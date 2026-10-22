@@ -67,6 +67,10 @@
       {
         "finding": "首次红基线与先规划后实施产生初始化依赖死锁",
         "resolution": "固定三个阶段，逐段使用前BASE校验；不绕过真实业务CI，不给后续PR开放任意中间契约。"
+      },
+      {
+        "finding": "PH-001的SDK schema/兼容规则仍待设计，不满足S级实现的Definition of Ready",
+        "resolution": "保持proposed并说明阻塞，先由PH-090冻结具体契约，不能在实现PR自授权。"
       }
     ],
     "evidence": "project/reviews/PH-000-bootstrap-review.md；实际8项全绿、保护生效、冻结祖先核对满足条件；常规收口删除一次性入口。"

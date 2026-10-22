@@ -76,7 +76,7 @@
       "title": "SDK-1：冻结业务插件元数据与独立示例App",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "proposed",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -104,7 +104,9 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/5",
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "SDK字段、类型与兼容规则尚未冻结，先由PH-090规划PR明确契约，再将本任务置ready。"
+      ],
       "handoff": null
     },
     {
