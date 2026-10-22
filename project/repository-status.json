@@ -3,9 +3,10 @@
   "repository": "https://github.com/lakii2982/project-hub",
   "visibility": "public",
   "ssh_authentication": "verified",
-  "main_pushed": false,
-  "github_actions": "pending",
+  "main_pushed": true,
+  "github_actions": "initial_failure_postgresql_nullable_join",
   "branch_protection": "pending",
   "security_reporting": "pending",
-  "release": "pending"
+  "release": "pending",
+  "initial_ci_url": "https://github.com/lakii2982/project-hub/actions/runs/39784003292"
 }
