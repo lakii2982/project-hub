@@ -320,7 +320,9 @@ def create_task(member, data):
 @transaction.atomic
 def update_task(member, pk, status, version, completion_note=""):
     lock_company(member)
-    task = Task.objects.select_for_update().select_related("project", "dependency").get(pk=pk)
+    # Company writes are already serialized above. Avoid locking the nullable
+    # dependency join, which PostgreSQL rejects, while retaining the task lock.
+    task = Task.objects.select_for_update(of=("self",)).select_related("project", "dependency").get(pk=pk)
     require_write(member)
     require_project(member, task.project)
     check_open(task.project)

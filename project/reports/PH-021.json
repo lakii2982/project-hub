@@ -1,0 +1,39 @@
+{
+  "task_id": "PH-021",
+  "summary": "限制任务行锁为Task本表，兼容PostgreSQL可空依赖关联；保留公司锁、事务、依赖/版本/审计规则。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "23 tasks validated"
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "No issues"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "No changes detected"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "SQLite 128 tests passed in 7.149s"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Pascal / deepseek_fast (independent reviewer)",
+    "status": "pass",
+    "evidence": "project/reviews/PH-021-review.md; minimal patch statically approved, 4/4 targeted SQLite tests; remote PG still pending",
+    "findings": []
+  },
+  "unverified": [
+    "PostgreSQL CI and container seed/restart/backup/restore pending stacked PR"
+  ],
+  "deviations": [
+    "先以已登记契约的规划分支为BASE提交stacked PR，规划PR需用户授权的已知基线红灯例外后才合入main。"
+  ]
+}

@@ -810,7 +810,7 @@
       "title": "修复PostgreSQL任务更新的可空关联行锁错误",
       "kind": "fix",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "v0.1.0",
       "depends_on": [],
@@ -833,9 +833,9 @@
         "python manage.py test tests --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "integration-agent",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-021.md"
     }
   ]
 }
