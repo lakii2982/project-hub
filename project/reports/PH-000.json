@@ -1,6 +1,6 @@
 {
   "task_id": "PH-000",
-  "summary": "建立公开仓库和跨Agent工程治理基线；公开发布与远端CI收口另在同任务PR核实。",
+  "summary": "公开工程基线初始化恢复：固定规划A、最小修复B、治理整合C逐段依据之前契约校验；所有检查全绿才合入。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "124 tests passed in 6.841 seconds (SQLite), including 15 contract checks, 10 publication cases and 4 governance cases."
+      "evidence": "当前SQLite128项通过7.398秒；首次124项基线亦通过。"
     },
     {
       "command": "actionlint -color",
@@ -31,11 +31,16 @@
       "command": "gitleaks dir <public-source> --config .gitleaks.toml --redact",
       "result": "pass",
       "evidence": "Official Gitleaks 8.30.1, only prospective public source files, no leaks after exact synthetic-fixture allowlist."
+    },
+    {
+      "command": "execute governance workflow step in isolated local clone",
+      "result": "pass",
+      "evidence": "A from initial PH-000, B from A PH-021, C from B PH-000: all three BASE policy stages passed; no replacement objects"
     }
   ],
   "review": {
     "required": true,
-    "reviewer": "integration-agent (independent of CLI and publishing-script implementers)",
+    "reviewer": "integration-agent plus Laplace / glm_worker independent bootstrap review",
     "status": "pass",
     "findings": [
       {
@@ -53,11 +58,15 @@
       {
         "finding": "Git replacement object can alter BASE resolution if HEAD executes first",
         "resolution": "Trusted BASE policy runs first, every policy Git command ignores replacement refs, real git-replace counterexample rejects widened scope."
+      },
+      {
+        "finding": "首次红基线与先规划后实施产生初始化依赖死锁",
+        "resolution": "固定三个阶段，逐段使用前BASE校验；不绕过真实业务CI，不给后续PR开放任意中间契约。"
       }
-    ]
+    ],
+    "evidence": "project/reviews/PH-000-bootstrap-review.md; acceptance conditional on final remote full CI and branch protection"
   },
   "unverified": [
-    "远端GitHub Actions运行结果待第一次push后核实",
     "远端branch protection与私下安全报告设置待核实",
     "真实生产TLS、PG多连接核销/锁账并发、附件完整恢复、模型质量和客户端联调仍待后续任务"
   ],
@@ -65,6 +74,28 @@
     "本任务唯一首次main初始化，之后收口也走PH-000 PR",
     "引入专用开源Gitleaks和actionlint做发布检查，不在产品内自写秘密扫描器",
     "既有业务只将健康接口版本改为读取pyproject单一来源；不修改运行数据",
-    "发布子进程新增120秒上限，同步加强其subprocess断言；没有削弱既有业务测试。"
-  ]
+    "发布子进程新增120秒上限，同步加强其subprocess断言；没有削弱既有业务测试。",
+    "用户要求所有检查全绿才能合入，未使用红灯合并例外。一次初始化恢复按固定规划、业务修复、治理收口三提交分段验证；全套CI保持执行，后续main继续常规BASE门禁。"
+  ],
+  "remote_ci": {
+    "url": "https://github.com/lakii2982/project-hub/actions/runs/39784003292",
+    "passed": [
+      "Project governance",
+      "SQLite domain",
+      "MCP protocol",
+      "Public hygiene"
+    ],
+    "failed": {
+      "PostgreSQL domain": "update_task FOR UPDATE nullable outer join",
+      "Container smoke": "seed_demo calls same update_task"
+    },
+    "fix_task": "PH-021"
+  },
+  "bootstrap_recovery": {
+    "initial": "0c7a95785e96c98176a76c3ffb531bc51a920b78",
+    "plan": "e10eae708365f9a192e74ec61526344b7483c013",
+    "fix": "bc2a7c94ffa540948200ef58198d18deaf1b0c48",
+    "checks": "三阶段scope分别经前一契约，完整六项CI保留，临时段在后续常规收口PR删除",
+    "rejected_path": "未合并红灯PR #12，遵从用户全部全绿要求"
+  }
 }

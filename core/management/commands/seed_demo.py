@@ -108,6 +108,7 @@ class Command(BaseCommand):
         pending = submit_time(member, {"project": tasks[0].project, "employee": member.employee,
             "work_date": today, "minutes": 120, "note": "方案准备和技术预研", "task": tasks[0]}, uuid.uuid4())
         credentials = settings.BASE_DIR / "runtime/demo-credentials.txt"
+        credentials.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         credentials.write_text("项目中枢本地演练账户（只用于演练数据库）\n地址：http://127.0.0.1:8765/\n" +
             "\n".join(f"{role}: {m.user.username}" for role, m in members.items()) + f"\n演练密码：{password}\n")
         os.chmod(credentials, 0o600)

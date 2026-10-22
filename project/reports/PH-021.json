@@ -1,0 +1,49 @@
+{
+  "task_id": "PH-021",
+  "summary": "限制任务行锁为Task本表，兼容PostgreSQL可空依赖关联；保留公司锁、事务、依赖/版本/审计规则。 全新PG环境seed写入凭据前创建私有runtime目录。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "23 tasks validated"
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "No issues"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "No changes detected"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "SQLite128项通过7.398秒；此前远端同锁修复PG128项通过。最终seed修复后需远端全套重跑。"
+    },
+    {
+      "command": "isolated seed in temporary SQLite database and temporary BASE_DIR",
+      "result": "pass",
+      "evidence": "全新runtime自动创建为0700，凭据文件0600；integrity通过；不使用当前运行数据库。"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Pascal / deepseek_fast (independent reviewer)",
+    "status": "pass",
+    "evidence": "project/reviews/PH-021-review.md; minimal patch statically approved, 4/4 targeted SQLite tests; remote PG still pending",
+    "findings": []
+  },
+  "unverified": [
+    "最终提交的完整远端CI待全绿恢复PR核实"
+  ],
+  "deviations": [
+    "按用户要求保持所有检查全绿才合入；纯规划与业务修复为两个冻结提交，最终由一次初始化恢复PR分段校验。"
+  ],
+  "prior_remote_ci": {
+    "url": "https://github.com/lakii2982/project-hub/actions/runs/39786137608",
+    "postgres_tests": "128 passed, later seed failed with missing runtime directory",
+    "container": "seed/restart/backup/restore all passed"
+  }
+}
