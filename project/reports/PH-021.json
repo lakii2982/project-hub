@@ -26,6 +26,11 @@
       "command": "isolated seed in temporary SQLite database and temporary BASE_DIR",
       "result": "pass",
       "evidence": "全新runtime自动创建为0700，凭据文件0600；integrity通过；不使用当前运行数据库。"
+    },
+    {
+      "command": "GitHub Project Hub checks + CodeQL on e4c99bf4e45e0452600a6b94a1b4b2229300252a",
+      "result": "pass",
+      "evidence": "https://github.com/lakii2982/project-hub/actions/runs/39789487592 ; https://github.com/lakii2982/project-hub/actions/runs/39789487620 ; all 8 jobs passed including PostgreSQL128, seed/restart/dump/restore"
     }
   ],
   "review": {
@@ -36,7 +41,7 @@
     "findings": []
   },
   "unverified": [
-    "最终提交的完整远端CI待全绿恢复PR核实"
+    "PG真实多连接并发与生产TLS/完整附件恢复仍属于后续任务，不以本次检查替代。"
   ],
   "deviations": [
     "按用户要求保持所有检查全绿才合入；纯规划与业务修复为两个冻结提交，最终由一次初始化恢复PR分段校验。"

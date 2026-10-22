@@ -4,9 +4,15 @@
   "visibility": "public",
   "ssh_authentication": "verified",
   "main_pushed": true,
-  "github_actions": "initial_failure_postgresql_nullable_join",
-  "branch_protection": "pending",
-  "security_reporting": "pending",
-  "release": "pending",
-  "initial_ci_url": "https://github.com/lakii2982/project-hub/actions/runs/39784003292"
+  "github_actions": {
+    "status": "all_8_pass_on_recovery_pr",
+    "head": "e4c99bf4e45e0452600a6b94a1b4b2229300252a",
+    "checks_url": "https://github.com/lakii2982/project-hub/actions/runs/39789487592",
+    "codeql_url": "https://github.com/lakii2982/project-hub/actions/runs/39789487620"
+  },
+  "branch_protection": "prepared_8_checks_pending_github_sudo_authentication",
+  "security_reporting": "pending_github_settings_authentication",
+  "release": "not_published_pending_green_main_and_normal_policy_closure",
+  "initial_ci_url": "https://github.com/lakii2982/project-hub/actions/runs/39784003292",
+  "recovery_pr": "https://github.com/lakii2982/project-hub/pull/15"
 }
