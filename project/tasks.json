@@ -66,7 +66,7 @@
         "python manage.py makemigrations --check --dry-run",
         "python manage.py test tests --verbosity 1"
       ],
-      "github_issue": null,
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/1",
       "owner": "integration-agent",
       "blockers": [],
       "handoff": "project/handoffs/PH-000.md"
@@ -102,7 +102,7 @@
         "python manage.py makemigrations --check --dry-run",
         "python manage.py test tests --verbosity 1"
       ],
-      "github_issue": null,
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/5",
       "owner": null,
       "blockers": [],
       "handoff": null
@@ -182,7 +182,7 @@
         "python manage.py makemigrations --check --dry-run",
         "python manage.py test tests --verbosity 1"
       ],
-      "github_issue": null,
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/3",
       "owner": null,
       "blockers": [],
       "handoff": null
@@ -250,7 +250,7 @@
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_governance -v"
       ],
-      "github_issue": null,
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/7",
       "owner": null,
       "blockers": [],
       "handoff": null
@@ -799,6 +799,38 @@
       "acceptance": [
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/8",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-021",
+      "title": "修复PostgreSQL任务更新的可空关联行锁错误",
+      "kind": "fix",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v0.1.0",
+      "depends_on": [],
+      "spec": "project/specs/PH-021.md",
+      "allowed_paths": [
+        "core/services.py",
+        "tests/test_task_locks.py",
+        "project/tasks.json",
+        "project/reports/PH-021.json",
+        "project/handoffs/PH-021.md",
+        "project/reviews/PH-021-review.md",
+        "docs/verification.md",
+        "docs/delivery-status.md",
+        "CHANGELOG.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
       ],
       "github_issue": null,
       "owner": null,

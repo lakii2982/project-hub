@@ -57,7 +57,6 @@
     ]
   },
   "unverified": [
-    "远端GitHub Actions运行结果待第一次push后核实",
     "远端branch protection与私下安全报告设置待核实",
     "真实生产TLS、PG多连接核销/锁账并发、附件完整恢复、模型质量和客户端联调仍待后续任务"
   ],
@@ -65,6 +64,21 @@
     "本任务唯一首次main初始化，之后收口也走PH-000 PR",
     "引入专用开源Gitleaks和actionlint做发布检查，不在产品内自写秘密扫描器",
     "既有业务只将健康接口版本改为读取pyproject单一来源；不修改运行数据",
-    "发布子进程新增120秒上限，同步加强其subprocess断言；没有削弱既有业务测试。"
-  ]
+    "发布子进程新增120秒上限，同步加强其subprocess断言；没有削弱既有业务测试。",
+    "首轮远端CI发现既有PostgreSQL可空关联锁错误。PH-000规划PR仅登记PH-021与恢复规则；尚未启用保护的初始化阶段允许该纯规划PR携带已确认的基线红灯合入，业务修复必须另走PH-021并全绿后才能发布/关闭PH-000。"
+  ],
+  "remote_ci": {
+    "url": "https://github.com/lakii2982/project-hub/actions/runs/39784003292",
+    "passed": [
+      "Project governance",
+      "SQLite domain",
+      "MCP protocol",
+      "Public hygiene"
+    ],
+    "failed": {
+      "PostgreSQL domain": "update_task FOR UPDATE nullable outer join",
+      "Container smoke": "seed_demo calls same update_task"
+    },
+    "fix_task": "PH-021"
+  }
 }
