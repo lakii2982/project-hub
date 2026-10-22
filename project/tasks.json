@@ -833,7 +833,7 @@
         "python manage.py makemigrations --check --dry-run",
         "python manage.py test tests --verbosity 1"
       ],
-      "github_issue": null,
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/14",
       "owner": "integration-agent",
       "blockers": [],
       "handoff": "project/handoffs/PH-021.md"

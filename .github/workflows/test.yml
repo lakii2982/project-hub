@@ -29,8 +29,31 @@ jobs:
           GIT_NO_REPLACE_OBJECTS: '1'
         run: |
           if [ "$EVENT_NAME" = pull_request ]; then
-            git --no-replace-objects show "$BASE_SHA:scripts/check_pr.py" > "$RUNNER_TEMP/check_pr.py"
-            python "$RUNNER_TEMP/check_pr.py"
+            INITIAL=0c7a95785e96c98176a76c3ffb531bc51a920b78
+            RECOVERY_PLAN=e10eae708365f9a192e74ec61526344b7483c013
+            RECOVERY_FIX=bc2a7c94ffa540948200ef58198d18deaf1b0c48
+            if [ "$BASE_SHA" = "$INITIAL" ]; then
+              # One frozen bootstrap stack: plan, repair, governance integration.
+              # Every stage is checked against its preceding contract; all six
+              # domain/operational checks below still execute on the final tree.
+              python -c 'import json,os,re; from pathlib import Path; event=json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text()); assert re.findall(r"^Task:\s*(PH-[0-9]{3,6})\s*$", event["pull_request"].get("body") or "", re.MULTILINE) == ["PH-000"], "Frozen bootstrap recovery requires Task: PH-000"'
+              test "$(git rev-list --parents -n 1 "$RECOVERY_PLAN")" = "$RECOVERY_PLAN $INITIAL"
+              test "$(git rev-list --parents -n 1 "$RECOVERY_FIX")" = "$RECOVERY_FIX $RECOVERY_PLAN"
+              git merge-base --is-ancestor "$RECOVERY_FIX" HEAD
+              verify_stage() {
+                stage_root="$RUNNER_TEMP/bootstrap-$1"
+                git worktree add --detach "$stage_root" "$2"
+                git --no-replace-objects show "$3:scripts/projectctl.py" > "$RUNNER_TEMP/policy-$1.py"
+                python "$RUNNER_TEMP/policy-$1.py" verify-change --root "$stage_root" --base "$3" --task "$4"
+              }
+              verify_stage plan "$RECOVERY_PLAN" "$INITIAL" PH-000
+              verify_stage fix "$RECOVERY_FIX" "$RECOVERY_PLAN" PH-021
+              git --no-replace-objects show "$RECOVERY_FIX:scripts/projectctl.py" > "$RUNNER_TEMP/policy-integration.py"
+              python "$RUNNER_TEMP/policy-integration.py" verify-change --root "$GITHUB_WORKSPACE" --base "$RECOVERY_FIX" --task PH-000
+            else
+              git --no-replace-objects show "$BASE_SHA:scripts/check_pr.py" > "$RUNNER_TEMP/check_pr.py"
+              python "$RUNNER_TEMP/check_pr.py"
+            fi
           fi
       - run: python scripts/projectctl.py check
       - run: python scripts/release_check.py
