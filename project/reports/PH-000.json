@@ -1,6 +1,6 @@
 {
   "task_id": "PH-000",
-  "summary": "公开工程基线初始化恢复：固定规划A、最小修复B、治理整合C逐段依据之前契约校验；所有检查全绿才合入。",
+  "summary": "建立Apache-2.0公开工程基线、可信BASE常规门禁、任务契约/交接、8项受保护检查和可重试发行流程；初始化恢复已全绿合入，临时入口在收口PR删除。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "当前SQLite128项通过7.398秒；首次124项基线亦通过。"
+      "evidence": "SQLite128项7.496秒通过；对应恢复提交PG128项和完整容器链路真实通过，见remote_ci_final。"
     },
     {
       "command": "actionlint -color",
@@ -36,6 +36,11 @@
       "command": "execute governance workflow step in isolated local clone",
       "result": "pass",
       "evidence": "A from initial PH-000, B from A PH-021, C from B PH-000: all three BASE policy stages passed; no replacement objects"
+    },
+    {
+      "command": "python scripts/package.py && python scripts/verify-source-package.py releases/project-hub-0.1.0-source.zip",
+      "result": "pass",
+      "evidence": "213 public source files; runtime, attachments, credentials and caches excluded; manifest verified. SHA is generated for each final source snapshot."
     }
   ],
   "review": {
@@ -62,12 +67,15 @@
       {
         "finding": "首次红基线与先规划后实施产生初始化依赖死锁",
         "resolution": "固定三个阶段，逐段使用前BASE校验；不绕过真实业务CI，不给后续PR开放任意中间契约。"
+      },
+      {
+        "finding": "PH-001的SDK schema/兼容规则仍待设计，不满足S级实现的Definition of Ready",
+        "resolution": "保持proposed并说明阻塞，先由PH-090冻结具体契约，不能在实现PR自授权。"
       }
     ],
-    "evidence": "project/reviews/PH-000-bootstrap-review.md; acceptance conditional on final remote full CI and branch protection"
+    "evidence": "project/reviews/PH-000-bootstrap-review.md；实际8项全绿、保护生效、冻结祖先核对满足条件；常规收口删除一次性入口。"
   },
   "unverified": [
-    "远端branch protection与私下安全报告设置待核实",
     "真实生产TLS、PG多连接核销/锁账并发、附件完整恢复、模型质量和客户端联调仍待后续任务"
   ],
   "deviations": [
@@ -97,5 +105,21 @@
     "fix": "bc2a7c94ffa540948200ef58198d18deaf1b0c48",
     "checks": "三阶段scope分别经前一契约，完整六项CI保留，临时段在后续常规收口PR删除",
     "rejected_path": "未合并红灯PR #12，遵从用户全部全绿要求"
+  },
+  "remote_ci_final": {
+    "head": "e4c99bf4e45e0452600a6b94a1b4b2229300252a",
+    "checks": "https://github.com/lakii2982/project-hub/actions/runs/39789487592",
+    "codeql": "https://github.com/lakii2982/project-hub/actions/runs/39789487620",
+    "all_8_jobs": "pass"
+  },
+  "governance_evidence": {
+    "recovery_pr": "https://github.com/lakii2982/project-hub/pull/15",
+    "closure_pr": "https://github.com/lakii2982/project-hub/pull/16",
+    "branch_rule_id": 85205254,
+    "protected_main_commit": "a112b7898a7bedc0e85b80ffdb6494026b2e8f17",
+    "review_disposition": "自动review使用a85187a提出祖先疑问；核对实际e4c99bf父为bc2a7c9并以真实runner三阶段ok日志回应后已解决，未删断言。",
+    "release_result": "以GitHub Releases和标签触发的同提交workflow/资产摘要为事实来源；源码快照先于发布。",
+    "private_vulnerability_reporting": "enabled, verified via saved GitHub settings",
+    "docs_refresh": "GLM Flash refreshed only delivery-status and SECURITY; integration reviewed scope and retained historical SQLite attachment proof."
   }
 }
