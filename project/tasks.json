@@ -1,0 +1,809 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "PH-000",
+      "title": "建立公开仓库与跨Agent持续迭代基线",
+      "kind": "infra",
+      "risk": "S",
+      "status": "in_review",
+      "priority": 1,
+      "milestone": "v0.1.0",
+      "depends_on": [],
+      "spec": "project/specs/PH-000.md",
+      "allowed_paths": [
+        "LICENSE",
+        "NOTICE",
+        "THIRD_PARTY_NOTICES.md",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "ROADMAP.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "GEMINI.md",
+        ".cursor/rules/*",
+        ".github/*",
+        ".github/**/*",
+        ".gitignore",
+        ".dockerignore",
+        "README.md",
+        "CHANGELOG.md",
+        "pyproject.toml",
+        "project/*",
+        "project/**/*",
+        "docs/engineering/*",
+        "docs/adr/*",
+        "docs/product/*",
+        "docs/verification.md",
+        "docs/delivery-status.md",
+        "scripts/projectctl.py",
+        "scripts/check_pr.py",
+        "scripts/public_hygiene.py",
+        "scripts/release_check.py",
+        "scripts/package.py",
+        "scripts/verify-source-package.py",
+        "tests/test_projectctl.py",
+        "tests/test_governance.py",
+        "pmo/__init__.py",
+        "core/views.py",
+        "integrations/mcp/*.example.*",
+        "integrations/mcp/README.md",
+        "project/reports/PH-000.json",
+        "project/handoffs/PH-000.md",
+        "project/tasks.json",
+        "scripts/publish-release.py",
+        "tests/test_publish_release.py",
+        ".gitleaks.toml",
+        "docs/open-source-review.md",
+        "docs/development-contract.md",
+        "START_HERE.md",
+        "project/reviews/*",
+        "tests/test_governance.py"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": "integration-agent",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-000.md"
+    },
+    {
+      "id": "PH-001",
+      "title": "SDK-1：冻结业务插件元数据与独立示例App",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v0.2.0",
+      "depends_on": [
+        "PH-000"
+      ],
+      "spec": "project/specs/PH-001.md",
+      "allowed_paths": [
+        "core/plugin_sdk/*",
+        "core/plugin_sdk/**/*",
+        "pmo_plugins/example_domain/*",
+        "pmo_plugins/example_domain/**/*",
+        "tests/test_plugin_sdk.py",
+        "docs/adr/0002-domain-plugin-sdk.md",
+        "docs/plugin-architecture.md",
+        "docs/plugin-evolution.md",
+        "project/reports/PH-001.json",
+        "project/handoffs/PH-001.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-002",
+      "title": "SDK-2：统一入口门控与命名空间路由",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v0.2.0",
+      "depends_on": [
+        "PH-001"
+      ],
+      "spec": "project/specs/PH-002.md",
+      "allowed_paths": [
+        "core/plugin_sdk/*",
+        "core/plugin_sdk/**/*",
+        "core/plugin_runtime.py",
+        "core/plugin_views.py",
+        "pmo/settings.py",
+        "pmo/urls.py",
+        "pmo_plugins/example_domain/*",
+        "pmo_plugins/example_domain/**/*",
+        "templates/base.html",
+        "tests/test_plugin_sdk.py",
+        "tests/test_plugins.py",
+        "docs/plugin-architecture.md",
+        "project/reports/PH-002.json",
+        "project/handoffs/PH-002.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-003",
+      "title": "建立可复验的Linux部署与容器集成验收",
+      "kind": "infra",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v0.2.0",
+      "depends_on": [
+        "PH-000"
+      ],
+      "spec": "project/specs/PH-003.md",
+      "allowed_paths": [
+        "scripts/install.sh",
+        "scripts/check-deployment.sh",
+        "compose.yaml",
+        "Dockerfile",
+        "Caddyfile",
+        ".env.example",
+        ".dockerignore",
+        ".github/workflows/*",
+        "tests/deployment/*",
+        "tests/deployment/**/*",
+        "docs/operations.md",
+        "docs/engineering/deployment.md",
+        "project/reports/PH-003.json",
+        "project/handoffs/PH-003.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-004",
+      "title": "实现首次启用向导与重复安装保护",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.2.0",
+      "depends_on": [
+        "PH-002",
+        "PH-003"
+      ],
+      "spec": "project/specs/PH-004.md",
+      "allowed_paths": [
+        "core/onboarding/*",
+        "core/onboarding/**/*",
+        "core/management/commands/bootstrap.py",
+        "pmo/urls.py",
+        "pmo/settings.py",
+        "templates/onboarding/*",
+        "tests/test_onboarding.py",
+        "docs/operations.md",
+        "project/reports/PH-004.json",
+        "project/handoffs/PH-004.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-005",
+      "title": "冻结老板决策工作台的信息与交互契约",
+      "kind": "research",
+      "risk": "A",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v0.2.0",
+      "depends_on": [
+        "PH-000"
+      ],
+      "spec": "project/specs/PH-005.md",
+      "allowed_paths": [
+        "docs/product/owner-workspace.md",
+        "docs/product/owner-workspace-wireframe.html",
+        "docs/product/owner-workspace-assets/*",
+        "docs/product/role-workspaces.md",
+        "docs/adr/0003-owner-read-models.md",
+        "project/reports/PH-005.json",
+        "project/handoffs/PH-005.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-006",
+      "title": "合同插件：先冻结合同与变更的领域契约",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-002"
+      ],
+      "spec": "project/specs/PH-006.md",
+      "allowed_paths": [
+        "pmo_plugins/contracts/*",
+        "pmo_plugins/contracts/**/*",
+        "tests/test_contracts_*.py",
+        "docs/adr/*-contracts.md",
+        "docs/work-orders/WO-01-contracts.md",
+        "project/reports/PH-006.json",
+        "project/handoffs/PH-006.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-007",
+      "title": "结算插件：应收应付与并发核销",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-006"
+      ],
+      "spec": "project/specs/PH-007.md",
+      "allowed_paths": [
+        "pmo_plugins/settlement/*",
+        "pmo_plugins/settlement/**/*",
+        "tests/test_settlement_*.py",
+        "docs/adr/*-settlement.md",
+        "docs/work-orders/WO-02-settlement.md",
+        "project/reports/PH-007.json",
+        "project/handoffs/PH-007.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-008",
+      "title": "现金插件：预收预付、退款与未分配收付",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-007"
+      ],
+      "spec": "project/specs/PH-008.md",
+      "allowed_paths": [
+        "pmo_plugins/cash/*",
+        "pmo_plugins/cash/**/*",
+        "tests/test_cash_*.py",
+        "docs/adr/*-cash.md",
+        "docs/work-orders/WO-03-prepayments.md",
+        "project/reports/PH-008.json",
+        "project/handoffs/PH-008.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-009",
+      "title": "成本插件：共享费用与最大余数分摊",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-002"
+      ],
+      "spec": "project/specs/PH-009.md",
+      "allowed_paths": [
+        "pmo_plugins/costing/*",
+        "pmo_plugins/costing/**/*",
+        "tests/test_costing_*.py",
+        "docs/adr/*-costing.md",
+        "docs/work-orders/WO-04-allocation.md",
+        "project/reports/PH-009.json",
+        "project/handoffs/PH-009.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-010",
+      "title": "人工成本池与组守恒费率快照",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-009"
+      ],
+      "spec": "project/specs/PH-010.md",
+      "allowed_paths": [
+        "pmo_plugins/costing/*",
+        "pmo_plugins/costing/**/*",
+        "tests/test_costing_*.py",
+        "docs/adr/*-costing.md",
+        "docs/work-orders/WO-05-payroll.md",
+        "project/reports/PH-010.json",
+        "project/handoffs/PH-010.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-011",
+      "title": "资源周工时与容量日历",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-002"
+      ],
+      "spec": "project/specs/PH-011.md",
+      "allowed_paths": [
+        "pmo_plugins/time/*",
+        "pmo_plugins/time/**/*",
+        "tests/test_time_*.py",
+        "docs/adr/*-time.md",
+        "docs/work-orders/WO-06-weekly-time.md",
+        "project/reports/PH-011.json",
+        "project/handoffs/PH-011.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-012",
+      "title": "发票登记、分配与红冲",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-007"
+      ],
+      "spec": "project/specs/PH-012.md",
+      "allowed_paths": [
+        "pmo_plugins/invoicing/*",
+        "pmo_plugins/invoicing/**/*",
+        "tests/test_invoicing_*.py",
+        "docs/adr/*-invoicing.md",
+        "docs/work-orders/WO-07-invoices.md",
+        "project/reports/PH-012.json",
+        "project/handoffs/PH-012.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-013",
+      "title": "存量期初迁移与启用核对",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-007",
+        "PH-008"
+      ],
+      "spec": "project/specs/PH-013.md",
+      "allowed_paths": [
+        "pmo_plugins/onboarding/*",
+        "pmo_plugins/onboarding/**/*",
+        "tests/test_onboarding_*.py",
+        "docs/adr/*-onboarding.md",
+        "docs/work-orders/WO-08-opening.md",
+        "project/reports/PH-013.json",
+        "project/handoffs/PH-013.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-014",
+      "title": "通知待办、事件幂等与任务追踪",
+      "kind": "feature",
+      "risk": "A",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-002"
+      ],
+      "spec": "project/specs/PH-014.md",
+      "allowed_paths": [
+        "pmo_plugins/notifications/*",
+        "pmo_plugins/notifications/**/*",
+        "tests/test_notifications_*.py",
+        "docs/adr/*-notifications.md",
+        "docs/work-orders/WO-09-notifications.md",
+        "project/reports/PH-014.json",
+        "project/handoffs/PH-014.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-015",
+      "title": "管理收入确认：方法互斥、来源与调整",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v0.3.0",
+      "depends_on": [
+        "PH-006",
+        "PH-007",
+        "PH-010"
+      ],
+      "spec": "project/specs/PH-015.md",
+      "allowed_paths": [
+        "pmo_plugins/management_revenue/*",
+        "pmo_plugins/management_revenue/**/*",
+        "tests/test_management_revenue.py",
+        "docs/adr/*-management-revenue.md",
+        "project/reports/PH-015.json",
+        "project/handoffs/PH-015.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-016",
+      "title": "经营读模型与老板决策工作台实现",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v0.4.0",
+      "depends_on": [
+        "PH-005",
+        "PH-007",
+        "PH-008",
+        "PH-010",
+        "PH-011",
+        "PH-015"
+      ],
+      "spec": "project/specs/PH-016.md",
+      "allowed_paths": [
+        "pmo_plugins/insights/*",
+        "pmo_plugins/insights/**/*",
+        "templates/owner/*",
+        "static/owner/*",
+        "tests/test_owner_workspace.py",
+        "docs/product/owner-workspace.md",
+        "project/reports/PH-016.json",
+        "project/handoffs/PH-016.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-017",
+      "title": "系统AI：结构化提取与可追溯经营简报",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v0.4.0",
+      "depends_on": [
+        "PH-014",
+        "PH-015"
+      ],
+      "spec": "project/specs/PH-017.md",
+      "allowed_paths": [
+        "core/ai.py",
+        "pmo_plugins/insights/ai/*",
+        "pmo_plugins/insights/ai/**/*",
+        "tests/test_ai_evals.py",
+        "tests/fixtures/ai/*",
+        "docs/ai/*",
+        "project/reports/PH-017.json",
+        "project/handoffs/PH-017.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-018",
+      "title": "个人Agent：真实客户端接入与对话填报验收",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v0.4.0",
+      "depends_on": [
+        "PH-002",
+        "PH-004"
+      ],
+      "spec": "project/specs/PH-018.md",
+      "allowed_paths": [
+        "integrations/mcp/*",
+        "core/api.py",
+        "core/agent_auth.py",
+        "tests/test_agent_api.py",
+        "docs/ai/personal-agents.md",
+        "project/reports/PH-018.json",
+        "project/handoffs/PH-018.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-019",
+      "title": "PostgreSQL并发、恢复、升级与规模验收",
+      "kind": "infra",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v0.4.0",
+      "depends_on": [
+        "PH-007",
+        "PH-008",
+        "PH-010",
+        "PH-013"
+      ],
+      "spec": "project/specs/PH-019.md",
+      "allowed_paths": [
+        "tests/pg/*",
+        "tests/pg/**/*",
+        "scripts/verify_restore.sh",
+        ".github/workflows/*",
+        "docs/engineering/production-evidence.md",
+        "docs/operations.md",
+        "project/reports/PH-019.json",
+        "project/handoffs/PH-019.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-020",
+      "title": "1.0上线就绪评审与发布候选",
+      "kind": "infra",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-004",
+        "PH-012",
+        "PH-013",
+        "PH-014",
+        "PH-016",
+        "PH-017",
+        "PH-018",
+        "PH-019"
+      ],
+      "spec": "project/specs/PH-020.md",
+      "allowed_paths": [
+        "project/release-readiness.json",
+        "docs/engineering/*",
+        "CHANGELOG.md",
+        "README.md",
+        "pyproject.toml",
+        "project/manifest.json",
+        "project/reports/PH-020.json",
+        "project/handoffs/PH-020.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-090",
+      "title": "规划维护：拆任务、澄清验收与更新迭代",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 3,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-000"
+      ],
+      "spec": "project/specs/PH-090.md",
+      "allowed_paths": [
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/specs/*",
+        "docs/adr/*",
+        "ROADMAP.md",
+        "docs/engineering/*",
+        "project/reports/PH-090.json",
+        "project/handoffs/PH-090.md",
+        "project/tasks.json"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    }
+  ]
+}

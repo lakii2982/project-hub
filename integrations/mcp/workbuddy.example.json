@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "project_hub": {
+      "command": "/absolute/path/to/project-hub/.agent-venv/bin/python",
+      "args": [
+        "/absolute/path/to/project-hub/integrations/mcp/server.py"
+      ],
+      "env": {
+        "PMO_BASE_URL": "${PMO_BASE_URL}",
+        "PMO_AGENT_TOKEN": "${PMO_AGENT_TOKEN}"
+      }
+    }
+  }
+}

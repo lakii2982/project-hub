@@ -1,0 +1,26 @@
+name: 缺陷报告
+description: 可复现的业务或技术问题；安全漏洞请走私下报告渠道
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 场景、版本与复现步骤
+      description: 使用演练/匿名数据；不要贴凭据、工资或真实客户信息。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 脱敏证据与影响范围
+  - type: input
+    id: task
+    attributes:
+      label: 已有PH任务编号（若有）

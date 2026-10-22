@@ -1,0 +1,26 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+runtime/
+staticfiles/
+coverage/
+.DS_Store
+
+.cache/
+backups/
+releases/
+
+.agent-venv/
+
+# Private material and local tool state
+*.pem
+*.key
+*.p12
+*.sqlite3
+*.db
+.codex/
+.claude/
+.gemini/

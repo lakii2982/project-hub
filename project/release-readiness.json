@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "target": "v1.0.0",
+  "gates": {
+    "lifecycle": {
+      "status": "pending",
+      "evidence": []
+    },
+    "financial_rules": {
+      "status": "pending",
+      "evidence": []
+    },
+    "production_deployment": {
+      "status": "pending",
+      "evidence": []
+    },
+    "postgres_concurrency": {
+      "status": "pending",
+      "evidence": []
+    },
+    "backup_restore": {
+      "status": "pending",
+      "evidence": []
+    },
+    "agent_client": {
+      "status": "pending",
+      "evidence": []
+    },
+    "ai_evaluation": {
+      "status": "pending",
+      "evidence": []
+    },
+    "business_acceptance": {
+      "status": "pending",
+      "evidence": []
+    },
+    "licenses": {
+      "status": "pending",
+      "evidence": []
+    }
+  }
+}

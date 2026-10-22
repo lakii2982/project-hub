@@ -1,0 +1,10 @@
+[project]
+name = "project-hub"
+version = "0.1.0"
+description = "面向小型软件与技术服务公司的项目经营工作台"
+requires-python = ">=3.12"
+license = {text = "Apache-2.0"}
+authors = [{name = "Project Hub contributors"}]
+dynamic = ["dependencies"]
+[tool.ruff]
+line-length = 100

@@ -1,0 +1,70 @@
+{
+  "task_id": "PH-000",
+  "summary": "建立公开仓库和跨Agent工程治理基线；公开发布与远端CI收口另在同任务PR核实。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "真实元数据22项任务通过；无依赖环/缺路径。"
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "System check identified no issues."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "124 tests passed in 6.841 seconds (SQLite), including 15 contract checks, 10 publication cases and 4 governance cases."
+    },
+    {
+      "command": "actionlint -color",
+      "result": "pass",
+      "evidence": "Official actionlint v1.7.12 parsed and checked all GitHub workflows."
+    },
+    {
+      "command": "gitleaks dir <public-source> --config .gitleaks.toml --redact",
+      "result": "pass",
+      "evidence": "Official Gitleaks 8.30.1, only prospective public source files, no leaks after exact synthetic-fixture allowlist."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "integration-agent (independent of CLI and publishing-script implementers)",
+    "status": "pass",
+    "findings": [
+      {
+        "finding": "release CLI flag mismatch",
+        "resolution": "workflow now uses --sha40hex"
+      },
+      {
+        "finding": "BASE task must be executable; acceptance declarations cannot be omitted",
+        "resolution": "baseline status and every required acceptance command enforced"
+      },
+      {
+        "finding": "trusted wrapper could otherwise come from HEAD",
+        "resolution": "workflow loads wrapper from BASE, which loads policy from BASE; workflow edits remain privileged trust boundary"
+      },
+      {
+        "finding": "Git replacement object can alter BASE resolution if HEAD executes first",
+        "resolution": "Trusted BASE policy runs first, every policy Git command ignores replacement refs, real git-replace counterexample rejects widened scope."
+      }
+    ]
+  },
+  "unverified": [
+    "远端GitHub Actions运行结果待第一次push后核实",
+    "远端branch protection与私下安全报告设置待核实",
+    "真实生产TLS、PG多连接核销/锁账并发、附件完整恢复、模型质量和客户端联调仍待后续任务"
+  ],
+  "deviations": [
+    "本任务唯一首次main初始化，之后收口也走PH-000 PR",
+    "引入专用开源Gitleaks和actionlint做发布检查，不在产品内自写秘密扫描器",
+    "既有业务只将健康接口版本改为读取pyproject单一来源；不修改运行数据",
+    "发布子进程新增120秒上限，同步加强其subprocess断言；没有削弱既有业务测试。"
+  ]
+}

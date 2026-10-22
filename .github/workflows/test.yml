@@ -1,0 +1,175 @@
+name: Project Hub checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  governance:
+    name: Project governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Verify PR against trusted BASE policy
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GIT_NO_REPLACE_OBJECTS: '1'
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            git --no-replace-objects show "$BASE_SHA:scripts/check_pr.py" > "$RUNNER_TEMP/check_pr.py"
+            python "$RUNNER_TEMP/check_pr.py"
+          fi
+      - run: python scripts/projectctl.py check
+      - run: python scripts/release_check.py
+  sqlite:
+    name: SQLite domain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python manage.py check
+      - run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py test tests --verbosity 1
+      - run: python manage.py migrate --noinput
+      - run: python manage.py seed_demo
+      - run: python manage.py verify_integrity --json
+      - run: python manage.py collectstatic --noinput
+      - run: pip inspect --local > application-dependencies.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: application-dependencies
+          path: application-dependencies.json
+  postgres:
+    name: PostgreSQL domain
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: pmo
+          POSTGRES_USER: pmo
+          POSTGRES_PASSWORD: ci-only-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U pmo" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: pmo
+      POSTGRES_USER: pmo
+      POSTGRES_PASSWORD: ci-only-password
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python manage.py check
+      - run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py test tests --verbosity 1
+      - run: python manage.py migrate --noinput
+      - run: python manage.py seed_demo
+      - run: python manage.py verify_integrity --json
+  mcp:
+    name: MCP protocol
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m venv .agent-venv
+      - run: .agent-venv/bin/pip install -r integrations/mcp/requirements.txt
+      - run: .agent-venv/bin/python -m unittest discover -s integrations/mcp -p 'test*.py'
+      - run: .agent-venv/bin/python integrations/mcp/smoke_stdio.py
+      - run: .agent-venv/bin/pip inspect --local > mcp-dependencies.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: mcp-dependencies
+          path: mcp-dependencies.json
+  hygiene:
+    name: Public hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: python scripts/public_hygiene.py
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_ENABLE_COMMENTS: 'false'
+      - run: python scripts/package.py
+      - name: Verify versioned source bundle
+        run: |
+          VERSION="$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+          python scripts/verify-source-package.py "releases/project-hub-$VERSION-source.zip"
+  container:
+    name: Container smoke
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE_PROJECT_NAME: project-hub-ci
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Generate isolated CI configuration
+        run: |
+          python - <<'PY'
+          import os, secrets
+          from pathlib import Path
+          Path('.env').write_text('PMO_DOMAIN=ci.invalid\nDJANGO_SECRET_KEY='+secrets.token_urlsafe(48)+'\nPOSTGRES_PASSWORD='+secrets.token_urlsafe(32)+'\n')
+          os.chmod('.env',0o600)
+          PY
+      - run: docker compose config --quiet
+      - run: docker compose up -d --build --wait --wait-timeout 180 db app worker
+      - run: docker compose exec -T app python manage.py check --deploy
+      - run: docker compose exec -T -e PMO_ENV=development app python manage.py seed_demo
+      - run: docker compose exec -T app python manage.py verify_integrity --json
+      - name: Health and restart persistence
+        run: |
+          docker compose exec -T app python -c "import urllib.request; r=urllib.request.Request('http://localhost:8000/health/',headers={'X-Forwarded-Proto':'https'}); assert urllib.request.urlopen(r,timeout=5).status==200"
+          docker compose restart app worker
+          docker compose up -d --wait --wait-timeout 180 db app worker
+          docker compose exec -T app python manage.py verify_integrity --json
+      - name: Real dump and isolated database restore
+        run: |
+          sh scripts/backup.sh "$RUNNER_TEMP/project-hub-backup"
+          (cd "$RUNNER_TEMP/project-hub-backup" && sha256sum -c SHA256SUMS)
+          docker compose exec -T db createdb -U pmo pmo_restore_ci
+          docker compose exec -T db pg_restore -U pmo --no-owner --exit-on-error -d pmo_restore_ci < "$RUNNER_TEMP/project-hub-backup/database.dump"
+          docker compose exec -T -e POSTGRES_DB=pmo_restore_ci app python manage.py verify_integrity --json
+      - if: failure()
+        run: docker compose logs --no-color --tail=100
+      - if: always()
+        run: docker compose down -v

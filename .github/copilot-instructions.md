@@ -1,0 +1,1 @@
+Read AGENTS.md and project/manifest.json before changing code. Canonical scope and acceptance are in project/tasks.json; continuation is in project/handoffs/. Follow CONTRIBUTING.md. Do not infer completed work from chat history.

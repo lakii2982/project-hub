@@ -1,0 +1,24 @@
+name: 业务需求与改进
+description: 先描述业务问题和验收，不默认已有设计正确
+title: "[Need] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: business
+    attributes:
+      label: 谁在什么情况下遇到什么问题
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 期待的业务结果与验收例子
+    validations:
+      required: true
+  - type: textarea
+    id: branches
+    attributes:
+      label: 例外、数据来源、权限或存量数据影响
+  - type: markdown
+    attributes:
+      value: 讨论结论由规划PR落入project/tasks.json。Issue本身不授权修改实现范围。

@@ -1,0 +1,19 @@
+title = "Project Hub source secret scanning"
+[extend]
+useDefault = true
+
+[[rules]]
+id = "project-hub-personal-token"
+description = "Project Hub PAT must never be committed"
+regex = '''\bph_[A-Za-z0-9_-]{48}\b'''
+keywords = ["ph_"]
+
+[[allowlists]]
+description = "Exact development-only key rejected in production; not a real credential"
+regexTarget = "secret"
+regexes = ['''^local-development-only-change-before-deploy-72b0$''']
+
+[[allowlists]]
+description = "Exact synthetic password used only to create a foreign-user unit-test fixture"
+regexTarget = "secret"
+regexes = ['''^Other-Test-9182$''']

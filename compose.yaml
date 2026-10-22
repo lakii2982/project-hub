@@ -1,0 +1,69 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: pmo
+      POSTGRES_USER: pmo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请设置独立的数据库密码}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U pmo -d pmo]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  app:
+    build: .
+    environment: &pmo_environment
+      PMO_ENV: production
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?请设置至少40字符的随机密钥}
+      DJANGO_ALLOWED_HOSTS: ${PMO_DOMAIN:?请设置系统域名},127.0.0.1,localhost
+      DJANGO_CSRF_TRUSTED_ORIGINS: https://${PMO_DOMAIN}
+      POSTGRES_HOST: db
+      POSTGRES_DB: pmo
+      POSTGRES_USER: pmo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PMO_AI_ENABLED: ${PMO_AI_ENABLED:-0}
+      PMO_AI_BASE_URL: ${PMO_AI_BASE_URL:-}
+      PMO_AI_MODEL: ${PMO_AI_MODEL:-deepseek-v4.1-flash}
+      PMO_AI_API_KEY: ${PMO_AI_API_KEY:-}
+    volumes:
+      - evidence:/app/runtime
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; r=urllib.request.Request('http://127.0.0.1:8000/health/',headers={'X-Forwarded-Proto':'https'}); urllib.request.urlopen(r,timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+  worker:
+    build: .
+    command: [python, manage.py, process_events, --watch, --limit, '100']
+    environment: *pmo_environment
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+  proxy:
+    image: caddy:2-alpine
+    environment:
+      PMO_DOMAIN: ${PMO_DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+volumes:
+  database:
+  evidence:
+  caddy_data:
+  caddy_config:

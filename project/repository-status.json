@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/lakii2982/project-hub",
+  "visibility": "public",
+  "ssh_authentication": "verified",
+  "main_pushed": false,
+  "github_actions": "pending",
+  "branch_protection": "pending",
+  "security_reporting": "pending",
+  "release": "pending"
+}

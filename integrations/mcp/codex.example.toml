@@ -1,0 +1,4 @@
+[mcp_servers.project_hub]
+command = "/absolute/path/to/project-hub/.agent-venv/bin/python"
+args = ["/absolute/path/to/project-hub/integrations/mcp/server.py"]
+env_vars = ["PMO_BASE_URL", "PMO_AGENT_TOKEN"]

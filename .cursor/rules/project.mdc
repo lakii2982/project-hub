@@ -1,0 +1,5 @@
+---
+description: Project Hub canonical engineering rules
+alwaysApply: true
+---
+Read AGENTS.md, project/manifest.json, its active_handoff and the assigned task spec. Use the same requirements, tests and handoff files as every other coding agent. Never expand task scope in an implementation PR.
