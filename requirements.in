@@ -3,6 +3,6 @@ gunicorn>=23,<24
 psycopg[binary]>=3.2,<4
 whitenoise>=6.9,<7
 django-axes>=8,<9
-djangorestframework>=3.16,<3.17
+djangorestframework>=3.18.3,<3.19
 pluggy>=1.6,<2
 packaging>=26,<27
