@@ -10,9 +10,47 @@
     "checks_url": "https://github.com/lakii2982/project-hub/actions/runs/39789487592",
     "codeql_url": "https://github.com/lakii2982/project-hub/actions/runs/39789487620"
   },
-  "branch_protection": "prepared_8_checks_pending_github_sudo_authentication",
-  "security_reporting": "pending_github_settings_authentication",
-  "release": "not_published_pending_green_main_and_normal_policy_closure",
+  "branch_protection": {
+    "status": "verified_enabled",
+    "rule_id": 85205254,
+    "branch": "main",
+    "require_pr": true,
+    "required_approvals": 0,
+    "strict_up_to_date": true,
+    "require_conversation_resolution": true,
+    "require_linear_history": true,
+    "enforce_admins": true,
+    "allow_force_pushes": false,
+    "allow_deletions": false,
+    "required_checks": [
+      "Project governance",
+      "SQLite domain",
+      "PostgreSQL domain",
+      "MCP protocol",
+      "Public hygiene",
+      "Container smoke",
+      "CodeQL (python)",
+      "CodeQL (javascript-typescript)"
+    ],
+    "evidence": "Saved GitHub edit page and public branch API protected:true; PR #15 merged under protection"
+  },
+  "security_reporting": {
+    "status": "verified_enabled",
+    "url": "https://github.com/lakii2982/project-hub/security/advisories/new",
+    "evidence": "Advanced Security page shows Disable private vulnerability reporting"
+  },
+  "release": {
+    "tag": "v0.1.0",
+    "canonical_url": "https://github.com/lakii2982/project-hub/releases/tag/v0.1.0",
+    "verification_source": "GitHub release workflow and downloadable ZIP/SHA256; query live result because publication follows the tagged source snapshot"
+  },
   "initial_ci_url": "https://github.com/lakii2982/project-hub/actions/runs/39784003292",
-  "recovery_pr": "https://github.com/lakii2982/project-hub/pull/15"
+  "recovery_pr": "https://github.com/lakii2982/project-hub/pull/15",
+  "recovery_merged_commit": "a112b7898a7bedc0e85b80ffdb6494026b2e8f17",
+  "dependency_security": {
+    "dependency_graph": true,
+    "dependabot_alerts": true,
+    "secret_push_protection": true,
+    "paid_agentic_autofix": false
+  }
 }

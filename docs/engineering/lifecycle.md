@@ -30,7 +30,7 @@
 
 ### 1.5 CI
 
-PR 必须通过 required CI 再合并。CI 定义见 `.github/workflows/test.yml`（当前含 PostgreSQL 服务、主测试、迁移检查、verify_integrity、MCP 测试）。配置文件存在不等于某次 CI 已通过；每次合并以当次 PR 的实际运行记录为准。当前不承诺已启用远端分支保护，合并纪律靠流程约束：不经 PR 与 CI 不合并到 main。
+PR 必须通过 required CI 再合并。CI 定义见 `.github/workflows/test.yml`（当前含 PostgreSQL 服务、主测试、迁移检查、verify_integrity、MCP 测试）。配置文件存在不等于某次 CI 已通过；每次合并以当次 PR 的实际运行记录为准。main已启用包含管理员的远端保护：PR、8项required checks、strict最新BASE、讨论解决与线性历史；禁止强推和删除。独立Agent报告不等于第二个GitHub身份，单维护者required approvals为0。
 
 ### 1.6 PR 合并
 

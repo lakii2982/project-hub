@@ -6,7 +6,7 @@
       "title": "建立公开仓库与跨Agent持续迭代基线",
       "kind": "infra",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v0.1.0",
       "depends_on": [],
@@ -76,7 +76,7 @@
       "title": "SDK-1：冻结业务插件元数据与独立示例App",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -152,7 +152,7 @@
       "title": "建立可复验的Linux部署与容器集成验收",
       "kind": "infra",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -229,7 +229,7 @@
       "title": "冻结老板决策工作台的信息与交互契约",
       "kind": "research",
       "risk": "A",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -778,7 +778,7 @@
       "title": "规划维护：拆任务、澄清验收与更新迭代",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 3,
       "milestone": "rolling",
       "depends_on": [
@@ -810,7 +810,7 @@
       "title": "修复PostgreSQL任务更新与演练初始化兼容性",
       "kind": "fix",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v0.1.0",
       "depends_on": [],

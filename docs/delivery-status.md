@@ -1,14 +1,16 @@
 # 交付状态：0.1 工程验证版
 
-任务ID：PMO-ENGINEERING-01
-日期：2026-10-22
-口径：本文只陈述已核对的事实，依据是当前实代码与本机实际执行结果。`product-requirements.md` 与 `accounting-rules.md` 是目标设计，其中能力大多数尚未实现。插件化设计见 `plugin-architecture.md`。
+任务ID：PH-000
+日期：2026-10-23
+口径：本文只陈述已核对的事实，依据是当前实代码、本机验证与对应提交的GitHub CI实际执行结果。`product-requirements.md` 与 `accounting-rules.md` 是目标设计，其中能力大多数尚未实现。插件化设计见 `plugin-architecture.md`。
 
 ## 1. 结论
 
-当前是工程验证版：项目管理纵线（立项、任务、工时、费用、现金计划、审批、冲销、审计、导入导出、规则告警）、个人 Agent 接入通道（api/v1、个人令牌、MCP 适配器）与插件扩展骨架（pluggy 运行时、每公司启停、outbox 事件、3 个叶插件）真实落库并有自动化测试。完整产品仍缺管理收入、应收应付未清项、预收预付、退款、发票、正式合同与变更单、多币种、共享费用分摊、月度人工成本池、期初数据及通知中心。事件后台消费已具备。core 业务模块未全部插件化；PostgreSQL、Docker、生产恢复、真实模型调用、真实 Agent 客户端接入均未验证。本地 SQLite 的隔离恢复已通过。
+当前是工程验证版：项目管理纵线（立项、任务、工时、费用、现金计划、审批、冲销、审计、导入导出、规则告警）、个人 Agent 接入通道（api/v1、个人令牌、MCP 适配器）与插件扩展骨架（pluggy 运行时、每公司启停、outbox 事件、3 个叶插件）真实落库并有自动化测试。完整产品仍缺管理收入、应收应付未清项、预收预付、退款、发票、正式合同与变更单、多币种、共享费用分摊、月度人工成本池、期初数据及通知中心。事件后台消费已具备。core 业务模块未全部插件化；生产TLS/Caddy公网、多连接财务/锁账并发、PostgreSQL备份链中的非空附件恢复与报表/凭证浏览、真实模型调用、真实 Agent 客户端接入仍未验证。SQLite与PostgreSQL各128项回归、迁移与append-only触发器测试、PG seed与integrity、容器冒烟、数据库备份/隔离新PG库恢复与integrity均已通过。
 
-测试基线：Django测试命令发现并通过95项（4.687秒，SQLite，2026-10-22；test_domain 30、test_http 13、test_imports_ai 16、test_agent_api 17、test_plugins 13、test_workflow 2、test_backup_script 4）。其中备份脚本4项用mock Docker验证控制流。MCP适配器另有8项unittest通过；真实stdio握手列出7个工具通过。verify_integrity在演练库47条账本记录通过；最新outbox批次 expanded 20、processed 20、无失败。`manage.py check --deploy`以测试参数运行无警告，未连接PostgreSQL、未做真实TLS。详细执行记录见 [verification.md](verification.md)。
+工程治理：Apache-2.0公开仓库已有23个任务、统一入口、任务契约、交接记录与版本CI。真实主分支保护main已保存8个required checks，并启用strict、PR、linear、conversation与enforce admins；禁用force与delete，required approvals为0以适配单维护者。恢复PR [#15](https://github.com/lakii2982/project-hub/pull/15) 在8项检查全绿后squash合入main `a112b7898a7bedc0e85b80ffdb6494026b2e8f17`；[CI run 39789487592](https://github.com/lakii2982/project-hub/actions/runs/39789487592) 与CodeQL run 39789487620共8个job通过。CI通过是自动化证据，不等同于生产完成。
+
+测试基线：SQLite与PostgreSQL各128项回归通过；迁移与append-only触发器测试、PG seed与verify_integrity通过。MCP适配器8项unittest通过，真实stdio握手列出7个工具通过。历史演练库的47条账本记录是历史快照说明，不代表当前演练事实。此前outbox演练批次 expanded 20、processed 20、无失败（历史记录）。`manage.py check --deploy`以测试参数运行无警告，未做真实生产TLS。详细执行记录见 [verification.md](verification.md)。
 
 ## 2. 已实现能力与验证证据
 
@@ -22,7 +24,7 @@
 | 财务字段遮蔽（非财务角色金额置空） | core/views.py redact_card | 测试：test_http.test_project_views_hide_labor_entries_but_keep_total_cost |
 | 个人费率/依据与工时成本明细仅 owner/finance；PM 与审阅不可见 | core/views.py（settings、time、export） | 测试：test_http.test_pm_and_auditor_time_views_hide_personal_rate_details、test_time_export_columns_depend_on_finance_role、test_ledger_export_is_limited_to_owner_and_finance |
 | 提交人/业务本人不能审批本人记录 | core/services.py review | 测试：test_domain.test_employee_cannot_approve_own_submitted_time、test_employee_cannot_approve_time_submitted_by_an_agent |
-| 登录锁定（django-axes）、生产强制独立密钥与 PG | pmo/settings.py | 代码（生产分支未在 PG 环境验证） |
+| 登录锁定（django-axes）、生产强制独立密钥与 PG | pmo/settings.py | 代码；PG回归已通过，真实生产TLS未验证 |
 
 ### 2.2 项目生命周期与任务
 
@@ -47,9 +49,9 @@
 | 六类单据审批后入账；费用/收付分账；可抵扣税影响成本 | core/services.py review | 测试：test_domain.test_expense_and_payment_post_only_to_their_respective_books、test_recoverable_tax_switch_changes_expense_cost、test_duplicate_approval_does_not_post_twice |
 | 现金计划核销未结额检查、超结拒绝、锁内重读计划 | core/services.py | 测试：test_domain.test_partial_receipt_settles_plan_and_overallocation_is_rejected、test_submit_document_rereads_approved_plan_under_lock |
 | 冲销只追加负值行、恢复计划、幂等 | core/services.py reverse | 测试：test_domain.test_reversal_adds_negative_record_restores_plan_and_is_idempotent |
-| 账本与审计表 append-only 触发器 | core/migrations/0002_append_only.py | 测试（SQLite）：test_domain.test_append_only_audit_event_rejects_database_update、test_append_only_ledger_entry_rejects_database_delete；PG 触发器未实跑 |
+| 账本与审计表 append-only 触发器 | core/migrations/0002_append_only.py | 测试（SQLite与PostgreSQL）：test_domain.test_append_only_audit_event_rejects_database_update、test_append_only_ledger_entry_rejects_database_delete；PG触发器已在回归中实跑 |
 | 审计哈希链与整链校验 | core/services.py audit/verify_audit | 测试：test_domain.test_audit_chain_is_consistent_and_linked、test_audit_verification_detects_in_memory_payload_tampering |
-| verify_integrity 只读完整性检查 | core/management/commands/verify_integrity.py | 代码；主代理在演练库执行通过（47 条账本记录） |
+| verify_integrity 只读完整性检查 | core/management/commands/verify_integrity.py | 代码；PG seed后verify_integrity执行通过。历史演练库47条账本记录仅作历史快照说明 |
 | 锁账：截止日只前移、锁期拒绝补录、开放期冲销历史 | core/forms.py OrgForm、core/services.py | 测试：test_domain.test_locked_period_rejects_backdated_time、test_open_period_allows_reversal_of_locked_history |
 | 金额解析：两位小数、拒绝分以下小数与非数值 | core/services.py cents | 测试：test_domain.test_cents_preserves_two_decimal_precision_for_ten_thousand_yuan、test_cents_rejects_fractional_cent、test_cents_rejects_nan_negative_and_non_numeric_values |
 
@@ -121,9 +123,9 @@
 
 演练数据（4 项目）与正式公司初始化：core/management/commands/seed_demo.py、bootstrap.py；本地演练库已初始化。真实浏览器完成桌面与手机视图检查、插件启停及提醒变化检查，截图在 screenshots/。四个既有演练项目的开始日期已与演练任务对齐，并追加审计，未改账本值。
 
-部署件：Dockerfile、compose.yaml（db、app、worker、proxy 四服务）、Caddyfile、scripts/entrypoint.sh、scripts/backup.sh（pg_dump、附件打包、SHA256）。容器构建与生产恢复尚未实跑。本地 `backup_local` 与 `scripts/verify-local-backup.py` 已完成隔离恢复：47 条账目、1 个演练附件通过；覆盖拒绝、权限 0700/0600、篡改检出、空库与空附件包通过。没有覆盖活动数据库；备份与登录凭据不进入源码包。
+部署件：Dockerfile、compose.yaml（db、app、worker、proxy 四服务）、Caddyfile、scripts/entrypoint.sh、scripts/backup.sh（pg_dump、附件打包、SHA256）。容器冒烟实际构建db/app/worker，通过`check --deploy`、seed、HTTP健康、重启持久性；backup.sh完成pg_dump与SHA校验，并在隔离新PG库完成恢复与integrity。本地 `backup_local` 与 `scripts/verify-local-backup.py` 曾完成47条账目和1个演练附件的隔离SQLite恢复，属于历史快照证据；覆盖拒绝、权限 0700/0600、篡改检出、空库与空附件包曾通过。PostgreSQL备份链中的非空附件恢复与恢复后报表/凭证浏览未验证。没有覆盖活动数据库；备份与登录凭据不进入源码包。
 
-生产备份脚本的4项mock测试覆盖：正常备份、已有目录/符号链接拒绝、pg_dump失败时恢复写服务、信号退出时只恢复原运行服务；生成相对路径校验清单，失败保留.incomplete。它们证明脚本控制流，不能代替真实PostgreSQL恢复。
+生产备份脚本的4项mock测试覆盖：正常备份、已有目录/符号链接拒绝、pg_dump失败时恢复写服务、信号退出时只恢复原运行服务；生成相对路径校验清单，失败保留.incomplete。它们证明脚本控制流，不能替代生产级运行与PostgreSQL备份链中的非空附件恢复验证。
 
 ## 3. 现金计划的定位
 
@@ -155,13 +157,13 @@ CashPlan 是计划待收/待付，用于 13 周现金预测和实际收付款的
 
 ## 6. 未验证事项
 
-1. PostgreSQL：迁移、append-only 触发器、select_for_update 并发、锁账并发、金额一致性均未在 PG 运行（本机无 docker）。SQLite 通过不等于生产并发正确。
-2. 容器与备份：Dockerfile 未构建；compose.yaml 未启动过；backup.sh 未执行；恢复后打开凭证与重建报表未演示。
-3. 真实模型提取：服务器未配置模型凭据，AI_ENABLED 默认关；结构合规率与提示注入抵抗（P12）未经真实模型验证。
-4. 真实 Agent 客户端：MCP → HTTP → 业务服务已实时冒烟通过；尚未配置真实 WorkBuddy/Codex 实例联调，示例配置不是客户端验证。
-5. 生产安全分支：HSTS、Secure Cookie、SSL 重定向只在 PMO_ENV=production 生效，未在真实 TLS 环境验证。
+1. 生产TLS与Caddy：HSTS、Secure Cookie、SSL重定向与真实Caddy公网访问未在真实TLS环境验证。
+2. 并发：PG回归通过不代表生产并发正确；多连接财务/锁账并发与锁账串行化行为仍未验证。
+3. 备份恢复边界：数据库恢复与integrity已通过；PostgreSQL备份链中的非空附件恢复、恢复后报表与凭证浏览未验证。
+4. 真实模型提取：服务器未配置模型凭据，AI_ENABLED 默认关；结构合规率与提示注入抵抗（P12）未经真实模型验证。
+5. 真实 Agent 客户端：MCP → HTTP → 业务服务已实时冒烟通过；尚未配置真实 WorkBuddy/Codex 实例联调，示例配置不是客户端验证。
 6. 项目规模下的吞吐、P95 与可访问性专项检查尚未执行；页面渲染用例及浏览器检查不构成负载测试。
-7. 生产 PG 备份与恢复未验证；SQLite 本地恢复已通过。
+7. 性能与真实业务规模下的专业PMS功能完整性仍待专项验证。
 
 ## 7. 尚未实现的目标设计能力
 
@@ -196,7 +198,7 @@ CashPlan 是计划待收/待付，用于 13 周现金预测和实际收付款的
 | 发票（A11） | 无 | 无 | WO-07 待执行，依赖 WO-02 |
 | 期初与启用向导（A21、D07） | bootstrap CLI | 代码 | WO-08 待执行，依赖 WO-02/WO-03 |
 | 通知/后台任务 | 页面告警列表 | 代码 | WO-09 待执行 |
-| 生产 PG 并发/备份恢复（14、A22/A23） | append-only 迁移、公司级行锁、compose 与 backup.sh | SQLite 测试；PG 未验证 | WO-10 待执行，依赖 WO-02/WO-03/WO-05 |
+| 生产 PG 并发/备份恢复（14、A22/A23） | append-only 迁移、公司级行锁、compose 与 backup.sh | SQLite与PG回归、容器冒烟与数据库备份/隔离恢复通过；生产级并发/性能未验证 | WO-10 待执行，依赖 WO-02/WO-03/WO-05 |
 | 个人 Agent 接入（api/v1 加 PAT） | core/api.py、core/agent_auth.py | 17 项测试 | 已完成（原 WO-11） |
 | MCP stdio 客户端 | integrations/mcp/ | 8 项测试 | 已完成（原 WO-12） |
 | 插件 kernel、outbox 与叶插件 | core/plugin_runtime.py、pmo_plugins/ 三个叶插件 | 12 项测试 | WO-13 已完成（骨架；业务模块未全部插件化） |
@@ -205,6 +207,6 @@ CashPlan 是计划待收/待付，用于 13 周现金预测和实际收付款的
 
 ## 9. 部署与运维件现状
 
-Dockerfile（python:3.12-slim、非 root、collectstatic）、compose.yaml（postgres:17-alpine 的 db、app、worker、Caddy proxy 四服务，健康检查与命名卷）、Caddyfile、scripts/entrypoint.sh（migrate 加 gunicorn 2×2）、scripts/backup.sh（停应用、pg_dump、附件打包、SHA256 清单）已在仓库；源码与脚本内无凭据；compose 各敏感项为必填环境变量。生产配置缺 POSTGRES_HOST 或弱密钥时拒绝启动。容器构建、编排启动、备份恢复演练均未执行，归入 WO-10。
+Dockerfile（python:3.12-slim、非 root、collectstatic）、compose.yaml（postgres:17-alpine 的 db、app、worker、Caddy proxy 四服务，健康检查与命名卷）、Caddyfile、scripts/entrypoint.sh（migrate 加 gunicorn 2×2）、scripts/backup.sh（停应用、pg_dump、附件打包、SHA256 清单）已在仓库；源码与脚本内无凭据；compose 各敏感项为必填环境变量。生产配置缺 POSTGRES_HOST 或弱密钥时拒绝启动。db/app/worker容器构建、check --deploy、seed、HTTP健康、重启持久性与数据库备份/隔离恢复已冒烟通过；真实公网TLS与生产级并发/性能仍待验证。
 
 

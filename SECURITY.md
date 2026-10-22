@@ -2,7 +2,7 @@
 
 ## 报告漏洞
 
-不要通过公开 Issue 报告安全漏洞。优先使用仓库Security页的私下漏洞报告入口；若该入口尚未启用，先发不含漏洞细节的Issue请求维护者提供私下渠道，再报告，内容包含：影响版本、复现步骤、影响范围（资金、权限、数据）。确认后安排修复版本，并在 CHANGELOG 说明影响面。
+不要通过公开 Issue 报告安全漏洞。请通过 [私下漏洞报告入口](https://github.com/lakii2982/project-hub/security/advisories/new) 报告，内容包含：影响版本、复现步骤、影响范围（资金、权限、数据）。确认后安排修复版本，并在 CHANGELOG 说明影响面。
 
 当前没有独立的安全响应团队与公开安全邮箱；响应时序不作承诺，但涉及资金与权限的报告优先处理。
 
@@ -33,9 +33,9 @@
 
 以下是当前明确未验证的安全相关项（完整清单见 docs/delivery-status.md 第 6 节），验证完成前不要依赖其在生产成立：
 
-1. PostgreSQL 迁移、append-only 触发器与 select_for_update 并发未在 PG 实跑（本机无 Docker）。
-2. 容器构建、compose 编排与生产备份恢复未演练。
-3. 生产安全分支（HSTS、Secure Cookie、SSL 重定向）未在真实 TLS 环境验证。
+1. 生产安全分支与Caddy公网访问（HSTS、Secure Cookie、SSL重定向）未在真实TLS环境验证。
+2. 多连接财务与锁账并发、锁账串行化行为未在真实生产并发场景验证。
+3. PostgreSQL备份链中的非空附件恢复、恢复后报表与凭证浏览未验证。
 4. 真实模型调用与提示注入抵抗未验证，AI 提取默认关闭。
 5. 未接入真实 WorkBuddy/Codex 客户端联调。
 
