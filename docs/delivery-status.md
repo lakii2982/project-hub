@@ -232,4 +232,4 @@ Dockerfile（python:3.12-slim、非 root、collectstatic）、compose.yaml（pos
 
 代码已实现严格需求/缺陷payload、可信grant授权、私有SQLite与跨进程锁、固定gh客户端、Issue幂等创建/更新及unknown对账，另有两个白名单Issue模板。默认dry_run不联网；Issue不形成开工许可，没有worker调度、自动合并或发布。
 
-自动化证据：39项目标/治理测试和161项全量测试通过，覆盖授权伪造、撤销/过期、双进程一次创建、崩溃与丢失响应对账；两轮独立复核通过。未做真实GitHub写操作、gh登录、远端断网或模板浏览器渲染，mock不证明GitHub exactly-once。精确证据见project/reports/PH-101.json和project/handoffs/PH-101.md，远端required checks以实际PR为准。
+自动化证据：46项目标/治理测试和168项全量测试通过，覆盖授权伪造、撤销/过期、多进程一次创建与revision顺序、崩溃和丢失响应对账；三轮独立复核通过。未做真实GitHub写操作、gh登录、远端断网或模板浏览器渲染，mock不证明GitHub exactly-once。精确证据见project/reports/PH-101.json和project/handoffs/PH-101.md，远端required checks以实际PR为准。

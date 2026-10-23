@@ -12,7 +12,7 @@
       "command": "python -m unittest tests.test_delivery_github tests.test_projectctl tests.test_governance -v",
       "executed_command": "/Users/lakii2982/项目/pmo项目管理/.venv/bin/python -m unittest tests.test_delivery_github tests.test_projectctl tests.test_governance -v",
       "result": "pass",
-      "evidence": "39 tests passed in 2.825s on final code"
+      "evidence": "46 tests passed in 3.155s on final code"
     },
     {
       "command": "python manage.py check",
@@ -30,13 +30,13 @@
       "command": "python manage.py test tests --verbosity 1",
       "executed_command": "/Users/lakii2982/项目/pmo项目管理/.venv/bin/python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "161 tests passed in 7.405s after collectstatic; no warnings"
+      "evidence": "168 tests passed in 8.121s on final code; no warnings"
     },
     {
       "command": "python scripts/public_hygiene.py",
       "executed_command": "/Users/lakii2982/项目/pmo项目管理/.venv/bin/python scripts/public_hygiene.py",
       "result": "pass",
-      "evidence": "247 tracked files checked; errors=[]"
+      "evidence": "249 tracked files checked; errors=[]"
     },
     {
       "command": "git diff --check",
@@ -46,10 +46,10 @@
   ],
   "review": {
     "required": true,
-    "reviewer": "agent-11 / independent primary coder context",
+    "reviewer": "agent-11 and agent-12 / independent primary coder contexts",
     "status": "pass",
     "findings": [],
-    "evidence": "Initial independent spec/quality review found three Important issues: confirmed replay bypassed grant binding, pending create recovery mishandled a valid response, and authorization counterexamples shared rejected state. Fix round 1 addressed all three; scoped re-review PASS with three focused tests. Main-agent full Django validation then exposed spawn recursion through the unguarded manage.py; fix round 2 changed only the three test contexts to POSIX fork, preserving real process/concurrency/crash assertions. Scoped re-review PASS; main-agent fresh 161-test run passed."
+    "evidence": "Initial spec/quality review found confirmed-replay authorization, pending recovery and polluted authorization counterexamples; fix round 1 scoped re-review PASS. Main-agent Django validation exposed spawn recursion; fix round 2 preserved real POSIX process coverage and passed re-review. Final whole-branch reviewer agent-12 found six Important issues covering HOME-split stores, unknown principal checks, recovery rollback, deterministic 404/422 rejection, unbounded markers and revision concurrency evidence. One concentrated fix wave added permanent regressions; scoped re-review marked all six ADDRESSED with no new Critical/Important and Ready to merge=Yes. Main-agent fresh 46-test and 168-test runs passed on final code."
   },
   "unverified": [
     "No real GitHub issue create/update, gh authentication, remote pagination or network failure was exercised; FakeClient and subprocess mocks do not prove GitHub exactly-once.",
