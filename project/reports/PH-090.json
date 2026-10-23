@@ -1,0 +1,47 @@
+{
+  "task_id": "PH-090",
+  "summary": "冻结GPT唯一主控、GitHub需求/缺陷、本地五执行器的AI原生研发架构；登记六个实现薄片与独立后续规划槽，修正旧协作快照。此PR仅规划，不声称执行平台已实现。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "executed_command": ".venv/bin/python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "30 tasks validated; final state rechecked before commit"
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "executed_command": ".venv/bin/python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "19 tests passed in 2.443s"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "No whitespace errors"
+    },
+    {
+      "command": "python scripts/public_hygiene.py",
+      "executed_command": ".venv/bin/python scripts/public_hygiene.py",
+      "result": "pass",
+      "evidence": "213 currently tracked files checked, no errors; CI rechecks committed new files"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Poincare / reviewer (gpt-6.1-sol), independent context",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Agent 01a1695b-f8c5-76a0-b669-87b361d90053 initially rejected PH024 authorization provenance and concurrent idempotency. Added exclusive local authorization store with bound principal/repo/request/action/revision/digest and revocation; persistent per-request operation record, process lock, unknown-state reconciliation without automatic create retry. Independent rereview: PASS, no blockers. This is contract review only."
+  },
+  "unverified": [
+    "No live worker inference/file editing/cancel/resume/parallel pipeline run; Claude Code and ZCode command entries not found in current PATH.",
+    "PH023/025/026/027 retain proposed status pending dependency evidence and separately frozen implementation contracts.",
+    "Remote CI/merge status must be queried on the actual PR/commit; planning report does not prove later CI success.",
+    "No production deployment or autonomous background service installed; no global tool settings changed."
+  ],
+  "deviations": [
+    "PH090 BASE whitelist excludes docs/delivery-status.md and docs/verification.md; planning-only status is recorded in the new architecture document and this handoff. Future implementation tasks explicitly include both delivery files."
+  ],
+  "request_issue": "https://github.com/lakii2982/project-hub/issues/19",
+  "scope": "planning_only"
+}

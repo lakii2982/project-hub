@@ -53,13 +53,9 @@
 - 合并到 main 必须经 PR 且当次 required CI 实际通过；main远端保护已启用且包含管理员；8项required checks、strict最新BASE、讨论解决与线性历史必须满足，不能依靠流程文字代替实际设置。
 - 主代理对整合与验收负最终责任：未收到执行结果、未确认工具执行或未通过验收，不得报为完成；高后果改动由主代理亲自复核。
 
-## 6. 真实现状（2026-10-22）
+## 6. 真实现状与研发主控
 
-以下事实供所有会话对齐，细节以 delivery-status.md 为准：
-
-- 本地验证：主测试 95 项与 MCP 适配器 8 项在本机通过（SQLite）；真实 stdio 握手列出 7 个工具通过。CI 定义含 PostgreSQL 服务，但本机未跑过容器。
-- 未验证：Docker 构建与 compose 编排、PostgreSQL 迁移/触发器/并发、生产备份恢复、真实模型调用（AI 默认关闭）、真实 WorkBuddy/Codex 客户端联调。
-- project元数据和CLI已建立，本地已初始化Git，公开仓库为 https://github.com/lakii2982/project-hub 。远端推送、检查、标签和保护状态在project/repository-status.json记录，使用时以实际查询为准。
+产品能力与已验证范围统一见 [delivery-status.md](../delivery-status.md)，每次核对当前 Git/CI，不继续维护本节旧的 95 项测试快照。GPT 主控、GitHub 需求缺陷与本地执行器的新增目标见 [ai-native-delivery.md](ai-native-delivery.md)。该架构用于研发，独立于产品个人 Agent API；规划不构成已实现能力。
 
 ## 7. 治理门禁的信任边界
 
