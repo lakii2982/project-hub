@@ -291,7 +291,7 @@ class GithubBridgeTests(unittest.TestCase):
                 PrivateStore(self.root / 'private')
 
     def test_multiprocess_simultaneous_duplicate_only_one_create(self):
-        ctx = multiprocessing.get_context('spawn')
+        ctx = multiprocessing.get_context('fork')
         event = ctx.Event()
         gid = self.grant()
         children = [ctx.Process(target=child_send, args=(str(self.root), payload(), gid, 'slow', event)) for _ in range(3)]
@@ -305,7 +305,7 @@ class GithubBridgeTests(unittest.TestCase):
         self.assertEqual((self.root / 'writes').read_text().splitlines(), ['0'])
 
     def test_pending_create_recovers_before_first_dispatch(self):
-        ctx = multiprocessing.get_context('spawn')
+        ctx = multiprocessing.get_context('fork')
         gid = self.grant()
         child = ctx.Process(target=child_crash_before_dispatch, args=(str(self.root), payload(), gid))
         child.start()
@@ -320,7 +320,7 @@ class GithubBridgeTests(unittest.TestCase):
         self.assertEqual((self.root / 'writes').read_text().splitlines(), ['0'])
 
     def test_real_process_crash_before_and_after_remote_effect(self):
-        ctx = multiprocessing.get_context('spawn')
+        ctx = multiprocessing.get_context('fork')
         for mode, expected in [('crash_before', 'unknown'), ('crash_after', 'confirmed')]:
             value = dict(payload(), request_id=str(uuid4()))
             gid = self.grant(value)
