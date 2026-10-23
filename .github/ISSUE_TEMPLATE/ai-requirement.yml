@@ -1,0 +1,47 @@
+name: AI 整理需求
+description: 提供可脱敏公开的业务摘要，由受控桥接层生成结构化记录
+title: "[AI Requirement] "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: 仅填写白名单业务字段和演练/匿名数据。Issue 不构成开工、审批或发布授权；请勿填写凭据、真实客户或工资信息。
+  - type: textarea
+    id: summary
+    attributes:
+      label: 业务摘要
+      description: 说明目标用户、场景、问题和预期结果。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收条件
+      description: 每行一条可验证的验收条件。
+    validations:
+      required: true
+  - type: textarea
+    id: business_decisions
+    attributes:
+      label: 已确认的业务决策
+      description: 每行一条；没有可留空。
+  - type: input
+    id: conversation_ref
+    attributes:
+      label: 非私密对话引用
+      description: 仅填标识符，不粘贴对话正文或私密链接。
+    validations:
+      required: true
+  - type: input
+    id: task_id
+    attributes:
+      label: 关联 PH 任务
+      description: 例如 PH-101；任务契约仍以仓库 BASE 为准。
+  - type: input
+    id: pr
+    attributes:
+      label: 关联 PR URL（若有）
+  - type: input
+    id: release
+    attributes:
+      label: 关联 Release URL（若有）
