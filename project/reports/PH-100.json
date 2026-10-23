@@ -1,0 +1,74 @@
+{
+  "task_id": "PH-100",
+  "summary": "接管Codex在当前分支留下的未提交实现，完成六种身份的封闭注册、协议类型和五种worker的只读doctor。仅执行固定--version；配置、超时、输出限额、私有环境和脱敏均有反例。补充CLI合法配置、坏JSON、超大配置及单横线参数串测试。未实现任务执行或调度。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "executed_command": ".venv/bin/python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "32 tasks validated"
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_agents tests.test_projectctl tests.test_governance -v",
+      "executed_command": ".venv/bin/python -m unittest tests.test_delivery_agents tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "32 tests passed in 3.423s after adding CLI coverage"
+    },
+    {
+      "command": "python manage.py check",
+      "executed_command": ".venv/bin/python manage.py check",
+      "result": "pass",
+      "evidence": "System check identified no issues (0 silenced)"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "executed_command": ".venv/bin/python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "No changes detected"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "executed_command": ".venv/bin/python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "141 tests passed in 7.290s using an isolated test database"
+    },
+    {
+      "command": "python -m tooling.ai_delivery.doctor",
+      "executed_command": ".venv/bin/python -m tooling.ai_delivery.doctor",
+      "result": "pass",
+      "evidence": "schema_version=1; codex 0.164.0, kimi 2.3.1, claude 2.1.309, opencode 2.0.30 and dsh 0.2.1-rc.2 probe_verified; zcode missing from PATH; every execution capability remains unverified"
+    },
+    {
+      "command": "python scripts/public_hygiene.py",
+      "executed_command": ".venv/bin/python scripts/public_hygiene.py",
+      "result": "pass",
+      "evidence": "236 tracked and staged files checked; errors=[]"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "No whitespace errors before or after staging the 11 task files"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "agent-0 / independent explore context",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Independent review returned PASS with no blockers after reading the implementation, contracts and tests and rerunning the targeted checks and doctor. Its medium CLI coverage finding was addressed with three main() tests; single-dash argument-like paths were pinned as probe-time config_required without PATH fallback. A final rereview of code, tests, reports, handoff, docs and allowed paths also returned PASS. Low-severity safe-failure and platform boundaries remain documented in the handoff."
+  },
+  "unverified": [
+    "Version probes do not verify authentication, inference, noninteractive task execution, structured output, cancellation or resume; all such capabilities remain unverified.",
+    "ZCode was missing from PATH in this run; this is not a claim that it is uninstalled or unsupported.",
+    "No browser change, production deployment, Linux/Windows probe, real worker task or existing runtime inspection was performed.",
+    "Remote required checks and merge status must be verified on the actual PR and commit; local results do not prove remote CI."
+  ],
+  "deviations": [
+    "Took over Codex's untracked tooling/ and tests/test_delivery_agents.py on feat/PH-100-agent-doctor at base ab434ea; no stash, reset, cleanup or branch rewrite was used.",
+    "The host has no python command, so acceptance commands used .venv/bin/python.",
+    "Directory, non-executable and argument-like explicit paths produce config_required without PATH fallback rather than raising a CLI configuration exception; consumers must inspect status.",
+    "project/manifest.json was not changed because it is outside the PH-100 allowed paths."
+  ],
+  "request_issue": "https://github.com/lakii2982/project-hub/issues/20",
+  "scope": "read_only_agent_protocol_and_doctor"
+}

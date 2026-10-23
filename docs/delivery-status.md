@@ -221,3 +221,9 @@ Dockerfile（python:3.12-slim、非 root、collectstatic）、compose.yaml（pos
 用户要求只与GPT对话，由GitHub承载需求/缺陷/PR/交付，本地Kimi Code、Claude Code、OpenCode、ZCode与DeepSeek Harness作为执行器池。架构和精确边界见docs/engineering/ai-native-delivery.md；新增PH-100至PH-105六个薄片及PH-092后续规划槽，保留既有PH-022项目详情需求。
 
 本轮交付为规划契约、GitHub父需求#19和六个子任务；没有实现常驻调度器、真实并行执行或生产发布。只读定位到Kimi Code 2.2.0、OpenCode v2.0.30、DSH 0.2.1-rc.2，当前PATH未找到Claude/ZCode入口；版本/帮助证据不等于真实任务通过。自动化与独立审阅记录见project/reports/PH-091.json，远端CI与合并状态查询实际PR。
+
+## PH-100：六种身份协议与只读doctor（2026-10-24）
+
+代码已实现封闭注册表、协议类型和五种worker只读doctor。配置仅接受已知ID的绝对executable路径；探针只运行固定`--version`，具有5秒超时、每流64KiB上限、私有临时环境、进程组清理与输出脱敏。没有任务执行、队列、隔离调度或模型调用。
+
+本机自动化：PH-100/治理32项测试及全量141项测试通过，Django检查与迁移漂移检查通过。实际doctor中Codex 0.164.0、Kimi 2.3.1、Claude 2.1.309、OpenCode 2.0.30、DSH 0.2.1-rc.2为`probe_verified`，ZCode在PATH中为`missing`；版本不认证登录或执行，所有noninteractive/structured_output/resume/cancel能力仍为`unverified`。独立复核、精确证据及边界见project/reports/PH-100.json和project/handoffs/PH-100.md。未做浏览器、生产部署、非macOS或真实worker任务验证；远端CI以实际PR为准。
