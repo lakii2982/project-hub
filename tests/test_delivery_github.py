@@ -84,6 +84,14 @@ def child_send(root, value, grant_id, mode, start=None):
     bridge.submit(value, grant_id=grant_id, dry_run=False)
 
 
+def child_crash_before_dispatch(root, value, grant_id):
+    store = PrivateStore(Path(root) / 'private')
+    authorizer = Authorizer(store)
+    authorizer.authorize = lambda *args: os._exit(73)
+    bridge = Bridge(store, authorizer, FakeClient(root), {REPO})
+    bridge.submit(value, grant_id=grant_id, dry_run=False)
+
+
 class GithubBridgeTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='ph101-demo-')
@@ -169,13 +177,25 @@ class GithubBridgeTests(unittest.TestCase):
                    dict(payload_digest='0' * 64), dict(actions=('issue_update',)),
                    dict(expires_at=datetime.now(timezone.utc) - timedelta(seconds=1))]
         for changeset in changes:
+            value = dict(payload(), request_id=str(uuid4()))
+            grant_id = self.grant(value, **changeset)
             with self.subTest(changes=changeset), self.assertRaises(Refused):
-                self.send(grant_id=self.grant(**changeset))
-        grant_id = self.grant()
+                self.send(value, grant_id=grant_id)
+        value = dict(payload(), request_id=str(uuid4()))
+        grant_id = self.grant(value)
         self.controller.revoke(grant_id)
         with self.assertRaises(Refused):
-            self.send(grant_id=grant_id)
+            self.send(value, grant_id=grant_id)
         self.assertEqual(self.client.writes, 0)
+
+    def test_confirmed_replay_requires_existing_bound_grant(self):
+        value = payload()
+        self.send(value)
+        wrong_request = dict(payload(), request_id=str(uuid4()))
+        for grant_id in (str(uuid4()), self.grant(wrong_request)):
+            with self.subTest(grant_id=grant_id), self.assertRaises(Refused):
+                self.send(value, grant_id=grant_id)
+        self.assertEqual(self.client.writes, 1)
 
     def test_grant_and_principal_rechecked_immediately_before_write(self):
         original = self.client.principal
@@ -282,6 +302,21 @@ class GithubBridgeTests(unittest.TestCase):
             child.join(15)
             self.assertFalse(child.is_alive())
             self.assertEqual(child.exitcode, 0)
+        self.assertEqual((self.root / 'writes').read_text().splitlines(), ['0'])
+
+    def test_pending_create_recovers_before_first_dispatch(self):
+        ctx = multiprocessing.get_context('spawn')
+        gid = self.grant()
+        child = ctx.Process(target=child_crash_before_dispatch, args=(str(self.root), payload(), gid))
+        child.start()
+        child.join(15)
+        self.assertEqual(child.exitcode, 73)
+        with sqlite3.connect(self.root / 'private' / 'state.sqlite3') as conn:
+            self.assertEqual(conn.execute('SELECT state FROM operations').fetchone()[0], 'pending')
+        self.assertFalse((self.root / 'writes').exists())
+        bridge = Bridge(PrivateStore(self.root / 'private'), Authorizer(self.store), self.client, {REPO})
+        self.assertEqual(bridge.submit(payload(), grant_id=gid, dry_run=False)['state'], 'confirmed')
+        self.assertEqual(bridge.submit(payload(), grant_id=gid, dry_run=False)['state'], 'confirmed')
         self.assertEqual((self.root / 'writes').read_text().splitlines(), ['0'])
 
     def test_real_process_crash_before_and_after_remote_effect(self):

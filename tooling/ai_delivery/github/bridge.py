@@ -125,6 +125,7 @@ class Bridge:
                     if operation['state'] == 'rejected':
                         raise Refused('operation was rejected')
                     if operation['state'] == 'confirmed':
+                        self._authorize_binding(grant_id, data, action, digest)
                         if request['confirmed_revision'] != data['revision']:
                             raise Conflict('stale revision')
                         return self._result(operation)
@@ -190,7 +191,8 @@ class Bridge:
                                               data['title'], render_issue(payload))
                 if not isinstance(row, dict) or type(row.get('number')) is not int or row['number'] < 1:
                     raise RemoteUnknown('GitHub write response invalid')
-                if request is not None and row['number'] != request['issue_number']:
+                if (request is not None and request['issue_number'] is not None
+                        and row['number'] != request['issue_number']):
                     raise RemoteUnknown('GitHub write response issue mismatch')
             except AuthenticationError:
                 self._reject(data)
