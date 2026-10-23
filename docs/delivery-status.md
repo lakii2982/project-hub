@@ -227,3 +227,9 @@ Dockerfile（python:3.12-slim、非 root、collectstatic）、compose.yaml（pos
 代码已实现封闭注册表、协议类型和五种worker只读doctor。配置仅接受已知ID的绝对executable路径；探针只运行固定`--version`，具有5秒超时、每流64KiB上限、私有临时环境、进程组清理与输出脱敏。没有任务执行、队列、隔离调度或模型调用。
 
 本机自动化：PH-100/治理32项测试及全量141项测试通过，Django检查与迁移漂移检查通过。实际doctor中Codex 0.164.0、Kimi 2.3.1、Claude 2.1.309、OpenCode 2.0.30、DSH 0.2.1-rc.2为`probe_verified`，ZCode在PATH中为`missing`；版本不认证登录或执行，所有noninteractive/structured_output/resume/cancel能力仍为`unverified`。独立复核、精确证据及边界见project/reports/PH-100.json和project/handoffs/PH-100.md。未做浏览器、生产部署、非macOS或真实worker任务验证；远端CI以实际PR为准。
+
+## PH-101：GitHub需求缺陷桥（2026-10-24）
+
+代码已实现严格需求/缺陷payload、可信grant授权、私有SQLite与跨进程锁、固定gh客户端、Issue幂等创建/更新及unknown对账，另有两个白名单Issue模板。默认dry_run不联网；Issue不形成开工许可，没有worker调度、自动合并或发布。
+
+自动化证据：39项目标/治理测试和161项全量测试通过，覆盖授权伪造、撤销/过期、双进程一次创建、崩溃与丢失响应对账；两轮独立复核通过。未做真实GitHub写操作、gh登录、远端断网或模板浏览器渲染，mock不证明GitHub exactly-once。精确证据见project/reports/PH-101.json和project/handoffs/PH-101.md，远端required checks以实际PR为准。

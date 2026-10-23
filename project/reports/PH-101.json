@@ -1,0 +1,68 @@
+{
+  "task_id": "PH-101",
+  "summary": "接管既有未提交GitHub桥薄片，补齐严格业务载荷、可信grant授权、固定gh客户端、私有SQLite、跨进程幂等状态机、unknown对账和两个Issue模板。默认dry_run不联网；实现不启动worker、不自动开工或合并。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "executed_command": "/Users/lakii2982/项目/pmo项目管理/.venv/bin/python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "32 tasks validated"
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_github tests.test_projectctl tests.test_governance -v",
+      "executed_command": "/Users/lakii2982/项目/pmo项目管理/.venv/bin/python -m unittest tests.test_delivery_github tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "39 tests passed in 2.825s on final code"
+    },
+    {
+      "command": "python manage.py check",
+      "executed_command": "/Users/lakii2982/项目/pmo项目管理/.venv/bin/python manage.py check",
+      "result": "pass",
+      "evidence": "System check identified no issues (0 silenced)"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "executed_command": "/Users/lakii2982/项目/pmo项目管理/.venv/bin/python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "No changes detected"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "executed_command": "/Users/lakii2982/项目/pmo项目管理/.venv/bin/python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "161 tests passed in 7.405s after collectstatic; no warnings"
+    },
+    {
+      "command": "python scripts/public_hygiene.py",
+      "executed_command": "/Users/lakii2982/项目/pmo项目管理/.venv/bin/python scripts/public_hygiene.py",
+      "result": "pass",
+      "evidence": "247 tracked files checked; errors=[]"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "No whitespace errors; final staged diff checked again before delivery commit"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "agent-11 / independent primary coder context",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Initial independent spec/quality review found three Important issues: confirmed replay bypassed grant binding, pending create recovery mishandled a valid response, and authorization counterexamples shared rejected state. Fix round 1 addressed all three; scoped re-review PASS with three focused tests. Main-agent full Django validation then exposed spawn recursion through the unguarded manage.py; fix round 2 changed only the three test contexts to POSIX fork, preserving real process/concurrency/crash assertions. Scoped re-review PASS; main-agent fresh 161-test run passed."
+  },
+  "unverified": [
+    "No real GitHub issue create/update, gh authentication, remote pagination or network failure was exercised; FakeClient and subprocess mocks do not prove GitHub exactly-once.",
+    "Issue templates were not rendered or submitted through GitHub's browser UI.",
+    "No real controller/worker, production deployment, release, automatic ready transition or automatic merge was implemented or verified.",
+    "POSIX process and permission behavior was tested on macOS; Windows is unsupported and Linux behavior requires CI."
+  ],
+  "deviations": [
+    "Took over pre-existing untracked files in /private/tmp/project-hub-ph101-01a16979 at BASE ab434ea; preserved them without stash/reset/clean and merged origin/main 535723c before final verification.",
+    "The existing manage.py has no __main__ guard and is outside PH-101 scope; process tests use POSIX fork so Django's runner does not recursively import it. Real independent processes and all crash assertions remain.",
+    "project/manifest.json was not changed because it is outside the PH-101 allowed paths.",
+    "Six Dependabot PRs were separately closed under the user's PR-disposition instruction; upgrades are tracked in Issue #28 and are not part of this task diff or claimed as completed."
+  ],
+  "request_issue": "https://github.com/lakii2982/project-hub/issues/21",
+  "scope": "github_issue_bridge_only"
+}
