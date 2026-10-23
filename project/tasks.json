@@ -796,7 +796,9 @@
         "docs/engineering/*",
         "project/reports/PH-090.json",
         "project/handoffs/PH-090.md",
-        "project/tasks.json"
+        "project/tasks.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

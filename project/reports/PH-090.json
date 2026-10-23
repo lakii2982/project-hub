@@ -1,0 +1,29 @@
+{
+  "task_id": "PH-090",
+  "summary": "仅预先授权后续规划PR同步delivery-status和verification；保持23项任务及PH090 ready。本PR不使用扩展后的路径，具体新需求另开规划PR。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "23 tasks validated for final narrow planning-scope diff."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "19 baseline governance tests passed; no implementation changes."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Popper / independent Codex reviewer / 01a167aa-bd9a-76f0-bb9a-90375ab4bda3",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Re-reviewed final narrow diff: only PH090 scope and stage report; 23 tasks, PH090 ready, no use of newly authorized paths."
+  },
+  "unverified": [
+    "本PR仅扩大后续规划的文档同步范围；新需求尚未登记/实施。"
+  ],
+  "deviations": [
+    "自动PR审阅发现原PH090白名单未包含强制交付状态同步位置；先单独修订BASE契约，不在同一PR使用新增范围。"
+  ]
+}
