@@ -215,3 +215,9 @@ Dockerfile（python:3.12-slim、非 root、collectstatic）、compose.yaml（pos
 ## PH-090：项目详情改版规划（2026-10-23）
 
 用户确认了项目详情横向页签与成本预算余额燃尽图的口径，具体契约见project/specs/PH-022.md。PH-022已登记为ready，尚未实现；计划使用独立工作区中的本机DSH执行，Codex负责共享接线、独立审阅、实际CI与合并。PH-091接续后续规划。代码、浏览器及本机DSH业务执行结果需由PH-022另行验证。
+
+## PH-091：GPT主控与GitHub原生研发规划（2026-10-23）
+
+用户要求只与GPT对话，由GitHub承载需求/缺陷/PR/交付，本地Kimi Code、Claude Code、OpenCode、ZCode与DeepSeek Harness作为执行器池。架构和精确边界见docs/engineering/ai-native-delivery.md；新增PH-100至PH-105六个薄片及PH-092后续规划槽，保留既有PH-022项目详情需求。
+
+本轮交付为规划契约、GitHub父需求#19和六个子任务；没有实现常驻调度器、真实并行执行或生产发布。只读定位到Kimi Code 2.2.0、OpenCode v2.0.30、DSH 0.2.1-rc.2，当前PATH未找到Claude/ZCode入口；版本/帮助证据不等于真实任务通过。自动化与独立审阅记录见project/reports/PH-091.json，远端CI与合并状态查询实际PR。
