@@ -1,16 +1,16 @@
 {
   "task_id": "PH-090",
-  "summary": "仅预先授权后续规划PR同步delivery-status和verification；保持23项任务及PH090 ready。本PR不使用扩展后的路径，具体新需求另开规划PR。",
+  "summary": "冻结项目详情横向页签与成本预算余额燃尽图；用户确认业务口径，明确本机DSH执行与Codex集成边界。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "23 tasks validated for final narrow planning-scope diff."
+      "evidence": "25 tasks validated."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
       "result": "pass",
-      "evidence": "19 baseline governance tests passed; no implementation changes."
+      "evidence": "19 tests passed in 2.654s on final planning workspace."
     }
   ],
   "review": {
@@ -18,12 +18,12 @@
     "reviewer": "Popper / independent Codex reviewer / 01a167aa-bd9a-76f0-bb9a-90375ab4bda3",
     "status": "pass",
     "findings": [],
-    "evidence": "Re-reviewed final narrow diff: only PH090 scope and stage report; 23 tasks, PH090 ready, no use of newly authorized paths."
+    "evidence": "Final independent review against BASE 2a625a8: scope, ready dependencies, permissions and business formula pass; no product implementation claimed."
   },
   "unverified": [
-    "本PR仅扩大后续规划的文档同步范围；新需求尚未登记/实施。"
+    "PH-022业务尚未实现；DSH真实调用、浏览器及实现PR的CI尚未执行。"
   ],
   "deviations": [
-    "自动PR审阅发现原PH090白名单未包含强制交付状态同步位置；先单独修订BASE契约，不在同一PR使用新增范围。"
+    "先由独立PR修订规划的文档同步范围，再从合入后的BASE使用新增范围；本PR不实现业务。"
   ]
 }
