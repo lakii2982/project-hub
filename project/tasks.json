@@ -780,7 +780,7 @@
       "title": "规划维护：拆任务、澄清验收与更新迭代",
       "kind": "docs",
       "risk": "S",
-      "status": "done",
+      "status": "ready",
       "priority": 3,
       "milestone": "rolling",
       "depends_on": [
@@ -796,16 +796,18 @@
         "docs/engineering/*",
         "project/reports/PH-090.json",
         "project/handoffs/PH-090.md",
-        "project/tasks.json"
+        "project/tasks.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/8",
-      "owner": "Codex integration lead",
+      "owner": null,
       "blockers": [],
-      "handoff": "project/handoffs/PH-090.md"
+      "handoff": null
     },
     {
       "id": "PH-021",
@@ -839,77 +841,6 @@
       "owner": "integration-agent",
       "blockers": [],
       "handoff": "project/handoffs/PH-021.md"
-    },
-    {
-      "id": "PH-022",
-      "title": "项目详情横向页签与概览成本燃尽图",
-      "kind": "feature",
-      "risk": "S",
-      "status": "ready",
-      "priority": 1,
-      "milestone": "v0.2.0",
-      "depends_on": [
-        "PH-000"
-      ],
-      "spec": "project/specs/PH-022.md",
-      "allowed_paths": [
-        "templates/project_detail.html",
-        "templates/partials/project_cost_burndown.html",
-        "static/app.css",
-        "static/app.js",
-        "core/reporting.py",
-        "core/views.py",
-        "tests/test_project_detail.py",
-        "docs/delivery-status.md",
-        "docs/verification.md",
-        "project/tasks.json",
-        "project/reports/PH-022.json",
-        "project/handoffs/PH-022.md",
-        "project/reviews/PH-022-review.md",
-        "project/reviews/PH-022-dispatch.md"
-      ],
-      "acceptance": [
-        "python scripts/projectctl.py check",
-        "python manage.py check",
-        "python manage.py makemigrations --check --dry-run",
-        "python manage.py test tests --verbosity 1",
-        "python manage.py verify_integrity --json"
-      ],
-      "github_issue": null,
-      "owner": "DSH / opencode-go / deepseek-v4.1-flash",
-      "blockers": [],
-      "handoff": null
-    },
-    {
-      "id": "PH-091",
-      "title": "后续需求规划维护",
-      "kind": "docs",
-      "risk": "S",
-      "status": "ready",
-      "priority": 3,
-      "milestone": "rolling",
-      "depends_on": [
-        "PH-090"
-      ],
-      "spec": "project/specs/PH-091.md",
-      "allowed_paths": [
-        "project/tasks.json",
-        "project/manifest.json",
-        "project/specs/*",
-        "docs/adr/*",
-        "ROADMAP.md",
-        "docs/engineering/*",
-        "project/reports/PH-091.json",
-        "project/handoffs/PH-091.md"
-      ],
-      "acceptance": [
-        "python scripts/projectctl.py check",
-        "python -m unittest tests.test_projectctl tests.test_governance -v"
-      ],
-      "github_issue": null,
-      "owner": null,
-      "blockers": [],
-      "handoff": null
     }
   ]
 }
