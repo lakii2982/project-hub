@@ -8,7 +8,7 @@
 
 当前是工程验证版：项目管理纵线（立项、任务、工时、费用、现金计划、审批、冲销、审计、导入导出、规则告警）、个人 Agent 接入通道（api/v1、个人令牌、MCP 适配器）与插件扩展骨架（pluggy 运行时、每公司启停、outbox 事件、3 个叶插件）真实落库并有自动化测试。完整产品仍缺管理收入、应收应付未清项、预收预付、退款、发票、正式合同与变更单、多币种、共享费用分摊、月度人工成本池、期初数据及通知中心。事件后台消费已具备。core 业务模块未全部插件化；生产TLS/Caddy公网、多连接财务/锁账并发、PostgreSQL备份链中的非空附件恢复与报表/凭证浏览、真实模型调用、真实 Agent 客户端接入仍未验证。SQLite与PostgreSQL各128项回归、迁移与append-only触发器测试、PG seed与integrity、容器冒烟、数据库备份/隔离新PG库恢复与integrity均已通过。
 
-工程治理：Apache-2.0公开仓库已有23个任务、统一入口、任务契约、交接记录与版本CI。真实主分支保护main已保存8个required checks，并启用strict、PR、linear、conversation与enforce admins；禁用force与delete，required approvals为0以适配单维护者。恢复PR [#15](https://github.com/lakii2982/project-hub/pull/15) 在8项检查全绿后squash合入main `a112b7898a7bedc0e85b80ffdb6494026b2e8f17`；[CI run 39789487592](https://github.com/lakii2982/project-hub/actions/runs/39789487592) 与CodeQL run 39789487620共8个job通过。CI通过是自动化证据，不等同于生产完成。
+工程治理：Apache-2.0公开仓库已有版本化任务清单（以project/tasks.json为准）、统一入口、任务契约、交接记录与版本CI。真实主分支保护main已保存8个required checks，并启用strict、PR、linear、conversation与enforce admins；禁用force与delete，required approvals为0以适配单维护者。恢复PR [#15](https://github.com/lakii2982/project-hub/pull/15) 在8项检查全绿后squash合入main `a112b7898a7bedc0e85b80ffdb6494026b2e8f17`；[CI run 39789487592](https://github.com/lakii2982/project-hub/actions/runs/39789487592) 与CodeQL run 39789487620共8个job通过。CI通过是自动化证据，不等同于生产完成。
 
 测试基线：SQLite与PostgreSQL各128项回归通过；迁移与append-only触发器测试、PG seed与verify_integrity通过。MCP适配器8项unittest通过，真实stdio握手列出7个工具通过。历史演练库的47条账本记录是历史快照说明，不代表当前演练事实。此前outbox演练批次 expanded 20、processed 20、无失败（历史记录）。`manage.py check --deploy`以测试参数运行无警告，未做真实生产TLS。详细执行记录见 [verification.md](verification.md)。
 
@@ -210,3 +210,8 @@ CashPlan 是计划待收/待付，用于 13 周现金预测和实际收付款的
 Dockerfile（python:3.12-slim、非 root、collectstatic）、compose.yaml（postgres:17-alpine 的 db、app、worker、Caddy proxy 四服务，健康检查与命名卷）、Caddyfile、scripts/entrypoint.sh（migrate 加 gunicorn 2×2）、scripts/backup.sh（停应用、pg_dump、附件打包、SHA256 清单）已在仓库；源码与脚本内无凭据；compose 各敏感项为必填环境变量。生产配置缺 POSTGRES_HOST 或弱密钥时拒绝启动。db/app/worker容器构建、check --deploy、seed、HTTP健康、重启持久性与数据库备份/隔离恢复已冒烟通过；真实公网TLS与生产级并发/性能仍待验证。
 
 
+
+
+## PH-090：项目详情改版规划（2026-10-23）
+
+用户确认了项目详情横向页签与成本预算余额燃尽图的口径，具体契约见project/specs/PH-022.md。PH-022已登记为ready，尚未实现；计划使用独立工作区中的本机DSH执行，Codex负责共享接线、独立审阅、实际CI与合并。PH-091接续后续规划。代码、浏览器及本机DSH业务执行结果需由PH-022另行验证。
