@@ -1,0 +1,52 @@
+{
+  "task_id": "PH-091",
+  "summary": "冻结GPT唯一主控、GitHub需求/缺陷、本地五执行器的AI原生研发架构；登记六个实现薄片与独立后续规划槽，修正旧协作快照。此PR仅规划，不声称执行平台已实现。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "executed_command": ".venv/bin/python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "32 tasks validated on current remote BASE"
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "executed_command": ".venv/bin/python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "19 tests passed in 2.537s after GitHub review fixes"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "evidence": "No whitespace errors"
+    },
+    {
+      "command": "python scripts/public_hygiene.py",
+      "executed_command": ".venv/bin/python scripts/public_hygiene.py",
+      "result": "pass",
+      "evidence": "213 currently tracked files checked, no errors; CI rechecks committed new files"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Poincare / reviewer (gpt-6.1-sol), independent context",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Agent 01a1695b-f8c5-76a0-b669-87b361d90053 initially rejected PH101 authorization provenance and concurrent idempotency. Added exclusive local authorization store with bound principal/repo/request/action/revision/digest and revocation; persistent per-request operation record, process lock, unknown-state reconciliation without automatic create retry. Independent rereview: PASS, no blockers. This is contract review only. Final BASE reconciliation rereview passed after preserving remote PH022/PH090, allocating PH100-105 and PH092, and correcting references. GitHub automated review found shared worker scope, premature PH092 readiness and missing PH092 delivery paths; fixed with explicit worker/integrator matrix, PH100/101 dependencies and required delivery paths."
+  },
+  "unverified": [
+    "No live worker inference, file editing, cancel/resume or parallel pipeline run. ZCode bundled CLI 0.16.9 was located; Claude Code package entry is an uninstalled-native-binary placeholder.",
+    "PH102/103/104/105 retain proposed status pending dependency evidence and separately frozen implementation contracts.",
+    "Remote CI/merge status must be queried on the actual PR/commit; planning report does not prove later CI success.",
+    "No production deployment or autonomous background service installed; no global tool settings changed."
+  ],
+  "deviations": [
+    "Remote main advanced through PR17/18 during this session and consumed PH090/PH022/PH091. Preserved its project-detail contract and historical reports, moved this planning to PH091, allocated PH100-105 and PH092, and restarted from current main without force-push."
+  ],
+  "request_issue": "https://github.com/lakii2982/project-hub/issues/19",
+  "scope": "planning_only",
+  "prior_remote_ci": {
+    "commit": "eed3b3872c73bbbb5f9431fea41e5a1cf807f664",
+    "url": "https://github.com/lakii2982/project-hub/actions/runs/39979703937",
+    "result": "all eight required checks passed; subsequent fixes require their own CI"
+  }
+}
