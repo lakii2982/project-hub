@@ -1116,11 +1116,13 @@
       "title": "Subsequent planning: freeze AI delivery implementation contracts",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "proposed",
       "priority": 2,
       "milestone": "rolling",
       "depends_on": [
-        "PH-091"
+        "PH-091",
+        "PH-100",
+        "PH-101"
       ],
       "spec": "project/specs/PH-092.md",
       "allowed_paths": [
@@ -1131,7 +1133,9 @@
         "docs/engineering/*",
         "ROADMAP.md",
         "project/reports/PH-092.json",
-        "project/handoffs/PH-092.md"
+        "project/handoffs/PH-092.md",
+        "docs/delivery-status.md",
+        "docs/verification.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -1139,7 +1143,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "Wait for actual PH-100 and PH-101 delivery evidence before freezing implementation details."
+      ],
       "handoff": null
     }
   ]

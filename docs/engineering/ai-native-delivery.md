@@ -98,13 +98,27 @@ GPT 产出效果说明和结构化动作提案；确定性控制层验证 actor�
 | PH-104 | 独立验收、PR/CI 核对、集成及发布授权门控 | PH-103 |
 | PH-105 | 一个需求与一个缺陷的真实 GitHub+多 Agent 全流程演练 | PH-104 |
 
-PH-100/PH-101 契约在本规划冻结后可 ready；其余任务保留 proposed，按实际前置成果由下一规划任务进一步冻结。不存在的能力不得由 mock 通过后升级为真实可用。
+PH-100/PH-101 契约在本规划冻结后可 ready；其余任务与 PH-092 保留 proposed，PH-092 等 PH-100 和 PH-101 交付后再冻结后续细节。不存在的能力不得由 mock 通过后升级为真实可用。
+
+### 并行派遣的精确写范围
+
+tasks.allowed_paths 是整个任务（含整合者）的上限，不是子代理可领取的完整范围。派遣必须进一步限定为下表子集；调度器不得把包含共享状态文件的完整任务白名单直接交给两个 worker。主控先收集代码、测试和证据，再按 PR 顺序串行更新三份共享状态文件；每次更新以最新主干为基线合并，保留其他任务记录。
+
+| 写入者 | 可写范围 | 禁止范围 |
+| --- | --- | --- |
+| PH-100 worker | tooling/ai_delivery/__init__.py、agents/*、doctor.py、tests/test_delivery_agents.py、自身 report/handoff 草稿 | docs/delivery-status.md、docs/verification.md、project/tasks.json、PH-101 全部文件 |
+| PH-101 worker | tooling/ai_delivery/github/*、tests/test_delivery_github.py、两个新增 Issue 模板、自身 report/handoff 草稿 | 同上三份共享状态文件、PH-100 全部文件 |
+| GPT 整合者（串行） | 两任务各自允许的三份共享状态文件与最终 report/handoff | 不能覆盖另一任务尚未集成的记录 |
+
+如果不能提供这种按角色限制的派遣和串行整合，就串行执行整个任务；不能声称两个完整任务白名单互斥。
 
 最终演练至少覆盖两个不同执行器真实并行、一个独立复核、一条缺陷重开、重复事件不重复写、进程取消、服务重启接续、契约变更、GitHub 断网/鉴权失败和权限拒绝。五种工具分别完成真实最小任务、采集结果和取消/恢复验证后才能全部宣称支持；未找到入口的工具允许保留 config_required，但不能据此声称整套目标全部完成。
 
 ## 9. 当前核查与资料
 
 本机只读核查：Kimi Code 2.2.0、OpenCode v2.0.30、DSH 0.2.1-rc.2 可定位；当前 PATH 未找到 claude/zcode，不等于未安装。Kimi 帮助确认 -p、stream-json 与显式会话参数；DSH 顶层帮助出现 headless，但子命令帮助可能启动 profile，因此未把它作为安全探针。未调用这些工具的模型、未验证登录/真实任务/取消恢复。主控本机 Codex CLI 0.155.1 帮助确认 exec、--json、--output-schema 与指定 session resume。机器绝对路径与登录信息不写公开文档。
+
+补充定位：ZCode桌面包内确有独立CLI入口，版本0.16.9，帮助包含--prompt、--json、--resume；非PATH入口需由可信本机配置明确登记，不能把桌面GUI二进制当CLI运行。Claude Code的现存包入口是“原生binary未安装”的占位脚本，当前不具备可用CLI；保留config_required，不自动重装或改变全局配置。两者仍未做真实模型任务验收。
 
 OpenAI 官方文档（2026-10-23 读取）：[非交互执行](https://learn.chatgpt.com/docs/non-interactive-mode)、[订阅与 API 认证区别](https://learn.chatgpt.com/docs/auth)。本机 CLI 版本与在线文档有差异时以本机实际帮助和演练为准。
 
