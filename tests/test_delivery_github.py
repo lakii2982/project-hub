@@ -17,10 +17,11 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from tooling.ai_delivery.github import Bridge, Conflict, Refused, validate_payload
+from tooling.ai_delivery.github import client as github_client
 from tooling.ai_delivery.github.authorizer import Authorizer
 from tooling.ai_delivery.github.client import GhClient, AuthenticationError, RemoteUnknown
 from tooling.ai_delivery.github.controller import TrustedGrantController
-from tooling.ai_delivery.github.private import PrivateStore
+from tooling.ai_delivery.github.private import PrivateStore, production_store
 
 REPO = 'demo-owner/demo-project'
 PRINCIPAL = 'demo-controller'
@@ -65,8 +66,15 @@ class FakeClient:
             os.fsync(f.fileno())
         if self.mode == 'crash_before':
             os._exit(71)
+        if self.mode == 'reject':
+            raise github_client.RemoteRejected('definite rejection')
         row = {'number': issue_number or 17, 'title': title, 'body': body}
         (self.root / 'remote.json').write_text(json.dumps([row]))
+        revision = body.rsplit('<!-- project-hub:v1:', 1)[1].split(':')[2]
+        with (self.root / 'remote_revisions').open('a') as f:
+            f.write(f'{revision}\n')
+            f.flush()
+            os.fsync(f.fileno())
         if self.mode == 'crash_after':
             os._exit(72)
         if self.mode == 'lost':
@@ -90,6 +98,19 @@ def child_crash_before_dispatch(root, value, grant_id):
     authorizer.authorize = lambda *args: os._exit(73)
     bridge = Bridge(store, authorizer, FakeClient(root), {REPO})
     bridge.submit(value, grant_id=grant_id, dry_run=False)
+
+
+def child_send_gated(root, value, grant_id, release):
+    store = PrivateStore(Path(root) / 'private')
+    client = FakeClient(root)
+    original = client.write_issue
+    def gated_write(*args):
+        row = original(*args)
+        if not release.wait(10):
+            raise RuntimeError('test release timed out')
+        return row
+    client.write_issue = gated_write
+    Bridge(store, Authorizer(store), client, {REPO}).submit(value, grant_id=grant_id, dry_run=False)
 
 
 class GithubBridgeTests(unittest.TestCase):
@@ -267,6 +288,122 @@ class GithubBridgeTests(unittest.TestCase):
         self.assertEqual(self.send(payload(3))['state'], 'confirmed')
         self.assertEqual((self.root / 'writes').read_text().splitlines(), ['0', '17', '17'])
 
+    def test_production_store_uses_trusted_uid_home_not_process_home(self):
+        trusted = self.root / 'trusted-uid-home'
+        expected = trusted / '.project-hub-github'
+        with (patch('tooling.ai_delivery.github.private.PrivateStore') as store,
+              patch('tooling.ai_delivery.github.private.Path.home',
+                    side_effect=[self.root / 'home-a', self.root / 'home-b']),
+              patch('tooling.ai_delivery.github.private.pwd',
+                    unittest.mock.Mock(getpwuid=unittest.mock.Mock(
+                        return_value=unittest.mock.Mock(pw_dir=str(trusted)))), create=True)):
+            production_store()
+            production_store()
+        self.assertEqual([call.args[0] for call in store.call_args_list], [expected, expected])
+
+    def test_unknown_reconcile_checks_principal_before_pagination(self):
+        value = payload()
+        grant_id = self.grant(value)
+        self.client.mode = 'lost'
+        self.assertEqual(self.bridge.submit(value, grant_id=grant_id, dry_run=False)['state'], 'unknown')
+        self.controller.revoke(grant_id)
+        pages = []
+        original = self.client.list_issues
+        def list_issues(repository):
+            pages.append(repository)
+            return original(repository)
+        self.client.list_issues = list_issues
+        self.client.mode = 'ok'
+        self.client.login = 'wrong-principal'
+        self.assertEqual(self.bridge.submit(value, grant_id=grant_id, dry_run=False)['state'], 'unknown')
+        self.client.login = PRINCIPAL
+        self.client.mode = 'auth'
+        self.assertEqual(self.bridge.submit(value, grant_id=grant_id, dry_run=False)['state'], 'unknown')
+        self.assertEqual(pages, [])
+        self.client.mode = 'ok'
+        self.assertEqual(self.bridge.submit(value, grant_id=grant_id, dry_run=False)['state'], 'confirmed')
+        self.assertEqual(pages, [REPO])
+        self.assertEqual(self.client.writes, 1)
+
+    def test_crash_recovery_commits_unknown_before_conflicts(self):
+        ctx = multiprocessing.get_context('fork')
+        for change in ('later_revision', 'changed_payload'):
+            value = dict(payload(), request_id=str(uuid4()))
+            grant_id = self.grant(value)
+            child = ctx.Process(target=child_send, args=(str(self.root), value, grant_id, 'crash_before'))
+            child.start()
+            child.join(15)
+            self.assertEqual(child.exitcode, 71)
+            bridge = Bridge(PrivateStore(self.root / 'private'), Authorizer(self.store), self.client, {REPO})
+            changed = dict(value, revision=2) if change == 'later_revision' else dict(value, summary='changed')
+            with self.subTest(change=change), self.assertRaises(Conflict):
+                bridge.submit(changed, grant_id=self.grant(changed), dry_run=False)
+            with sqlite3.connect(self.root / 'private' / 'state.sqlite3') as conn:
+                state = conn.execute('SELECT state FROM operations WHERE request_id=?',
+                                     (value['request_id'],)).fetchone()[0]
+            self.assertEqual(state, 'unknown')
+
+    def test_definite_remote_rejection_is_rejected_and_not_retried(self):
+        grant_id = self.grant()
+        self.client.mode = 'reject'
+        with self.assertRaises(Refused):
+            self.send(grant_id=grant_id)
+        with sqlite3.connect(self.root / 'private' / 'state.sqlite3') as conn:
+            self.assertEqual(conn.execute('SELECT state FROM operations').fetchone()[0], 'rejected')
+        with self.assertRaises(Refused):
+            self.send(grant_id=grant_id)
+        self.assertEqual(self.client.writes, 1)
+
+    def test_unrelated_long_marker_ignored_and_related_marker_controlled(self):
+        value = payload()
+        grant_id = self.grant(value)
+        self.client.mode = 'lost'
+        self.bridge.submit(value, grant_id=grant_id, dry_run=False)
+        unrelated = f'<!-- project-hub:v1:{uuid4()}:issue_create:{"9" * 5000}:{"0" * 64} -->'
+        (self.root / 'remote.json').write_text(json.dumps([{'number': 99, 'body': unrelated}]))
+        self.client.mode = 'ok'
+        self.assertEqual(self.bridge.submit(value, grant_id=grant_id, dry_run=False)['state'], 'unknown')
+        related = f'<!-- project-hub:v1:{value["request_id"]}:issue_create:{"9" * 5000}:{"0" * 64} -->'
+        (self.root / 'remote.json').write_text(json.dumps([{'number': 99, 'body': related}]))
+        with self.assertRaises(Conflict):
+            self.bridge.submit(value, grant_id=grant_id, dry_run=False)
+        self.assertEqual(self.client.writes, 1)
+
+    def test_multiprocess_revision_two_three_remote_order(self):
+        self.send()
+        revision_two = payload(2)
+        revision_three = payload(3)
+        grant_two = self.grant(revision_two)
+        grant_three = self.grant(revision_three)
+        with self.assertRaises(Conflict):
+            self.send(revision_three, grant_id=grant_three)
+        ctx = multiprocessing.get_context('fork')
+        release = ctx.Event()
+        self.addCleanup(release.set)
+        child_two = ctx.Process(target=child_send_gated,
+                                args=(str(self.root), revision_two, grant_two, release))
+        child_two.start()
+        deadline = time.monotonic() + 10
+        revisions = []
+        while time.monotonic() < deadline:
+            path = self.root / 'remote_revisions'
+            revisions = path.read_text().splitlines() if path.exists() else []
+            if revisions == ['1', '2']:
+                break
+            time.sleep(0.01)
+        self.assertEqual(revisions, ['1', '2'])
+        child_three = ctx.Process(target=child_send,
+                                  args=(str(self.root), revision_three, grant_three, 'ok'))
+        child_three.start()
+        time.sleep(0.1)
+        self.assertEqual((self.root / 'remote_revisions').read_text().splitlines(), ['1', '2'])
+        release.set()
+        for child in (child_two, child_three):
+            child.join(15)
+            self.assertFalse(child.is_alive())
+            self.assertEqual(child.exitcode, 0)
+        self.assertEqual((self.root / 'remote_revisions').read_text().splitlines(), ['1', '2', '3'])
+
     def test_private_modes_owner_symlink_and_auxiliary_files(self):
         self.grant()
         self.send()
@@ -369,3 +506,16 @@ class GhClientTests(unittest.TestCase):
             client.principal()
         self.assertEqual(runner.call_count, 1)
         self.assertNotIn('secret-demo-token', str(error.exception))
+
+    def test_definite_http_rejections_are_redacted_and_not_retried(self):
+        runner = unittest.mock.Mock()
+        client = GhClient('/trusted/bin/gh', runner=runner)
+        for status in (404, 422):
+            runner.reset_mock()
+            runner.return_value = subprocess.CompletedProcess([], 1, '', f'HTTP {status} secret-demo-token')
+            with self.subTest(status=status):
+                with self.assertRaises(Refused) as error:
+                    client.write_issue(REPO, None, 'title', 'body')
+                self.assertEqual(type(error.exception).__name__, 'RemoteRejected')
+                self.assertNotIn('secret-demo-token', str(error.exception))
+                self.assertEqual(runner.call_count, 1)

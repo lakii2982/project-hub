@@ -16,6 +16,10 @@ class AuthenticationError(Refused):
     pass
 
 
+class RemoteRejected(Refused):
+    pass
+
+
 class GhClient:
     def __init__(self, executable, *, runner=subprocess.run):
         # executable is trusted local startup configuration, never payload text.
@@ -40,6 +44,8 @@ class GhClient:
             if result.returncode:
                 if re.search(r'\bHTTP\s+(401|403)\b', result.stderr or '') or 'not logged' in (result.stderr or '').lower():
                     raise AuthenticationError('GitHub authentication/permission denied')
+                if re.search(r'\bHTTP\s+(404|422)\b', result.stderr or ''):
+                    raise RemoteRejected('GitHub request definitely rejected')
                 if method == 'GET' and attempt + 1 < attempts and re.search(r'\bHTTP\s+(429|502|503|504)\b|timeout|connection|network', result.stderr or '', re.I):
                     continue
                 raise RemoteUnknown('gh request result unavailable')

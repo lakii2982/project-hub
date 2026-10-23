@@ -10,6 +10,7 @@ import fcntl
 import hashlib
 import os
 from pathlib import Path
+import pwd
 import sqlite3
 import stat
 
@@ -139,4 +140,5 @@ def production_store():
     No environment/Issue/worker/request option can choose another state database.
     Never call this factory from tests, workers or untrusted request handlers.
     """
-    return PrivateStore(Path.home() / '.project-hub-github')
+    home = Path(pwd.getpwuid(os.getuid()).pw_dir)
+    return PrivateStore(home / '.project-hub-github')

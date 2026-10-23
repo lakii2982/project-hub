@@ -9,7 +9,7 @@ from .schema import repository_name, uuid_text, validate_payload
 MARKER_PREFIX = 'project-hub:v1'
 MARKER = re.compile(
     r'<!-- project-hub:v1:([0-9a-f-]{36}):(issue_create|issue_update):'
-    r'([1-9][0-9]*):([0-9a-f]{64}) -->'
+    r'([0-9]+):([0-9a-f]{64}) -->'
 )
 
 
@@ -73,10 +73,11 @@ class Bridge:
         return db.execute('SELECT * FROM requests WHERE repository=? AND request_id=?',
                           (data['repository'], data['request_id'])).fetchone()
 
-    def _recover(self, db, data):
-        db.execute('''UPDATE operations SET state='unknown', updated_at=?
-                      WHERE repository=? AND request_id=? AND state='dispatching' ''',
-                   (self._now(), data['repository'], data['request_id']))
+    def _recover(self, data):
+        with self.store.transaction() as db:
+            db.execute('''UPDATE operations SET state='unknown', updated_at=?
+                          WHERE repository=? AND request_id=? AND state='dispatching' ''',
+                       (self._now(), data['repository'], data['request_id']))
 
     def _reject(self, data):
         with self.store.transaction() as db:
@@ -115,8 +116,8 @@ class Bridge:
             raise Refused('repository is not allowlisted')
 
         with self.store.request_lock(data['repository'], data['request_id']):
+            self._recover(data)
             with self.store.transaction() as db:
-                self._recover(db, data)
                 request = self._request(db, data)
                 operation = self._operation(db, data)
                 if operation is not None:
@@ -149,7 +150,13 @@ class Bridge:
                                 self._now()))
 
             if operation is not None and operation['state'] == 'unknown':
-                self._authorize_binding(grant_id, data, action, digest)
+                grant = self._authorize_binding(grant_id, data, action, digest)
+                try:
+                    principal = self.client.principal()
+                except (AuthenticationError, RemoteUnknown):
+                    return self._result(operation)
+                if principal != grant.principal:
+                    return self._result(operation)
                 return self._reconcile(data, payload, operation)
 
             try:
@@ -247,8 +254,13 @@ class Bridge:
             if not isinstance(body, str):
                 continue
             for found in MARKER.finditer(body):
-                request_id, action, revision, digest = found.groups()
-                if (request_id, action, int(revision)) == (data['request_id'], target_action, data['revision']):
+                request_id, action, revision_text, digest = found.groups()
+                if (request_id, action) != (data['request_id'], target_action):
+                    continue
+                if len(revision_text) > 19 or revision_text[0] == '0':
+                    raise Conflict('related remote marker has an invalid revision')
+                revision = int(revision_text)
+                if revision == data['revision']:
                     identity.append((issue['number'], digest))
                     if digest == payload.digest:
                         exact.append(issue['number'])
