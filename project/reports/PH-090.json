@@ -1,0 +1,27 @@
+{
+  "task_id": "PH-090",
+  "summary": "冻结项目详情横向页签与成本预算余额燃尽图；用户确认业务口径，明确本机DSH执行与Codex集成边界。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "25 tasks validated after actual independent review and unit-test evidence were recorded."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "19 tests passed in 2.423s; local Python3.12 venv."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Popper / independent Codex reviewer / 01a167aa-bd9a-76f0-bb9a-90375ab4bda3",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Read-only review of PH022/PH091 contract, permissions/date/accounting boundaries and PH090 lifecycle; no blockers. Base f474f895263be2e72b6acd1e138581f497dc26be."
+  },
+  "unverified": [
+    "PH-022业务尚未实现；DSH真实调用、浏览器及实现PR的CI尚未执行。"
+  ],
+  "deviations": []
+}
