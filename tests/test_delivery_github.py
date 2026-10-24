@@ -68,7 +68,8 @@ class FakeClient:
             os._exit(71)
         if self.mode == 'reject':
             raise github_client.RemoteRejected('definite rejection')
-        row = {'number': issue_number or 17, 'title': title, 'body': body}
+        row = {'number': issue_number or 17, 'title': title, 'body': body,
+               'user': {'login': self.login}}
         (self.root / 'remote.json').write_text(json.dumps([row]))
         revision = body.rsplit('<!-- project-hub:v1:', 1)[1].split(':')[2]
         with (self.root / 'remote_revisions').open('a') as f:
@@ -92,12 +93,27 @@ def child_send(root, value, grant_id, mode, start=None):
     bridge.submit(value, grant_id=grant_id, dry_run=False)
 
 
-def child_crash_before_dispatch(root, value, grant_id):
+def child_crash_in_initial_authorization(root, value, grant_id):
+    """PH-106 F1: dying inside the first authorization must leave no key behind."""
     store = PrivateStore(Path(root) / 'private')
     authorizer = Authorizer(store)
     authorizer.authorize = lambda *args: os._exit(73)
-    bridge = Bridge(store, authorizer, FakeClient(root), {REPO})
-    bridge.submit(value, grant_id=grant_id, dry_run=False)
+    Bridge(store, authorizer, FakeClient(root), {REPO}).submit(value, grant_id=grant_id, dry_run=False)
+
+
+def child_crash_before_dispatch(root, value, grant_id):
+    """Die after the pending row commits but before the durable dispatching marker."""
+    store = PrivateStore(Path(root) / 'private')
+    authorizer = Authorizer(store)
+    original = authorizer.authorize
+    checked = []
+    def authorize(*args):
+        if checked:
+            os._exit(73)
+        checked.append(1)
+        return original(*args)
+    authorizer.authorize = authorize
+    Bridge(store, authorizer, FakeClient(root), {REPO}).submit(value, grant_id=grant_id, dry_run=False)
 
 
 def child_send_gated(root, value, grant_id, release):
@@ -192,6 +208,42 @@ class GithubBridgeTests(unittest.TestCase):
             self.send()
         self.assertEqual(self.client.writes, 0)
 
+    def test_unauthorized_initial_binding_allocates_no_key_and_makes_no_remote_call(self):
+        # PH-106 F1: expired/revoked/digest-mismatched/random grants must not
+        # consume the request/revision key nor touch the remote; a later valid
+        # grant for the same request/revision must still succeed.
+        value = payload()
+        expired = self.grant(value, expires_at=datetime.now(timezone.utc) - timedelta(seconds=1))
+        mismatched = self.grant(value, payload_digest='0' * 64)
+        revoked = self.grant(value)
+        self.controller.revoke(revoked)
+        for index, grant_id in enumerate((expired, mismatched, revoked, str(uuid4()))):
+            with self.subTest(grant=index), self.assertRaises(Refused):
+                self.send(value, grant_id=grant_id)
+        self.assertEqual(self.client.reads + self.client.writes, 0)
+        self.assertFalse((self.root / 'writes').exists())
+        with sqlite3.connect(self.root / 'private' / 'state.sqlite3') as conn:
+            self.assertIsNone(conn.execute('SELECT * FROM requests').fetchone())
+            self.assertIsNone(conn.execute('SELECT * FROM operations').fetchone())
+        self.assertEqual(self.send(value, grant_id=self.grant(value))['state'], 'confirmed')
+        self.assertEqual(self.client.reads, 1)
+        self.assertEqual(self.client.writes, 1)
+
+    def test_crash_inside_initial_authorization_consumes_no_key(self):
+        ctx = multiprocessing.get_context('fork')
+        gid = self.grant()
+        child = ctx.Process(target=child_crash_in_initial_authorization,
+                            args=(str(self.root), payload(), gid))
+        child.start()
+        child.join(15)
+        self.assertEqual(child.exitcode, 73)
+        self.assertFalse((self.root / 'writes').exists())
+        with sqlite3.connect(self.root / 'private' / 'state.sqlite3') as conn:
+            self.assertIsNone(conn.execute('SELECT * FROM operations').fetchone())
+        bridge = Bridge(PrivateStore(self.root / 'private'), Authorizer(self.store), self.client, {REPO})
+        self.assertEqual(bridge.submit(payload(), grant_id=gid, dry_run=False)['state'], 'confirmed')
+        self.assertEqual((self.root / 'writes').read_text().splitlines(), ['0'])
+
     def test_grant_binding_expiry_revocation_principal_and_actions(self):
         changes = [dict(repository='other/repo'), dict(principal='other-user'),
                    dict(request_id=str(uuid4())), dict(revision=2),
@@ -257,6 +309,77 @@ class GithubBridgeTests(unittest.TestCase):
             self.send(value)
         with self.assertRaises(Conflict):
             self.send(dict(value, revision=2))
+
+    def test_unknown_confirm_requires_exact_title_body_and_grant_author(self):
+        # PH-106 F2: marker+digest identity alone is never enough; a candidate is
+        # confirmed only with the exact rendered title, the full body and the grant
+        # principal as creator. Anything else stays unknown and never writes again.
+        value = payload()
+        self.client.mode = 'lost'
+        self.assertEqual(self.send(value)['state'], 'unknown')
+        self.client.mode = 'ok'
+        base = json.loads((self.root / 'remote.json').read_text())[0]
+        marker_only = base['body'][base['body'].rfind('<!--'):]
+        candidates = [
+            dict(base, number=99, title='Copied marker on an unrelated title'),
+            dict(base, number=99, body=marker_only),
+            dict(base, number=99, user={'login': 'other-user'}),
+            dict(base, number=99, body=base['body'].replace('## Summary', '## summary')),
+            dict(base, number=99, title=base['title'] + ' (edited)'),
+            {key: item for key, item in base.items() if key != 'user'},
+        ]
+        for candidate in candidates:
+            (self.root / 'remote.json').write_text(json.dumps([candidate]))
+            with self.subTest(missing='user' if 'user' not in candidate else None,
+                              title=candidate['title']):
+                self.assertEqual(self.send(value)['state'], 'unknown')
+        self.assertEqual(self.client.writes, 1)
+        (self.root / 'remote.json').write_text(json.dumps([base]))
+        self.assertEqual(self.send(value)['state'], 'confirmed')
+        self.assertEqual(self.client.writes, 1)
+
+    def test_duplicate_fully_matching_remote_issues_reject_instead_of_guessing(self):
+        value = dict(payload(), request_id=str(uuid4()))
+        self.client.mode = 'lost'
+        self.bridge.submit(value, grant_id=self.grant(value), dry_run=False)
+        base = json.loads((self.root / 'remote.json').read_text())[0]
+        (self.root / 'remote.json').write_text(json.dumps([base, dict(base, number=18)]))
+        self.client.mode = 'ok'
+        with self.assertRaises(Conflict):
+            self.bridge.submit(value, grant_id=self.grant(value), dry_run=False)
+        self.assertEqual(self.client.writes, 1)
+
+    def test_update_reconcile_never_binds_a_different_issue_number(self):
+        self.send()
+        self.client.mode = 'lost'
+        self.assertEqual(self.send(payload(2))['state'], 'unknown')
+        self.client.mode = 'ok'
+        base = json.loads((self.root / 'remote.json').read_text())[0]
+        (self.root / 'remote.json').write_text(json.dumps([dict(base, number=99)]))
+        with self.assertRaises(Conflict):
+            self.send(payload(2))
+        with sqlite3.connect(self.root / 'private' / 'state.sqlite3') as conn:
+            row = conn.execute('SELECT issue_number, confirmed_revision FROM requests').fetchone()
+        self.assertEqual(tuple(row), (17, 1))
+        (self.root / 'remote.json').write_text(json.dumps([base]))
+        self.assertEqual(self.send(payload(2))['state'], 'confirmed')
+        self.assertEqual(self.send(payload(3))['state'], 'confirmed')
+
+    def test_lost_update_reconciles_after_principal_changes_or_creator_is_deleted(self):
+        self.send()
+        # The fake principal method is intentionally replaced for this revision;
+        # the stored remote creator remains the original principal.
+        self.client.principal = lambda: 'operator-b'
+        value = payload(2)
+        grant = self.grant(value, principal='operator-b')
+        self.client.mode = 'lost'
+        self.assertEqual(self.send(value, grant_id=grant)['state'], 'unknown')
+        remote = json.loads((self.root / 'remote.json').read_text())
+        remote[0]['user'] = None
+        (self.root / 'remote.json').write_text(json.dumps(remote))
+        self.client.mode = 'ok'
+        self.assertEqual(self.send(value, grant_id=grant)['state'], 'confirmed')
+        self.assertEqual(self.client.writes, 2)
 
     def test_unknown_not_found_blocks_all_later_revisions_and_never_resends(self):
         self.client.mode = 'lost'

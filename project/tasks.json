@@ -1158,7 +1158,7 @@
       "title": "修复GitHub桥的授权占键与错误Issue关联",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1180,9 +1180,9 @@
         "python -m unittest tests.test_delivery_github tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/31",
-      "owner": null,
+      "owner": "GPT integrator; native Claude/GLM implementation; native DSH independent review",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-106.md"
     },
     {
       "id": "PH-107",

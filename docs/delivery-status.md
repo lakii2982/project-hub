@@ -238,3 +238,7 @@ Dockerfile（python:3.12-slim、非 root、collectstatic）、compose.yaml（pos
 ## PH-092 四CLI本地团队规划（2026-10-24）
 
 已冻结GPT总控、GitHub任务、四CLI执行/复核/PR的最小实现契约，见local-team.md。PH-106/107记录真实审计修复，PH-102至105分阶段实现，PH-093保留下一规划入口。本条只陈述规划，未宣称调度、取消恢复或全流程已实现。PR #30经用户单次明确授权恢复planning入口，原8项required checks、各app_id与strict均已恢复；后续不复用豁免。实际测试/独立复核记录见PH-092报告。
+
+## PH-106 GitHub桥审计修复（2026-10-24）
+
+首次无效授权不占业务键；响应丢失只对完整远端结果恢复，更新绑定原Issue。原生Claude/GLM实施、DeepSeek Harness独立复核，52项专项与174项产品回归在无凭据隔离环境通过；没有生产或远端exactly-once声明。详见PH-106报告。
