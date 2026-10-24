@@ -1,0 +1,30 @@
+{
+  "task_id": "PH-092",
+  "summary": "Freeze the smallest GPT-controlled local four-CLI GitHub workflow, audit fixes and a successor planning slot.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":35}\n"
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "ext_without_url_credentials) ... ok\ntest_check_rejects_dependency_cycle (tests.test_projectctl.ProjectCtlTests.test_check_rejects_dependency_cycle) ... ok\ntest_check_rejects_missing_handoff_file (tests.test_projectctl.ProjectCtlTests.test_check_rejects_missing_handoff_file) ... ok\ntest_check_reports_schema_errors (tests.test_projectctl.ProjectCtlTests.test_check_reports_schema_errors) ... ok\ntest_git_replace_cannot_substitute_a_wider_base_contract (tests.test_projectctl.ProjectCtlTests.test_git_replace_cannot_substitute_a_wider_base_contract) ... ok\ntest_long_lived_project_accepts_four_digit_task_id (tests.test_projectctl.ProjectCtlTests.test_long_lived_project_accepts_four_digit_task_id) ... ok\ntest_next_orders_by_priority_then_id (tests.test_projectctl.ProjectCtlTests.test_next_orders_by_priority_then_id) ... ok\ntest_verify_change_accepts_scoped_change_and_report (tests.test_projectctl.ProjectCtlTests.test_verify_change_accepts_scoped_change_and_report) ... ok\ntest_verify_change_checks_both_rename_paths (tests.test_projectctl.ProjectCtlTests.test_verify_change_checks_both_rename_paths) ... ok\ntest_verify_change_rejects_old_migration_modification (tests.test_projectctl.ProjectCtlTests.test_verify_change_rejects_old_migration_modification) ... ok\ntest_verify_change_rejects_out_of_scope_file (tests.test_projectctl.ProjectCtlTests.test_verify_change_rejects_out_of_scope_file) ... ok\ntest_verify_change_rejects_report_with_failed_test (tests.test_projectctl.ProjectCtlTests.test_verify_change_rejects_report_with_failed_test) ... ok\ntest_verify_change_rejects_risk_s_without_passing_review (tests.test_projectctl.ProjectCtlTests.test_verify_change_rejects_risk_s_without_passing_review) ... ok\ntest_verify_change_requires_risk_s_for_new_migration (tests.test_projectctl.ProjectCtlTests.test_verify_change_requires_risk_s_for_new_migration) ... ok\ntest_health_version_uses_pyproject (tests.test_governance.GovernanceTests.test_health_version_uses_pyproject) ... ok\ntest_private_runtime_and_credentials_are_rejected (tests.test_governance.GovernanceTests.test_private_runtime_and_credentials_are_rejected) ... ok\ntest_production_version_cannot_skip_readiness (tests.test_governance.GovernanceTests.test_production_version_cannot_skip_readiness) ... ok\ntest_tag_must_match_single_version_source (tests.test_governance.GovernanceTests.test_tag_must_match_single_version_source) ... ok\n\n----------------------------------------------------------------------\nRan 19 tests in 2.124s\n\nOK\n"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "OpenCode 2.0.30 / DeepSeek Flash free; Claude Code 2.1.309 / GLM-5.3-Flash; independent contexts",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Independent GLM/Claude and DeepSeek/OpenCode reviews found candidate-test privilege, assembly, auth-path, review-readonly, quarantined-capacity, digest, command-wiring and pilot-order gaps. Corrected together. Scoped native OpenCode/DeepSeek re-review returned {verdict:PASS,findings:[]}. Original GPT reviewer missing-Issue finding fixed with actual Issues #31/#32.",
+    "review_log_sha256": "678f67eb03e04de2af6541a131f2fc9b2b5512545214fa4a16435b5939c21236"
+  },
+  "unverified": [
+    "No task execution capability is claimed by this planning PR; implementation and real CLI development validation remain."
+  ],
+  "deviations": [
+    "PR #30 planning activation used a human explicitly authorized one-PR governance exception. Original eight required checks, app IDs and strict setting were restored immediately in finally after merge c9e60ab. This exception is not reusable."
+  ]
+}
