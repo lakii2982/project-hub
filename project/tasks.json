@@ -1116,7 +1116,7 @@
       "title": "Subsequent planning: freeze AI delivery implementation contracts",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "rolling",
       "depends_on": [
@@ -1143,9 +1143,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "Wait for actual PH-100 and PH-101 delivery evidence before freezing implementation details."
-      ],
+      "blockers": [],
       "handoff": null
     }
   ]
