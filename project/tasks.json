@@ -981,10 +981,10 @@
     },
     {
       "id": "PH-102",
-      "title": "本地隔离执行、持久队列与多Agent并行恢复",
+      "title": "本地四执行器：隔离运行、队列、取消和恢复",
       "kind": "infra",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -997,24 +997,23 @@
         "docs/engineering/ai-delivery-isolation.md",
         "docs/delivery-status.md",
         "docs/verification.md",
+        "project/tasks.json",
         "project/reports/PH-102.json",
         "project/handoffs/PH-102.md",
-        "project/tasks.json"
+        "tests/test_delivery_execution_*.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
-        "python -m unittest tests.test_delivery_execution tests.test_delivery_agents -v"
+        "python -m unittest tests.test_delivery_execution tests.test_delivery_execution_queue tests.test_delivery_execution_sandbox tests.test_delivery_agents -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/22",
       "owner": null,
-      "blockers": [
-        "Implementation details require a subsequent planning PR after dependencies deliver."
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
       "id": "PH-103",
-      "title": "GPT对话主控：效果说明、结构化派工与恢复",
+      "title": "GitHub任务到本地团队的单一命令入口",
       "kind": "feature",
       "risk": "S",
       "status": "proposed",
@@ -1027,13 +1026,14 @@
       "spec": "project/specs/PH-103.md",
       "allowed_paths": [
         "tooling/ai_delivery/controller/*",
+        "tooling/ai_delivery/__main__.py",
         "tests/test_delivery_controller.py",
         "docs/engineering/ai-delivery-controller.md",
         "docs/delivery-status.md",
         "docs/verification.md",
+        "project/tasks.json",
         "project/reports/PH-103.json",
-        "project/handoffs/PH-103.md",
-        "project/tasks.json"
+        "project/handoffs/PH-103.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -1042,31 +1042,34 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/23",
       "owner": null,
       "blockers": [
-        "Implementation details require a subsequent planning PR after dependencies deliver."
+        "Activate when the frozen prerequisites are delivered."
       ],
       "handoff": null
     },
     {
       "id": "PH-104",
-      "title": "交付证据、独立复核与PR及发布门控",
+      "title": "团队交付：独立复核、真实验收与PR检查",
       "kind": "infra",
       "risk": "S",
       "status": "proposed",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
-        "PH-103"
+        "PH-103",
+        "PH-106"
       ],
       "spec": "project/specs/PH-104.md",
       "allowed_paths": [
         "tooling/ai_delivery/delivery/*",
+        "tooling/ai_delivery/controller/*",
         "tests/test_delivery_gate.py",
-        ".github/workflows/ai-delivery.yml",
+        "docs/engineering/ai-delivery-delivery.md",
         "docs/delivery-status.md",
         "docs/verification.md",
+        "project/tasks.json",
         "project/reports/PH-104.json",
         "project/handoffs/PH-104.md",
-        "project/tasks.json"
+        "tooling/ai_delivery/__main__.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -1075,30 +1078,34 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/24",
       "owner": null,
       "blockers": [
-        "Implementation details require a subsequent planning PR after dependencies deliver."
+        "Activate when the frozen prerequisites are delivered."
       ],
       "handoff": null
     },
     {
       "id": "PH-105",
-      "title": "AI研发试点：真实需求与缺陷全流程演练",
+      "title": "真实GitHub需求和缺陷的四CLI闭环演练",
       "kind": "research",
       "risk": "S",
       "status": "proposed",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
-        "PH-104"
+        "PH-104",
+        "PH-107"
       ],
       "spec": "project/specs/PH-105.md",
       "allowed_paths": [
         "tests/delivery_e2e/*",
         "docs/engineering/ai-delivery-pilot.md",
+        "tooling/ai_delivery/controller/*",
+        "tooling/ai_delivery/execution/*",
+        "tooling/ai_delivery/delivery/*",
         "docs/delivery-status.md",
         "docs/verification.md",
+        "project/tasks.json",
         "project/reports/PH-105.json",
-        "project/handoffs/PH-105.md",
-        "project/tasks.json"
+        "project/handoffs/PH-105.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -1107,7 +1114,7 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/25",
       "owner": null,
       "blockers": [
-        "Implementation details require a subsequent planning PR after dependencies deliver."
+        "Activate when the frozen prerequisites are delivered."
       ],
       "handoff": null
     },
@@ -1116,7 +1123,7 @@
       "title": "Subsequent planning: freeze AI delivery implementation contracts",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "rolling",
       "depends_on": [
@@ -1136,6 +1143,103 @@
         "project/handoffs/PH-092.md",
         "docs/delivery-status.md",
         "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "GPT integration lead",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-092.md"
+    },
+    {
+      "id": "PH-106",
+      "title": "修复GitHub桥的授权占键与错误Issue关联",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "ai-native-delivery",
+      "depends_on": [
+        "PH-100",
+        "PH-101"
+      ],
+      "spec": "project/specs/PH-106.md",
+      "allowed_paths": [
+        "tooling/ai_delivery/github/*",
+        "tests/test_delivery_github.py",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/reports/PH-106.json",
+        "project/handoffs/PH-106.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_delivery_github tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/31",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-107",
+      "title": "修复探针配置边界并将执行器收敛为四个CLI",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "ai-native-delivery",
+      "depends_on": [
+        "PH-104"
+      ],
+      "spec": "project/specs/PH-107.md",
+      "allowed_paths": [
+        "tooling/ai_delivery/doctor.py",
+        "tooling/ai_delivery/agents/*",
+        "tests/test_delivery_agents.py",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/reports/PH-107.json",
+        "project/handoffs/PH-107.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_delivery_agents tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/32",
+      "owner": null,
+      "blockers": [
+        "Run the known audit bug through the delivered local team pipeline after PH-104."
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-093",
+      "title": "下一轮需求规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-092"
+      ],
+      "spec": "project/specs/PH-093.md",
+      "allowed_paths": [
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-093.json",
+        "project/handoffs/PH-093.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
