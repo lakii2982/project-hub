@@ -141,6 +141,14 @@ class Bridge:
                         raise Conflict('revisions must be consecutive and cannot be stale')
                     if action == 'issue_update' and (request is None or request['issue_number'] is None):
                         raise Conflict('an update requires a confirmed issue')
+                    # PH-106 F1: the first authorization must bind and be active
+                    # before a new business operation key is allocated. A refused
+                    # binding leaves requests/operations untouched and makes no
+                    # remote call, so the same request/revision stays available
+                    # for a later valid grant.
+                    self.authorizer.authorize(grant_id, data['repository'], data['request_id'],
+                                              action, data['revision'], digest,
+                                              datetime.now(timezone.utc))
                     if request is None:
                         db.execute('INSERT INTO requests VALUES (?,?,?,?,?)',
                                    (data['repository'], data['request_id'], None, 0, digest))
@@ -157,14 +165,13 @@ class Bridge:
                     return self._result(operation)
                 if principal != grant.principal:
                     return self._result(operation)
-                return self._reconcile(data, payload, operation)
+                return self._reconcile(data, payload, operation, grant.principal)
 
-            try:
-                self.authorizer.authorize(grant_id, data['repository'], data['request_id'], action,
-                                          data['revision'], digest, datetime.now(timezone.utc))
-            except Refused:
-                self._reject(data)
-                raise
+            # PH-106 F1: an attempt whose own authorization fails must not reject an
+            # operation that an earlier authorized attempt allocated and never
+            # dispatched; it only refuses this attempt and leaves the key intact.
+            self.authorizer.authorize(grant_id, data['repository'], data['request_id'], action,
+                                      data['revision'], digest, datetime.now(timezone.utc))
 
             with self.store.transaction() as db:
                 changed = db.execute('''UPDATE operations SET state='dispatching', updated_at=?
@@ -236,7 +243,14 @@ class Bridge:
                         data['repository'], data['request_id']))
             return self._result(self._operation(db, data))
 
-    def _reconcile(self, data, payload, operation):
+    @staticmethod
+    def _issue_author(issue):
+        user = issue.get('user')
+        if isinstance(user, dict) and isinstance(user.get('login'), str):
+            return user['login']
+        return None
+
+    def _reconcile(self, data, payload, operation, principal):
         try:
             issues = list(self.client.list_issues(data['repository']))
         except AuthenticationError:
@@ -245,6 +259,16 @@ class Bridge:
             return self._result(operation)
 
         target_action = 'issue_create' if data['revision'] == 1 else 'issue_update'
+        rendered = render_issue(payload)
+        request = self._request_for_reconcile(data)
+        if target_action == 'issue_update' and (request is None or request['issue_number'] is None):
+            raise Conflict('an update requires a confirmed issue')
+        # PH-106 F2: a copied marker never identifies the remote effect. A candidate
+        # is confirmed only when its marker identity and digest are unique AND the
+        # exact rendered title and full body match. Creation also requires the grant
+        # principal as creator; updates must stay bound to the known Issue number.
+        # GitHub is not exactly-once: two byte-identical issues under the same actor
+        # stay an explicit ambiguity and are rejected, never guessed at.
         identity = []
         exact = []
         for issue in issues:
@@ -262,15 +286,19 @@ class Bridge:
                 revision = int(revision_text)
                 if revision == data['revision']:
                     identity.append((issue['number'], digest))
-                    if digest == payload.digest:
+                    if (digest == payload.digest and issue.get('title') == data['title']
+                            and body == rendered
+                            and ((target_action == 'issue_create'
+                                  and self._issue_author(issue) == principal)
+                                 or (target_action == 'issue_update'
+                                     and issue['number'] == request['issue_number']))):
                         exact.append(issue['number'])
         if any(digest != payload.digest for _, digest in identity) or (exact and len(exact) != 1):
             raise Conflict('remote marker/digest is not unique or does not match')
+        if target_action == 'issue_update' and identity and not exact:
+            raise Conflict('remote update does not match the confirmed issue')
         if not exact:
             return self._result(operation)
-        request = self._request_for_reconcile(data)
-        if target_action == 'issue_update' and (request is None or request['issue_number'] is None):
-            raise Conflict('an update requires a confirmed issue')
         return self._confirm(data, exact[0])
 
     def _request_for_reconcile(self, data):

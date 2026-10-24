@@ -1,0 +1,40 @@
+{
+  "task_id": "PH-106",
+  "summary": "Reject unbound grants before allocating a business key and reconcile lost responses against the complete Issue effect and the known update target.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual projectctl check returned ok=true/task_count=35 before commit."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_github tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "52 tests passed with Python 3.12, credential-free macOS filesystem sandbox, network disabled. Includes invalidgrant->validgrant, crash, marker clone, creator/body mismatch, operator change and deleted creator, known update target."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "174 tests passed in 9.371s in credential-free/no-network sandbox with disposable SQLite test DB."
+    },
+    {
+      "command": "python manage.py check; python manage.py makemigrations --check --dry-run; python manage.py migrate --noinput; python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Separate management argv in one credential-free sandbox; check clean, no migration changes, disposable DB migrated, integrity ok=true/errors=[]/organizations=0/entries=0."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native DeepSeek Harness / OpenCode Go DeepSeek v4.1 Flash (findings); fresh native Claude Code / existing GLM-5.3-Flash final scoped review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "DSH identified changed-principal and unreachable mismatch branches. Both corrected with regressions. Fresh final Claude/GLM context returned verdict PASS after reading final diff; no remaining regressions.",
+    "review_log_sha256": "0fa128581581d5e492b6ce3117f79c7528018315a04157be43e51b8dea9af825"
+  },
+  "unverified": [
+    "No real GitHub write was needed for this bridge regression suite; real delivery is tracked separately. No production PostgreSQL concurrency or browser changes claimed. Public byte-identical clones by the same principal remain ambiguous; no remote exactly-once guarantee."
+  ],
+  "deviations": [
+    "Independent review found update reconciliation must bind the existing Issue number without requiring its creator to equal the new grant principal. Fixed with regression tests."
+  ]
+}
