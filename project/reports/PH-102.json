@@ -5,7 +5,7 @@
     {
       "command": "python -m unittest tests.test_delivery_execution tests.test_delivery_execution_queue tests.test_delivery_execution_sandbox tests.test_delivery_agents -v",
       "result": "pass",
-      "evidence": "77 tests:73 passed,4 explicit nested-backend skips;9.964s; credential-free/no-network filesystem isolation, fixed Python3.12."
+      "evidence": "79 tests:75 passed,4 explicit nested-backend skips;7.337s; Python3.12 credential-free/no-network filesystem isolation, including cancel-before-dispatch capacity release."
     },
     {
       "command": "trusted two-stage real sandbox-exec canary",
@@ -15,7 +15,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "238 tests:234 passed,4 nested-backend skips;12.725s; disposable SQLite and credential-free/no-network sandbox."
+      "evidence": "240 tests:236 passed,4 nested-backend skips;12.801s; disposable SQLite and credential-free/no-network filesystem isolation."
     },
     {
       "command": "python scripts/projectctl.py check",
@@ -33,14 +33,15 @@
     "reviewer": "Independent native Claude Code / GLM-5.3-Flash; native OpenCode / DeepSeek final scoped review",
     "status": "pass",
     "findings": [],
-    "evidence": "Independent GLM broad review, OpenCode/DeepSeek followup, DSH same-token spawn-fact review PASS, and final OpenCode/DeepSeek fixed-path review PASS with no findings. Unproven raw-PID kill suggestion explicitly rejected under frozen fail-closed contract; known-identity launch/cancel regressions pass. Final selected-model metadata correction independently reviewed by native Kimi context: PASS.",
+    "evidence": "Independent GLM broad review, OpenCode/DeepSeek followup, DSH same-token spawn-fact review PASS, and final OpenCode/DeepSeek fixed-path review PASS with no findings. Unproven raw-PID kill suggestion explicitly rejected under frozen fail-closed contract; known-identity launch/cancel regressions pass. Final selected-model metadata correction independently reviewed by native Kimi context: PASS. GitHub automated P2 claimed-cancellation finding fixed; independent native Kimi followup PASS.",
     "review_logs_sha256": {
       "broad_glm": "4ab469c6b8857708cca0940dbcfe844c31a64f20f58abb617880415b74d768b8",
       "spawn_delta_dsh": "e6496ae209c8fae995304d73c5fd3758bd9766423dcaf526d74e182126c3f5f8",
       "fixed_path_deepseek": "269973a6bdc8bb40bd916c76ca7f96552b606b1bc59f5be826f4ba9b894f1755",
-      "kimi_metadata": "25a5662f83c3c183971b6e46939296bdabb04307add280b03b2cf431e6c74f8a"
+      "kimi_metadata": "25a5662f83c3c183971b6e46939296bdabb04307add280b03b2cf431e6c74f8a",
+      "claimed_cancel": "fd67640e71ffd2e3c3a4f449ee19d004279d19c06a5c8124b50e616358d6dc91"
     },
-    "code_manifest_sha256": "9e0f784cafc74e7d062ebb5147e7390ad32c57b621a4d9163e038ba18f0b9b07"
+    "code_manifest_sha256": "84888598cfc1c598594a7d1f097611f28026ee65dd788f9b7b9af35133f85e03"
   },
   "unverified": [
     "Four nested macOS unit canaries skipped because the outer credential-free sandbox cannot apply another sandbox. Separate real backend proof is recorded, not counted as skipped tests passing.",
@@ -53,7 +54,8 @@
     "Cross-process queue tests use actual POSIX fork because legacy manage.py unconditionally runs Django when spawn imports it; the product entry file was kept outside this task scope. Initial spawn-mode unittest tests also passed.",
     "Independent regex reviews found optional/partial path component cases. Replaced general regex-prefix analysis with fixed literal paths/prefixes only (optional end anchor or trailing .* suffix); all internal regex operators rejected and safety comparisons use complete directory boundaries. A misformatted review snippet initially obscured real test class boundaries; actual unittest collection verified and review package corrected.",
     "Actual Kimi invocation exposed missing always_thinking model metadata; fixed bounded selected capabilities/efforts serialization, added regression, independent Kimi context PASS, native retry PASS. Initial failed run retained in local evidence.",
-    "Initial Linux CI failed four profile-construction tests because their fake Darwin backend still resolved the actual macOS executable. Scoped the executable stub to that construction fixture; production fail-closed behavior and separate real macOS probes remain unchanged."
+    "Initial Linux CI failed four profile-construction tests because their fake Darwin backend still resolved the actual macOS executable. Scoped the executable stub to that construction fixture; production fail-closed behavior and separate real macOS probes remain unchanged.",
+    "GitHub automated review also found cancellation while still claimed could quarantine forever without a PID. Claimed cancellation now atomically revokes the token and becomes terminal before dispatch; added three-slot release and no-Popen preparation-interleaving regressions. Independent native Kimi scoped review PASS."
   ],
   "native_smoke": {
     "kind": "private file-write fixture; not a governed GitHub task run",

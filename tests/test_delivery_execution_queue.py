@@ -80,6 +80,21 @@ class QueueFixture(unittest.TestCase):
 
 
 class RunStoreTests(QueueFixture):
+    def test_cancel_claimed_before_dispatch_releases_slots_and_revokes_token(self):
+        for _ in range(3):
+            request = self.request()
+            claimed = self.store.claim(request["run_id"])
+            cancelled = self.store.cancel(request["run_id"])
+            self.assertEqual(cancelled["state"], "cancelled")
+            self.assertIsNone(cancelled["fencing_token"])
+            self.assertEqual(cancelled["lease_until"], 0)
+            with self.assertRaises(LeaseError):
+                self.store.dispatch(request["run_id"], claimed["fencing_token"])
+        self.assertFalse(self.store.active())
+        self.assertEqual(self.store.recover(), [])
+        next_request = self.request()
+        self.assertIsNotNone(self.store.claim(next_request["run_id"]))
+
     def test_private_permissions_and_idempotent_enqueue(self):
         request = self.request()
         self.assertEqual(self.store.enqueue(request)["run_id"], request["run_id"])

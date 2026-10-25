@@ -245,6 +245,6 @@ Dockerfile（python:3.12-slim、非 root、collectstatic）、compose.yaml（pos
 
 ## PH-102 本地四CLI执行层（2026-10-25）
 
-已有私有队列、三并发/scope互斥、进程身份、取消与保守恢复，以及macOS实机文件隔离和只读复核。Kimi/OpenCode/DSH参与实现，GLM/DeepSeek独立复核。最终77项专项中73项通过、4项嵌套沙箱跳过；238项应用回归有相同4项跳过，另有实机权限探针通过。原生客户端结果见PH-102报告；任务到PR的完整入口仍由PH-103/104交付。
+已有私有队列、三并发/scope互斥、进程身份、取消与保守恢复，以及macOS实机文件隔离和只读复核。Kimi/OpenCode/DSH参与实现，GLM/DeepSeek独立复核。最终79项专项中75项通过、4项嵌套沙箱跳过；240项应用回归有相同4项跳过，另有实机权限探针通过。原生客户端结果见PH-102报告；任务到PR的完整入口仍由PH-103/104交付。
 
 四个原生客户端经本次Executor均完成精确文件写入；DSH与Claude成功区间实际重叠。Kimi最初因遗漏always_thinking能力声明被服务端400拒绝，保留所选模型公开元数据后单独重试通过，未改原配置。该私有fixture不冒充已治理的GitHub开发任务。

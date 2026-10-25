@@ -312,6 +312,22 @@ class ExecutorIntegrationTests(DeliveryFixture):
 
 
 class SpawnRecoveryIntegrationTests(DeliveryFixture):
+    def test_cancel_during_adapter_preparation_never_spawns_or_holds_capacity(self):
+        request = self.enqueue()
+        executable = self.executable("raise AssertionError('must never execute')\n")
+        executor = self.executor(executable)
+        original = executor.test_adapter
+        def cancelled_config(*args, **kwargs):
+            self.store.cancel(request["run_id"])
+            return original(*args, **kwargs)
+        executor.test_adapter = cancelled_config
+        with patch("tooling.ai_delivery.execution.runner.subprocess.Popen") as popen:
+            result = executor.run_once(request["run_id"], object())
+        popen.assert_not_called()
+        self.assertEqual(result["state"], "cancelled")
+        self.assertFalse(self.store.active())
+        self.assertEqual(executor.recover(), [])
+
     def test_cancel_between_spawn_and_start_stops_proven_group_then_recovers_cancelled(self):
         request = self.enqueue()
         executable = self.executable("import time\ntime.sleep(60)\n")

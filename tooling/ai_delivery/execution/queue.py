@@ -461,8 +461,15 @@ class RunStore:
             row = connection.execute("SELECT * FROM runs WHERE run_id=?", (run_id,)).fetchone()
             if row is None:
                 raise StateError("unknown_run")
-            if row["state"] == "queued":
-                connection.execute("UPDATE runs SET state='cancelled', updated_at=? WHERE run_id=?", (_now(), run_id))
+            if row["state"] in {"queued", "claimed"}:
+                # dispatch() and this transition serialize in the same DB.
+                # A claimed run has no child; revoking its token prevents the
+                # preparing executor from dispatching after cancellation.
+                connection.execute("""
+                    UPDATE runs SET state='cancelled', lease_until=0,
+                        fencing_token=NULL, pid=NULL, spawn_pgid=NULL,
+                        process_identity=NULL, updated_at=? WHERE run_id=?
+                """, (_now(), run_id))
                 self._event(connection, run_id, "cancelled", {})
                 terminal = True
             elif row["state"] not in ACTIVE_STATES or row["state"] == "quarantined":
