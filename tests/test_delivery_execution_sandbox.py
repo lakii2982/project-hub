@@ -422,6 +422,7 @@ class SandboxConstructionTests(_DeliveryTestCase):
     def fake_macos_backend(self):
         with patch.object(sandbox.sys, "platform", "darwin"), \
                 patch.object(sandbox, "backend_status", return_value=(True, "")), \
+                patch.object(sandbox, "_sandbox_executable", return_value="/usr/bin/sandbox-exec"), \
                 patch.object(sandbox, "_profile_is_accepted", return_value=True):
             yield
 

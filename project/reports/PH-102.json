@@ -52,7 +52,8 @@
     "Independent review suggestion to signal Popen without proven group identity was rejected: frozen contract requires quarantine on unknown and Python send_signal documents residual PID-reuse risk. Deterministic cancel-before-start regression proves known identity is stopped and cancellation survives recovery.",
     "Cross-process queue tests use actual POSIX fork because legacy manage.py unconditionally runs Django when spawn imports it; the product entry file was kept outside this task scope. Initial spawn-mode unittest tests also passed.",
     "Independent regex reviews found optional/partial path component cases. Replaced general regex-prefix analysis with fixed literal paths/prefixes only (optional end anchor or trailing .* suffix); all internal regex operators rejected and safety comparisons use complete directory boundaries. A misformatted review snippet initially obscured real test class boundaries; actual unittest collection verified and review package corrected.",
-    "Actual Kimi invocation exposed missing always_thinking model metadata; fixed bounded selected capabilities/efforts serialization, added regression, independent Kimi context PASS, native retry PASS. Initial failed run retained in local evidence."
+    "Actual Kimi invocation exposed missing always_thinking model metadata; fixed bounded selected capabilities/efforts serialization, added regression, independent Kimi context PASS, native retry PASS. Initial failed run retained in local evidence.",
+    "Initial Linux CI failed four profile-construction tests because their fake Darwin backend still resolved the actual macOS executable. Scoped the executable stub to that construction fixture; production fail-closed behavior and separate real macOS probes remain unchanged."
   ],
   "native_smoke": {
     "kind": "private file-write fixture; not a governed GitHub task run",
