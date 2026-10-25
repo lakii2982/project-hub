@@ -1,10 +1,11 @@
 """Read-only version probes: python -m tooling.ai_delivery.doctor [--config FILE].
 
-Configuration is a JSON mapping of known IDs to absolute executable paths.
-Only fixed --version argv is run. No task, help, headless or login command is
-available. A temporary HOME/cwd avoids normal user profile initialization;
-this is hygiene, not an operating-system security sandbox. Raw tool output is
-discarded, including on error. No authentication or inference is attempted.
+Configuration is a JSON mapping of known IDs to absolute executable paths,
+read only from a regular file that is not a symlink. Only fixed --version argv
+is run. No task, help, headless or login command is available. A temporary
+HOME/cwd avoids normal user profile initialization; this is hygiene, not an
+operating-system security sandbox. Raw tool output is discarded, including on
+error. No authentication or inference is attempted.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ import re
 import selectors
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -122,6 +124,11 @@ def probe(spec: AgentSpec, config: object = None) -> ProbeResult:
     if not executable:
         result["diagnostics"] = ["command_missing"]
         return result
+    # A PATH lookup may return a path relative to the launching cwd; the probe
+    # switches to a private cwd, so pin the absolute location here first.
+    # Configured paths are already absolute and stay byte-for-byte unchanged.
+    if not os.path.isabs(executable):
+        executable = os.path.abspath(executable)
     try:
         usable = Path(executable).is_file() and os.access(executable, os.X_OK)
     except OSError:
@@ -154,8 +161,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.config:
-            # Bound config reads too; invalid content is never echoed.
-            with args.config.open("rb") as handle:
+            # The configuration must be an already-regular file: opened without
+            # following symlinks and without blocking, so a FIFO, directory or
+            # symlink is rejected instead of stalling the doctor. The file is
+            # identified by fstat on the open descriptor, then read bounded;
+            # invalid content is never echoed.
+            descriptor = os.open(args.config, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(descriptor, "rb") as handle:
+                info = os.fstat(handle.fileno())
+                if not stat.S_ISREG(info.st_mode) or info.st_size > STREAM_LIMIT:
+                    raise ConfigurationError("configuration_not_regular_file")
                 content = handle.read(STREAM_LIMIT + 1)
             if len(content) > STREAM_LIMIT:
                 raise ConfigurationError("configuration_too_large")
@@ -163,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             config = {}
         result = doctor(config)
-    except (ConfigurationError, OSError, ValueError, UnicodeError):
+    except (ConfigurationError, OSError, ValueError, UnicodeError, RecursionError):
         print('{"error":"invalid_agent_configuration"}', file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False))

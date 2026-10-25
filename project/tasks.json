@@ -1086,7 +1086,7 @@
       "title": "真实GitHub需求和缺陷的四CLI闭环演练",
       "kind": "research",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1112,9 +1112,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/25",
       "owner": null,
-      "blockers": [
-        "Activate when the frozen prerequisites are delivered."
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -1188,7 +1186,7 @@
       "title": "修复探针配置边界并将执行器收敛为四个CLI",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1210,9 +1208,9 @@
         "python -m unittest tests.test_delivery_agents tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/32",
-      "owner": null,
+      "owner": "integration-agent; native Claude Code GLM code + DSH DeepSeek tests; Kimi review",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-107.md"
     },
     {
       "id": "PH-093",

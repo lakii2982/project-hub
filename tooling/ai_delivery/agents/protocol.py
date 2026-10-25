@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Literal, TypedDict
 
 
-AgentId = Literal["codex_controller", "kimi_code", "claude_code", "opencode", "zcode", "dsh"]
+AgentId = Literal["codex_controller", "kimi_code", "claude_code", "opencode", "dsh"]
 Capability = Literal["verified", "unverified", "unsupported"]
 ProbeStatus = Literal["missing", "probe_failed", "probe_verified", "config_required"]
 
