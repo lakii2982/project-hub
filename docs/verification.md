@@ -145,3 +145,5 @@ PR #36 首次 SQLite 作业40174894779/job121113355733中两个既有执行测�
 ## PH-094 · 2026-10-25 规划验证
 
 projectctl check通过（41任务），projectctl/governance共19项通过（3.075s）。原生Claude Code既有GLM在只读快照返回PASS/0阻断，完整范围与限制见PH-094报告；工具代理路由失败未计成功。仅规划，无产品页面、生产或PG并发验证。
+
+PH-095：projectctl check（42任务）与19项规划/治理测试（2.152s）通过；原生Claude/GLM只读风险校正复核PASS。最终PH-023仍须新S契约下复核/CI。

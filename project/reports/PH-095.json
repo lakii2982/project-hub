@@ -1,0 +1,38 @@
+{
+  "task_id": "PH-095",
+  "summary": "Correct PH-023 BASE risk A to S because AGENTS.md and task metadata are critical paths; preserve all scope, acceptance and CI protections; add PH-096 planning successor.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual Python3.12 check ok=true/task_count42; final check rerun after report."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "19 actual tests passed in2.152s."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native Claude Code / existing GLM",
+    "status": "pass",
+    "findings": [],
+    "run_id": "adbe580d-35fd-4fb5-a81d-a63b18d918c1",
+    "stdout_sha256": "2e4661311acb47169becb48ce55c1831ff96e5bd6cda989c95c73b0efd17c473",
+    "evidence": {
+      "result": "PASS",
+      "blockers": [],
+      "limitations": [
+        "仅按指令读取了三个指定范围（tasks.json相关条目、PH-023.md末段、projectctl.py:68-91与1050-1090）并用搜索定位行号，未执行测试或projectctl，门禁行为系代码阅读推断；快照非git仓库，无法直接diff核对'仅risk A→S+spec追加'，系由终态及PH095白名单（不含scripts/projectctl.py、AGENTS.md等门禁文件）间接佐证；projectctl.py仅审阅指定行段，其余可能的S级附加门禁未审计（若有也只会更严格）；PH-095.md本身未读。",
+        "核对结论：AGENTS.md与project/tasks.json确在CRITICAL_PATHS（projectctl.py:81-82），verify-change对critical path强制BASE risk S（projectctl.py:1078-1086）；PH023白名单含两者（tasks.json:1298,1305），原risk A必被critical_path_requires_high_risk拒绝；现risk已为S（tasks.json:1289），属加严而非削弱；升级由PH-023.md:15治理风险校正段明确要求（'风险必须S…旧A标注不得用于绕过门禁'），经PH094→PH095规划链在白名单内实施，未扩大PH023文件范围、业务、验收或门禁；PH096为同构'下一轮需求规划入口'槽位（tasks.json:1494-1527），blocked于PH095，状态与'复核通过后才置done/继任ready'一致。"
+      ]
+    }
+  },
+  "unverified": [
+    "Planning correction only; no product implementation. Final PH023 deliverable requires fresh S-level independent review and current CI under the corrected BASE."
+  ],
+  "deviations": [
+    "PH094 mistakenly classified the bounded frontend AGENTS addition as A; actual trusted verify-change requires S for AGENTS and tasks. Corrected through the next ready planning slot instead of changing the implementation PR or checker. Native Kimi drafts retain their original BASE and are collected as drafts; final integrated verification/review must bind the corrected contract."
+  ]
+}
