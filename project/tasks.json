@@ -984,7 +984,7 @@
       "title": "本地四执行器：隔离运行、队列、取消和恢复",
       "kind": "infra",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1007,16 +1007,16 @@
         "python -m unittest tests.test_delivery_execution tests.test_delivery_execution_queue tests.test_delivery_execution_sandbox tests.test_delivery_agents -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/22",
-      "owner": null,
+      "owner": "GPT integration; native Kimi, OpenCode, DSH implementation; GLM/DeepSeek independent review",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-102.md"
     },
     {
       "id": "PH-103",
       "title": "GitHub任务到本地团队的单一命令入口",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1041,9 +1041,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/23",
       "owner": null,
-      "blockers": [
-        "Activate when the frozen prerequisites are delivered."
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
