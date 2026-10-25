@@ -1,0 +1,30 @@
+{
+  "task_id": "PH-093",
+  "summary": "Planning-only: add the actual early-child-exit integration correction to PH-104 frozen scope, preserving process-proof, quarantine, fencing and all CI checks; retain PH-094 planning successor.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual final projectctl check ok=true/task_count36 after report and review completion."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "19 actual tests passed in1.983s with Python3.12, credential-free/no-network filesystem sandbox."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native Claude Code / existing GLM-5.3-Flash",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Fresh native Claude Code/GLM followup reviewed literal before/after task and actual group_empty. PASS/no blockers; minor canonical acceptance list inconsistency corrected. Existing preapproved delivery/controller scope retained; no scope redesign.",
+    "review_log_sha256": "3c3882f88dc54b7d53149de61835281673d7b21534521b80204f1ca9223d60ae"
+  },
+  "unverified": [
+    "No runtime implementation in this planning PR. Original PR36 first SQLite failure retained; single rerun passed, not claimed a fix."
+  ],
+  "deviations": [
+    "Initial independent review requested literal delta and operational absence criterion; provided actual task/spec and helper facts. Reviewer mistook queue quarantine for disabling tests and mistook an omitted source file for a nonexistent file; factual corrections provided."
+  ]
+}

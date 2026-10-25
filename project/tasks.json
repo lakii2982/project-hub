@@ -1067,11 +1067,14 @@
         "project/tasks.json",
         "project/reports/PH-104.json",
         "project/handoffs/PH-104.md",
-        "tooling/ai_delivery/__main__.py"
+        "tooling/ai_delivery/__main__.py",
+        "tooling/ai_delivery/execution/runner.py",
+        "tests/test_delivery_execution.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
-        "python -m unittest tests.test_delivery_gate -v"
+        "python -m unittest tests.test_delivery_gate -v",
+        "python -m unittest tests.test_delivery_execution -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/24",
       "owner": null,
@@ -1218,7 +1221,7 @@
       "title": "下一轮需求规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "rolling",
       "depends_on": [
@@ -1236,6 +1239,39 @@
         "docs/verification.md",
         "project/reports/PH-093.json",
         "project/handoffs/PH-093.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "integration-agent; native Claude/GLM independent planning review",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-093.md"
+    },
+    {
+      "id": "PH-094",
+      "title": "下一轮需求规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-093"
+      ],
+      "spec": "project/specs/PH-094.md",
+      "allowed_paths": [
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-094.json",
+        "project/handoffs/PH-094.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
