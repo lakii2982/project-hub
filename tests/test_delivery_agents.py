@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import chdir, redirect_stderr, redirect_stdout
 import io
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import time
@@ -13,6 +14,9 @@ from unittest.mock import patch
 
 from tooling.ai_delivery.agents.registry import AGENTS, ConfigurationError, validate_config
 from tooling.ai_delivery.doctor import STREAM_LIMIT, doctor, main, probe
+
+
+REPOSITORY = Path(__file__).resolve().parents[1]
 
 
 class DeliveryAgentTests(unittest.TestCase):
@@ -32,7 +36,10 @@ class DeliveryAgentTests(unittest.TestCase):
             result = doctor()
         self.assertEqual(set(result), {"schema_version", "controller", "agents"})
         self.assertEqual(result["controller"]["id"], "codex_controller")
-        self.assertEqual(len(result["agents"]), 5)
+        self.assertEqual(set(AGENTS), {"codex_controller", "kimi_code", "opencode", "dsh", "claude_code"})
+        self.assertEqual(len(result["agents"]), 4)
+        self.assertEqual({entry["id"] for entry in result["agents"]},
+                         {"kimi_code", "opencode", "dsh", "claude_code"})
         for entry in [result["controller"], *result["agents"]]:
             self.assertEqual(set(entry), {"id", "available", "executable", "version", "status", "capabilities", "diagnostics"})
             self.assertEqual(entry["status"], "missing")
@@ -40,7 +47,7 @@ class DeliveryAgentTests(unittest.TestCase):
             self.assertEqual(set(entry["capabilities"].values()), {"unverified"})
 
     def test_config_rejects_unknown_ids_fields_and_non_paths(self):
-        for config in [{"arbitrary": "/bin/true"}, {"dsh": {"executable": "/bin/true"}}, {"dsh": "relative"}, {"dsh": "/bin/true --version"}, [], {"dsh": 1}, {"dsh": "/bin/true\x00"}]:
+        for config in [{"arbitrary": "/bin/true"}, {"zcode": "/bin/true"}, {"dsh": {"executable": "/bin/true"}}, {"dsh": "relative"}, {"dsh": "/bin/true --version"}, [], {"dsh": 1}, {"dsh": "/bin/true\x00"}]:
             with self.subTest(config=config), self.assertRaises(ConfigurationError):
                 validate_config(config)
 
@@ -141,6 +148,73 @@ class DeliveryAgentTests(unittest.TestCase):
         self.assertEqual(status, 2)
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(json.loads(stderr.getvalue()), {"error": "invalid_agent_configuration"})
+
+    def cli(self, config, timeout=10):
+        return subprocess.run(
+            [sys.executable, "-m", "tooling.ai_delivery.doctor", "--config", str(config)],
+            cwd=REPOSITORY, capture_output=True, text=True, errors="replace", timeout=timeout,
+        )
+
+    def assert_rejected(self, completed):
+        self.assertEqual(completed.returncode, 2)
+        self.assertEqual(completed.stdout, "")
+        self.assertEqual(completed.stderr.strip(), '{"error":"invalid_agent_configuration"}')
+        self.assertNotIn("Traceback", completed.stderr)
+
+    def test_cli_rejects_deeply_nested_json_without_echoing_content(self):
+        for shape, content in {"arrays": "[" * 2000 + '"secret-fixture"' + "]" * 2000,
+                               "objects": '{"a":' * 2000 + "1" + "}" * 2000}.items():
+            with self.subTest(shape=shape):
+                self.assertLess(len(content.encode()), STREAM_LIMIT)
+                config = self.root / f"{shape}.json"
+                config.write_text(content)
+                completed = self.cli(config)
+                self.assert_rejected(completed)
+                self.assertNotIn("secret-fixture", completed.stderr)
+                self.assertNotIn(str(self.root), completed.stderr)
+
+    def test_cli_rejects_fifo_config_without_blocking(self):
+        fifo = self.root / "agents.fifo"
+        try:
+            os.mkfifo(fifo)
+        except (AttributeError, NotImplementedError, OSError):
+            self.skipTest("FIFO not supported")
+        started = time.monotonic()
+        try:
+            completed = self.cli(fifo, timeout=5)
+        except subprocess.TimeoutExpired:
+            self.fail("configuration read blocked on a FIFO")
+        self.assertLess(time.monotonic() - started, 5)
+        self.assert_rejected(completed)
+        self.assertNotIn(str(self.root), completed.stderr)
+
+    def test_cli_rejects_symlink_config(self):
+        target = self.root / "agents.json"
+        target.write_text(json.dumps({"dsh": "/bin/true"}))
+        link = self.root / "agents-link.json"
+        try:
+            os.symlink(target, link)
+        except (AttributeError, NotImplementedError, OSError):
+            self.skipTest("symlinks unavailable")
+        completed = self.cli(link)
+        self.assert_rejected(completed)
+        self.assertNotIn(str(target), completed.stderr)
+        self.assertNotIn("/bin/true", completed.stderr)
+
+    def test_cli_rejects_directory_config(self):
+        self.assert_rejected(self.cli(self.root))
+
+    def test_relative_path_is_resolved_before_probe_changes_cwd(self):
+        bindir = self.root / "bin"
+        bindir.mkdir()
+        exe = bindir / "dsh"
+        exe.write_text(f"#!{sys.executable}\nprint('dsh 4.5.6')\n")
+        exe.chmod(0o700)
+        with chdir(self.root), patch.dict(os.environ, {"PATH": "bin"}):
+            result = doctor()
+        entry = next(agent for agent in result["agents"] if agent["id"] == "dsh")
+        self.assertEqual(entry["status"], "probe_verified")
+        self.assertEqual(entry["version"], "4.5.6")
 
 
 if __name__ == "__main__":

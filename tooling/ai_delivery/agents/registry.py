@@ -12,7 +12,6 @@ AGENTS = MappingProxyType({spec.id: spec for spec in (
     AgentSpec("kimi_code", "kimi"),
     AgentSpec("claude_code", "claude"),
     AgentSpec("opencode", "opencode"),
-    AgentSpec("zcode", "zcode"),
     AgentSpec("dsh", "dsh"),
 )})
 

@@ -1,0 +1,140 @@
+{
+  "task_id": "PH-107",
+  "summary": "Fix the three observed doctor boundary defects and restrict the registry to the controller plus four native workers; implement the real bug through the delivered local team pipeline.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual ready contract from approved BASE307f69d,36 tasks. Final metadata checked separately."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_agents tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "37 tests passed5.231s in credential-free/no-network filesystem sandbox. New real-subprocess deep JSON/FIFO/symlink/directory negatives, relative-PATH actual executable, exact registry and rejected ZCode; all prior assertions retained."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "358 tests99.776s:354 passed and4 explicit nested-macOS-backend skips. Disposable SQLite; no credentials or network."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual isolated run: no issues."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual isolated run: no changes detected."
+    },
+    {
+      "command": "python manage.py migrate --noinput; python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Both management commands called sequentially inside one credential-free sandbox with disposable SQLite: ok=true/errors=[]/organizations0/entries0."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native Kimi Code / existing K3.1 Pro",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual read-only focused review of all3 production changes returned structured PASS/findings[]. Whole final source receives separate exact-diff delivered-gate review after report freezing.",
+    "log_sha256": "ebeb4077d5b7fccf3d13983edb822720e5414d262cb008e98445cbecbce08403"
+  },
+  "native_bug_development": [
+    {
+      "agent_id": "claude_code",
+      "provider_model": "existing Claude Code / GLM-5.3-Flash",
+      "run_id": "4a331862-76ae-48fd-a5d8-e58ec76e994d",
+      "state": "completed",
+      "base_sha": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+      "contract_digest": "65e37ac8b38da595ab5edcbfffc3f573d2794cb68c2223a8b590f9c29d953ad8",
+      "scope": [
+        "tooling/ai_delivery/agents/*",
+        "tooling/ai_delivery/doctor.py"
+      ],
+      "process_started_at": 1792931180,
+      "process_finished_at": 1792931505,
+      "diff_digest": "1ebb4aa15e10c265e0792625ef73758c78a57ce223856aa7882f4165c081d22c",
+      "manifest": [
+        {
+          "path": "tooling/ai_delivery/agents/protocol.py",
+          "old": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "0589c9831716bd2e627d6853365184e9bf83471d340bb209109ba5fef52a5f5e"
+          },
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "6a0c24bec601d842935821520e2601373b8e8b0014037d73919b996fe1c56eae"
+          }
+        },
+        {
+          "path": "tooling/ai_delivery/agents/registry.py",
+          "old": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "6ebaa10f74ef118237d3a14bebb0fb0f21c7eec641110dc7d98fbab316431624"
+          },
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "6c34225900696fcedfb1610f81f4c697bf729438cd923b5b476c14c128dd91c0"
+          }
+        },
+        {
+          "path": "tooling/ai_delivery/doctor.py",
+          "old": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "a9ef8ed6c4685c8dd1a7b4f5da038d5e1cb0c45b8927ec8608b103386c6cf140"
+          },
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "a82074a8959ba32b6ec2f12fa276003f5076fc050caadef9bdd1b54edfadf4cc"
+          }
+        }
+      ],
+      "stdout_sha256": "c878ffc00b4820a719851415d0477e367f40f9e889158428e8de95f67850a33e"
+    },
+    {
+      "agent_id": "dsh",
+      "provider_model": "existing DSH OpenCode Go / deepseek-v4.1-flash",
+      "run_id": "d018ff32-b053-4ee9-ace3-4c7c1c3896b6",
+      "state": "completed",
+      "base_sha": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+      "contract_digest": "65e37ac8b38da595ab5edcbfffc3f573d2794cb68c2223a8b590f9c29d953ad8",
+      "scope": [
+        "tests/test_delivery_agents.py"
+      ],
+      "process_started_at": 1792931179,
+      "process_finished_at": 1792931605,
+      "diff_digest": "5edbf3e3c3c1ee80918915d3360f49fd95488bfbf26a0ae9dff99bb3d723c96f",
+      "manifest": [
+        {
+          "path": "tests/test_delivery_agents.py",
+          "old": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "df60e7eb069fa193ab631ea73751038e646c55d8fae4dedc149395c6b0f171b3"
+          },
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "ae0aad7a410f28c83c95edc69f63215b91f031690a7da099b87e28f48bd03d79"
+          }
+        }
+      ],
+      "stdout_sha256": "49fb6b8824b2b7ddb46bac335b7a980b9efafea94f27a253f915b0275f739ef6"
+    }
+  ],
+  "source_assembly_id": "f02dd76e-d36f-4545-94df-4a20351ccc7c",
+  "parallel_evidence": "Actual native Claude process1792931180..1792931505 and DSH1792931179..1792931605 overlap325seconds. Both are successful real Issue32 development, not version/help/fixture probes.",
+  "unverified": [
+    "Four nested backend tests explicitly skipped in the outer credential-free sandbox; separate PH-102 real macOS backend evidence remains. No unsupported-OS, daemon/autostart, deployment or production claims.",
+    "Final exact-diff gate verification/reviewer/PR/CI receipts are recorded separately after freezing this report, then audited in PH-105; no self-referencing source digest."
+  ],
+  "deviations": []
+}
