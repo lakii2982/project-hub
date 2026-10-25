@@ -1,0 +1,803 @@
+{
+  "schema_version": 1,
+  "repository": "lakii2982/project-hub",
+  "development": [
+    {
+      "run_id": "5645cce6-75e5-42e2-a945-5e63d8b17030",
+      "task_id": "PH-104",
+      "agent_id": "kimi_code",
+      "state": "completed",
+      "base_sha": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+      "contract_digest": "6f598bd39fcbbbd16dc5044e7785640acf219f15ad4e54e452659020a156cd08",
+      "provider_model": "Kimi Code existing OAuth / K3.1 Pro",
+      "process_started_at": 1792916108,
+      "process_finished_at": 1792916526,
+      "diff_digest": "cf3ff20de460a95d63a58ab2545f8b75595e1ea78234d605f1b7d161b62a17d3",
+      "stdout_sha256": "514471e4292aeddf59d21d56af63127b088aa01dde1aa718b1a09df4c8202163",
+      "manifest": [
+        {
+          "path": "tooling/ai_delivery/delivery/verification.py",
+          "old": null,
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "233ac070a345d675ed03bb9b8f80f13ce7869dc033878aabee9a3a11125d9898"
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "152b0b10-b943-467d-8560-5c8a3b901ac5",
+      "task_id": "PH-104",
+      "agent_id": "opencode",
+      "state": "completed",
+      "base_sha": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+      "contract_digest": "6f598bd39fcbbbd16dc5044e7785640acf219f15ad4e54e452659020a156cd08",
+      "provider_model": "OpenCode / opencode/deepseek-v4.1-flash-free",
+      "process_started_at": 1792917217,
+      "process_finished_at": 1792917226,
+      "diff_digest": "b45d05a75fa5779503ec6b7e2934866e57e1f779f69a3dbcfaf4ee32f8673e36",
+      "stdout_sha256": "eeeaa7e253d23a1403c94d83ea1359f7f619c188565ec0a100e6d6f3a04a57b5",
+      "manifest": [
+        {
+          "path": "tooling/ai_delivery/delivery/receipt.py",
+          "old": null,
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "8aee43a5e507b8eabf8bb9ccc6371a713a25c7e4a4e652d1d8ed2c7073849e4c"
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "376cb7bd-0221-4e85-8be4-04bec341dc01",
+      "task_id": "PH-104",
+      "agent_id": "dsh",
+      "state": "completed",
+      "base_sha": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+      "contract_digest": "6f598bd39fcbbbd16dc5044e7785640acf219f15ad4e54e452659020a156cd08",
+      "provider_model": "DSH / existing OpenCode Go deepseek-v4.1-flash",
+      "process_started_at": 1792916110,
+      "process_finished_at": 1792916232,
+      "diff_digest": "c0487df21e750b3156b01e40c275f0316ad5fd95be3c3d2580333fb844707ad3",
+      "stdout_sha256": "a8ff6a589f3e7bc7c1ee645497044909e32ac932a029051e70b7dd547ccde542",
+      "manifest": [
+        {
+          "path": "docs/engineering/ai-delivery-delivery.md",
+          "old": null,
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "f660883cf561106e0c4f31250c7c6d4c8e6172dfdefa61b85518ac7f1ed7af62"
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "4a331862-76ae-48fd-a5d8-e58ec76e994d",
+      "task_id": "PH-107",
+      "agent_id": "claude_code",
+      "state": "completed",
+      "base_sha": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+      "contract_digest": "65e37ac8b38da595ab5edcbfffc3f573d2794cb68c2223a8b590f9c29d953ad8",
+      "provider_model": "Claude Code / existing GLM-5.3-Flash",
+      "process_started_at": 1792931180,
+      "process_finished_at": 1792931505,
+      "diff_digest": "1ebb4aa15e10c265e0792625ef73758c78a57ce223856aa7882f4165c081d22c",
+      "stdout_sha256": "c878ffc00b4820a719851415d0477e367f40f9e889158428e8de95f67850a33e",
+      "manifest": [
+        {
+          "path": "tooling/ai_delivery/agents/protocol.py",
+          "old": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "0589c9831716bd2e627d6853365184e9bf83471d340bb209109ba5fef52a5f5e"
+          },
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "6a0c24bec601d842935821520e2601373b8e8b0014037d73919b996fe1c56eae"
+          }
+        },
+        {
+          "path": "tooling/ai_delivery/agents/registry.py",
+          "old": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "6ebaa10f74ef118237d3a14bebb0fb0f21c7eec641110dc7d98fbab316431624"
+          },
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "6c34225900696fcedfb1610f81f4c697bf729438cd923b5b476c14c128dd91c0"
+          }
+        },
+        {
+          "path": "tooling/ai_delivery/doctor.py",
+          "old": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "a9ef8ed6c4685c8dd1a7b4f5da038d5e1cb0c45b8927ec8608b103386c6cf140"
+          },
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "a82074a8959ba32b6ec2f12fa276003f5076fc050caadef9bdd1b54edfadf4cc"
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "d018ff32-b053-4ee9-ace3-4c7c1c3896b6",
+      "task_id": "PH-107",
+      "agent_id": "dsh",
+      "state": "completed",
+      "base_sha": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+      "contract_digest": "65e37ac8b38da595ab5edcbfffc3f573d2794cb68c2223a8b590f9c29d953ad8",
+      "provider_model": "DSH / existing OpenCode Go deepseek-v4.1-flash",
+      "process_started_at": 1792931179,
+      "process_finished_at": 1792931605,
+      "diff_digest": "5edbf3e3c3c1ee80918915d3360f49fd95488bfbf26a0ae9dff99bb3d723c96f",
+      "stdout_sha256": "49fb6b8824b2b7ddb46bac335b7a980b9efafea94f27a253f915b0275f739ef6",
+      "manifest": [
+        {
+          "path": "tests/test_delivery_agents.py",
+          "old": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "df60e7eb069fa193ab631ea73751038e646c55d8fae4dedc149395c6b0f171b3"
+          },
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "ae0aad7a410f28c83c95edc69f63215b91f031690a7da099b87e28f48bd03d79"
+          }
+        }
+      ]
+    }
+  ],
+  "deliveries": [
+    {
+      "task_id": "PH-104",
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_delivery_gate -v",
+        "python -m unittest tests.test_delivery_execution -v"
+      ],
+      "source_actors": [
+        "kimi_code",
+        "dsh",
+        "opencode"
+      ],
+      "source": {
+        "run_id": "f0aa7ee9-7787-4534-a355-269c80134fa9",
+        "task_id": "PH-104",
+        "repository": "lakii2982/project-hub",
+        "base_sha": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+        "contract_digest": "6f598bd39fcbbbd16dc5044e7785640acf219f15ad4e54e452659020a156cd08",
+        "diff_digest": "bf9320551019f71e516036317e2a7f908e221cdc267b9c9a79e4e2860a8767d3"
+      },
+      "verification": {
+        "run_id": "f0aa7ee9-7787-4534-a355-269c80134fa9",
+        "task_id": "PH-104",
+        "repository": "lakii2982/project-hub",
+        "base_sha": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+        "contract_digest": "6f598bd39fcbbbd16dc5044e7785640acf219f15ad4e54e452659020a156cd08",
+        "diff_digest": "bf9320551019f71e516036317e2a7f908e221cdc267b9c9a79e4e2860a8767d3",
+        "result": "PASS",
+        "checks": [
+          {
+            "command": "python scripts/projectctl.py check",
+            "result": "PASS",
+            "exit_code": 0,
+            "stdout_sha256": "e3070665d0d3cab634807d42681af6ee12926ed45512a75dd232046747ab692d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "limitations": []
+          },
+          {
+            "command": "python -m unittest tests.test_delivery_gate -v",
+            "result": "PASS",
+            "exit_code": 0,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "60d140150d91d2b60b133dbb4dfe172bc6e325315dd68cae29825c4b38f94fa0",
+            "limitations": []
+          },
+          {
+            "command": "python -m unittest tests.test_delivery_execution -v",
+            "result": "PASS",
+            "exit_code": 0,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "5d2994fd096fa62b9966f971b1a8d11e07e5a69a15f04d8c60131e2c34ec4708",
+            "limitations": []
+          }
+        ],
+        "evidence_id": "2e6365aa-3282-49fc-9b0c-241ee5516429",
+        "limitations": []
+      },
+      "review": {
+        "run_id": "f0aa7ee9-7787-4534-a355-269c80134fa9",
+        "task_id": "PH-104",
+        "repository": "lakii2982/project-hub",
+        "base_sha": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+        "contract_digest": "6f598bd39fcbbbd16dc5044e7785640acf219f15ad4e54e452659020a156cd08",
+        "diff_digest": "bf9320551019f71e516036317e2a7f908e221cdc267b9c9a79e4e2860a8767d3",
+        "result": "PASS",
+        "findings": [],
+        "reviewer_run_id": "cd2938f7-ab75-40a9-853f-91dd8038334c",
+        "reviewer_agent": "claude_code",
+        "evidence_id": "e7f82e84-d24f-4a6f-abb2-60ce90684978",
+        "verification_id": "2e6365aa-3282-49fc-9b0c-241ee5516429",
+        "context_sha256": "128233c26fb923f20dc4cb314e1e8f1a7328824a786f51975c23c0a5981d631e",
+        "limitations": []
+      },
+      "pull_request": {
+        "head": "4496732f3cfede1e9cfce2a94909981f3d034715",
+        "url": "https://github.com/lakii2982/project-hub/pull/38",
+        "base": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+        "branch": "feat/PH-104-delivery-f0aa7ee9-7787-4534-a355-269c80134fa9",
+        "merge_commit": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+        "status": "merged",
+        "checks": [
+          {
+            "name": "CodeQL (javascript-typescript)",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "CodeQL (python)",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Container smoke",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "MCP protocol",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "PostgreSQL domain",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Project governance",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Public hygiene",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "SQLite domain",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ],
+        "ci": [
+          {
+            "name": "CodeQL (javascript-typescript)",
+            "app_id": 15368,
+            "check_id": 121167249161,
+            "head_sha": "4496732f3cfede1e9cfce2a94909981f3d034715",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40192812921/job/121167249161",
+            "completed_at": "2026-10-25T12:23:11Z"
+          },
+          {
+            "name": "CodeQL (python)",
+            "app_id": 15368,
+            "check_id": 121167249343,
+            "head_sha": "4496732f3cfede1e9cfce2a94909981f3d034715",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40192812921/job/121167249343",
+            "completed_at": "2026-10-25T12:23:28Z"
+          },
+          {
+            "name": "Container smoke",
+            "app_id": 15368,
+            "check_id": 121167249345,
+            "head_sha": "4496732f3cfede1e9cfce2a94909981f3d034715",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40192812928/job/121167249345",
+            "completed_at": "2026-10-25T12:24:13Z"
+          },
+          {
+            "name": "MCP protocol",
+            "app_id": 15368,
+            "check_id": 121167249543,
+            "head_sha": "4496732f3cfede1e9cfce2a94909981f3d034715",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40192812928/job/121167249543",
+            "completed_at": "2026-10-25T12:22:44Z"
+          },
+          {
+            "name": "PostgreSQL domain",
+            "app_id": 15368,
+            "check_id": 121167249486,
+            "head_sha": "4496732f3cfede1e9cfce2a94909981f3d034715",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40192812928/job/121167249486",
+            "completed_at": "2026-10-25T12:23:35Z"
+          },
+          {
+            "name": "Project governance",
+            "app_id": 15368,
+            "check_id": 121167249493,
+            "head_sha": "4496732f3cfede1e9cfce2a94909981f3d034715",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40192812928/job/121167249493",
+            "completed_at": "2026-10-25T12:22:32Z"
+          },
+          {
+            "name": "Public hygiene",
+            "app_id": 15368,
+            "check_id": 121167249502,
+            "head_sha": "4496732f3cfede1e9cfce2a94909981f3d034715",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40192812928/job/121167249502",
+            "completed_at": "2026-10-25T12:22:36Z"
+          },
+          {
+            "name": "SQLite domain",
+            "app_id": 15368,
+            "check_id": 121167249434,
+            "head_sha": "4496732f3cfede1e9cfce2a94909981f3d034715",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40192812928/job/121167249434",
+            "completed_at": "2026-10-25T12:23:21Z"
+          }
+        ]
+      }
+    },
+    {
+      "task_id": "PH-107",
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_delivery_agents tests.test_projectctl tests.test_governance -v"
+      ],
+      "source_actors": [
+        "claude_code",
+        "dsh"
+      ],
+      "source": {
+        "run_id": "f02dd76e-d36f-4545-94df-4a20351ccc7c",
+        "task_id": "PH-107",
+        "repository": "lakii2982/project-hub",
+        "base_sha": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+        "contract_digest": "65e37ac8b38da595ab5edcbfffc3f573d2794cb68c2223a8b590f9c29d953ad8",
+        "diff_digest": "734452d5e93603f51f83d2a4330289015771e5ebc9e16e25b9c4112e4da63a30"
+      },
+      "verification": {
+        "run_id": "f02dd76e-d36f-4545-94df-4a20351ccc7c",
+        "task_id": "PH-107",
+        "repository": "lakii2982/project-hub",
+        "base_sha": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+        "contract_digest": "65e37ac8b38da595ab5edcbfffc3f573d2794cb68c2223a8b590f9c29d953ad8",
+        "diff_digest": "734452d5e93603f51f83d2a4330289015771e5ebc9e16e25b9c4112e4da63a30",
+        "result": "PASS",
+        "checks": [
+          {
+            "command": "python scripts/projectctl.py check",
+            "result": "PASS",
+            "exit_code": 0,
+            "stdout_sha256": "e3070665d0d3cab634807d42681af6ee12926ed45512a75dd232046747ab692d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "limitations": []
+          },
+          {
+            "command": "python -m unittest tests.test_delivery_agents tests.test_projectctl tests.test_governance -v",
+            "result": "PASS",
+            "exit_code": 0,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "cf13a4d89f238c6766ed8145c6dfe56ed580a133e827840b390ef918820eeaeb",
+            "limitations": []
+          }
+        ],
+        "evidence_id": "1e5c88f9-f3c2-4eaa-ba57-bd416bbfd5fd",
+        "limitations": []
+      },
+      "review": {
+        "run_id": "f02dd76e-d36f-4545-94df-4a20351ccc7c",
+        "task_id": "PH-107",
+        "repository": "lakii2982/project-hub",
+        "base_sha": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+        "contract_digest": "65e37ac8b38da595ab5edcbfffc3f573d2794cb68c2223a8b590f9c29d953ad8",
+        "diff_digest": "734452d5e93603f51f83d2a4330289015771e5ebc9e16e25b9c4112e4da63a30",
+        "result": "PASS",
+        "findings": [],
+        "reviewer_run_id": "a9c25dc0-76d9-4196-bece-e8d0ff981f3a",
+        "reviewer_agent": "kimi_code",
+        "evidence_id": "593e481d-1d19-4251-9cf5-2acb65b2aa49",
+        "verification_id": "1e5c88f9-f3c2-4eaa-ba57-bd416bbfd5fd",
+        "context_sha256": "c097ffe5b4ecd167edcdc38c8c4c517709f8b10399bcfda51899cd679b6f91d8",
+        "limitations": []
+      },
+      "pull_request": {
+        "head": "94235f223eacc2f550674ef88844e2e3c414eee8",
+        "url": "https://github.com/lakii2982/project-hub/pull/39",
+        "base": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+        "branch": "feat/PH-107-delivery-f02dd76e-d36f-4545-94df-4a20351ccc7c",
+        "merge_commit": "dcbaed8e5e5f08e32d1c1df03b347ec340e32542",
+        "status": "merged",
+        "checks": [
+          {
+            "name": "CodeQL (javascript-typescript)",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "CodeQL (python)",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Container smoke",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "MCP protocol",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "PostgreSQL domain",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Project governance",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Public hygiene",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "SQLite domain",
+            "app_id": 15368,
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ],
+        "ci": [
+          {
+            "name": "CodeQL (javascript-typescript)",
+            "app_id": 15368,
+            "check_id": 121174141280,
+            "head_sha": "94235f223eacc2f550674ef88844e2e3c414eee8",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40195103507/job/121174141280",
+            "completed_at": "2026-10-25T12:53:57Z"
+          },
+          {
+            "name": "CodeQL (python)",
+            "app_id": 15368,
+            "check_id": 121174141505,
+            "head_sha": "94235f223eacc2f550674ef88844e2e3c414eee8",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40195103507/job/121174141505",
+            "completed_at": "2026-10-25T12:54:07Z"
+          },
+          {
+            "name": "Container smoke",
+            "app_id": 15368,
+            "check_id": 121174141689,
+            "head_sha": "94235f223eacc2f550674ef88844e2e3c414eee8",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40195103544/job/121174141689",
+            "completed_at": "2026-10-25T12:54:54Z"
+          },
+          {
+            "name": "MCP protocol",
+            "app_id": 15368,
+            "check_id": 121174141854,
+            "head_sha": "94235f223eacc2f550674ef88844e2e3c414eee8",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40195103544/job/121174141854",
+            "completed_at": "2026-10-25T12:53:30Z"
+          },
+          {
+            "name": "PostgreSQL domain",
+            "app_id": 15368,
+            "check_id": 121174141826,
+            "head_sha": "94235f223eacc2f550674ef88844e2e3c414eee8",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40195103544/job/121174141826",
+            "completed_at": "2026-10-25T12:54:16Z"
+          },
+          {
+            "name": "Project governance",
+            "app_id": 15368,
+            "check_id": 121174141804,
+            "head_sha": "94235f223eacc2f550674ef88844e2e3c414eee8",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40195103544/job/121174141804",
+            "completed_at": "2026-10-25T12:53:18Z"
+          },
+          {
+            "name": "Public hygiene",
+            "app_id": 15368,
+            "check_id": 121174141790,
+            "head_sha": "94235f223eacc2f550674ef88844e2e3c414eee8",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40195103544/job/121174141790",
+            "completed_at": "2026-10-25T12:53:20Z"
+          },
+          {
+            "name": "SQLite domain",
+            "app_id": 15368,
+            "check_id": 121174141807,
+            "head_sha": "94235f223eacc2f550674ef88844e2e3c414eee8",
+            "conclusion": "success",
+            "status": "completed",
+            "url": "https://github.com/lakii2982/project-hub/actions/runs/40195103544/job/121174141807",
+            "completed_at": "2026-10-25T12:53:55Z"
+          }
+        ]
+      }
+    }
+  ],
+  "cancel_recovery": {
+    "run_id": "811ac6d4-ef26-415c-8002-98e0b32c3505",
+    "agent_id": "opencode",
+    "cancel_state": "cancelled",
+    "new_process_state": "cancelled",
+    "recover_exit_code": 0,
+    "event_types": [
+      "queued",
+      "contract_frozen",
+      "claimed",
+      "dispatched",
+      "spawned",
+      "started",
+      "cancellation_requested",
+      "cancelled"
+    ],
+    "events": [
+      {
+        "seq": 8,
+        "type": "queued",
+        "at": 1792914579
+      },
+      {
+        "seq": 9,
+        "type": "contract_frozen",
+        "at": 1792914579
+      },
+      {
+        "seq": 10,
+        "type": "claimed",
+        "at": 1792914579
+      },
+      {
+        "seq": 11,
+        "type": "dispatched",
+        "at": 1792914579
+      },
+      {
+        "seq": 12,
+        "type": "spawned",
+        "at": 1792914579
+      },
+      {
+        "seq": 13,
+        "type": "started",
+        "at": 1792914579
+      },
+      {
+        "seq": 14,
+        "type": "cancellation_requested",
+        "at": 1792914889
+      },
+      {
+        "seq": 15,
+        "type": "cancelled",
+        "at": 1792914889
+      }
+    ],
+    "recover_stdout_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "status_stdout_sha256": "82463796896efbfab4ea582b3bf715d26bfd22f9dae94f60d407f1e97fd482ee",
+    "original_cancel_record_sha256": "20c08d9beab8ee2fdaccba7f1f9f55954b26c30874bcad923b3eae8382216c04",
+    "reason": "Actual out-of-assigned-scope native OpenCode work cancelled; original coordinator process ended. Separate fresh interpreter recovered no pending work and retained the terminal state; no model restart."
+  },
+  "issue_revalidation": {
+    "number": 32,
+    "url": "https://github.com/lakii2982/project-hub/issues/32",
+    "events": [
+      {
+        "id": 34182647370,
+        "event": "reopened",
+        "created_at": "2026-10-25T12:59:01Z"
+      },
+      {
+        "id": 34182697950,
+        "event": "closed",
+        "created_at": "2026-10-25T13:00:18Z"
+      }
+    ],
+    "final_state": "closed",
+    "test_command": "python -m unittest tests.test_delivery_agents -v",
+    "test_exit_code": 0,
+    "test_count": 18,
+    "test_completed_at_epoch": 1792933180.2781997,
+    "test_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "test_stderr_sha256": "0f6a1535865f7dd132e8b8a7a28fb50989c175316207ee2ce0978d4fc06ba84b",
+    "done_task_rejected": true,
+    "done_task_error": "task_not_executable: done",
+    "production_regression_introduced": false
+  },
+  "environment": {
+    "doctor": {
+      "schema_version": 1,
+      "controller": {
+        "id": "codex_controller",
+        "available": true,
+        "executable": "codex",
+        "version": "0.164.0",
+        "status": "probe_verified",
+        "capabilities": {
+          "noninteractive": "unverified",
+          "structured_output": "unverified",
+          "resume": "unverified",
+          "cancel": "unverified"
+        },
+        "diagnostics": [
+          "version_only_execution_unverified"
+        ]
+      },
+      "agents": [
+        {
+          "id": "kimi_code",
+          "available": true,
+          "executable": "kimi",
+          "version": "2.3.1",
+          "status": "probe_verified",
+          "capabilities": {
+            "noninteractive": "unverified",
+            "structured_output": "unverified",
+            "resume": "unverified",
+            "cancel": "unverified"
+          },
+          "diagnostics": [
+            "version_only_execution_unverified"
+          ]
+        },
+        {
+          "id": "claude_code",
+          "available": true,
+          "executable": "claude",
+          "version": "2.1.310",
+          "status": "probe_verified",
+          "capabilities": {
+            "noninteractive": "unverified",
+            "structured_output": "unverified",
+            "resume": "unverified",
+            "cancel": "unverified"
+          },
+          "diagnostics": [
+            "version_only_execution_unverified"
+          ]
+        },
+        {
+          "id": "opencode",
+          "available": true,
+          "executable": "opencode",
+          "version": "2.1.4",
+          "status": "probe_verified",
+          "capabilities": {
+            "noninteractive": "unverified",
+            "structured_output": "unverified",
+            "resume": "unverified",
+            "cancel": "unverified"
+          },
+          "diagnostics": [
+            "version_only_execution_unverified"
+          ]
+        },
+        {
+          "id": "dsh",
+          "available": true,
+          "executable": "dsh",
+          "version": "0.2.1-rc.3",
+          "status": "probe_verified",
+          "capabilities": {
+            "noninteractive": "unverified",
+            "structured_output": "unverified",
+            "resume": "unverified",
+            "cancel": "unverified"
+          },
+          "diagnostics": [
+            "version_only_execution_unverified"
+          ]
+        }
+      ]
+    },
+    "doctor_stdout_sha256": "25953806e650bdb3b68ccaed13f4a6cfaa6aa5f4471983da5a88e105398e0909",
+    "default_local_configuration": true,
+    "platform": "macOS sandbox-exec",
+    "unsupported_platforms": "Native execution explicitly refuses when the verified macOS backend is unavailable."
+  },
+  "retained_failures": [
+    {
+      "task_id": "PH-104",
+      "agent_id": "opencode",
+      "run_id": "069d786a-8fff-4900-9144-709c21d3bb40",
+      "state": "timed_out",
+      "not_counted_as_completed": true,
+      "resolution": "Unverified partial adopted and corrected/tested/reviewed by coordinator; separate bounded receipt helper succeeded."
+    },
+    {
+      "task_id": "PH-104",
+      "agent_id": "dsh",
+      "role": "long GitHub module review",
+      "state": "timed_out",
+      "not_counted_as_completed": true,
+      "resolution": "Different native Kimi scoped review actually PASS."
+    },
+    {
+      "task_id": "PH-103",
+      "agent_id": "opencode",
+      "run_id": "811ac6d4-ef26-415c-8002-98e0b32c3505",
+      "state": "cancelled",
+      "not_counted_as_completed": true,
+      "resolution": "Scope violation attempt cancelled; no source adopted as a completed contributor."
+    },
+    {
+      "task_id": "PH-105",
+      "agent_id": "claude_code",
+      "role": "final whole-source review",
+      "run_id": "3b684336-84bf-45be-be22-5c4419421618",
+      "state": "timed_out",
+      "error": "deadline_exceeded",
+      "stdout_sha256": "edfc3fcf914ae947145d8527b0f43f8e366e4640a8754e59907371904ab9ea4e",
+      "not_counted_as_completed": true,
+      "observed_tool_calls": 171,
+      "resolution": "Coordinator narrowed the shipped review guidance to the current diff, changed document sections and concrete dependency questions, with a40-call advisory budget. A different native reviewer must actually pass the new final source; this timeout is never PASS."
+    }
+  ],
+  "limitations": [
+    "Public audit records are not tamper-proof against repository administrators. Unit tests read this local public evidence only; they do not call models or write GitHub.",
+    "Four backend unit cases explicitly skip inside nested filesystem sandbox; PH-102 separate actual macOS backend canaries passed. No Linux/Windows native execution or production deployment claimed.",
+    "This is a foreground controller: closing the conversation does not keep GPT working. No daemon/autostart, new paid model API or global client settings change."
+  ]
+}

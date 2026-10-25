@@ -1,0 +1,144 @@
+{
+  "task_id": "PH-105",
+  "summary": "Complete the actual four-native-CLI GitHub requirement/bug pilot, publicly record sanitized run/source/check/review/CI evidence, verify real cancellation across a fresh controller and real Issue reopen/revalidation/close.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual approved BASEdcbaed8 PH-105 ready, prerequisites104/107done,36 tasks; final updated metadata checked separately."
+    },
+    {
+      "command": "python -m unittest discover -s tests/delivery_e2e -v",
+      "result": "pass",
+      "evidence": "4 offline audit-consistency tests passed0.001s in credential-free/network-denied filesystem sandbox. No model or GitHub access. All4native real writes, positive overlapping intervals, source six-field bindings, complete frozen acceptance, independent reviewer, exact8/app15368/samehead CI, persisted cancellation and realIssue32 events."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "362 tests89.832s:358 passed and4 explicit nested macOS backend skips, disposableSQLite with no credentials/network. Staticfiles warning preserved, no zero-warning claim. This full run preceded the later prompt-only review-guidance adjustment; the36gate tests ran after it and finalCI reruns the complete final source."
+    },
+    {
+      "command": "python manage.py check; python manage.py makemigrations --check --dry-run; python manage.py migrate --noinput; python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual sequential management calls inside a single no-credential/network-denied sandbox; no issues or migration changes; disposable emptySQLite ok=true/errors=[]/organizations0/entries0."
+    },
+    {
+      "command": "python -m tooling.ai_delivery doctor",
+      "result": "pass",
+      "evidence": "Actual default local discovery with no custom config. Controller and4workers version probes passed. Probe capabilities remain unverified by design; separate native development records prove writes. Current versions Kimi2.3.1,Claude2.1.310,OpenCode2.1.4,DSH0.2.1-rc.3."
+    },
+    {
+      "command": "python -m tooling.ai_delivery recover; python -m tooling.ai_delivery status 811ac6d4-ef26-415c-8002-98e0b32c3505",
+      "result": "pass",
+      "evidence": "Two real new interpreter invocations: recover returned[],status stillcancelled with actual persisted original started/cancellation_requested/cancelled events; no model was restarted."
+    },
+    {
+      "command": "gh issue reopen 32; python -m unittest tests.test_delivery_agents -v; gh issue close 32 --reason completed",
+      "result": "pass",
+      "evidence": "Actual parent GitHub writes, actual isolated18tests2.855sPASS, GitHub events34182647370/34182697950 timestamp bound. Done PH-107 planning stillrefused task_not_executable: done; no deliberate code regression."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_gate -v",
+      "result": "pass",
+      "evidence": "36 tests39.814s passed after the prompt-only review-scope correction, in no-credential/network-denied filesystem sandbox. No source/actor/binding/CI gate weakened."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native Claude Code / existing GLM-5.3-Flash",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual read-only independent review of full public evidence, offline tests and usage doc PASS. Final assembled source receives separate exact-diff delivered-gate review after this report freezes. Later timeout-driven prompt-only scope guidance is covered by36passing gate regressions and requires a new final source-bound independent review; no old PASS is reused as the final receipt.",
+    "log_sha256": "8aa4b4f9c5f37e8536a51decdad978252b162e4d3bc4366c7aba858bde27fa80"
+  },
+  "pilot_evidence_file": "tests/delivery_e2e/pilot-evidence.json",
+  "pilot_evidence_sha256": "0a660c55e59ba8a4777eb0f7a3dd8fd53f3deab3b0e4c75cb3ba4266ebe50426",
+  "native_audit_development": [
+    {
+      "run_id": "2b07a93a-eb2c-4bfb-a269-4e61f0754192",
+      "task_id": "PH-105",
+      "agent_id": "opencode",
+      "state": "completed",
+      "base_sha": "dcbaed8e5e5f08e32d1c1df03b347ec340e32542",
+      "contract_digest": "cc8faa3461b0e4ac769d23c81ad3c0f095b253301d770227da1e0c0af9099b83",
+      "scope": [
+        "tests/delivery_e2e/test_pilot_evidence.py"
+      ],
+      "manifest": [
+        {
+          "path": "tests/delivery_e2e/test_pilot_evidence.py",
+          "old": null,
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "019de3622fe139955aa65eedcbb198f9cdc749bb3c7b4bcf2c70367c4629c2be"
+          }
+        }
+      ],
+      "diff_digest": "3953c05f8872dce7fa232c936e15333113c0626869b4fc15f946046992772ec4",
+      "stdout_sha256": "80642950a866b9db0d5b3a29123eeb76a6bb33f94a2e84150c01e657140f19fe",
+      "process_started_at": 1792933106,
+      "process_finished_at": 1792933214
+    },
+    {
+      "run_id": "73b46026-abc2-4919-9aa6-9f16075ba8c1",
+      "task_id": "PH-105",
+      "agent_id": "kimi_code",
+      "state": "completed",
+      "base_sha": "dcbaed8e5e5f08e32d1c1df03b347ec340e32542",
+      "contract_digest": "cc8faa3461b0e4ac769d23c81ad3c0f095b253301d770227da1e0c0af9099b83",
+      "scope": [
+        "docs/engineering/ai-delivery-pilot.md"
+      ],
+      "manifest": [
+        {
+          "path": "docs/engineering/ai-delivery-pilot.md",
+          "old": null,
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "b1f600faa25f510f518ce828f487fcfe120ff2c72fb234d26ea419b4d00c889a"
+          }
+        }
+      ],
+      "diff_digest": "730734fe60a26d20920eff13a81211bdc527d31a7bd3a2db5e1f635c9b68625b",
+      "stdout_sha256": "0f990963f807dbd6b8c210a682a1a6badca5909d871445f4e2bca8f25b8a46d7",
+      "process_started_at": 1792933104,
+      "process_finished_at": 1792933287
+    }
+  ],
+  "source_assembly_id": "dd460e9f-afdf-4ea1-8aa6-5998a9136e35",
+  "actual_deliveries": [
+    {
+      "task_id": "PH-104",
+      "source_id": "f0aa7ee9-7787-4534-a355-269c80134fa9",
+      "pr": "https://github.com/lakii2982/project-hub/pull/38",
+      "head": "4496732f3cfede1e9cfce2a94909981f3d034715",
+      "merge_commit": "307f69d4be5c8fdbccd15f9758e0327e490ff358",
+      "verification_id": "2e6365aa-3282-49fc-9b0c-241ee5516429",
+      "review_id": "e7f82e84-d24f-4a6f-abb2-60ce90684978"
+    },
+    {
+      "task_id": "PH-107",
+      "source_id": "f02dd76e-d36f-4545-94df-4a20351ccc7c",
+      "pr": "https://github.com/lakii2982/project-hub/pull/39",
+      "head": "94235f223eacc2f550674ef88844e2e3c414eee8",
+      "merge_commit": "dcbaed8e5e5f08e32d1c1df03b347ec340e32542",
+      "verification_id": "1e5c88f9-f3c2-4eaa-ba57-bd416bbfd5fd",
+      "review_id": "593e481d-1d19-4251-9cf5-2acb65b2aa49"
+    }
+  ],
+  "unverified": [
+    "Public audit records are not tamper-proof against repository administrators. Unit tests read this local public evidence only; they do not call models or write GitHub.",
+    "Four backend unit cases explicitly skip inside nested filesystem sandbox; PH-102 separate actual macOS backend canaries passed. No Linux/Windows native execution or production deployment claimed.",
+    "This is a foreground controller: closing the conversation does not keep GPT working. No daemon/autostart, new paid model API or global client settings change.",
+    "This source report cannot contain its own final source digest or future PR/CI; exact-diff private receipts and actual current PR evidence are generated after final freezing.",
+    "No browser/product UI changes or production concurrency validation in this task; native execution proof is macOS only."
+  ],
+  "deviations": [
+    "Coordinator strengthened the OpenCode audit test to require all frozen commands, exact protected app ID and repository CI links; native original source and its hash are retained. Added package marker so full Django discovery includes these4offline tests.",
+    "Coordinator clarified Kimi usage doc: default client discovery works with no extra config, optional overrides only, merge uses existing user authorization; updated actual mergedPR39/Issue32 facts.",
+    "Coordinator initial done-task assertion expected task_not_executable without the actual done-state suffix; actual refusal was correct, private assertion corrected against exact observed ControllerError. No product code changed.",
+    "Final Claude review run3b684336 reached900s deadline after171 tool calls and wandered into unchanged business/history code; state timed_out/logSHA retained publicly, never PASS. Added bounded diff-first/append-section/dependency guidance plus40-call advisory budget to existing delivery/service.py; actual process deadline remains enforced. Final source is reverified and reviewed by a different CLI DSH; previous verification digest190d6935 becomes stale."
+  ]
+}

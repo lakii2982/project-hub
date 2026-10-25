@@ -1086,7 +1086,7 @@
       "title": "真实GitHub需求和缺陷的四CLI闭环演练",
       "kind": "research",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1111,9 +1111,9 @@
         "python -m unittest discover -s tests/delivery_e2e -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/25",
-      "owner": null,
+      "owner": "integration-agent; native OpenCode+Kimi audit artifacts; independent Claude Code GLM review",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-105.md"
     },
     {
       "id": "PH-092",
