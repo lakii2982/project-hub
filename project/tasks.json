@@ -1386,7 +1386,9 @@
         "docs/verification.md",
         "project/tasks.json",
         "project/reports/PH-025.json",
-        "project/handoffs/PH-025.md"
+        "project/handoffs/PH-025.md",
+        "core/forms.py",
+        "core/views.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

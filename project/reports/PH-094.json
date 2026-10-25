@@ -32,7 +32,13 @@
       "PH-026白名单templates/*与templates/**/*重复且范围宽（全站UI任务性质下可接受）；趋势聚合依赖LedgerEntry.occurred_on与cash_forecast复用，未在源码核实",
       "ADR-0004/PH-025的历史核算安全（旧Task/Timesheet.task保留、task_id弃用兼容、不猜历史关联、不重算历史成本、不改已提交工时费率快照、收付款仍走既有确定性服务）仅依据文本声明，未做代码或迁移级验证；SQLite演练不证明PG生产并发",
       "PH-023参考Linear/Atlassian公开规范仅借鉴，未验证最终产物无品牌资产复制（属后续交付验收项）"
-    ]
+    ],
+    "followup": {
+      "run_id": "09508e04-f1ab-409b-b611-b8867edf7fd8",
+      "result": "PASS",
+      "stdout_sha256": "75e290dfaab2dcfc3f8c4677a67dd2ed0b3b1da763fadcf1d87248750820f0e7",
+      "evidence": "Native independent read-only followup reviewed the exact P1 correction: mandatory links, Kimi minimum forms and controller view conversion must land atomically in PH-025 after PH-023 design; no dependency cycle or shared writer conflict."
+    }
   },
   "unverified": [
     "Planning only; native implementation, product browser behavior and current remote CI remain separate evidence.",
@@ -41,6 +47,7 @@
   ],
   "deviations": [
     "Tool-hosted DeepSeek reviewer route failed HTTP400 model_not_found on the subscription endpoint; no auth retry. A second role could not start due to unsupported reasoning setting. Replaced by actual native Claude/GLM isolated review; neither tool attempt is counted as successful review.",
-    "The preexisting PH-094 BASE slot has no Issue, so planning review used the existing Executor directly with the frozen BASE task/spec digest and read-only public snapshot; native implementation tasks now have linked Issues for the Controller."
+    "The preexisting PH-094 BASE slot has no Issue, so planning review used the existing Executor directly with the frozen BASE task/spec digest and read-only public snapshot; native implementation tasks now have linked Issues for the Controller.",
+    "PR47 independent GitHub review correctly found browser forms would break if mandatory task links merged before PH026. Corrected planning scope: PH025 now owns minimum core/forms.py + core/views.py integration with real POST regression and cannot merge backend alone; Kimi starts forms only after PH023 design. Followup native review PASS."
   ]
 }
