@@ -1016,7 +1016,7 @@
       "title": "GitHub任务到本地团队的单一命令入口",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1040,16 +1040,16 @@
         "python -m unittest tests.test_delivery_controller -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/23",
-      "owner": null,
+      "owner": "integration-agent; native Kimi/DSH/Claude/OpenCode bounded workers",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-103.md"
     },
     {
       "id": "PH-104",
       "title": "团队交付：独立复核、真实验收与PR检查",
       "kind": "infra",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1075,9 +1075,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/24",
       "owner": null,
-      "blockers": [
-        "Activate when the frozen prerequisites are delivered."
-      ],
+      "blockers": [],
       "handoff": null
     },
     {

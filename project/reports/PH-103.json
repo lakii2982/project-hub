@@ -1,0 +1,76 @@
+{
+  "task_id": "PH-103",
+  "summary": "Single command and Python API bind GitHub Issue context to origin/main task contracts and dispatch isolated native runs, validate complete raw-byte changes and assemble disjoint work.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual final check ok=true/task_count=35; own task ready in approved BASE and scope unchanged."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_controller -v",
+      "result": "pass",
+      "evidence": "72 actual tests passed in30.300s; real temporary Git and RunStore, fake GH/models only, credential-free/no-network filesystem sandbox. Includes8new cache-type/symlink/file-directory/no-delete-conflict and exit0/post-idempotence scope regressions."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "312 tests in48.027s,308 passed and4 explicit nested-backend skips; disposable SQLite, credential-free filesystem sandbox, network disabled."
+    },
+    {
+      "command": "python manage.py check; python manage.py makemigrations --check --dry-run; python manage.py migrate --noinput; python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual separate argv in credential-free sandbox: no system/migration issues; disposable SQLite migrated; integrity ok=true/errors=[]/organizations=0/entries=0."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_controller.TaskGatingTests.test_issue_text_does_not_grant_authority -v",
+      "result": "pass",
+      "evidence": "Targeted actual pass after adding read-output instructions; task authority remains frozen and Issue untrusted."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_controller.DryRunTests -v",
+      "result": "pass",
+      "evidence": "9 actual tests in4.265s; exit0 outside scope and idempotent re-return both refuse, using real temporary Git/queue and fake model in credential-free/no-network sandbox."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native Kimi Code service/CLI review; native OpenCode/DeepSeek repository review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Independent Kimi service/CLI review found missingIssue and incomplete-artifact idempotence, fixed and re-review PASS. OpenCode/DeepSeek repository review found type-blind cache exclusion and file/directory transitions; Kimi independently confirmed transition issue. Both corrected with6new regressions,23targetedtests passed; Kimi focused final delta PASS no findings. Final runtime postflight delta independently reviewed by native Kimi: PASS, no findings.",
+    "service_followup_sha256": "98837a548b08c6e2f22c99892c0f0342d4e59497be158cb93ebb15185dd745d2",
+    "repository_final_sha256": "2d1cf68233a209441ae5c7bc72529dcd501c993595652dc79876cc590bb95976",
+    "repository_findings_sha256": "b3d2b3b112e4fcbe97feb1100e936cda5bd309e004bdd1969637d269f3df351e",
+    "code_manifest_sha256": "f435d61a8251c0de6ea28fc67db6c3086eb70a272b594a6466c81b50d9217bf8",
+    "postflight_final_sha256": "e9132136d8c1c53e53141633ae303877b3f3911ddafa537c66b575e3c674e551"
+  },
+  "unverified": [
+    "PH-104 verify/review/PR/merge actions are the next task, not claimed implemented here. Four nested macOS backend cases remain explicit skips; separate PH-102 real backend proof recorded previously. No daemon/autostart, production deployment, customer data, new paid API or global client settings changes.",
+    "PH-103 real doc trials are failures/cancellation, not successful governed development. Successful governed four-CLI requirement/bug evidence remains for PH-104/107/105."
+  ],
+  "deviations": [
+    "Independent OpenCode repository review had one ECONNRESET. Retry returned2concrete findings, both fixed. A narrow independent Kimi review confirmed transitions; final Kimi followup PASS. No disconnected/exit0-without-verdict run counted as review success.",
+    "Real OpenCode doc run failed closed on stdout_line_limit_exceeded after unbounded source reads. A single retry used bounded-read instructions, but attempted out-of-assigned-scope source edits. Coordinator cancelled exact owned process, recover/status confirmed cancelled. Neither run is counted as successful development. Added immediate scope/contract validation on completed run return and idempotent re-return, with2 regressions; coordinator took over documentation."
+  ],
+  "native_entry_trials": [
+    {
+      "run_id": "73a3e1e2-1c35-411d-a4f9-231cf0261727",
+      "agent_id": "opencode",
+      "model": "opencode/deepseek-v4.1-flash-free",
+      "state": "failed",
+      "reason": "stdout_line_limit_exceeded",
+      "base_sha": "a5eb4d78d54d3a42095251c46f9c00a6562ca578",
+      "contract_digest": "188febeaf86e4b74560efeb026355ddb4e3ee06424a0c30dfee42127b5681a6c"
+    },
+    {
+      "run_id": "811ac6d4-ef26-415c-8002-98e0b32c3505",
+      "agent_id": "opencode",
+      "model": "opencode/deepseek-v4.1-flash-free",
+      "state": "cancelled",
+      "reason": "coordinator rejected actual out-of-assigned-scope work",
+      "recovery": "fresh Controller.recover/status: cancelled; no rerun and no accepted artifacts",
+      "evidence_sha256": "20c08d9beab8ee2fdaccba7f1f9f55954b26c30874bcad923b3eae8382216c04"
+    }
+  ]
+}
