@@ -200,8 +200,23 @@ class ExecutorIntegrationTests(DeliveryFixture):
     def test_adapter_sandbox_callbacks_and_persisted_lifecycle(self):
         marker = str(uuid.uuid4())
         request = self.enqueue(mode="review", prompt=f"PUBLIC-{marker}")
-        executable = self.executable("print('{\"event\":\"done\"}')\n")
-        result = self.run_once(request, executable)
+        release = self.worktree / "lifecycle-started"
+        executable = self.executable(
+            "import pathlib,time\n"
+            f"p=pathlib.Path({str(release)!r})\n"
+            "until=time.monotonic()+5\n"
+            "while not p.exists():\n"
+            "    if time.monotonic()>=until: raise SystemExit(90)\n"
+            "    time.sleep(0.01)\n"
+            "print('{\"event\":\"done\"}')\n"
+        )
+        real_start = self.store.start
+        def start_then_release(*args, **kwargs):
+            record = real_start(*args, **kwargs)
+            release.write_text("started")
+            return record
+        with patch.object(self.store, "start", side_effect=start_then_release):
+            result = self.run_once(request, executable)
 
         self.assertEqual(result["state"], "completed")
         self.assertEqual(len(self.launch_calls), 1)
@@ -579,6 +594,68 @@ class NativeFinalProtocolTests(unittest.TestCase):
         self.assertFalse(_dsh_completed(complete + final + b'{"type":"error"}'))
         self.assertFalse(_dsh_completed(complete.replace(b'completed', b'cancelled') + final))
 
+
+
+class EarlyExitIntegrationTests(DeliveryFixture):
+    def reaped_run(self, body, **kwargs):
+        request = self.enqueue(agent_id=kwargs.pop("agent_id", "kimi_code"))
+        executable = self.executable(body)
+        real_popen = subprocess.Popen
+        def reaped(*args, **options):
+            process = real_popen(*args, **options)
+            process.wait(timeout=5)
+            return process
+        with patch("tooling.ai_delivery.execution.runner.subprocess.Popen", side_effect=reaped):
+            result = self.run_once(request, executable, **kwargs)
+        return request, result
+
+    def test_already_reaped_child_keeps_actual_exit_and_output(self):
+        for code in (0, 7):
+            with self.subTest(code=code):
+                with patch("tooling.ai_delivery.execution.runner.stop_group") as stop:
+                    request, row = self.reaped_run("import sys\nsys.stdout.write('actual output')\nraise SystemExit(" + str(code) + ")\n")
+                self.assertEqual(row["state"], "completed" if code == 0 else "failed", row["error"])
+                self.assertEqual(row["result"]["exit_code"], code)
+                self.assertTrue(row["result"]["exited_before_identity"])
+                self.assertGreater(row["result"]["stdout_bytes"], 0)
+                self.assertIsNone(row["process_identity"])
+                self.assertIsNone(row["pid"])
+                self.assertNotIn("started", {event["type"] for event in self.store.events(request["run_id"])})
+                stop.assert_not_called()
+
+    def test_reaped_child_unknown_or_live_group_retains_quarantine(self):
+        for probe in (False, ProcessUnknown("group unavailable")):
+            with self.subTest(probe=type(probe).__name__):
+                options = {"side_effect": probe} if isinstance(probe, Exception) else {"return_value": probe}
+                with patch("tooling.ai_delivery.execution.runner.group_empty", **options), patch("tooling.ai_delivery.execution.runner.stop_group") as stop:
+                    request, row = self.reaped_run("print('exited')\n")
+                self.assertEqual(row["state"], "quarantined")
+                self.assertIsNotNone(row["pid"])
+                self.assertIsNone(row["process_identity"])
+                stop.assert_not_called()
+                self.assertIn(request["run_id"], {active["run_id"] for active in self.store.active()})
+
+    def test_reaped_child_output_limits_are_still_enforced(self):
+        _request, row = self.reaped_run("print('{'+ 'x'*100 +'}')\n", line_limit=64)
+        self.assertEqual(row["state"], "failed")
+        self.assertEqual(row["error"], "stdout_line_limit_exceeded")
+        self.assertTrue(row["result"]["stdout_line_limit_exceeded"])
+
+    def test_reaped_dsh_still_requires_a_completed_final(self):
+        _request, row = self.reaped_run("print('{\"type\":\"final\",\"text\":\"not enough\"}')\n", agent_id="dsh")
+        self.assertEqual(row["state"], "failed")
+        self.assertEqual(row["error"], "dsh_final_not_completed")
+
+    def test_reaped_leader_with_actual_live_descendant_is_not_released(self):
+        body = ("import subprocess,sys\n"
+                "subprocess.Popen([sys.executable,'-c','import time;time.sleep(0.4)'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)\n")
+        with patch("tooling.ai_delivery.execution.runner.stop_group") as stop:
+            _request, row = self.reaped_run(body)
+        self.assertEqual(row["state"], "quarantined")
+        self.assertIsNone(row["process_identity"])
+        stop.assert_not_called()
+        # The fixture descendant exits itself promptly; no raw PID cleanup.
+        time.sleep(0.5)
 
 
 class DshCompletionIntegrationTests(DeliveryFixture):

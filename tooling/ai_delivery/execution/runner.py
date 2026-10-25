@@ -83,6 +83,7 @@ class Executor:
         request = claimed["request"]
         process = None
         identity = None
+        exited_before_identity = False
         try:
             if getattr(config, "agent_id", request["agent_id"]) != request["agent_id"]:
                 raise ValueError("agent configuration does not match request")
@@ -121,20 +122,29 @@ class Executor:
             # fails, recovery still has enough evidence to distinguish an
             # absent process from a live or unknown one without signaling.
             self.store.spawned(run_id, token, process.pid, process.pid)
-            if process.poll() is not None:
-                raise ProcessGone("spawned child already exited")
-            # One bounded retry of a transient kernel identity lookup. Never
-            # use a raw PID or Popen.terminate as a substitute for group proof.
             try:
-                identity = process_identity(process.pid)
-            except ProcessUnknown:
-                identity = process_identity(process.pid)
-            if process.poll() is not None:
+                if process.poll() is not None:
+                    raise ProcessGone("spawned child already exited")
+                try:
+                    identity = process_identity(process.pid)
+                except ProcessUnknown:
+                    identity = process_identity(process.pid)
+                if process.poll() is not None:
+                    raise ProcessGone("spawned child exited during identity capture")
+            except (ProcessGone, ProcessUnknown):
                 identity = None
-                raise ProcessGone("spawned child exited during identity capture")
-            if identity[0] != identity[1]:
-                raise ProcessUnknown("child is not a process group leader")
-            self.store.start(run_id, token, process.pid, identity)
+                # Only our own reaped Popen child plus kernel proof of absent
+                # spawn group permits the no-identity completion path. Never
+                # signal a raw PID or invent a dead process's start timestamp.
+                if process.poll() is None or process.returncode is None:
+                    raise ProcessUnknown("spawned child exit is not proven")
+                if not group_empty(process.pid):
+                    raise ProcessUnknown("spawned child's group is still present")
+                exited_before_identity = True
+            if not exited_before_identity:
+                if identity[0] != identity[1]:
+                    raise ProcessUnknown("child is not a process group leader")
+                self.store.start(run_id, token, process.pid, identity)
         except Exception as exc:
             if process is not None:
                 for stream in (process.stdin, process.stdout, process.stderr):
@@ -231,6 +241,8 @@ class Executor:
 
         final_state = None
         error = None
+        if exited_before_identity and int(time.time()) >= request["deadline"]:
+            final_state, error = "timed_out", "deadline_exceeded"
         next_renew = time.monotonic() + self.heartbeat
         try:
             while process.poll() is None:
@@ -286,12 +298,14 @@ class Executor:
             error = ("stdout_line_limit_exceeded" if line_limited.is_set()
                      else "output_limit_exceeded")
         try:
-            if not group_empty(identity[1]):
+            finished_pgid = process.pid if exited_before_identity else identity[1]
+            if not group_empty(finished_pgid):
                 return self.store._quarantine(run_id, token, "process_group_not_empty")
         except ProcessUnknown:
             return self.store._quarantine(run_id, token, "process_group_unknown")
         current = self.store.get(run_id)
-        if current["state"] != "running" or current["fencing_token"] != token:
+        expected_state = "dispatching" if exited_before_identity else "running"
+        if current["state"] != expected_state or current["fencing_token"] != token:
             return current
         if final_state is None:
             final_state = "completed" if process.returncode == 0 else "failed"
@@ -302,6 +316,7 @@ class Executor:
                 final_state, error = "failed", "dsh_final_not_completed"
         result = {
             "exit_code": process.returncode,
+            "exited_before_identity": exited_before_identity,
             "output_limit_exceeded": output_limited.is_set(),
             "stdout_line_limit_exceeded": line_limited.is_set(),
         }

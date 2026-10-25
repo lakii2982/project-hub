@@ -19,7 +19,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     _common(parser)
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("doctor", "tasks", "run", "status", "cancel", "recover", "assemble"):
+    for name in ("doctor", "tasks", "run", "status", "cancel", "recover", "assemble", "verify", "review", "pr", "merge"):
         command = commands.add_parser(name)
         _common(command, child=True)
         if name == "run":
@@ -31,6 +31,11 @@ def main(argv=None):
             command.add_argument("--timeout", type=int, default=900)
             command.add_argument("--mode", choices=("implement", "review"), default="implement")
             command.add_argument("--execute", action="store_true")
+        elif name in {"verify", "review", "pr", "merge"}:
+            command.add_argument("source_id")
+            if name == "review":
+                command.add_argument("--agent", required=True,
+                                     choices=("kimi_code", "opencode", "dsh", "claude_code"))
         elif name == "status":
             command.add_argument("run_id", nargs="?")
         elif name == "cancel":
@@ -61,9 +66,16 @@ def main(argv=None):
                 result = controller.cancel(args.run_id)
             elif args.command == "recover":
                 result = controller.recover()
+            elif args.command in {"verify", "review", "pr", "merge"}:
+                from .delivery import DeliveryGate
+                gate = DeliveryGate(controller)
+                method = getattr(gate, args.command)
+                result = method(args.source_id, args.agent) if args.command == "review" else method(args.source_id)
             else:
                 result = controller.assemble(args.run_ids)
         print(json.dumps(result, ensure_ascii=False, default=str))
+        if args.command in {"verify", "review"} and isinstance(result, dict) and result.get("result") != "PASS":
+            return 1
         if args.command == "run" and args.execute and isinstance(result, dict):
             if result.get("state") in {"failed", "cancelled", "timed_out", "quarantined", "interrupted", "config_required"}:
                 return 1
