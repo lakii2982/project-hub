@@ -1,0 +1,46 @@
+{
+  "task_id": "PH-094",
+  "summary": "Freeze the six requested finance-workspace changes in five implementation slices; Kimi owns all frontend and design before product UI, native backend executors can run concurrently in disjoint scopes. No product implementation in this PR.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual .venv Python3.12 projectctl check returned ok=true/task_count41; final check rerun after report."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 tests passed in3.075s; no new executable code in planning scope."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native Claude Code / existing GLM configuration",
+    "status": "pass",
+    "findings": [],
+    "run_id": "7b0246a8-8fdb-4ef3-a0b5-050e981fca55",
+    "stdout_sha256": "1799fa76f04f18f42523fa6fefb9a409ea650bebae4ab6e9d10d70edf3460bfa",
+    "evidence": "Read-only sandbox snapshot review returned structured PASS, zero blockers. Main controller separately verified actual model fields, services, forms, CSV/API assumptions.",
+    "limitations": [
+      "未读project/specs/PH-095.md正文（工具调用预算用尽），仅核对其tasks.json条目：依赖仅PH-094、docs类、白名单与已验证的PH-094规划槽同构，风险低",
+      "未运行任何验收命令（只读快照、不执行）：projectctl check、测试、verify_integrity均未实际执行，仅静态核对",
+      "未读core/models.py等代码：Milestone/CashPlan既有模型、TimeForm当前含task字段、Timesheet含project字段等PH-025/026假设未在源码中核实",
+      "'proposed'为合法状态已确认（scripts/projectctl.py:58及AGENTS.md既有词汇），但只做了静态核对",
+      "PH-024与PH-025白名单重叠core/services.py、tests/test_workflow.py、tests/test_http.py：两spec均声明共享文件仅由整合者串行单写，该约束是流程性约定，无工具强制，并行时需主控确实串行接线；docs/delivery-status.md、docs/verification.md、project/tasks.json为全体任务共享，同理",
+      "PH-023白名单含AGENTS.md，spec限定'只追加必读入口不改已有治理'，为追加式有界修改，未验证执行时是否守住",
+      "PH-025白名单含core/migrations/0005_critical_task_links.py而spec称迁移由整合者按当前叶节点生成、执行者不生成；0005为既有0001-0004之后正确叶节点，归属张力由整合者吸收，未验证",
+      "PH-026白名单templates/*与templates/**/*重复且范围宽（全站UI任务性质下可接受）；趋势聚合依赖LedgerEntry.occurred_on与cash_forecast复用，未在源码核实",
+      "ADR-0004/PH-025的历史核算安全（旧Task/Timesheet.task保留、task_id弃用兼容、不猜历史关联、不重算历史成本、不改已提交工时费率快照、收付款仍走既有确定性服务）仅依据文本声明，未做代码或迁移级验证；SQLite演练不证明PG生产并发",
+      "PH-023参考Linear/Atlassian公开规范仅借鉴，未验证最终产物无品牌资产复制（属后续交付验收项）"
+    ]
+  },
+  "unverified": [
+    "Planning only; native implementation, product browser behavior and current remote CI remain separate evidence.",
+    "Native review did not read PH-095 body; controller checked its planning-only successor scope and the actual task/spec.",
+    "No production deployment, release or PostgreSQL multi-connection claim."
+  ],
+  "deviations": [
+    "Tool-hosted DeepSeek reviewer route failed HTTP400 model_not_found on the subscription endpoint; no auth retry. A second role could not start due to unsupported reasoning setting. Replaced by actual native Claude/GLM isolated review; neither tool attempt is counted as successful review.",
+    "The preexisting PH-094 BASE slot has no Issue, so planning review used the existing Executor directly with the frozen BASE task/spec digest and read-only public snapshot; native implementation tasks now have linked Issues for the Controller."
+  ]
+}

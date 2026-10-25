@@ -844,14 +844,15 @@
     },
     {
       "id": "PH-022",
-      "title": "项目详情横向页签与概览成本燃尽图",
+      "title": "Kimi项目详情页签与成本预算余额图",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "proposed",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
-        "PH-000"
+        "PH-023",
+        "PH-025"
       ],
       "spec": "project/specs/PH-022.md",
       "allowed_paths": [
@@ -868,7 +869,8 @@
         "project/reports/PH-022.json",
         "project/handoffs/PH-022.md",
         "project/reviews/PH-022-review.md",
-        "project/reviews/PH-022-dispatch.md"
+        "project/reviews/PH-022-dispatch.md",
+        "core/charts.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -877,9 +879,11 @@
         "python manage.py test tests --verbosity 1",
         "python manage.py verify_integrity --json"
       ],
-      "github_issue": null,
-      "owner": "integration-agent; preferred local DSH Flash executor",
-      "blockers": [],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/45",
+      "owner": null,
+      "blockers": [
+        "依新需求等待视觉规范与关键任务领域完成；旧日常任务界面不再开工。"
+      ],
       "handoff": null
     },
     {
@@ -1250,7 +1254,7 @@
       "title": "下一轮需求规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "rolling",
       "depends_on": [
@@ -1268,6 +1272,212 @@
         "docs/verification.md",
         "project/reports/PH-094.json",
         "project/handoffs/PH-094.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/41",
+      "owner": "Codex integration controller",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-094.md"
+    },
+    {
+      "id": "PH-023",
+      "title": "Kimi视觉系统与前端规范",
+      "kind": "docs",
+      "risk": "A",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v0.2.0",
+      "depends_on": [
+        "PH-094"
+      ],
+      "spec": "project/specs/PH-023.md",
+      "allowed_paths": [
+        "AGENTS.md",
+        "docs/engineering/visual-system.md",
+        "docs/engineering/frontend-standards.md",
+        "docs/engineering/ui-tokens.css",
+        "docs/engineering/ui-specimen.html",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/reports/PH-023.json",
+        "project/handoffs/PH-023.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/42",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-024",
+      "title": "基础资料唯一维护服务与权限边界",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v0.2.0",
+      "depends_on": [
+        "PH-094"
+      ],
+      "spec": "project/specs/PH-024.md",
+      "allowed_paths": [
+        "core/masterdata.py",
+        "core/masterdata_forms.py",
+        "core/masterdata_views.py",
+        "core/views.py",
+        "core/services.py",
+        "tests/test_masterdata.py",
+        "tests/test_workflow.py",
+        "tests/test_http.py",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/reports/PH-024.json",
+        "project/handoffs/PH-024.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/43",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-025",
+      "title": "关键任务领域与项目级工时核算",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v0.2.0",
+      "depends_on": [
+        "PH-094"
+      ],
+      "spec": "project/specs/PH-025.md",
+      "allowed_paths": [
+        "core/task_policy.py",
+        "core/models.py",
+        "core/services.py",
+        "core/blueprints.py",
+        "core/api.py",
+        "core/migrations/0005_critical_task_links.py",
+        "core/management/commands/seed_demo.py",
+        "tests/test_critical_tasks.py",
+        "tests/test_domain.py",
+        "tests/test_task_locks.py",
+        "tests/test_agent_api.py",
+        "tests/test_workflow.py",
+        "tests/test_http.py",
+        "integrations/mcp/README.md",
+        "docs/agent-api.md",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/reports/PH-025.json",
+        "project/handoffs/PH-025.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/44",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-026",
+      "title": "Kimi全站界面与经营趋势可视化",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v0.2.0",
+      "depends_on": [
+        "PH-023",
+        "PH-024",
+        "PH-025",
+        "PH-022"
+      ],
+      "spec": "project/specs/PH-026.md",
+      "allowed_paths": [
+        "templates/*",
+        "templates/**/*",
+        "static/app.css",
+        "static/app.js",
+        "static/icons.svg",
+        "static/favicon.svg",
+        "core/forms.py",
+        "core/views.py",
+        "core/masterdata_views.py",
+        "core/masterdata_forms.py",
+        "core/trends.py",
+        "core/reporting.py",
+        "pmo/urls.py",
+        "tests/test_workspace_ui.py",
+        "tests/test_trends.py",
+        "tests/test_http.py",
+        "tests/test_workflow.py",
+        "docs/screenshots/*",
+        "docs/engineering/frontend-standards.md",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/reports/PH-026.json",
+        "project/handoffs/PH-026.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/46",
+      "owner": null,
+      "blockers": [
+        "前置交付完成后由整合者按已冻结契约置ready；不扩大白名单。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-095",
+      "title": "下一轮需求规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-094"
+      ],
+      "spec": "project/specs/PH-095.md",
+      "allowed_paths": [
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-095.json",
+        "project/handoffs/PH-095.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
