@@ -1,0 +1,144 @@
+{
+  "task_id": "PH-104",
+  "summary": "Bind real no-credential/no-network acceptance, a different native read-only reviewer and GitHub publication/merge to the complete final source; correct the observed early-child-exit integration race without weakening unknown-process quarantine.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final actual projectctl check ok=true/task_count36 after delivery metadata; task/scope/prerequisites authorized by BASE11f64f4."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_gate -v",
+      "result": "pass",
+      "evidence": "36 unique tests passed28.964s in credential-free/no-network filesystem sandbox. Real temporary Git and RunStore; model/GH/process edges mocked. Full manifest/receipt staleness, native-final versus tool echo, source-actor exclusion, missing context/log, clean snapshot, pinned venv, raw rename ends, real clean Git commit, exact8check-app/head/latest-attempt, pagination, unresolved threads and last-moment base/head changes."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_execution -v",
+      "result": "pass",
+      "evidence": "27 actual tests passed9.004s, same isolation.5new deterministic early-exit cases include actual0/7exit and output, live/unknown group retention, real inherited child, line cap and DSH final. Lifecycle test now has real-start handshake and5s bounded fixture wait; original assertions retained."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "353 tests78.667s:349 passed,4 explicit nested macOS backend skips. Disposable SQLite, credential-free filesystem sandbox, network disabled."
+    },
+    {
+      "command": "python manage.py check; python manage.py makemigrations --check --dry-run; python manage.py migrate --noinput; python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual separate argv in same credential-free sandbox; no system/migration drift; disposable emptySQLite integrity ok=true/errors=[]/organizations0/entries0."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_gate.GateTests.test_actual_source_bound_receipts_and_explicit_merge -v",
+      "result": "pass",
+      "evidence": "Targeted real pass after linking frozen Issue with Closes in PR body; creating PR does not call merge."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native Claude Code / existing GLM-5.3-Flash for coordinator/verification/runner; native Kimi Code for GitHub publication module",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual independent reviews and scoped followups PASS. Missing-review-file errors and fixed-venv-path correction verified; source actor list now derived from real run or required assembly IDs. Rejecting a suggestion to accept zero-exit with inherited unfinished output retains bounded BLOCKING behavior.",
+    "review_logs_sha256": {
+      "runner_glm": "078079aa0824e5358006e8744f08804e8048eb004c7bc86323f19e593d3eee58",
+      "gate_verifier_glm": "e5750b91ec7899299b03400d8b3dcdcfc367636be36be4fff0e207afc66d3979",
+      "gate_verifier_followup_glm": "1c06acd5479f5cca950474eb5dd22f8992138e938cfd925541c163de1c86ef01",
+      "github_kimi": "187c1f7642c879e77a8c50e7be0efd60c0b24e9ef52c83330bf03fe2238f6cb9"
+    },
+    "code_manifest_sha256": "f5a5399021ba7e5e6d700ed2513b2578b50a778f593a3bbf8ccc5aed407040cc"
+  },
+  "native_requirement_development": [
+    {
+      "agent_id": "kimi_code",
+      "run_id": "5645cce6-75e5-42e2-a945-5e63d8b17030",
+      "state": "completed",
+      "base_sha": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+      "contract_digest": "6f598bd39fcbbbd16dc5044e7785640acf219f15ad4e54e452659020a156cd08",
+      "scope": [
+        "tooling/ai_delivery/delivery/verification.py"
+      ],
+      "process_started_at": 1792916108,
+      "process_finished_at": 1792916526,
+      "diff_digest": "cf3ff20de460a95d63a58ab2545f8b75595e1ea78234d605f1b7d161b62a17d3",
+      "manifest": [
+        {
+          "path": "tooling/ai_delivery/delivery/verification.py",
+          "old": null,
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "233ac070a345d675ed03bb9b8f80f13ce7869dc033878aabee9a3a11125d9898"
+          }
+        }
+      ],
+      "stdout_sha256": "514471e4292aeddf59d21d56af63127b088aa01dde1aa718b1a09df4c8202163",
+      "provider_model": "existing Kimi Code K3.1 Pro OAuth"
+    },
+    {
+      "agent_id": "dsh",
+      "run_id": "376cb7bd-0221-4e85-8be4-04bec341dc01",
+      "state": "completed",
+      "base_sha": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+      "contract_digest": "6f598bd39fcbbbd16dc5044e7785640acf219f15ad4e54e452659020a156cd08",
+      "scope": [
+        "docs/engineering/ai-delivery-delivery.md"
+      ],
+      "process_started_at": 1792916110,
+      "process_finished_at": 1792916232,
+      "diff_digest": "c0487df21e750b3156b01e40c275f0316ad5fd95be3c3d2580333fb844707ad3",
+      "manifest": [
+        {
+          "path": "docs/engineering/ai-delivery-delivery.md",
+          "old": null,
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "f660883cf561106e0c4f31250c7c6d4c8e6172dfdefa61b85518ac7f1ed7af62"
+          }
+        }
+      ],
+      "stdout_sha256": "a8ff6a589f3e7bc7c1ee645497044909e32ac932a029051e70b7dd547ccde542",
+      "provider_model": "existing OpenCode Go / deepseek-v4.1-flash"
+    },
+    {
+      "agent_id": "opencode",
+      "run_id": "152b0b10-b943-467d-8560-5c8a3b901ac5",
+      "state": "completed",
+      "base_sha": "11f64f4e64b49c2c64805bcb32c58d2d29206301",
+      "contract_digest": "6f598bd39fcbbbd16dc5044e7785640acf219f15ad4e54e452659020a156cd08",
+      "scope": [
+        "tooling/ai_delivery/delivery/receipt.py"
+      ],
+      "process_started_at": 1792917217,
+      "process_finished_at": 1792917226,
+      "diff_digest": "b45d05a75fa5779503ec6b7e2934866e57e1f779f69a3dbcfaf4ee32f8673e36",
+      "manifest": [
+        {
+          "path": "tooling/ai_delivery/delivery/receipt.py",
+          "old": null,
+          "new": {
+            "mode": "100644",
+            "type": "blob",
+            "sha256": "8aee43a5e507b8eabf8bb9ccc6371a713a25c7e4a4e652d1d8ed2c7073849e4c"
+          }
+        }
+      ],
+      "stdout_sha256": "eeeaa7e253d23a1403c94d83ea1359f7f619c188565ec0a100e6d6f3a04a57b5",
+      "provider_model": "opencode/deepseek-v4.1-flash-free"
+    }
+  ],
+  "source_assembly_id": "f0aa7ee9-7787-4534-a355-269c80134fa9",
+  "parallel_evidence": "Kimi process1792916108..1792916526 and DSH1792916110..1792916232 overlap122seconds; actual completed native runs on Issue24, not fixtures.",
+  "unverified": [
+    "Four nested backend unit cases explicitly skipped; separate PH-102 real macOS backend proof exists. No unsupported-OS execution, deployment, daemon/autostart or production validation claimed.",
+    "This committed report avoids self-referencing its final diff. Exact-diff private verification/reviewer/PR receipts and current CI are recorded by the coordinator and in PH-105 audit; raw private logs are never uploaded.",
+    "Claude Code actual development remains the subsequent PH-107 bug task; its current work is independent review, not counted as a development write."
+  ],
+  "deviations": [
+    "OpenCode initial GitHub module900s timed out despite partial source; originalrun069d786a-8fff-4900-9144-709c21d3bb40 retained and not assembled as a completed contributor. Coordinator adopted it as unverified partial, corrected and tested it; a separate bounded receipt helper run152b0b10 completed and is wired into actual proof comparison.",
+    "Coordinator found undefined local-branch function and tuple-versus-name protected-check lookup in that partial; corrected with real-Git and exact-check negative tests. Rename golden initially failed staged_manifest_mismatch; fixed git staged diff --no-renames, regression passed.",
+    "DSH long independent GitHub review timed out, not counted PASS; switched to bounded independent Kimi review which returned PASS.",
+    "Independent GLM review misread ordinary single-run absence of source_run_ids as a chained source; made the normal/assembly distinction explicit and reject missing assembly provenance. A zero-exit/background-child permissive suggestion was rejected; live inherited pipes remain bounded BLOCKING.",
+    "Verifier originally resolved the venv executable symlink to base Python. Preserve lexical fixed interpreter; explicitly reject alternate runtimes. Added regression and independent followup PASS."
+  ]
+}

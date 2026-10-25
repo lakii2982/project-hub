@@ -1049,7 +1049,7 @@
       "title": "团队交付：独立复核、真实验收与PR检查",
       "kind": "infra",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1077,9 +1077,9 @@
         "python -m unittest tests.test_delivery_execution -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/24",
-      "owner": null,
+      "owner": "integration-agent; native Kimi/OpenCode/DSH development, Claude independent review",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-104.md"
     },
     {
       "id": "PH-105",
@@ -1188,7 +1188,7 @@
       "title": "修复探针配置边界并将执行器收敛为四个CLI",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "ai-native-delivery",
       "depends_on": [
@@ -1211,9 +1211,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/32",
       "owner": null,
-      "blockers": [
-        "Run the known audit bug through the delivered local team pipeline after PH-104."
-      ],
+      "blockers": [],
       "handoff": null
     },
     {

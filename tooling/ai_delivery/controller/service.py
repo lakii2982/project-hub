@@ -195,7 +195,7 @@ class _PrivateArtifacts:
         self.root = Path(root) / "controller"
 
     def _directory(self, kind, create=False):
-        if kind not in {"runs", "assemblies"}:
+        if kind not in {"runs", "assemblies", "verifications", "reviews", "pull_requests"}:
             raise ControllerError("invalid_artifact_kind")
         base = self.root
         directory = base / kind
