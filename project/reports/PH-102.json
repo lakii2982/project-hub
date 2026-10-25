@@ -1,0 +1,156 @@
+{
+  "task_id": "PH-102",
+  "summary": "Native four-CLI execution with private durable three-slot queue, fenced scope ownership, exact process identity, cancellation/recovery and real macOS isolation.",
+  "tests": [
+    {
+      "command": "python -m unittest tests.test_delivery_execution tests.test_delivery_execution_queue tests.test_delivery_execution_sandbox tests.test_delivery_agents -v",
+      "result": "pass",
+      "evidence": "77 tests:73 passed,4 explicit nested-backend skips;9.964s; credential-free/no-network filesystem isolation, fixed Python3.12."
+    },
+    {
+      "command": "trusted two-stage real sandbox-exec canary",
+      "result": "pass",
+      "evidence": "Candidate profile construction only in credential-free sandbox; host executes only fixed harmless probe with validated pure SBPL data. Actual implement/review/auth profiles applied: own work/cache allowed; sibling read/write denied; review write denied; local TCP EPERM; own OAuth/credential read and refresh allowed, other provider and original mixed config denied."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "238 tests:234 passed,4 nested-backend skips;12.725s; disposable SQLite and credential-free/no-network sandbox."
+    },
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual check returned ok=true/task_count=35; task PH-102 ready in approved BASE, scope unchanged."
+    },
+    {
+      "command": "explicit native Executor file-write fixture, 2 concurrent workers",
+      "result": "pass",
+      "evidence": "All four native adapters completed exit0 and exact SHA256-checked files. DSH and Claude success intervals overlap. Kimi initial400 failed because required thinking metadata was omitted; preserved selected-model capabilities/efforts and retried only Kimi successfully. No global config/credential copy/new paid route."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native Claude Code / GLM-5.3-Flash; native OpenCode / DeepSeek final scoped review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Independent GLM broad review, OpenCode/DeepSeek followup, DSH same-token spawn-fact review PASS, and final OpenCode/DeepSeek fixed-path review PASS with no findings. Unproven raw-PID kill suggestion explicitly rejected under frozen fail-closed contract; known-identity launch/cancel regressions pass. Final selected-model metadata correction independently reviewed by native Kimi context: PASS.",
+    "review_logs_sha256": {
+      "broad_glm": "4ab469c6b8857708cca0940dbcfe844c31a64f20f58abb617880415b74d768b8",
+      "spawn_delta_dsh": "e6496ae209c8fae995304d73c5fd3758bd9766423dcaf526d74e182126c3f5f8",
+      "fixed_path_deepseek": "269973a6bdc8bb40bd916c76ca7f96552b606b1bc59f5be826f4ba9b894f1755",
+      "kimi_metadata": "25a5662f83c3c183971b6e46939296bdabb04307add280b03b2cf431e6c74f8a"
+    },
+    "code_manifest_sha256": "9e0f784cafc74e7d062ebb5147e7390ad32c57b621a4d9163e038ba18f0b9b07"
+  },
+  "unverified": [
+    "Four nested macOS unit canaries skipped because the outer credential-free sandbox cannot apply another sandbox. Separate real backend proof is recorded, not counted as skipped tests passing.",
+    "Unsupported platforms return config_required. No production deployment/autostart, product data, unknown API purchase or global client settings changed. Persistent unknown process identity deliberately retains quarantine/slot/scope until explicit proof of death.",
+    "Native fixture proves execution-layer calls only. PH-103/104/105 governed GitHub task/PR flow remains separate work."
+  ],
+  "deviations": [
+    "Native DSH first worker timed out; its partial adapter/backend source was collected as unverified and corrected by Kimi plus integrator. OpenCode corrections were stopped after repeated failures in an out-of-scope macOS process proof race; parent fixed process proof and reran all checks.",
+    "Independent review suggestion to signal Popen without proven group identity was rejected: frozen contract requires quarantine on unknown and Python send_signal documents residual PID-reuse risk. Deterministic cancel-before-start regression proves known identity is stopped and cancellation survives recovery.",
+    "Cross-process queue tests use actual POSIX fork because legacy manage.py unconditionally runs Django when spawn imports it; the product entry file was kept outside this task scope. Initial spawn-mode unittest tests also passed.",
+    "Independent regex reviews found optional/partial path component cases. Replaced general regex-prefix analysis with fixed literal paths/prefixes only (optional end anchor or trailing .* suffix); all internal regex operators rejected and safety comparisons use complete directory boundaries. A misformatted review snippet initially obscured real test class boundaries; actual unittest collection verified and review package corrected.",
+    "Actual Kimi invocation exposed missing always_thinking model metadata; fixed bounded selected capabilities/efforts serialization, added regression, independent Kimi context PASS, native retry PASS. Initial failed run retained in local evidence."
+  ],
+  "native_smoke": {
+    "kind": "private file-write fixture; not a governed GitHub task run",
+    "runs": [
+      {
+        "agent_id": "opencode",
+        "run_id": "a9088b6c-0519-4fe7-be06-ee7d9ffa7365",
+        "start": 1792909232.216367,
+        "end": 1792909238.151776,
+        "state": "completed",
+        "error": null,
+        "artifact_valid": true,
+        "artifact_sha256": "9032c99b66dd2a80a44c63de1c5427231225f52e92004912ffdda524668a7c19",
+        "result": {
+          "exit_code": 0,
+          "output_limit_exceeded": false,
+          "stderr_bytes": 0,
+          "stderr_captured_bytes": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_bytes": 2089,
+          "stdout_captured_bytes": 2089,
+          "stdout_line_limit_exceeded": false,
+          "stdout_sha256": "433c7d6ed0024e292c5d5f61f05b8ae8e80039fa116949e5484e82e66d0c01ba"
+        }
+      },
+      {
+        "agent_id": "dsh",
+        "run_id": "e279099e-a9c8-4d85-a2ad-15fd7aaaa587",
+        "start": 1792909238.152042,
+        "end": 1792909247.5177379,
+        "state": "completed",
+        "error": null,
+        "artifact_valid": true,
+        "artifact_sha256": "f7df36641994854bd672c55a5491c51dc7fccbd08e8b1793801a412ab4d41370",
+        "result": {
+          "exit_code": 0,
+          "output_limit_exceeded": false,
+          "stderr_bytes": 0,
+          "stderr_captured_bytes": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_bytes": 1835,
+          "stdout_captured_bytes": 1835,
+          "stdout_line_limit_exceeded": false,
+          "stdout_sha256": "922acef1bd41443719ee1d56b13d8a2ed78c612da2d1d551033727a8ca5a47cd"
+        }
+      },
+      {
+        "agent_id": "claude_code",
+        "run_id": "0db53178-361d-4e85-87f5-a728f49185a1",
+        "start": 1792909238.73974,
+        "end": 1792909250.2058399,
+        "state": "completed",
+        "error": null,
+        "artifact_valid": true,
+        "artifact_sha256": "506bea72a8eb596f17c35aaf94ef5fd5ceb231b51f918aadf22354175f5e9541",
+        "result": {
+          "exit_code": 0,
+          "output_limit_exceeded": false,
+          "stderr_bytes": 84,
+          "stderr_captured_bytes": 84,
+          "stderr_sha256": "f911801cb74fd16835931a9ac0a9200337ae1c5805717ffe316e037b9e39996c",
+          "stdout_bytes": 12735,
+          "stdout_captured_bytes": 12735,
+          "stdout_line_limit_exceeded": false,
+          "stdout_sha256": "783eb75a143394fe5907f8e139469a603ca8782352c2796d80a91d140ff4b107"
+        }
+      },
+      {
+        "agent_id": "kimi_code",
+        "run_id": "85a55e5a-2ff4-430a-93d2-e57908847f61",
+        "start": 1792909375.321898,
+        "end": 1792909386.458519,
+        "state": "completed",
+        "error": null,
+        "artifact_valid": true,
+        "artifact_sha256": "c8d507a41f143264124835cd77adb18ebdc06f2c1a7cacc9122bac3e44aff4a0",
+        "result": {
+          "exit_code": 0,
+          "output_limit_exceeded": false,
+          "stderr_bytes": 0,
+          "stderr_captured_bytes": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_bytes": 777,
+          "stdout_captured_bytes": 777,
+          "stdout_line_limit_exceeded": false,
+          "stdout_sha256": "b8faf8332cb34d3538238fac79edfa6900b693e019abc432f16b7b38f5ff5e6b"
+        }
+      }
+    ],
+    "models": {
+      "kimi_code": "existing Kimi Code K3.1 Pro",
+      "opencode": "opencode/deepseek-v4.1-flash-free",
+      "dsh": "existing OpenCode Go / deepseek-v4.1-flash",
+      "claude_code": "existing GLM-5.3-Flash via Claude Code"
+    },
+    "parallel_successful_agents": [
+      "dsh",
+      "claude_code"
+    ]
+  }
+}
