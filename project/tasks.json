@@ -870,7 +870,8 @@
         "project/handoffs/PH-022.md",
         "project/reviews/PH-022-review.md",
         "project/reviews/PH-022-dispatch.md",
-        "core/charts.py"
+        "core/charts.py",
+        "pmo/settings.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -1493,7 +1494,7 @@
       "title": "下一轮需求规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "rolling",
       "depends_on": [
@@ -1511,6 +1512,39 @@
         "docs/verification.md",
         "project/reports/PH-096.json",
         "project/handoffs/PH-096.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "integrator",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-096.md"
+    },
+    {
+      "id": "PH-097",
+      "title": "下一轮需求规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-096"
+      ],
+      "spec": "project/specs/PH-097.md",
+      "allowed_paths": [
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-097.json",
+        "project/handoffs/PH-097.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

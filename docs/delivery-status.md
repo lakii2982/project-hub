@@ -290,3 +290,7 @@ PH-105最后Claude全件复核一次超时，保留失败；补充差异优先�
 ## PH-025 · 2026-10-26
 
 关键任务必须链接同项目里程碑或有效收付款计划；保留历史任务与task_id兼容，工时浏览器只按项目登记。追加0005迁移，蓝图仅生成3个真实里程碑及相应关键任务；Kimi最小表单与主控视图原子集成。 8项固定命令在无凭据禁网快照通过，最终独立只读复核PASS。PH022可开始项目页签和成本预算余额图，仍由Kimi负责前端、DSH/GLM负责只读汇总；PH026全站样式与唯一维护入口。Task字段milestone/cash_plan至少一项；estimate历史保留，新建0；TimeForm无task，API/MCP兼容原可选task_id不重算历史成本。 详细实际命令/哈希与偏差见project/reports/PH-025.json；当次PR8CI另核对。非生产验证。
+
+## PH-096 · 唯一视觉令牌源接线规划
+
+PR52独立GitHub审查指出产品复制令牌会偏离规范；仅为PH022补入pmo/settings.py静态源接线白名单，允许app.css引用docs/engineering/ui-tokens.css唯一源，不改令牌/权限/验收/门禁。实现仍由独立PH022 PR完成，PH097保留规划入口。
