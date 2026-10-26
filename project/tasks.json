@@ -1320,7 +1320,7 @@
       "title": "基础资料唯一维护服务与权限边界",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -1350,9 +1350,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/43",
-      "owner": null,
+      "owner": "Local native agents; Codex integration",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-024.md"
     },
     {
       "id": "PH-025",
