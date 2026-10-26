@@ -26,6 +26,7 @@ from .models import (Project, Membership, Employee, CostRate, ProjectMember, Tas
 from .services import (create_project, submit_time, submit_document, create_task, review as review_record,
                        reverse as reverse_record, transition as change_stage, update_task, accept_milestone,
                        cents, audit, lock_company, check_open, plan_remaining, verify_audit, edit_task)
+from .masterdata import create_employee, create_rate, update_project
 from .reporting import project_summary, portfolio_metrics, cash_forecast, alerts_for, overdue_plan_totals
 from .imports import HEADERS, parse_csv, preview_rows as validate_import, commit_rows
 from .ai import extract_draft
@@ -165,20 +166,12 @@ def create_from_form(member, kind, data, token):
             if candidate.organization_id != member.organization_id or not candidate.active: raise ValidationError("成员不属于当前公司")
         obj = {"milestone": Milestone, "risk": Risk, "team": ProjectMember}[kind](**data)
     elif kind in {"employee", "rate"}:
-        if member.role not in WRITE_FINANCE: raise PermissionDenied("员工与成本费率只允许负责人和项目财务管理")
-        if kind == "employee":
-            data["capacity_minutes"] = int(data.pop("capacity_hours") * 60)
-            if data.get("member") and data["member"].organization_id != member.organization_id: raise ValidationError("员工账户公司不一致")
-            obj = Employee(**data, organization=member.organization)
-        else:
-            data["hourly_cents"] = cents(data.pop("hourly_amount"))
-            if data["employee"].organization_id != member.organization_id: raise ValidationError("员工公司不一致")
-            obj = CostRate(**data)
+        # Every browser entry shares the canonical master-data service.
+        return create_employee(member, data) if kind == "employee" else create_rate(member, data)
     elif kind == "member":
         if member.role != "owner": raise PermissionDenied("只有公司负责人可以开通账户")
         user = get_user_model().objects.create_user(username=data["username"], password=data["password"], first_name=data["name"])
         obj = Membership.objects.create(organization=member.organization, user=user, role=data["role"])
-        Employee.objects.create(organization=member.organization, name=data["name"], member=obj)
         audit(member, "account.created", obj, {"role": obj.role, "username": user.username})
         return obj
     else: raise Http404()
@@ -224,16 +217,9 @@ def project_edit(request, pk):
     form = ui.ProjectEditForm(request.POST or None, initial=initial, member=request.member, project=project)
     if request.method == "POST" and form.is_valid():
         try:
-            with transaction.atomic():
-                lock_company(request.member)
-                current = Project.objects.select_for_update().get(pk=project.pk)
-                if current.version != form.cleaned_data["version"]: raise ValidationError("项目已经更新，请刷新后重试")
-                before = {k: str(getattr(current, k)) for k in ["scope", "acceptance_criteria", "end_date", "contract_reference", "etc_cents"]}
-                for key in ["scope", "acceptance_criteria", "end_date", "contract_reference"]: setattr(current, key, form.cleaned_data[key])
-                current.etc_cents = cents(form.cleaned_data["etc_amount"])
-                current.version += 1
-                current.full_clean(); current.save()
-                audit(request.member, "project.updated", current, {"before": before, "etc_cents": current.etc_cents, "reason": form.cleaned_data["reason"]})
+            data = form.cleaned_data.copy()
+            version, reason = data.pop("version"), data.pop("reason")
+            update_project(request.member, project.pk, data, version, reason)
             messages.success(request, "项目信息与完工预测已更新")
             return redirect("project-detail", pk=pk)
         except (ValidationError, IntegrityError) as error: form.add_error(None, error_text(error))

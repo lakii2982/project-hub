@@ -1,0 +1,127 @@
+{
+  "task_id": "PH-024",
+  "summary": "以既有Project/Employee/CostRate建立唯一基础资料服务、授权上下文及Kimi维护表单；旧创建/项目编辑委派同一服务，账户开通不再隐式新建员工。公开维护模块界面留PH026。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=d34b05c2bbfd0e4bdb73cb38c122cf74c3b6d7dcd9c4dd5d06724f3ebe17a5c5; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=1e3e63f221bde88816c4a4ef7367691607b20cc1d194028a02ec9ae0586cf9b1; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=a2bfa7b376c38062f77ce2b1e703876aaa04662f96355cdf5dc9d0d075302b05; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=6ed8847ccab9fa21936800e875b2a9fa4d3e6d93ddf25c0d405b5b609ab1e83a; stderr_sha256=f255477717b7cafda97aae4c2e177241468dafb054ca6bb60ff01696d473ed7b"
+    },
+    {
+      "command": "python manage.py migrate --noinput",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=50c20b98a2ae70d283937c8778ac0e106f523ff867257677ec62b13b925e8988; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=55718ed41b875a87b09e335e37fb99fa1698eea79aea40ea2d59aa7f13f305c9; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent fresh Kimi Code read-only context; prior separate backend reviewer",
+    "status": "pass",
+    "findings": [],
+    "run_id": "5ab96660-5967-4614-b8c2-45e425c98ae3",
+    "evidence": {
+      "result": "PASS",
+      "blockers": [],
+      "limitations": [
+        "未执行测试、Django 检查、迁移检查或完整性校验；所述 31 项测试结果未作为通过依据。",
+        "未验证 PostgreSQL 多连接下的并发、锁与公司锁行为。",
+        "公开模块路由、模板和浏览器端流程不属于本次 PH-024 范围，未验证；由 PH-026 负责。"
+      ]
+    },
+    "stdout_sha256": "e2926b605898eeaca81d3ddfe8e1a9f8957d91b9cb35e80462fb99e2d7124696",
+    "binding": {
+      "run_id": "5ab96660-5967-4614-b8c2-45e425c98ae3",
+      "base_sha": "3151c31a3f0e6f267fdbf98f00de9e95d2f09470",
+      "contract_digest": "4696c8f45a3ea5066865032bdde2b1c8214d1d1c0c70b7e032cca194c52cd424",
+      "diff_digest": "ba522eef802e5defe0385343a520c0d32fd9cff6c23ee73f7194e78f38486188",
+      "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-024-review-7m7kgb7q/source"
+    },
+    "prior_component_review": "OpenCode96f2897f-bde4-464c-9145-12e464fa9799 independently reviewed backend services/context/views before forms, PASS. Final review covers assembled forms/service integration."
+  },
+  "native_runs": [
+    {
+      "run_id": "20a631fc-d4cb-44eb-aab5-3db61ed95a0e",
+      "agent_id": "claude_code",
+      "state": "completed",
+      "created_at": 1792941227,
+      "updated_at": 1792941440,
+      "base_sha": "181b430782a4f4304d98ac8e5eae98c2620e09b3",
+      "stdout_sha256": "2a76478ad72173c63ac0ee8544e3698d16c2dc483f72e961e811840866e14026"
+    },
+    {
+      "run_id": "14b0bd0d-a940-4fd8-90bb-d91f8dce71f9",
+      "agent_id": "dsh",
+      "state": "completed",
+      "created_at": 1792941232,
+      "updated_at": 1792941877,
+      "base_sha": "181b430782a4f4304d98ac8e5eae98c2620e09b3",
+      "stdout_sha256": "8251f14d2ef917ef322869159ab19cde932a7b759712b4eabd4eb3200ec61eae"
+    },
+    {
+      "run_id": "2f816cd2-1c02-42e3-99fc-df16dfff5f06",
+      "agent_id": "dsh",
+      "state": "completed",
+      "created_at": 1792977125,
+      "updated_at": 1792977255,
+      "base_sha": "8d59a942086a5269c945aa6852fc9ceb70cc4733",
+      "stdout_sha256": "a86b5c1ce11cfb64447db7461a72dc68cbee6a19de481eebbd193ad7aec0fff4"
+    },
+    {
+      "run_id": "a5b92a17-011b-4c67-ad39-95532c355f98",
+      "agent_id": "kimi_code",
+      "state": "completed",
+      "created_at": 1792977204,
+      "updated_at": 1792977307,
+      "base_sha": "3151c31a3f0e6f267fdbf98f00de9e95d2f09470",
+      "stdout_sha256": "80ef614be764ee9d83a9c581b62f1014d480a45df18a973cada4ee4b61ba8831"
+    },
+    {
+      "run_id": "f86242af-e9c9-4699-a978-82bdc29b30b7",
+      "agent_id": "kimi_code",
+      "state": "completed",
+      "created_at": 1792977422,
+      "updated_at": 1792977482,
+      "base_sha": "3151c31a3f0e6f267fdbf98f00de9e95d2f09470",
+      "stdout_sha256": "abef7b32e12218c1219bf73d3e9be711dc33e5c969e182f0a0e40d5467ddbfc8"
+    }
+  ],
+  "code_snapshot_verification": {
+    "base_sha": "3151c31a3f0e6f267fdbf98f00de9e95d2f09470",
+    "contract_digest": "4696c8f45a3ea5066865032bdde2b1c8214d1d1c0c70b7e032cca194c52cd424",
+    "diff_digest": "ba522eef802e5defe0385343a520c0d32fd9cff6c23ee73f7194e78f38486188",
+    "result": "PASS"
+  },
+  "unverified": [
+    "本薄片没有公开master-data路由或全站界面；PH026交付。",
+    "SQLite无凭据禁网验收不证明真实PostgreSQL多连接生产并发；不部署。",
+    "报告/任务状态在代码验收后填写，最终已提交版本的实际远端8CI以PR checks为准，不把本报告声明当机器证明。"
+  ],
+  "deviations": [
+    "首次GLM c5b16c9b stdout_line_limit失败且无产物，缩为服务单文件后20a631fc成功；未盲重试鉴权。",
+    "主控加固数据库重读以拒绝陈旧/伪造的员工和负责人引用，拒绝float/bool金额与非整数version，保持原服务事务/公司锁/历史费率快照。",
+    "服务完成后已有23项通过；六项表单反例在Kimi实现前真实RED(缺模块)。主控进一步发现继承的一小时下限/执行阶段禁用/停用账户OR问题，补两项反例及0.25h断言，真实3失败+1错误后由Kimi修正。",
+    "DSH新表单测试误假设未约定的Form.save；主控改为真实cleaned_data调用既有update_project，断言实际名称/客户/version和审计原因，不通过新增虚构API迎合测试。",
+    "中途DSH复核5825c504由主控在发现已知表单问题后取消，未计PASS；最终复核新上下文独立执行。",
+    "原后端原生run基于8d59，规范合入3151c31后才启动Kimi产品表单；最终集成按当前批准BASE验收。"
+  ]
+}
