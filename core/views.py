@@ -141,7 +141,8 @@ def create_from_form(member, kind, data, token):
         data["tax_cents"] = cents(data.pop("tax"))
         return submit_document(member, data, token)
     if kind == "task":
-        data["estimate_minutes"] = int(data.pop("estimate_hours") * 60)
+        data.pop("estimate_hours", None)  # Legacy field no longer drives key tasks.
+        data["estimate_minutes"] = 0
         return create_task(member, data)
     project = data.get("project")
     if project:
@@ -543,14 +544,13 @@ def task_edit(request, pk):
     task = get_object_or_404(Task, pk=pk, project__in=visible_projects(request.member))
     require_project(request.member, task.project, manage=True)
     require_write(request.member)
-    initial = {key: getattr(task, key) for key in ["project", "name", "owner", "start_date", "due_date", "dependency", "description", "version"]}
-    initial["estimate_hours"] = Decimal(task.estimate_minutes) / 60
+    initial = {key: getattr(task, key) for key in ["project", "name", "owner", "start_date", "due_date", "dependency", "description", "version", "milestone", "cash_plan"]}
     form = ui.TaskEditForm(request.POST or None, member=request.member, project=task.project, initial=initial)
     form.fields["dependency"].queryset = form.fields["dependency"].queryset.exclude(pk=task.pk)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data.copy()
         version, reason = data.pop("version"), data.pop("reason")
-        data["estimate_minutes"] = int(data.pop("estimate_hours") * 60)
+        data.pop("estimate_hours", None)
         try:
             edit_task(request.member, task.pk, data, version, reason)
             messages.success(request, "任务计划已更新，原值和调整依据已保留")

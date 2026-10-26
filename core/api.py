@@ -7,6 +7,7 @@ import uuid
 from datetime import timedelta
 from django.core.exceptions import ValidationError as DomainValidation, PermissionDenied as DomainDenied
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers, exceptions
@@ -170,11 +171,14 @@ class TasksView(AgentAPIView):
     required_scope = "tasks:read"
     def get(self, request, pk):
         project = self.project(pk)
-        rows = project.tasks.select_related("owner__user")
+        rows = project.tasks.filter(Q(milestone__isnull=False) | Q(cash_plan__isnull=False)).select_related(
+            "owner__user", "milestone", "cash_plan")
         self.read_audit(project, "agent.tasks_read")
         return Response({"schema_version": "api/v1", "tasks": [{"id": t.pk, "name": t.name, "status": t.status,
             "owner": str(t.owner), "owned_by_me": t.owner_id == request.auth.member_id, "due_date": str(t.due_date),
-            "version": t.version, "dependency_id": t.dependency_id} for t in rows[:200]]})
+            "version": t.version, "dependency_id": t.dependency_id, "milestone_id": t.milestone_id,
+            "milestone_name": t.milestone.name if t.milestone_id else None, "cash_plan_id": t.cash_plan_id,
+            "cash_plan_title": t.cash_plan.title if t.cash_plan_id else None} for t in rows[:200]]})
 
 
 def execute_command(request, operation, data, function):

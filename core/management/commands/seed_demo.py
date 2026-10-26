@@ -51,18 +51,21 @@ class Command(BaseCommand):
             baseline = submit_document(pm, {"project": project, "kind": "baseline", "title": "初始预算基线", "amount_cents": budget,
                 "occurred_on": today - timedelta(days=29), "reference": f"{code}-B01"}, uuid.uuid4())
             if index < 3: review(owner, "document", baseline.pk, "approve", "确认预算与范围")
-            tasks = []
-            for pos, title in enumerate(["需求与范围确认", "方案与设计评审", "开发配置与集成", "联调测试与培训", "上线交付与验收"]):
-                task = create_task(pm, {"project": project, "name": title, "owner": member if pos in {2, 3} else pm,
-                    "start_date": today - timedelta(days=60), "due_date": today + timedelta(days=(pos - done_count) * 7 + 4),
-                    "estimate_minutes": (pos + 1) * 480, "description": "记录交付成果并完成阶段确认。"})
-                # Dates are clamped because late-start examples still need coherent task intervals.
-                tasks.append(task)
-                if pos < done_count: update_task(pm, task.pk, "done", task.version, f"{code}-DEL-{pos+1:02d} 客户交付记录")
+            milestones = []
             for pos, title in enumerate(["需求基线确认", "版本交付", "最终验收"]):
                 milestone = Milestone.objects.create(project=project, name=title,
                     due_date=today + timedelta(days=(pos - 1) * 21), criteria="交付内容及测试结果经项目负责人确认")
                 audit(pm, "milestone.created", milestone, {"project_id": project.pk})
+                milestones.append(milestone)
+            tasks = []
+            for pos, title in enumerate(["范围基线确认", "版本交付验收", "最终验收与交接"]):
+                task = create_task(pm, {"project": project, "name": title, "owner": member if pos in {2, 3} else pm,
+                    "start_date": today - timedelta(days=60), "due_date": today + timedelta(days=(pos - done_count) * 7 + 4),
+                    "description": "记录交付成果并完成阶段确认。", "milestone": milestones[pos]})
+                # Dates are clamped because late-start examples still need coherent task intervals.
+                tasks.append(task)
+                if pos < done_count: update_task(pm, task.pk, "done", task.version, f"{code}-DEL-{pos+1:02d} 客户交付记录")
+            for pos, milestone in enumerate(milestones):
                 if pos == 0 or index == 2: accept_milestone(pm, milestone.pk, f"{code}-YS-{pos+1:02d} 客户确认单")
             project.refresh_from_db()
             transition(pm, project.pk, "planning", project.version, "立项范围与验收条件已确认")
@@ -73,7 +76,7 @@ class Command(BaseCommand):
                 for d in range(12):
                     row = submit_time(member, {"project": project, "employee": member.employee,
                         "work_date": today - timedelta(days=20 - d), "minutes": 120 + (index % 2) * 30,
-                        "note": f"{name}：功能配置、实现与验证", "task": tasks[2]}, uuid.uuid4())
+                        "note": f"{name}：功能配置、实现与验证", "task": None}, uuid.uuid4())
                     review(pm, "time", row.pk, "approve", "工作内容已确认")
                 for pos, amount in enumerate([1260000 + index * 200000, 380000 + index * 100000]):
                     expense = submit_document(pm, {"project": project, "kind": "expense", "title": ["云资源与软件服务", "现场实施差旅"][pos],
@@ -106,7 +109,7 @@ class Command(BaseCommand):
                 project.refresh_from_db()
                 transition(pm, project.pk, "warranty", project.version, "客户验收完成，进入约定支持期")
         pending = submit_time(member, {"project": tasks[0].project, "employee": member.employee,
-            "work_date": today, "minutes": 120, "note": "方案准备和技术预研", "task": tasks[0]}, uuid.uuid4())
+            "work_date": today, "minutes": 120, "note": "方案准备和技术预研", "task": None}, uuid.uuid4())
         credentials = settings.BASE_DIR / "runtime/demo-credentials.txt"
         credentials.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         credentials.write_text("项目中枢本地演练账户（只用于演练数据库）\n地址：http://127.0.0.1:8765/\n" +

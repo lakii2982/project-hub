@@ -33,7 +33,8 @@ class BrowserWorkflowTests(TestCase):
             "contract_amount": "10000", "initial_budget": "5000", "etc_amount": "4000", "scope": "交付系统配置和培训",
             "acceptance_criteria": "关键流程通过并确认交付", "contract_reference": "HT-FLOW-001"})
         project = Project.objects.get(code="FLOW-001")
-        self.assertEqual(project.tasks.count(), 5)
+        self.assertEqual(project.tasks.count(), 3)
+        self.assertFalse(project.tasks.filter(milestone__isnull=True, cash_plan__isnull=True).exists())
         self.assertEqual(project.milestones.count(), 3)
         self.assertFalse(project.budget_approved)
         baseline = project.documents.get(kind="baseline")
