@@ -62,17 +62,55 @@ class ProjectScopedForm(BaseForm):
 
 class TaskForm(ProjectScopedForm):
     management_only = True
-    name = forms.CharField(label="任务名称", max_length=160)
+    name = forms.CharField(label="关键任务名称", max_length=160)
+    milestone = forms.ModelChoiceField(
+        queryset=Milestone.objects.none(), label="里程碑（交付节点）", required=False,
+        help_text="选择本项目的交付里程碑；里程碑与收付款计划至少选择一项",
+    )
+    cash_plan = forms.ModelChoiceField(
+        queryset=CashPlan.objects.none(), label="收付款计划（收付款节点）", required=False,
+        help_text="选择本项目已启用的收付款节点；仅建立关联，不会自动审批或记账",
+    )
     owner = forms.ModelChoiceField(queryset=Membership.objects.none(), label="负责人")
     start_date = forms.DateField(label="开始日期", widget=forms.DateInput(attrs=DATE))
     due_date = forms.DateField(label="计划完成日期", widget=forms.DateInput(attrs=DATE))
-    estimate_hours = forms.DecimalField(label="预计工时（小时）", max_digits=7, decimal_places=2, min_value=0)
-    dependency = forms.ModelChoiceField(queryset=Task.objects.none(), label="前置任务", required=False)
+    dependency = forms.ModelChoiceField(queryset=Task.objects.none(), label="前置关键任务", required=False)
     description = forms.CharField(label="交付要求", widget=forms.Textarea, required=False, max_length=8000)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        projects = self.fields["project"].queryset
+        selected_project = None
+        if self.project_context:
+            selected_project = projects.filter(pk=self.project_context.pk).first()
+        else:
+            project_value = self.data.get(self.add_prefix("project")) if self.is_bound else None
+            if project_value is None:
+                project_value = self.initial.get("project")
+            if project_value:
+                try:
+                    selected_project = projects.filter(pk=getattr(project_value, "pk", project_value)).first()
+                except (TypeError, ValueError):
+                    pass
+        if selected_project:
+            projects = projects.filter(pk=selected_project.pk)
         self.fields["owner"].queryset = Membership.objects.filter(organization=self.member.organization, active=True).select_related("user")
-        self.fields["dependency"].queryset = Task.objects.filter(project__in=self.fields["project"].queryset)
+        self.fields["dependency"].queryset = Task.objects.filter(project__in=projects)
+        self.fields["milestone"].queryset = Milestone.objects.filter(project__in=projects)
+        self.fields["cash_plan"].queryset = CashPlan.objects.filter(project__in=projects, active=True)
+    def clean(self):
+        data = super().clean()
+        project = data.get("project")
+        milestone = data.get("milestone")
+        cash_plan = data.get("cash_plan")
+        if not milestone and not cash_plan:
+            self.add_error("milestone", "关键任务至少关联一个里程碑或收付款计划")
+        if project and milestone and milestone.project_id != project.pk:
+            self.add_error("milestone", "里程碑必须属于所选项目")
+        if project and cash_plan and cash_plan.project_id != project.pk:
+            self.add_error("cash_plan", "收付款计划必须属于所选项目")
+        if milestone and cash_plan and cash_plan.milestone_id and cash_plan.milestone_id != milestone.pk:
+            self.add_error("cash_plan", "收付款计划已关联其他里程碑，请选择一致的里程碑")
+        return data
 
 class MilestoneForm(ProjectScopedForm):
     management_only = True
@@ -95,7 +133,6 @@ class PlanForm(ProjectScopedForm):
 
 class TimeForm(ProjectScopedForm):
     employee = forms.ModelChoiceField(queryset=Employee.objects.none(), label="员工")
-    task = forms.ModelChoiceField(queryset=Task.objects.none(), label="任务", required=False)
     work_date = forms.DateField(label="工作日期", widget=forms.DateInput(attrs=DATE), initial=timezone.localdate)
     hours = forms.DecimalField(label="工时（小时）", max_digits=5, decimal_places=2, min_value=Decimal("0.01"), max_value=24,
                                help_text="最小单位为分钟。审批后按当日有效的综合成本费率自动核算")
@@ -105,7 +142,6 @@ class TimeForm(ProjectScopedForm):
         qs = Employee.objects.filter(organization=self.member.organization, active=True)
         if self.member.role == "member": qs = qs.filter(member=self.member)
         self.fields["employee"].queryset = qs
-        self.fields["task"].queryset = Task.objects.filter(project__in=self.fields["project"].queryset)
     def clean_hours(self):
         hours = self.cleaned_data["hours"]
         if hours * 60 != int(hours * 60):

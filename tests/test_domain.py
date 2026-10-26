@@ -629,19 +629,18 @@ class DomainRulesTestCase(TestCase):
         Project.objects.filter(pk=self.project.pk).update(
             budget_approved=True, contract_reference="P-001-CONTRACT"
         )
-        create_task(
-            self.pm,
-            {
-                "project": self.project,
-                "name": "完成首版交付",
-                "owner": self.pm,
-                "status": Task.Status.TODO,
-                "start_date": self.day_one,
-                "due_date": self.day_two,
-                "estimate_minutes": 480,
-                "description": "",
-                "completion_note": "",
-            },
+        # Historical unlinked task row: the transition still requires a
+        # verifiable milestone even when old task data exists.
+        Task.objects.create(
+            project=self.project,
+            name="完成首版交付",
+            owner=self.pm,
+            status=Task.Status.TODO,
+            start_date=self.day_one,
+            due_date=self.day_two,
+            estimate_minutes=480,
+            description="",
+            completion_note="",
         )
         project = Project.objects.get(pk=self.project.pk)
 

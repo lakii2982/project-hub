@@ -847,7 +847,7 @@
       "title": "Kimi项目详情页签与成本预算余额图",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -881,9 +881,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/45",
       "owner": null,
-      "blockers": [
-        "依新需求等待视觉规范与关键任务领域完成；旧日常任务界面不再开工。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -1359,7 +1357,7 @@
       "title": "关键任务领域与项目级工时核算",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -1398,9 +1396,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/44",
-      "owner": null,
+      "owner": "Local native agents; Codex integration",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-025.md"
     },
     {
       "id": "PH-026",

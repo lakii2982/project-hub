@@ -121,3 +121,5 @@ python3 -m venv .agent-venv
 - <https://developers.openai.com/codex/mcp>
 - <https://github.com/modelcontextprotocol/python-sdk>
 - <https://cloud.tencent.cn/document/product/1831/137039>
+
+工时按项目归集：新调用省略可选 task_id；该字段只为 api/v1 历史兼容保留并继续校验同项目，不影响项目成本计算。tasks 读取为里程碑/收付款相关关键任务。完成任务不产生财务审批或记账授权。

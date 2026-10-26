@@ -11,6 +11,7 @@ from .access import (require_member, require_write, require_project, require_fin
                      can_manage, WRITE_FINANCE)
 from .models import (Organization, Project, ProjectMember, Task, Milestone, CashPlan, Timesheet,
                      Document, LedgerEntry, AuditEvent, CostRate, Risk, Employee, DomainEvent)
+from .task_policy import validate_key_task
 
 MAX_MONEY = 10**12  # CNY 10 billion; exact within 64-bit and JSON safe integer ranges.
 
@@ -305,6 +306,8 @@ def create_task(member, data):
     require_write(member)
     require_project(member, project, manage=True)
     check_open(project)
+    milestone, cash_plan = validate_key_task(project, data)
+    data = {**data, "milestone": milestone, "cash_plan": cash_plan}
     if data["owner"].organization_id != project.organization_id or not data["owner"].active:
         raise ValidationError("任务负责人须为本公司有效成员")
     if not (project.manager_id == data["owner"].id or ProjectMember.objects.filter(project=project, member=data["owner"]).exists()):
@@ -429,6 +432,13 @@ def edit_task(member, pk, data, version, reason):
     check_open(task.project)
     if task.version != version: raise ValidationError("任务已经被更新，请刷新后重试")
     if data["project"].pk != task.project_id: raise ValidationError("已建任务不能移到其他项目")
+    # Omitted link keys keep the current links; an explicit None still clears a
+    # link, and the resulting plan must retain at least one link.
+    data = {**data}
+    data.setdefault("milestone", task.milestone)
+    data.setdefault("cash_plan", task.cash_plan)
+    milestone, cash_plan = validate_key_task(task.project, data)
+    data.update(milestone=milestone, cash_plan=cash_plan)
     if data["owner"].organization_id != member.organization_id or not data["owner"].active: raise ValidationError("任务负责人无效")
     if data["owner"].pk != task.project.manager_id and not ProjectMember.objects.filter(project=task.project, member=data["owner"]).exists():
         raise ValidationError("请先将任务负责人加入项目团队")
