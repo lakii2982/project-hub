@@ -1,0 +1,125 @@
+{
+  "task_id": "PH-022",
+  "summary": "项目详情改为概览/关键任务/里程碑/有权财务/风险/团队页签，保留深链与原操作；概览增加按当前批准预算减业务日期累计确认成本的余额燃尽图和精确数表；历史任务独立保留，不驱动关键任务统计。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=d34b05c2bbfd0e4bdb73cb38c122cf74c3b6d7dcd9c4dd5d06724f3ebe17a5c5; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=1e3e63f221bde88816c4a4ef7367691607b20cc1d194028a02ec9ae0586cf9b1; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=a2bfa7b376c38062f77ce2b1e703876aaa04662f96355cdf5dc9d0d075302b05; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=08f1de6796497aab862e2f521a05b9d3f076115e76182e37b3812709ef102a46; stderr_sha256=be30081f47463152cacb81c276436bff9511b398796f931e9a3cb17741f112e6"
+    },
+    {
+      "command": "python manage.py migrate --noinput",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=c485a0ceb7097168e8478d4f7c02dce89a2cc77091f5089dcdd5acded7b04994; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=55718ed41b875a87b09e335e37fb99fa1698eea79aea40ea2d59aa7f13f305c9; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native GLM backend plus fresh Kimi frontend contexts",
+    "status": "pass",
+    "findings": [],
+    "components": [
+      {
+        "scope": "backend",
+        "run_id": "8bd15aa3-7155-4a70-8fc4-760403d2c92d",
+        "reviewer": "Independent native GLM",
+        "result": {
+          "result": "PASS",
+          "blockers": [],
+          "limitations": [
+            "Evidence-based on direct reads of: reporting.py:40-100, charts.py:1-179, views.py:78-113, tests/test_project_detail.py:123-342 and 489-538 plus the symbol map for the rest — test bodies at lines 1-122, 343-488 and 539-580 (zero-budget, unapproved empty state, org isolation, linked/history split, cross-org 404, chart-helper float-rejection cases) were located via symbol map but not line-read; their existence is confirmed, their content is not independently verified.",
+            "reporting.py:1-39 (imports/helpers) not read; the Decimal/ROUND_HALF_UP usage at reporting.py:74-75 implies these imports exist and the exercised test paths would fail at import if missing, but that is inference, not direct verification.",
+            "charts.py final return-dict lines (~179 to EOF) not read; the returned structure (left/right/top/bottom/zero_y/series/y_ticks/x_ticks/viewbox) is attested by the chart_series assertions in tests/test_project_detail.py:155-183 rather than by reading those lines.",
+            "No code execution performed: the 5 acceptance commands, sha256 manifest match against the working tree, and REVIEW_DIFF.patch were not independently re-verified; the frozen-snapshot integrity and the orchestrator's browser/CI runs (1440/390 tabs, deep-link back/forward/refresh, 21 checks, full acceptance suite) are taken as claimed, not re-proven here.",
+            "can_read_finance / scoped_project / redact_card / WRITE_FINANCE implementations are pre-existing shared helpers outside the 4-file scope and were not reviewed; leakage conclusions rest on the gating call sites (views.py:98,100,110-111) and tests:504-537 only.",
+            "project.start_date/end_date assumed non-null per the model/contract (null dates would raise at reporting.py:65,90); null-date behavior is unverified and outside the stated contract.",
+            "templates (project_detail.html, project_cost_burndown.html), static/app.css, static/app.js and the front-end tab/aria/SVG-rendering layer are outside this backend review's 4-file scope and are covered by the separate front-context review; 'static SVG preferred' was verified only as: charts.py emits pure coordinate dicts and tests assert no cost data reaches HTML/context without finance_read."
+          ]
+        },
+        "stdout_sha256": "58a3bb69ab4ea630818e6de169707904f347470f3f5c99c2604111ddd8083aff",
+        "binding": {
+          "run_id": "8bd15aa3-7155-4a70-8fc4-760403d2c92d",
+          "base_sha": "de82006eb4d6bbd785ae58cea6b3e55b423e4515",
+          "contract_digest": "7092775922ed6c3b0d1c5ddb65cca0a333ab37b151b20815f98b6d77fa99a511",
+          "diff_digest": "e34ebec3116ccfb7af890cde48373a4d9e9b7b35ab53f91b4c52367cad9c6f38",
+          "snapshot": "/private/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-022-review-sex5hamr/source"
+        }
+      },
+      {
+        "scope": "frontend",
+        "run_id": "f0f36f7e-4845-4b55-82fa-75820a16d4fe",
+        "reviewer": "Independent fresh Kimi Code read-only context",
+        "result": {
+          "result": "PASS",
+          "blockers": [],
+          "limitations": [
+            "仅静态复核4个前端文件，未执行代码、测试或浏览器；1440/390布局、页签导航历史、键盘交互及局部滚动未由本次独立验证。",
+            "后端与财务接线、成本数据计算及权限上下文不在本次复核范围；图表数据正确性依赖相关审查与测试证据。"
+          ]
+        },
+        "stdout_sha256": "cac0316de4b824da3fdb0fad85efa0d2db937aa2b3cebe91efee4127efe6943f",
+        "binding": {
+          "run_id": "f0f36f7e-4845-4b55-82fa-75820a16d4fe",
+          "base_sha": "de82006eb4d6bbd785ae58cea6b3e55b423e4515",
+          "contract_digest": "7092775922ed6c3b0d1c5ddb65cca0a333ab37b151b20815f98b6d77fa99a511",
+          "diff_digest": "e34ebec3116ccfb7af890cde48373a4d9e9b7b35ab53f91b4c52367cad9c6f38",
+          "snapshot": "/private/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-022-review-njp_fcbh/source"
+        }
+      }
+    ]
+  },
+  "code_snapshot_verification": {
+    "base_sha": "de82006eb4d6bbd785ae58cea6b3e55b423e4515",
+    "contract_digest": "7092775922ed6c3b0d1c5ddb65cca0a333ab37b151b20815f98b6d77fa99a511",
+    "diff_digest": "c7be3e1cc0ac0b01e0b0bec185a6d87fb434646d8181406377f5751119545b7a",
+    "result": "PASS"
+  },
+  "browser": {
+    "sizes": [
+      1440,
+      390
+    ],
+    "facts": [
+      "六个页签逐项点击仅一个panel可见；左右/Home/End与hash切换有效。",
+      "真实back/forward/reload保持overview/finance所选页签。",
+      "390页面scrollWidth390；页签client350/scroll422，图表client316/scroll760，均局部滚动。",
+      "最终项目副标题实际12px；成本图轴不缩小为不可读小字，含title/desc及精确数表。"
+    ],
+    "screenshots_private": [
+      "/private/tmp/ph022-desktop.png",
+      "/private/tmp/ph022-mobile.png"
+    ]
+  },
+  "unverified": [
+    "关闭脚本的实际浏览器检查挂起后被中断，不计PASS；自然可聚焦锚点与全部有权面板由静态审阅及服务端HTML反例覆盖。",
+    "生产部署、真实PostgreSQL多连接并发和全浏览器兼容未验证。",
+    "本任务只改项目详情，PH026负责全站统一和经营趋势/基础资料公开入口。",
+    "438项全量验收在最后一条仅副标题字号CSS修正前运行；该纯样式补丁由独立前端复核、真实12px测量及最终PR CI覆盖。"
+  ],
+  "deviations": [
+    "初DSH测试草稿混淆rows实际预算余额与累计成本并算错日期间距；主控明确语义，DSH f97979b5修正后真实RED，再实现后端；未通过放宽财务断言迎合代码。",
+    "主控单写core/views，DSH只reporting/charts/tests，Kimi只templates/static；无模型/迁移/记账服务/API变更。",
+    "GLM初次全件审阅7dff68b4触发64KB单行输出限制，失败不计PASS；保持原限制，改为GLM后端/新Kimi前端两个互斥只读范围，最终均PASS。",
+    "Kimi先完成页签，再按主控实际检查修无JS静态tabindex、局部SVG滚动和项目字体；所有前端均Kimi写。"
+  ]
+}

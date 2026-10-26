@@ -847,7 +847,7 @@
       "title": "Kimi项目详情页签与成本预算余额图",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -880,9 +880,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/45",
-      "owner": null,
+      "owner": "Kimi UI; DSH backend/tests; Codex integration",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-022.md"
     },
     {
       "id": "PH-091",
@@ -1405,7 +1405,7 @@
       "title": "Kimi全站界面与经营趋势可视化",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -1450,9 +1450,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/46",
       "owner": null,
-      "blockers": [
-        "前置交付完成后由整合者按已冻结契约置ready；不扩大白名单。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {

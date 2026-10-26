@@ -38,3 +38,72 @@
   document.documentElement.classList.add('js-nav');
   syncSize();
 })();
+
+(() => {
+  'use strict';
+  const root = document.querySelector('[data-project-tabs]');
+  if (!root) return;
+  const tablist = root.querySelector('[role="tablist"]');
+  const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+  const panels = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
+  if (panels.some(panel => !panel || !root.contains(panel))) return;
+
+  function requestedId() {
+    const hash = window.location.hash.slice(1);
+    return tabs.some(tab => tab.getAttribute('aria-controls') === hash) ? hash : 'overview';
+  }
+
+  function activate(id, { focusTab = false, focusPanel = false } = {}) {
+    tabs.forEach((tab, index) => {
+      const selected = tab.getAttribute('aria-controls') === id;
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+      panels[index].hidden = !selected;
+      if (selected) {
+        tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        if (focusTab) tab.focus();
+        if (focusPanel) panels[index].querySelector('[data-panel-title]')?.focus({ preventScroll: true });
+      }
+    });
+  }
+
+  function navigate(id, options = {}) {
+    const { replace = false, ...focus } = options;
+    const hash = `#${id}`;
+    if (window.location.hash !== hash || replace) {
+      window.history[replace ? 'replaceState' : 'pushState'](null, '', hash);
+    }
+    activate(id, focus);
+  }
+
+  function syncFromLocation() {
+    const id = requestedId();
+    if (window.location.hash !== `#${id}`) window.history.replaceState(null, '', `#${id}`);
+    activate(id, { focusPanel: true });
+  }
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', event => {
+      event.preventDefault();
+      navigate(tab.getAttribute('aria-controls'), { focusPanel: true });
+    });
+    tab.addEventListener('keydown', event => {
+      let next;
+      if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+      else if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      else if (event.key === ' ') next = index;
+      else return;
+      event.preventDefault();
+      navigate(tabs[next].getAttribute('aria-controls'), { focusTab: true });
+    });
+  });
+
+  window.addEventListener('hashchange', syncFromLocation);
+  window.addEventListener('popstate', syncFromLocation);
+  root.classList.add('project-tabs-enhanced');
+  const initial = requestedId();
+  if (window.location.hash !== `#${initial}`) window.history.replaceState(null, '', `#${initial}`);
+  activate(initial);
+})();
