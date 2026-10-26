@@ -5,32 +5,32 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=d34b05c2bbfd0e4bdb73cb38c122cf74c3b6d7dcd9c4dd5d06724f3ebe17a5c5; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "evidence": "Actual final combined source on approved BASEef27efb, credential-free/network-denied; stdout_sha256=d34b05c2bbfd0e4bdb73cb38c122cf74c3b6d7dcd9c4dd5d06724f3ebe17a5c5; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=1e3e63f221bde88816c4a4ef7367691607b20cc1d194028a02ec9ae0586cf9b1; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "evidence": "Actual final combined source on approved BASEef27efb, credential-free/network-denied; stdout_sha256=1e3e63f221bde88816c4a4ef7367691607b20cc1d194028a02ec9ae0586cf9b1; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=a2bfa7b376c38062f77ce2b1e703876aaa04662f96355cdf5dc9d0d075302b05; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "evidence": "Actual final combined source on approved BASEef27efb, credential-free/network-denied; stdout_sha256=a2bfa7b376c38062f77ce2b1e703876aaa04662f96355cdf5dc9d0d075302b05; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=8c94d2372c8348bf56ddeb9e9a606eb0c79fd675b52e0c4b55f5512144bc1043; stderr_sha256=570d871818028fd99806d282c5498869c714e4b38ff2f9596aeab20cf444316d"
+      "evidence": "Actual final combined source on approved BASEef27efb, credential-free/network-denied; stdout_sha256=cd60e8a68a3cffd0d1b0c9e584a8340510ceef15246e13c0e52e055d20ab7f05; stderr_sha256=eb1e98cf9e240650e5caedd1c6e49eaebe549e4539dcf97ff84d8b28f67b1c14"
     },
     {
       "command": "python manage.py migrate --noinput",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=c485a0ceb7097168e8478d4f7c02dce89a2cc77091f5089dcdd5acded7b04994; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "evidence": "Actual final combined source on approved BASEef27efb, credential-free/network-denied; stdout_sha256=c485a0ceb7097168e8478d4f7c02dce89a2cc77091f5089dcdd5acded7b04994; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "command": "python manage.py verify_integrity --json",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied snapshot; stdout_sha256=55718ed41b875a87b09e335e37fb99fa1698eea79aea40ea2d59aa7f13f305c9; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "evidence": "Actual final combined source on approved BASEef27efb, credential-free/network-denied; stdout_sha256=55718ed41b875a87b09e335e37fb99fa1698eea79aea40ea2d59aa7f13f305c9; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "command": "python -m unittest discover -s integrations/mcp -p test*.py",
@@ -48,25 +48,24 @@
     "reviewer": "Independent fresh Kimi Code read-only context; prior separate backend reviewer",
     "status": "pass",
     "findings": [],
-    "run_id": "90401d2f-2e65-4142-ad2d-d270a0eab53c",
+    "run_id": "ec2a6e24-306d-457a-adef-8a252c098b2e",
     "evidence": {
       "result": "PASS",
       "blockers": [],
       "limitations": [
-        "按要求仅作只读静态复核，未执行代码；main 上的完整验收命令及三项浏览器 POST 测试未由本次重跑。",
-        "旧版 API 可选 task_id、MCP 签名及既有后端/迁移的运行时兼容性沿用此前独立审查结论，本次未重新验证。",
-        "未进行浏览器视觉、响应式或键盘检查；全站视觉统一由 PH-026 负责。"
+        "Static review was limited to core/forms.py:63-120 and the create_from_form/task_edit views; no code, tests, browser checks, or full combined-source acceptance were executed by this reviewer."
       ]
     },
-    "stdout_sha256": "22d5c7de4d863d7997f2aeb87608c888e4a324a8fcf1d71400bd8773c7a14614",
+    "stdout_sha256": "9ea2ae5c109766357c0e657d1c425df537a4320335a20cc04d6dc3dbc6f809e8",
     "binding": {
-      "run_id": "90401d2f-2e65-4142-ad2d-d270a0eab53c",
-      "base_sha": "3151c31a3f0e6f267fdbf98f00de9e95d2f09470",
+      "run_id": "ec2a6e24-306d-457a-adef-8a252c098b2e",
+      "base_sha": "ef27efb11a77232eb806522f553529cf804027de",
       "contract_digest": "d0f3fb864959116d002e015cf0fed6edb177be6d45a0c8c613fbe25cabd3a0b0",
-      "diff_digest": "f1426b52943d30ce0f33a56f5557eabeaf9612348ea1b790c72121a10a882b76",
-      "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-025-review-czt9zk3m/source"
+      "diff_digest": "274c943bc579a63cebc47f47c67d7e696ed793b38d8e8814e43ae8d833a7a8ce",
+      "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-025-review-k4ujn87x/source"
     },
-    "prior_component_review": "Independent GLM2236a36d-2045-44bc-b10a-15b559ea16b2 reviewed backend/migration/API/fixtures PASS; final independent Kimi context reviewed new forms/views and compatibility notes."
+    "prior_component_review": "Independent GLM2236a36d-2045-44bc-b10a-15b559ea16b2 reviewed backend/migration/API/fixtures PASS; final independent Kimi context reviewed new forms/views and compatibility notes.",
+    "prior_forms_run_id": "90401d2f-2e65-4142-ad2d-d270a0eab53c"
   },
   "native_runs": [
     {
@@ -86,12 +85,19 @@
       "updated_at": 1792977420,
       "base_sha": "3151c31a3f0e6f267fdbf98f00de9e95d2f09470",
       "stdout_sha256": "ee067451bd6915b543fcd7f4e08753e386c9803cbae78b5a5e4aae55755f0eed"
+    },
+    {
+      "run_id": "d596a0d1-6eff-42b5-b2e0-c2aa8a673bd3",
+      "agent_id": "kimi_code",
+      "state": "completed",
+      "created_at": 1792978157,
+      "updated_at": 1792978184
     }
   ],
   "code_snapshot_verification": {
-    "base_sha": "3151c31a3f0e6f267fdbf98f00de9e95d2f09470",
+    "base_sha": "ef27efb11a77232eb806522f553529cf804027de",
     "contract_digest": "d0f3fb864959116d002e015cf0fed6edb177be6d45a0c8c613fbe25cabd3a0b0",
-    "diff_digest": "f1426b52943d30ce0f33a56f5557eabeaf9612348ea1b790c72121a10a882b76",
+    "diff_digest": "274c943bc579a63cebc47f47c67d7e696ed793b38d8e8814e43ae8d833a7a8ce",
     "result": "PASS"
   },
   "unverified": [
@@ -104,6 +110,7 @@
     "旧test_domain阶段门禁fixture改为真实历史无链接Task，保留原拒绝断言；模板既有计数5改为契约要求3且新增所有任务有里程碑断言，不删除测试。",
     "后端74项PASS，Kimi在PH023规范合入3151c31后才开始forms，真实3项POST反例通过。此前旧BASE重放新tests真实失败，见私有PH025-red-verification。",
     "OpenCode91b433bd独立复核因free-limit429失败，未购买或重试，改用既有GLM完成。",
-    "MCP8项测试PASS；首次stdio因工作区无.agent-venv失败，临时链接后实际7工具握手PASS。该自建临时链接被最终manifest以symlink_escape拒绝，已仅移除链接（既有环境未改）；重新按正常门禁验收。"
+    "MCP8项测试PASS；首次stdio因工作区无.agent-venv失败，临时链接后实际7工具握手PASS。该自建临时链接被最终manifest以symlink_escape拒绝，已仅移除链接（既有环境未改）；重新按正常门禁验收。",
+    "真实本机浏览器已完成owner登录，并发现关键任务3个选择框显示Model object编号；Kimi d596a0d1改为名称/方向/日期，独立最终复核ec2a6e24 PASS。PH024合入后重接ef27efb，仅两处追加文档冲突保留两任务记录，core/views自动合并；最新组合全量417项（413通过/4环境跳过）及完整契约验收通过。"
   ]
 }
