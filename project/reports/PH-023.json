@@ -1,0 +1,119 @@
+{
+  "task_id": "PH-023",
+  "summary": "Kimi设计并冻结全站视觉系统、前端规范、语义令牌和可交互静态样张；AGENTS追加4行必读入口，产品页面留后续任务。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "无凭据、禁网快照实际运行；stdout_sha256=d34b05c2bbfd0e4bdb73cb38c122cf74c3b6d7dcd9c4dd5d06724f3ebe17a5c5; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "无凭据、禁网快照实际运行；stdout_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; stderr_sha256=137b952efcafa8206fb7b19ed062b37cc3cf16b8465f9b7291f258335cdb2600"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native DSH/DeepSeek and Claude Code/GLM final delta review",
+    "status": "pass",
+    "findings": [],
+    "run_id": "f60e3f15-2fa7-4274-a5fc-e26bd8d3a8b1",
+    "binding": {
+      "run_id": "f60e3f15-2fa7-4274-a5fc-e26bd8d3a8b1",
+      "base_sha": "8d59a942086a5269c945aa6852fc9ceb70cc4733",
+      "contract_digest": "7731905acc56895fbaeea7badb4cd033665f74eaf94ed17abf6557f977ce54c1",
+      "diff_digest": "ef54f803f8321750e8ea5967d5eee7858ac8a2eb98f27aea673356f07a97bd62",
+      "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-023-review-dff3ja4q/source"
+    },
+    "stdout_sha256": "84898205e2b59565104ed092ca16eafccfa366e4c5793cb004af58eb105a1457",
+    "prior_full_pass": "faf48949-342d-4009-a379-559b25fa039d",
+    "historical_evidence_summary": {
+      "result": "PASS",
+      "note": "Prior GLM delta review concerned the superseded hours input. Its disabled-button inference was incorrect for JS and is superseded by measured browser validity and submit feedback. Original wording remains in the hashed private run log; it is not the final input acceptance."
+    },
+    "input_review_before_report_correction": {
+      "reviewer": "Independent fresh Kimi Code read-only context",
+      "run_id": "82045239-dfaf-4089-a5ab-9fb6018d9da9",
+      "stdout_sha256": "a9b91c7027c3c51cd2049ab69974b8c4b9ea67178a0e1c1b78fa31dd71de2d40",
+      "binding": {
+        "run_id": "82045239-dfaf-4089-a5ab-9fb6018d9da9",
+        "base_sha": "8d59a942086a5269c945aa6852fc9ceb70cc4733",
+        "contract_digest": "7731905acc56895fbaeea7badb4cd033665f74eaf94ed17abf6557f977ce54c1",
+        "diff_digest": "10e3237fe5643a12444bdef0df5c4f12f52971424bdf262ff3277236102e9e40",
+        "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-023-review-u0fr2x44/source"
+      },
+      "evidence": {
+        "result": "BLOCK",
+        "blockers": [
+          "project/reports/PH-023.json:38 still describes the superseded hours-based input (`step 0.0166666667`, `value 8`) and incorrectly says the demo submit stays disabled. Update it to the final integer-minutes contract (`min=1`, `max=1440`, `step=1`, `value=480`) and clarify that JS enables the submit button while the demo handler prevents data submission; disabled applies only to no-JS."
+        ],
+        "limitations": [
+          "docs/engineering/ui-specimen.html:311 has a valid native default and matching label/id; no backend compatibility claim was found in the reviewed delta.",
+          "Static read-only review only: no browser execution or backend verification. Prior full DSH+GLM PASS results were treated as historical and not re-evaluated."
+        ]
+      }
+    },
+    "final_input_delta": {
+      "reviewer": "Independent fresh Kimi Code read-only context",
+      "run_id": "71db08dd-2c1d-4d1f-8f37-5907669c6cff",
+      "evidence": {
+        "result": "PASS",
+        "blockers": [],
+        "limitations": [
+          "Read-only follow-up limited to project/reports/PH-023.json and the employee field in docs/engineering/ui-specimen.html; browser behavior, demo submission, and retained log hashes were not independently executed or verified."
+        ]
+      },
+      "stdout_sha256": "f43cb7eddad49fce73384ba44a0891591cdb8d9dbb35ceb5a1e8d6843f8ad629",
+      "binding": {
+        "run_id": "71db08dd-2c1d-4d1f-8f37-5907669c6cff",
+        "base_sha": "8d59a942086a5269c945aa6852fc9ceb70cc4733",
+        "contract_digest": "7731905acc56895fbaeea7badb4cd033665f74eaf94ed17abf6557f977ce54c1",
+        "diff_digest": "1f7218e8bb98cd9abcda7e4c954f0f2ce8aecbb599a362831f16d5679eb50fd7",
+        "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-023-review-otg57ndz/source"
+      }
+    }
+  },
+  "browser": {
+    "desktop": 1440,
+    "mobile": [
+      320,
+      390,
+      768
+    ],
+    "observed": "320/390概览页面scrollWidth等于viewport；320图表client254/scroll640仅局部滚动；员工页320/768无横溢；移动导航及登录入口、展开收起aria标签通过；无JS全部9个页签自然focusable、全部panel可见、全部submit disabled；恢复JS。",
+    "screenshots_private": [
+      "/private/tmp/ph023-fixed-desktop.png",
+      "/private/tmp/ph023-fixed-mobile.png"
+    ],
+    "capacity_default_submit": "实际480分钟有效且默认保存触发演练反馈；截图/private/tmp/ph023-capacity-verified.png。"
+  },
+  "native_runs": [
+    {
+      "agent": "kimi_code",
+      "run_id": "253c2fe8-ee57-47ee-864d-5e0d87dbbe4f"
+    },
+    {
+      "agent": "kimi_code",
+      "run_id": "9d28acd6-34cf-4201-ae12-b6826129be08"
+    },
+    {
+      "agent": "kimi_code",
+      "run_id": "2eb41120-b764-4528-a3db-2185de47fc48"
+    },
+    {
+      "agent": "kimi_code",
+      "run_id": "b17a05e4-67ff-44ec-8a1c-059faabe921f"
+    }
+  ],
+  "unverified": [
+    "静态样张不代表产品页面已改造；后续PH024/025/022/026另行验收。",
+    "非全浏览器兼容或生产验证；当次远端CI见PR实际checks。"
+  ],
+  "deviations": [
+    "原Kimi修正run b52600e8-4fa2-44c4-ac26-cbcf9573d546达到900秒超时，保留文件后由新run完成定点修正，不冒称进程成功。",
+    "首次S复核f9ff209e BLOCK的对比度、窄屏、无JS和aria问题由Kimi修正。DSH后续PASS未发现主控实测320图表grid min-content溢出；主控浏览器发现后再由Kimi修复，最终GLM补丁复核与浏览器实际数值共同验收。",
+    "设计首run基于181b430，最终集成/复核采用PH095校正后8d59a94的S契约；未复用旧A门禁。",
+    "PR49 P2发现容量小时step的循环小数会使默认8不满足浏览器step。Kimi改用整数分钟min1/max1440/step1/value480；新独立Kimi只读上下文确认HTML默认有效，但BLOCK旧报告描述；本次同时纠正报告，最终新上下文复核71db08dd已PASS。主控实际validity.valid=true/stepMismatch=false，点击默认员工演练保存出现成功反馈。此前GLM关于demo按钮一直disabled的推断错误：仅无JS禁用，JS会启用并以demo handler阻止发送。"
+  ]
+}

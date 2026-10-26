@@ -1287,7 +1287,7 @@
       "title": "Kimi视觉系统与前端规范",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -1311,9 +1311,9 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/42",
-      "owner": null,
+      "owner": "Kimi Code; Codex integration",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-023.md"
     },
     {
       "id": "PH-024",
