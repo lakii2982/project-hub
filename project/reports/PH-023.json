@@ -1,0 +1,79 @@
+{
+  "task_id": "PH-023",
+  "summary": "Kimi设计并冻结全站视觉系统、前端规范、语义令牌和可交互静态样张；AGENTS追加4行必读入口，产品页面留后续任务。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "无凭据、禁网快照实际运行；stdout_sha256=d34b05c2bbfd0e4bdb73cb38c122cf74c3b6d7dcd9c4dd5d06724f3ebe17a5c5; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "无凭据、禁网快照实际运行；stdout_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; stderr_sha256=137b952efcafa8206fb7b19ed062b37cc3cf16b8465f9b7291f258335cdb2600"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native DSH/DeepSeek and Claude Code/GLM final delta review",
+    "status": "pass",
+    "findings": [],
+    "run_id": "f60e3f15-2fa7-4274-a5fc-e26bd8d3a8b1",
+    "binding": {
+      "run_id": "f60e3f15-2fa7-4274-a5fc-e26bd8d3a8b1",
+      "base_sha": "8d59a942086a5269c945aa6852fc9ceb70cc4733",
+      "contract_digest": "7731905acc56895fbaeea7badb4cd033665f74eaf94ed17abf6557f977ce54c1",
+      "diff_digest": "ef54f803f8321750e8ea5967d5eee7858ac8a2eb98f27aea673356f07a97bd62",
+      "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-023-review-dff3ja4q/source"
+    },
+    "stdout_sha256": "84898205e2b59565104ed092ca16eafccfa366e4c5793cb004af58eb105a1457",
+    "evidence": {
+      "result": "PASS",
+      "blockers": [],
+      "limitations": [
+        "Manifest sha256 digests in REVIEW_FILES.json could not be verified (no execution permitted); file identity against the frozen manifest is unverified.",
+        "No browser could be run; the prior browser evidence (320px masterdata scrollWidth=320, 768px scrollWidth=768, noJS tabs/submit checks) is taken as given. The 320px overview tab scrollWidth was never browser-confirmed; static analysis says it fits: longest overview metric '¥ 286,400' (ui-specimen.html:218) is ~80px in tabular figures at --font-size-lg plus 32px padding ≈ 112px min-content vs a 144px track at 320px.",
+        "Residual inconsistency with the stated delta: docs/engineering/ui-specimen.html:157 in @media (max-width:639px) still has .summary { grid-template-columns: 1fr 1fr; } (auto-min tracks), while the equivalent ≤1023px rule at :144 and the chart/form mobile rules at :143 were converted to minmax(0,1fr), and .chart-layout>*/.form-layout>* min-width:0 are present at :102/:113. For all fixed demo content this renders identically (no current overflow, no regression introduced), so it is recorded as a latent min-content overflow fragility for future longer metric values, not a must-fix.",
+        "Lines 172/175 single-column '1fr' at ≤639px (.detail-grid, .form-grid, .state-list) keep auto-min tracks; bounded by ~288px available at 320px and longest unbreakable content (~23-char emails, mitigated by overflow-wrap:anywhere at :165), assessed low-risk by reasoning only.",
+        "Review scope was the delta (ui-specimen.html CSS chunks :90-187/:300-319, ui-tokens.css :1-30, AGENTS.md diff) plus manifest; the full specimen HTML, visual-system.md and frontend-standards.md were not re-read — contrast, noJS behavior, aria expansion and focus remain covered by the prior independent PASS faf48949. AGENTS.md diff confirms only the 4-line '前端必读入口（PH-023）' appendix with original governance text untouched. Employee account select (:311, label/id paired, 不关联 default) and hours min/step 0.0166666667 with value 8 (≈1/60h) verified structurally; step-rounding never surfaces because the demo submit stays disabled."
+      ]
+    },
+    "prior_full_pass": "faf48949-342d-4009-a379-559b25fa039d"
+  },
+  "browser": {
+    "desktop": 1440,
+    "mobile": [
+      320,
+      390,
+      768
+    ],
+    "observed": "320/390概览页面scrollWidth等于viewport；320图表client254/scroll640仅局部滚动；员工页320/768无横溢；移动导航及登录入口、展开收起aria标签通过；无JS全部9个页签自然focusable、全部panel可见、全部submit disabled；恢复JS。",
+    "screenshots_private": [
+      "/private/tmp/ph023-fixed-desktop.png",
+      "/private/tmp/ph023-fixed-mobile.png"
+    ]
+  },
+  "native_runs": [
+    {
+      "agent": "kimi_code",
+      "run_id": "253c2fe8-ee57-47ee-864d-5e0d87dbbe4f"
+    },
+    {
+      "agent": "kimi_code",
+      "run_id": "9d28acd6-34cf-4201-ae12-b6826129be08"
+    },
+    {
+      "agent": "kimi_code",
+      "run_id": "2eb41120-b764-4528-a3db-2185de47fc48"
+    }
+  ],
+  "unverified": [
+    "静态样张不代表产品页面已改造；后续PH024/025/022/026另行验收。",
+    "非全浏览器兼容或生产验证；当次远端CI见PR实际checks。"
+  ],
+  "deviations": [
+    "原Kimi修正run b52600e8-4fa2-44c4-ac26-cbcf9573d546达到900秒超时，保留文件后由新run完成定点修正，不冒称进程成功。",
+    "首次S复核f9ff209e BLOCK的对比度、窄屏、无JS和aria问题由Kimi修正。DSH后续PASS未发现主控实测320图表grid min-content溢出；主控浏览器发现后再由Kimi修复，最终GLM补丁复核与浏览器实际数值共同验收。",
+    "设计首run基于181b430，最终集成/复核采用PH095校正后8d59a94的S契约；未复用旧A门禁。"
+  ]
+}

@@ -54,3 +54,7 @@
 使用演练数据，不能把真实客户、工资、凭据放入外部代理上下文或源码包。runtime、.env、虚拟环境、附件与备份不进入发布包。用户的 Codex/WorkBuddy 设置不属于产品初始化范围。
 
 交付更新 docs/delivery-status.md 与验证记录；分别说明代码存在、自动化通过、浏览器检查、生产验证。检查范围之外的事项明确保留，禁止以配置存在代替运行证据。
+
+## 前端必读入口（PH-023）
+
+所有产品前端修改前，必须先读 `docs/engineering/frontend-standards.md` 与 `docs/engineering/visual-system.md`，使用 `docs/engineering/ui-tokens.css` 的语义令牌并复用 `docs/engineering/ui-specimen.html` 的共享模式；新增模式先更新规范与样张。审查必须覆盖 1440px、390px、键盘与焦点、溢出及空态/错误/加载/不可用状态，不接受只换色而不统一布局。

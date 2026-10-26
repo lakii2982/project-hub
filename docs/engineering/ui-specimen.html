@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Project Hub · Kimi 视觉样张</title>
+  <link rel="stylesheet" href="./ui-tokens.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--color-canvas); }
+    body { margin: 0; color: var(--color-text); background: var(--color-canvas); font: var(--font-weight-regular) var(--font-size-sm)/var(--line-height-sm) var(--font-family-sans); }
+    button, input, select, textarea { font: inherit; }
+    button, a, input, select, textarea, summary { -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    a { color: var(--color-text-link); text-underline-offset: 3px; }
+    a:hover { text-decoration-thickness: 2px; }
+    :focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+    [hidden] { display: none !important; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3 { overflow-wrap: anywhere; }
+    h1 { margin-bottom: var(--space-2); font-size: var(--font-size-2xl); line-height: var(--line-height-2xl); font-weight: var(--font-weight-semibold); letter-spacing: -0.02em; }
+    h2 { margin-bottom: var(--space-3); font-size: var(--font-size-lg); line-height: var(--line-height-lg); }
+    h3 { margin-bottom: var(--space-2); font-size: var(--font-size-md); line-height: var(--line-height-md); }
+    p { margin-bottom: var(--space-3); }
+    svg { display: block; }
+    .icon { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .skip-link { position: fixed; z-index: var(--z-toast); top: var(--space-2); left: var(--space-2); padding: var(--space-3); background: var(--color-surface); transform: translateY(-160%); }
+    .skip-link:focus { transform: translateY(0); }
+    .app-shell { display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+    .sidebar { position: sticky; top: 0; height: 100vh; height: 100dvh; display: flex; flex-direction: column; padding: var(--space-5) var(--space-3); background: var(--color-surface); border-right: var(--border-default); }
+    .brand { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-3) var(--space-6); font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); }
+    .brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--radius-md); color: var(--color-text-inverse); background: var(--color-accent); font-size: var(--font-size-sm); }
+    .nav-label { margin: var(--space-4) var(--space-3) var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); }
+    .nav-list { display: grid; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+    .nav-button { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--control-height); padding: var(--space-2) var(--space-3); color: var(--color-text-secondary); background: transparent; border: 0; border-radius: var(--radius-md); text-align: left; text-decoration: none; }
+    .nav-button:hover { background: var(--color-surface-subtle); color: var(--color-text); }
+    .nav-button[aria-current="page"] { color: var(--color-accent-active); background: var(--color-surface-selected); font-weight: var(--font-weight-medium); }
+    .sidebar-footer { margin-top: auto; padding: var(--space-4) var(--space-3) 0; border-top: var(--border-default); }
+    .user-name { font-weight: var(--font-weight-medium); }
+    .muted { color: var(--color-text-muted); }
+    .small { font-size: var(--font-size-xs); line-height: var(--line-height-xs); }
+    .main { min-width: 0; }
+    .mobile-bar { display: none; }
+    .content { width: min(100%, var(--content-max-width)); margin-inline: auto; padding: var(--space-8); }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-6); margin-bottom: var(--space-5); }
+    .page-heading { min-width: 0; }
+    .breadcrumb { margin-bottom: var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-xs); }
+    .page-description { max-width: 720px; margin-bottom: 0; color: var(--color-text-secondary); }
+    .actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: var(--space-2); }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-height); padding: var(--space-2) var(--space-4); border: var(--border-width) solid transparent; border-radius: var(--radius-md); font-weight: var(--font-weight-medium); text-decoration: none; }
+    .button-primary { color: var(--color-text-inverse); background: var(--color-accent); }
+    .button-primary:hover { background: var(--color-accent-hover); }
+    .button-secondary { color: var(--color-text); background: var(--color-surface); border-color: var(--color-border-strong); }
+    .button-secondary:hover { background: var(--color-surface-subtle); }
+    .button-danger { color: var(--color-danger); background: var(--color-surface); border-color: var(--color-danger); }
+    .button-quiet { padding-inline: var(--space-2); color: var(--color-text-link); background: transparent; }
+    .button:disabled { cursor: not-allowed; opacity: 0.55; }
+    .icon-button { width: var(--control-height); padding: 0; }
+    .tabs { display: flex; flex-wrap: nowrap; gap: var(--space-5); max-width: 100%; margin-bottom: var(--space-5); overflow-x: auto; overscroll-behavior-inline: contain; scroll-padding-inline: var(--space-3); border-bottom: var(--border-default); }
+    .tab { position: relative; flex: 0 0 auto; min-height: var(--control-height); padding: var(--space-2) 0; color: var(--color-text-secondary); background: transparent; border: 0; text-decoration: none; white-space: nowrap; }
+    .tab:focus-visible { outline-offset: -3px; }
+    .tab[aria-selected="true"] { color: var(--color-text); font-weight: var(--font-weight-medium); }
+    .tab[aria-selected="true"]::after { content: ""; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: var(--color-accent); }
+    .surface { background: var(--color-surface); border: var(--border-default); border-radius: var(--radius-lg); }
+    .section { margin-top: var(--space-6); }
+    .section-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-3); }
+    .section-header h2 { margin-bottom: 0; }
+    .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: var(--space-6); overflow: hidden; }
+    .metric { padding: var(--space-5); border-right: var(--border-default); }
+    .metric:last-child { border-right: 0; }
+    .metric-label { color: var(--color-text-secondary); }
+    .metric-value { display: block; margin: var(--space-2) 0 var(--space-1); font-size: var(--font-size-xl); line-height: var(--line-height-xl); font-weight: var(--font-weight-semibold); }
+    .number { font-variant-numeric: tabular-nums; font-family: var(--font-family-mono); white-space: nowrap; }
+    .filter-bar { display: flex; align-items: end; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-4); margin-bottom: var(--space-4); }
+    .field { display: grid; gap: var(--space-2); min-width: 0; }
+    .field label, .field-label { font-weight: var(--font-weight-medium); }
+    .input, .select, .textarea { width: 100%; min-height: var(--control-height); padding: var(--space-2) var(--space-3); color: var(--color-text); background: var(--color-surface); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md); }
+    .textarea { min-height: 96px; resize: vertical; }
+    .input::placeholder, .textarea::placeholder { color: var(--color-text-muted); }
+    .input[aria-invalid="true"] { border-color: var(--color-danger); }
+    .help { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-xs); }
+    .error-text { margin: 0; color: var(--color-danger); font-size: var(--font-size-xs); }
+    .table-wrap { max-width: 100%; overflow-x: auto; }
+    .long-text { min-width: 0; overflow-wrap: anywhere; }
+    table { width: 100%; border-collapse: collapse; }
+    caption { padding: var(--space-4); text-align: left; font-weight: var(--font-weight-medium); }
+    th, td { padding: var(--space-3) var(--space-4); border-top: var(--border-default); text-align: left; vertical-align: middle; }
+    th { color: var(--color-text-secondary); background: var(--color-surface-subtle); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); }
+    td.numeric, th.numeric { text-align: right; }
+    .row-toggle { min-width: var(--control-height); }
+    .row-detail td { padding: 0; background: var(--color-surface-subtle); }
+    .detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); margin: 0; padding: var(--space-4) var(--space-6); }
+    .detail-grid dt { color: var(--color-text-muted); font-size: var(--font-size-xs); }
+    .detail-grid dd { margin: var(--space-1) 0 0; }
+    .badge { display: inline-flex; align-items: center; gap: var(--space-1); width: fit-content; padding: 2px var(--space-2); border-radius: var(--radius-pill); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); white-space: nowrap; }
+    .badge-success { color: var(--color-success); background: var(--color-success-subtle); }
+    .badge-warning { color: var(--color-warning); background: var(--color-warning-subtle); }
+    .badge-danger { color: var(--color-danger); background: var(--color-danger-subtle); }
+    .badge-info { color: var(--color-info); background: var(--color-info-subtle); }
+    .chart-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: var(--space-5); padding: var(--space-5); }
+    .chart-layout > * { min-width: 0; }
+    .chart-meta { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-3); color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+    .legend { display: inline-flex; align-items: center; gap: var(--space-2); }
+    .legend-line { width: 24px; border-top: 2px solid var(--chart-1); }
+    .legend-line.dashed { border-top-style: dashed; border-top-color: var(--chart-2); }
+    .chart-scroll { max-width: 100%; overflow-x: auto; }
+    .chart { width: 100%; height: auto; min-height: 180px; }
+    .chart-note { margin: 0; align-self: center; padding: var(--space-4); background: var(--color-surface-subtle); border-radius: var(--radius-md); }
+    .empty-state { padding: var(--space-10) var(--space-5); text-align: center; }
+    .empty-state p { max-width: 440px; margin-inline: auto; color: var(--color-text-secondary); }
+    .form-layout { display: grid; grid-template-columns: minmax(0, 720px) minmax(220px, 1fr); gap: var(--space-6); align-items: start; }
+    .form-layout > * { min-width: 0; }
+    .form-section { padding: var(--space-6); }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+    .field-full { grid-column: 1 / -1; }
+    .form-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-4); border-top: var(--border-default); }
+    .notice { padding: var(--space-4); border-left: 3px solid var(--color-info); background: var(--color-info-subtle); border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+    .notice-error { border-left-color: var(--color-danger); background: var(--color-danger-subtle); }
+    .state-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+    .state-item { padding: var(--space-4); }
+    .skeleton { height: 12px; margin: var(--space-2) 0; border-radius: var(--radius-sm); background: var(--color-surface-subtle); }
+    dialog { max-width: min(560px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 0; color: var(--color-text); background: var(--color-surface); border: var(--border-default); border-radius: var(--radius-xl); box-shadow: var(--shadow-overlay); }
+    dialog::backdrop { background: var(--color-overlay); }
+    .dialog-body { padding: var(--space-6); }
+    .dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+    .dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-5); }
+    .nav-dialog { width: min(320px, calc(100% - 48px)); height: 100dvh; max-height: none; margin: 0 auto 0 0; border-radius: 0 var(--radius-xl) var(--radius-xl) 0; }
+    .nav-dialog .dialog-body { padding: var(--space-4); }
+    .toast { position: fixed; z-index: var(--z-toast); right: var(--space-6); bottom: var(--space-6); max-width: min(400px, calc(100% - 32px)); padding: var(--space-4); color: var(--color-text); background: var(--color-surface-raised); border: var(--border-default); border-left: 3px solid var(--color-success); border-radius: var(--radius-md); box-shadow: var(--shadow-raised); }
+    .login-dialog { width: 440px; }
+    .login-brand { margin-bottom: var(--space-6); }
+    .password-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); }
+    .approval-facts { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: var(--space-2) var(--space-4); padding: var(--space-4); background: var(--color-surface-subtle); border-radius: var(--radius-md); }
+    .approval-facts dt { color: var(--color-text-secondary); }
+    .approval-facts dd { margin: 0; }
+    @media (max-width: 1023px) {
+      .app-shell { display: block; }
+      .sidebar { display: none; }
+      .mobile-bar { position: sticky; z-index: var(--z-sticky); top: 0; display: flex; align-items: center; gap: var(--space-3); min-height: 56px; padding: var(--space-2) var(--space-4); background: var(--color-surface); border-bottom: var(--border-default); }
+      .mobile-bar .brand { padding: 0; }
+      .content { padding: var(--space-6); }
+      .chart-layout, .form-layout { grid-template-columns: minmax(0, 1fr); }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric:nth-child(2) { border-right: 0; }
+      .metric:nth-child(-n+2) { border-bottom: var(--border-default); }
+    }
+    @media (max-width: 639px) {
+      .content { padding: var(--space-4); }
+      h1 { font-size: var(--font-size-xl); line-height: var(--line-height-xl); }
+      .page-header { display: grid; gap: var(--space-4); }
+      .actions { width: 100%; }
+      .actions .button { flex: 1 1 auto; }
+      .button, .nav-button, .tab, .icon-button { min-height: var(--touch-target); }
+      .icon-button { min-width: var(--touch-target); }
+      .tabs { gap: var(--space-4); }
+      .summary { grid-template-columns: 1fr 1fr; }
+      .metric { padding: var(--space-4); }
+      .metric-value { font-size: var(--font-size-lg); }
+      .filter-bar { align-items: stretch; flex-direction: column; }
+      .filter-bar .button { width: 100%; }
+      .table-wrap thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+      .table-wrap, .table-wrap tbody, .table-wrap tr, .table-wrap td { display: block; width: 100%; }
+      .table-wrap tr { padding: var(--space-3) var(--space-4); border-top: var(--border-default); }
+      .table-wrap td { display: grid; grid-template-columns: minmax(88px, 40%) minmax(0, 1fr); gap: var(--space-3); padding: var(--space-2) 0; border: 0; text-align: left !important; overflow-wrap: anywhere; }
+      .table-wrap td::before { content: attr(data-label); color: var(--color-text-muted); font-size: var(--font-size-xs); }
+      .table-wrap td.row-toggle-cell { display: flex; justify-content: flex-end; }
+      .table-wrap td.row-toggle-cell::before { content: ""; }
+      .table-wrap .row-detail { padding: 0; border: 0; }
+      .table-wrap .row-detail td { display: block; padding: 0; }
+      .table-wrap .row-detail td::before { content: none; }
+      .detail-grid { grid-template-columns: 1fr; padding: var(--space-4); }
+      .chart-layout, .form-section { padding: var(--space-4); }
+      .chart { min-width: 640px; min-height: 0; }
+      .form-grid, .state-list { grid-template-columns: 1fr; }
+      .form-actions, .dialog-actions { flex-direction: column-reverse; }
+      .form-actions .button, .dialog-actions .button { width: 100%; }
+      .approval-facts { grid-template-columns: 96px minmax(0, 1fr); }
+      .toast { right: var(--space-4); bottom: var(--space-4); left: var(--space-4); }
+    }
+    @media (forced-colors: active) {
+      .badge, .notice, .brand-mark { border: var(--border-width) solid currentColor; }
+      .tab[aria-selected="true"] { text-decoration: underline; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到主内容</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="桌面导航">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">项</span><span>Project Hub</span></div>
+      <nav id="primary-nav" aria-label="样张页面">
+        <p class="nav-label">经营工作区</p>
+        <ul class="nav-list">
+          <li><a class="nav-button" href="#view-overview" data-view-target="overview" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg>经营总览</a></li>
+          <li><a class="nav-button" href="#project-panel-tasks" data-view-target="projects"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>项目</a></li>
+          <li><a class="nav-button" href="#view-master" data-view-target="master"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>基础资料</a></li>
+          <li><a class="nav-button" href="#view-expenses" data-view-target="expenses"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>我的费用</a></li>
+          <li><a class="nav-button" href="#view-form" data-view-target="form"><svg class="icon" aria-hidden="true"><use href="#i-edit"/></svg>登记工时</a></li>
+        </ul>
+      </nav>
+      <div class="sidebar-footer"><div class="user-name">林澄 · 演示用户</div><div class="small muted">华东咨询（虚构）</div><button class="button button-quiet" type="button" data-open="login-dialog">查看登录样张</button></div>
+    </aside>
+    <main class="main" id="main-content">
+      <div class="mobile-bar"><button class="button button-secondary icon-button" id="menu-button" type="button" aria-label="打开导航" data-open="nav-dialog"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button><div class="brand"><span class="brand-mark" aria-hidden="true">项</span><span>Project Hub</span></div></div>
+      <div class="content">
+        <aside class="notice" aria-label="样张说明"><strong>静态设计样张，非产品已实现页面。</strong>所有组织、人员、项目、金额、日期与反馈均为虚构演练值；操作不保存或发送业务数据。</aside>
+        <noscript><style>[data-view][hidden], [role="tabpanel"][hidden], .row-detail[hidden] { display: block !important; }</style><p class="notice">JavaScript 未启用：全部视图与面板已展开，可使用导航和页签锚点阅读；演练提交按钮保持禁用，不会提交表单或发送数据。</p></noscript>
+        <section data-view="overview" id="view-overview" aria-labelledby="overview-title" class="section">
+          <header class="page-header">
+            <div class="page-heading"><div class="breadcrumb">经营工作区 / 总览</div><h1 id="overview-title" tabindex="-1">经营总览</h1><p class="page-description">2026 年 10 月 · 已审批实际与已批准计划分口径呈现，数据为虚构演练内容。</p></div>
+            <div class="actions"><button class="button button-secondary" type="button" data-open="approval-dialog">审批示例</button><a class="button button-primary" href="#view-form" data-view-target="form"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>登记工时</a></div>
+          </header>
+          <div class="summary surface" aria-label="本月经营摘要">
+            <div class="metric"><span class="metric-label">本月实际收款</span><strong class="metric-value number">¥ 286,400</strong><span class="small muted">现金口径 · 3 笔</span></div>
+            <div class="metric"><span class="metric-label">本月确认成本</span><strong class="metric-value number">¥ 173,280</strong><span class="small muted">费用与工时口径</span></div>
+            <div class="metric"><span class="metric-label">待审批</span><strong class="metric-value number">8</strong><span class="small muted">工时 5 · 费用 3</span></div>
+            <div class="metric"><span class="metric-label">逾期现金计划</span><strong class="metric-value number">2</strong><span class="small muted">单列跟进 · 不移入本周</span></div>
+          </div>
+          <section class="surface" aria-labelledby="cash-chart-title">
+            <div class="chart-layout">
+              <div>
+                <h2 id="cash-chart-title">近六个月现金趋势</h2>
+                <div class="chart-meta"><span>单位：人民币元</span><span class="legend"><i class="legend-line" aria-hidden="true"></i>实际收款 · 实线圆点</span><span class="legend"><i class="legend-line dashed" aria-hidden="true"></i>实际付款 · 虚线方点</span></div>
+                <div class="chart-scroll" tabindex="0" role="group" aria-label="现金趋势图，窄屏可横向滚动"><svg class="chart" viewBox="0 0 640 250" role="img" aria-labelledby="trend-title trend-desc">
+                  <title id="trend-title">2026 年 5 月至 10 月实际收付款趋势</title>
+                  <desc id="trend-desc">实际收款从 8 万元升至 28.64 万元；实际付款在 6.8 万元至 16.2 万元之间。精确值与含负值的净现金流见下方数据表。</desc>
+                  <g stroke="var(--chart-grid)" stroke-width="1"><line x1="56" y1="30" x2="616" y2="30"/><line x1="56" y1="85" x2="616" y2="85"/><line x1="56" y1="140" x2="616" y2="140"/><line x1="56" y1="195" x2="616" y2="195"/></g>
+                  <g fill="var(--chart-axis)" font-size="12" font-family="var(--font-family-sans)"><text x="48" y="34" text-anchor="end">30万</text><text x="48" y="89" text-anchor="end">20万</text><text x="48" y="144" text-anchor="end">10万</text><text x="48" y="199" text-anchor="end">0</text><text x="56" y="222">5月</text><text x="164" y="222">6月</text><text x="272" y="222">7月</text><text x="380" y="222">8月</text><text x="488" y="222">9月</text><text x="596" y="222">10月</text></g>
+                  <polyline points="56,151 164,118 272,74 380,107 488,63 596,38" fill="none" stroke="var(--chart-1)" stroke-width="2.5"/>
+                  <polyline points="56,136 164,147 272,125 380,158 488,136 596,106" fill="none" stroke="var(--chart-2)" stroke-width="2.5" stroke-dasharray="7 5"/>
+                  <g fill="var(--color-surface)" stroke="var(--chart-1)" stroke-width="2"><circle cx="56" cy="151" r="4"/><circle cx="164" cy="118" r="4"/><circle cx="272" cy="74" r="4"/><circle cx="380" cy="107" r="4"/><circle cx="488" cy="63" r="4"/><circle cx="596" cy="38" r="4"/></g>
+                  <g fill="var(--color-surface)" stroke="var(--chart-2)" stroke-width="2"><rect x="52" y="132" width="8" height="8"/><rect x="160" y="143" width="8" height="8"/><rect x="268" y="121" width="8" height="8"/><rect x="376" y="154" width="8" height="8"/><rect x="484" y="132" width="8" height="8"/><rect x="592" y="102" width="8" height="8"/></g>
+                </svg></div>
+                <details><summary>查看趋势精确数据</summary><div class="table-wrap"><table><caption class="small">单位：人民币元；已审批实际现金</caption><thead><tr><th>月份</th><th class="numeric">实际收款</th><th class="numeric">实际付款</th><th class="numeric">净现金流</th></tr></thead><tbody><tr><td data-label="月份">2026-05</td><td data-label="实际收款" class="numeric number">80,000</td><td data-label="实际付款" class="numeric number">108,000</td><td data-label="净现金流" class="numeric number">−28,000</td></tr><tr><td data-label="月份">2026-06</td><td data-label="实际收款" class="numeric number">140,000</td><td data-label="实际付款" class="numeric number">88,000</td><td data-label="净现金流" class="numeric number">52,000</td></tr><tr><td data-label="月份">2026-07</td><td data-label="实际收款" class="numeric number">220,000</td><td data-label="实际付款" class="numeric number">128,000</td><td data-label="净现金流" class="numeric number">92,000</td></tr><tr><td data-label="月份">2026-08</td><td data-label="实际收款" class="numeric number">160,000</td><td data-label="实际付款" class="numeric number">68,000</td><td data-label="净现金流" class="numeric number">92,000</td></tr><tr><td data-label="月份">2026-09</td><td data-label="实际收款" class="numeric number">240,000</td><td data-label="实际付款" class="numeric number">108,000</td><td data-label="净现金流" class="numeric number">132,000</td></tr><tr><td data-label="月份">2026-10</td><td data-label="实际收款" class="numeric number">286,400</td><td data-label="实际付款" class="numeric number">162,000</td><td data-label="净现金流" class="numeric number">124,400</td></tr></tbody></table></div></details>
+                <h3 class="section">每月净现金流 <span class="small muted">单位：人民币元；负值有减号与向下柱形</span></h3>
+                <div class="chart-scroll" tabindex="0" role="group" aria-label="净现金流图，窄屏可横向滚动"><svg class="chart" viewBox="0 0 640 190" role="img" aria-labelledby="net-title net-desc">
+                  <title id="net-title">2026 年 5 月至 10 月净现金流正负值</title><desc id="net-desc">5 月为负 28000 元，其余月份为正；精确值见上方数据表。</desc>
+                  <g stroke="var(--chart-grid)"><line x1="56" y1="60" x2="616" y2="60"/><line x1="56" y1="100" x2="616" y2="100" stroke="var(--chart-axis)"/><line x1="56" y1="120" x2="616" y2="120"/></g>
+                  <g fill="var(--chart-axis)" font-size="12" font-family="var(--font-family-sans)"><text x="48" y="64" text-anchor="end">10万</text><text x="48" y="104" text-anchor="end">0</text><text x="48" y="124" text-anchor="end">−5万</text></g>
+                  <g stroke-width="1"><rect x="60" y="100" width="32" height="11.2" fill="var(--chart-5)"/><rect x="164" y="79.2" width="32" height="20.8" fill="var(--chart-3)"/><rect x="268" y="63.2" width="32" height="36.8" fill="var(--chart-3)"/><rect x="372" y="63.2" width="32" height="36.8" fill="var(--chart-3)"/><rect x="476" y="47.2" width="32" height="52.8" fill="var(--chart-3)"/><rect x="580" y="50.24" width="32" height="49.76" fill="var(--chart-3)"/></g>
+                  <g fill="var(--color-text)" font-size="12" font-family="var(--font-family-sans)" text-anchor="middle"><text x="76" y="130">−28,000</text><text x="180" y="73">52,000</text><text x="284" y="57">92,000</text><text x="388" y="57">92,000</text><text x="492" y="41">132,000</text><text x="596" y="44">124,400</text><text x="76" y="158">5月</text><text x="180" y="158">6月</text><text x="284" y="158">7月</text><text x="388" y="158">8月</text><text x="492" y="158">9月</text><text x="596" y="158">10月</text></g>
+                </svg></div>
+              </div>
+              <aside class="chart-note"><h3>阅读口径</h3><p class="small">收款与付款是现金事实，不等同于收入、成本或利润。逾期计划单独跟进，不自动移入当前周。</p><p class="small muted">来源：演练现金账本<br>更新：2026-10-25 09:30</p></aside>
+            </div>
+          </section>
+          <section class="section" aria-labelledby="attention-title">
+            <div class="section-header"><h2 id="attention-title">需要跟进的项目</h2><button class="button button-quiet" type="button" data-view-target="projects">查看全部项目</button></div>
+            <div class="surface table-wrap"><table><caption>按风险与业务日期排序 · 点击行尾展开详情</caption><thead><tr><th scope="col">项目</th><th scope="col">负责人</th><th scope="col">状态</th><th scope="col" class="numeric">预计剩余成本</th><th scope="col">下一节点</th><th scope="col"><span class="small">详情</span></th></tr></thead><tbody>
+              <tr><td data-label="项目"><strong>星河零售 · 年度经营咨询</strong></td><td data-label="负责人">周岚</td><td data-label="状态"><span class="badge badge-warning">△ 有风险</span></td><td data-label="预计剩余成本" class="numeric number">¥ 48,600</td><td data-label="下一节点">10-28 中期复核</td><td data-label="详情" class="row-toggle-cell"><button class="button button-quiet row-toggle" type="button" aria-expanded="false" aria-controls="detail-star" aria-label="展开星河零售项目详情">展开</button></td></tr>
+              <tr class="row-detail" id="detail-star" hidden><td colspan="6"><dl class="detail-grid"><div><dt>风险</dt><dd>中期确认晚于计划 2 天</dd></div><div><dt>跟进人</dt><dd>周岚 · 项目经理</dd></div><div><dt>建议操作</dt><dd>复核里程碑，不重算历史成本</dd></div></dl></td></tr>
+              <tr><td data-label="项目"><strong>远山制造 · 供应链优化</strong></td><td data-label="负责人">陈墨</td><td data-label="状态"><span class="badge badge-info">● 执行中</span></td><td data-label="预计剩余成本" class="numeric number">¥ 32,400</td><td data-label="下一节点">11-02 成果验收</td><td data-label="详情" class="row-toggle-cell"><button class="button button-quiet row-toggle" type="button" aria-expanded="false" aria-controls="detail-mountain" aria-label="展开远山制造项目详情">展开</button></td></tr>
+              <tr class="row-detail" id="detail-mountain" hidden><td colspan="6"><dl class="detail-grid"><div><dt>当前里程碑</dt><dd>成果验收</dd></div><div><dt>待审批</dt><dd>2 条工时 · 1 笔费用</dd></div><div><dt>建议操作</dt><dd>先处理待审批记录</dd></div></dl></td></tr>
+            </tbody></table></div>
+          </section>
+        </section>
+        <section data-view="projects" id="view-projects" aria-labelledby="projects-title" hidden>
+          <header class="page-header"><div class="page-heading"><div class="breadcrumb">项目 / PRJ-2026-018</div><h1 id="projects-title" tabindex="-1">星河零售 · 年度经营咨询与组织效能提升项目</h1><p class="page-description">虚构演练项目 · 执行中 · 负责人周岚 · 2026-03-01 至 2026-12-20</p></div><div class="actions"><a class="button button-secondary" href="#view-expenses" data-view-target="expenses">我的费用</a><button class="button button-primary" type="button" data-toast="已演示新建关键任务；未写入业务数据。">新建关键任务</button></div></header>
+          <div data-tabs>
+            <div class="tabs" role="tablist" aria-label="项目详情视图">
+              <a class="tab" id="project-tab-overview" href="#project-panel-overview" role="tab" aria-selected="false" aria-controls="project-panel-overview">概览</a>
+              <a class="tab" id="project-tab-tasks" href="#project-panel-tasks" role="tab" aria-selected="true" aria-controls="project-panel-tasks">关键任务</a>
+              <a class="tab" id="project-tab-milestones" href="#project-panel-milestones" role="tab" aria-selected="false" aria-controls="project-panel-milestones">里程碑</a>
+              <a class="tab" id="project-tab-finance" href="#project-panel-finance" role="tab" aria-selected="false" aria-controls="project-panel-finance">项目财务（有权）</a>
+              <a class="tab" id="project-tab-risks" href="#project-panel-risks" role="tab" aria-selected="false" aria-controls="project-panel-risks">风险</a>
+              <a class="tab" id="project-tab-team" href="#project-panel-team" role="tab" aria-selected="false" aria-controls="project-panel-team">团队</a>
+            </div>
+            <section id="project-panel-overview" role="tabpanel" aria-labelledby="project-tab-overview" tabindex="0" hidden>
+              <div class="notice"><strong>需要关注：</strong>中期确认比计划晚 2 天。请复核下一里程碑，历史费率与成本不因此重算。</div>
+              <div class="summary surface section" aria-label="项目摘要"><div class="metric"><span class="metric-label">预算基线</span><strong class="metric-value number">¥ 480,000</strong><span class="small muted">2026-03-01 已批准</span></div><div class="metric"><span class="metric-label">累计确认成本</span><strong class="metric-value number">¥ 218,600</strong><span class="small muted">实际业务口径</span></div><div class="metric"><span class="metric-label">预计剩余成本</span><strong class="metric-value number">¥ 48,600</strong><span class="small muted">预测 · 非实际</span></div><div class="metric"><span class="metric-label">未完成关键任务</span><strong class="metric-value number">2 / 5</strong><span class="small muted">均关联项目节点</span></div></div>
+              <div class="surface empty-state"><h2>项目动态为空</h2><p>当前筛选期间没有新的项目动态。风险与关键任务仍在对应页签显示。</p></div>
+            </section>
+            <section id="project-panel-tasks" role="tabpanel" aria-labelledby="project-tab-tasks" tabindex="0">
+              <div class="notice"><strong>关键任务口径：</strong>每项必须关联本项目的一个里程碑或收付款计划；日常开发和服务执行不列入此表。</div>
+              <div class="surface table-wrap section"><table><caption>虚构关键任务 · 计划口径</caption><thead><tr><th scope="col">关键任务</th><th scope="col">关联类型</th><th scope="col">同项目关联节点</th><th scope="col">负责人</th><th scope="col">截止日期</th><th scope="col">状态</th></tr></thead><tbody>
+                <tr><td data-label="关键任务"><strong>提交中期经营诊断报告</strong></td><td data-label="关联类型">里程碑</td><td data-label="同项目关联节点">MS-02 · 中期复核</td><td data-label="负责人">周岚</td><td data-label="截止日期">2026-10-28</td><td data-label="状态"><span class="badge badge-warning">△ 临期</span></td></tr>
+                <tr><td data-label="关键任务"><strong>确认成果验收收款节点</strong></td><td data-label="关联类型">收款计划</td><td data-label="同项目关联节点">CP-03 · 验收款</td><td data-label="负责人">林澄</td><td data-label="截止日期">2026-11-02</td><td data-label="状态"><span class="badge badge-info">● 进行中</span></td></tr>
+              </tbody></table></div>
+            </section>
+            <section id="project-panel-milestones" role="tabpanel" aria-labelledby="project-tab-milestones" tabindex="0" hidden><div class="surface table-wrap"><table><caption>虚构项目里程碑</caption><thead><tr><th>里程碑</th><th>计划日期</th><th>关联关键任务</th><th>状态</th></tr></thead><tbody><tr><td data-label="里程碑">MS-02 · 中期复核</td><td data-label="计划日期">2026-10-28</td><td data-label="关联关键任务">提交中期经营诊断报告</td><td data-label="状态"><span class="badge badge-warning">△ 临期</span></td></tr><tr><td data-label="里程碑">MS-03 · 成果验收</td><td data-label="计划日期">2026-11-02</td><td data-label="关联关键任务">确认成果验收收款节点</td><td data-label="状态"><span class="badge badge-info">○ 未开始</span></td></tr></tbody></table></div></section>
+            <section id="project-panel-finance" role="tabpanel" aria-labelledby="project-tab-finance" tabindex="0" hidden><div class="notice"><strong>有权视图：</strong>此处演示已获项目财务授权时的汇总；无权限时应说明原因，不显示金额或个人费率。</div><div class="surface table-wrap section"><table><caption>虚构项目财务 · 单位：人民币元</caption><thead><tr><th>口径</th><th class="numeric">金额</th><th>说明</th></tr></thead><tbody><tr><td data-label="口径">累计确认成本</td><td data-label="金额" class="numeric number">218,600</td><td data-label="说明">已确认实际</td></tr><tr><td data-label="口径">预计剩余成本</td><td data-label="金额" class="numeric number">48,600</td><td data-label="说明">预测，非实际</td></tr></tbody></table></div></section>
+            <section id="project-panel-risks" role="tabpanel" aria-labelledby="project-tab-risks" tabindex="0" hidden><div class="surface table-wrap"><table><caption>虚构项目风险</caption><thead><tr><th>风险</th><th>影响节点</th><th>跟进人</th><th>状态</th></tr></thead><tbody><tr><td data-label="风险">中期确认晚于计划</td><td data-label="影响节点">MS-02 · 中期复核</td><td data-label="跟进人">周岚</td><td data-label="状态"><span class="badge badge-warning">△ 跟进中</span></td></tr></tbody></table></div></section>
+            <section id="project-panel-team" role="tabpanel" aria-labelledby="project-tab-team" tabindex="0" hidden><div class="surface table-wrap"><table><caption>虚构项目团队 · 不展示个人费率</caption><thead><tr><th>员工</th><th>项目职责</th><th>加入日期</th></tr></thead><tbody><tr><td data-label="员工">周岚</td><td data-label="项目职责">项目负责人</td><td data-label="加入日期">2026-03-01</td></tr><tr><td data-label="员工">许青</td><td data-label="项目职责">经营分析</td><td data-label="加入日期">2026-03-01</td></tr></tbody></table></div></section>
+          </div>
+        </section>
+
+        <section data-view="master" id="view-master" aria-labelledby="master-title" hidden>
+          <header class="page-header"><div class="page-heading"><div class="breadcrumb">经营工作区 / 基础资料</div><h1 id="master-title" tabindex="-1">基础资料</h1><p class="page-description">仅维护项目、员工、成本费率三类虚构资料；停用保留历史记录，不删除已引用资料。</p></div></header>
+          <div data-tabs>
+            <div class="tabs" role="tablist" aria-label="基础资料类型">
+              <a class="tab" id="master-tab-project" href="#master-panel-project" role="tab" aria-selected="true" aria-controls="master-panel-project">项目</a>
+              <a class="tab" id="master-tab-employee" href="#master-panel-employee" role="tab" aria-selected="false" aria-controls="master-panel-employee">员工</a>
+              <a class="tab" id="master-tab-rate" href="#master-panel-rate" role="tab" aria-selected="false" aria-controls="master-panel-rate">成本费率</a>
+            </div>
+            <section id="master-panel-project" role="tabpanel" aria-labelledby="master-tab-project" tabindex="0">
+              <form class="filter-bar surface" id="master-filter">
+                <div class="field"><label for="project-query">项目名称</label><input class="input" id="project-query" name="query" type="search" placeholder="输入名称关键字" autocomplete="off"></div>
+                <div class="field"><label for="project-status">状态</label><select class="select" id="project-status" name="status"><option value="all">全部状态</option><option value="active">执行中</option><option value="inactive">已归档</option></select></div>
+                <button class="button button-secondary" type="submit" disabled data-demo-submit>查询</button><button class="button button-secondary" id="filter-reset" type="button">清除</button>
+              </form>
+              <div id="project-results" class="surface table-wrap"><table><caption id="project-caption">虚构项目列表 · 共 2 条</caption><thead><tr><th>项目名称</th><th>项目编号</th><th>负责人</th><th>状态</th></tr></thead><tbody><tr data-project-row data-name="星河零售年度经营咨询" data-status="active"><td data-label="项目名称"><strong>星河零售 · 年度经营咨询</strong></td><td data-label="项目编号" class="number">PRJ-2026-018</td><td data-label="负责人">周岚</td><td data-label="状态"><span class="badge badge-success">● 执行中</span></td></tr><tr data-project-row data-name="远山制造供应链优化" data-status="inactive"><td data-label="项目名称"><strong>远山制造 · 供应链优化</strong></td><td data-label="项目编号" class="number">PRJ-2026-021</td><td data-label="负责人">陈墨</td><td data-label="状态"><span class="badge badge-warning">■ 已归档</span></td></tr></tbody></table></div>
+              <div id="project-empty" class="surface empty-state" role="status" hidden><h2>没有符合条件的项目</h2><p>已保留筛选条件，可修改或清除后重试。</p><button class="button button-secondary" type="button" data-reset-filter>清除筛选</button></div>
+              <form class="surface form-section section" data-demo-form="项目"><h2>维护项目 <span class="small muted">演练表单</span></h2><div class="form-grid"><div class="field"><label for="master-project-code">项目编号</label><input class="input number" id="master-project-code" value="PRJ-2026-018" readonly></div><div class="field"><label for="master-project-owner">负责人</label><select class="select" id="master-project-owner"><option>周岚（虚构）</option><option>陈墨（虚构）</option></select></div><div class="field field-full"><label for="master-project-name">项目名称</label><input class="input" id="master-project-name" value="星河零售 · 年度经营咨询" required></div><div class="field"><label for="master-project-start">开始日期</label><input class="input" id="master-project-start" type="date" value="2026-03-01"></div><div class="field"><label for="master-project-end">结束日期</label><input class="input" id="master-project-end" type="date" value="2026-12-20"></div></div><div class="form-actions"><button class="button button-primary" type="submit" disabled data-demo-submit>保存项目演练</button></div></form>
+            </section>
+            <section id="master-panel-employee" role="tabpanel" aria-labelledby="master-tab-employee" tabindex="0" hidden>
+              <div class="surface table-wrap"><table><caption>虚构员工列表 · 不显示个人费率</caption><thead><tr><th>员工编号</th><th>姓名</th><th>工作邮箱</th><th>状态</th></tr></thead><tbody><tr><td data-label="员工编号" class="number">EMP-008</td><td data-label="姓名">周岚</td><td data-label="工作邮箱" class="long-text">zhoulan@example.invalid</td><td data-label="状态"><span class="badge badge-success">✓ 启用</span></td></tr><tr><td data-label="员工编号" class="number">EMP-012</td><td data-label="姓名">许青</td><td data-label="工作邮箱" class="long-text">xuqing@example.invalid</td><td data-label="状态"><span class="badge badge-success">✓ 启用</span></td></tr></tbody></table></div>
+              <form class="surface form-section section" data-demo-form="员工"><h2>维护员工 <span class="small muted">演练表单</span></h2><div class="form-grid"><div class="field"><label for="master-employee-name">姓名</label><input class="input" id="master-employee-name" value="周岚（虚构）" required></div><div class="field"><label for="master-employee-role">岗位</label><input class="input" id="master-employee-role" value="经营顾问"></div><div class="field field-full"><label for="master-employee-account">关联登录账户</label><select class="select" id="master-employee-account"><option value="">不关联</option><option value="zhou" selected>周岚（虚构）</option></select></div><div class="field"><label for="master-employee-hours">每日可用工时</label><input class="input number" id="master-employee-hours" type="number" min="0.0166666667" step="0.0166666667" value="8" inputmode="decimal"></div><div class="field"><label for="master-employee-status">启用状态</label><select class="select" id="master-employee-status"><option>启用</option><option>停用（保留历史）</option></select></div></div><div class="form-actions"><button class="button button-primary" type="submit" disabled data-demo-submit>保存员工演练</button></div></form>
+            </section>
+            <section id="master-panel-rate" role="tabpanel" aria-labelledby="master-tab-rate" tabindex="0" hidden>
+              <div class="notice"><strong>授权与快照：</strong>成本费率仅授权角色可见；按业务日期快照，新增未来费率不重算历史成本。以下均为虚构演练值。</div>
+              <div class="surface table-wrap section"><table><caption>虚构成本费率 · 单位：人民币元/小时</caption><thead><tr><th>员工</th><th>生效日期</th><th class="numeric">成本费率</th><th>状态</th></tr></thead><tbody><tr><td data-label="员工">周岚</td><td data-label="生效日期">2026-01-01</td><td data-label="成本费率" class="numeric number">180.00</td><td data-label="状态"><span class="badge badge-success">✓ 当前</span></td></tr><tr><td data-label="员工">周岚</td><td data-label="生效日期">2027-01-01</td><td data-label="成本费率" class="numeric number">195.00</td><td data-label="状态"><span class="badge badge-info">○ 未来</span></td></tr></tbody></table></div>
+              <form class="surface form-section section" data-demo-form="成本费率"><h2>维护成本费率 <span class="small muted">授权角色演练表单</span></h2><div class="form-grid"><div class="field"><label for="master-rate-employee">员工</label><select class="select" id="master-rate-employee"><option>周岚（虚构）</option><option>许青（虚构）</option></select></div><div class="field"><label for="master-rate-date">生效日期</label><input class="input" id="master-rate-date" type="date" value="2027-01-01"></div><div class="field"><label for="master-rate-value">成本费率（元/小时）</label><input class="input number" id="master-rate-value" type="number" min="0" step="0.01" value="195.00" inputmode="decimal"></div></div><p class="help">正式产品由服务端校验权限与业务日期；此表单不保存数据。</p><div class="form-actions"><button class="button button-primary" type="submit" disabled data-demo-submit>保存费率演练</button></div></form>
+            </section>
+          </div>
+          <details class="surface section"><summary>查看加载、错误与不可用状态样例</summary><div class="state-list"><div class="state-item surface" aria-label="加载状态"><h3>正在加载</h3><div class="skeleton" style="width: 72%"></div><div class="skeleton" style="width: 94%"></div><p class="small muted" role="status">正在读取项目数据…</p></div><div class="state-item surface"><h3>读取失败</h3><p class="small">数据尚未更新，已保留当前筛选与输入。</p><button class="button button-secondary" type="button" data-toast="演练重试已触发。">重试</button></div><div class="state-item surface"><h3>暂不可用</h3><p class="small">你没有查看个人费率的权限。请联系财务负责人。</p><button class="button button-secondary" type="button" disabled>导出费率</button></div><div class="state-item surface"><h3>图表暂无数据</h3><p class="small">当前期间没有可展示的趋势数据；调整期间后再查看。</p></div><div class="state-item surface"><h3>图表读取失败</h3><p class="small">趋势暂时无法读取，不以零值替代。</p><button class="button button-secondary" type="button" data-toast="演练重试已触发。">重试图表</button></div><div class="state-item surface"><h3>图表不可用</h3><p class="small">你没有查看财务趋势的权限；此处不展示金额或趋势。</p></div></div></details>
+        </section>
+        <section data-view="expenses" id="view-expenses" aria-labelledby="expenses-title" hidden>
+          <header class="page-header"><div class="page-heading"><div class="breadcrumb">经营工作区 / 我的费用</div><h1 id="expenses-title" tabindex="-1">我的费用</h1><p class="page-description">普通成员可查看本人费用；不展示他人记录或个人费率。以下为虚构演练数据。</p></div></header>
+          <div class="surface table-wrap"><table><caption>林澄（虚构）的本人费用</caption><thead><tr><th>项目</th><th>费用日期</th><th>内容</th><th class="numeric">金额</th><th>状态</th></tr></thead><tbody><tr><td data-label="项目">星河零售 · 年度经营咨询</td><td data-label="费用日期">2026-10-22</td><td data-label="内容">访谈现场往返交通</td><td data-label="金额" class="numeric number">¥ 1,280.00</td><td data-label="状态"><span class="badge badge-info">● 待审批</span></td></tr></tbody></table></div>
+        </section>
+        <section data-view="form" id="view-form" aria-labelledby="form-title" hidden>
+          <header class="page-header"><div class="page-heading"><div class="breadcrumb">项目 / 工时 / 新建</div><h1 id="form-title" tabindex="-1">登记项目工时</h1><p class="page-description">仅记录项目、员工、日期、时长与工作内容；不关联任务，不显示个人费率。</p></div></header>
+          <div class="form-layout">
+            <form class="surface form-section" id="time-form" novalidate>
+              <div id="form-error-summary" class="notice notice-error" role="alert" tabindex="-1" hidden><strong>请检查标记的字段</strong><p class="small" style="margin: var(--space-2) 0 0">修正后可再次保存，已填写内容不会丢失。</p></div>
+              <h2>工作事实 <span class="small muted">虚构演练表单</span></h2>
+              <div class="form-grid">
+                <div class="field field-full"><label for="time-project">项目 <span aria-hidden="true">*</span><span class="muted">（必填）</span></label><select class="select" id="time-project" name="project" required aria-describedby="time-project-error"><option value="">请选择项目</option><option value="star">星河零售 · 年度经营咨询</option><option value="mountain">远山制造 · 供应链优化</option></select><p class="error-text" id="time-project-error" hidden>请选择要登记的项目。</p></div>
+                <div class="field field-full"><label for="time-employee">员工 <span aria-hidden="true">*</span><span class="muted">（必填）</span></label><select class="select" id="time-employee" name="employee" required aria-describedby="time-employee-help time-employee-error"><option value="lin">林澄（本人，虚构）</option><option value="zhou">周岚（授权登记演练）</option></select><p class="help" id="time-employee-help">普通成员默认选择本人；可登记他人的范围由既有权限决定。</p><p class="error-text" id="time-employee-error" hidden>请选择员工。</p></div>
+                <div class="field"><label for="work-date">日期 <span aria-hidden="true">*</span><span class="muted">（必填）</span></label><input class="input" id="work-date" name="workDate" type="date" value="2026-10-24" max="2026-10-25" required aria-describedby="work-date-help work-date-error"><p class="help" id="work-date-help">不能登记未来实际日期。</p><p class="error-text" id="work-date-error" hidden>请选择有效的非未来日期。</p></div>
+                <div class="field"><label for="work-minutes">时长（分钟） <span aria-hidden="true">*</span><span class="muted">（必填）</span></label><input class="input number" id="work-minutes" name="minutes" type="number" min="15" max="1440" step="15" inputmode="numeric" placeholder="例如 120" required aria-describedby="work-minutes-help work-minutes-error"><p class="help" id="work-minutes-help">15 至 1440 分钟，以 15 分钟递增。</p><p class="error-text" id="work-minutes-error" hidden>请输入 15 至 1440 之间、15 的倍数的分钟数。</p></div>
+                <div class="field field-full"><label for="work-note">工作内容 <span aria-hidden="true">*</span><span class="muted">（必填）</span></label><textarea class="textarea" id="work-note" name="note" required minlength="8" placeholder="说明完成的工作与产出" aria-describedby="work-note-help work-note-error"></textarea><p class="help" id="work-note-help">至少 8 个字符；不要填写真实业务秘密或个人敏感信息。</p><p class="error-text" id="work-note-error" hidden>请填写至少 8 个字符的工作内容。</p></div>
+              </div>
+              <div class="form-actions"><a class="button button-secondary" href="#view-overview" data-view-target="overview">取消</a><button class="button button-primary" id="time-submit" type="submit" disabled data-demo-submit>保存演练草稿</button></div>
+            </form>
+            <aside><div class="notice"><h2>提交前确认</h2><p class="small">项目、员工、日期、时长与内容应反映实际工作。正式产品中，权限、期间、状态和幂等由服务端校验。</p></div><div class="surface form-section section"><h2>状态说明</h2><p class="small"><span class="badge badge-info">○ 草稿</span><br><br>草稿不是已确认成本；审批通过后才按既有规则入账。</p></div></aside>
+          </div>
+        </section>
+        <footer class="section small muted">Kimi 视觉系统静态样张 · 所有名称与数据均为虚构 · 无远程资源、无构建步骤</footer>
+      </div>
+    </main>
+  </div>
+
+  <dialog class="nav-dialog" id="nav-dialog" aria-labelledby="nav-dialog-title">
+    <div class="dialog-body"><div class="dialog-header"><h2 id="nav-dialog-title" tabindex="-1">页面导航</h2><button class="button button-secondary icon-button" type="button" aria-label="关闭导航" data-close><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div><div id="mobile-nav-target"></div><button class="button button-quiet" type="button" data-open="login-dialog">查看登录样张</button></div>
+  </dialog>
+
+  <dialog class="login-dialog" id="login-dialog" aria-labelledby="login-title">
+    <div class="dialog-body"><div class="dialog-header"><div class="login-brand"><div class="brand"><span class="brand-mark" aria-hidden="true">项</span><span>Project Hub</span></div><p class="muted">项目与经营事实的共同中心</p></div><button class="button button-secondary icon-button" type="button" aria-label="关闭登录样张" data-close><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+      <h1 id="login-title" tabindex="-1">登录工作台</h1><p class="page-description">使用组织账号继续。此对话框仅展示界面，不验证或发送凭据。</p>
+      <form id="login-form" novalidate><div id="login-error" class="notice notice-error" role="alert" hidden>演练登录不会建立会话，也未发送任何凭据。</div><div class="form-grid" style="margin-top: var(--space-5)"><div class="field field-full"><label for="login-email">工作邮箱</label><input class="input" id="login-email" name="email" type="email" autocomplete="username" required placeholder="name@example.com"></div><div class="field field-full"><label for="login-password">密码</label><div class="password-row"><input class="input" id="login-password" name="password" type="password" autocomplete="current-password" required><button class="button button-secondary" id="password-toggle" type="button" aria-pressed="false">显示</button></div></div></div><div class="dialog-actions"><button class="button button-primary" type="submit" disabled data-demo-submit>演示登录状态</button></div></form>
+    </div>
+  </dialog>
+
+  <dialog id="approval-dialog" aria-labelledby="approval-title">
+    <div class="dialog-body"><div class="dialog-header"><div><div class="breadcrumb">审批 / 费用 / EXP-2026-031</div><h1 id="approval-title" tabindex="-1">复核差旅费用申请</h1></div><button class="button button-secondary icon-button" type="button" aria-label="关闭审批样张" data-close><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+      <p class="page-description">先核对申请事实与证据，再作出决定。以下操作仅显示演练反馈。</p>
+      <dl class="approval-facts"><dt>申请项目</dt><dd>星河零售 · 年度经营咨询</dd><dt>提交人</dt><dd>周岚（与当前审批人不同）</dd><dt>费用日期</dt><dd>2026-10-22</dd><dt>申请金额</dt><dd class="number">¥ 1,280.00</dd><dt>费用说明</dt><dd>访谈现场往返交通</dd><dt>证据</dt><dd>2 份演练附件 · 名称已脱敏</dd><dt>审批记录</dt><dd>2026-10-23 提交 · 尚无审批决定</dd></dl>
+      <form id="approval-form"><div class="field" style="margin-top: var(--space-5)"><label for="approval-note">审批意见</label><textarea class="textarea" id="approval-note" placeholder="通过可不填；退回或驳回请说明原因"></textarea></div><div class="dialog-actions"><button class="button button-danger" type="button" data-approval="驳回">驳回</button><button class="button button-secondary" type="button" data-approval="退回">退回补充</button><button class="button button-primary" type="button" data-approval="通过">通过</button></div></form>
+    </div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <svg width="0" height="0" aria-hidden="true" style="position: absolute">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4a2 2 0 0 1 2-2h5v18H6a2 2 0 0 1-2-2Zm15-2h-5v18h5a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m4 20 4-1 11-11-3-3L5 16Zm10-14 3 3M13 20h8"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  </svg>
+  <script>
+    (() => {
+      document.querySelectorAll('[data-demo-submit]').forEach(button => { button.disabled = false; });
+      const views = [...document.querySelectorAll('[data-view]')];
+      const toast = document.getElementById('toast');
+      let toastTimer;
+
+      function showToast(message) {
+        clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.hidden = false;
+        toastTimer = setTimeout(() => { toast.hidden = true; }, 4500);
+      }
+
+      function showView(name, moveFocus = true, updateHash = true) {
+        const target = views.find(view => view.dataset.view === name);
+        if (!target) return;
+        views.forEach(view => { view.hidden = view !== target; });
+        document.querySelectorAll('.nav-button[data-view-target]').forEach(button => {
+          if (button.dataset.viewTarget === name) button.setAttribute('aria-current', 'page');
+          else button.removeAttribute('aria-current');
+        });
+        if (updateHash) history.replaceState(null, '', `#${target.id}`);
+        if (moveFocus) {
+          target.querySelector('h1').focus({ preventScroll: true });
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        }
+      }
+
+      const desktopNav = document.getElementById('primary-nav');
+      const mobileNav = desktopNav.cloneNode(true);
+      mobileNav.removeAttribute('id');
+      mobileNav.setAttribute('aria-label', '移动样张页面');
+      document.getElementById('mobile-nav-target').appendChild(mobileNav);
+
+      document.addEventListener('click', event => {
+        const viewButton = event.target.closest('[data-view-target]');
+        if (viewButton) {
+          event.preventDefault();
+          const dialog = viewButton.closest('dialog');
+          if (dialog) dialog.close();
+          showView(viewButton.dataset.viewTarget);
+        }
+        const openButton = event.target.closest('[data-open]');
+        if (openButton) {
+          const dialog = document.getElementById(openButton.dataset.open);
+          dialog.showModal();
+          requestAnimationFrame(() => {
+            const heading = dialog.querySelector('h1, h2');
+            if (heading) heading.focus();
+          });
+        }
+        const closeButton = event.target.closest('[data-close]');
+        if (closeButton) closeButton.closest('dialog').close();
+        const toastButton = event.target.closest('[data-toast]');
+        if (toastButton) showToast(toastButton.dataset.toast);
+      });
+
+      function activateTab(tab, moveFocus = false, updateHash = true) {
+        const group = tab.closest('[data-tabs]');
+        group.querySelectorAll('[role="tab"]').forEach(item => {
+          const selected = item === tab;
+          item.setAttribute('aria-selected', String(selected));
+          item.tabIndex = selected ? 0 : -1;
+          document.getElementById(item.getAttribute('aria-controls')).hidden = !selected;
+        });
+        if (updateHash) history.replaceState(null, '', tab.getAttribute('href'));
+        tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        if (moveFocus) tab.focus({ preventScroll: true });
+      }
+
+      document.querySelectorAll('[role="tab"]').forEach(tab => {
+        tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
+        tab.addEventListener('click', event => {
+          event.preventDefault();
+          activateTab(tab);
+        });
+        tab.addEventListener('keydown', event => {
+          const tabs = [...tab.closest('[role="tablist"]').querySelectorAll('[role="tab"]')];
+          const index = tabs.indexOf(tab);
+          let next;
+          if (event.key === 'ArrowRight') next = tabs[(index + 1) % tabs.length];
+          if (event.key === 'ArrowLeft') next = tabs[(index - 1 + tabs.length) % tabs.length];
+          if (event.key === 'Home') next = tabs[0];
+          if (event.key === 'End') next = tabs[tabs.length - 1];
+          if (next) {
+            event.preventDefault();
+            activateTab(next, true);
+          }
+        });
+      });
+
+      const initialTarget = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      if (initialTarget?.matches('[role="tabpanel"]')) {
+        showView(initialTarget.closest('[data-view]').dataset.view, false, false);
+        activateTab(document.getElementById(initialTarget.getAttribute('aria-labelledby')), false, false);
+      } else if (initialTarget?.matches('[data-view]')) {
+        showView(initialTarget.dataset.view, false, false);
+      }
+
+      document.querySelectorAll('.row-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+          const expanded = button.getAttribute('aria-expanded') === 'true';
+          button.setAttribute('aria-expanded', String(!expanded));
+          document.getElementById(button.getAttribute('aria-controls')).hidden = expanded;
+          button.textContent = expanded ? '展开' : '收起';
+          button.setAttribute('aria-label', button.getAttribute('aria-label').replace(/^(展开|收起)/, button.textContent));
+        });
+      });
+
+      const filter = document.getElementById('master-filter');
+      const query = document.getElementById('project-query');
+      const status = document.getElementById('project-status');
+      const results = document.getElementById('project-results');
+      const empty = document.getElementById('project-empty');
+      function applyFilter() {
+        const keyword = query.value.trim().toLocaleLowerCase('zh-CN');
+        let count = 0;
+        document.querySelectorAll('[data-project-row]').forEach(row => {
+          const matchesName = row.dataset.name.toLocaleLowerCase('zh-CN').includes(keyword);
+          const matchesStatus = status.value === 'all' || row.dataset.status === status.value;
+          row.hidden = !(matchesName && matchesStatus);
+          if (!row.hidden) count += 1;
+        });
+        document.getElementById('project-caption').textContent = `虚构项目列表 · 共 ${count} 条`;
+        results.hidden = count === 0;
+        empty.hidden = count !== 0;
+      }
+      function resetFilter() {
+        filter.reset();
+        applyFilter();
+        query.focus();
+      }
+      filter.addEventListener('submit', event => { event.preventDefault(); applyFilter(); });
+      document.getElementById('filter-reset').addEventListener('click', resetFilter);
+      document.querySelector('[data-reset-filter]').addEventListener('click', resetFilter);
+      document.querySelectorAll('[data-demo-form]').forEach(form => {
+        form.addEventListener('submit', event => {
+          event.preventDefault();
+          showToast(`${form.dataset.demoForm}维护表单仅作演练；未发送或保存数据。`);
+        });
+      });
+
+      const timeForm = document.getElementById('time-form');
+      const timeFields = ['time-project', 'time-employee', 'work-date', 'work-minutes', 'work-note'].map(id => document.getElementById(id));
+      function validField(field) {
+        if (field.id === 'work-minutes') {
+          const minutes = Number(field.value);
+          return field.value !== '' && Number.isInteger(minutes) && minutes >= 15 && minutes <= 1440 && minutes % 15 === 0;
+        }
+        if (field.id === 'work-note') return field.value.trim().length >= 8;
+        return field.validity.valid;
+      }
+      function validateField(field) {
+        const valid = validField(field);
+        field.setAttribute('aria-invalid', String(!valid));
+        const error = document.getElementById(`${field.id}-error`);
+        error.hidden = valid;
+        return valid;
+      }
+      timeFields.forEach(field => {
+        field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', () => {
+          if (field.getAttribute('aria-invalid') === 'true') validateField(field);
+        });
+      });
+      timeForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const invalid = timeFields.filter(field => !validateField(field));
+        const summary = document.getElementById('form-error-summary');
+        summary.hidden = invalid.length === 0;
+        if (invalid.length) {
+          invalid[0].focus();
+          return;
+        }
+        const submit = document.getElementById('time-submit');
+        submit.disabled = true;
+        submit.textContent = '正在保存…';
+        setTimeout(() => {
+          submit.disabled = false;
+          submit.textContent = '保存演练草稿';
+          showToast('演练草稿校验通过；未发送或保存任何数据。');
+        }, 500);
+      });
+
+      const password = document.getElementById('login-password');
+      const passwordToggle = document.getElementById('password-toggle');
+      passwordToggle.addEventListener('click', () => {
+        const showing = password.type === 'text';
+        password.type = showing ? 'password' : 'text';
+        passwordToggle.textContent = showing ? '显示' : '隐藏';
+        passwordToggle.setAttribute('aria-pressed', String(!showing));
+      });
+      document.getElementById('login-form').addEventListener('submit', event => {
+        event.preventDefault();
+        password.value = '';
+        const error = document.getElementById('login-error');
+        error.hidden = false;
+        error.tabIndex = -1;
+        error.focus();
+      });
+
+      document.querySelectorAll('[data-approval]').forEach(button => {
+        button.addEventListener('click', () => {
+          const decision = button.dataset.approval;
+          const note = document.getElementById('approval-note');
+          if (decision !== '通过' && !note.value.trim()) {
+            note.setCustomValidity('退回或驳回时请填写原因。');
+            note.reportValidity();
+            return;
+          }
+          note.setCustomValidity('');
+          if (decision === '驳回' && !window.confirm('确认演示“驳回”操作？正式产品中此操作需要明确确认。')) return;
+          document.getElementById('approval-dialog').close();
+          showToast(`已演示“${decision}”反馈；未修改业务数据。`);
+        });
+      });
+      document.getElementById('approval-note').addEventListener('input', event => event.target.setCustomValidity(''));
+    })();
+  </script>
+</body>
+</html>
