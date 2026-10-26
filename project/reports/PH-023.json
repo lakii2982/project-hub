@@ -27,18 +27,52 @@
       "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-023-review-dff3ja4q/source"
     },
     "stdout_sha256": "84898205e2b59565104ed092ca16eafccfa366e4c5793cb004af58eb105a1457",
-    "evidence": {
+    "prior_full_pass": "faf48949-342d-4009-a379-559b25fa039d",
+    "historical_evidence_summary": {
       "result": "PASS",
-      "blockers": [],
-      "limitations": [
-        "Manifest sha256 digests in REVIEW_FILES.json could not be verified (no execution permitted); file identity against the frozen manifest is unverified.",
-        "No browser could be run; the prior browser evidence (320px masterdata scrollWidth=320, 768px scrollWidth=768, noJS tabs/submit checks) is taken as given. The 320px overview tab scrollWidth was never browser-confirmed; static analysis says it fits: longest overview metric '¥ 286,400' (ui-specimen.html:218) is ~80px in tabular figures at --font-size-lg plus 32px padding ≈ 112px min-content vs a 144px track at 320px.",
-        "Residual inconsistency with the stated delta: docs/engineering/ui-specimen.html:157 in @media (max-width:639px) still has .summary { grid-template-columns: 1fr 1fr; } (auto-min tracks), while the equivalent ≤1023px rule at :144 and the chart/form mobile rules at :143 were converted to minmax(0,1fr), and .chart-layout>*/.form-layout>* min-width:0 are present at :102/:113. For all fixed demo content this renders identically (no current overflow, no regression introduced), so it is recorded as a latent min-content overflow fragility for future longer metric values, not a must-fix.",
-        "Lines 172/175 single-column '1fr' at ≤639px (.detail-grid, .form-grid, .state-list) keep auto-min tracks; bounded by ~288px available at 320px and longest unbreakable content (~23-char emails, mitigated by overflow-wrap:anywhere at :165), assessed low-risk by reasoning only.",
-        "Review scope was the delta (ui-specimen.html CSS chunks :90-187/:300-319, ui-tokens.css :1-30, AGENTS.md diff) plus manifest; the full specimen HTML, visual-system.md and frontend-standards.md were not re-read — contrast, noJS behavior, aria expansion and focus remain covered by the prior independent PASS faf48949. AGENTS.md diff confirms only the 4-line '前端必读入口（PH-023）' appendix with original governance text untouched. Employee account select (:311, label/id paired, 不关联 default) and hours min/step 0.0166666667 with value 8 (≈1/60h) verified structurally; step-rounding never surfaces because the demo submit stays disabled."
-      ]
+      "note": "Prior GLM delta review concerned the superseded hours input. Its disabled-button inference was incorrect for JS and is superseded by measured browser validity and submit feedback. Original wording remains in the hashed private run log; it is not the final input acceptance."
     },
-    "prior_full_pass": "faf48949-342d-4009-a379-559b25fa039d"
+    "input_review_before_report_correction": {
+      "reviewer": "Independent fresh Kimi Code read-only context",
+      "run_id": "82045239-dfaf-4089-a5ab-9fb6018d9da9",
+      "stdout_sha256": "a9b91c7027c3c51cd2049ab69974b8c4b9ea67178a0e1c1b78fa31dd71de2d40",
+      "binding": {
+        "run_id": "82045239-dfaf-4089-a5ab-9fb6018d9da9",
+        "base_sha": "8d59a942086a5269c945aa6852fc9ceb70cc4733",
+        "contract_digest": "7731905acc56895fbaeea7badb4cd033665f74eaf94ed17abf6557f977ce54c1",
+        "diff_digest": "10e3237fe5643a12444bdef0df5c4f12f52971424bdf262ff3277236102e9e40",
+        "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-023-review-u0fr2x44/source"
+      },
+      "evidence": {
+        "result": "BLOCK",
+        "blockers": [
+          "project/reports/PH-023.json:38 still describes the superseded hours-based input (`step 0.0166666667`, `value 8`) and incorrectly says the demo submit stays disabled. Update it to the final integer-minutes contract (`min=1`, `max=1440`, `step=1`, `value=480`) and clarify that JS enables the submit button while the demo handler prevents data submission; disabled applies only to no-JS."
+        ],
+        "limitations": [
+          "docs/engineering/ui-specimen.html:311 has a valid native default and matching label/id; no backend compatibility claim was found in the reviewed delta.",
+          "Static read-only review only: no browser execution or backend verification. Prior full DSH+GLM PASS results were treated as historical and not re-evaluated."
+        ]
+      }
+    },
+    "final_input_delta": {
+      "reviewer": "Independent fresh Kimi Code read-only context",
+      "run_id": "71db08dd-2c1d-4d1f-8f37-5907669c6cff",
+      "evidence": {
+        "result": "PASS",
+        "blockers": [],
+        "limitations": [
+          "Read-only follow-up limited to project/reports/PH-023.json and the employee field in docs/engineering/ui-specimen.html; browser behavior, demo submission, and retained log hashes were not independently executed or verified."
+        ]
+      },
+      "stdout_sha256": "f43cb7eddad49fce73384ba44a0891591cdb8d9dbb35ceb5a1e8d6843f8ad629",
+      "binding": {
+        "run_id": "71db08dd-2c1d-4d1f-8f37-5907669c6cff",
+        "base_sha": "8d59a942086a5269c945aa6852fc9ceb70cc4733",
+        "contract_digest": "7731905acc56895fbaeea7badb4cd033665f74eaf94ed17abf6557f977ce54c1",
+        "diff_digest": "1f7218e8bb98cd9abcda7e4c954f0f2ce8aecbb599a362831f16d5679eb50fd7",
+        "snapshot": "/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-023-review-otg57ndz/source"
+      }
+    }
   },
   "browser": {
     "desktop": 1440,
@@ -51,7 +85,8 @@
     "screenshots_private": [
       "/private/tmp/ph023-fixed-desktop.png",
       "/private/tmp/ph023-fixed-mobile.png"
-    ]
+    ],
+    "capacity_default_submit": "实际480分钟有效且默认保存触发演练反馈；截图/private/tmp/ph023-capacity-verified.png。"
   },
   "native_runs": [
     {
@@ -65,6 +100,10 @@
     {
       "agent": "kimi_code",
       "run_id": "2eb41120-b764-4528-a3db-2185de47fc48"
+    },
+    {
+      "agent": "kimi_code",
+      "run_id": "b17a05e4-67ff-44ec-8a1c-059faabe921f"
     }
   ],
   "unverified": [
@@ -74,6 +113,7 @@
   "deviations": [
     "原Kimi修正run b52600e8-4fa2-44c4-ac26-cbcf9573d546达到900秒超时，保留文件后由新run完成定点修正，不冒称进程成功。",
     "首次S复核f9ff209e BLOCK的对比度、窄屏、无JS和aria问题由Kimi修正。DSH后续PASS未发现主控实测320图表grid min-content溢出；主控浏览器发现后再由Kimi修复，最终GLM补丁复核与浏览器实际数值共同验收。",
-    "设计首run基于181b430，最终集成/复核采用PH095校正后8d59a94的S契约；未复用旧A门禁。"
+    "设计首run基于181b430，最终集成/复核采用PH095校正后8d59a94的S契约；未复用旧A门禁。",
+    "PR49 P2发现容量小时step的循环小数会使默认8不满足浏览器step。Kimi改用整数分钟min1/max1440/step1/value480；新独立Kimi只读上下文确认HTML默认有效，但BLOCK旧报告描述；本次同时纠正报告，最终新上下文复核71db08dd已PASS。主控实际validity.valid=true/stepMismatch=false，点击默认员工演练保存出现成功反馈。此前GLM关于demo按钮一直disabled的推断错误：仅无JS禁用，JS会启用并以demo handler阻止发送。"
   ]
 }
