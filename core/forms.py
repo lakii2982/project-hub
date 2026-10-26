@@ -78,6 +78,9 @@ class TaskForm(ProjectScopedForm):
     description = forms.CharField(label="交付要求", widget=forms.Textarea, required=False, max_length=8000)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["milestone"].label_from_instance = lambda obj: f"{obj.name} · {obj.due_date}"
+        self.fields["cash_plan"].label_from_instance = lambda obj: f"{obj.get_direction_display()} · {obj.title} · {obj.due_date}"
+        self.fields["dependency"].label_from_instance = lambda obj: f"{obj.name} · {obj.due_date}"
         projects = self.fields["project"].queryset
         selected_project = None
         if self.project_context:
