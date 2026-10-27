@@ -1673,7 +1673,7 @@
       "title": "下一轮需求规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "rolling",
       "depends_on": [
@@ -1691,6 +1691,178 @@
         "docs/verification.md",
         "project/reports/PH-111.json",
         "project/handoffs/PH-111.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "integration-agent",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-111.md"
+    },
+    {
+      "id": "PH-120",
+      "title": "可信PR交付契约、独立审查与自动仲裁",
+      "kind": "infra",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-111"
+      ],
+      "spec": "project/specs/PH-120.md",
+      "allowed_paths": [
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "START_HERE.md",
+        ".github/pull_request_template.md",
+        ".github/workflows/delivery.yml",
+        "project/delivery-policy.json",
+        "scripts/projectctl.py",
+        "scripts/check_pr.py",
+        "scripts/delivery_gate.py",
+        "tooling/ai_delivery/__main__.py",
+        "tooling/ai_delivery/delivery/*",
+        "tests/test_projectctl.py",
+        "tests/test_governance.py",
+        "tests/test_delivery_gate.py",
+        "tests/test_delivery_policy.py",
+        "docs/engineering/agent-protocol.md",
+        "docs/engineering/lifecycle.md",
+        "docs/engineering/local-team.md",
+        "docs/engineering/ai-delivery-delivery.md",
+        "docs/engineering/ai-delivery-pilot.md",
+        "docs/engineering/pr-delivery.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-120.json",
+        "project/handoffs/PH-120.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_delivery_gate -v",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/57",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-121",
+      "title": "客观覆盖率、财务反例和发布边界",
+      "kind": "infra",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-120"
+      ],
+      "spec": "project/specs/PH-121.md",
+      "allowed_paths": [
+        ".github/workflows/test.yml",
+        ".github/workflows/codeql.yml",
+        ".github/workflows/release.yml",
+        "requirements-ci.txt",
+        ".coveragerc",
+        "project/delivery-policy.json",
+        "scripts/quality_gate.py",
+        "tests/test_quality_gate.py",
+        "tests/test_financial_concurrency.py",
+        "tests/test_delivery_policy.py",
+        "docs/engineering/pr-delivery.md",
+        "docs/engineering/releases.md",
+        "docs/engineering/README.md",
+        "THIRD_PARTY_NOTICES.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-121.json",
+        "project/handoffs/PH-121.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_quality_gate tests.test_delivery_policy -v",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/58",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-122",
+      "title": "远端强制门禁启用、对抗演练与新会话交接",
+      "kind": "infra",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-121"
+      ],
+      "spec": "project/specs/PH-122.md",
+      "allowed_paths": [
+        "project/repository-status.json",
+        "project/delivery-policy.json",
+        "project/reviews/PH-122-evidence.json",
+        "docs/engineering/pr-delivery.md",
+        "docs/engineering/README.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-122.json",
+        "project/handoffs/PH-122.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_delivery_policy tests.test_delivery_gate tests.test_quality_gate -v",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/59",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-123",
+      "title": "下一轮需求规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-111"
+      ],
+      "spec": "project/specs/PH-123.md",
+      "allowed_paths": [
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-123.json",
+        "project/handoffs/PH-123.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
