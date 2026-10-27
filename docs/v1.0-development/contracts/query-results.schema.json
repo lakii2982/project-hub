@@ -1,0 +1,1703 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-hub.local/contracts/v1/query-results.schema.json",
+  "$defs": {
+    "identity.context.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "identity.context.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "membership_scope": {
+              "$ref": "./entities.schema.json#/$defs/MembershipScope"
+            },
+            "command_context": {
+              "$ref": "./entities.schema.json#/$defs/CommandContext"
+            }
+          },
+          "required": [
+            "membership_scope",
+            "command_context"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "identity.permissions.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "identity.permissions.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "capabilities": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "enum": [
+                  "project_read",
+                  "time_submit",
+                  "expense_submit",
+                  "project_manage",
+                  "finance_read",
+                  "finance_write",
+                  "sensitive_labor_read",
+                  "company_manage"
+                ]
+              }
+            },
+            "project_ids": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Id"
+              }
+            }
+          },
+          "required": [
+            "capabilities",
+            "project_ids"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "core.source.trace/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "core.source.trace/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            "event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "reversal_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            }
+          },
+          "required": [
+            "source",
+            "event_refs",
+            "reversal_refs"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "core.event.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "core.event.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "event": {
+              "$ref": "./entities.schema.json#/$defs/AccountingEvent"
+            }
+          },
+          "required": [
+            "event"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "masterdata.entity.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "masterdata.entity.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity": {
+              "oneOf": [
+                {
+                  "$ref": "./entities.schema.json#/$defs/Employee"
+                },
+                {
+                  "$ref": "./entities.schema.json#/$defs/Project"
+                },
+                {
+                  "$ref": "./entities.schema.json#/$defs/Counterparty"
+                },
+                {
+                  "$ref": "./entities.schema.json#/$defs/Contact"
+                },
+                {
+                  "$ref": "./entities.schema.json#/$defs/CostCategory"
+                },
+                {
+                  "$ref": "./entities.schema.json#/$defs/NonProjectDestination"
+                }
+              ]
+            }
+          },
+          "required": [
+            "entity"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "masterdata.lookup.search/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "masterdata.lookup.search/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "items": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "source",
+                  "label"
+                ]
+              }
+            },
+            "next_cursor": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "items",
+            "next_cursor"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "contracts.effective_line.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "contracts.effective_line.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "line": {
+              "$ref": "./entities.schema.json#/$defs/ContractLine"
+            }
+          },
+          "required": [
+            "line"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "contracts.project_summary.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "contracts.project_summary.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "contract_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "effective_net_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "pending_change_net_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            }
+          },
+          "required": [
+            "project_id",
+            "contract_refs",
+            "effective_net_cents",
+            "pending_change_net_cents"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "delivery.performance.available/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "delivery.performance.available/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "items": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  "available_minutes": {
+                    "anyOf": [
+                      {
+                        "$ref": "./contract-bundle.schema.json#/$defs/Minutes"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "available_net_cents": {
+                    "anyOf": [
+                      {
+                        "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "source",
+                  "available_minutes",
+                  "available_net_cents"
+                ]
+              }
+            }
+          },
+          "required": [
+            "items"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "time.approved.list/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "time.approved.list/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "items": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  "employee_id": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                  },
+                  "work_date": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                  },
+                  "minutes": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/Minutes"
+                  },
+                  "target_kind": {
+                    "enum": [
+                      "project",
+                      "nonproject"
+                    ]
+                  },
+                  "target_id": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                  },
+                  "state": {
+                    "enum": [
+                      "approved",
+                      "reversed"
+                    ]
+                  }
+                },
+                "required": [
+                  "source",
+                  "employee_id",
+                  "work_date",
+                  "minutes",
+                  "target_kind",
+                  "target_id",
+                  "state"
+                ]
+              }
+            },
+            "next_cursor": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "items",
+            "next_cursor"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "costing.source.available/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "costing.source.available/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            "available_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "policy_confirmed": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "source",
+            "available_cents",
+            "policy_confirmed"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "costing.reconciliation.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "costing.reconciliation.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "total_source_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "project_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "nonproject_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "unallocated_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "difference_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            }
+          },
+          "required": [
+            "source_refs",
+            "total_source_cents",
+            "project_cents",
+            "nonproject_cents",
+            "unallocated_cents",
+            "difference_cents"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "settlement.open_item.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "settlement.open_item.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "item": {
+              "$ref": "./entities.schema.json#/$defs/OpenItem"
+            }
+          },
+          "required": [
+            "item"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "settlement.aging.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "settlement.aging.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "items": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./entities.schema.json#/$defs/OpenItem"
+              }
+            },
+            "unallocated_receipt_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "items",
+            "unallocated_receipt_refs",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "cash.transaction.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "cash.transaction.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "transaction": {
+              "$ref": "./entities.schema.json#/$defs/CashTransaction"
+            },
+            "allocated_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "available_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            }
+          },
+          "required": [
+            "transaction",
+            "allocated_cents",
+            "available_cents"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "cash.account_coverage.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "cash.account_coverage.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "account_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "known_available_cents": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "coverage_complete": {
+              "type": "boolean"
+            },
+            "missing_coverage": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            }
+          },
+          "required": [
+            "account_refs",
+            "known_available_cents",
+            "coverage_complete",
+            "missing_coverage"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "invoicing.unallocated.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "invoicing.unallocated.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "invoice_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "unallocated_gross_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "unallocated_tax_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            }
+          },
+          "required": [
+            "invoice_refs",
+            "unallocated_gross_cents",
+            "unallocated_tax_cents"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "management_revenue.contract_line.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "management_revenue.contract_line.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "contract_line_ref": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            "recognized_net_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            },
+            "settled_net_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            },
+            "matched_net_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            },
+            "unsettled_performance_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            },
+            "settled_unperformed_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            }
+          },
+          "required": [
+            "contract_line_ref",
+            "recognized_net_cents",
+            "settled_net_cents",
+            "matched_net_cents",
+            "unsettled_performance_cents",
+            "settled_unperformed_cents"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "planning.eac.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "planning.eac.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "confirmed_cost_cents": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "remaining_estimate_cents": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "estimate_at_completion_cents": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "gap_codes": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            }
+          },
+          "required": [
+            "confirmed_cost_cents",
+            "remaining_estimate_cents",
+            "estimate_at_completion_cents",
+            "gap_codes"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "cash.forecast.13week/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "cash.forecast.13week/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "weeks": {
+              "type": "array",
+              "minItems": 13,
+              "maxItems": 13,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "week_start": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                  },
+                  "inflow_cents": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+                  },
+                  "outflow_cents": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+                  },
+                  "cumulative_net_flow_cents": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+                  }
+                },
+                "required": [
+                  "week_start",
+                  "inflow_cents",
+                  "outflow_cents",
+                  "cumulative_net_flow_cents"
+                ]
+              }
+            },
+            "overdue_source_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "undated_source_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "coverage_complete": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "weeks",
+            "overdue_source_refs",
+            "undated_source_refs",
+            "coverage_complete"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "period.precheck.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "period.precheck.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "precheck": {
+              "$ref": "./entities.schema.json#/$defs/PeriodPrecheck"
+            }
+          },
+          "required": [
+            "precheck"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "onboarding.coverage.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "onboarding.coverage.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "batch_ref": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "coverage": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./entities.schema.json#/$defs/OpeningCoverage"
+              }
+            },
+            "gap_codes": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            }
+          },
+          "required": [
+            "batch_ref",
+            "coverage",
+            "gap_codes"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "insights.metric.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "insights.metric.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "metric": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "enum": [
+                    "recognized_management_revenue",
+                    "confirmed_cost",
+                    "management_contribution",
+                    "net_cash_flow",
+                    "budget_remaining",
+                    "estimate_at_completion",
+                    "forecast_result"
+                  ]
+                },
+                "value_cents": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "basis": {
+                  "enum": [
+                    "actual",
+                    "provisional",
+                    "forecast"
+                  ]
+                },
+                "coverage_complete": {
+                  "type": "boolean"
+                },
+                "gap_codes": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 1000,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "source_refs": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 1000,
+                  "items": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "value_cents",
+                "basis",
+                "coverage_complete",
+                "gap_codes",
+                "source_refs"
+              ]
+            }
+          },
+          "required": [
+            "metric"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "insights.workspace.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "insights.workspace.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "metrics": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "recognized_management_revenue",
+                      "confirmed_cost",
+                      "management_contribution",
+                      "net_cash_flow",
+                      "budget_remaining",
+                      "estimate_at_completion",
+                      "forecast_result"
+                    ]
+                  },
+                  "value_cents": {
+                    "anyOf": [
+                      {
+                        "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "basis": {
+                    "enum": [
+                      "actual",
+                      "provisional",
+                      "forecast"
+                    ]
+                  },
+                  "coverage_complete": {
+                    "type": "boolean"
+                  },
+                  "gap_codes": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 1000,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000
+                    }
+                  },
+                  "source_refs": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 1000,
+                    "items": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "value_cents",
+                  "basis",
+                  "coverage_complete",
+                  "gap_codes",
+                  "source_refs"
+                ]
+              }
+            },
+            "pending_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "gap_codes": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            }
+          },
+          "required": [
+            "metrics",
+            "pending_refs",
+            "gap_codes"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    },
+    "insights.data_gaps.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "insights.data_gaps.get/v1"
+        },
+        "as_of_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "items": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./entities.schema.json#/$defs/DataGap"
+              }
+            }
+          },
+          "required": [
+            "items"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "as_of_date",
+        "watermark",
+        "data"
+      ],
+      "x-privacy": "time output has no rates/cost. Individual salary/pool detail and funding-account queries owner/finance only; no client actor or roles supplied."
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/identity.context.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/identity.permissions.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/core.source.trace~1v1"
+    },
+    {
+      "$ref": "#/$defs/core.event.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/masterdata.entity.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/masterdata.lookup.search~1v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.effective_line.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.project_summary.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.performance.available~1v1"
+    },
+    {
+      "$ref": "#/$defs/time.approved.list~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.source.available~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.reconciliation.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.open_item.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.aging.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.account_coverage.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/invoicing.unallocated.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/management_revenue.contract_line.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/planning.eac.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.forecast.13week~1v1"
+    },
+    {
+      "$ref": "#/$defs/period.precheck.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/onboarding.coverage.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.metric.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.workspace.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.data_gaps.get~1v1"
+    }
+  ]
+}

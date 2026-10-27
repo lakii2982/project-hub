@@ -1,0 +1,4899 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-hub.local/contracts/v1/commands.schema.json",
+  "title": "C01-C12 named command schemas",
+  "description": "Every named command has an exact payload. Authorization context is server-derived; cross-record invariants remain service/DB enforced.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/identity.membership.change~1v1"
+    },
+    {
+      "$ref": "#/$defs/identity.agent_grant.revoke~1v1"
+    },
+    {
+      "$ref": "#/$defs/core.posting.append~1v1"
+    },
+    {
+      "$ref": "#/$defs/core.posting.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/masterdata.entity.upsert~1v1"
+    },
+    {
+      "$ref": "#/$defs/masterdata.entity.merge~1v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.version.submit~1v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.version.approve~1v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.change.decide~1v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.acceptance.confirm~1v1"
+    },
+    {
+      "$ref": "#/$defs/time.timesheet.submit~1v1"
+    },
+    {
+      "$ref": "#/$defs/time.billable.confirm~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.cost.post~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.allocation.run~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.allocation.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.open_item.create~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.clearance.create~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.clearance.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.offset.create~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction.record~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.allocation.create~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.refund.record~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.return.record~1v1"
+    },
+    {
+      "$ref": "#/$defs/invoicing.invoice.record~1v1"
+    },
+    {
+      "$ref": "#/$defs/invoicing.invoice.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/management_revenue.recognize~1v1"
+    },
+    {
+      "$ref": "#/$defs/management_revenue.match~1v1"
+    },
+    {
+      "$ref": "#/$defs/planning.budget.approve~1v1"
+    },
+    {
+      "$ref": "#/$defs/planning.etc.publish~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.forecast.replace~1v1"
+    },
+    {
+      "$ref": "#/$defs/onboarding.opening.commit~1v1"
+    },
+    {
+      "$ref": "#/$defs/period.close~1v1"
+    },
+    {
+      "$ref": "#/$defs/period.adjustment.post~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.export.create~1v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.evidence.attach~1v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.contract.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.contract_change.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.acceptance.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.service_confirmation.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/time.timesheet.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.salary_pool.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.expense_claim.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.spend_commitment.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.spend_acceptance.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.prepaid_service.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.settlement.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.credit_adjustment.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.bad_debt_disposition.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.funding_account.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/planning.budget_version.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/planning.budget_line.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/planning.e_t_c_version.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/planning.e_t_c_item.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/onboarding.opening_batch.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/core.document.decide~1v1"
+    }
+  ],
+  "$defs": {
+    "identity.membership.change/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "identity.membership.change/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "membership_id",
+            "role",
+            "project_scope"
+          ],
+          "properties": {
+            "membership_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "role": {
+              "enum": [
+                "owner",
+                "pm",
+                "finance",
+                "member",
+                "auditor"
+              ]
+            },
+            "project_scope": {
+              "type": "array",
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Id"
+              }
+            },
+            "active": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "identity.agent_grant.revoke/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "identity.agent_grant.revoke/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "agent_grant_id"
+          ],
+          "properties": {
+            "agent_grant_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "core.posting.append/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload",
+        "source",
+        "occurred_on",
+        "posting_period"
+      ],
+      "properties": {
+        "contract": {
+          "const": "core.posting.append/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "event_type",
+            "entries",
+            "algorithm_version"
+          ],
+          "properties": {
+            "event_type": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "entries": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "./write-dtos.schema.json#/$defs/PostingEntryInput"
+              }
+            },
+            "algorithm_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/AlgorithmVersion"
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          }
+        }
+      },
+      "x-exposure": "internal_service_only",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "Ordinary cost/receipt/payment accepts its one real row. Allocation scope shifts require equal/opposite cost entries; internal transfers require linked cash_out/cash_in with company net zero. No dummy balancing counterpart or new book."
+      ]
+    },
+    "core.posting.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "core.posting.reverse/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "original_event_ref",
+            "reason"
+          ],
+          "properties": {
+            "original_event_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "accounting_event",
+                        "ledger_posting"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        }
+      },
+      "x-exposure": "internal_service_only",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "Legacy posting resolves original stored cents and existing reversal service; never synthesizes or recalculates historical event/rate data."
+      ]
+    },
+    "masterdata.entity.upsert/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "masterdata.entity.upsert/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "entity_kind": {
+                  "const": "Employee"
+                },
+                "entity_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "expected_version": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fields": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "active_from"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60
+                    },
+                    "title": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "membership_id": {
+                      "anyOf": [
+                        {
+                          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "active_from": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                    },
+                    "inactive_on": {
+                      "anyOf": [
+                        {
+                          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "capacity_minutes": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1440
+                    }
+                  },
+                  "x-contract-status-enum": [
+                    "active",
+                    "inactive"
+                  ],
+                  "x-owner": "masterdata",
+                  "x-record-kind": "owned_fact"
+                }
+              },
+              "required": [
+                "entity_kind",
+                "fields"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "entity_kind": {
+                  "const": "Project"
+                },
+                "entity_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "expected_version": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fields": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "code",
+                    "name",
+                    "manager_membership_id",
+                    "start_date",
+                    "end_date"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 32
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 120
+                    },
+                    "manager_membership_id": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    },
+                    "client_counterparty_id": {
+                      "anyOf": [
+                        {
+                          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "start_date": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                    },
+                    "end_date": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                    }
+                  },
+                  "x-contract-status-enum": [
+                    "active",
+                    "on_hold",
+                    "cancelled",
+                    "closed"
+                  ],
+                  "x-owner": "masterdata",
+                  "x-record-kind": "owned_fact"
+                }
+              },
+              "required": [
+                "entity_kind",
+                "fields"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "entity_kind": {
+                  "const": "Counterparty"
+                },
+                "entity_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "expected_version": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fields": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "display_name",
+                    "roles",
+                    "active_from"
+                  ],
+                  "properties": {
+                    "display_name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 160
+                    },
+                    "roles": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "enum": [
+                          "customer",
+                          "supplier"
+                        ]
+                      }
+                    },
+                    "active_from": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                    },
+                    "inactive_on": {
+                      "anyOf": [
+                        {
+                          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "x-contract-status-enum": [
+                    "active",
+                    "inactive",
+                    "merged"
+                  ],
+                  "x-owner": "contracts",
+                  "x-record-kind": "owned_fact"
+                }
+              },
+              "required": [
+                "entity_kind",
+                "fields"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "entity_kind": {
+                  "const": "Contact"
+                },
+                "entity_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "expected_version": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fields": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "counterparty_id",
+                    "name"
+                  ],
+                  "properties": {
+                    "counterparty_id": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "maxLength": 40
+                    }
+                  },
+                  "x-contract-status-enum": [
+                    "active",
+                    "inactive"
+                  ],
+                  "x-owner": "contracts",
+                  "x-record-kind": "owned_fact"
+                }
+              },
+              "required": [
+                "entity_kind",
+                "fields"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "entity_kind": {
+                  "const": "CostCategory"
+                },
+                "entity_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "expected_version": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fields": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "code",
+                    "name"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "active_from": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                    },
+                    "inactive_on": {
+                      "anyOf": [
+                        {
+                          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "x-contract-status-enum": [
+                    "active",
+                    "inactive"
+                  ],
+                  "x-owner": "masterdata",
+                  "x-record-kind": "owned_fact"
+                }
+              },
+              "required": [
+                "entity_kind",
+                "fields"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "entity_kind": {
+                  "const": "NonProjectDestination"
+                },
+                "entity_id": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "expected_version": {
+                  "anyOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fields": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "code",
+                    "name"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    }
+                  },
+                  "x-contract-status-enum": [
+                    "active",
+                    "inactive"
+                  ],
+                  "x-owner": "masterdata",
+                  "x-record-kind": "owned_fact"
+                }
+              },
+              "required": [
+                "entity_kind",
+                "fields"
+              ]
+            }
+          ]
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "masterdata.entity.merge/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "masterdata.entity.merge/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_ref",
+            "target_ref",
+            "reason"
+          ],
+          "properties": {
+            "source_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "counterparty",
+                        "contact",
+                        "cost_category",
+                        "non_project_destination"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "target_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "counterparty",
+                        "contact",
+                        "cost_category",
+                        "non_project_destination"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "contracts.version.submit/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "contracts.version.submit/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contract_id",
+            "lines",
+            "effective_on"
+          ],
+          "properties": {
+            "contract_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "lines": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "./write-dtos.schema.json#/$defs/ContractLine"
+              }
+            },
+            "effective_on": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "contracts.version.approve/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "contracts.version.approve/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contract_version_id",
+            "expected_version"
+          ],
+          "properties": {
+            "contract_version_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "contracts.change.decide/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "contracts.change.decide/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contract_change_id",
+            "decision"
+          ],
+          "properties": {
+            "contract_change_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "decision": {
+              "enum": [
+                "approved",
+                "rejected",
+                "withdrawn"
+              ]
+            },
+            "decision_note": {
+              "type": "string",
+              "maxLength": 500
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "delivery.acceptance.confirm/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "delivery.acceptance.confirm/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "acceptance_id",
+            "expected_version"
+          ],
+          "properties": {
+            "acceptance_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "time.timesheet.submit/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "time.timesheet.submit/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "timesheet_id",
+            "expected_version"
+          ],
+          "properties": {
+            "timesheet_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "time.billable.confirm/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "time.billable.confirm/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "timesheet_ref",
+            "contract_line_ref",
+            "confirmed_minutes",
+            "evidence"
+          ],
+          "properties": {
+            "timesheet_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "timesheet"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "contract_line_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "contract_line"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "confirmed_minutes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "costing.cost.post/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.cost.post/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cost_source_ref",
+            "occurred_on",
+            "posting_period"
+          ],
+          "properties": {
+            "cost_source_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "salary_pool",
+                        "expense_claim",
+                        "spend_acceptance",
+                        "prepaid_service"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "occurred_on": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "posting_period": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            }
+          }
+        }
+      },
+      "x-exposure": "internal_service_only",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "costing.allocation.run/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.allocation.run/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cost_source_ref",
+            "period",
+            "policy_version",
+            "basis_refs"
+          ],
+          "properties": {
+            "cost_source_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "salary_pool",
+                        "expense_claim"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "period": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+            },
+            "policy_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PolicyRef"
+            },
+            "basis_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            }
+          },
+          "x-service-invariants": [
+            "Caller selects approved source/basis refs only; owner resolves frozen policy and actual approved quantities. Never accept caller allocated amounts or payroll rate."
+          ]
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "costing.allocation.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.allocation.reverse/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "allocation_run_id",
+            "reason"
+          ],
+          "properties": {
+            "allocation_run_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "settlement.open_item.create/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "settlement.open_item.create/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "settlement_ref"
+          ],
+          "properties": {
+            "settlement_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "settlement"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "x-exposure": "internal_service_only",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "Direction/scope/payee/date and partition amounts are inherited from approved Settlement, never a caller override.",
+        "Customer receivables have project scope and approved contract evidence; nonproject expense payables preserve original nonproject scope/employee payee.",
+        "Create all declared due/retention partitions once using stable source/partition keys; sum cannot exceed approved settlement. No duplicate cost/revenue/cash."
+      ]
+    },
+    "settlement.clearance.create/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "settlement.clearance.create/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cash_transaction_ref",
+            "open_item_ref",
+            "cleared_cents"
+          ],
+          "properties": {
+            "cash_transaction_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "cash_transaction",
+                        "cash_allocation"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "open_item_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "open_item"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "cleared_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            }
+          }
+        }
+      },
+      "x-exposure": "internal_cash_orchestration_only",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "Same company transaction receives server-only FundingAvailabilityProof from cash application; never deserialize a caller-supplied proof/available balance. No cash model import in settlement."
+      ]
+    },
+    "settlement.clearance.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "settlement.clearance.reverse/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "clearance_ref",
+            "reason"
+          ],
+          "properties": {
+            "clearance_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "clearance"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        }
+      },
+      "x-exposure": "internal_cash_orchestration_only",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "Same company transaction receives server-only FundingAvailabilityProof from cash application; never deserialize a caller-supplied proof/available balance. No cash model import in settlement."
+      ]
+    },
+    "settlement.offset.create/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "settlement.offset.create/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "advance_ref",
+            "open_item_ref",
+            "offset_cents"
+          ],
+          "properties": {
+            "advance_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "advance_balance"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "open_item_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "open_item"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "offset_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            }
+          }
+        }
+      },
+      "x-exposure": "internal_cash_orchestration_only",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "Same company transaction receives server-only FundingAvailabilityProof from cash application; never deserialize a caller-supplied proof/available balance. No cash model import in settlement."
+      ]
+    },
+    "cash.transaction.record/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.transaction.record/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "funding_account_id",
+            "transaction_date",
+            "direction",
+            "gross_cents",
+            "external_source_key",
+            "payee"
+          ],
+          "properties": {
+            "funding_account_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "transaction_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "direction": {
+              "enum": [
+                "in",
+                "out"
+              ]
+            },
+            "gross_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "external_source_key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            },
+            "payee": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PayeeRef"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "cash.allocation.create/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.allocation.create/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cash_transaction_ref",
+            "target_kind",
+            "target_id",
+            "allocated_cents"
+          ],
+          "properties": {
+            "cash_transaction_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "cash_transaction",
+                        "cash_allocation"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "target_kind": {
+              "enum": [
+                "project",
+                "non_project_pool"
+              ]
+            },
+            "target_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "allocated_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "cash.refund.record/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.refund.record/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "original_cash_ref",
+            "refund_date",
+            "gross_cents",
+            "reason"
+          ],
+          "properties": {
+            "original_cash_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "cash_transaction"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "refund_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "gross_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "cash.return.record/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.return.record/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "original_cash_ref",
+            "return_date",
+            "gross_cents"
+          ],
+          "properties": {
+            "original_cash_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "cash_transaction"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "return_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "gross_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "invoicing.invoice.record/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "invoicing.invoice.record/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "direction",
+            "counterparty_id",
+            "invoice_number",
+            "invoice_date",
+            "gross_cents",
+            "net_cents",
+            "tax_cents"
+          ],
+          "properties": {
+            "direction": {
+              "enum": [
+                "sales",
+                "purchase"
+              ]
+            },
+            "counterparty_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "invoice_number": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "invoice_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "gross_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "net_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "tax_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "invoicing.invoice.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "invoicing.invoice.reverse/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "original_invoice_ref",
+            "reason",
+            "reversal_date"
+          ],
+          "properties": {
+            "original_invoice_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "invoice"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "reversal_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "management_revenue.recognize/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "management_revenue.recognize/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contract_line_ref",
+            "performance_ref",
+            "policy_version"
+          ],
+          "properties": {
+            "contract_line_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "contract_line"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "performance_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "acceptance",
+                        "billable_confirmation",
+                        "service_confirmation"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "policy_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PolicyRef"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "management_revenue.match/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "management_revenue.match/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "revenue_ref",
+            "settlement_ref",
+            "matched_net_cents"
+          ],
+          "properties": {
+            "revenue_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "revenue_recognition"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "settlement_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "settlement"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "matched_net_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "planning.budget.approve/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "planning.budget.approve/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "budget_version_id",
+            "expected_version"
+          ],
+          "properties": {
+            "budget_version_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "planning.etc.publish/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "planning.etc.publish/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "etc_version_id",
+            "expected_version"
+          ],
+          "properties": {
+            "etc_version_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "cash.forecast.replace/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.forecast.replace/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lower_source_ref",
+            "higher_source_ref",
+            "replaced_cents"
+          ],
+          "properties": {
+            "lower_source_ref": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            "higher_source_ref": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            "replaced_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "onboarding.opening.commit/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "onboarding.opening.commit/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "opening_batch_id",
+            "expected_version"
+          ],
+          "properties": {
+            "opening_batch_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "period.close/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "period.close/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "period",
+            "expected_last_event_id"
+          ],
+          "properties": {
+            "period": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+            },
+            "expected_last_event_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "period.adjustment.post/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "period.adjustment.post/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "original_event_ref",
+            "reason",
+            "posting_period"
+          ],
+          "properties": {
+            "original_event_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "accounting_event",
+                        "ledger_posting"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "posting_period": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "Legacy posting resolves original stored cents and existing reversal service; never synthesizes or recalculates historical event/rate data."
+      ]
+    },
+    "insights.export.create/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "insights.export.create/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "query_contract",
+            "as_of_date",
+            "scope"
+          ],
+          "properties": {
+            "query_contract": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "scope": {
+              "enum": [
+                "organization",
+                "project",
+                "counterparty"
+              ]
+            },
+            "project_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "delivery.evidence.attach/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "delivery.evidence.attach/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_ref",
+            "evidence"
+          ],
+          "properties": {
+            "entity_ref": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            "evidence": {
+              "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+            }
+          }
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+      ]
+    },
+    "contracts.contract.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "contracts.contract.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/ContractDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "contracts.contract_change.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "contracts.contract_change.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/ContractChangeDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "delivery.acceptance.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "delivery.acceptance.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/AcceptanceDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "delivery.service_confirmation.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "delivery.service_confirmation.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/ServiceConfirmationDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "time.timesheet.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "time.timesheet.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/TimesheetDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "costing.salary_pool.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.salary_pool.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/SalaryPoolDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "costing.expense_claim.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.expense_claim.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/ExpenseClaimDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "costing.spend_commitment.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.spend_commitment.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/SpendCommitmentDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "costing.spend_acceptance.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.spend_acceptance.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/SpendAcceptanceDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "costing.prepaid_service.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.prepaid_service.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/PrepaidServiceDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "settlement.settlement.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "settlement.settlement.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/SettlementDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "settlement.credit_adjustment.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "settlement.credit_adjustment.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/CreditAdjustmentDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "settlement.bad_debt_disposition.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "settlement.bad_debt_disposition.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/BadDebtDispositionDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "cash.funding_account.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.funding_account.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/FundingAccountDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "planning.budget_version.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "planning.budget_version.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/BudgetVersionDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "planning.budget_line.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "planning.budget_line.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/BudgetLineDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "planning.e_t_c_version.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "planning.e_t_c_version.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/ETCVersionDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "planning.e_t_c_item.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "planning.e_t_c_item.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/ETCItemDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "onboarding.opening_batch.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "onboarding.opening_batch.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/OpeningBatchDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service",
+      "x-service-invariants": [
+        "Draft only: no cost/cash/revenue/open-item/ledger side effect.",
+        "Server derives organization, current actor and approval/status; edited approved version must be copied to a new draft.",
+        "All entry channels use the same owner service and source/idempotency checks."
+      ]
+    },
+    "core.document.decide/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "core.document.decide/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "expected_version",
+            "decision"
+          ],
+          "properties": {
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "timesheet",
+                        "expense_claim",
+                        "salary_pool",
+                        "spend_acceptance",
+                        "settlement",
+                        "credit_adjustment",
+                        "bad_debt_disposition",
+                        "opening_batch",
+                        "cash_transaction",
+                        "refund",
+                        "bank_return",
+                        "invoice"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            },
+            "decision": {
+              "enum": [
+                "submit",
+                "approve",
+                "return",
+                "reject"
+              ]
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 1000
+            }
+          }
+        }
+      },
+      "x-exposure": "browser_workflow_adapter_only",
+      "x-service-invariants": [
+        "Reuse existing submit/review semantics through registered owner handler, not arbitrary status assignment.",
+        "Submit by authorized creator; approve/return/reject by distinct authorized actor, rejecting creator and business self-review.",
+        "Approval validates full required domain facts/policy/source/evidence/period before atomic owner posting. Editing approved version creates new draft.",
+        "No personal PAT/MCP/AI approval, payment or lock-period tool added. No external bank payment initiated; records describe actual bank facts."
+      ]
+    }
+  },
+  "x-command-count": 55,
+  "x-service-enforced": [
+    "derive organization/actor/field access from CommandContext",
+    "idempotency normalized digest and persisted result",
+    "version/period/plugin checks",
+    "source and bridge uniqueness",
+    "balance/cap/amount availability",
+    "company lock order and full transaction"
+  ]
+}

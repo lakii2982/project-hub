@@ -1,0 +1,2618 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-hub.local/contracts/v1/events.schema.json",
+  "$defs": {
+    "identity.membership_changed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "identity.membership_changed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "membership"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "identity.agent_grant_revoked.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "identity.agent_grant_revoked.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "agent_grant"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "core.accounting_posted.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "core.accounting_posted.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "accounting_event"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "core.posting_reversed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "core.posting_reversed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "accounting_event"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "masterdata.entity_changed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "masterdata.entity_changed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "employee",
+                    "project",
+                    "counterparty",
+                    "contact",
+                    "cost_category",
+                    "non_project_destination",
+                    "merge_map"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "contracts.version_approved.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "contracts.version_approved.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "contract_version"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "contracts.change_effective.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "contracts.change_effective.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "contract_change"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "delivery.accepted.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "delivery.accepted.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "acceptance"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "time.approved.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "time.approved.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "timesheet"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "time.billable_confirmed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "time.billable_confirmed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "billable_confirmation"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "costing.cost_posted.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "costing.cost_posted.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "cost_event"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "costing.allocated.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "costing.allocated.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "allocation_run"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "settlement.open_item_created.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "settlement.open_item_created.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "open_item"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "settlement.cleared.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "settlement.cleared.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "clearance"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "settlement.clearance_reversed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "settlement.clearance_reversed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "clearance"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "cash.transaction_recorded.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.transaction_recorded.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "cash_transaction"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "cash.refunded.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.refunded.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "refund"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "cash.returned.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.returned.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "bank_return"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "invoicing.recorded.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "invoicing.recorded.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "invoice"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "management_revenue.recognized.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "management_revenue.recognized.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "revenue_recognition"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "management_revenue.matched.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "management_revenue.matched.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "performance_settlement_match"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "planning.budget_approved.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "planning.budget_approved.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "budget_version"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "planning.etc_published.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "planning.etc_published.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "etc_version"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "cash.forecast_replaced.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.forecast_replaced.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "forecast_coverage"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "period.closed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "period.closed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "period_close"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "onboarding.opening_committed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "onboarding.opening_committed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "opening_batch"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "insights.export_ready.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "insights.export_ready.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "export_manifest"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "delivery.evidence_attached.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "delivery.evidence_attached.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "evidence"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/identity.membership_changed.v1"
+    },
+    {
+      "$ref": "#/$defs/identity.agent_grant_revoked.v1"
+    },
+    {
+      "$ref": "#/$defs/core.accounting_posted.v1"
+    },
+    {
+      "$ref": "#/$defs/core.posting_reversed.v1"
+    },
+    {
+      "$ref": "#/$defs/masterdata.entity_changed.v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.version_approved.v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.change_effective.v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.accepted.v1"
+    },
+    {
+      "$ref": "#/$defs/time.approved.v1"
+    },
+    {
+      "$ref": "#/$defs/time.billable_confirmed.v1"
+    },
+    {
+      "$ref": "#/$defs/costing.cost_posted.v1"
+    },
+    {
+      "$ref": "#/$defs/costing.allocated.v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.open_item_created.v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.cleared.v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.clearance_reversed.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction_recorded.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.refunded.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.returned.v1"
+    },
+    {
+      "$ref": "#/$defs/invoicing.recorded.v1"
+    },
+    {
+      "$ref": "#/$defs/management_revenue.recognized.v1"
+    },
+    {
+      "$ref": "#/$defs/management_revenue.matched.v1"
+    },
+    {
+      "$ref": "#/$defs/planning.budget_approved.v1"
+    },
+    {
+      "$ref": "#/$defs/planning.etc_published.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.forecast_replaced.v1"
+    },
+    {
+      "$ref": "#/$defs/period.closed.v1"
+    },
+    {
+      "$ref": "#/$defs/onboarding.opening_committed.v1"
+    },
+    {
+      "$ref": "#/$defs/insights.export_ready.v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.evidence_attached.v1"
+    }
+  ]
+}

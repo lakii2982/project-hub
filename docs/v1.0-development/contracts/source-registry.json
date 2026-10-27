@@ -1,0 +1,545 @@
+{
+  "schema_version": 1,
+  "objects": {
+    "CommandContext": {
+      "namespace": "identity",
+      "kind": "command_context",
+      "owner": "identity"
+    },
+    "MembershipScope": {
+      "namespace": "identity",
+      "kind": "membership_scope",
+      "owner": "identity"
+    },
+    "SensitiveReadAudit": {
+      "namespace": "identity",
+      "kind": "sensitive_read_audit",
+      "owner": "identity"
+    },
+    "AgentGrant": {
+      "namespace": "identity",
+      "kind": "agent_grant",
+      "owner": "identity"
+    },
+    "SourceRef": {
+      "namespace": "core",
+      "kind": "source_ref",
+      "owner": "core"
+    },
+    "AccountingEvent": {
+      "namespace": "core",
+      "kind": "accounting_event",
+      "owner": "core"
+    },
+    "LedgerPosting": {
+      "namespace": "core",
+      "kind": "ledger_posting",
+      "owner": "core"
+    },
+    "AuditRecord": {
+      "namespace": "core",
+      "kind": "audit_record",
+      "owner": "core"
+    },
+    "OutboxEvent": {
+      "namespace": "core",
+      "kind": "outbox_event",
+      "owner": "core"
+    },
+    "IdempotencyRecord": {
+      "namespace": "core",
+      "kind": "idempotency_record",
+      "owner": "core"
+    },
+    "OrganizationProfile": {
+      "namespace": "masterdata",
+      "kind": "organization_profile",
+      "owner": "masterdata"
+    },
+    "Employee": {
+      "namespace": "masterdata",
+      "kind": "employee",
+      "owner": "masterdata"
+    },
+    "Project": {
+      "namespace": "masterdata",
+      "kind": "project",
+      "owner": "masterdata"
+    },
+    "Counterparty": {
+      "namespace": "contracts",
+      "kind": "counterparty",
+      "owner": "contracts"
+    },
+    "Contact": {
+      "namespace": "contracts",
+      "kind": "contact",
+      "owner": "contracts"
+    },
+    "CostCategory": {
+      "namespace": "masterdata",
+      "kind": "cost_category",
+      "owner": "masterdata"
+    },
+    "NonProjectDestination": {
+      "namespace": "masterdata",
+      "kind": "non_project_destination",
+      "owner": "masterdata"
+    },
+    "MergeMap": {
+      "namespace": "masterdata",
+      "kind": "merge_map",
+      "owner": "masterdata"
+    },
+    "Contract": {
+      "namespace": "contracts",
+      "kind": "contract",
+      "owner": "contracts"
+    },
+    "ContractVersion": {
+      "namespace": "contracts",
+      "kind": "contract_version",
+      "owner": "contracts"
+    },
+    "ContractLine": {
+      "namespace": "contracts",
+      "kind": "contract_line",
+      "owner": "contracts"
+    },
+    "PaymentTerm": {
+      "namespace": "contracts",
+      "kind": "payment_term",
+      "owner": "contracts"
+    },
+    "WarrantyTerm": {
+      "namespace": "contracts",
+      "kind": "warranty_term",
+      "owner": "contracts"
+    },
+    "MethodPolicySelection": {
+      "namespace": "contracts",
+      "kind": "method_policy_selection",
+      "owner": "contracts"
+    },
+    "ContractChange": {
+      "namespace": "contracts",
+      "kind": "contract_change",
+      "owner": "contracts"
+    },
+    "DeliveryMilestone": {
+      "namespace": "delivery",
+      "kind": "delivery_milestone",
+      "owner": "delivery"
+    },
+    "ServiceConfirmation": {
+      "namespace": "delivery",
+      "kind": "service_confirmation",
+      "owner": "delivery"
+    },
+    "Acceptance": {
+      "namespace": "delivery",
+      "kind": "acceptance",
+      "owner": "delivery"
+    },
+    "WorkItem": {
+      "namespace": "delivery",
+      "kind": "work_item",
+      "owner": "delivery"
+    },
+    "Timesheet": {
+      "namespace": "time",
+      "kind": "timesheet",
+      "owner": "time"
+    },
+    "BillableConfirmation": {
+      "namespace": "time",
+      "kind": "billable_confirmation",
+      "owner": "time"
+    },
+    "WorkforceCoverage": {
+      "namespace": "time",
+      "kind": "workforce_coverage",
+      "owner": "time"
+    },
+    "SalaryPool": {
+      "namespace": "costing",
+      "kind": "salary_pool",
+      "owner": "costing"
+    },
+    "RateSnapshot": {
+      "namespace": "costing",
+      "kind": "rate_snapshot",
+      "owner": "costing"
+    },
+    "CostPolicy": {
+      "namespace": "costing",
+      "kind": "cost_policy",
+      "owner": "costing"
+    },
+    "ExpenseClaim": {
+      "namespace": "costing",
+      "kind": "expense_claim",
+      "owner": "costing"
+    },
+    "SpendCommitment": {
+      "namespace": "costing",
+      "kind": "spend_commitment",
+      "owner": "costing"
+    },
+    "SpendAcceptance": {
+      "namespace": "costing",
+      "kind": "spend_acceptance",
+      "owner": "costing"
+    },
+    "PrepaidService": {
+      "namespace": "costing",
+      "kind": "prepaid_service",
+      "owner": "costing"
+    },
+    "CostEvent": {
+      "namespace": "costing",
+      "kind": "cost_event",
+      "owner": "costing"
+    },
+    "AllocationRun": {
+      "namespace": "costing",
+      "kind": "allocation_run",
+      "owner": "costing"
+    },
+    "AllocationTarget": {
+      "namespace": "costing",
+      "kind": "allocation_target",
+      "owner": "costing"
+    },
+    "TaxQualification": {
+      "namespace": "costing",
+      "kind": "tax_qualification",
+      "owner": "costing"
+    },
+    "Settlement": {
+      "namespace": "settlement",
+      "kind": "settlement",
+      "owner": "settlement"
+    },
+    "OpenItem": {
+      "namespace": "settlement",
+      "kind": "open_item",
+      "owner": "settlement"
+    },
+    "CreditAdjustment": {
+      "namespace": "settlement",
+      "kind": "credit_adjustment",
+      "owner": "settlement"
+    },
+    "BadDebtDisposition": {
+      "namespace": "settlement",
+      "kind": "bad_debt_disposition",
+      "owner": "settlement"
+    },
+    "Clearance": {
+      "namespace": "settlement",
+      "kind": "clearance",
+      "owner": "settlement"
+    },
+    "Offset": {
+      "namespace": "settlement",
+      "kind": "offset",
+      "owner": "settlement"
+    },
+    "AgingCase": {
+      "namespace": "settlement",
+      "kind": "aging_case",
+      "owner": "settlement"
+    },
+    "FundingAccount": {
+      "namespace": "cash",
+      "kind": "funding_account",
+      "owner": "cash"
+    },
+    "CashTransaction": {
+      "namespace": "cash",
+      "kind": "cash_transaction",
+      "owner": "cash"
+    },
+    "CashClassification": {
+      "namespace": "cash",
+      "kind": "cash_classification",
+      "owner": "cash"
+    },
+    "CashAllocation": {
+      "namespace": "cash",
+      "kind": "cash_allocation",
+      "owner": "cash"
+    },
+    "AdvanceBalance": {
+      "namespace": "cash",
+      "kind": "advance_balance",
+      "owner": "cash"
+    },
+    "Refund": {
+      "namespace": "cash",
+      "kind": "refund",
+      "owner": "cash"
+    },
+    "BankReturn": {
+      "namespace": "cash",
+      "kind": "bank_return",
+      "owner": "cash"
+    },
+    "InternalTransfer": {
+      "namespace": "cash",
+      "kind": "internal_transfer",
+      "owner": "cash"
+    },
+    "CashForecastItem": {
+      "namespace": "cash",
+      "kind": "cash_forecast_item",
+      "owner": "cash"
+    },
+    "Invoice": {
+      "namespace": "invoicing",
+      "kind": "invoice",
+      "owner": "invoicing"
+    },
+    "InvoiceLine": {
+      "namespace": "invoicing",
+      "kind": "invoice_line",
+      "owner": "invoicing"
+    },
+    "InvoiceAllocation": {
+      "namespace": "invoicing",
+      "kind": "invoice_allocation",
+      "owner": "invoicing"
+    },
+    "InvoiceReversal": {
+      "namespace": "invoicing",
+      "kind": "invoice_reversal",
+      "owner": "invoicing"
+    },
+    "RevenueRecognition": {
+      "namespace": "management_revenue",
+      "kind": "revenue_recognition",
+      "owner": "management_revenue"
+    },
+    "RevenueAdjustment": {
+      "namespace": "management_revenue",
+      "kind": "revenue_adjustment",
+      "owner": "management_revenue"
+    },
+    "PerformanceSettlementMatch": {
+      "namespace": "management_revenue",
+      "kind": "performance_settlement_match",
+      "owner": "management_revenue"
+    },
+    "BudgetVersion": {
+      "namespace": "planning",
+      "kind": "budget_version",
+      "owner": "planning"
+    },
+    "BudgetLine": {
+      "namespace": "planning",
+      "kind": "budget_line",
+      "owner": "planning"
+    },
+    "ETCVersion": {
+      "namespace": "planning",
+      "kind": "etc_version",
+      "owner": "planning"
+    },
+    "ETCItem": {
+      "namespace": "planning",
+      "kind": "etc_item",
+      "owner": "planning"
+    },
+    "Scenario": {
+      "namespace": "planning",
+      "kind": "scenario",
+      "owner": "planning"
+    },
+    "ForecastSource": {
+      "namespace": "cash",
+      "kind": "forecast_source",
+      "owner": "cash"
+    },
+    "ForecastCoverage": {
+      "namespace": "cash",
+      "kind": "forecast_coverage",
+      "owner": "cash"
+    },
+    "EstimateRelease": {
+      "namespace": "planning",
+      "kind": "estimate_release",
+      "owner": "planning"
+    },
+    "AccountingPeriod": {
+      "namespace": "core",
+      "kind": "accounting_period",
+      "owner": "core"
+    },
+    "PeriodClose": {
+      "namespace": "core",
+      "kind": "period_close",
+      "owner": "core"
+    },
+    "OpeningBatch": {
+      "namespace": "onboarding",
+      "kind": "opening_batch",
+      "owner": "onboarding"
+    },
+    "OpeningCoverage": {
+      "namespace": "onboarding",
+      "kind": "opening_coverage",
+      "owner": "onboarding"
+    },
+    "OpeningEvent": {
+      "namespace": "onboarding",
+      "kind": "opening_event",
+      "owner": "onboarding"
+    },
+    "AdjustmentRequest": {
+      "namespace": "core",
+      "kind": "adjustment_request",
+      "owner": "core"
+    },
+    "MetricDefinition": {
+      "namespace": "insights",
+      "kind": "metric_definition",
+      "owner": "insights"
+    },
+    "ReadModelWatermark": {
+      "namespace": "insights",
+      "kind": "read_model_watermark",
+      "owner": "insights"
+    },
+    "DataGap": {
+      "namespace": "insights",
+      "kind": "data_gap",
+      "owner": "insights"
+    },
+    "Evidence": {
+      "namespace": "delivery",
+      "kind": "evidence",
+      "owner": "delivery"
+    },
+    "TraceLink": {
+      "namespace": "insights",
+      "kind": "trace_link",
+      "owner": "insights"
+    },
+    "ExportManifest": {
+      "namespace": "insights",
+      "kind": "export_manifest",
+      "owner": "insights"
+    },
+    "DeliveryReceipt": {
+      "namespace": "delivery",
+      "kind": "delivery_receipt",
+      "owner": "delivery"
+    },
+    "EmployeeBinding": {
+      "namespace": "masterdata",
+      "kind": "employee_binding",
+      "owner": "masterdata"
+    },
+    "NonProjectWork": {
+      "namespace": "time",
+      "kind": "non_project_work",
+      "owner": "time"
+    },
+    "EmployeeAdvance": {
+      "namespace": "cash",
+      "kind": "employee_advance",
+      "owner": "cash"
+    },
+    "ImportPreview": {
+      "namespace": "onboarding",
+      "kind": "import_preview",
+      "owner": "onboarding"
+    },
+    "ImportConflict": {
+      "namespace": "onboarding",
+      "kind": "import_conflict",
+      "owner": "onboarding"
+    },
+    "OnboardingSession": {
+      "namespace": "onboarding",
+      "kind": "onboarding_session",
+      "owner": "onboarding"
+    },
+    "PeriodPrecheck": {
+      "namespace": "core",
+      "kind": "period_precheck",
+      "owner": "core"
+    },
+    "ReconciliationCase": {
+      "namespace": "insights",
+      "kind": "reconciliation_case",
+      "owner": "insights"
+    },
+    "DeliveryClose": {
+      "namespace": "delivery",
+      "kind": "delivery_close",
+      "owner": "delivery"
+    },
+    "IntegrityFinding": {
+      "namespace": "core",
+      "kind": "integrity_finding",
+      "owner": "core"
+    },
+    "BackupManifest": {
+      "namespace": "delivery",
+      "kind": "backup_manifest",
+      "owner": "delivery"
+    },
+    "DeploymentManifest": {
+      "namespace": "delivery",
+      "kind": "deployment_manifest",
+      "owner": "delivery"
+    },
+    "ReleaseManifest": {
+      "namespace": "delivery",
+      "kind": "release_manifest",
+      "owner": "delivery"
+    },
+    "RestoreEvidence": {
+      "namespace": "delivery",
+      "kind": "restore_evidence",
+      "owner": "delivery"
+    },
+    "ConcurrencyTestEvidence": {
+      "namespace": "delivery",
+      "kind": "concurrency_test_evidence",
+      "owner": "delivery"
+    },
+    "Membership": {
+      "namespace": "identity",
+      "kind": "membership",
+      "owner": "identity"
+    },
+    "SourceConsumption": {
+      "namespace": "core",
+      "kind": "source_consumption",
+      "owner": "core"
+    }
+  },
+  "read_projections": [
+    "AdvanceBalance",
+    "AgingCase",
+    "CashForecastItem",
+    "CommandContext",
+    "ConcurrencyTestEvidence",
+    "DataGap",
+    "EmployeeAdvance",
+    "EmployeeBinding",
+    "ForecastSource",
+    "IntegrityFinding",
+    "MembershipScope",
+    "MetricDefinition",
+    "NonProjectWork",
+    "PeriodPrecheck",
+    "RateSnapshot",
+    "ReadModelWatermark",
+    "TraceLink"
+  ],
+  "invariant": "One canonical owner per fact; projections are not additional writable records. SourceRef namespace/kind is an enforced union, not free strings."
+}

@@ -1,0 +1,2293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-hub.local/contracts/v1/contract-bundle.schema.json",
+  "title": "Project Hub 1.0 target C01-C12 contract bundle",
+  "description": "TARGET ONLY: proposed planning contract, not current implementation or customer policy approval.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_catalog",
+    "definitions",
+    "global_rules"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "contract_catalog": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/$defs/ContractCatalogEntry"
+      }
+    },
+    "definitions": {
+      "$ref": "#/$defs/DefinitionCatalog"
+    },
+    "global_rules": {
+      "$ref": "#/$defs/GlobalRules"
+    }
+  },
+  "$defs": {
+    "Id": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$"
+        }
+      ],
+      "description": "Existing positive integer PKs, fixtures such as P1, and new stable string IDs."
+    },
+    "Version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "CnyCents": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000000000,
+      "description": "CNY minor unit only; JSON number must be integer, not float/bool."
+    },
+    "SignedCnyCents": {
+      "type": "integer",
+      "minimum": -1000000000000,
+      "maximum": 1000000000000
+    },
+    "Minutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1440
+    },
+    "BusinessDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "PostingPeriod": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currency",
+        "amount_cents"
+      ],
+      "properties": {
+        "currency": {
+          "const": "CNY"
+        },
+        "amount_cents": {
+          "$ref": "#/$defs/SignedCnyCents"
+        }
+      },
+      "x-contract-rule": "all v1 entities use CNY; no float or yuan input"
+    },
+    "PolicyVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_id",
+        "version",
+        "status",
+        "effective_from"
+      ],
+      "properties": {
+        "policy_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "approved",
+            "retired"
+          ]
+        },
+        "effective_from": {
+          "$ref": "#/$defs/BusinessDate"
+        },
+        "approved_by_member_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "x-contract-rule": "only approved policy versions may support formal posting"
+    },
+    "AlgorithmVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm_id",
+        "version",
+        "rounding",
+        "input_digest"
+      ],
+      "properties": {
+        "algorithm_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]{2,80}$"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "rounding": {
+          "const": "ROUND_HALF_UP"
+        },
+        "input_digest": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "allocation_mode": {
+          "enum": [
+            "line_half_up",
+            "largest_remainder",
+            "strict_reversal"
+          ]
+        }
+      },
+      "x-contract-rule": "persist exact version and inputs; new versions never recalculate posted history"
+    },
+    "SourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "kind",
+        "id",
+        "version"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "line_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "external_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "namespace": {
+              "const": "identity"
+            },
+            "kind": {
+              "const": "command_context"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "identity"
+            },
+            "kind": {
+              "const": "membership_scope"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "identity"
+            },
+            "kind": {
+              "const": "sensitive_read_audit"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "identity"
+            },
+            "kind": {
+              "const": "agent_grant"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "source_ref"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "accounting_event"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "ledger_posting"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "audit_record"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "outbox_event"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "idempotency_record"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "masterdata"
+            },
+            "kind": {
+              "const": "organization_profile"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "masterdata"
+            },
+            "kind": {
+              "const": "employee"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "masterdata"
+            },
+            "kind": {
+              "const": "project"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "contracts"
+            },
+            "kind": {
+              "const": "counterparty"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "contracts"
+            },
+            "kind": {
+              "const": "contact"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "masterdata"
+            },
+            "kind": {
+              "const": "cost_category"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "masterdata"
+            },
+            "kind": {
+              "const": "non_project_destination"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "masterdata"
+            },
+            "kind": {
+              "const": "merge_map"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "contracts"
+            },
+            "kind": {
+              "const": "contract"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "contracts"
+            },
+            "kind": {
+              "const": "contract_version"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "contracts"
+            },
+            "kind": {
+              "const": "contract_line"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "contracts"
+            },
+            "kind": {
+              "const": "payment_term"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "contracts"
+            },
+            "kind": {
+              "const": "warranty_term"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "contracts"
+            },
+            "kind": {
+              "const": "method_policy_selection"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "contracts"
+            },
+            "kind": {
+              "const": "contract_change"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "delivery_milestone"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "service_confirmation"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "acceptance"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "work_item"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "time"
+            },
+            "kind": {
+              "const": "timesheet"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "time"
+            },
+            "kind": {
+              "const": "billable_confirmation"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "time"
+            },
+            "kind": {
+              "const": "workforce_coverage"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "salary_pool"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "rate_snapshot"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "cost_policy"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "expense_claim"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "spend_commitment"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "spend_acceptance"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "prepaid_service"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "cost_event"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "allocation_run"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "allocation_target"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "tax_qualification"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "settlement"
+            },
+            "kind": {
+              "const": "settlement"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "settlement"
+            },
+            "kind": {
+              "const": "open_item"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "settlement"
+            },
+            "kind": {
+              "const": "credit_adjustment"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "settlement"
+            },
+            "kind": {
+              "const": "bad_debt_disposition"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "settlement"
+            },
+            "kind": {
+              "const": "clearance"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "settlement"
+            },
+            "kind": {
+              "const": "offset"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "settlement"
+            },
+            "kind": {
+              "const": "aging_case"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "funding_account"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "cash_transaction"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "cash_classification"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "cash_allocation"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "advance_balance"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "refund"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "bank_return"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "internal_transfer"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "cash_forecast_item"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "invoicing"
+            },
+            "kind": {
+              "const": "invoice"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "invoicing"
+            },
+            "kind": {
+              "const": "invoice_line"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "invoicing"
+            },
+            "kind": {
+              "const": "invoice_allocation"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "invoicing"
+            },
+            "kind": {
+              "const": "invoice_reversal"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "management_revenue"
+            },
+            "kind": {
+              "const": "revenue_recognition"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "management_revenue"
+            },
+            "kind": {
+              "const": "revenue_adjustment"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "management_revenue"
+            },
+            "kind": {
+              "const": "performance_settlement_match"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "planning"
+            },
+            "kind": {
+              "const": "budget_version"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "planning"
+            },
+            "kind": {
+              "const": "budget_line"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "planning"
+            },
+            "kind": {
+              "const": "etc_version"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "planning"
+            },
+            "kind": {
+              "const": "etc_item"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "planning"
+            },
+            "kind": {
+              "const": "scenario"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "forecast_source"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "forecast_coverage"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "planning"
+            },
+            "kind": {
+              "const": "estimate_release"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "accounting_period"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "period_close"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "onboarding"
+            },
+            "kind": {
+              "const": "opening_batch"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "onboarding"
+            },
+            "kind": {
+              "const": "opening_coverage"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "onboarding"
+            },
+            "kind": {
+              "const": "opening_event"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "adjustment_request"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "insights"
+            },
+            "kind": {
+              "const": "metric_definition"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "insights"
+            },
+            "kind": {
+              "const": "read_model_watermark"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "insights"
+            },
+            "kind": {
+              "const": "data_gap"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "evidence"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "insights"
+            },
+            "kind": {
+              "const": "trace_link"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "insights"
+            },
+            "kind": {
+              "const": "export_manifest"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "delivery_receipt"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "masterdata"
+            },
+            "kind": {
+              "const": "employee_binding"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "time"
+            },
+            "kind": {
+              "const": "non_project_work"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "employee_advance"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "onboarding"
+            },
+            "kind": {
+              "const": "import_preview"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "onboarding"
+            },
+            "kind": {
+              "const": "import_conflict"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "onboarding"
+            },
+            "kind": {
+              "const": "onboarding_session"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "period_precheck"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "insights"
+            },
+            "kind": {
+              "const": "reconciliation_case"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "delivery_close"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "integrity_finding"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "backup_manifest"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "deployment_manifest"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "release_manifest"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "restore_evidence"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "delivery"
+            },
+            "kind": {
+              "const": "concurrency_test_evidence"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "identity"
+            },
+            "kind": {
+              "const": "membership"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "core"
+            },
+            "kind": {
+              "const": "source_consumption"
+            }
+          }
+        }
+      ],
+      "x-service-invariants": [
+        "Resolve namespace/kind through this registry; then verify tenant/project and requested immutable version under company lock.",
+        "Source identity is canonical owner+kind+stable id+immutable version; namespace aliases must be migration mappings, never separate live identities."
+      ]
+    },
+    "EvidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "sha256"
+      ],
+      "properties": {
+        "evidence_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "kind": {
+          "enum": [
+            "attachment",
+            "acceptance",
+            "customer_confirmation",
+            "bank_proof",
+            "invoice",
+            "approval"
+          ]
+        }
+      }
+    },
+    "EntityMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "project_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "supersedes_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "reversal_of_id": {
+          "$ref": "#/$defs/Id"
+        }
+      }
+    },
+    "CommandEnvelope": {
+      "$ref": "./commands.schema.json"
+    },
+    "CommandResult": {
+      "$ref": "./command-results.schema.json"
+    },
+    "QueryEnvelope": {
+      "$ref": "./queries.schema.json"
+    },
+    "Event": {
+      "$ref": "./events.schema.json"
+    },
+    "ErrorCode": {
+      "enum": [
+        "validation_error",
+        "permission_denied",
+        "not_found",
+        "version_conflict",
+        "idempotency_conflict",
+        "period_locked",
+        "dependency_disabled",
+        "source_already_consumed",
+        "insufficient_available",
+        "policy_unconfirmed",
+        "missing_evidence",
+        "self_review_forbidden",
+        "cross_tenant_forbidden",
+        "cross_project_forbidden",
+        "amount_limit_exceeded",
+        "state_transition_forbidden",
+        "transient_database_failure"
+      ]
+    },
+    "ContractCatalogEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "consumers",
+        "objects",
+        "bridges",
+        "commands",
+        "queries",
+        "events"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "C01",
+            "C02",
+            "C03",
+            "C04",
+            "C05",
+            "C06",
+            "C07",
+            "C08",
+            "C09",
+            "C10",
+            "C11",
+            "C12"
+          ]
+        },
+        "owner": {
+          "type": "string"
+        },
+        "consumers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bridges": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "queries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "consumed_bridges": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "DefinitionCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entities",
+        "bridges",
+        "invariants"
+      ],
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntityDefinition"
+          }
+        },
+        "bridges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BridgeDefinition"
+          }
+        },
+        "invariants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "EntityDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "owner",
+        "schema_ref"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "schema_ref": {
+          "type": "string"
+        }
+      }
+    },
+    "BridgeDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "owner",
+        "left",
+        "right",
+        "amount_or_quantity",
+        "unique_key",
+        "reversal"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "left": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "namespace",
+            "object_types"
+          ],
+          "properties": {
+            "namespace": {
+              "type": "string"
+            },
+            "object_types": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "Acceptance",
+                  "AccountingEvent",
+                  "AccountingPeriod",
+                  "AdjustmentRequest",
+                  "AdvanceBalance",
+                  "AgentGrant",
+                  "AgingCase",
+                  "AllocationRun",
+                  "AllocationTarget",
+                  "AuditRecord",
+                  "BackupManifest",
+                  "BadDebtDisposition",
+                  "BankReturn",
+                  "BillableConfirmation",
+                  "BudgetLine",
+                  "BudgetVersion",
+                  "CashAllocation",
+                  "CashClassification",
+                  "CashForecastItem",
+                  "CashTransaction",
+                  "Clearance",
+                  "CommandContext",
+                  "ConcurrencyTestEvidence",
+                  "Contact",
+                  "Contract",
+                  "ContractChange",
+                  "ContractLine",
+                  "ContractVersion",
+                  "CostCategory",
+                  "CostEvent",
+                  "CostPolicy",
+                  "Counterparty",
+                  "CreditAdjustment",
+                  "DataGap",
+                  "DeliveryClose",
+                  "DeliveryMilestone",
+                  "DeliveryReceipt",
+                  "DeploymentManifest",
+                  "ETCItem",
+                  "ETCVersion",
+                  "Employee",
+                  "EmployeeAdvance",
+                  "EmployeeBinding",
+                  "EstimateRelease",
+                  "Evidence",
+                  "ExpenseClaim",
+                  "ExportManifest",
+                  "ForecastCoverage",
+                  "ForecastSource",
+                  "FundingAccount",
+                  "IdempotencyRecord",
+                  "ImportConflict",
+                  "ImportPreview",
+                  "IntegrityFinding",
+                  "InternalTransfer",
+                  "Invoice",
+                  "InvoiceAllocation",
+                  "InvoiceLine",
+                  "InvoiceReversal",
+                  "LedgerPosting",
+                  "Membership",
+                  "MembershipScope",
+                  "MergeMap",
+                  "MethodPolicySelection",
+                  "MetricDefinition",
+                  "NonProjectDestination",
+                  "NonProjectWork",
+                  "Offset",
+                  "OnboardingSession",
+                  "OpenItem",
+                  "OpeningBatch",
+                  "OpeningCoverage",
+                  "OpeningEvent",
+                  "OrganizationProfile",
+                  "OutboxEvent",
+                  "PaymentTerm",
+                  "PerformanceSettlementMatch",
+                  "PeriodClose",
+                  "PeriodPrecheck",
+                  "PrepaidService",
+                  "Project",
+                  "RateSnapshot",
+                  "ReadModelWatermark",
+                  "ReconciliationCase",
+                  "Refund",
+                  "ReleaseManifest",
+                  "RestoreEvidence",
+                  "RevenueAdjustment",
+                  "RevenueRecognition",
+                  "SalaryPool",
+                  "Scenario",
+                  "SensitiveReadAudit",
+                  "ServiceConfirmation",
+                  "Settlement",
+                  "SourceRef",
+                  "SpendAcceptance",
+                  "SpendCommitment",
+                  "TaxQualification",
+                  "Timesheet",
+                  "TraceLink",
+                  "WarrantyTerm",
+                  "WorkItem",
+                  "WorkforceCoverage"
+                ]
+              }
+            }
+          }
+        },
+        "right": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "namespace",
+            "object_types"
+          ],
+          "properties": {
+            "namespace": {
+              "type": "string"
+            },
+            "object_types": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "Acceptance",
+                  "AccountingEvent",
+                  "AccountingPeriod",
+                  "AdjustmentRequest",
+                  "AdvanceBalance",
+                  "AgentGrant",
+                  "AgingCase",
+                  "AllocationRun",
+                  "AllocationTarget",
+                  "AuditRecord",
+                  "BackupManifest",
+                  "BadDebtDisposition",
+                  "BankReturn",
+                  "BillableConfirmation",
+                  "BudgetLine",
+                  "BudgetVersion",
+                  "CashAllocation",
+                  "CashClassification",
+                  "CashForecastItem",
+                  "CashTransaction",
+                  "Clearance",
+                  "CommandContext",
+                  "ConcurrencyTestEvidence",
+                  "Contact",
+                  "Contract",
+                  "ContractChange",
+                  "ContractLine",
+                  "ContractVersion",
+                  "CostCategory",
+                  "CostEvent",
+                  "CostPolicy",
+                  "Counterparty",
+                  "CreditAdjustment",
+                  "DataGap",
+                  "DeliveryClose",
+                  "DeliveryMilestone",
+                  "DeliveryReceipt",
+                  "DeploymentManifest",
+                  "ETCItem",
+                  "ETCVersion",
+                  "Employee",
+                  "EmployeeAdvance",
+                  "EmployeeBinding",
+                  "EstimateRelease",
+                  "Evidence",
+                  "ExpenseClaim",
+                  "ExportManifest",
+                  "ForecastCoverage",
+                  "ForecastSource",
+                  "FundingAccount",
+                  "IdempotencyRecord",
+                  "ImportConflict",
+                  "ImportPreview",
+                  "IntegrityFinding",
+                  "InternalTransfer",
+                  "Invoice",
+                  "InvoiceAllocation",
+                  "InvoiceLine",
+                  "InvoiceReversal",
+                  "LedgerPosting",
+                  "Membership",
+                  "MembershipScope",
+                  "MergeMap",
+                  "MethodPolicySelection",
+                  "MetricDefinition",
+                  "NonProjectDestination",
+                  "NonProjectWork",
+                  "Offset",
+                  "OnboardingSession",
+                  "OpenItem",
+                  "OpeningBatch",
+                  "OpeningCoverage",
+                  "OpeningEvent",
+                  "OrganizationProfile",
+                  "OutboxEvent",
+                  "PaymentTerm",
+                  "PerformanceSettlementMatch",
+                  "PeriodClose",
+                  "PeriodPrecheck",
+                  "PrepaidService",
+                  "Project",
+                  "RateSnapshot",
+                  "ReadModelWatermark",
+                  "ReconciliationCase",
+                  "Refund",
+                  "ReleaseManifest",
+                  "RestoreEvidence",
+                  "RevenueAdjustment",
+                  "RevenueRecognition",
+                  "SalaryPool",
+                  "Scenario",
+                  "SensitiveReadAudit",
+                  "ServiceConfirmation",
+                  "Settlement",
+                  "SourceRef",
+                  "SpendAcceptance",
+                  "SpendCommitment",
+                  "TaxQualification",
+                  "Timesheet",
+                  "TraceLink",
+                  "WarrantyTerm",
+                  "WorkItem",
+                  "WorkforceCoverage"
+                ]
+              }
+            }
+          }
+        },
+        "amount_or_quantity": {
+          "type": "string"
+        },
+        "unique_key": {
+          "type": "string"
+        },
+        "reversal": {
+          "type": "string"
+        },
+        "x-contract-limits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "GlobalRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transaction",
+        "locks",
+        "history",
+        "currency"
+      ],
+      "properties": {
+        "currency": {
+          "const": "CNY"
+        },
+        "transaction": {
+          "const": "authorize+period+source+business+ledger+bridge+audit+outbox atomically"
+        },
+        "locks": {
+          "const": "organization, period, project, sources, cash_transaction, open_item, allocation sorted by stable id"
+        },
+        "history": {
+          "const": "append/reverse/forward-adjust only; never update posted ledger or snapshot"
+        },
+        "rounding": {
+          "const": "Decimal ROUND_HALF_UP; strict reversal preserves original cents"
+        }
+      }
+    },
+    "PolicyRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_id",
+        "version"
+      ],
+      "properties": {
+        "policy_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        }
+      },
+      "x-service-invariants": [
+        "Server resolves approved policy version and effective dates; input cannot assert approval or actor."
+      ]
+    },
+    "PayeeRef": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "counterparty",
+                "employee",
+                "own_account"
+              ]
+            },
+            "id": {
+              "$ref": "#/$defs/Id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unidentified"
+            }
+          }
+        }
+      ]
+    },
+    "PricingConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "template": {
+          "enum": [
+            "fixed_milestone",
+            "confirmed_time",
+            "fixed_service_period"
+          ]
+        },
+        "policy_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PolicyRef"
+        },
+        "currency": {
+          "const": "CNY"
+        },
+        "confirmed_by_customer_required": {
+          "const": true
+        },
+        "net_cap_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "milestones": {
+          "type": "array",
+          "maxItems": 1000,
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "milestone_id": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Id"
+              },
+              "allocated_net_cents": {
+                "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+              }
+            },
+            "required": [
+              "milestone_id",
+              "allocated_net_cents"
+            ]
+          }
+        },
+        "service_start": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "service_end": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "period_unit": {
+          "enum": [
+            "calendar_month",
+            "calendar_day",
+            null
+          ]
+        },
+        "time_unit": {
+          "enum": [
+            "hour",
+            "workday"
+          ]
+        },
+        "unit_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1440
+        },
+        "unit_price_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "service_schedule": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "coverage_start": {
+                "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+              },
+              "coverage_end": {
+                "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+              },
+              "allocated_net_cents": {
+                "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+              }
+            },
+            "required": [
+              "coverage_start",
+              "coverage_end",
+              "allocated_net_cents"
+            ]
+          }
+        },
+        "partial_period_rule": {
+          "enum": [
+            "no_partial",
+            "calendar_days"
+          ]
+        }
+      },
+      "required": [
+        "template",
+        "policy_ref",
+        "currency",
+        "confirmed_by_customer_required",
+        "net_cap_cents"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "template": {
+                "const": "fixed_milestone"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "milestones"
+            ],
+            "properties": {
+              "milestones": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "template": {
+                "const": "confirmed_time"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "time_unit",
+              "unit_minutes",
+              "unit_price_cents"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "time_unit": {
+                      "const": "hour"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "unit_minutes": {
+                      "const": 60
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "template": {
+                "const": "fixed_service_period"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "service_start",
+              "service_end",
+              "period_unit",
+              "service_schedule",
+              "partial_period_rule"
+            ],
+            "properties": {
+              "service_start": {
+                "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+              },
+              "service_end": {
+                "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+              },
+              "period_unit": {
+                "enum": [
+                  "calendar_month",
+                  "calendar_day"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "x-service-invariants": [
+        "Only contracts owns the approved choice; read pricing_template/method_policy are derived snapshots of this configuration.",
+        "Fixed price milestone allocations sum to line net; retention is within price, never additional revenue.",
+        "Confirmed-time price=Decimal(unit_price_cents)*customer-confirmed minutes/unit_minutes, group HALF_UP, cumulative cap and unique confirmed coverage enforced.",
+        "Service schedule intervals nonoverlap within line term; allocated amounts sum to line net; approved whole-period confirmations consume schedule once. Partial periods require explicitly approved calendar-days rule, otherwise reject.",
+        "Cross-line/project/time/service coverage overlaps rejected; contract parent provides project and counterparty."
+      ]
+    },
+    "MonthlyLaborInputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "const": "monthly_comprehensive_capacity_v1"
+        },
+        "effective_from": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "salary_components": {
+          "type": "array",
+          "maxItems": 1000,
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "component_code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "amount_cents": {
+                "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+              },
+              "evidence": {
+                "type": "array",
+                "maxItems": 1000,
+                "minItems": 1,
+                "items": {
+                  "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+                }
+              }
+            },
+            "required": [
+              "component_code",
+              "amount_cents",
+              "evidence"
+            ]
+          }
+        },
+        "capacity_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "approved_inputs": {
+          "type": "array",
+          "maxItems": 1000,
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "timesheet_ref": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "const": "timesheet"
+                      }
+                    }
+                  }
+                ]
+              },
+              "target_kind": {
+                "enum": [
+                  "project",
+                  "nonproject"
+                ]
+              },
+              "target_id": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Id"
+              },
+              "minutes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1440
+              }
+            },
+            "required": [
+              "timesheet_ref",
+              "target_kind",
+              "target_id",
+              "minutes"
+            ]
+          }
+        },
+        "unallocated_destination_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "rounding_group": {
+          "const": "organization+employee+month+method_version+policy_version+currency"
+        },
+        "algorithm": {
+          "const": "monthly_group_half_up_largest_remainder_v1"
+        },
+        "customer_policy_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PolicyRef"
+        },
+        "valuation_state": {
+          "enum": [
+            "incurred_provisional",
+            "reconciled_actual"
+          ]
+        },
+        "covered_through": {
+          "$ref": "#/$defs/BusinessDate"
+        }
+      },
+      "required": [
+        "method",
+        "effective_from",
+        "salary_components",
+        "capacity_minutes",
+        "approved_inputs",
+        "unallocated_destination_id",
+        "rounding_group",
+        "algorithm",
+        "customer_policy_ref",
+        "valuation_state",
+        "covered_through"
+      ],
+      "x-service-invariants": [
+        "Sum salary_components=salary pool total; one active employee/month/method version after correction.",
+        "Sum approved minutes <= confirmed capacity; otherwise block final allocation until customer confirms corrected capacity/overtime policy.",
+        "Group target by project/nonproject id; missing capacity minutes have explicit unallocated destination. No arbitrary allocation to projects.",
+        "Total raw weights including unallocated = capacity; total source cents recognized once at company level. Allocation is a distribution, not another company cost.",
+        "Compute Decimal raw target=C*minutes/capacity; group_total=ROUND_HALF_UP(sum(raw)); floor raw targets then distribute integer residual by descending fractional remainder, ties by target_kind then stable target_id; never Python float.",
+        "Allocated projects+nonproject+unallocated == group_total == salary pool cents; reversal uses persisted allocations, never recomputes old inputs.",
+        "Capacity, approved-minute dates and source cost refer to the same confirmed incurred coverage. No future business date or planned full-month amount is posted as incurred.",
+        "The current cumulative labor amount and every estimate-to-actual correction are linked to the original employee/month claim and prior immutable snapshots."
+      ],
+      "x-record-kind": "server_resolved_immutable_allocation_snapshot"
+    },
+    "MonthlyLaborPolicyInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "const": "monthly_comprehensive_capacity_v1"
+        },
+        "effective_from": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "salary_components": {
+          "type": "array",
+          "maxItems": 1000,
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "component_code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "amount_cents": {
+                "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+              },
+              "evidence": {
+                "type": "array",
+                "maxItems": 1000,
+                "minItems": 1,
+                "items": {
+                  "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+                }
+              }
+            },
+            "required": [
+              "component_code",
+              "amount_cents",
+              "evidence"
+            ]
+          }
+        },
+        "capacity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unallocated_destination_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "customer_policy_ref": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/PolicyRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "salary_components"
+      ],
+      "x-service-invariants": [
+        "Customer confirms component inclusion/capacity policy and evidence; server resolves approved timesheets and target weights itself.",
+        "Missing capacity or approved policy blocks final allocation; no implicit zero or undocumented pro-rata.",
+        "This is draft input only. Missing/null/zero capacity can preserve salary facts but cannot become a final allocation snapshot; final MonthlyLaborInputs still requires positive confirmed capacity and policy."
+      ]
+    },
+    "BusinessScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "project",
+            "nonproject"
+          ]
+        },
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        }
+      }
+    }
+  }
+}

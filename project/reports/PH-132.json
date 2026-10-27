@@ -1,0 +1,48 @@
+{
+  "task_id": "PH-132",
+  "summary": "Freeze field/identity/source/valuation contracts, customer policy boundaries and legacy cutover without changing product code.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual current check accepts60 tasks."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual19 governance tests run on final candidate."
+    },
+    {
+      "command": ".agent-venv/bin/python -B docs/v1.0-development/contracts/validate_contracts.py",
+      "result": "pass",
+      "evidence": "Existing pinned MCP environment:9 schemas,2478 offline refs,137 unique requirements,55 commands,25 input/output queries,28 events; unique relationship ownership and product SHA."
+    },
+    {
+      "command": ".agent-venv/bin/python -B docs/v1.0-development/contracts/check_contract_cases.py",
+      "result": "pass",
+      "evidence": "19 concrete positive examples and37 rejection cases; no product/database commands; schema annotations do not inject defaults."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/contract_candidate_audit and /root/ph132_finance_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Both independently ran validators and reviewed actual DTO/identity/kind/privacy/source/legacy boundaries. Defects corrected and limited fresh re-reviews passed. Finance independently verified Decimal5+52+44=101 vs old2+2+2+52=58; final source comparison retains cost/cash_in/cash_out and old no-AccountingEvent projection. Final valuation-state review maps to existing CST03/04/05. Extra actual approval/Payee and legacy-scope examples retained in review messages; not reported as product tests. GitHub review found missing fixed-milestone coverage, nonproject payable scope and forced double-entry counterpart. Added explicit milestone ranges, conditional obligation scope/inherited direction, one real ledger row; removed duplicate catalog fields in favor of canonical schema refs. Fresh independent financial/interface limited reviews passed, including downstream OpenItem AR rejection."
+  },
+  "deviations": [
+    "Original /tmp draft was rejected (URI, generic source/DTO/status, missing objects/queries/events, untraceable financial inputs); primary took over rather than copying claimed passes.",
+    "Separated incomplete payroll draft from positive-capacity allocation; known incurred company salary can remain visibly unallocated.",
+    "Separated planned/provisional/reconciled maturity and covered-through; interim and actual use same employee/month origin with delta correction.",
+    "Corrected initial conceptual cost/cash labels against actual baseline three physical book codes; preserve old signs and null old accounting-event reference.",
+    "Preparation patch for source/scope had a Python syntax error before applying; corrected and reran all final checks; no failed partial schema credited.",
+    "CI Gitleaks generic-api-key flagged two literal synthetic idempotency/source examples (case helper lines23/32). Replaced with explicit all-zero placeholders; no real credential or customer data found, no allowlist/gate change. Amend only our unmerged feature commit and push with exact lease so scanner PR-history range contains sanitized examples; failed CI40595626263 retained.",
+    "PR72 feedback repaired milestone/partial coverage, nonproject employee expense/AP and inherited OpenItem direction/scope, and minimum1 ordinary posting. Catalog stale field/state copies now reference canonical schemas. Case factory initially used unsupported OpenItem status open; corrected to declared active, then final19 positives/37 negatives passed."
+  ],
+  "unverified": [
+    "All runtime authorization/period/state/source/cumulative constraints and monetary calculations remain implementation obligations; schemas/x metadata do not enforce production behavior.",
+    "No actual product migration, legacy cutover, PostgreSQL concurrency, customer or production validation in this task.",
+    "PH133 prototype, PH134 golden data/legacy constructor, PH135 real PG preparation CI, PH136 estimates and PH137 task promotion still pending.",
+    "Current PR eight required CI must be checked before normal merge."
+  ]
+}

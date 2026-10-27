@@ -1,0 +1,2478 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-hub.local/contracts/v1/catalog-completeness.schema.json",
+  "title": "Catalog entities and bridge definitions missing from primary grouping",
+  "$defs": {
+    "CommandContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "membership_id",
+        "auth_snapshot",
+        "project_scope",
+        "field_permissions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "membership_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "auth_snapshot": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "project_scope": {
+          "type": "array",
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        },
+        "field_permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "MembershipScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "membership_id",
+        "scope_kind",
+        "scope_id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "membership_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "scope_kind": {
+          "enum": [
+            "organization",
+            "project"
+          ]
+        },
+        "scope_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        }
+      }
+    },
+    "SensitiveReadAudit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "membership_id",
+        "field_group",
+        "read_at"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "membership_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "field_group": {
+          "enum": [
+            "salary",
+            "rate",
+            "employee_cost_detail",
+            "funding_account_identifier"
+          ]
+        },
+        "read_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "AgentGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "membership_id",
+        "scopes",
+        "expires_at",
+        "default_dry_run"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "membership_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "project_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "default_dry_run": {
+          "const": true
+        }
+      }
+    },
+    "SourceRef": {
+      "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+    },
+    "AccountingEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "source",
+        "event_type",
+        "occurred_on",
+        "posting_period",
+        "algorithm_version"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "event_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "algorithm_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/AlgorithmVersion"
+        }
+      }
+    },
+    "LedgerPosting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "accounting_event_id",
+        "book",
+        "amount_cents",
+        "scope",
+        "origin"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "accounting_event_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "book": {
+          "enum": [
+            "cost",
+            "cash_in",
+            "cash_out"
+          ]
+        },
+        "amount_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "project",
+                "nonproject",
+                "funding_account",
+                "legacy_project"
+              ]
+            },
+            "id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            }
+          }
+        },
+        "origin": {
+          "enum": [
+            "legacy",
+            "current"
+          ]
+        },
+        "legacy_source_type": {
+          "enum": [
+            "document",
+            "timesheet"
+          ]
+        },
+        "legacy_source_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "book": {
+                "const": "cost"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "project",
+                      "nonproject"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "book": {
+                "const": "cash_in"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "funding_account",
+                      "legacy_project"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "book": {
+                "const": "cash_out"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "funding_account",
+                      "legacy_project"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "origin": {
+                "const": "legacy"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "legacy_source_type",
+              "legacy_source_id"
+            ],
+            "properties": {
+              "accounting_event_id": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "accounting_event_id": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Id"
+              }
+            }
+          }
+        }
+      ],
+      "x-service-invariants": [
+        "Legacy rows stay physically unchanged; adapter projects original project scope/cents. legacy_project cash is registered historical project cash, never a verified bank balance.",
+        "New bank cash uses funding_account scope once; project attribution is cash allocation, not another cash posting.",
+        "Company cost sums all cost scopes once; allocation posts equal/opposite scope shifts with net company zero.",
+        "Keep actual baseline book codes cost/cash_in/cash_out and original signed amounts, including reversal negatives. Net cash = sum(cash_in) - sum(cash_out); never change old stored book/sign or invent AccountingEvent for old rows."
+      ]
+    },
+    "AuditRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "actor_membership_id",
+        "action",
+        "entity_ref",
+        "event_hash"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "actor_membership_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "entity_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "event_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "OutboxEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "event_id",
+        "topic",
+        "source",
+        "payload_digest"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "payload_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "IdempotencyRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "contract",
+        "idempotency_key",
+        "request_digest",
+        "result_ref"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "contract": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "request_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "result_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        }
+      }
+    },
+    "counterparty-role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "counterparty-role"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "masterdata-merge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "masterdata-merge"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "member-project-scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "member-project-scope"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "membership-employee-binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "membership-employee-binding"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "event-reversal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "event-reversal"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "source-event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "source-event"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "contract-line-policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "contract-line-policy"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "contract-line-payment-term": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "contract-line-payment-term"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "service-confirmation-contract-line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "service-confirmation-contract-line"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "cost-source-allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "cost-source-allocation"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "commitment-consumption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "commitment-consumption"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "prepaid-consumption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "prepaid-consumption"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "vendor-workforce-exclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "vendor-workforce-exclusion"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "cash-openitem-clearance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "cash-openitem-clearance"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "advance-openitem-offset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "advance-openitem-offset"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "cash-transaction-allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "cash-transaction-allocation"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "cash-transaction-clearance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "cash-transaction-clearance"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "invoice-business-allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "invoice-business-allocation"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "performance-settlement-match": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "performance-settlement-match"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "etc-actual-release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "etc-actual-release"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "forecast-source-coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "forecast-source-coverage"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "opening-coverage-history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "opening-coverage-history"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "period-event-snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "period-event-snapshot"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "metric-source-trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "metric-source-trace"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "evidence-entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "evidence-entity"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "timesheet-billable-confirmation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "left_ref",
+        "right_ref",
+        "relation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "left_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "right_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "relation": {
+          "const": "timesheet-billable-confirmation"
+        },
+        "amount_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantity_minutes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reversal_of_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
