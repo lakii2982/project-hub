@@ -1,0 +1,42 @@
+{
+  "task_id": "PH-130",
+  "summary": "Import reviewed 1.0 product and long-run design; reconcile latest user decisions without implementing product code.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual current worktree check: 60 tasks accepted."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 tests passed; no product files changed."
+    },
+    {
+      "command": "python docs/v1.0-development/check-design.py",
+      "result": "pass",
+      "evidence": "137 unique requirements, 62 packages, 18 UAT; no dispatch authority."
+    },
+    {
+      "command": "python docs/v1.0-development/check-design-cases.py",
+      "result": "pass",
+      "evidence": "All 5 mutations rejected for their expected reason; original before/after accepted. Plain Python created no checkout bytecode."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph130_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Independent BASE-scope, business boundary and design review; fixed loader bytecode side effect and stale policy status. Final limited re-review plus independent design/cases/projectctl run passed."
+  },
+  "deviations": [
+    "Use PH123/PR69 current preparation entry rather than historical PH097.",
+    "Recorded latest explicit user authorization to begin formal development after preparation and PD02/03/04 decisions; no release/deploy authorization.",
+    "First negative-copy run failed because ROADMAP link missing in disposable layout; fixed fixture, then validated positive baseline and exact rejection reasons."
+  ],
+  "unverified": [
+    "PH131 runtime execution/cancel/recovery, PH132 schemas, PH133 browser prototype, PH134 golden fixtures, PH135 PostgreSQL preparation qualification and final implementation promotion remain pending.",
+    "This PR current required CI must be checked before normal merge; no customer or production acceptance claimed."
+  ]
+}
