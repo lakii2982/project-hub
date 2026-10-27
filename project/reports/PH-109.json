@@ -1,0 +1,79 @@
+{
+  "task_id": "PH-109",
+  "summary": "Align README, roadmap, architecture, operations, delivery/verification and local testing guide with merged b3d5f85 product; preserve dated historical evidence; refresh handoff; deliver real-login local demo without resetting data.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual45 tasks ok=true; rerun after report"
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual No issues"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual No changes detected"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "TMPDIR=/private/tmp; actual440 tests in91.420s OK/skipped4"
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actualok=true errors=[] organizations1 entries48"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent fresh reviewer /root/cancel_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Reviewed tracked docs diff plus new local-testing guide and relevant service/permissions/startup/backup/seed/workflow sources; diff --check passed. Later architecture wording correction reviewed separately. Final supplemental review accepted architecture/current-evidence corrections; its two wording notes (five commands, post-merge check still pending) corrected before commit.",
+    "limitations": [
+      "Remote CI, browser and primary demo runtime facts supplied by integrator; reviewer did not access runtime/credentials or independently verify remote service."
+    ]
+  },
+  "deviations": [
+    "Documentation repair preserves all dated historical validation rather than rewriting old runs; updates current summaries and specifically marks old unknown Docker/PG status as historical.",
+    "No product code, dependencies, workflows or release version changes. Existing demo DB backed up to ignored runtime before0005; original logins and48 ledger rows preserved.",
+    "Initial macOS full tests under noncanonical temporary path failed2 existing path assertions; normalized TMPDIR=/private/tmp passed. PH108 handles the independent cancellation synchronization issue."
+  ],
+  "unverified": [
+    "Production TLS/public Caddy, multi-connection financial/period-lock concurrency, nonempty PG attachment restore UI/report checks, real model quality and product personal-agent client integration remain unverified.",
+    "Four nested/macOS sandbox tests skipped in this local environment; Popen lifecycle ResourceWarning on abnormal cleanup retained.",
+    "This docs PR requires its own current GitHub CI; historical PR52 all-green is product evidence, not a replacement."
+  ],
+  "base_sha": "b3d5f857f673fb6abc460b4148d34e9623ea0b9e",
+  "browser": {
+    "url": "http://127.0.0.1:8765/",
+    "login": "RealGET/login/ followed byowner POST redirects to经营总览; project1 renders six tabs and cost chart. Credentials read only locally, not included.",
+    "product_responsive": "Final product patch checked1440/390 beforemerge; documents only in this task.",
+    "tabs": [
+      "概览",
+      "关键任务",
+      "里程碑",
+      "项目财务",
+      "风险",
+      "团队"
+    ]
+  },
+  "local_environment": {
+    "database": "Existing demo SQLite only, notreset; backup completed,0005 migrated,integrity48entries",
+    "listen": "127.0.0.1:8765",
+    "credentials_location": "runtime/demo-credentials.txt (ignored,0600)",
+    "final_main_sync": "Pending: after docs PR merge, execute finalHEAD/origin/main comparison and HTTP checks; then save receipt outsideGit."
+  },
+  "remote_product_evidence": {
+    "pr": 52,
+    "head": "d1743ace7c75ed85845481bcb814eeca70642b63",
+    "main": "b3d5f857f673fb6abc460b4148d34e9623ea0b9e",
+    "required_checks": "All8 success beforemerge",
+    "checks_run": 40486300463,
+    "codeql_run": 40486300490
+  }
+}

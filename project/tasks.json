@@ -1591,7 +1591,7 @@
       "title": "按最新代码同步使用文档并验证本地测试环境",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "rolling",
       "depends_on": [
@@ -1621,9 +1621,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "Codex integration controller",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-109.md"
     }
   ]
 }

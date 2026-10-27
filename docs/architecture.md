@@ -1,8 +1,8 @@
 # 工程架构设计
 
 任务ID：PMO-ENGINEERING-01
-日期：2026-10-22
-适用范围：面向中国大陆 100 人以下软件/实施/技术服务公司的单主体项目管理账。业务行为以 `product-requirements.md`、金额与核算以 `accounting-rules.md` 为准；本文承接二者的工程实现决策。本文区分「已实现」（与 `delivery-status.md` 一致）与「目标设计」（待工作单实现），不混写。
+更新日期：2026-10-27
+适用范围：面向中国大陆 100 人以下软件/实施/技术服务公司的单主体项目管理账。现行实现与证据以 `delivery-status.md`、任务契约及业务服务为准；`product-requirements.md`、`accounting-rules.md`包含尚未实现的目标设计，本文只承接已冻结的工程决策。本文区分「已实现」（与 `delivery-status.md` 一致）与「目标设计」（待工作单实现），不混写。
 
 ## 1. 约束与前提
 
@@ -24,7 +24,7 @@
 
 ### ADR-3 服务层是唯一写入口
 
-工时、财务单据、审批、冲销和项目状态迁移集中在 `core/services.py` 的事务脚本；浏览器表单、CSV 导入与已实现的 api/v1 共用这些服务和金额规则。账户、附件、个人令牌与插件设置另有专门写入口，均需权限检查、事务和审计。新增业务插件采用相同规则，不在接口内复制核算逻辑。
+工时、财务单据、审批、冲销和项目状态迁移集中在 `core/services.py` 的事务脚本；浏览器表单、CSV 导入与已实现的 api/v1 共用这些服务和金额规则。PH-024将项目基础资料、员工与费率维护集中到 `core/masterdata.py`，旧入口委派同一服务；表单只清洗输入，不自行落库。账户、附件、个人令牌与插件设置另有专门写入口，均需权限检查、事务和审计。新增业务插件采用相同规则，不在接口内复制核算逻辑。
 
 ### ADR-4 公司级写串行化 + 行级锁 + 乐观锁
 
@@ -32,7 +32,7 @@
 
 ### ADR-5 不可变账本 + 负值冲销 + 数据库触发器兜底
 
-`LedgerEntry` 与 `AuditEvent` 只追加；更正通过一对一挂接的负值冲销行表达，原行永不修改。应用层之外由迁移 0002 安装 UPDATE/DELETE 拒绝触发器（PG 与 SQLite 两套），防止运维手改和程序缺陷。SQLite 已实测；PG 触发器未实跑（WO-10）。
+`LedgerEntry` 与 `AuditEvent` 只追加；更正通过一对一挂接的负值冲销行表达，原行永不修改。应用层之外由迁移 0002 安装 UPDATE/DELETE 拒绝触发器（PG 与 SQLite 两套），防止运维手改和程序缺陷。SQLite与PostgreSQL触发器均已在实际CI回归中运行；真实生产多连接财务并发仍留待后续验收。
 
 ### ADR-6 租户隔离在查询层强制
 
@@ -52,7 +52,7 @@
 
 ### ADR-10 插件化：稳定 kernel 与可替换业务插件
 
-目标是按插件隔离可变业务，kernel 保留身份、权限、审计、账本不变式、outbox 与注册接口。当前 manifest 只声明版本、内核兼容、依赖、默认启用值和 capabilities 等 8 个字段；没有 scopes 授权引擎或数据 namespace 强制。已交付 pluggy 运行时与 3 个叶插件（13 项测试），按公司即时启停。outbox 处理器只产有界回执，洞察钩子只产提醒。同进程插件属于可信代码。业务模块抽离、独立迁移与页面注册仍是目标能力，详见 `plugin-architecture.md`。
+目标是按插件隔离可变业务，kernel 保留身份、权限、审计、账本不变式、outbox 与注册接口。当前 manifest 只声明版本、内核兼容、依赖、默认启用值和 capabilities 等 8 个字段；没有 scopes 授权引擎或数据 namespace 强制。已交付 pluggy 运行时与 3 个叶插件（专项覆盖见tests/test_plugins.py），按公司即时启停。outbox 处理器只产有界回执，洞察钩子只产提醒。同进程插件属于可信代码。业务模块抽离、独立迁移与页面注册仍是目标能力，详见 `plugin-architecture.md`。
 
 ## 3. 域模型与模块边界
 
@@ -66,6 +66,8 @@ erDiagram
     Employee ||--o{ CostRate : versions
     Project ||--o{ Task : contains
     Project ||--o{ Milestone : contains
+    Milestone o|--o{ Task : links
+    CashPlan o|--o{ Task : links
     Project ||--o{ CashPlan : plans
     Project ||--o{ Timesheet : books
     Project ||--o{ Document : books
@@ -77,6 +79,8 @@ erDiagram
     Document ||--o{ Evidence : proves
     Organization ||--o{ AuditEvent : chain
 ```
+
+Task新建或计划编辑至少关联同项目Milestone/CashPlan之一；历史无关联任务保留，状态更新兼容。Timesheet按项目/员工/业务日归集，历史task引用及API/MCP可选task_id保留，新浏览器表单不再填task。新任务estimate_minutes默认为0，不参与成本核算。
 
 要点：Project 承载阶段机、合同总额（占位口径）、预算与 ETC；Document 六类覆盖费用/收付/基线/变更/验收；LedgerEntry 三本分户账；审批动作即过账动作（review 内同事务生成账本行）。
 
@@ -107,8 +111,11 @@ erDiagram
 | --- | --- | --- |
 | `core/models.py` | 表结构、约束、枚举 | 业务规则、跨行计算 |
 | `core/access.py` | 成员解析、可见性、角色断言 | 写操作 |
-| `core/services.py` | 全部写事务、状态机、金额计算、幂等 | HTTP、模板 |
-| `core/reporting.py` | 只读汇总、预测、告警 | 写、缓存余额 |
+| `core/services.py` | 主要业务写事务、状态机、金额计算、幂等 | HTTP、模板 |
+| `core/masterdata.py`、`core/masterdata_forms.py` | 基础资料唯一写服务及输入清洗；独立维护页面留PH-026 | 不复制实体、覆盖历史费率或绕过审批 |
+| `core/task_policy.py` | 关键任务关联与有效性校验 | 自动生成现金或审批事实 |
+| `core/charts.py` | 整数金额/Decimal只读图坐标 | 写账、计算利润或前端金额运算 |
+| `core/reporting.py` | 只读汇总、预测、告警及成本预算余额读模型 | 写、缓存余额 |
 | `core/forms.py` | 输入解析与表单级校验 | 落库决策 |
 | `core/views.py` | HTTP 接线、权限入口检查、渲染 | 业务规则副本 |
 | `core/imports.py` | CSV 解析、预览/提交、行级幂等 | 绕过 services |
@@ -145,13 +152,15 @@ erDiagram
 
 ### 7.1 浏览器表单（已实现）
 
+项目详情采用六页签和锚点深链，成本图只向finance_read读者提供项目级汇总，使用当前批准预算重述历史。统一视觉令牌由app.css引用ui静态命名空间中的docs/engineering/ui-tokens.css，全站视觉与基础资料独立入口仍待PH-026。
+
 URL 清单见 `pmo/urls.py`；写端点全部 POST 加 CSRF；表单金额以元输入、最多两位小数，服务层 `cents()` 统一转分并拒绝三位小数与超限。测试已证明 GET 不产生变更、无 CSRF 拒绝、匿名与越权拒绝。
 
 ### 7.2 CSV 导入导出（已实现）
 
 导入三类（time/expense/plan）：UTF-8、不超过 2MB、不超过 500 行、列头精确匹配；预览为整体回滚的试算，提交为整批全或无；行级错误带行号。导出四类（ledger/plans/time/projects），UTF-8 BOM、公式注入转义、按角色裁剪列（见第 4 节）。
 
-### 7.3 api/v1 JSON API（已实现，17 项测试于 SQLite）
+### 7.3 api/v1 JSON API（已实现，随SQLite/PostgreSQL回归验证）
 
 面向个人 Agent 与脚本的第一方 API，DRF 实现，端点：`/api/v1/me`、`/api/v1/projects`、`/api/v1/projects/{id}`、`/api/v1/projects/{id}/tasks`、`/api/v1/timesheets`、`/api/v1/expenses`、`/api/v1/tasks/{id}/status`；URL 主键经 SafeIdConverter 限长（最多 18 位数字）。已实现契约：
 
@@ -232,7 +241,7 @@ flowchart LR
 
 ## 9. 部署拓扑与运维
 
-### 9.1 拓扑（目标，件已在仓库、未验证）
+### 9.1 拓扑（CI容器链路已验证，真实公网部署待验收）
 
 ```mermaid
 flowchart TB
@@ -246,11 +255,11 @@ flowchart TB
     B -->|tar.gz| M
 ```
 
-环境变量：`PMO_ENV=production`、`DJANGO_SECRET_KEY`（不少于 40 字符）、`POSTGRES_*`、`DJANGO_ALLOWED_HOSTS`、`DJANGO_CSRF_TRUSTED_ORIGINS`、可选 `PMO_AI_*`。生产缺 PG 或弱密钥直接拒绝启动。compose.yaml 提供 db/app/worker/proxy 四服务；worker 执行 `process_events --watch`。容器构建、编排启动与生产备份未实跑，属 WO-10。
+环境变量：`PMO_ENV=production`、`DJANGO_SECRET_KEY`（不少于 40 字符）、`POSTGRES_*`、`DJANGO_ALLOWED_HOSTS`、`DJANGO_CSRF_TRUSTED_ORIGINS`、可选 `PMO_AI_*`。生产缺 PG 或弱密钥直接拒绝启动。compose.yaml 提供 db/app/worker/proxy 四服务；worker 执行 `process_events --watch`。CI已实际运行容器构建、db/app/worker启动、健康/重启和dump/隔离PG库恢复；真实公网TLS、非空附件恢复和业务多连接并发仍待验收，见verification.md。
 
 ### 9.2 备份、升级与回滚
 
-- 生产备份（待验证）：停 app 与 worker、pg_dump -Fc、附件 tar.gz、SHA256 清单；`.env` 独立保管。恢复验收：新环境能登录、打开原凭证、verify_integrity 通过、报表数字一致。本地 SQLite 使用专门的 `backup_local` 与隔离恢复脚本，已验证 47 条账目和 1 个附件，详见 `local-backup.md`。
+- 备份机制（CI数据库恢复已验证，生产验收未完成）：停 app 与 worker、pg_dump -Fc、附件 tar.gz、SHA256 清单；`.env` 独立保管。恢复验收：新环境能登录、打开原凭证、verify_integrity 通过、报表数字一致。本地 SQLite 使用专门的 `backup_local` 与隔离恢复脚本，已验证 47 条账目和 1 个附件，详见 `local-backup.md`。
 - 升级：迁移只追加不改历史语义；append-only 触发器随迁移重装；升级前先备份。
 - 回滚：应用回滚到上一镜像；数据库不回滚（迁移向前兼容约束），确需回退时用升级前备份恢复并接受期间数据损失——该约束写入 WO-10 验收。
 
