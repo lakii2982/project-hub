@@ -368,7 +368,7 @@
             },
             "entries": {
               "type": "array",
-              "minItems": 2,
+              "minItems": 1,
               "items": {
                 "$ref": "./write-dtos.schema.json#/$defs/PostingEntryInput"
               }
@@ -390,7 +390,8 @@
         "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
         "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
         "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
-        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "Ordinary cost/receipt/payment accepts its one real row. Allocation scope shifts require equal/opposite cost entries; internal transfers require linked cash_out/cash_in with company net zero. No dummy balancing counterpart or new book."
       ]
     },
     "core.posting.reverse/v1": {
@@ -1783,9 +1784,7 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "settlement_ref",
-            "direction",
-            "due_date"
+            "settlement_ref"
           ],
           "properties": {
             "settlement_ref": {
@@ -1803,15 +1802,6 @@
                   }
                 }
               ]
-            },
-            "direction": {
-              "enum": [
-                "receivable",
-                "payable"
-              ]
-            },
-            "due_date": {
-              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
             }
           }
         }
@@ -1821,7 +1811,10 @@
         "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
         "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
         "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
-        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "Direction/scope/payee/date and partition amounts are inherited from approved Settlement, never a caller override.",
+        "Customer receivables have project scope and approved contract evidence; nonproject expense payables preserve original nonproject scope/employee payee.",
+        "Create all declared due/retention partitions once using stable source/partition keys; sum cannot exceed approved settlement. No duplicate cost/revenue/cash."
       ]
     },
     "settlement.clearance.create/v1": {

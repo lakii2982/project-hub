@@ -87,7 +87,30 @@ def main():
     validate('entities.schema.json',legacy,'LedgerPosting')
     bad=deepcopy(legacy);bad['accounting_event_id']=1;reject('fabricated_legacy_event','entities.schema.json',bad,'LedgerPosting')
     bad=deepcopy(legacy);bad['origin']='current';reject('new_posting_missing_event','entities.schema.json',bad,'LedgerPosting')
-    print(json.dumps({'result':'pass','kind':'schema_examples_only','positive_examples':12,'rejected_examples':len(passed),'cases':passed,'server_defaults_not_applied_by_schema':True,'business_commands_executed':False}))
+    evidence=[{'evidence_id':1,'sha256':'0'*64}]
+    acceptance={'project_id':1,'contract_line_ref':source('contracts','contract_line'),'confirmed_on':'2026-10-01','evidence':evidence,'milestone_coverages':[{'milestone_id':1,'from_basis_points':0,'to_basis_points':5000}]}
+    validate('write-dtos.schema.json',acceptance,'AcceptanceDraft')
+    bad=deepcopy(acceptance);bad.pop('milestone_coverages');reject('acceptance_missing_coverage','write-dtos.schema.json',bad,'AcceptanceDraft')
+    bad=deepcopy(acceptance);bad['accepted_net_cents']=100;reject('acceptance_raw_price','write-dtos.schema.json',bad,'AcceptanceDraft')
+    nonproject={'kind':'nonproject','id':2}
+    expense={'scope':nonproject,'occurred_on':'2026-10-01','category_id':1,'gross_cents':101,'tax_cents':0,'claimant_employee_id':1,'evidence':evidence}
+    validate('write-dtos.schema.json',expense,'ExpenseClaimDraft')
+    payable={'scope':nonproject,'direction':'payable','payee':{'kind':'employee','id':1},'source_ref':source('costing','expense_claim'),'gross_cents':101,'net_cents':101,'tax_cents':0,'settled_on':'2026-10-01','due_date':'2026-10-10','evidence':evidence}
+    validate('write-dtos.schema.json',payable,'SettlementDraft')
+    bad=deepcopy(payable);bad['direction']='receivable';reject('receivable_nonproject','write-dtos.schema.json',bad,'SettlementDraft')
+    open_item={'id':1,'organization_id':1,'version':1,'status':'active','created_at':'2026-10-01T00:00:00Z','scope':nonproject,'direction':'payable','payee':{'kind':'employee','id':1},'source':source('settlement','settlement'),'gross_cents':101,'due_date':'2026-10-10','occurred_on':'2026-10-01'}
+    validate('entities.schema.json',open_item,'OpenItem')
+    post=command('core.posting.append/v1',{'event_type':'cost.confirmed','entries':[entry],'algorithm_version':{'algorithm_id':'cost_post_v1','version':1,'rounding':'ROUND_HALF_UP','input_digest':'0'*64}})
+    post.update(source=source('costing','cost_event'),occurred_on='2026-10-01',posting_period='2026-10')
+    validate('commands.schema.json',post)
+    receipt=deepcopy(post);receipt['source']=source('cash','cash_transaction');receipt['payload']['event_type']='cash.received';receipt['payload']['entries']=[bank]
+    validate('commands.schema.json',receipt)
+    bad=deepcopy(post);bad['payload']['entries']=[];reject('posting_empty','commands.schema.json',bad)
+    bad=deepcopy(open_item);bad['direction']='receivable';reject('openitem_nonproject_ar','entities.schema.json',bad,'OpenItem')
+    create=command('settlement.open_item.create/v1',{'settlement_ref':source('settlement','settlement')})
+    validate('commands.schema.json',create)
+    bad=deepcopy(create);bad['payload']['direction']='receivable';reject('openitem_direction_override','commands.schema.json',bad)
+    print(json.dumps({'result':'pass','kind':'schema_examples_only','positive_examples':19,'rejected_examples':len(passed),'cases':passed,'server_defaults_not_applied_by_schema':True,'business_commands_executed':False}))
 
 
 if __name__=='__main__':main()

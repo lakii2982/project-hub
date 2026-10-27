@@ -754,7 +754,8 @@
         "project_id",
         "contract_line_ref",
         "confirmed_on",
-        "evidence"
+        "evidence",
+        "milestone_coverages"
       ],
       "properties": {
         "project_id": {
@@ -786,8 +787,34 @@
             "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
           }
         },
-        "accepted_net_cents": {
-          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        "milestone_coverages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "milestone_id",
+              "from_basis_points",
+              "to_basis_points"
+            ],
+            "properties": {
+              "milestone_id": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Id"
+              },
+              "from_basis_points": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9999
+              },
+              "to_basis_points": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10000
+              }
+            }
+          }
         }
       },
       "x-contract-status-enum": [
@@ -796,7 +823,11 @@
         "reversed"
       ],
       "x-owner": "delivery",
-      "x-record-kind": "owned_fact"
+      "x-record-kind": "owned_fact",
+      "x-service-invariants": [
+        "Every milestone belongs to the approved parent contract line/project; from<to and ranges never overlap active accepted coverage.",
+        "Price is deterministic from approved milestone allocation and cumulative accepted range; no inference from attachment or entered amount."
+      ]
     },
     "WorkItem": {
       "type": "object",
@@ -1184,29 +1215,10 @@
         "category_id",
         "gross_cents",
         "claimant_employee_id",
-        "evidence"
+        "evidence",
+        "scope"
       ],
       "properties": {
-        "project_id": {
-          "anyOf": [
-            {
-              "$ref": "./contract-bundle.schema.json#/$defs/Id"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "non_project_destination_id": {
-          "anyOf": [
-            {
-              "$ref": "./contract-bundle.schema.json#/$defs/Id"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "occurred_on": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
         },
@@ -1238,6 +1250,9 @@
           "items": {
             "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
           }
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
         }
       },
       "x-contract-status-enum": [
@@ -1255,31 +1270,33 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "project_id",
         "counterparty_id",
         "gross_cents",
-        "committed_on"
+        "committed_on",
+        "scope"
       ],
       "properties": {
-        "project_id": {
-          "$ref": "./contract-bundle.schema.json#/$defs/Id"
-        },
         "counterparty_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
         "contract_line_ref": {
-          "allOf": [
+          "anyOf": [
             {
-              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_line"
+                    }
+                  }
+                }
+              ]
             },
             {
-              "properties": {
-                "kind": {
-                  "enum": [
-                    "contract_line"
-                  ]
-                }
-              }
+              "type": "null"
             }
           ]
         },
@@ -1291,6 +1308,9 @@
         },
         "remaining_gross_cents": {
           "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
         }
       },
       "x-contract-status-enum": [
@@ -1365,19 +1385,10 @@
         "gross_cents",
         "service_start",
         "service_end",
-        "consumption_method"
+        "consumption_method",
+        "scope"
       ],
       "properties": {
-        "project_id": {
-          "anyOf": [
-            {
-              "$ref": "./contract-bundle.schema.json#/$defs/Id"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "counterparty_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
@@ -1398,6 +1409,9 @@
         },
         "remaining_cents": {
           "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
         }
       },
       "x-contract-status-enum": [
@@ -1600,9 +1614,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "project_id",
         "counterparty_id",
-        "contract_line_ref",
         "settled_on",
         "direction",
         "payee",
@@ -1611,28 +1623,31 @@
         "net_cents",
         "tax_cents",
         "due_date",
-        "evidence"
+        "evidence",
+        "scope"
       ],
       "properties": {
-        "project_id": {
-          "$ref": "./contract-bundle.schema.json#/$defs/Id"
-        },
         "counterparty_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
         "contract_line_ref": {
-          "allOf": [
+          "anyOf": [
             {
-              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_line"
+                    }
+                  }
+                }
+              ]
             },
             {
-              "properties": {
-                "kind": {
-                  "enum": [
-                    "contract_line"
-                  ]
-                }
-              }
+              "type": "null"
             }
           ]
         },
@@ -1670,6 +1685,9 @@
           "items": {
             "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
           }
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
         }
       },
       "x-contract-status-enum": [
@@ -1682,8 +1700,50 @@
       "x-owner": "settlement",
       "x-record-kind": "owned_fact",
       "x-service-invariants": [
-        "gross=net+tax; approved source consumption and contract line caps; customer retention/terms confirmed.",
-        "Settlement creates one obligation and zero management revenue/cash; posting cannot edit computed outstanding balance."
+        "Scope/payee derive from approved obligation source. Payable source expense/spend acceptance may be project or nonproject without a customer contract.",
+        "Receivable scope is project with approved customer contract line. Same-source obligation is created once; no duplicate cost or management revenue."
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "direction": {
+                "const": "receivable"
+              }
+            },
+            "required": [
+              "direction"
+            ]
+          },
+          "then": {
+            "required": [
+              "contract_line_ref"
+            ],
+            "properties": {
+              "scope": {
+                "properties": {
+                  "kind": {
+                    "const": "project"
+                  }
+                }
+              },
+              "contract_line_ref": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "const": "contract_line"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
       ]
     },
     "OpenItem": {
@@ -1692,11 +1752,11 @@
       "required": [
         "direction",
         "counterparty_id",
-        "project_id",
         "source",
         "gross_cents",
         "due_date",
-        "occurred_on"
+        "occurred_on",
+        "scope"
       ],
       "properties": {
         "direction": {
@@ -1706,9 +1766,6 @@
           ]
         },
         "counterparty_id": {
-          "$ref": "./contract-bundle.schema.json#/$defs/Id"
-        },
-        "project_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
         "source": {
@@ -1725,6 +1782,9 @@
         },
         "occurred_on": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
         }
       },
       "x-contract-status-enum": [
@@ -3565,15 +3625,46 @@
             "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
           }
         },
-        "accepted_net_cents": {
-          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        "milestone_coverages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "milestone_id",
+              "from_basis_points",
+              "to_basis_points"
+            ],
+            "properties": {
+              "milestone_id": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Id"
+              },
+              "from_basis_points": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9999
+              },
+              "to_basis_points": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10000
+              }
+            }
+          }
         }
       },
       "required": [
         "project_id",
         "contract_line_ref",
         "confirmed_on",
-        "evidence"
+        "evidence",
+        "milestone_coverages"
+      ],
+      "x-service-invariants": [
+        "Every milestone belongs to the approved parent contract line/project; from<to and ranges never overlap active accepted coverage.",
+        "Price is deterministic from approved milestone allocation and cumulative accepted range; no inference from attachment or entered amount."
       ]
     },
     "ServiceConfirmationDraft": {
@@ -3788,26 +3879,6 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "project_id": {
-          "anyOf": [
-            {
-              "$ref": "./contract-bundle.schema.json#/$defs/Id"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "non_project_destination_id": {
-          "anyOf": [
-            {
-              "$ref": "./contract-bundle.schema.json#/$defs/Id"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "occurred_on": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
         },
@@ -3839,6 +3910,9 @@
           "items": {
             "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
           }
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
         }
       },
       "required": [
@@ -3846,32 +3920,35 @@
         "category_id",
         "gross_cents",
         "claimant_employee_id",
-        "evidence"
+        "evidence",
+        "scope"
       ]
     },
     "SpendCommitmentDraft": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "project_id": {
-          "$ref": "./contract-bundle.schema.json#/$defs/Id"
-        },
         "counterparty_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
         "contract_line_ref": {
-          "allOf": [
+          "anyOf": [
             {
-              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_line"
+                    }
+                  }
+                }
+              ]
             },
             {
-              "properties": {
-                "kind": {
-                  "enum": [
-                    "contract_line"
-                  ]
-                }
-              }
+              "type": "null"
             }
           ]
         },
@@ -3880,13 +3957,16 @@
         },
         "committed_on": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
         }
       },
       "required": [
-        "project_id",
         "counterparty_id",
         "gross_cents",
-        "committed_on"
+        "committed_on",
+        "scope"
       ]
     },
     "SpendAcceptanceDraft": {
@@ -3939,16 +4019,6 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "project_id": {
-          "anyOf": [
-            {
-              "$ref": "./contract-bundle.schema.json#/$defs/Id"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "counterparty_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
@@ -3966,6 +4036,9 @@
             "monthly_straight_line",
             "actual_usage"
           ]
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
         }
       },
       "required": [
@@ -3973,29 +4046,32 @@
         "gross_cents",
         "service_start",
         "service_end",
-        "consumption_method"
+        "consumption_method",
+        "scope"
       ]
     },
     "SettlementDraft": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "project_id": {
-          "$ref": "./contract-bundle.schema.json#/$defs/Id"
-        },
         "contract_line_ref": {
-          "allOf": [
+          "anyOf": [
             {
-              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_line"
+                    }
+                  }
+                }
+              ]
             },
             {
-              "properties": {
-                "kind": {
-                  "enum": [
-                    "contract_line"
-                  ]
-                }
-              }
+              "type": "null"
             }
           ]
         },
@@ -4033,11 +4109,12 @@
           "items": {
             "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
           }
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
         }
       },
       "required": [
-        "project_id",
-        "contract_line_ref",
         "settled_on",
         "direction",
         "payee",
@@ -4046,7 +4123,54 @@
         "net_cents",
         "tax_cents",
         "due_date",
-        "evidence"
+        "evidence",
+        "scope"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "direction": {
+                "const": "receivable"
+              }
+            },
+            "required": [
+              "direction"
+            ]
+          },
+          "then": {
+            "required": [
+              "contract_line_ref"
+            ],
+            "properties": {
+              "scope": {
+                "properties": {
+                  "kind": {
+                    "const": "project"
+                  }
+                }
+              },
+              "contract_line_ref": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "const": "contract_line"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "x-service-invariants": [
+        "Scope/payee derive from approved obligation source. Payable source expense/spend acceptance may be project or nonproject without a customer contract.",
+        "Receivable scope is project with approved customer contract line. Same-source obligation is created once; no duplicate cost or management revenue."
       ]
     },
     "CreditAdjustmentDraft": {

@@ -495,552 +495,83 @@
     "entities": [
       {
         "name": "CommandContext",
-        "owner": "C01",
-        "required_fields": [
-          "organization_id",
-          "membership_id",
-          "auth_snapshot",
-          "field_permissions"
-        ],
-        "fields": {
-          "organization_id": "Id",
-          "membership_id": "Id",
-          "auth_snapshot": "Sha256",
-          "project_scope": "Id[]|all",
-          "field_permissions": "string[]",
-          "effective_at": "date-time"
-        },
-        "states": [
-          "active",
-          "revoked"
-        ],
-        "x-contract-uniques": [
-          "authenticated session/PAT only"
-        ],
-        "x-contract-rules": [
-          "never accepted from command payload",
-          "role downgrade rechecks on every request"
-        ]
+        "owner": "identity",
+        "schema_ref": "./entities.schema.json#/$defs/CommandContext"
       },
       {
         "name": "AgentGrant",
-        "owner": "C01",
-        "required_fields": [
-          "member_id",
-          "scopes",
-          "project_ids",
-          "expires_at",
-          "default_dry_run"
-        ],
-        "fields": {
-          "member_id": "Id",
-          "scopes": "string[]",
-          "project_ids": "Id[]",
-          "expires_at": "date-time",
-          "default_dry_run": "boolean",
-          "revoked_at": "date-time|null"
-        },
-        "states": [
-          "active",
-          "revoked",
-          "expired"
-        ],
-        "x-contract-uniques": [
-          "token hash"
-        ],
-        "x-contract-rules": [
-          "no approval/payment/period-close scope",
-          "revoked on disabled membership/password change"
-        ]
+        "owner": "identity",
+        "schema_ref": "./entities.schema.json#/$defs/AgentGrant"
       },
       {
         "name": "AccountingEvent",
-        "owner": "C02",
-        "required_fields": [
-          "source",
-          "event_type",
-          "occurred_on",
-          "posting_period",
-          "algorithm_version",
-          "entries"
-        ],
-        "fields": {
-          "source": "SourceRef",
-          "event_type": "string",
-          "occurred_on": "BusinessDate",
-          "posting_period": "PostingPeriod",
-          "algorithm_version": "AlgorithmVersion",
-          "entries": "LedgerPosting[2+]",
-          "evidence": "EvidenceRef[]"
-        },
-        "states": [
-          "posted",
-          "reversed"
-        ],
-        "x-contract-uniques": [
-          "source+effective version+event_type"
-        ],
-        "x-contract-rules": [
-          "append only",
-          "balanced by management counterpart",
-          "reversal references exactly one original"
-        ]
+        "owner": "core",
+        "schema_ref": "./entities.schema.json#/$defs/AccountingEvent"
       },
       {
         "name": "Counterparty",
-        "owner": "C03",
-        "required_fields": [
-          "organization_id",
-          "legal_or_display_name",
-          "roles",
-          "active_from"
-        ],
-        "fields": {
-          "legal_or_display_name": "string<=160",
-          "roles": "customer|supplier[]",
-          "contacts": "Contact[]",
-          "active_from": "BusinessDate",
-          "inactive_on": "BusinessDate|null",
-          "merged_to_id": "Id|null"
-        },
-        "states": [
-          "active",
-          "inactive",
-          "merged"
-        ],
-        "x-contract-uniques": [
-          "organization+normalized name requires human collision decision"
-        ],
-        "x-contract-rules": [
-          "same ID used by contracts/cash/invoices",
-          "no automatic name match for clearance"
-        ]
+        "owner": "contracts",
+        "schema_ref": "./entities.schema.json#/$defs/Counterparty"
       },
       {
         "name": "ContractLine",
-        "owner": "C04",
-        "required_fields": [
-          "contract_id",
-          "line_no",
-          "counterparty_id",
-          "project_id",
-          "pricing_template",
-          "net_cents",
-          "tax_cents",
-          "gross_cents",
-          "method_policy"
-        ],
-        "fields": {
-          "contract_id": "Id",
-          "line_no": "positive integer",
-          "counterparty_id": "Id",
-          "project_id": "Id",
-          "pricing_template": "fixed_milestone|confirmed_time|fixed_service_period",
-          "net_cents": "CnyCents",
-          "tax_cents": "CnyCents",
-          "gross_cents": "CnyCents",
-          "method_policy": "PolicyVersion",
-          "cap_cents": "CnyCents",
-          "service_start": "BusinessDate|null",
-          "service_end": "BusinessDate|null"
-        },
-        "states": [
-          "draft",
-          "approved",
-          "terminated",
-          "superseded"
-        ],
-        "x-contract-uniques": [
-          "contract+line_no+approved version"
-        ],
-        "x-contract-rules": [
-          "gross=net+tax",
-          "one approved revenue/settlement method per service coverage",
-          "approved change only adds version"
-        ]
+        "owner": "contracts",
+        "schema_ref": "./entities.schema.json#/$defs/ContractLine"
       },
       {
         "name": "Acceptance",
-        "owner": "C05",
-        "required_fields": [
-          "project_id",
-          "contract_line_ref",
-          "confirmed_on",
-          "evidence",
-          "confirmed_by_member_id"
-        ],
-        "fields": {
-          "project_id": "Id",
-          "contract_line_ref": "SourceRef",
-          "confirmed_on": "BusinessDate",
-          "evidence": "EvidenceRef[]",
-          "confirmed_by_member_id": "Id",
-          "accepted_net_cents": "CnyCents|null",
-          "accepted_minutes": "integer|null",
-          "service_coverage": "date range|null"
-        },
-        "states": [
-          "draft",
-          "confirmed",
-          "superseded",
-          "reversed"
-        ],
-        "x-contract-uniques": [
-          "approved source coverage"
-        ],
-        "x-contract-rules": [
-          "due date/task completion never auto-confirms performance"
-        ]
+        "owner": "delivery",
+        "schema_ref": "./entities.schema.json#/$defs/Acceptance"
       },
       {
         "name": "Timesheet",
-        "owner": "C05",
-        "required_fields": [
-          "employee_id",
-          "work_date",
-          "minutes",
-          "destination",
-          "submitted_by_member_id"
-        ],
-        "fields": {
-          "employee_id": "Id",
-          "work_date": "BusinessDate",
-          "minutes": "Minutes",
-          "destination": "project Id|non_project_destination Id",
-          "task_id": "Id|null",
-          "delegate_reason": "string|null",
-          "submitted_by_member_id": "Id",
-          "approved_by_member_id": "Id|null",
-          "rate_snapshot_ref": "SourceRef|null"
-        },
-        "states": [
-          "draft",
-          "submitted",
-          "approved",
-          "rejected",
-          "posted",
-          "reversed"
-        ],
-        "x-contract-uniques": [
-          "employee+work_date+external/source key"
-        ],
-        "x-contract-rules": [
-          "daily total <=1440",
-          "missing rate is pending not zero cost",
-          "submitter/business employee cannot final review own record"
-        ]
+        "owner": "time",
+        "schema_ref": "./entities.schema.json#/$defs/Timesheet"
       },
       {
         "name": "CostEvent",
-        "owner": "C06",
-        "required_fields": [
-          "source",
-          "cost_kind",
-          "occurred_on",
-          "posting_period",
-          "gross_cents",
-          "project_or_pool",
-          "algorithm_version"
-        ],
-        "fields": {
-          "source": "SourceRef",
-          "cost_kind": "labor|expense|vendor_acceptance|prepaid_consumption|shared_allocation|adjustment",
-          "occurred_on": "BusinessDate",
-          "posting_period": "PostingPeriod",
-          "gross_cents": "SignedCnyCents",
-          "recoverable_tax_cents": "CnyCents",
-          "project_or_pool": "Id",
-          "algorithm_version": "AlgorithmVersion",
-          "rate_snapshot_ref": "SourceRef|null"
-        },
-        "states": [
-          "pending",
-          "posted",
-          "reversed"
-        ],
-        "x-contract-uniques": [
-          "source+event type"
-        ],
-        "x-contract-rules": [
-          "payment alone is never a cost",
-          "tax unknown means gross temporary cost",
-          "cost source cannot be double counted through allocation"
-        ]
+        "owner": "costing",
+        "schema_ref": "./entities.schema.json#/$defs/CostEvent"
       },
       {
         "name": "OpenItem",
-        "owner": "C07",
-        "required_fields": [
-          "direction",
-          "counterparty_id",
-          "project_id",
-          "source",
-          "gross_cents",
-          "due_date",
-          "occurred_on"
-        ],
-        "fields": {
-          "direction": "receivable|payable",
-          "counterparty_id": "Id",
-          "project_id": "Id",
-          "source": "SourceRef",
-          "gross_cents": "CnyCents",
-          "tax_cents": "CnyCents",
-          "due_date": "BusinessDate",
-          "occurred_on": "BusinessDate",
-          "warranty_release_on": "BusinessDate|null",
-          "dispute_status": "none|disputed|extension_promised|extension_approved"
-        },
-        "states": [
-          "open",
-          "partially_settled",
-          "settled",
-          "written_off",
-          "reversed"
-        ],
-        "x-contract-uniques": [
-          "source+open-item type"
-        ],
-        "x-contract-rules": [
-          "balance is derived from opening+events-bridges",
-          "cannot be directly edited",
-          "condition plan does not create item"
-        ]
+        "owner": "settlement",
+        "schema_ref": "./entities.schema.json#/$defs/OpenItem"
       },
       {
         "name": "CashTransaction",
-        "owner": "C08",
-        "required_fields": [
-          "funding_account_id",
-          "transaction_date",
-          "direction",
-          "gross_cents",
-          "external_source_key"
-        ],
-        "fields": {
-          "funding_account_id": "Id",
-          "transaction_date": "BusinessDate",
-          "direction": "in|out",
-          "gross_cents": "CnyCents",
-          "counterparty_id": "Id|null",
-          "external_source_key": "string",
-          "bank_reference": "string|null",
-          "classification": "unmatched|advance|payment|receipt|fee|payroll|tax|transfer",
-          "evidence": "EvidenceRef[]"
-        },
-        "states": [
-          "recorded",
-          "matched",
-          "reversed"
-        ],
-        "x-contract-uniques": [
-          "funding_account+external_source_key"
-        ],
-        "x-contract-rules": [
-          "bank fact persists while unmatched",
-          "one real transaction appears once only",
-          "no automatic income/cost"
-        ]
+        "owner": "cash",
+        "schema_ref": "./entities.schema.json#/$defs/CashTransaction"
       },
       {
         "name": "Invoice",
-        "owner": "C09",
-        "required_fields": [
-          "direction",
-          "counterparty_id",
-          "invoice_number",
-          "gross_cents",
-          "net_cents",
-          "tax_cents",
-          "invoice_date"
-        ],
-        "fields": {
-          "direction": "sales|purchase",
-          "counterparty_id": "Id",
-          "invoice_number": "string<=80",
-          "gross_cents": "CnyCents",
-          "net_cents": "CnyCents",
-          "tax_cents": "CnyCents",
-          "invoice_date": "BusinessDate",
-          "original_invoice_ref": "SourceRef|null"
-        },
-        "states": [
-          "recorded",
-          "voided",
-          "red"
-        ],
-        "x-contract-uniques": [
-          "organization+direction+invoice_number"
-        ],
-        "x-contract-rules": [
-          "gross=net+tax",
-          "invoice does not automatically create revenue/cost/open item"
-        ]
+        "owner": "invoicing",
+        "schema_ref": "./entities.schema.json#/$defs/Invoice"
       },
       {
         "name": "RevenueRecognition",
-        "owner": "C09",
-        "required_fields": [
-          "contract_line_ref",
-          "performance_ref",
-          "policy_version",
-          "algorithm_version",
-          "recognized_net_cents",
-          "occurred_on"
-        ],
-        "fields": {
-          "contract_line_ref": "SourceRef",
-          "performance_ref": "SourceRef",
-          "policy_version": "PolicyVersion",
-          "algorithm_version": "AlgorithmVersion",
-          "recognized_net_cents": "SignedCnyCents",
-          "occurred_on": "BusinessDate",
-          "posting_period": "PostingPeriod"
-        },
-        "states": [
-          "posted",
-          "adjusted",
-          "reversed"
-        ],
-        "x-contract-uniques": [
-          "contract line+performance coverage+algorithm version"
-        ],
-        "x-contract-rules": [
-          "not triggered by invoice/cash/date alone",
-          "cumulative cap cannot exceed approved line"
-        ]
+        "owner": "management_revenue",
+        "schema_ref": "./entities.schema.json#/$defs/RevenueRecognition"
       },
       {
         "name": "BudgetVersion",
-        "owner": "C10",
-        "required_fields": [
-          "project_id",
-          "name",
-          "version_no",
-          "lines",
-          "approved_by_member_id"
-        ],
-        "fields": {
-          "project_id": "Id",
-          "name": "B0|Bn",
-          "version_no": "Version",
-          "lines": "BudgetLine[]",
-          "approved_by_member_id": "Id",
-          "approved_on": "BusinessDate"
-        },
-        "states": [
-          "draft",
-          "approved",
-          "superseded"
-        ],
-        "x-contract-uniques": [
-          "project+version_no"
-        ],
-        "x-contract-rules": [
-          "budget never posts cost",
-          "Project only reads current approved baseline"
-        ]
+        "owner": "planning",
+        "schema_ref": "./entities.schema.json#/$defs/BudgetVersion"
       },
       {
         "name": "ETCItem",
-        "owner": "C10",
-        "required_fields": [
-          "project_id",
-          "etc_version_id",
-          "category",
-          "remaining_cents",
-          "source_or_assumption",
-          "as_of_date"
-        ],
-        "fields": {
-          "project_id": "Id",
-          "etc_version_id": "Id",
-          "category": "own_effort|commitment|other_cost|unposted|risk",
-          "remaining_cents": "CnyCents",
-          "source_or_assumption": "SourceRef|string",
-          "as_of_date": "BusinessDate",
-          "owner_member_id": "Id",
-          "coverage_status": "active|partially_released|released"
-        },
-        "states": [
-          "draft",
-          "published",
-          "superseded",
-          "released"
-        ],
-        "x-contract-uniques": [
-          "version+source coverage"
-        ],
-        "x-contract-rules": [
-          "AC+ETC=EAC",
-          "actual source releases matching ETC coverage exactly once"
-        ]
+        "owner": "planning",
+        "schema_ref": "./entities.schema.json#/$defs/ETCItem"
       },
       {
         "name": "OpeningBatch",
-        "owner": "C11",
-        "required_fields": [
-          "organization_id",
-          "cutoff_date",
-          "mode",
-          "submitted_by_member_id",
-          "coverage"
-        ],
-        "fields": {
-          "cutoff_date": "BusinessDate",
-          "mode": "rebuild_detail|carry_balance",
-          "submitted_by_member_id": "Id",
-          "coverage": "OpeningCoverage[]",
-          "input_digest": "Sha256",
-          "approved_by_member_id": "Id|null"
-        },
-        "states": [
-          "draft",
-          "previewed",
-          "committed",
-          "rejected"
-        ],
-        "x-contract-uniques": [
-          "organization+cutoff+input digest"
-        ],
-        "x-contract-rules": [
-          "commit is all-or-nothing",
-          "opening receivable/payable does not re-recognize income/cost"
-        ]
+        "owner": "onboarding",
+        "schema_ref": "./entities.schema.json#/$defs/OpeningBatch"
       },
       {
         "name": "MetricDefinition",
-        "owner": "C12",
-        "required_fields": [
-          "metric_id",
-          "name",
-          "formula_version",
-          "as_of_date",
-          "scope",
-          "watermark"
-        ],
-        "fields": {
-          "metric_id": "string",
-          "name": "string",
-          "formula_version": "Version",
-          "as_of_date": "BusinessDate",
-          "scope": "organization|project|counterparty",
-          "watermark": "ReadModelWatermark",
-          "value_cents": "SignedCnyCents|null",
-          "data_gaps": "DataGap[]"
-        },
-        "states": [
-          "available",
-          "incomplete",
-          "not_computable"
-        ],
-        "x-contract-uniques": [
-          "metric+formula version+scope+as_of"
-        ],
-        "x-contract-rules": [
-          "null means unknown/not calculable, not zero",
-          "export/page/API use same definition and authorization"
-        ]
+        "owner": "insights",
+        "schema_ref": "./entities.schema.json#/$defs/MetricDefinition"
       }
     ],
     "bridges": [

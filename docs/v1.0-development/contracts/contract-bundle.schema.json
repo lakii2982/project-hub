@@ -1448,9 +1448,7 @@
       "required": [
         "name",
         "owner",
-        "required_fields",
-        "fields",
-        "states"
+        "schema_ref"
       ],
       "properties": {
         "name": {
@@ -1459,35 +1457,8 @@
         "owner": {
           "type": "string"
         },
-        "required_fields": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "fields": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "states": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "x-contract-uniques": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "x-contract-rules": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "schema_ref": {
+          "type": "string"
         }
       }
     },
@@ -2298,6 +2269,25 @@
         "Missing capacity or approved policy blocks final allocation; no implicit zero or undocumented pro-rata.",
         "This is draft input only. Missing/null/zero capacity can preserve salary facts but cannot become a final allocation snapshot; final MonthlyLaborInputs still requires positive confirmed capacity and policy."
       ]
+    },
+    "BusinessScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "project",
+            "nonproject"
+          ]
+        },
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        }
+      }
     }
   }
 }
