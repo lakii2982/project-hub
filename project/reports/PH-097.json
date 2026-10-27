@@ -1,0 +1,33 @@
+{
+  "task_id": "PH-097",
+  "summary": "规划蓝白设计规范整合、暂停依赖旧规范的 PH-026 并保留后续规划入口；不实施规范或修改产品。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "使用主工作区 Python 3.12，47 项任务检查通过。"
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "使用主工作区 Python 3.12，19 项通过。"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent reviewer /root/plan_review",
+    "status": "pass",
+    "findings": [
+      "初稿缺少源包绝对路径和仓库保存目录，已补充。"
+    ],
+    "scope": "PH-097 规划差异、任务依赖和 PH-110 实施边界；未审查产品实现。"
+  },
+  "unverified": [
+    "规划 PR 的 CI 与合入尚未发生。",
+    "PH-110 规范整合、浏览器检查与产品页面尚未实施或验证。"
+  ],
+  "deviations": [
+    "系统 python 不可用、python3 版本过低；使用仓库 .venv Python 3.12。",
+    "低成本子代理渠道返回 model_not_found，未重试或启用未知计费 API；改由独立审阅代理复核。"
+  ]
+}
