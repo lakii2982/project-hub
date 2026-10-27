@@ -293,9 +293,14 @@ class ExecutorIntegrationTests(DeliveryFixture):
         )
         thread.start()
         deadline = time.monotonic() + 10
-        while time.monotonic() < deadline and not marker.exists():
+        while time.monotonic() < deadline:
+            running = self.store.get(request["run_id"])
+            if marker.exists() and running["state"] == "running" and running["process_identity"]:
+                break
             time.sleep(0.02)
         self.assertTrue(marker.exists())
+        self.assertEqual(running["state"], "running")
+        self.assertIsNotNone(running["process_identity"])
 
         cancelled = executor.cancel(request["run_id"])
         thread.join(10)
@@ -305,6 +310,39 @@ class ExecutorIntegrationTests(DeliveryFixture):
         executor.recover()
         self.assertEqual(marker.read_text(), "1")
         self.assertEqual(self.store.get(request["run_id"])["state"], "cancelled")
+
+    def test_child_marker_before_persisted_identity_keeps_early_cancel_quarantined(self):
+        marker = self.worktree / "early-launch-count"
+        request = self.enqueue()
+        executable = self.executable(
+            "import pathlib, time\n"
+            f"pathlib.Path({str(marker)!r}).write_text('1')\n"
+            "time.sleep(60)\n"
+        )
+        original_start = self.store.start
+        cancellations = []
+
+        def cancel_before_start(*args, **kwargs):
+            deadline = time.monotonic() + 10
+            while time.monotonic() < deadline and not marker.exists():
+                time.sleep(0.02)
+            self.assertTrue(marker.exists())
+            pending = self.store.get(request["run_id"])
+            self.assertEqual(pending["state"], "dispatching")
+            self.assertIsNone(pending["process_identity"])
+            cancellations.append(self.store.cancel(request["run_id"]))
+            return original_start(*args, **kwargs)
+
+        with patch.object(self.store, "start", side_effect=cancel_before_start):
+            result = self.run_once(request, executable)
+
+        self.assertEqual(cancellations[0]["state"], "quarantined")
+        self.assertEqual(cancellations[0]["error"], "process_identity_unavailable")
+        self.assertEqual(result["state"], "quarantined")
+        self.assertTrue(group_empty(result["spawn_pgid"]))
+        self.assertEqual(self.store.recover()[0]["state"], "cancelled")
+        self.assertEqual(marker.read_text(), "1")
+        self.assertFalse(self.store.active())
 
     def test_renew_uses_heartbeat_not_the_poll_interval(self):
         request = self.enqueue()

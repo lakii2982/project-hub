@@ -1,0 +1,53 @@
+{
+  "task_id": "PH-108",
+  "summary": "Only tests: wait for persisted running identity before normal cancellation; intercept store.start to prove early marker cancellation remains quarantined and recovers only after empty group.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "45 tasks ok=true"
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "No issues"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "No changes detected"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "TMPDIR=/private/tmp; 418 tests in91.048s OK/skipped4"
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "ok=true errors=[] organizations1 entries48"
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_execution -v",
+      "result": "pass",
+      "evidence": "TMPDIR=/private/tmp; 28 tests in9.623s OK"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent fresh reviewer /root/cancel_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Read final40-line diff and relevant cleanup; independently ran2 changed tests in0.785s OK. No production source changes or weakened assertions.",
+    "limitations": [
+      "New and existing abnormal cleanup cases emit ResourceWarning because stop_group/os.waitpid reaps without updating Popen.returncode. group_empty passed; no live-process leak proved."
+    ]
+  },
+  "deviations": [
+    "Pre-fix deterministic fixture demonstrated marker=True while dispatching and identity=None; cancellation quarantined, later recover cancelled. Exact previous CI internal error remains unavailable.",
+    "Canonical TMPDIR=/private/tmp used on macOS to avoid /var versus /private/var alias failures in unrelated existing tests. Initial uncanonical main run2 failures recorded in maintenance log."
+  ],
+  "unverified": [
+    "Latest PR required CI pending; no production concurrency or deployment claim."
+  ]
+}

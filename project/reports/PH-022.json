@@ -5,22 +5,22 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=d34b05c2bbfd0e4bdb73cb38c122cf74c3b6d7dcd9c4dd5d06724f3ebe17a5c5; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "evidence": "Final actual check45 tasks ok=true"
     },
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=1e3e63f221bde88816c4a4ef7367691607b20cc1d194028a02ec9ae0586cf9b1; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "evidence": "Final integration actual No issues"
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=a2bfa7b376c38062f77ce2b1e703876aaa04662f96355cdf5dc9d0d075302b05; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "evidence": "Final integration actual No changes detected"
     },
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=08f1de6796497aab862e2f521a05b9d3f076115e76182e37b3812709ef102a46; stderr_sha256=be30081f47463152cacb81c276436bff9511b398796f931e9a3cb17741f112e6"
+      "evidence": "Final base38939d1; TMPDIR=/private/tmp; 440 tests in94.033s OK(skipped4)"
     },
     {
       "command": "python manage.py migrate --noinput",
@@ -30,7 +30,7 @@
     {
       "command": "python manage.py verify_integrity --json",
       "result": "pass",
-      "evidence": "Actual credential-free/network-denied isolated snapshot; stdout_sha256=55718ed41b875a87b09e335e37fb99fa1698eea79aea40ea2d59aa7f13f305c9; stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "evidence": "Final isolated demo DB ok=true errors=[] organizations1 entries47"
     }
   ],
   "review": {
@@ -86,13 +86,16 @@
           "snapshot": "/private/var/folders/f5/h17mb1jj5nj4z4fv04ql9hd40000gn/T/ph-022-review-njp_fcbh/source"
         }
       }
-    ]
-  },
-  "code_snapshot_verification": {
-    "base_sha": "de82006eb4d6bbd785ae58cea6b3e55b423e4515",
-    "contract_digest": "7092775922ed6c3b0d1c5ddb65cca0a333ab37b151b20815f98b6d77fa99a511",
-    "diff_digest": "c7be3e1cc0ac0b01e0b0bec185a6d87fb434646d8181406377f5751119545b7a",
-    "result": "PASS"
+    ],
+    "canonical_patch_review": {
+      "reviewer": "Independent fresh reviewer /root/planning_review",
+      "status": "pass",
+      "findings": [],
+      "scope": "settings static namespace, Kimi canonical import/removal of duplicated tokens, auditor regression corrected to frozen finance_read contract, dependent PH109 ready transition",
+      "limitations": [
+        "Auditor fixture has no personal timesheet rows; privacy conclusion also reads existing filter code. Browser/full tests are integration evidence, not independently rerun."
+      ]
+    }
   },
   "browser": {
     "sizes": [
@@ -120,6 +123,46 @@
     "初DSH测试草稿混淆rows实际预算余额与累计成本并算错日期间距；主控明确语义，DSH f97979b5修正后真实RED，再实现后端；未通过放宽财务断言迎合代码。",
     "主控单写core/views，DSH只reporting/charts/tests，Kimi只templates/static；无模型/迁移/记账服务/API变更。",
     "GLM初次全件审阅7dff68b4触发64KB单行输出限制，失败不计PASS；保持原限制，改为GLM后端/新Kimi前端两个互斥只读范围，最终均PASS。",
-    "Kimi先完成页签，再按主控实际检查修无JS静态tabindex、局部SVG滚动和项目字体；所有前端均Kimi写。"
-  ]
+    "Kimi先完成页签，再按主控实际检查修无JS静态tabindex、局部SVG滚动和项目字体；所有前端均Kimi写。",
+    "Preserved original uncommitted auditor test in private maintenance evidence. Its expectation denied a summary chart to an existing finance reader, contradicting frozen can_read_finance policy; corrected the test, retaining personal labor-entry filtering assertions; no production permission change. Initial22-test run failed this draft expectation, final22 passed.",
+    "Canonical @import follows UTF-8 @charset immediately to retain valid CSS encoding; no duplicated semantic tokens. Kimi only edited CSS; integrator only wired approved static namespace."
+  ],
+  "historical_code_snapshot_verification": {
+    "base_sha": "de82006eb4d6bbd785ae58cea6b3e55b423e4515",
+    "contract_digest": "7092775922ed6c3b0d1c5ddb65cca0a333ab37b151b20815f98b6d77fa99a511",
+    "diff_digest": "c7be3e1cc0ac0b01e0b0bec185a6d87fb434646d8181406377f5751119545b7a",
+    "result": "PASS",
+    "note": "Pre-token-patch evidence only; final integration supersedes this binding."
+  },
+  "final_integration": {
+    "base_sha": "38939d17a91b09c047c01dd809975c4b9c682296",
+    "full_tests": "440 tests in94.033s OK/skipped4; TMPDIR=/private/tmp",
+    "targeted_tests": "22 tests in1.173s OK",
+    "canonical_tokens": {
+      "http_matches_source": true,
+      "sha256": "d33a392e2b94e90f6e18b34e95cd0e169c73944f8b9eb07581c2ccf25247cd82"
+    },
+    "frontend_run": {
+      "agent": "native Kimi Code",
+      "run_id": "d8ccf65c-184e-4189-a7bd-53c15c9ef1db",
+      "state": "completed",
+      "stdout_sha256": "8a0bdc705e4bd2389c7f1efcac058954b6f99d3df98b609957a9819394129042",
+      "app_css_sha256": "fe97144c51a60c125ba74b073c796ae37e547ce60a8dc18fa528f273c0b7a0b8"
+    },
+    "collectstatic": "182 files copied",
+    "browser": {
+      "desktop": {
+        "width": 1440,
+        "scroll_width": 1440
+      },
+      "mobile": {
+        "width": 390,
+        "scroll_width": 390,
+        "chart_client_width": 316,
+        "chart_scroll_width": 760
+      },
+      "tabs": "six clicked; Home keyboard returns overview; refresh restores overview",
+      "native_screenshots": "Reviewed actual1440/390 captures; temporary viewport override reset."
+    }
+  }
 }

@@ -1558,7 +1558,7 @@
       "title": "修复取消集成测试的启动同步竞态",
       "kind": "fix",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "rolling",
       "depends_on": [
@@ -1582,16 +1582,16 @@
         "python -m unittest tests.test_delivery_execution -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "Codex integration controller",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-108.md"
     },
     {
       "id": "PH-109",
       "title": "按最新代码同步使用文档并验证本地测试环境",
       "kind": "docs",
       "risk": "S",
-      "status": "blocked",
+      "status": "ready",
       "priority": 1,
       "milestone": "rolling",
       "depends_on": [
@@ -1622,9 +1622,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-108恢复和PH-022项目详情尚未合入。"
-      ],
+      "blockers": [],
       "handoff": null
     }
   ]

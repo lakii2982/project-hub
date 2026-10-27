@@ -516,7 +516,7 @@ class ProjectDetailHTTPTests(BurndownFixture):
         self.assertNotContains(response, 'href="#finance"')
         self.assertContains(response, "我的费用单据")
 
-    def test_auditor_with_finance_read_gets_numbers_but_no_burndown_chart(self):
+    def test_auditor_with_finance_read_keeps_project_summary_chart(self):
         users = get_user_model()
         auditor_user = users.objects.create_user("ph022-auditor", password="test-pass")
         Membership.objects.create(
@@ -526,16 +526,16 @@ class ProjectDetailHTTPTests(BurndownFixture):
         response = self.client.get(reverse("project-detail", args=[self.http_project.pk]))
 
         self.assertEqual(response.status_code, 200)
-        # Auditor keeps the pre-existing finance figures/documents, but the
-        # newly added cost burndown chart is gated to finance readers only.
+        # The frozen contract gates project summaries on can_read_finance;
+        # auditors already have that permission, without personal labor details.
         self.assertTrue(response.context["can_finance"])
         self.assertContains(response, 'href="#finance"')
         self.assertIn("cost_burndown", response.context)
-        self.assertIsNone(response.context["cost_burndown"])
-        self.assertNotContains(response, "cost-burndown-chart")
-        self.assertNotContains(response, "cost-burndown-plot")
-        self.assertNotContains(response, "cost-burndown-title")
-        self.assertNotContains(response, "按当前批准预算计算")
+        self.assertTrue(response.context["cost_burndown"]["available"])
+        self.assertContains(response, "cost-burndown-chart")
+        self.assertContains(response, "按当前批准预算计算")
+        self.assertNotContains(response, "hourly_rate_cents")
+        self.assertTrue(all(entry.timesheet_id is None for entry in response.context["entries"]))
 
     def test_member_own_expenses_remain_visible_but_other_users_do_not(self):
         own_document = self.add_document(
