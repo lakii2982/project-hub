@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "relationships": {
+    "member-project-scope": {
+      "owner": "identity",
+      "canonical_record": "MembershipScope",
+      "kind": "projection",
+      "schema_ref": "./entities.schema.json#/$defs/MembershipScope"
+    },
+    "membership-employee-binding": {
+      "owner": "masterdata",
+      "canonical_record": "EmployeeBinding",
+      "kind": "projection",
+      "schema_ref": "./entities.schema.json#/$defs/EmployeeBinding"
+    },
+    "event-reversal": {
+      "owner": "core",
+      "canonical_record": "AccountingEvent",
+      "kind": "embedded_reference",
+      "schema_ref": "./entities.schema.json#/$defs/AccountingEvent"
+    },
+    "source-event": {
+      "owner": "core",
+      "canonical_record": "SourceConsumption",
+      "kind": "append_only_fact",
+      "schema_ref": "./entities.schema.json#/$defs/SourceConsumption"
+    },
+    "counterparty-role": {
+      "owner": "contracts",
+      "canonical_record": "Counterparty",
+      "kind": "embedded_field",
+      "schema_ref": "./entities.schema.json#/$defs/Counterparty"
+    },
+    "masterdata-merge": {
+      "owner": "masterdata",
+      "canonical_record": "MergeMap",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/MergeMap"
+    },
+    "contract-line-policy": {
+      "owner": "contracts",
+      "canonical_record": "MethodPolicySelection",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/MethodPolicySelection"
+    },
+    "contract-line-payment-term": {
+      "owner": "contracts",
+      "canonical_record": "PaymentTerm",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/PaymentTerm"
+    },
+    "timesheet-billable-confirmation": {
+      "owner": "time",
+      "canonical_record": "BillableConfirmation",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/BillableConfirmation"
+    },
+    "service-confirmation-contract-line": {
+      "owner": "delivery",
+      "canonical_record": "ServiceConfirmation",
+      "kind": "embedded_reference",
+      "schema_ref": "./entities.schema.json#/$defs/ServiceConfirmation"
+    },
+    "cost-source-allocation": {
+      "owner": "costing",
+      "canonical_record": "AllocationTarget",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/AllocationTarget"
+    },
+    "commitment-consumption": {
+      "owner": "costing",
+      "canonical_record": "SpendAcceptance",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/SpendAcceptance"
+    },
+    "prepaid-consumption": {
+      "owner": "costing",
+      "canonical_record": "CostEvent",
+      "kind": "append_only_fact",
+      "schema_ref": "./entities.schema.json#/$defs/CostEvent"
+    },
+    "vendor-workforce-exclusion": {
+      "owner": "time",
+      "canonical_record": "WorkforceCoverage",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/WorkforceCoverage"
+    },
+    "cash-openitem-clearance": {
+      "owner": "settlement",
+      "canonical_record": "Clearance",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/Clearance"
+    },
+    "advance-openitem-offset": {
+      "owner": "settlement",
+      "canonical_record": "Offset",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/Offset"
+    },
+    "cash-transaction-allocation": {
+      "owner": "cash",
+      "canonical_record": "CashAllocation",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/CashAllocation"
+    },
+    "forecast-source-coverage": {
+      "owner": "cash",
+      "canonical_record": "ForecastCoverage",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/ForecastCoverage"
+    },
+    "invoice-business-allocation": {
+      "owner": "invoicing",
+      "canonical_record": "InvoiceAllocation",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/InvoiceAllocation"
+    },
+    "performance-settlement-match": {
+      "owner": "management_revenue",
+      "canonical_record": "PerformanceSettlementMatch",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/PerformanceSettlementMatch"
+    },
+    "etc-actual-release": {
+      "owner": "planning",
+      "canonical_record": "EstimateRelease",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/EstimateRelease"
+    },
+    "opening-coverage-history": {
+      "owner": "onboarding",
+      "canonical_record": "OpeningCoverage",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/OpeningCoverage"
+    },
+    "period-event-snapshot": {
+      "owner": "core",
+      "canonical_record": "PeriodClose",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/PeriodClose"
+    },
+    "metric-source-trace": {
+      "owner": "insights",
+      "canonical_record": "TraceLink",
+      "kind": "projection",
+      "schema_ref": "./entities.schema.json#/$defs/TraceLink"
+    },
+    "evidence-entity": {
+      "owner": "delivery",
+      "canonical_record": "Evidence",
+      "kind": "embedded_reference",
+      "schema_ref": "./entities.schema.json#/$defs/Evidence"
+    }
+  },
+  "invariant": "A conceptual relation reuses the named canonical fact/projection; it does not authorize an extra table or duplicated maintenance surface."
+}

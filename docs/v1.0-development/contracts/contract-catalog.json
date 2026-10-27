@@ -1,0 +1,1272 @@
+{
+  "$schema": "./contract-bundle.schema.json",
+  "global_rules": {
+    "currency": "CNY",
+    "transaction": "authorize+period+source+business+ledger+bridge+audit+outbox atomically",
+    "locks": "organization, period, project, sources, cash_transaction, open_item, allocation sorted by stable id",
+    "history": "append/reverse/forward-adjust only; never update posted ledger or snapshot",
+    "rounding": "Decimal ROUND_HALF_UP; strict reversal preserves original cents"
+  },
+  "contract_catalog": [
+    {
+      "id": "C01",
+      "owner": "core authorization",
+      "consumers": [
+        "all commands",
+        "all queries"
+      ],
+      "objects": [
+        "CommandContext",
+        "MembershipScope",
+        "SensitiveReadAudit",
+        "AgentGrant",
+        "Membership"
+      ],
+      "bridges": [
+        "member-project-scope"
+      ],
+      "commands": [
+        "identity.membership.change/v1",
+        "identity.agent_grant.revoke/v1",
+        "core.document.decide/v1"
+      ],
+      "queries": [
+        "identity.context.get/v1",
+        "identity.permissions.get/v1"
+      ],
+      "events": [
+        "identity.membership_changed.v1",
+        "identity.agent_grant_revoked.v1"
+      ],
+      "consumed_bridges": [
+        "membership-employee-binding"
+      ]
+    },
+    {
+      "id": "C02",
+      "owner": "core ledger/audit/outbox",
+      "consumers": [
+        "all financial domains",
+        "imports",
+        "legacy adapters"
+      ],
+      "objects": [
+        "SourceRef",
+        "AccountingEvent",
+        "LedgerPosting",
+        "AuditRecord",
+        "OutboxEvent",
+        "IdempotencyRecord",
+        "SourceConsumption"
+      ],
+      "bridges": [
+        "event-reversal",
+        "source-event"
+      ],
+      "commands": [
+        "core.posting.append/v1",
+        "core.posting.reverse/v1"
+      ],
+      "queries": [
+        "core.source.trace/v1",
+        "core.event.get/v1"
+      ],
+      "events": [
+        "core.accounting_posted.v1",
+        "core.posting_reversed.v1"
+      ]
+    },
+    {
+      "id": "C03",
+      "owner": "masterdata + contracts counterparty",
+      "consumers": [
+        "contracts",
+        "delivery",
+        "time",
+        "costing",
+        "settlement",
+        "cash",
+        "invoicing"
+      ],
+      "objects": [
+        "OrganizationProfile",
+        "Employee",
+        "Project",
+        "Counterparty",
+        "Contact",
+        "CostCategory",
+        "NonProjectDestination",
+        "MergeMap",
+        "EmployeeBinding"
+      ],
+      "bridges": [
+        "counterparty-role",
+        "masterdata-merge",
+        "membership-employee-binding"
+      ],
+      "commands": [
+        "masterdata.entity.upsert/v1",
+        "masterdata.entity.merge/v1"
+      ],
+      "queries": [
+        "masterdata.entity.get/v1",
+        "masterdata.lookup.search/v1"
+      ],
+      "events": [
+        "masterdata.entity_changed.v1"
+      ]
+    },
+    {
+      "id": "C04",
+      "owner": "contracts",
+      "consumers": [
+        "delivery",
+        "settlement",
+        "management_revenue",
+        "planning"
+      ],
+      "objects": [
+        "Contract",
+        "ContractVersion",
+        "ContractLine",
+        "PaymentTerm",
+        "WarrantyTerm",
+        "MethodPolicySelection",
+        "ContractChange"
+      ],
+      "bridges": [
+        "contract-line-policy",
+        "contract-line-payment-term"
+      ],
+      "commands": [
+        "contracts.version.submit/v1",
+        "contracts.version.approve/v1",
+        "contracts.change.decide/v1",
+        "contracts.contract.draft.save/v1",
+        "contracts.contract_change.draft.save/v1"
+      ],
+      "queries": [
+        "contracts.effective_line.get/v1",
+        "contracts.project_summary.get/v1"
+      ],
+      "events": [
+        "contracts.version_approved.v1",
+        "contracts.change_effective.v1"
+      ]
+    },
+    {
+      "id": "C05",
+      "owner": "delivery/time",
+      "consumers": [
+        "costing",
+        "settlement",
+        "management_revenue"
+      ],
+      "objects": [
+        "DeliveryMilestone",
+        "ServiceConfirmation",
+        "Acceptance",
+        "WorkItem",
+        "Timesheet",
+        "BillableConfirmation",
+        "WorkforceCoverage",
+        "NonProjectWork",
+        "DeliveryClose"
+      ],
+      "bridges": [
+        "timesheet-billable-confirmation",
+        "service-confirmation-contract-line",
+        "vendor-workforce-exclusion"
+      ],
+      "commands": [
+        "delivery.acceptance.confirm/v1",
+        "time.timesheet.submit/v1",
+        "time.billable.confirm/v1",
+        "delivery.acceptance.draft.save/v1",
+        "delivery.service_confirmation.draft.save/v1",
+        "time.timesheet.draft.save/v1"
+      ],
+      "queries": [
+        "delivery.performance.available/v1",
+        "time.approved.list/v1"
+      ],
+      "events": [
+        "delivery.accepted.v1",
+        "time.approved.v1",
+        "time.billable_confirmed.v1"
+      ]
+    },
+    {
+      "id": "C06",
+      "owner": "costing",
+      "consumers": [
+        "settlement",
+        "cash",
+        "planning",
+        "reconciliation"
+      ],
+      "objects": [
+        "SalaryPool",
+        "RateSnapshot",
+        "CostPolicy",
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "CostEvent",
+        "AllocationRun",
+        "AllocationTarget",
+        "TaxQualification"
+      ],
+      "bridges": [
+        "cost-source-allocation",
+        "commitment-consumption",
+        "prepaid-consumption"
+      ],
+      "commands": [
+        "costing.cost.post/v1",
+        "costing.allocation.run/v1",
+        "costing.allocation.reverse/v1",
+        "costing.salary_pool.draft.save/v1",
+        "costing.expense_claim.draft.save/v1",
+        "costing.spend_commitment.draft.save/v1",
+        "costing.spend_acceptance.draft.save/v1",
+        "costing.prepaid_service.draft.save/v1"
+      ],
+      "queries": [
+        "costing.source.available/v1",
+        "costing.reconciliation.get/v1"
+      ],
+      "events": [
+        "costing.cost_posted.v1",
+        "costing.allocated.v1"
+      ],
+      "consumed_bridges": [
+        "vendor-workforce-exclusion"
+      ]
+    },
+    {
+      "id": "C07",
+      "owner": "settlement",
+      "consumers": [
+        "cash orchestration",
+        "invoicing",
+        "management_revenue",
+        "insights"
+      ],
+      "objects": [
+        "Settlement",
+        "OpenItem",
+        "CreditAdjustment",
+        "BadDebtDisposition",
+        "Clearance",
+        "Offset",
+        "AgingCase"
+      ],
+      "bridges": [
+        "cash-openitem-clearance",
+        "advance-openitem-offset"
+      ],
+      "commands": [
+        "settlement.open_item.create/v1",
+        "settlement.clearance.create/v1",
+        "settlement.clearance.reverse/v1",
+        "settlement.offset.create/v1",
+        "settlement.settlement.draft.save/v1",
+        "settlement.credit_adjustment.draft.save/v1",
+        "settlement.bad_debt_disposition.draft.save/v1"
+      ],
+      "queries": [
+        "settlement.open_item.get/v1",
+        "settlement.aging.get/v1"
+      ],
+      "events": [
+        "settlement.open_item_created.v1",
+        "settlement.cleared.v1",
+        "settlement.clearance_reversed.v1"
+      ]
+    },
+    {
+      "id": "C08",
+      "owner": "cash",
+      "consumers": [
+        "settlement",
+        "reconciliation",
+        "forecast"
+      ],
+      "objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashClassification",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem",
+        "EmployeeAdvance"
+      ],
+      "bridges": [
+        "cash-transaction-allocation",
+        "forecast-source-coverage"
+      ],
+      "commands": [
+        "cash.transaction.record/v1",
+        "cash.allocation.create/v1",
+        "cash.refund.record/v1",
+        "cash.return.record/v1",
+        "cash.funding_account.draft.save/v1"
+      ],
+      "queries": [
+        "cash.transaction.get/v1",
+        "cash.account_coverage.get/v1"
+      ],
+      "events": [
+        "cash.transaction_recorded.v1",
+        "cash.refunded.v1",
+        "cash.returned.v1"
+      ],
+      "consumed_bridges": [
+        "cash-openitem-clearance"
+      ]
+    },
+    {
+      "id": "C09",
+      "owner": "invoicing / management_revenue",
+      "consumers": [
+        "reconciliation",
+        "insights"
+      ],
+      "objects": [
+        "Invoice",
+        "InvoiceLine",
+        "InvoiceAllocation",
+        "InvoiceReversal",
+        "RevenueRecognition",
+        "RevenueAdjustment",
+        "PerformanceSettlementMatch"
+      ],
+      "bridges": [
+        "invoice-business-allocation",
+        "performance-settlement-match"
+      ],
+      "commands": [
+        "invoicing.invoice.record/v1",
+        "invoicing.invoice.reverse/v1",
+        "management_revenue.recognize/v1",
+        "management_revenue.match/v1"
+      ],
+      "queries": [
+        "invoicing.unallocated.get/v1",
+        "management_revenue.contract_line.get/v1"
+      ],
+      "events": [
+        "invoicing.recorded.v1",
+        "management_revenue.recognized.v1",
+        "management_revenue.matched.v1"
+      ]
+    },
+    {
+      "id": "C10",
+      "owner": "costing/planning and cash forecast",
+      "consumers": [
+        "insights",
+        "exports"
+      ],
+      "objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "ForecastSource",
+        "ForecastCoverage",
+        "EstimateRelease"
+      ],
+      "bridges": [
+        "etc-actual-release"
+      ],
+      "commands": [
+        "planning.budget.approve/v1",
+        "planning.etc.publish/v1",
+        "cash.forecast.replace/v1",
+        "planning.budget_version.draft.save/v1",
+        "planning.budget_line.draft.save/v1",
+        "planning.e_t_c_version.draft.save/v1",
+        "planning.e_t_c_item.draft.save/v1"
+      ],
+      "queries": [
+        "planning.eac.get/v1",
+        "cash.forecast.13week/v1"
+      ],
+      "events": [
+        "planning.budget_approved.v1",
+        "planning.etc_published.v1",
+        "cash.forecast_replaced.v1"
+      ],
+      "consumed_bridges": [
+        "forecast-source-coverage"
+      ]
+    },
+    {
+      "id": "C11",
+      "owner": "core periods + domain opening commands",
+      "consumers": [
+        "all write services",
+        "onboarding",
+        "close"
+      ],
+      "objects": [
+        "AccountingPeriod",
+        "PeriodClose",
+        "OpeningBatch",
+        "OpeningCoverage",
+        "OpeningEvent",
+        "AdjustmentRequest",
+        "ImportPreview",
+        "ImportConflict",
+        "OnboardingSession",
+        "PeriodPrecheck"
+      ],
+      "bridges": [
+        "opening-coverage-history",
+        "period-event-snapshot"
+      ],
+      "commands": [
+        "onboarding.opening.commit/v1",
+        "period.close/v1",
+        "period.adjustment.post/v1",
+        "onboarding.opening_batch.draft.save/v1"
+      ],
+      "queries": [
+        "period.precheck.get/v1",
+        "onboarding.coverage.get/v1"
+      ],
+      "events": [
+        "period.closed.v1",
+        "onboarding.opening_committed.v1"
+      ]
+    },
+    {
+      "id": "C12",
+      "owner": "insights / delivery evidence",
+      "consumers": [
+        "pages",
+        "exports",
+        "authorized API",
+        "release verification"
+      ],
+      "objects": [
+        "MetricDefinition",
+        "ReadModelWatermark",
+        "DataGap",
+        "Evidence",
+        "TraceLink",
+        "ExportManifest",
+        "DeliveryReceipt",
+        "ReconciliationCase",
+        "IntegrityFinding",
+        "BackupManifest",
+        "DeploymentManifest",
+        "ReleaseManifest",
+        "RestoreEvidence",
+        "ConcurrencyTestEvidence"
+      ],
+      "bridges": [
+        "metric-source-trace",
+        "evidence-entity"
+      ],
+      "commands": [
+        "insights.export.create/v1",
+        "delivery.evidence.attach/v1"
+      ],
+      "queries": [
+        "insights.metric.get/v1",
+        "insights.workspace.get/v1",
+        "insights.data_gaps.get/v1"
+      ],
+      "events": [
+        "insights.export_ready.v1",
+        "delivery.evidence_attached.v1"
+      ]
+    }
+  ],
+  "definitions": {
+    "entities": [
+      {
+        "name": "CommandContext",
+        "owner": "C01",
+        "required_fields": [
+          "organization_id",
+          "membership_id",
+          "auth_snapshot",
+          "field_permissions"
+        ],
+        "fields": {
+          "organization_id": "Id",
+          "membership_id": "Id",
+          "auth_snapshot": "Sha256",
+          "project_scope": "Id[]|all",
+          "field_permissions": "string[]",
+          "effective_at": "date-time"
+        },
+        "states": [
+          "active",
+          "revoked"
+        ],
+        "x-contract-uniques": [
+          "authenticated session/PAT only"
+        ],
+        "x-contract-rules": [
+          "never accepted from command payload",
+          "role downgrade rechecks on every request"
+        ]
+      },
+      {
+        "name": "AgentGrant",
+        "owner": "C01",
+        "required_fields": [
+          "member_id",
+          "scopes",
+          "project_ids",
+          "expires_at",
+          "default_dry_run"
+        ],
+        "fields": {
+          "member_id": "Id",
+          "scopes": "string[]",
+          "project_ids": "Id[]",
+          "expires_at": "date-time",
+          "default_dry_run": "boolean",
+          "revoked_at": "date-time|null"
+        },
+        "states": [
+          "active",
+          "revoked",
+          "expired"
+        ],
+        "x-contract-uniques": [
+          "token hash"
+        ],
+        "x-contract-rules": [
+          "no approval/payment/period-close scope",
+          "revoked on disabled membership/password change"
+        ]
+      },
+      {
+        "name": "AccountingEvent",
+        "owner": "C02",
+        "required_fields": [
+          "source",
+          "event_type",
+          "occurred_on",
+          "posting_period",
+          "algorithm_version",
+          "entries"
+        ],
+        "fields": {
+          "source": "SourceRef",
+          "event_type": "string",
+          "occurred_on": "BusinessDate",
+          "posting_period": "PostingPeriod",
+          "algorithm_version": "AlgorithmVersion",
+          "entries": "LedgerPosting[2+]",
+          "evidence": "EvidenceRef[]"
+        },
+        "states": [
+          "posted",
+          "reversed"
+        ],
+        "x-contract-uniques": [
+          "source+effective version+event_type"
+        ],
+        "x-contract-rules": [
+          "append only",
+          "balanced by management counterpart",
+          "reversal references exactly one original"
+        ]
+      },
+      {
+        "name": "Counterparty",
+        "owner": "C03",
+        "required_fields": [
+          "organization_id",
+          "legal_or_display_name",
+          "roles",
+          "active_from"
+        ],
+        "fields": {
+          "legal_or_display_name": "string<=160",
+          "roles": "customer|supplier[]",
+          "contacts": "Contact[]",
+          "active_from": "BusinessDate",
+          "inactive_on": "BusinessDate|null",
+          "merged_to_id": "Id|null"
+        },
+        "states": [
+          "active",
+          "inactive",
+          "merged"
+        ],
+        "x-contract-uniques": [
+          "organization+normalized name requires human collision decision"
+        ],
+        "x-contract-rules": [
+          "same ID used by contracts/cash/invoices",
+          "no automatic name match for clearance"
+        ]
+      },
+      {
+        "name": "ContractLine",
+        "owner": "C04",
+        "required_fields": [
+          "contract_id",
+          "line_no",
+          "counterparty_id",
+          "project_id",
+          "pricing_template",
+          "net_cents",
+          "tax_cents",
+          "gross_cents",
+          "method_policy"
+        ],
+        "fields": {
+          "contract_id": "Id",
+          "line_no": "positive integer",
+          "counterparty_id": "Id",
+          "project_id": "Id",
+          "pricing_template": "fixed_milestone|confirmed_time|fixed_service_period",
+          "net_cents": "CnyCents",
+          "tax_cents": "CnyCents",
+          "gross_cents": "CnyCents",
+          "method_policy": "PolicyVersion",
+          "cap_cents": "CnyCents",
+          "service_start": "BusinessDate|null",
+          "service_end": "BusinessDate|null"
+        },
+        "states": [
+          "draft",
+          "approved",
+          "terminated",
+          "superseded"
+        ],
+        "x-contract-uniques": [
+          "contract+line_no+approved version"
+        ],
+        "x-contract-rules": [
+          "gross=net+tax",
+          "one approved revenue/settlement method per service coverage",
+          "approved change only adds version"
+        ]
+      },
+      {
+        "name": "Acceptance",
+        "owner": "C05",
+        "required_fields": [
+          "project_id",
+          "contract_line_ref",
+          "confirmed_on",
+          "evidence",
+          "confirmed_by_member_id"
+        ],
+        "fields": {
+          "project_id": "Id",
+          "contract_line_ref": "SourceRef",
+          "confirmed_on": "BusinessDate",
+          "evidence": "EvidenceRef[]",
+          "confirmed_by_member_id": "Id",
+          "accepted_net_cents": "CnyCents|null",
+          "accepted_minutes": "integer|null",
+          "service_coverage": "date range|null"
+        },
+        "states": [
+          "draft",
+          "confirmed",
+          "superseded",
+          "reversed"
+        ],
+        "x-contract-uniques": [
+          "approved source coverage"
+        ],
+        "x-contract-rules": [
+          "due date/task completion never auto-confirms performance"
+        ]
+      },
+      {
+        "name": "Timesheet",
+        "owner": "C05",
+        "required_fields": [
+          "employee_id",
+          "work_date",
+          "minutes",
+          "destination",
+          "submitted_by_member_id"
+        ],
+        "fields": {
+          "employee_id": "Id",
+          "work_date": "BusinessDate",
+          "minutes": "Minutes",
+          "destination": "project Id|non_project_destination Id",
+          "task_id": "Id|null",
+          "delegate_reason": "string|null",
+          "submitted_by_member_id": "Id",
+          "approved_by_member_id": "Id|null",
+          "rate_snapshot_ref": "SourceRef|null"
+        },
+        "states": [
+          "draft",
+          "submitted",
+          "approved",
+          "rejected",
+          "posted",
+          "reversed"
+        ],
+        "x-contract-uniques": [
+          "employee+work_date+external/source key"
+        ],
+        "x-contract-rules": [
+          "daily total <=1440",
+          "missing rate is pending not zero cost",
+          "submitter/business employee cannot final review own record"
+        ]
+      },
+      {
+        "name": "CostEvent",
+        "owner": "C06",
+        "required_fields": [
+          "source",
+          "cost_kind",
+          "occurred_on",
+          "posting_period",
+          "gross_cents",
+          "project_or_pool",
+          "algorithm_version"
+        ],
+        "fields": {
+          "source": "SourceRef",
+          "cost_kind": "labor|expense|vendor_acceptance|prepaid_consumption|shared_allocation|adjustment",
+          "occurred_on": "BusinessDate",
+          "posting_period": "PostingPeriod",
+          "gross_cents": "SignedCnyCents",
+          "recoverable_tax_cents": "CnyCents",
+          "project_or_pool": "Id",
+          "algorithm_version": "AlgorithmVersion",
+          "rate_snapshot_ref": "SourceRef|null"
+        },
+        "states": [
+          "pending",
+          "posted",
+          "reversed"
+        ],
+        "x-contract-uniques": [
+          "source+event type"
+        ],
+        "x-contract-rules": [
+          "payment alone is never a cost",
+          "tax unknown means gross temporary cost",
+          "cost source cannot be double counted through allocation"
+        ]
+      },
+      {
+        "name": "OpenItem",
+        "owner": "C07",
+        "required_fields": [
+          "direction",
+          "counterparty_id",
+          "project_id",
+          "source",
+          "gross_cents",
+          "due_date",
+          "occurred_on"
+        ],
+        "fields": {
+          "direction": "receivable|payable",
+          "counterparty_id": "Id",
+          "project_id": "Id",
+          "source": "SourceRef",
+          "gross_cents": "CnyCents",
+          "tax_cents": "CnyCents",
+          "due_date": "BusinessDate",
+          "occurred_on": "BusinessDate",
+          "warranty_release_on": "BusinessDate|null",
+          "dispute_status": "none|disputed|extension_promised|extension_approved"
+        },
+        "states": [
+          "open",
+          "partially_settled",
+          "settled",
+          "written_off",
+          "reversed"
+        ],
+        "x-contract-uniques": [
+          "source+open-item type"
+        ],
+        "x-contract-rules": [
+          "balance is derived from opening+events-bridges",
+          "cannot be directly edited",
+          "condition plan does not create item"
+        ]
+      },
+      {
+        "name": "CashTransaction",
+        "owner": "C08",
+        "required_fields": [
+          "funding_account_id",
+          "transaction_date",
+          "direction",
+          "gross_cents",
+          "external_source_key"
+        ],
+        "fields": {
+          "funding_account_id": "Id",
+          "transaction_date": "BusinessDate",
+          "direction": "in|out",
+          "gross_cents": "CnyCents",
+          "counterparty_id": "Id|null",
+          "external_source_key": "string",
+          "bank_reference": "string|null",
+          "classification": "unmatched|advance|payment|receipt|fee|payroll|tax|transfer",
+          "evidence": "EvidenceRef[]"
+        },
+        "states": [
+          "recorded",
+          "matched",
+          "reversed"
+        ],
+        "x-contract-uniques": [
+          "funding_account+external_source_key"
+        ],
+        "x-contract-rules": [
+          "bank fact persists while unmatched",
+          "one real transaction appears once only",
+          "no automatic income/cost"
+        ]
+      },
+      {
+        "name": "Invoice",
+        "owner": "C09",
+        "required_fields": [
+          "direction",
+          "counterparty_id",
+          "invoice_number",
+          "gross_cents",
+          "net_cents",
+          "tax_cents",
+          "invoice_date"
+        ],
+        "fields": {
+          "direction": "sales|purchase",
+          "counterparty_id": "Id",
+          "invoice_number": "string<=80",
+          "gross_cents": "CnyCents",
+          "net_cents": "CnyCents",
+          "tax_cents": "CnyCents",
+          "invoice_date": "BusinessDate",
+          "original_invoice_ref": "SourceRef|null"
+        },
+        "states": [
+          "recorded",
+          "voided",
+          "red"
+        ],
+        "x-contract-uniques": [
+          "organization+direction+invoice_number"
+        ],
+        "x-contract-rules": [
+          "gross=net+tax",
+          "invoice does not automatically create revenue/cost/open item"
+        ]
+      },
+      {
+        "name": "RevenueRecognition",
+        "owner": "C09",
+        "required_fields": [
+          "contract_line_ref",
+          "performance_ref",
+          "policy_version",
+          "algorithm_version",
+          "recognized_net_cents",
+          "occurred_on"
+        ],
+        "fields": {
+          "contract_line_ref": "SourceRef",
+          "performance_ref": "SourceRef",
+          "policy_version": "PolicyVersion",
+          "algorithm_version": "AlgorithmVersion",
+          "recognized_net_cents": "SignedCnyCents",
+          "occurred_on": "BusinessDate",
+          "posting_period": "PostingPeriod"
+        },
+        "states": [
+          "posted",
+          "adjusted",
+          "reversed"
+        ],
+        "x-contract-uniques": [
+          "contract line+performance coverage+algorithm version"
+        ],
+        "x-contract-rules": [
+          "not triggered by invoice/cash/date alone",
+          "cumulative cap cannot exceed approved line"
+        ]
+      },
+      {
+        "name": "BudgetVersion",
+        "owner": "C10",
+        "required_fields": [
+          "project_id",
+          "name",
+          "version_no",
+          "lines",
+          "approved_by_member_id"
+        ],
+        "fields": {
+          "project_id": "Id",
+          "name": "B0|Bn",
+          "version_no": "Version",
+          "lines": "BudgetLine[]",
+          "approved_by_member_id": "Id",
+          "approved_on": "BusinessDate"
+        },
+        "states": [
+          "draft",
+          "approved",
+          "superseded"
+        ],
+        "x-contract-uniques": [
+          "project+version_no"
+        ],
+        "x-contract-rules": [
+          "budget never posts cost",
+          "Project only reads current approved baseline"
+        ]
+      },
+      {
+        "name": "ETCItem",
+        "owner": "C10",
+        "required_fields": [
+          "project_id",
+          "etc_version_id",
+          "category",
+          "remaining_cents",
+          "source_or_assumption",
+          "as_of_date"
+        ],
+        "fields": {
+          "project_id": "Id",
+          "etc_version_id": "Id",
+          "category": "own_effort|commitment|other_cost|unposted|risk",
+          "remaining_cents": "CnyCents",
+          "source_or_assumption": "SourceRef|string",
+          "as_of_date": "BusinessDate",
+          "owner_member_id": "Id",
+          "coverage_status": "active|partially_released|released"
+        },
+        "states": [
+          "draft",
+          "published",
+          "superseded",
+          "released"
+        ],
+        "x-contract-uniques": [
+          "version+source coverage"
+        ],
+        "x-contract-rules": [
+          "AC+ETC=EAC",
+          "actual source releases matching ETC coverage exactly once"
+        ]
+      },
+      {
+        "name": "OpeningBatch",
+        "owner": "C11",
+        "required_fields": [
+          "organization_id",
+          "cutoff_date",
+          "mode",
+          "submitted_by_member_id",
+          "coverage"
+        ],
+        "fields": {
+          "cutoff_date": "BusinessDate",
+          "mode": "rebuild_detail|carry_balance",
+          "submitted_by_member_id": "Id",
+          "coverage": "OpeningCoverage[]",
+          "input_digest": "Sha256",
+          "approved_by_member_id": "Id|null"
+        },
+        "states": [
+          "draft",
+          "previewed",
+          "committed",
+          "rejected"
+        ],
+        "x-contract-uniques": [
+          "organization+cutoff+input digest"
+        ],
+        "x-contract-rules": [
+          "commit is all-or-nothing",
+          "opening receivable/payable does not re-recognize income/cost"
+        ]
+      },
+      {
+        "name": "MetricDefinition",
+        "owner": "C12",
+        "required_fields": [
+          "metric_id",
+          "name",
+          "formula_version",
+          "as_of_date",
+          "scope",
+          "watermark"
+        ],
+        "fields": {
+          "metric_id": "string",
+          "name": "string",
+          "formula_version": "Version",
+          "as_of_date": "BusinessDate",
+          "scope": "organization|project|counterparty",
+          "watermark": "ReadModelWatermark",
+          "value_cents": "SignedCnyCents|null",
+          "data_gaps": "DataGap[]"
+        },
+        "states": [
+          "available",
+          "incomplete",
+          "not_computable"
+        ],
+        "x-contract-uniques": [
+          "metric+formula version+scope+as_of"
+        ],
+        "x-contract-rules": [
+          "null means unknown/not calculable, not zero",
+          "export/page/API use same definition and authorization"
+        ]
+      }
+    ],
+    "bridges": [
+      {
+        "name": "TimesheetBillableConfirmation",
+        "owner": "time",
+        "left": {
+          "namespace": "time",
+          "object_types": [
+            "Timesheet"
+          ]
+        },
+        "right": {
+          "namespace": "contracts",
+          "object_types": [
+            "ContractLine"
+          ]
+        },
+        "amount_or_quantity": "confirmed_minutes",
+        "unique_key": "timesheet source coverage+contract line",
+        "reversal": "append reversal; preserve original approved minutes",
+        "x-contract-limits": [
+          "sum confirmed minutes <= approved timesheet minutes",
+          "cost minutes remain independent"
+        ]
+      },
+      {
+        "name": "CostAllocation",
+        "owner": "costing",
+        "left": {
+          "namespace": "costing",
+          "object_types": [
+            "CostEvent"
+          ]
+        },
+        "right": {
+          "namespace": "masterdata",
+          "object_types": [
+            "Project",
+            "NonProjectDestination"
+          ]
+        },
+        "amount_or_quantity": "allocated_cents",
+        "unique_key": "allocation run+source+target",
+        "reversal": "reverse whole run before reallocation",
+        "x-contract-limits": [
+          "sum active allocation <= available source cents",
+          "largest remainder stable order",
+          "source not additionally counted in company totals"
+        ]
+      },
+      {
+        "name": "Clearance",
+        "owner": "settlement",
+        "left": {
+          "namespace": "cash",
+          "object_types": [
+            "CashTransaction"
+          ]
+        },
+        "right": {
+          "namespace": "settlement",
+          "object_types": [
+            "OpenItem"
+          ]
+        },
+        "amount_or_quantity": "cleared_cents",
+        "unique_key": "cash transaction+open item+request/source key",
+        "reversal": "one reversal record restores both available balances",
+        "x-contract-limits": [
+          "same organization/counterparty/CNY",
+          "amount <= both derived available balances",
+          "cross-project requires explicit approved exception",
+          "no bank transaction created"
+        ]
+      },
+      {
+        "name": "AdvanceOffset",
+        "owner": "settlement",
+        "left": {
+          "namespace": "cash",
+          "object_types": [
+            "AdvanceBalance"
+          ]
+        },
+        "right": {
+          "namespace": "settlement",
+          "object_types": [
+            "OpenItem"
+          ]
+        },
+        "amount_or_quantity": "offset_cents",
+        "unique_key": "advance+open item+source key",
+        "reversal": "append reversal restores both balances",
+        "x-contract-limits": [
+          "no cash/income/cost event",
+          "partial offsets supported"
+        ]
+      },
+      {
+        "name": "CashAllocation",
+        "owner": "cash",
+        "left": {
+          "namespace": "cash",
+          "object_types": [
+            "CashTransaction"
+          ]
+        },
+        "right": {
+          "namespace": "masterdata",
+          "object_types": [
+            "Project",
+            "NonProjectDestination"
+          ]
+        },
+        "amount_or_quantity": "allocated_cents",
+        "unique_key": "transaction+target+source key",
+        "reversal": "append reversal",
+        "x-contract-limits": [
+          "sum allocations <= transaction amount",
+          "not a clearance or second cash fact"
+        ]
+      },
+      {
+        "name": "InvoiceAllocation",
+        "owner": "invoicing",
+        "left": {
+          "namespace": "invoicing",
+          "object_types": [
+            "Invoice"
+          ]
+        },
+        "right": {
+          "namespace": "costing",
+          "object_types": [
+            "CostEvent",
+            "OpenItem"
+          ]
+        },
+        "amount_or_quantity": "gross/net/tax cents",
+        "unique_key": "invoice+business source+line",
+        "reversal": "red invoice linked to original; no deletion",
+        "x-contract-limits": [
+          "each gross/net/tax sum <= independent source remainder",
+          "does not create duplicate cost/revenue/open item"
+        ]
+      },
+      {
+        "name": "PerformanceSettlementMatch",
+        "owner": "management_revenue",
+        "left": {
+          "namespace": "management_revenue",
+          "object_types": [
+            "RevenueRecognition"
+          ]
+        },
+        "right": {
+          "namespace": "settlement",
+          "object_types": [
+            "Settlement"
+          ]
+        },
+        "amount_or_quantity": "matched_net_cents",
+        "unique_key": "contract line+performance coverage+settlement coverage",
+        "reversal": "unmatch then rebuild correct allocation",
+        "x-contract-limits": [
+          "match only same contract line",
+          "no duplicate revenue",
+          "unsettled performance and settled-unperformed stay mutually exclusive"
+        ]
+      },
+      {
+        "name": "ForecastCoverage",
+        "owner": "cash forecast",
+        "left": {
+          "namespace": "cash",
+          "object_types": [
+            "ForecastSource"
+          ]
+        },
+        "right": {
+          "namespace": "cash",
+          "object_types": [
+            "CashTransaction",
+            "OpenItem"
+          ]
+        },
+        "amount_or_quantity": "replaced_cents",
+        "unique_key": "source coverage range+replacement",
+        "reversal": "append release/correction",
+        "x-contract-limits": [
+          "partial replacement retains remainder",
+          "same coverage exists at only one prediction layer"
+        ]
+      },
+      {
+        "name": "OpeningCoverage",
+        "owner": "onboarding/domains",
+        "left": {
+          "namespace": "onboarding",
+          "object_types": [
+            "OpeningBatch"
+          ]
+        },
+        "right": {
+          "namespace": "onboarding",
+          "object_types": [
+            "OpeningCoverage"
+          ]
+        },
+        "amount_or_quantity": "period/category/project coverage",
+        "unique_key": "organization+project/pool+period+category",
+        "reversal": "opening correction only via domain adjustment",
+        "x-contract-limits": [
+          "detail rebuild and balance carry are mutually exclusive for same coverage",
+          "historical reference rows never re-post"
+        ]
+      }
+    ],
+    "invariants": [
+      "Every formal financial record has organization, project/pool, SourceRef, evidence/approval chain, business date and posting period.",
+      "Balances are derived from effective append-only events and bridges; UI/API has no balance update command.",
+      "All write paths acquire locks in global C11 order and either commit all facts/audit/outbox or none.",
+      "Formal approval is version-bound and rejects self-review; an edited version invalidates approval.",
+      "Unknown policies, evidence, rates, taxes, or coverage yield explicit gaps/pending state, never fabricated zero.",
+      "Algorithms and rate snapshots are historical facts; a new policy applies prospectively or by explicit forward adjustment."
+    ]
+  }
+}

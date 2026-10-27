@@ -1,0 +1,1134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-hub.local/contracts/v1/queries.schema.json",
+  "$defs": {
+    "identity.context.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "identity.context.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "identity.permissions.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "identity.permissions.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": []
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "core.source.trace/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "core.source.trace/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            }
+          },
+          "required": [
+            "source"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "core.event.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "core.event.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            }
+          },
+          "required": [
+            "source"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "masterdata.entity.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "masterdata.entity.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            }
+          },
+          "required": [
+            "source"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "masterdata.lookup.search/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "masterdata.lookup.search/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "search": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "cursor": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "search"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "contracts.effective_line.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "contracts.effective_line.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "contract_line"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "source",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "contracts.project_summary.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "contracts.project_summary.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "project_id",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "delivery.performance.available/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "delivery.performance.available/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "contract_line"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "source",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "time.approved.list/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "time.approved.list/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "cursor": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "costing.source.available/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "costing.source.available/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "salary_pool",
+                        "expense_claim",
+                        "spend_acceptance",
+                        "prepaid_service"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "source",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "costing.reconciliation.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "costing.reconciliation.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "salary_pool",
+                        "allocation_run",
+                        "expense_claim"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "source",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "settlement.open_item.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "settlement.open_item.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "open_item"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "source",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "settlement.aging.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "settlement.aging.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "cash.transaction.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "cash.transaction.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "cash_transaction"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "source",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "cash.account_coverage.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "cash.account_coverage.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "invoicing.unallocated.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "invoicing.unallocated.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "management_revenue.contract_line.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "management_revenue.contract_line.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "contract_line"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "source",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "planning.eac.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "planning.eac.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "project_id",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "cash.forecast.13week/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "cash.forecast.13week/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "period.precheck.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "period.precheck.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "period": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+            }
+          },
+          "required": [
+            "period"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "onboarding.coverage.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "onboarding.coverage.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "opening_batch"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "insights.metric.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "insights.metric.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "metric": {
+              "enum": [
+                "recognized_management_revenue",
+                "confirmed_cost",
+                "management_contribution",
+                "net_cash_flow",
+                "budget_remaining",
+                "estimate_at_completion",
+                "forecast_result"
+              ]
+            },
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "metric",
+            "project_id",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "insights.workspace.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "insights.workspace.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "workspace": {
+              "enum": [
+                "owner",
+                "pm",
+                "member",
+                "finance"
+              ]
+            },
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "workspace",
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    },
+    "insights.data_gaps.get/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "insights.data_gaps.get/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "as_of_date"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "request_id",
+        "query"
+      ],
+      "x-authorization": "Resolve current membership from authenticated context; tenant/project filter before fetch/aggregate; source outside scope is not_found.",
+      "x-service-invariants": [
+        "All source selectors must have the declared business kind/version, same authenticated company and authorized project.",
+        "Date filter is inclusive business date Asia/Shanghai; period remains independent posting period. Cursor order is stable(source id,version), aggregates independent of pagination."
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/identity.context.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/identity.permissions.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/core.source.trace~1v1"
+    },
+    {
+      "$ref": "#/$defs/core.event.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/masterdata.entity.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/masterdata.lookup.search~1v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.effective_line.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/contracts.project_summary.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.performance.available~1v1"
+    },
+    {
+      "$ref": "#/$defs/time.approved.list~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.source.available~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.reconciliation.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.open_item.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.aging.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.account_coverage.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/invoicing.unallocated.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/management_revenue.contract_line.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/planning.eac.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.forecast.13week~1v1"
+    },
+    {
+      "$ref": "#/$defs/period.precheck.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/onboarding.coverage.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.metric.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.workspace.get~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.data_gaps.get~1v1"
+    }
+  ]
+}

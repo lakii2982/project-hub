@@ -1944,7 +1944,7 @@
       "title": "冻结1.0字段级契约、政策与升级映射",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -1969,16 +1969,16 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/63",
-      "owner": null,
+      "owner": "integration-agent",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-132.md"
     },
     {
       "id": "PH-133",
       "title": "交付三收费模板四职责原型与界面契约",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -2010,7 +2010,7 @@
       "title": "建立黄金企业数据、18UAT分解及逐分预期",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
