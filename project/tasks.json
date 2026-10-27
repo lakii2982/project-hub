@@ -1560,7 +1560,7 @@
       "title": "修复取消集成测试的启动同步竞态",
       "kind": "fix",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "rolling",
       "depends_on": [
@@ -1584,9 +1584,9 @@
         "python -m unittest tests.test_delivery_execution -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "Codex integration controller",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-108.md"
     },
     {
       "id": "PH-109",
