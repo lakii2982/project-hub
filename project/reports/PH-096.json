@@ -1,0 +1,88 @@
+{
+  "task_id": "PH-096",
+  "summary": "冻结统一视觉令牌接线；为当前CI阻断限定PH108取消测试同步修复，并为用户的文档同步与本机测试环境交付冻结PH109；不实施产品或降低CI。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "2026-10-27 actual Python3.12 check ok=true task_count45"
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "2026-10-27 actual 19 tests passed in2.141s; independent reviewer reran 19 tests in2.323s."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent native Claude Code / existing GLM",
+    "status": "pass",
+    "findings": [],
+    "run_id": "976c095f-e18c-44e4-a4e0-78bce5dabd4b",
+    "stdout_sha256": "9d22dae44e12e0d0430987eee34d0f73b1f13f251e7d8c2587645173a2f4adbb",
+    "evidence": {
+      "verdict": "PASS",
+      "review_scope": "planning.diff (3 files: docs/delivery-status.md, project/specs/PH-022.md, project/tasks.json) + task/spec chunks",
+      "blockers": [],
+      "checks": {
+        "diff_scope_within_authorization": {
+          "pass": true,
+          "detail": "All 3 changed files are covered by PH-096's own allowed_paths (project/tasks.json, project/specs/*, docs/delivery-status.md). No product source, settings, tests, CI, or checker files touched."
+        },
+        "ph022": {
+          "pass": true,
+          "detail": "Status remains 'ready' (project/tasks.json:850). allowed_paths gains exactly one entry: 'pmo/settings.py'. pmo/settings.py is a CRITICAL_PATHS member (scripts/projectctl.py:79), so this independent review is the required gate for whitelisting it; the diff itself does not modify pmo/settings.py — wiring stays deferred to the future PH-022 implementation PR."
+        },
+        "spec_append": {
+          "pass": true,
+          "detail": "PH-022 spec append constrains the future change narrowly: docs/engineering as sole 'ui' static namespace, first-line @import of the unique ui-tokens.css (file exists: docs/engineering/ui-tokens.css), no token duplication, no new deps, no security/db/business setting changes. Matches 'canonical static source, not duplicate tokens'."
+        },
+        "transition_discipline": {
+          "pass": true,
+          "detail": "PH-096 is 'in_progress' with owner 'integrator' — not done. PH-097 is 'blocked', depends_on ['PH-096'], blocker 'PH-096规划复核与合入未完成' — not ready. No self-authorization: done/ready transitions correctly deferred until after this review + the actual 19 governance checks."
+        },
+        "ph026_untouched": {
+          "pass": true,
+          "detail": "PH-026 remains 'proposed' (project/tasks.json:1409); no changes to its entry or its 'make-ready' freeze conditions."
+        },
+        "no_weakening": {
+          "pass": true,
+          "detail": "No changes to scripts/projectctl.py, scripts/check_pr.py, tests/, acceptance arrays, permissions, or CI. PH-096's own allowed_paths unchanged. Diff context confirms only the listed hunks."
+        }
+      },
+      "non_blocking_notes": [
+        "PH-096 and PH-097 share the identical title '下一轮需求规划入口' — cosmetic; title uniqueness is not enforced by projectctl validation.",
+        "The appended delivery-status entry describes planning only and explicitly defers implementation to a separate PH-022 PR; it must not be read as PH-096 completion. PH-096→done and PH-097→ready still require the 19 governance checks post-merge.",
+        "collectstatic/browser-load verification for the @import is correctly noted in the spec as required at implementation time."
+      ]
+    },
+    "supplemental_review": {
+      "reviewer": "Independent fresh reviewer agent /root/planning_review",
+      "status": "pass",
+      "findings": [],
+      "scope": "Final PH096 diff including PH108 narrowed test-only contract and blocked PH109; 8 changed paths within BASE allowlist; no product/CI/checker changes.",
+      "limitations": [
+        "Only planning reviewed; no remote verification; two current CI cancellation failures remain recorded."
+      ]
+    }
+  },
+  "unverified": [
+    "Planning only. PH022 must actually verify collectstatic, HTTP token loading, full required acceptance and current PR CI before merge.",
+    "PH108 repair and PH109 documentation/local delivery have not started; require merged frozen contract. Explicit maintainer authorization required only if baseline-red recovery prevents planning merge."
+  ],
+  "deviations": [
+    "Initial planning draft omitted in-progress owner and blocked successor reason; projectctl rejected both, corrected and rerun successfully.",
+    "Two pre-existing cancellation failures recorded and one bounded rerun exhausted; independent fixture with Event holding store.start reproduced marker-before-running quarantine/recover path without editing source. CI log lacks internal error/events so exact CI root cause remains unproven."
+  ],
+  "remote_ci": {
+    "head_sha": "09cf8a76f17b472c6d359829a9bc7822a6726850",
+    "run_id": 40482119214,
+    "sqlite_failure_jobs": [
+      122114745889,
+      122115783502
+    ],
+    "signature": "test_cancel_stops_the_group_and_recovery_does_not_relaunch: quarantined != cancelled",
+    "other_checks": "PostgreSQL/MCP/governance/hygiene/container/CodeQL passed; no all-green claim",
+    "status": "not_merged"
+  }
+}
