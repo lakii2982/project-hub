@@ -1554,6 +1554,80 @@
       "owner": null,
       "blockers": [],
       "handoff": null
+    },
+    {
+      "id": "PH-108",
+      "title": "修复取消集成测试的启动同步竞态",
+      "kind": "fix",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-096"
+      ],
+      "spec": "project/specs/PH-108.md",
+      "allowed_paths": [
+        "tests/test_delivery_execution.py",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/reports/PH-108.json",
+        "project/handoffs/PH-108.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python -m unittest tests.test_delivery_execution -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-109",
+      "title": "按最新代码同步使用文档并验证本地测试环境",
+      "kind": "docs",
+      "risk": "S",
+      "status": "blocked",
+      "priority": 1,
+      "milestone": "rolling",
+      "depends_on": [
+        "PH-096",
+        "PH-108",
+        "PH-022"
+      ],
+      "spec": "project/specs/PH-109.md",
+      "allowed_paths": [
+        "README.md",
+        "ROADMAP.md",
+        "docs/architecture.md",
+        "docs/operations.md",
+        "docs/local-testing.md",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/reports/PH-109.json",
+        "project/handoffs/PH-109.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "PH-108恢复和PH-022项目详情尚未合入。"
+      ],
+      "handoff": null
     }
   ]
 }

@@ -1,16 +1,16 @@
 {
   "task_id": "PH-096",
-  "summary": "为PH022补入pmo/settings.py唯一视觉令牌静态源接线授权；不实现产品、不改变令牌/CI/验收/权限；保留PH097规划入口。",
+  "summary": "冻结统一视觉令牌接线；为当前CI阻断限定PH108取消测试同步修复，并为用户的文档同步与本机测试环境交付冻结PH109；不实施产品或降低CI。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual Python3.12 ok=true task_count43 after owner/blocker draft correction."
+      "evidence": "2026-10-27 actual Python3.12 check ok=true task_count45"
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
       "result": "pass",
-      "evidence": "Actual 19 tests passed in2.403s; final metadata check rerun."
+      "evidence": "2026-10-27 actual 19 tests passed in2.141s; independent reviewer reran 19 tests in2.323s."
     }
   ],
   "review": {
@@ -55,12 +55,34 @@
         "The appended delivery-status entry describes planning only and explicitly defers implementation to a separate PH-022 PR; it must not be read as PH-096 completion. PH-096→done and PH-097→ready still require the 19 governance checks post-merge.",
         "collectstatic/browser-load verification for the @import is correctly noted in the spec as required at implementation time."
       ]
+    },
+    "supplemental_review": {
+      "reviewer": "Independent fresh reviewer agent /root/planning_review",
+      "status": "pass",
+      "findings": [],
+      "scope": "Final PH096 diff including PH108 narrowed test-only contract and blocked PH109; 8 changed paths within BASE allowlist; no product/CI/checker changes.",
+      "limitations": [
+        "Only planning reviewed; no remote verification; two current CI cancellation failures remain recorded."
+      ]
     }
   },
   "unverified": [
-    "Planning only. PH022 must actually verify collectstatic, HTTP token loading, full required acceptance and current PR CI before merge."
+    "Planning only. PH022 must actually verify collectstatic, HTTP token loading, full required acceptance and current PR CI before merge.",
+    "PH108 repair and PH109 documentation/local delivery have not started; require merged frozen contract. Explicit maintainer authorization required only if baseline-red recovery prevents planning merge."
   ],
   "deviations": [
-    "Initial planning draft omitted in-progress owner and blocked successor reason; projectctl rejected both, corrected and rerun successfully."
-  ]
+    "Initial planning draft omitted in-progress owner and blocked successor reason; projectctl rejected both, corrected and rerun successfully.",
+    "Two pre-existing cancellation failures recorded and one bounded rerun exhausted; independent fixture with Event holding store.start reproduced marker-before-running quarantine/recover path without editing source. CI log lacks internal error/events so exact CI root cause remains unproven."
+  ],
+  "remote_ci": {
+    "head_sha": "09cf8a76f17b472c6d359829a9bc7822a6726850",
+    "run_id": 40482119214,
+    "sqlite_failure_jobs": [
+      122114745889,
+      122115783502
+    ],
+    "signature": "test_cancel_stops_the_group_and_recovery_does_not_relaunch: quarantined != cancelled",
+    "other_checks": "PostgreSQL/MCP/governance/hygiene/container/CodeQL passed; no all-green claim",
+    "status": "not_merged"
+  }
 }
