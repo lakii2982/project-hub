@@ -1,20 +1,30 @@
 # 交付状态：0.1 工程验证版
 
-任务ID：PH-000
-日期：2026-10-23
+汇总任务：PH-109（保留各历史任务的日期与证据）
+更新日期：2026-10-27
 口径：本文只陈述已核对的事实，依据是当前实代码、本机验证与对应提交的GitHub CI实际执行结果。`product-requirements.md` 与 `accounting-rules.md` 是目标设计，其中能力大多数尚未实现。插件化设计见 `plugin-architecture.md`。
 
-## 1. 结论
+## 1. 当前结论（2026-10-27）
 
-当前是工程验证版：项目管理纵线（立项、任务、工时、费用、现金计划、审批、冲销、审计、导入导出、规则告警）、个人 Agent 接入通道（api/v1、个人令牌、MCP 适配器）与插件扩展骨架（pluggy 运行时、每公司启停、outbox 事件、3 个叶插件）真实落库并有自动化测试。完整产品仍缺管理收入、应收应付未清项、预收预付、退款、发票、正式合同与变更单、多币种、共享费用分摊、月度人工成本池、期初数据及通知中心。事件后台消费已具备。core 业务模块未全部插件化；生产TLS/Caddy公网、多连接财务/锁账并发、PostgreSQL备份链中的非空附件恢复与报表/凭证浏览、真实模型调用、真实 Agent 客户端接入仍未验证。SQLite与PostgreSQL各128项回归、迁移与append-only触发器测试、PG seed与integrity、容器冒烟、数据库备份/隔离新PG库恢复与integrity均已通过。
+当前发布版本仍为0.1.0工程验证版，代码主线继续v0.2基础产品化。项目工作流、成本/现金分账、审批审计、导入导出、个人API/MCP及三个叶插件已实现。最新主线还包括：
 
-工程治理：Apache-2.0公开仓库已有版本化任务清单（以project/tasks.json为准）、统一入口、任务契约、交接记录与版本CI。真实主分支保护main已保存8个required checks，并启用strict、PR、linear、conversation与enforce admins；禁用force与delete，required approvals为0以适配单维护者。恢复PR [#15](https://github.com/lakii2982/project-hub/pull/15) 在8项检查全绿后squash合入main `a112b7898a7bedc0e85b80ffdb6494026b2e8f17`；[CI run 39789487592](https://github.com/lakii2982/project-hub/actions/runs/39789487592) 与CodeQL run 39789487620共8个job通过。CI通过是自动化证据，不等同于生产完成。
+- PH-022：项目详情六页签、深链接/键盘导航、历史任务区和成本预算余额图。实际线只取项目成本账，包含冲销；计划线仅供参考，历史按当前批准预算重述。财务图遵循既有finance_read，个人费率与人工明细仍单独遮蔽。
+- PH-023/024/025：统一视觉规范、Project/Employee/CostRate唯一维护服务、关键任务关联同项目里程碑或有效收付款计划、浏览器按项目登记工时。历史任务及可选task_id兼容保留，不重算历史成本。
+- PH-100至107：前台macOS四CLI执行与GitHub交付闭环演练。PH-108只修取消测试同步，生产执行器的隔离规则未改变。
 
-测试基线：SQLite与PostgreSQL各128项回归通过；迁移与append-only触发器测试、PG seed与verify_integrity通过。MCP适配器8项unittest通过，真实stdio握手列出7个工具通过。历史演练库的47条账本记录是历史快照说明，不代表当前演练事实。此前outbox演练批次 expanded 20、processed 20、无失败（历史记录）。`manage.py check --deploy`以测试参数运行无警告，未做真实生产TLS。详细执行记录见 [verification.md](verification.md)。
+PH-026已ready但未实现：全站界面统一、独立基础资料模块、经营趋势仍待交付。正式合同、管理收入、应收应付、预收预付/退款、发票、多币种、共享费用分摊、月度人工池、期初数据与通知中心仍未实现；core业务未完全插件化。
+
+代码与自动化：产品收口PR[#52](https://github.com/lakii2982/project-hub/pull/52)在最终head d1743ac的8项required CI通过后合入main b3d5f85；[业务/容器运行40486300463](https://github.com/lakii2982/project-hub/actions/runs/40486300463)及[CodeQL运行40486300490](https://github.com/lakii2982/project-hub/actions/runs/40486300490)均通过。该产品组合本机440项回归中436通过、4项环境限制跳过，22项详情专项通过。更早的95/128/417等数量是各日期历史快照，不代表当前数量。
+
+浏览器：最终产品补丁实际检查1440px与390px、六页签、Home键、刷新、无页面横溢、窄屏图表局部滚动；统一令牌HTTP字节与仓库唯一源一致。关闭JavaScript的历史浏览器检查挂起，未计通过。本轮本机环境的真实登录与完整性结果见[验证记录](verification.md)和[测试环境说明](local-testing.md)。
+
+生产边界：CI已执行SQLite/PG回归、迁移、append-only、MCP握手、容器健康/重启和数据库dump/隔离恢复；真实公网TLS、财务/锁账多连接并发、非空附件PG恢复后的凭证/报表检查、真实模型及产品个人Agent客户端联调仍未验证。CI通过不等于生产验收。
+
+工程治理继续采用仓库任务契约、独立S级复核、PR与当次required CI。历史恢复PR#15及其128项测试记录保留在verification.md；本轮未修改保护、检查器或发布标签。
 
 ## 2. 已实现能力与验证证据
 
-「测试」指上节自动化用例，标注到方法名；「代码」指逻辑存在但无对应该行为的专门断言。
+下表逐项证据沿用已存在的自动化用例，标注到方法名；「代码」指逻辑存在但无对应该行为的专门断言。
 
 ### 2.1 组织、权限与隐私
 
@@ -30,12 +40,12 @@
 
 | 能力 | 实现 | 证据 |
 | --- | --- | --- |
-| 三类模板立项时生成基础任务链与里程碑 | core/blueprints.py、core/views.py create_from_form | 代码 |
+| 三类模板生成真实里程碑及其关联关键任务；不生成日常执行任务 | core/blueprints.py、core/views.py create_from_form | 代码 |
 | 项目 8 阶段状态机、乐观锁 version | core/services.py transition | 测试：test_domain.test_execution_transition_requires_approved_budget_baseline、..._requires_contract_reference、..._requires_a_task、..._requires_a_milestone（执行前置四项）；其余阶段门禁为代码 |
 | 暂停阻止新增普通工时与任务；暂停/取消可登记实际收付款；归档项目补记收付被拒 | core/services.py check_open、submit_document | 测试：test_domain.test_create_task_rereads_project_and_rejects_stale_closed_project（closed 分支）；on_hold/cancelled 分支为代码 |
 | 取消仅 owner；恢复已结束项目仅 owner | core/services.py transition | 代码 |
 | 归档前置：ETC=0、无待确认现金计划、里程碑全验收、无未关闭高风险、无待审记录、已批计划全结清 | core/services.py transition | 代码 |
-| 任务计划编辑：乐观版本、循环与跨项目依赖检查 | core/services.py edit_task | 代码 |
+| 关键任务新建/编辑须关联同项目里程碑或有效收付款计划；乐观版本、循环与跨项目依赖检查 | core/services.py edit_task | 代码 |
 | 任务依赖完成门禁、完成须附交付说明 | core/services.py update_task | 代码 |
 | 里程碑验收证据、风险登记关闭 | core/services.py、core/views.py | 代码 |
 
@@ -43,7 +53,7 @@
 
 | 能力 | 实现 | 证据 |
 | --- | --- | --- |
-| 工时提交/审批/退回/冲销，提交即冻结费率快照与成本 | core/services.py | 测试：test_domain.test_time_rate_is_selected_by_work_date、test_rate_change_after_approval_does_not_rewrite_history_cost |
+| 浏览器按项目登记工时，无任务输入；提交/审批/退回/冲销及业务日费率快照 | core/services.py | 测试：test_domain.test_time_rate_is_selected_by_work_date、test_rate_change_after_approval_does_not_rewrite_history_cost |
 | 同一员工跨项目当日总工时不超过 1440 分钟 | core/services.py submit_time | 测试：test_domain.test_cross_project_daily_total_over_1440_minutes_is_rejected |
 | 提交幂等 token：同 token 同内容返回原记录，改内容拒绝 | core/services.py | 测试：test_domain.test_duplicate_submit_token_does_not_create_second_timesheet、test_same_time_token_with_changed_content_is_rejected、test_same_document_token_with_changed_amount_is_rejected |
 | 六类单据审批后入账；费用/收付分账；可抵扣税影响成本 | core/services.py review | 测试：test_domain.test_expense_and_payment_post_only_to_their_respective_books、test_recoverable_tax_switch_changes_expense_cost、test_duplicate_approval_does_not_post_twice |
