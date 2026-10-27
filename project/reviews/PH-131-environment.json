@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "task_id": "PH-131",
+  "recorded_at": "2026-10-27T21:17:03.040193+00:00",
+  "purpose": "Current preparation environment qualification only; not product business, PostgreSQL or customer acceptance.",
+  "base_sha": "b88297be1f2c55b931f6c72810280b87617867ae",
+  "python": "3.12.14",
+  "pinned_dependencies": {
+    "asgiref": "3.12.1",
+    "django": "5.2.18",
+    "django-axes": "8.3.1",
+    "djangorestframework": "3.16.1",
+    "gunicorn": "23.0.0",
+    "packaging": "26.3",
+    "pluggy": "1.7.0",
+    "psycopg": "3.3.6",
+    "psycopg-binary": "3.3.6",
+    "sqlparse": "0.6.0",
+    "typing-extensions": "4.16.0",
+    "whitenoise": "6.12.0"
+  },
+  "native_runs": [
+    {
+      "run_id": "33ab2063-e57c-4cf3-818d-cbfbdd4716d6",
+      "agent_id": "kimi_code",
+      "base_sha": "b88297be1f2c55b931f6c72810280b87617867ae",
+      "contract_digest": "62f6cf085ab52d9a98437fde9bb9be4f52b82af60b15e1fdd42ed2a18250d17e",
+      "scope": [
+        "docs/v1.0-development/environment/kimi_code-probe.md"
+      ],
+      "state": "timed_out",
+      "error": "deadline_exceeded",
+      "result": {
+        "stderr_bytes": 1494,
+        "exit_code": 0,
+        "stdout_bytes": 73005,
+        "stdout_sha256": "90aa742304c1fe238e0a9628086e7390179c8845eb6ea158c0d644349044725f",
+        "stderr_sha256": "b38813e8ef953ca6f2164a492fefdd2dea4c4875c96120b92f74476e9ce3b78d",
+        "stdout_captured_bytes": 73005,
+        "stdout_line_limit_exceeded": false,
+        "output_limit_exceeded": false,
+        "stderr_captured_bytes": 1494
+      },
+      "created_at": 1793135031,
+      "updated_at": 1793135211
+    },
+    {
+      "run_id": "bf704380-56e9-45c0-b219-187c8fca2d0f",
+      "agent_id": "claude_code",
+      "base_sha": "b88297be1f2c55b931f6c72810280b87617867ae",
+      "contract_digest": "62f6cf085ab52d9a98437fde9bb9be4f52b82af60b15e1fdd42ed2a18250d17e",
+      "scope": [
+        "docs/v1.0-development/environment/claude_code-probe.md"
+      ],
+      "state": "cancelled",
+      "error": null,
+      "result": null,
+      "created_at": 1793135042,
+      "updated_at": 1793135088
+    },
+    {
+      "run_id": "d7ba0f67-95f1-4bae-b01f-2084f520cd96",
+      "agent_id": "dsh",
+      "base_sha": "b88297be1f2c55b931f6c72810280b87617867ae",
+      "contract_digest": "62f6cf085ab52d9a98437fde9bb9be4f52b82af60b15e1fdd42ed2a18250d17e",
+      "scope": [
+        "docs/v1.0-development/environment/dsh-probe.md"
+      ],
+      "state": "config_required",
+      "error": "configuration_or_isolation_failed",
+      "result": null,
+      "created_at": 1793135166,
+      "updated_at": 1793135166
+    },
+    {
+      "run_id": "b29d2d70-8f85-4e66-8035-d2343b2af4a1",
+      "agent_id": "opencode",
+      "base_sha": "b88297be1f2c55b931f6c72810280b87617867ae",
+      "contract_digest": "62f6cf085ab52d9a98437fde9bb9be4f52b82af60b15e1fdd42ed2a18250d17e",
+      "scope": [
+        "docs/v1.0-development/environment/opencode-probe.md"
+      ],
+      "state": "timed_out",
+      "error": "deadline_exceeded",
+      "result": {
+        "stderr_bytes": 0,
+        "exit_code": 0,
+        "stdout_bytes": 212048,
+        "stdout_sha256": "e0fa369402c106706e7c6ca7e437150e7ec948c115966962ee5bf20913f2181c",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_captured_bytes": 212048,
+        "stdout_line_limit_exceeded": false,
+        "output_limit_exceeded": false,
+        "stderr_captured_bytes": 0
+      },
+      "created_at": 1793135243,
+      "updated_at": 1793135423
+    },
+    {
+      "run_id": "cff850d9-6e72-4757-87b1-2d235476cbaf",
+      "agent_id": "claude_code",
+      "base_sha": "b88297be1f2c55b931f6c72810280b87617867ae",
+      "contract_digest": "62f6cf085ab52d9a98437fde9bb9be4f52b82af60b15e1fdd42ed2a18250d17e",
+      "scope": [
+        "docs/v1.0-development/environment/claude_code-probe.md"
+      ],
+      "state": "completed",
+      "error": null,
+      "result": {
+        "stderr_bytes": 0,
+        "exit_code": 0,
+        "stdout_bytes": 393803,
+        "stdout_sha256": "ae907cb79b5fb1ddb9df0143489ecd46824b1eb08f320293b2d452a13e327af8",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_captured_bytes": 393803,
+        "stdout_line_limit_exceeded": false,
+        "output_limit_exceeded": false,
+        "stderr_captured_bytes": 0
+      },
+      "created_at": 1793135244,
+      "updated_at": 1793135367,
+      "controller_postflight": "pass",
+      "artifact_sha256": "1ac56b074b3aa7fa2215183554f6e130ab59ab004b81a2b6790412e117f245e9",
+      "artifact_bytes": 4480
+    },
+    {
+      "run_id": "099d328d-1d7e-452c-8eba-f0ada45745a7",
+      "agent_id": "kimi_code",
+      "base_sha": "b88297be1f2c55b931f6c72810280b87617867ae",
+      "contract_digest": "62f6cf085ab52d9a98437fde9bb9be4f52b82af60b15e1fdd42ed2a18250d17e",
+      "scope": [
+        "docs/v1.0-development/environment/kimi_code-probe.md"
+      ],
+      "state": "completed",
+      "error": null,
+      "result": {
+        "stderr_bytes": 632,
+        "exit_code": 0,
+        "stdout_bytes": 22688,
+        "stdout_sha256": "b928a128de1cd4e2e2e865cad642c8af3c4f7137d30a0d4106b43870e236fa0e",
+        "stderr_sha256": "1b67aefccbd564d0cff8119605a48f4e82bb340c7c24eecdec48a0b183621754",
+        "stdout_captured_bytes": 22688,
+        "stdout_line_limit_exceeded": false,
+        "output_limit_exceeded": false,
+        "stderr_captured_bytes": 632
+      },
+      "created_at": 1793135383,
+      "updated_at": 1793135489,
+      "controller_postflight": "pass",
+      "artifact_sha256": "2393d15da90e4cf0084d588d14d1a06ed357424198b3face4fffba1570773568",
+      "artifact_bytes": 2603
+    },
+    {
+      "run_id": "5f72bce3-b06c-4555-8d66-feb09880577c",
+      "agent_id": "opencode",
+      "base_sha": "b88297be1f2c55b931f6c72810280b87617867ae",
+      "contract_digest": "62f6cf085ab52d9a98437fde9bb9be4f52b82af60b15e1fdd42ed2a18250d17e",
+      "scope": [
+        "docs/v1.0-development/environment/opencode-probe.md"
+      ],
+      "state": "completed",
+      "error": null,
+      "result": {
+        "stderr_bytes": 0,
+        "exit_code": 0,
+        "stdout_bytes": 119580,
+        "stdout_sha256": "4509cc3c890765656d768654951460ad14fa063c845a198fd842b83f8fe259f6",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_captured_bytes": 119580,
+        "stdout_line_limit_exceeded": false,
+        "output_limit_exceeded": false,
+        "stderr_captured_bytes": 0
+      },
+      "created_at": 1793135696,
+      "updated_at": 1793135752,
+      "controller_postflight": "pass",
+      "artifact_sha256": "4df5b8bc4711f9e67bea94b05d1f1f27dee2cf97937eed228b467d695d7a5023",
+      "artifact_bytes": 5936
+    }
+  ],
+  "cli_versions": {
+    "kimi_code": "2.3.1",
+    "claude_code": "2.1.310",
+    "opencode": "2.1.4",
+    "dsh": "0.2.1-rc.3"
+  },
+  "cancellation": {
+    "run_id": "bf704380-56e9-45c0-b219-187c8fca2d0f",
+    "observed_running_before_cancel": true,
+    "terminal_state": "cancelled",
+    "kernel_group_absence": "Actual os.killpg(recorded spawned pgid,0) raised ProcessLookupError",
+    "recover_result": [],
+    "replacement_run_id": "cff850d9-6e72-4757-87b1-2d235476cbaf",
+    "replacement_state": "completed",
+    "resumed_unknown_last_session": false
+  },
+  "os_synthetic_probe": {
+    "result": "pass",
+    "controller_read": "EPERM_or_EACCES",
+    "controller_write": "EPERM_or_EACCES",
+    "readonly_worktree_write": "EPERM_or_EACCES",
+    "network": "EPERM_or_EACCES",
+    "runtime_write": "allowed",
+    "boundary": "Separate synthetic invocation of existing OS backend, not proof that every CLI has identical auth/cache access."
+  },
+  "browser": {
+    "engine": "Chromium 151.0.7922.34",
+    "offline": true,
+    "viewport_width": 390,
+    "keyboard_tab_focus": "BUTTON",
+    "page_overflow": false,
+    "product_ui_verified": false
+  },
+  "local_tools_on_path": {
+    "docker": false,
+    "psql": false,
+    "initdb": false,
+    "pg_ctl": false
+  },
+  "postgres": "not_run_locally; PH135 must qualify real CI PostgreSQL with two connections",
+  "dsh": "config_required/dsh_opencode_go_auth_required; not retried or reauthenticated",
+  "native_verification": {
+    "run_id": "cff850d9-6e72-4757-87b1-2d235476cbaf",
+    "result": "PASS",
+    "evidence_id": "e6b986dd-4178-4629-9471-7553929b41b4",
+    "commands": [
+      "python scripts/projectctl.py check",
+      "python -m unittest tests.test_projectctl tests.test_governance -v"
+    ],
+    "boundary": "Verification bound to this limited worker artifact, not full PH131 acceptance."
+  },
+  "native_review_negative_case": {
+    "result": "BLOCKING",
+    "reviewer_run_id": "3f4fbbcd-650f-44f7-b63a-94dd87d80bd6",
+    "reason": "Correctly rejected limited artifact as insufficient for full PH131 environment matrix. Not reported as passing task review."
+  },
+  "unverified": [
+    "PostgreSQL multi-connection qualification (PH135)",
+    "Linux target installation, actual TLS, nonempty-attachment restore and customer acceptance",
+    "Capability beyond these document probes requires each implementation task acceptance; native document write is not business development acceptance."
+  ],
+  "qualified_execution_pool": [
+    "kimi_code",
+    "claude_code",
+    "opencode"
+  ],
+  "excluded_channels": {
+    "dsh": "Required existing OpenCode Go credential unavailable; do not dispatch until separately qualified."
+  },
+  "worker_git_limit": "Kimi worker git commands hit xcrun-cache permission; controller postflight validates the authoritative Git manifest. No permission widening."
+}

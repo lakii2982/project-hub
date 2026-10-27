@@ -1,0 +1,52 @@
+{
+  "task_id": "PH-131",
+  "summary": "Qualify current isolated native execution pool, cancellation/recovery and development/browser environment; preserve failed and unverified channels.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual final candidate 60 tasks; independent reviewer also reran."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 tests passed, independently rerun in 2.013s."
+    },
+    {
+      "command": "python -B docs/v1.0-development/environment/isolation_probe.py",
+      "result": "pass",
+      "evidence": "Real OS EPERM/EACCES for controller read/write, readonly source write and network; runtime write allowed; synthetic only."
+    },
+    {
+      "command": "node docs/v1.0-development/environment/browser_probe.cjs",
+      "result": "pass",
+      "evidence": "Executed with existing bundled Node/Playwright; real Chromium151, offline390px, Tab BUTTON and no overflow. Environment only."
+    },
+    {
+      "command": "Controller PH131 native run/validate/cancel/recover and DeliveryGate verify/review",
+      "result": "pass",
+      "evidence": "Qualification scenarios observed as specified: three write channels completed; real running cancellation and kernel-confirmed group absence/recover[]/new run; negative partial review correctly BLOCKING, not task acceptance. Exact IDs, hashes and original outcomes in project/reviews/PH-131-environment.json."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph130_review reviewing full PH131 candidate",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Separate read-only review of both probes plus complete final matrix/JSON/decisions/handoff; independently reran projectctl and19 governance tests. DSH exclusion and later PG qualification conform to BASE spec; limited native review BLOCKING is retained as negative evidence only."
+  },
+  "deviations": [
+    "Use isolated private injected RunStore for real qualification to avoid affecting unrelated original queue records; fixed adapters/OS isolation and trusted origin/main unchanged.",
+    "Kimi/OpenCode first180s timeouts retained; clarified minimal child scope and allowed one retry within existing900s bound.",
+    "DSH config_required/dsh_opencode_go_auth_required: excluded, no credential/config alteration or blind retry.",
+    "Corrected worker false self-report about not using private queue before freezing limited verification/review; original private stdout hash retained.",
+    "First isolation probe used an incorrect keyword review instead of readonly; corrected to existing API and actual successful rerun recorded.",
+    "Intermediate in_review metadata check rejected missing handoff; added required handoff and final check passes."
+  ],
+  "unverified": [
+    "No local PostgreSQL or Docker instance qualified; PH135 must execute real CI PG two-connection/non-skip tests.",
+    "No target Linux/TLS/nonempty-attachment restoration/customer or product UI acceptance.",
+    "Native document probes do not prove future product business implementation; each future PH retains tests/review/current CI.",
+    "Current PR required CI must pass before normal merge."
+  ]
+}
