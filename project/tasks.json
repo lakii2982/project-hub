@@ -1845,7 +1845,7 @@
       "title": "下一轮需求规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "rolling",
       "depends_on": [
@@ -1863,6 +1863,310 @@
         "docs/verification.md",
         "project/reports/PH-123.json",
         "project/handoffs/PH-123.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "integration-agent",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-123.md"
+    },
+    {
+      "id": "PH-130",
+      "title": "登记1.0交付方案与长程准备设计",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-123"
+      ],
+      "spec": "project/specs/PH-130.md",
+      "allowed_paths": [
+        "docs/v1.0-delivery-plan.md",
+        "docs/v1.0-feature-list.md",
+        "docs/v1.0-development/*",
+        "docs/v1.0-development/**/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-130.json",
+        "project/handoffs/PH-130.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/61",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-131",
+      "title": "当轮执行隔离、取消恢复与开发环境实测",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-130"
+      ],
+      "spec": "project/specs/PH-131.md",
+      "allowed_paths": [
+        "docs/v1.0-development/environment/*",
+        "docs/v1.0-development/environment-check.md",
+        "docs/v1.0-development/decisions-and-readiness.md",
+        "project/reviews/PH-131-environment.json",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-131.json",
+        "project/handoffs/PH-131.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/62",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-132",
+      "title": "冻结1.0字段级契约、政策与升级映射",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-131"
+      ],
+      "spec": "project/specs/PH-132.md",
+      "allowed_paths": [
+        "docs/v1.0-development/contracts/*",
+        "docs/v1.0-development/contracts/**/*",
+        "docs/v1.0-development/policy-decisions.md",
+        "docs/v1.0-development/legacy-cutover.md",
+        "docs/v1.0-development/decisions-and-readiness.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-132.json",
+        "project/handoffs/PH-132.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/63",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-133",
+      "title": "交付三收费模板四职责原型与界面契约",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-132"
+      ],
+      "spec": "project/specs/PH-133.md",
+      "allowed_paths": [
+        "docs/v1.0-development/ux/*",
+        "docs/v1.0-development/ux/**/*",
+        "docs/v1.0-development/decisions-and-readiness.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-133.json",
+        "project/handoffs/PH-133.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/64",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-134",
+      "title": "建立黄金企业数据、18UAT分解及逐分预期",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-132"
+      ],
+      "spec": "project/specs/PH-134.md",
+      "allowed_paths": [
+        "docs/v1.0-development/fixtures/*",
+        "docs/v1.0-development/fixtures/**/*",
+        "docs/v1.0-development/decisions-and-readiness.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-134.json",
+        "project/handoffs/PH-134.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/65",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-135",
+      "title": "验证契约夹具、PG多连接与准备环境CI",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-133",
+        "PH-134"
+      ],
+      "spec": "project/specs/PH-135.md",
+      "allowed_paths": [
+        "tests/test_v1_preparation.py",
+        "tests/test_v1_preparation_pg.py",
+        ".github/workflows/preparation.yml",
+        "docs/v1.0-development/preparation-evidence.md",
+        "docs/v1.0-development/decisions-and-readiness.md",
+        "docs/v1.0-development/environment/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-135.json",
+        "project/handoffs/PH-135.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/66",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-136",
+      "title": "完成工作包估算、关键路径与验证容量计划",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-135"
+      ],
+      "spec": "project/specs/PH-136.md",
+      "allowed_paths": [
+        "docs/v1.0-development/development-schedule.md",
+        "docs/v1.0-development/schedule.json",
+        "docs/v1.0-development/decisions-and-readiness.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-136.json",
+        "project/handoffs/PH-136.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/67",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-137",
+      "title": "晋级1.0开发契约并建立正式开工基线",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-136"
+      ],
+      "spec": "project/specs/PH-137.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/v1.0-development/*",
+        "docs/v1.0-development/**/*",
+        "docs/engineering/v1-startup-preparation.md",
+        "docs/v1.0-delivery-plan.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-137.json",
+        "project/handoffs/PH-137.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/68",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-138",
+      "title": "后续需求独立规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-123"
+      ],
+      "spec": "project/specs/PH-138.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-138.json",
+        "project/handoffs/PH-138.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
