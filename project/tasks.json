@@ -2067,7 +2067,6 @@
       "acceptance": [
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v",
-        "python manage.py test tests.test_v1_preparation tests.test_v1_preparation_pg --verbosity 2",
         "python manage.py check",
         "python manage.py makemigrations --check --dry-run",
         "python manage.py test tests --verbosity 1",

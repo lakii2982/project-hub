@@ -18,7 +18,7 @@
     "reviewer": "Independent /root/ph123_plan_review",
     "status": "pass",
     "findings": [],
-    "evidence": "Initial review rejected ambiguous PH138 readiness and missing PH135 substantive commands; preparation-only readiness wording, added test modules/full regression, PG non-skip requirements and PH130 design check were amended; fresh limited re-review passed."
+    "evidence": "Initial review rejected ambiguous PH138 readiness and missing PH135 substantive commands; preparation-only readiness wording, added test modules/full regression, PG non-skip requirements and PH130 design check were amended; fresh limited re-review passed. GitHub independent review found targeted PH135 acceptance was unsupported by parse_acceptance; removed only that machine command, retained mandatory targeted execution in spec plus supported full-suite command. All preparation acceptance commands parsed successfully after fix."
   },
   "deviations": [
     "Use current planning slot PH-123 because PH-097 and PH-111 have completed on main.",
