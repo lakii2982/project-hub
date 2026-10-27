@@ -1,0 +1,57 @@
+{% load money %}
+{% if cost_burndown %}
+<section class="panel cost-burndown section-gap" aria-labelledby="cost-burndown-heading">
+  <div class="panel-heading">
+    <div><h2 id="cost-burndown-heading">成本预算余额燃尽图</h2><p>人民币元 · 截至 {{ cost_burndown.as_of|date:'Y-m-d' }} · 项目成本账本口径</p></div>
+  </div>
+  {% if cost_burndown.available %}
+  <div class="cost-burndown-body">
+    <p class="cost-burndown-note">按当前批准预算重述整条历史曲线，不复原历史预算版本。计划参考线按项目起止日期均匀燃尽，并非已批准的逐日计划。实际线仅截至今天；负值冲销会使余额回升，超支保留负余额。</p>
+    {% if cost_burndown.note %}<p class="muted">{{ cost_burndown.note }}</p>{% endif %}
+    <dl class="cost-burndown-summary" aria-label="成本预算余额摘要">
+      <div><dt>当前批准预算</dt><dd>¥ {{ cost_burndown.budget_cents|money }}</dd></div>
+      <div><dt>累计确认成本</dt><dd>¥ {{ cost_burndown.actual_cost_cents|money }}</dd></div>
+      <div><dt>期末预算余额</dt><dd {% if cost_burndown.remaining_cents < 0 %}class="text-warning"{% endif %}>¥ {{ cost_burndown.remaining_cents|money }}</dd></div>
+    </dl>
+    <div class="cost-burndown-meta">
+      <span>单位：人民币元</span>
+      {% for series in cost_burndown.chart.series %}<span class="cost-burndown-legend"><i class="cost-burndown-legend-line {% if series.reference %}reference{% else %}actual{% endif %}" aria-hidden="true"></i>{{ series.label }}{% if series.reference %} · 虚线方点{% else %} · 实线圆点{% endif %}</span>{% endfor %}
+    </div>
+    <div class="cost-burndown-plot-scroll" tabindex="0" role="region" aria-label="成本预算余额燃尽图，可横向滚动查看完整日期轴">
+      <svg class="cost-burndown-chart" viewBox="{{ cost_burndown.chart.viewbox }}" role="img" aria-labelledby="cost-burndown-title cost-burndown-desc">
+        <title id="cost-burndown-title">项目成本预算余额与计划参考燃尽图</title>
+        <desc id="cost-burndown-desc">按当前批准预算计算，截至 {{ cost_burndown.as_of|date:'Y-m-d' }}，累计确认成本 {{ cost_burndown.actual_cost_cents|money }} 元，预算余额 {{ cost_burndown.remaining_cents|money }} 元。实际预算余额使用实线圆点，计划参考使用虚线方点。精确日期和金额见下方数据表。</desc>
+        <g class="cost-burndown-grid" aria-hidden="true">
+          {% for tick in cost_burndown.chart.y_ticks %}<line x1="{{ cost_burndown.chart.left }}" y1="{{ tick.y }}" x2="{{ cost_burndown.chart.right }}" y2="{{ tick.y }}"></line>{% endfor %}
+          <line x1="{{ cost_burndown.chart.left }}" y1="{{ cost_burndown.chart.top }}" x2="{{ cost_burndown.chart.left }}" y2="{{ cost_burndown.chart.bottom }}"></line>
+          <line x1="{{ cost_burndown.chart.left }}" y1="{{ cost_burndown.chart.bottom }}" x2="{{ cost_burndown.chart.right }}" y2="{{ cost_burndown.chart.bottom }}"></line>
+          {% if cost_burndown.chart.zero_y %}<line class="zero" x1="{{ cost_burndown.chart.left }}" y1="{{ cost_burndown.chart.zero_y }}" x2="{{ cost_burndown.chart.right }}" y2="{{ cost_burndown.chart.zero_y }}"></line>{% endif %}
+        </g>
+        <g class="cost-burndown-axis-labels" aria-hidden="true">
+          {% for tick in cost_burndown.chart.y_ticks %}<text x="64" y="{{ tick.y }}" text-anchor="end" dominant-baseline="middle">{{ tick.label }}</text>{% endfor %}
+          {% for tick in cost_burndown.chart.x_ticks %}<text x="{{ tick.x }}" y="272" text-anchor="middle">{{ tick.label }}</text>{% endfor %}
+        </g>
+        {% for series in cost_burndown.chart.series %}
+        <g class="cost-burndown-series {% if series.reference %}reference{% else %}actual{% endif %}" aria-hidden="true">
+          {% if series.points %}<polyline points="{{ series.points }}" fill="none"></polyline>{% endif %}
+          {% for dot in series.dots %}{% if series.reference %}<rect x="{{ dot.cx }}" y="{{ dot.cy }}" width="8" height="8" transform="translate(-4 -4)"></rect>{% else %}<circle cx="{{ dot.cx }}" cy="{{ dot.cy }}" r="4"></circle>{% endif %}{% endfor %}
+        </g>
+        {% endfor %}
+      </svg>
+    </div>
+    <details class="cost-burndown-details">
+      <summary>查看成本燃尽精确数据</summary>
+      <div class="cost-burndown-table-wrap">
+        <table class="cost-burndown-data">
+          <caption>按当前批准预算重述 · 单位：人民币元 · “尚未发生”不绘制实际值</caption>
+          <thead><tr><th scope="col">业务日期</th><th scope="col" class="numeric">实际预算余额</th><th scope="col" class="numeric">计划参考余额</th></tr></thead>
+          <tbody>{% for row in cost_burndown.rows %}<tr><td data-label="业务日期">{{ row.date|date:'Y-m-d' }}</td><td data-label="实际预算余额" class="numeric">{% if row.actual_cents is None %}<span class="muted">尚未发生</span>{% else %}¥ {{ row.actual_cents|money }}{% endif %}</td><td data-label="计划参考余额" class="numeric">¥ {{ row.plan_cents|money }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+  {% else %}
+  <div class="empty-state compact"><h3>成本预算余额图暂不可用</h3><p>{{ cost_burndown.reason|default:'当前项目尚无已批准的成本预算。批准预算后将按项目成本账本生成预算余额曲线。' }}</p></div>
+  {% endif %}
+</section>
+{% endif %}

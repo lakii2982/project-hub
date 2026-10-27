@@ -27,7 +27,8 @@ from .services import (create_project, submit_time, submit_document, create_task
                        reverse as reverse_record, transition as change_stage, update_task, accept_milestone,
                        cents, audit, lock_company, check_open, plan_remaining, verify_audit, edit_task)
 from .masterdata import create_employee, create_rate, update_project
-from .reporting import project_summary, portfolio_metrics, cash_forecast, alerts_for, overdue_plan_totals
+from .reporting import (project_summary, portfolio_metrics, cash_forecast, alerts_for,
+                        overdue_plan_totals, project_cost_burndown)
 from .imports import HEADERS, parse_csv, preview_rows as validate_import, commit_rows
 from .ai import extract_draft
 
@@ -103,7 +104,10 @@ def project_detail(request, pk):
     if request.member.role not in WRITE_FINANCE: display_entries = display_entries.filter(timesheet__isnull=True)
     return render(request, "project_detail.html", {"nav": "projects", "project": project,
         "summary": redact_card(project_summary(project), request.member),
-        "tasks": project.tasks.select_related("owner__user", "dependency"), "milestones": project.milestones.all(),
+        "tasks": project.tasks.filter(Q(milestone__isnull=False) | Q(cash_plan__isnull=False)).select_related("owner__user", "dependency", "milestone", "cash_plan"),
+        "historical_tasks": project.tasks.filter(milestone__isnull=True, cash_plan__isnull=True).select_related("owner__user", "dependency"),
+        "milestones": project.milestones.all(),
+        "cost_burndown": project_cost_burndown(project) if finance_read else None,
         "cash_plans": plans, "documents": docs[:40], "entries": display_entries[:60] if finance_read else [],
         "risks": project.risks.select_related("owner__user"), "members": project.team.select_related("member__user"),
         "can_manage": can_manage(request.member, project), "can_finance": finance_read, "stages": Project.Stage.choices})
