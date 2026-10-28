@@ -39,7 +39,8 @@
     "Original native drafts failed independent acceptance; revised native batches timed_out or output-limit failure. Root salvaged only whitelisted files, corrected contracts and generated exact specs, no successful native completion claim. Original history retained in ignored private runtime.",
     "Expanded design contracts fill reviewed cash/cost/invoice/close/reconciliation gaps within137planning scope; canonical+input hashes frozen; original old financial fixture values/legacy58cents not recomputed.",
     "PH139 P0 security split from existing release/security package; no new63rd package. Package subjective estimates retained and trace SHA refreshed, not measured product velocity.",
-    "First PR77 head Public hygiene gitleaks flagged synthetic idempotency_key invoice-allocate-01, not a credential. Changed synthetic keys to numeric8digit and refreshed input hash; unmerged branch commit replaced with lease to remove false-positive-only candidate from PR scanned history. Scanner/config unchanged; all current checks must rerun."
+    "First PR77 head Public hygiene gitleaks flagged synthetic idempotency_key invoice-allocate-01, not a credential. Changed synthetic keys to numeric8digit and refreshed input hash; unmerged branch commit replaced with lease to remove false-positive-only candidate from PR scanned history. Scanner/config unchanged; all current checks must rerun.",
+    "PR77 review identified missing app-bootstrap prerequisites. Added157→155 and162/163/173→159 in tasks/plan/specs;12apps58uses and129nodeDAG checked. Issue78 mirrors PH139 spec for trusted local Controller linkage; no scope change."
   ],
   "unverified": [
     "All new product services/models/UI/financial concurrency remain unimplemented; schema/examples only validate design inputs.",

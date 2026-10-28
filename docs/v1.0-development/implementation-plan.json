@@ -1825,7 +1825,8 @@
         "PH-150",
         "PH-145",
         "PH-142",
-        "PH-110"
+        "PH-110",
+        "PH-155"
       ],
       "requirement_ids": [
         "V1-SET-02"
@@ -2295,7 +2296,8 @@
       "depends_on": [
         "PH-157",
         "PH-142",
-        "PH-110"
+        "PH-110",
+        "PH-159"
       ],
       "requirement_ids": [
         "V1-SPD-01",
@@ -2392,7 +2394,8 @@
         "PH-157",
         "PH-150",
         "PH-152",
-        "PH-110"
+        "PH-110",
+        "PH-159"
       ],
       "requirement_ids": [
         "V1-CST-12",
@@ -3440,7 +3443,8 @@
       "planned_state": "proposed",
       "depends_on": [
         "PH-169",
-        "PH-110"
+        "PH-110",
+        "PH-159"
       ],
       "requirement_ids": [
         "V1-CSH-07",

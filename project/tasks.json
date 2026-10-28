@@ -2222,7 +2222,7 @@
         "python manage.py test tests.test_drf_security_compatibility -v 2",
         "python manage.py verify_integrity --json"
       ],
-      "github_issue": null,
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/78",
       "owner": null,
       "blockers": [],
       "handoff": null
@@ -3048,7 +3048,8 @@
         "PH-150",
         "PH-145",
         "PH-142",
-        "PH-110"
+        "PH-110",
+        "PH-155"
       ],
       "spec": "project/specs/PH-157.md",
       "allowed_paths": [
@@ -3282,7 +3283,8 @@
       "depends_on": [
         "PH-157",
         "PH-142",
-        "PH-110"
+        "PH-110",
+        "PH-159"
       ],
       "spec": "project/specs/PH-162.md",
       "allowed_paths": [
@@ -3331,7 +3333,8 @@
         "PH-157",
         "PH-150",
         "PH-152",
-        "PH-110"
+        "PH-110",
+        "PH-159"
       ],
       "spec": "project/specs/PH-163.md",
       "allowed_paths": [
@@ -3840,7 +3843,8 @@
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-169",
-        "PH-110"
+        "PH-110",
+        "PH-159"
       ],
       "spec": "project/specs/PH-173.md",
       "allowed_paths": [
