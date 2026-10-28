@@ -2042,7 +2042,7 @@
       "title": "验证契约夹具、PG多连接与准备环境CI",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -2073,16 +2073,16 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/66",
-      "owner": null,
+      "owner": "integrator",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-135.md"
     },
     {
       "id": "PH-136",
       "title": "完成工作包估算、关键路径与验证容量计划",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [

@@ -1,0 +1,121 @@
+name: Preparation contracts and PostgreSQL
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: preparation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  contracts:
+    name: Preparation schemas and fixtures
+    env:
+      PH135_REQUIRE_SCHEMAS: '1'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: integrations/mcp/requirements.txt
+      - run: python -m venv .agent-venv
+      - run: .agent-venv/bin/pip install -r integrations/mcp/requirements.txt
+      - name: Run complete preparation validation without product dependencies
+        run: |
+          set -o pipefail
+          .agent-venv/bin/python -m unittest tests.test_v1_preparation -v 2>&1 | tee preparation-contracts.log
+      - name: Require schema execution and reject skipped preparation checks
+        run: |
+          test "$(grep -c 'PH135_CONTRACT_SCHEMAS_EXECUTED validator=strict_jsonschema' preparation-contracts.log)" -eq 1
+          test "$(grep -c 'PH135_FIXTURE_SCHEMA_EXECUTED positive=99 negative=8' preparation-contracts.log)" -eq 1
+          if grep -Eq 'skipped=[1-9][0-9]*' preparation-contracts.log; then
+            echo 'Preparation schema checks must not skip in the pinned MCP environment.'
+            exit 1
+          fi
+  postgres:
+    name: Preparation PostgreSQL multi-connection
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: pmo
+          POSTGRES_USER: pmo
+          POSTGRES_PASSWORD: ci-only-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U pmo" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      PH135_REQUIRE_PG: '1'
+      PH135_REQUIRE_SCHEMAS: '1'
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: pmo
+      POSTGRES_USER: pmo
+      POSTGRES_PASSWORD: ci-only-password
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            integrations/mcp/requirements.txt
+      - run: python -m venv .agent-venv
+      - run: .agent-venv/bin/pip install -r requirements.txt -r integrations/mcp/requirements.txt
+      - name: Run directed preparation and real PostgreSQL tests
+        run: |
+          set -o pipefail
+          export PATH="$PWD/.agent-venv/bin:$PATH"
+          python manage.py test tests.test_v1_preparation tests.test_v1_preparation_pg --verbosity 2 2>&1 | tee preparation-pg.log
+      - name: Require every PostgreSQL capability and reject all skips
+        run: |
+          for marker in \
+            'PH135_CONTRACT_SCHEMAS_EXECUTED validator=strict_jsonschema' \
+            'PH135_FIXTURE_SCHEMA_EXECUTED positive=99 negative=8' \
+            'PH135_PG_FIXTURE_EXECUTED enterprises=2' \
+            'PH135_PG_TRANSACTION_EXECUTED rollback=true' \
+            'PH135_PG_UNIQUE_EXECUTED constraint=unique_org_user' \
+            'PH135_PG_BARRIER_EXECUTED connections=2 backend=postgresql'
+          do
+            test "$(grep -c "$marker" preparation-pg.log)" -eq 1
+          done
+          if grep -Eq 'skipped=[1-9][0-9]*' preparation-pg.log; then
+            echo 'PostgreSQL preparation tests must execute without skips.'
+            exit 1
+          fi
+
+  legacy:
+    name: Preparation frozen legacy reproducibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Rebuild frozen legacy twice without live database inputs
+        run: |
+          python -B docs/v1.0-development/fixtures/verify_legacy.py --repo "$PWD" > preparation-legacy.json
+          python - <<'PYCODE'
+          import json
+          proof=json.load(open('preparation-legacy.json'))
+          assert proof['result']=='pass' and len(proof['runs'])==2
+          assert proof['original_lines_cents']==[2,2,2,52]
+          assert proof['business_bytes_identical'] and proof['existing_output_refused'] and proof['existing_database_hash_unchanged']
+          assert all(row['total_cost_cents']==58 and row['integrity']['ok'] for row in proof['runs'])
+          print('PH135_LEGACY_EXECUTED builds=2 cents=58 overwrite_rejected=true')
+          PYCODE
