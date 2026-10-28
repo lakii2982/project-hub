@@ -1,0 +1,57 @@
+{
+  "kind": "offline_synthetic_prototype_only",
+  "engine": "151.0.7922.34",
+  "date_local": "2026-10-28",
+  "product_acceptance": false,
+  "customer_study": false,
+  "results": [
+    {
+      "viewport": 1440,
+      "result": "pass",
+      "roles": 4,
+      "templates": 3,
+      "checks": [
+        "opening-invalid-focus",
+        "opening-preview",
+        "finance-denial",
+        "private-sections-hidden",
+        "tabs-arrow-home-end",
+        "gap-expansion",
+        "no-page-errors",
+        "offline-no-external-requests"
+      ],
+      "no_page_overflow_widths": [
+        1440
+      ]
+    },
+    {
+      "viewport": 390,
+      "result": "pass",
+      "roles": 4,
+      "templates": 3,
+      "checks": [
+        "opening-invalid-focus",
+        "opening-preview",
+        "finance-denial",
+        "private-sections-hidden",
+        "tabs-arrow-home-end",
+        "gap-expansion",
+        "no-page-errors",
+        "offline-no-external-requests",
+        "modal-menu-focus-trap-escape-return",
+        "mobile-link-focus"
+      ],
+      "no_page_overflow_widths": [
+        320,
+        360,
+        390,
+        480,
+        640,
+        768,
+        800,
+        1024,
+        1440
+      ]
+    }
+  ]
+}

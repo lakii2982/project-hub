@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project Hub 1.0｜开工低保真原型</title>
+  <style>
+    /* Snapshot of the shared semantic tokens; product source remains unchanged. */
+:root {
+  color-scheme: light;
+
+  /* Semantic color: use these roles rather than raw palette values. */
+  --color-canvas: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f1f3f6;
+  --color-surface-raised: #ffffff;
+  --color-surface-selected: #edf2ff;
+  --color-text: #20242c;
+  --color-text-secondary: #535d6c;
+  --color-text-muted: #586376;
+  --color-text-inverse: #ffffff;
+  --color-text-link: #3157b7;
+  --color-border: #d9dee7;
+  --color-border-strong: #7d8798;
+  --color-accent: #365fc7;
+  --color-accent-hover: #294da8;
+  --color-accent-active: #203f8c;
+  --color-accent-subtle: #e8eeff;
+  --color-success: #18794e;
+  --color-success-subtle: #e8f5ee;
+  --color-warning: #8a4b0f;
+  --color-warning-subtle: #fff3df;
+  --color-danger: #b42332;
+  --color-danger-hover: #8f1d29;
+  --color-danger-subtle: #fdecef;
+  --color-info: #2463a9;
+  --color-info-subtle: #eaf3fc;
+  --color-overlay: rgb(23 29 38 / 48%);
+  --color-focus: #7c3aed;
+
+  /* System Chinese typography; no remote font. */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-family-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.375rem;
+  --font-size-2xl: 1.75rem;
+  --line-height-xs: 1.125rem;
+  --line-height-sm: 1.375rem;
+  --line-height-md: 1.5rem;
+  --line-height-lg: 1.625rem;
+  --line-height-xl: 1.875rem;
+  --line-height-2xl: 2.25rem;
+  --font-weight-regular: 400;
+  --font-weight-medium: 550;
+  --font-weight-semibold: 650;
+  --font-weight-bold: 700;
+
+  /* 4px spacing grid. */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Shape, border and elevation. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-pill: 999px;
+  --border-width: 1px;
+  --border-width-strong: 2px;
+  --border-default: var(--border-width) solid var(--color-border);
+  --shadow-raised: 0 8px 24px rgb(23 29 38 / 12%);
+  --shadow-overlay: 0 16px 48px rgb(23 29 38 / 20%);
+
+  /* Focus remains visible in forced-colors mode via outline. */
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+  --focus-ring: var(--focus-ring-width) solid var(--color-focus);
+
+  /* Layout breakpoints are documented tokens; native CSS vars cannot drive @media. */
+  --breakpoint-xs: 390px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+  --sidebar-width: 232px;
+  --content-max-width: 1440px;
+  --control-height: 36px;
+  --touch-target: 44px;
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Chart channels also require line/point/pattern encoding and text labels. */
+  --chart-1: #365fc7;
+  --chart-2: #a15c07;
+  --chart-3: #18794e;
+  --chart-4: #8b46b8;
+  --chart-5: #b42332;
+  --chart-grid: #dfe4eb;
+  --chart-axis: #687385;
+  --z-sticky: 20;
+  --z-drawer: 40;
+  --z-toast: 60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+  }
+}
+
+    * { box-sizing:border-box; } html { scroll-behavior:smooth; } body { margin:0; min-width:320px; color:var(--color-text); background:var(--color-canvas); font:14px/1.5 var(--font-family-sans); } button,input,select { font:inherit; } button,input,select { min-height:var(--control-height); } button { cursor:pointer; } button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { outline:var(--focus-ring); outline-offset:2px; } a { color:var(--color-accent); } .skip { position:absolute; left:var(--space-3); top:-4rem; padding:var(--space-2) var(--space-3); background:var(--color-surface); z-index:5; } .skip:focus { top:var(--space-3); }
+    .shell { display:grid; grid-template-columns:var(--sidebar-width) minmax(0,1fr); min-height:100vh; } .sidebar { padding:var(--space-6) var(--space-3); background:var(--color-surface); border-right:1px solid var(--color-border); } .brand { margin:0 0 var(--space-6); font-size:18px; font-weight:650; } .brand small { display:block; color:var(--color-text-secondary); font-size:12px; font-weight:400; } .nav-list { padding:0; margin:0; list-style:none; } .nav-list a { display:block; margin-bottom:var(--space-1); padding:10px 12px; color:var(--color-text); text-decoration:none; border-radius:var(--radius-md); } .nav-list a[aria-current="page"] { color:var(--color-accent); background:var(--color-surface-selected); font-weight:650; } .side-note { margin-top:var(--space-8); padding:var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-md); color:var(--color-text-secondary); font-size:12px; } .main { width:min(100%,var(--content-max-width)); padding:var(--space-8); } .topline { display:flex; gap:var(--space-3); align-items:center; justify-content:space-between; margin-bottom:var(--space-4); } .prototype { margin:0; padding:var(--space-1) var(--space-2); color:var(--color-info); background:var(--color-info-subtle); border-radius:var(--radius-md); font-size:12px; } .role-switcher { display:flex; align-items:center; gap:var(--space-2); } .menu { display:none; } h1 { margin:0; font-size:28px; line-height:1.3; } h2 { margin:0 0 var(--space-3); font-size:18px; } h3 { margin:0 0 var(--space-2); font-size:16px; } .lede { margin:var(--space-2) 0 var(--space-6); color:var(--color-text-secondary); } .panel { margin-bottom:var(--space-6); padding:var(--space-6); background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); } .flow { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:var(--space-2); } .flow-step { min-height:100px; padding:var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-md); } .flow-step strong { display:block; margin-bottom:var(--space-1); } .flow-step small { color:var(--color-text-secondary); } .flow-step.active { border:2px solid var(--color-accent); background:var(--color-surface-selected); } .flow-step::after { content:"→"; float:right; color:var(--color-text-muted); } .flow-step:last-child::after { content:""; }
+    .toolbar { display:flex; flex-wrap:wrap; align-items:end; gap:var(--space-3); } label { display:grid; gap:var(--space-1); font-weight:650; } select,input { padding:0 var(--space-2); color:var(--color-text); border:1px solid var(--color-border-strong); border-radius:var(--radius-md); background:var(--color-surface); } .button { padding:0 var(--space-3); color:var(--color-text); background:var(--color-surface); border:1px solid var(--color-border-strong); border-radius:var(--radius-md); } .button.primary { color:var(--color-text-inverse); background:var(--color-accent); border-color:var(--color-accent); } .button:hover { background:var(--color-surface-subtle); } .button.primary:hover { background:var(--color-accent-hover); } .tabs { display:flex; gap:var(--space-1); margin:0 0 var(--space-4); overflow-x:auto; border-bottom:1px solid var(--color-border); } .tab { white-space:nowrap; padding:10px 12px; color:var(--color-text-secondary); background:none; border:0; border-bottom:3px solid transparent; border-radius:0; } .tab[aria-selected="true"] { color:var(--color-accent); border-bottom-color:var(--color-accent); font-weight:650; } .tab-panel[hidden] { display:none; } .summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border:1px solid var(--color-border); border-radius:var(--radius-md); overflow:hidden; } .metric { padding:var(--space-3); border-right:1px solid var(--color-border); } .metric:last-child { border-right:0; } .metric span { display:block; color:var(--color-text-secondary); font-size:12px; } .metric strong { font-family:var(--font-family-mono); font-size:18px; } .table-wrap { overflow-x:auto; } table { width:100%; border-collapse:collapse; } caption { text-align:left; padding-bottom:var(--space-2); color:var(--color-text-secondary); } th,td { padding:10px 8px; text-align:left; vertical-align:top; border-bottom:1px solid var(--color-border); } th { color:var(--color-text-secondary); font-size:12px; font-weight:650; } .num { text-align:right; font-family:var(--font-family-mono); font-variant-numeric:tabular-nums; white-space:nowrap; } .badge { display:inline-block; padding:2px 6px; border-radius:999px; font-size:12px; } .ok { color:var(--color-success); background:var(--color-success-subtle); } .warn { color:var(--color-warning); background:var(--color-warning-subtle); } .danger { color:var(--color-danger); background:var(--color-danger-subtle); } .info { color:var(--color-info); background:var(--color-info-subtle); } .muted { color:var(--color-text-secondary); } .notice { margin:var(--space-3) 0 0; padding:var(--space-3); border-left:3px solid var(--color-info); background:var(--color-info-subtle); } .state-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--space-2); } .state { min-height:164px; padding:var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-md); } .state p { margin:var(--space-2) 0; color:var(--color-text-secondary); font-size:12px; } .state .button { min-height:32px; } .skeleton { height:12px; margin:8px 0; background:var(--color-surface-subtle); border-radius:var(--radius-md); } .skeleton.short { width:60%; } .error-text { color:var(--color-danger); font-size:12px; } .owner-grid { display:grid; grid-template-columns:1fr 1.1fr 1.1fr; gap:1px; background:var(--color-border); border:1px solid var(--color-border); border-radius:var(--radius-md); overflow:hidden; } .owner-grid > div { padding:var(--space-3); background:var(--color-surface); } .owner-grid strong { display:block; } .task-list { margin:0; padding-left:20px; } .task-list li { margin:var(--space-2) 0; } [hidden],.hidden { display:none !important; } .warning-box { padding:var(--space-3); border:1px solid var(--color-warning); background:var(--color-warning-subtle); border-radius:var(--radius-md); } .footer { color:var(--color-text-muted); font-size:12px; }
+    .main,.toolbar>*,.metric { min-width:0; } input,select { max-width:100%; }
+    .tabs { padding:var(--space-1); } .tab:focus-visible { outline:var(--focus-ring); outline-offset:-3px; }
+    dialog { width:min(90vw,360px); border:1px solid var(--color-border); padding:var(--space-4); background:var(--color-surface); color:var(--color-text); }
+    dialog a { display:block; padding:var(--space-3); } dialog::backdrop { background:var(--color-border-strong); opacity:.5; }
+    summary { cursor:pointer; padding:var(--space-2); } summary:focus-visible,h2:focus { outline:var(--focus-ring); }
+    @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+    @media (max-width:768px) { .shell { grid-template-columns:1fr; } .sidebar { display:none; } .main { padding:var(--space-4); } .menu { display:inline-block; } .topline { align-items:flex-start; } .role-switcher { display:grid; } .flow,.state-grid { grid-template-columns:1fr; } .flow-step::after { content:"↓"; } .summary { grid-template-columns:1fr; } .metric { border-right:0; border-bottom:1px solid var(--color-border); } .metric:last-child { border-bottom:0; } .owner-grid { grid-template-columns:1fr; } .panel { padding:var(--space-4); } .toolbar { display:grid; grid-template-columns:1fr; } .button,input,select,.tab { min-height:44px; } thead { display:none; } caption { display:block; width:100%; } th { display:none; } table,tbody,tr,td { display:block; width:100%; } tr { padding:var(--space-2) 0; border-bottom:1px solid var(--color-border); } td { display:flex; justify-content:space-between; gap:var(--space-3); padding:var(--space-1) 0; border:0; } td::before { flex:0 0 6em; content:attr(data-label); color:var(--color-text-secondary); font-size:12px; } td.num { text-align:right; white-space:normal; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">跳到主要内容</a>
+  <div class="shell">
+    <aside class="sidebar" aria-label="主导航"><p class="brand">Project Hub <small>1.0 开工低保真原型</small></p><nav><ul class="nav-list"><li><a href="#workspace" aria-current="page">工作台</a></li><li><a data-roles="owner finance" href="#onboarding">开账</a></li><li><a data-roles="owner pm finance" href="#project">项目与合同</a></li><li><a href="#input">投入与费用</a></li><li><a data-roles="owner finance" href="#settlement">结算与收付</a></li><li><a data-roles="owner finance" href="#reconcile">月末核对</a></li></ul></nav><p class="side-note">合成数据 · 非产品业务实现<br>关键操作只演示页面跳转或表单校验。</p></aside>
+    <main class="main" id="main">
+      <div class="topline"><p class="prototype" data-testid="prototype-banner">原型 / 合成数据 / 非产品业务实现</p><div class="role-switcher"><button class="button menu" type="button" data-testid="mobile-menu">菜单</button><label>查看职责<select id="role-select" data-testid="role-select"><option value="owner">老板 / 负责人</option><option value="pm">项目经理</option><option value="employee">员工</option><option value="finance">财务 / 核对人员</option></select></label></div></div>
+      <header id="workspace"><h1 tabindex="-1">项目经营工作台</h1><p class="lede" id="role-copy">老板看例外和责任人；不以这份原型确认审批、记账或真实经营结果。</p></header>
+      <section class="panel" aria-labelledby="flow-heading"><h2 id="flow-heading">必要任务路径</h2><p id="role-task" role="status">先处理未匹配收款和待分配成本，查看责任人。</p><div class="flow" data-testid="task-flow"><a class="flow-step active" data-roles="owner finance" href="#onboarding"><strong>1. 开账</strong><small>选择路径、范围、核对报告</small></a><a class="flow-step" data-roles="owner pm finance" href="#project"><strong>2. 合同 / 投入 / 费用</strong><small>项目事实与证据</small></a><a class="flow-step" data-roles="owner finance" href="#settlement"><strong>3. 结算 / 收付</strong><small>未清、现金、核销关系</small></a><a class="flow-step" data-roles="owner finance" href="#reconcile"><strong>4. 核对</strong><small>异常与期间预检</small></a><a class="flow-step" href="#sources"><strong>5. 追溯</strong><small>唯一维护方与下游使用</small></a></div></section>
+      <section class="panel" id="onboarding" data-roles="owner finance" aria-labelledby="onboarding-heading"><h2 id="onboarding-heading">开账：选择承接路径</h2><form id="onboarding-form" novalidate><div class="toolbar"><label>启用方式<select id="opening-route" data-testid="opening-route"><option value="new">从零开账</option><option value="historical">存量承接</option></select></label><label>起账日<input id="opening-date" data-testid="opening-date" type="date" required aria-describedby="opening-error"></label><button class="button primary" data-testid="preview-opening" type="submit">预览核对范围</button></div><p class="error-text hidden" id="opening-error" role="alert">请先填写起账日；此原型不会导入或写入任何数据。</p><p class="notice" id="opening-result" role="status">默认：先声明项目、期间和资金账户覆盖范围，再生成“待客户确认”的开账核对报告。</p></form></section>
+      <section class="panel" id="project" data-roles="owner pm finance" aria-labelledby="project-heading"><h2 id="project-heading">项目与合同：三种收费模板共用一份项目事实</h2><div class="toolbar"><label>收费模板<select id="template-select" data-testid="template-select"><option value="fixed">固定总价 / 里程碑</option><option value="time">按确认人天或工时</option><option value="service">固定服务期</option></select></label><button class="button primary" type="button" data-testid="show-contract">查看合同明细</button></div><p class="notice" id="template-note" role="status" tabindex="-1">固定合成示例：批准合同不含税 ¥100,000；履约、结算和收款分别引用来源，不互相代替。</p><div class="tabs" role="tablist" aria-label="项目详情"><button class="tab" id="tab-overview" role="tab" aria-selected="true" aria-controls="panel-overview">概览</button><button class="tab" id="tab-tasks" role="tab" aria-selected="false" aria-controls="panel-tasks">关键任务</button><button class="tab" id="tab-finance" role="tab" aria-selected="false" aria-controls="panel-finance">项目财务（有权）</button></div><div id="panel-overview" class="tab-panel" role="tabpanel" aria-labelledby="tab-overview" tabindex="-1"><div class="summary"><div class="metric"><span>项目</span><strong>PH-1.0-演示</strong></div><div class="metric"><span>合同模板</span><strong id="template-name">固定总价 / 里程碑</strong></div><div class="metric"><span>验收事实</span><strong>1 条（合成）</strong></div></div></div><div id="panel-tasks" class="tab-panel" role="tabpanel" aria-labelledby="tab-tasks" tabindex="-1" hidden><ul class="task-list"><li>里程碑：接口联调验收（来源：验收记录）</li><li>关键任务：准备验收证据（关联同项目里程碑）</li></ul></div><div id="panel-finance" class="tab-panel" role="tabpanel" aria-labelledby="tab-finance" tabindex="-1" hidden><p class="warning-box" data-testid="finance-access">财务页只给老板/财务显示汇总。项目经理和员工不展示个人工资或费率。</p></div></section>
+      <section class="panel" id="input" aria-labelledby="input-heading"><h2 id="input-heading">投入与费用：录入事实，不在页面计算工资</h2><div class="summary"><div class="metric"><span>员工本人投入</span><strong>480 分钟</strong></div><div class="metric"><span>费用验收</span><strong>¥2,400</strong></div><div class="metric"><span>待处理</span><strong>1 条缺证据</strong></div></div><p class="notice">员工可登记本人分钟、日期和说明；PM核对项目投入；财务处理费用来源。费率快照与工资池不在本原型计算，且对PM/员工遮蔽。</p></section>
+      <section class="panel" id="settlement" data-roles="owner finance" aria-labelledby="settlement-heading"><h2 id="settlement-heading">结算与收付：来源相连，金额不在这里重算</h2><div class="table-wrap"><table data-testid="settlement-table"><caption>固定合成金额，仅用于界面关系说明</caption><thead><tr><th>事实 / 来源</th><th>唯一维护方</th><th>状态</th><th class="num">合成金额</th><th>下一步</th></tr></thead><tbody><tr><td data-label="事实 / 来源">验收 FIN-001</td><td data-label="唯一维护方">交付验收</td><td data-label="状态"><span class="badge ok">● 已确认</span></td><td class="num" data-label="合成金额">¥50,000</td><td data-label="下一步">发起结算</td></tr><tr><td data-label="事实 / 来源">结算 SET-001</td><td data-label="唯一维护方">结算记录</td><td data-label="状态"><span class="badge warn">△ 待核销</span></td><td class="num" data-label="合成金额">¥50,000</td><td data-label="下一步">引用资金事实</td></tr><tr><td data-label="事实 / 来源">收款 CSH-001</td><td data-label="唯一维护方">收付款记录</td><td data-label="状态"><span class="badge info">○ 待匹配</span></td><td class="num" data-label="合成金额">¥20,000</td><td data-label="下一步">办理核销关系</td></tr></tbody></table></div><p class="notice">演示关系：收款不确认收入，付款不重复确认成本；核销不新建现金。本页没有“批准”或“记账”操作。</p></section>
+      <section class="panel" id="reconcile" data-roles="owner finance" aria-labelledby="reconcile-heading"><h2 id="reconcile-heading">月末核对：先看差异及责任人，再决定能否继续</h2><div class="table-wrap"><table data-testid="reconcile-table"><caption>核对事项（合成）</caption><thead><tr><th>核对对象</th><th>结果</th><th>来源</th><th>责任人</th><th>可办理动作</th></tr></thead><tbody><tr><td data-label="核对对象">工资池与去向</td><td data-label="结果"><span class="badge warn">△ 差额 ¥600</span></td><td data-label="来源">人工与费用</td><td data-label="责任人">财务</td><td data-label="可办理动作"><button class="button" type="button" data-testid="open-gap" aria-expanded="false" aria-controls="gap-detail">查看差额来源</button></td></tr><tr><td data-label="核对对象">费用与应付</td><td data-label="结果"><span class="badge ok">● 可追溯</span></td><td data-label="来源">费用来源 → 应付记录</td><td data-label="责任人">财务</td><td data-label="可办理动作">查看原始验收</td></tr><tr><td data-label="核对对象">银行与核销</td><td data-label="结果"><span class="badge danger">× 1 条未匹配</span></td><td data-label="来源">银行记录 → 核销记录</td><td data-label="责任人">财务</td><td data-label="可办理动作">打开资金事实</td></tr></tbody></table></div><p class="notice hidden" id="gap-detail" role="status">合成差额：工资池 ¥24,000，已分配 ¥23,400，待处理 ¥600。这里只显示核对口径与来源，不能锁期或生成凭证。</p></section>
+      <section class="panel" id="sources" aria-labelledby="sources-heading"><h2 id="sources-heading">数据从哪里来</h2><p>在原始业务入口维护一次，后续环节引用同一记录。核对差异可回到来源，不另外填一份余额。</p><details><summary>设计附录：模块唯一维护方（供开发和审阅）</summary><div class="owner-grid" data-testid="ownership-grid"><div><strong>项目、员工主档</strong><span class="muted">masterdata（现有主档）</span></div><div><strong>成员、项目授权范围</strong><span class="muted">identity</span></div><div><strong>合同、收费模板、批准版本</strong><span class="muted">contracts</span></div><div><strong>交付节点、验收证据</strong><span class="muted">交付验收</span></div><div><strong>投入、可计费确认</strong><span class="muted">time</span></div><div><strong>成本、工资池、费用来源</strong><span class="muted">人工与费用</span></div><div><strong>结算、未清项、核销关系</strong><span class="muted">结算记录</span></div><div><strong>实际现金、账户、预收预付</strong><span class="muted">收付款记录</span></div><div><strong>发票与分配</strong><span class="muted">invoicing</span></div><div><strong>收入事件与算法执行</strong><span class="muted">management_revenue</span></div></div><p class="notice">每个入口只展示所需的引用关系；汇总和工作台只读统一查询，不能变成第二套可编辑余额。</p></details></section>
+      <section class="panel" aria-labelledby="states-heading"><h2 id="states-heading">同一列表必须覆盖的状态</h2><p>以下是静态状态样张；按钮仅作占位，实际可操作路径在上方。</p><div class="state-grid" data-testid="state-gallery"><article class="state"><h3>默认</h3><p>显示有来源、状态和下一步的记录。</p><span class="badge ok">● 已确认</span></article><article class="state"><h3>空</h3><p>本期间还没有费用来源。</p><button class="button" type="button" disabled>登记第一笔费用</button></article><article class="state"><h3>筛选空</h3><p>当前筛选没有记录，保留原条件并提供清除入口。</p><button class="button" type="button" disabled>清除筛选</button></article><article class="state"><h3>错误</h3><p class="error-text">无法读取核对结果；已保留筛选条件。</p><button class="button" type="button" disabled>重试</button></article><article class="state"><h3>加载</h3><div class="skeleton"></div><div class="skeleton short"></div><p>正在读取核对记录…</p></article><article class="state"><h3>无权</h3><p>你无权查看个人工资费率。</p><button class="button" type="button" disabled>联系财务负责人</button></article></div></section>
+      <footer class="footer">原型范围：页面结构、职责可见性、状态和来源关系。非范围：真实审批、业务校验、金额计算、记账、权限执行、数据导入或客户研究。</footer>
+    </main>
+  </div>
+  <dialog id="mobile-nav" aria-labelledby="mobile-nav-title"><h2 id="mobile-nav-title">工作导航</h2><button class="button" id="close-nav">关闭菜单</button><nav id="mobile-links" aria-label="手机导航"></nav></dialog>
+  <script>
+    const roleCopy={owner:'老板看例外和责任人；不以这份原型确认审批、记账或真实经营结果。',pm:'PM只看获授权项目的待办、验收和预计；不显示个人工资费率。',employee:'员工只登记本人投入、费用与退回信息；不显示工资费率或财务审批操作。',finance:'财务处理费用、结算、资金和核对异常；本原型不执行真实审批或记账。'};
+    const templateCopy={fixed:['固定总价 / 里程碑','固定合成示例：批准合同不含税 ¥100,000；履约、结算和收款分别引用来源，不互相代替。'],time:['按确认人天或工时','固定合成示例：投入 600 分钟，客户确认 480 分钟；成本与对外计量引用同一投入但不重录。'],service:['固定服务期','固定合成示例：服务期 2026-11-01 至 2026-11-30；履约和结算依据服务确认，不能以到账代替。']};
+    const allowedFinance=()=>['owner','finance'].includes(document.querySelector('#role-select').value);
+    const taskCopy={owner:'先处理未匹配收款和待分配成本，查看责任人。',pm:'核对授权项目的交付证据与投入，推进客户验收。',employee:'填写本人投入与费用，补齐退回记录的证据。',finance:'先匹配收付款与结算，再核对成本去向与期间异常。'};
+    document.querySelector('#role-select').addEventListener('change',e=>{
+      const role=e.target.value;
+      document.querySelector('#role-copy').textContent=roleCopy[role];
+      document.querySelector('#role-task').textContent=taskCopy[role];
+      document.querySelectorAll('[data-roles]').forEach(el=>el.hidden=!el.dataset.roles.split(' ').includes(role));
+      document.querySelector('[data-testid="finance-access"]').textContent=allowedFinance()?'有权：项目汇总沿用同一来源。个人工资费率不在此展示。':'无权：当前职责不能查看公司资金、工资池或个人费率，请联系负责人。';
+      document.querySelector('#gap-detail').classList.add('hidden');
+      document.querySelector('[data-testid="open-gap"]').setAttribute('aria-expanded','false');
+      if(document.querySelector('#tab-finance').getAttribute('aria-selected')==='true')activate(document.querySelector('#tab-overview'));
+    });
+    document.querySelector('#template-select').addEventListener('change',e=>{const t=templateCopy[e.target.value];document.querySelector('#template-name').textContent=t[0];document.querySelector('#template-note').textContent=t[1];});
+    document.querySelector('[data-testid="show-contract"]').addEventListener('click',()=>document.querySelector('#template-note').focus());
+    document.querySelector('#onboarding-form').addEventListener('submit',e=>{e.preventDefault();const date=document.querySelector('#opening-date');const error=document.querySelector('#opening-error');if(!date.value){error.classList.remove('hidden');date.setAttribute('aria-invalid','true');date.focus();return;}error.classList.add('hidden');date.removeAttribute('aria-invalid');document.querySelector('#opening-result').textContent='预览（合成）：将核对项目范围、起账日 '+date.value+' 与资金账户覆盖范围；不会导入或写入。';});
+    document.querySelector('[data-testid="open-gap"]').addEventListener('click',e=>{const hidden=document.querySelector('#gap-detail').classList.toggle('hidden');e.currentTarget.setAttribute('aria-expanded',String(!hidden));});
+    const tabs=[...document.querySelectorAll('[role="tab"]')];
+    function activate(tab,moveFocus=true){tabs.forEach(t=>{const selected=t===tab;t.setAttribute('aria-selected',String(selected));t.tabIndex=selected?0:-1;document.querySelector('#'+t.getAttribute('aria-controls')).hidden=!selected;});if(moveFocus)document.querySelector('#'+tab.getAttribute('aria-controls')).focus();}
+    tabs.forEach((tab,i)=>{tab.addEventListener('click',()=>activate(tab));tab.addEventListener('keydown',e=>{let n;if(e.key==='ArrowRight')n=(i+1)%tabs.length;if(e.key==='ArrowLeft')n=(i+tabs.length-1)%tabs.length;if(e.key==='Home')n=0;if(e.key==='End')n=tabs.length-1;if(n!==undefined){e.preventDefault();activate(tabs[n],false);tabs[n].focus();}});});activate(tabs[0],false);
+    const dialog=document.querySelector('#mobile-nav'),menu=document.querySelector('[data-testid="mobile-menu"]');
+    document.querySelector('#mobile-links').innerHTML=document.querySelector('.nav-list').innerHTML;
+    menu.addEventListener('click',()=>{dialog.showModal();document.querySelector('#close-nav').focus();});
+    document.querySelector('#close-nav').addEventListener('click',()=>dialog.close());
+    dialog.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const items=[...dialog.querySelectorAll('button,a')].filter(el=>el.getClientRects().length);const first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
+    let nextCloseFocus=null;
+    dialog.addEventListener('close',()=>{(nextCloseFocus||menu).focus();nextCloseFocus=null;});
+    dialog.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{const target=document.querySelector(a.getAttribute('href')+' h2')||document.querySelector('h1');target.tabIndex=-1;nextCloseFocus=target;dialog.close();}));
+    document.querySelectorAll('section h2').forEach(h=>h.tabIndex=-1);
+  </script>
+</body>
+</html>
