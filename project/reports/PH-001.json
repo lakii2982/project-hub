@@ -1,0 +1,57 @@
+{
+  "task_id": "PH-001",
+  "summary": "Minimal strict six-field domain metadata, controlled deployment/context validation and immutable registry snapshot with unchanged legacy manifest/runtime; independent default-off zero-model example. No production wiring or business module.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual129task validation; repeat after report/handoff."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual no system issues."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual No changes detected. Example zero models/migrations; no production App/URL registration."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Final after container-subclass fix: canonicalTMPDIR cleanproduct485tests89.313s OK,477executed/8explicit skips(4PG3prepSchema1SDKparity). Earlierfixedtoolfull484tests94.088s480executed/4PGskip; finalfixedtooltarget36allPASS supplements the addedcase."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual isolated seeded database1organization47entries,oktrue/noerrors; no originaldatabase writes."
+    },
+    {
+      "command": "python manage.py test tests.test_plugin_sdk tests.test_plugins --verbosity 1",
+      "result": "pass",
+      "evidence": "FinalfixedMCPtool36allPASS0.296s; cleanproduct36total35executedPASS/1supplementalparityskip0.261s. Independent36all0.306s PASS. Runtime structural/dependency/immutable/legacy rejections do notrequirejsonschema."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph001_sdk_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Code scope limitedPASS after clean-product dependency guard fix. Independently35allpass in fixedverification env and34pass/1explicitparityskip in product-only env. Final metadata/ADR/DoR/BASEallowlist closure PASS; currentCI stillrequired. IndependentPRP2container-subclassclosure PASS; finaltarget36allverified."
+  },
+  "deviations": [
+    "NativeClaude5664f089-099f-4ad0-a7b8-7303abee8bec timed_out/deadline_exceeded. Root inspected exact8files vsBASE6940892 and salvaged unverified source, never nativecompleted claim. Originalscope/SHA receipt retained privately.",
+    "Initial27specialtests had3fail2errors plus concrete missing complete-context/manifestgraph/snapshot robustness. Scoped integration repaired fixtures, fail-closedcontexts, reused Registry.validate_graph, immutable snapshots and deployment identities; independentreview followed.",
+    "App label may differ from plugin_id. Controlled installed_apps supports module strings or strict module/plugin_id mapping; builder only augments existing matching installedlabel/module, no extra metadata field or speculative imports.",
+    "Independentreview detected schema-tool import absent from productrequirements. Supplemental parity now uses existing optional-tool pattern; actualfixedMCPenv executes it, cleanproductenv explicitly skips it. No new product dependency, test deletion, parser/guard weakening or CI waiver.",
+    "Issue80 mirrors frozenPH002; ready transition is conditional on this currentPR allgreen+normalmerge. PH005 separatelyreadyscope candidates stayprivate, not bundled in SDK PR.",
+    "PR81 P2 identified mutable OrderedDict/list subclasses accepted by legacy manifest validation. _freeze now recursively handles those supported subclasses without changing acceptance rules; regression test plus independentclosure and finalcleanproduct485fullpassed. Currentnewhead11CI stillrequired."
+  ],
+  "unverified": [
+    "Unified service/API/import/background guards and static URL mounting are PH002, not implemented here; route access is declaration only.",
+    "Migration scanning/replay qualification is PH140, business financial modules remain unimplemented. No existing tables, URLs, manifests, leaf sources or ledgers rewritten.",
+    "RealPG/currentexacthead11CI/normalmerge pending; SQLite not production concurrency evidence.",
+    "No browser/product UI, production deployment/release or customer acceptance in this puremetadata slice."
+  ]
+}
