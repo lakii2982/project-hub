@@ -1837,7 +1837,7 @@
             "net_cents": 10000,
             "tax_cents": 600,
             "settled_on": "2026-10-15",
-            "due_date": "2026-11-15",
+            "due_date": "2027-10-31",
             "evidence": [
               {
                 "evidence_id": "ATT-CONTRACT",

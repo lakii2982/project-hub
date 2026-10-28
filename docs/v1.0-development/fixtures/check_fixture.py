@@ -36,6 +36,11 @@ def main():
    check(set(stage['source_ids'])<=set(registry),stage['stage_id']+' declared source refs')
   check(set(u['negative'])<=set(f['rejection_catalog']),u['id']+' rejection catalog')
  check([u['id'] for u in f['uat_sequences']]==['UAT-%02d'%i for i in range(1,19)],'UAT ids')
+ historical=files['CSV-HIST-COST'][0];opening=f['facts']['opening']
+ check(historical['source_date']<=opening['cutoff_date'] and int(historical['amount_minor'])<=opening['legacy_cost_cents'],'historical CSV is inside opening coverage')
+ check(f['uat_sequences'][11]['steps'][1]['source_ids']==['OPEN-20260831','CSV-HIST-COST'],'opening overlap binds historical sample')
+ sample_values={x['id']:x['value'] for x in samples['samples']}
+ check(sample_values['SET-U10-RET']['payload']['fields']['due_date']=='2027-10-31','retention due date matches UAT10 maturity')
  future=f['uat_sequences'][2]['steps'][-1]
  check(future['expected']['remaining_forecast_magnitude_cents']==0 and future['forecast_components']['later_unsettled_conditional_cents']==53000 and future['forecast_components']['combined_remaining_magnitude_cents']==53000,'UAT03 settled tranche vs remaining contract coverage')
  race=f['uat_sequences'][13]['steps'][1];by_sample={x['id']:x['value'] for x in samples['samples']}

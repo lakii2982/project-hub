@@ -15,7 +15,7 @@
     {
       "command": ".agent-venv/bin/python -B docs/v1.0-development/fixtures/check_fixture.py",
       "result": "pass",
-      "evidence": "Root actual99 schema positives/8 rejections/91typed source refs/18 independent bases/137 specialized cases; no product commands or DB. Input hashes match recorded sample-verification."
+      "evidence": "Root actual99 schema positives/8 rejections/92typed source refs/18 independent bases/137 specialized cases; no product commands or DB. Input hashes match recorded sample-verification."
     },
     {
       "command": "python -B docs/v1.0-development/fixtures/verify_legacy.py --repo .",
@@ -28,14 +28,15 @@
     "reviewer": "Independent /root/ph134_review",
     "status": "pass",
     "findings": [],
-    "evidence": "Read-only full finance/fixture/builder review; independently ran final99positive/8reject/91source/18UAT/137requirements checker and60taskcheck; verified allsample/legacy inputhashes. Fixed September period-race source/month and close/post branches plus current-tranche vs later conditional53000 forecast. Independently checked cost/allocations/reversals/cash/ETC/tax/prepaid arithmetic. Did not repeat2legacy builds or productUAT/PG/browser/restore. Limited re-review after CI falsepositive:125 key occurrences/111 original tokens map bijectively to111numeric placeholders, original key equality/conflict semantics retained, all other fields unchanged; independent99/8/91/18/137 and4inputhashes pass. CurrentGitleaks remainsCI obligation."
+    "evidence": "Read-only full finance/fixture/builder review; independently ran final99positive/8reject/92source/18UAT/137requirements checker and60taskcheck; verified allsample/legacy inputhashes. Fixed September period-race source/month and close/post branches plus current-tranche vs later conditional53000 forecast. Independently checked cost/allocations/reversals/cash/ETC/tax/prepaid arithmetic. Did not repeat2legacy builds or productUAT/PG/browser/restore. Limited re-review after CI falsepositive:125 key occurrences/111 original tokens map bijectively to111numeric placeholders, original key equality/conflict semantics retained, all other fields unchanged; independent99/8/91/18/137 and4inputhashes pass. CurrentGitleaks remainsCI obligation. Final PR-finding limited re-review PASS: August08 paid historical cost lies within August31 opening coverage, OctoberAP is separate non-overlap case; retention dueOctober31,2027 matches oracle; independent99/8/92/18/137+4inputhashes pass."
   },
   "deviations": [
     "Corrected draft second company-cost addition on allocation, cash clearing counted as cash, ETC mistaken for open-item balance, UAT09 cumulativecash and UAT06remainingforecast/12opening/14clearance.",
     "Frozen schema lacks some bootstrap/CSV-preview/restore/orchestration commands; retain explicit procedural future operations instead of inventing APIs.",
     "Legacy builder no-replace objects and fixedarchiveSHA; external unique output, sanitized environment; never import live runtime database.",
     "Independent financial review fixed cross-month lock/post race with September-only source and explicit close/post winner branches; clarified UAT03 current settled tranche forecast0 vs later conditional53000, preserving mutually exclusive source coverage.",
-    "Initial PR74 CI40620018668 Gitleaks generic-api-key flagged46 literal synthetic command keys. Replaced synthetic idempotency/external source tokens with stable distinct all-numeric placeholders, preserving original equality mapping; no real credential/customerdata or scanner exemption. Amend only own unmerged feature commit with exact lease, retaining failedCI evidence."
+    "Initial PR74 CI40620018668 Gitleaks generic-api-key flagged46 literal synthetic command keys. Replaced synthetic idempotency/external source tokens with stable distinct all-numeric placeholders, preserving original equality mapping; no real credential/customerdata or scanner exemption. Amend only own unmerged feature commit with exact lease, retaining failedCI evidence.",
+    "PR74 actual review: UAT12 overlap mistakenly used October CSV beyond August opening cutoff; added dedicated August08 paid historical cost already included in opening, plus later-period non-overlap case. Retention settlement due_date corrected to UAT10 October31,2027 maturity. Checker asserts date/source bindings; product behavior stillnot_run."
   ],
   "unverified": [
     "All18 product UAT not_run, including actual permissions/source/cumulative/locks/transactions and client/API/CSV equivalence.",

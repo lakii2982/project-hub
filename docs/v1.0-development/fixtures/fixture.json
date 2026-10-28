@@ -313,6 +313,12 @@
       "kind": "csv",
       "path": "samples/payables-conflict.csv",
       "sha256": "e5da815c6d5a8dffc35b132792a078cfc5d079b56cf2f32171cdfe6e95dbea61"
+    },
+    {
+      "id": "CSV-HIST-COST",
+      "kind": "csv",
+      "path": "samples/historical-costs.csv",
+      "sha256": "11b26b0d870e6df7efafb6215ebbd87c813803b2c6e57be4132bb6386fc2bbea"
     }
   ],
   "facts": {
@@ -396,7 +402,16 @@
       "id": "OPEN-20260831",
       "legacy_cost_cents": 200000,
       "legacy_receivable_cents": 50000,
-      "bank_opening_cents": 100000
+      "bank_opening_cents": 100000,
+      "cutoff_date": "2026-08-31",
+      "covered_historical_cost_sample": {
+        "file_id": "CSV-HIST-COST",
+        "source_date": "2026-08-08",
+        "cost_cents": 10000,
+        "included_in_legacy_cost_cents": 200000,
+        "settled_before_cutoff": true,
+        "outstanding_payable_cents": 0
+      }
     },
     "period_race": {
       "source_id": "SE-SEP-10000",
@@ -2447,12 +2462,17 @@
         {
           "source_ids": [
             "OPEN-20260831",
-            "CSV-AP-NORMAL"
+            "CSV-HIST-COST"
           ],
           "stage_id": "UAT-12-S02",
           "semantic_operation": "historical_detail.import",
           "oracle_inputs": {
-            "period": "covered"
+            "period": "covered",
+            "cutoff_date": "2026-08-31",
+            "historical_source_date": "2026-08-08",
+            "cost_cents": 10000,
+            "already_in_opening_cost_cents": 200000,
+            "settled_before_cutoff": true
           },
           "expected": {
             "company_cost_cents": 200000,
@@ -2474,7 +2494,7 @@
           },
           "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
           "command_sample_ids": [],
-          "procedural_operation": "CSV preview of overlapping covered historical detail: reject posting or reference-only; no import commit contract exists.",
+          "procedural_operation": "Preview historical-costs.csv inside covered cost range through2026-08-31; reject duplicate posting or reference-only, no new cost/payable/cash. Historical10000 is already included in brought-forward200000 and was paid before cutoff.",
           "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
           "expected_account_balance_with_declared_opening_cents": 100000
         },
@@ -2555,7 +2575,18 @@
           "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
         }
       ],
-      "additional_cases": []
+      "additional_cases": [
+        {
+          "id": "UAT-12-new-period-is-not-overlap",
+          "inputs": {
+            "file_id": "CSV-AP-NORMAL",
+            "source_date": "2026-10-08",
+            "opening_cutoff": "2026-08-31"
+          },
+          "expected": "Do not reject this later-period row solely for opening-period overlap; apply ordinary permissions/source/period/approval checks. Separate fresh branch; not posted by S02.",
+          "execution_status": "not_run"
+        }
+      ]
     },
     {
       "id": "UAT-13",
@@ -5186,6 +5217,17 @@
         "namespace": "costing",
         "kind": "expense_claim",
         "id": "SE-SEP-10000",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "CSV-HIST-COST",
+      "object": "ImportPreview",
+      "source": {
+        "namespace": "onboarding",
+        "kind": "import_preview",
+        "id": "CSV-HIST-COST",
         "version": 1
       },
       "enterprise_id": "ENT-A"

@@ -4,10 +4,10 @@
 
 ## 内容与读取顺序
 
-1. `fixture.json`：固定日期、两企业、owner/finance/pm/member 四主职责、三收费模板、合成事实、91 个最终 SourceRef、18 个独立 base/命令阶段/整数分预期/来源和拒绝路径。`additional_cases` 补充分摊调差、归档迟到款、资金分配、五类 PG 竞争和恢复链；它们也未运行。
+1. `fixture.json`：固定日期、两企业、owner/finance/pm/member 四主职责、三收费模板、合成事实、92 个最终 SourceRef、18 个独立 base/命令阶段/整数分预期/来源和拒绝路径。`additional_cases` 补充分摊调差、归档迟到款、资金分配、五类 PG 竞争和恢复链；它们也未运行。
 2. `command-samples.json`：99 个严格 schema 正例（包含三模板 ContractLine DTO）、8 个 schema 拒绝例。各阶段通过 sample id 关联；`dry_run=false` 仅描述未来已认证应用服务的执行意图，不授予 AI/PAT 审批、支付或锁期权限。草稿样本不是批准事实；实际执行前必须按所属域提交和独立批准。
 3. `requirements-coverage.json`：137 条需求各自保留原业务规则和专项验收文字，同时保留 PH-132 对象/契约和既有 UAT 相关性。每条专项都有独立 ID；映射不证明该需求已测试。没有直接 UAT 的专项仍须单独执行。
-4. `attachments/`：3 份非空纯文本演练凭据；`samples/`：CSV 正常、列重排和同来源金额冲突样本；哈希在 fixture 中。
+4. `attachments/`：3 份非空纯文本演练凭据；`samples/`：CSV 正常、列重排、同来源金额冲突及8月历史费用样本；哈希在 fixture 中。
 5. `build_legacy.py` / `seed_legacy.py`：从固定产品提交 `119a04916e3e96a5e4d86516a5f13e841faf2f67` 建空 SQLite，再通过旧提交的真实 submit/review 服务形成旧账。
 6. `check_fixture.py` / `verify_legacy.py`：可重跑的离线样本检查与两次旧库重建；实际结果为 `sample-verification.json`、`verification.json`。
 
@@ -55,3 +55,5 @@ bootstrap、条件预测初建、CSV 历史覆盖预览、内部转账原子编�
 独立审查纠正UAT14：9月关账竞争必须用9月专用来源/过账，不得绑定10月样本。主分支以屏障确保close wins并拒绝过账；独立post wins分支确认10000分成本，并要求旧watermark关账冲突、重新预检后关闭。两分支都是未来产品not_run。
 
 UAT03的remaining_forecast_magnitude字段明确限定SET-U03本期已结算半程；S03/S04/S05为53000/21200/0。另列互斥的后半程条件范围53000，组合为106000/74200/53000，结清本期不能删掉后半程。S04显式抵扣以前，预收31800另列为可用信用，不把未清或总预测冒称银行净可用额。后续范围专项保留来源覆盖，不生成重复计划。
+
+PR审阅纠正：UAT12覆盖重叠用专用2026-08-08历史费用CSV，已经含在8月31日期初成本且截止前已付；10月普通AP样本另保留为非覆盖反例。UAT10质保结算样本到期日与黄金预期统一为2027-10-31，未到期不得视为逾期。
