@@ -1,0 +1,2 @@
+enterprise_id,document_type,external_id,version,amount_minor,currency,project_id,source_date
+ENT-A,payable,CSV-AP-1,1,10000,CNY,P-FIXED,2026-10-08

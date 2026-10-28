@@ -2010,7 +2010,7 @@
       "title": "建立黄金企业数据、18UAT分解及逐分预期",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -2033,16 +2033,16 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/65",
-      "owner": null,
+      "owner": "integrator",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-134.md"
     },
     {
       "id": "PH-135",
       "title": "验证契约夹具、PG多连接与准备环境CI",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [

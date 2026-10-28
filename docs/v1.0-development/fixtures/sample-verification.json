@@ -1,0 +1,19 @@
+{
+  "result": "pass",
+  "kind": "fixture_structure_hash_arithmetic_and_schema_only",
+  "positive_schema_samples": 99,
+  "negative_schema_samples": 8,
+  "sources": 91,
+  "uat_sequences": 18,
+  "requirements": 137,
+  "product_commands_executed": false,
+  "product_uat_passed": false,
+  "database_read": false,
+  "input_sha256": {
+    "fixture.json": "54d4502ee9f8bf1b1579c4468ebaef72bc007656705b3b2d0902517e0bf730b3",
+    "command-samples.json": "f165d7ba8dc25fa4e65e67a733c9a5a1f2d84cdcb0b02e0ac3ff1980d7b99e49",
+    "requirements-coverage.json": "7f8c1049e02e946ff44142d331723b4704fe2ee3d290e37212aebc6f5cc888af",
+    "check_fixture.py": "3f7a967b517c142f21e146c3f02874c3a79d43c4e07663f5ca52a3c8800718fe"
+  },
+  "errors": []
+}

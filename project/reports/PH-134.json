@@ -1,0 +1,46 @@
+{
+  "task_id": "PH-134",
+  "summary": "Synthetic golden fixtures,18 independent UAT oracles,137 specialized requirement cases and reproducible frozen legacy builder.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual60-taskcheck passed."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual19governance tests passed in2.053s."
+    },
+    {
+      "command": ".agent-venv/bin/python -B docs/v1.0-development/fixtures/check_fixture.py",
+      "result": "pass",
+      "evidence": "Root actual99 schema positives/8 rejections/91typed source refs/18 independent bases/137 specialized cases; no product commands or DB. Input hashes match recorded sample-verification."
+    },
+    {
+      "command": "python -B docs/v1.0-development/fixtures/verify_legacy.py --repo .",
+      "result": "pass",
+      "evidence": "Scoped worker actual two fresh frozen119a049 builds, each migrate/old service seed/integrity succeeds; businessbytes samefb6ede3c...,58 cents4lines4ledger9audit9events, existing output refused and DBunchanged. Root checked builder/seed/driver hashes and both recorded outputs. No DB published."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph134_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Read-only full finance/fixture/builder review; independently ran final99positive/8reject/91source/18UAT/137requirements checker and60taskcheck; verified allsample/legacy inputhashes. Fixed September period-race source/month and close/post branches plus current-tranche vs later conditional53000 forecast. Independently checked cost/allocations/reversals/cash/ETC/tax/prepaid arithmetic. Did not repeat2legacy builds or productUAT/PG/browser/restore. Limited re-review after CI falsepositive:125 key occurrences/111 original tokens map bijectively to111numeric placeholders, original key equality/conflict semantics retained, all other fields unchanged; independent99/8/91/18/137 and4inputhashes pass. CurrentGitleaks remainsCI obligation."
+  },
+  "deviations": [
+    "Corrected draft second company-cost addition on allocation, cash clearing counted as cash, ETC mistaken for open-item balance, UAT09 cumulativecash and UAT06remainingforecast/12opening/14clearance.",
+    "Frozen schema lacks some bootstrap/CSV-preview/restore/orchestration commands; retain explicit procedural future operations instead of inventing APIs.",
+    "Legacy builder no-replace objects and fixedarchiveSHA; external unique output, sanitized environment; never import live runtime database.",
+    "Independent financial review fixed cross-month lock/post race with September-only source and explicit close/post winner branches; clarified UAT03 current settled tranche forecast0 vs later conditional53000, preserving mutually exclusive source coverage.",
+    "Initial PR74 CI40620018668 Gitleaks generic-api-key flagged46 literal synthetic command keys. Replaced synthetic idempotency/external source tokens with stable distinct all-numeric placeholders, preserving original equality mapping; no real credential/customerdata or scanner exemption. Amend only own unmerged feature commit with exact lease, retaining failedCI evidence."
+  ],
+  "unverified": [
+    "All18 product UAT not_run, including actual permissions/source/cumulative/locks/transactions and client/API/CSV equivalence.",
+    "No new migrations/upgrade/cutover/realPG concurrency/Linux attachment+database restore/browser/customer acceptance.",
+    "Schema defaults are annotations,99 samplevalidity not server authorization or runtime execution.",
+    "Current PR eight requiredCI must pass before normalmerge."
+  ]
+}
