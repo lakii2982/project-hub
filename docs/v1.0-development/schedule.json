@@ -3,7 +3,7 @@
   "artifact_kind": "static_estimate_not_task_authority",
   "date_local": "2026-10-28",
   "baseline_sha": "6dfb7f8fddf891fba08505aa2e218a8ff1dfb9ce",
-  "work_package_source_sha256": "0f78649ee7bdb37958f00212123eae01dacac0cf5cdddeb0875c69a92469f2dd",
+  "work_package_source_sha256": "c81a3ff63ebafb809fbd0ad41aad60133306a5772c26ba845fb79e8c538616f3",
   "unit": "integer focused-work minutes; neither money nor promised calendar duration",
   "counts": {
     "packages": 62,
@@ -8336,7 +8336,7 @@
   ],
   "p0_security_reserve": {
     "owner_package": "WP-RELEASE-PACKAGE",
-    "formal_task_id": null,
+    "formal_task_id": "PH-139",
     "effort_minutes": [
       180,
       480
@@ -8353,5 +8353,18 @@
       "migration/sharedfile serialization andcustomer-facing task failures"
     ],
     "update_rule": "Review ranges and remainingcriticalpath in own authorized planning change; no scope expansion or proposed→ready by estimate."
+  },
+  "ph137_promotion": {
+    "formal_slices": 73,
+    "new_tasks": 69,
+    "reused_tasks": [
+      "PH-001",
+      "PH-002",
+      "PH-003",
+      "PH-026"
+    ],
+    "mapping": "implementation-plan.json",
+    "estimates": "PH136 package-level subjective estimates retained; not measured velocity or per-slice promise",
+    "recalibrate_after": "first three formal merged slices and first cross-domain financial slice"
   }
 }

@@ -17,7 +17,11 @@
       "acceptance_expectation": "拒绝重复接管；缺基础规则无法正式启用",
       "primary_package": "WP-ONBOARDING",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-194",
+        "PH-192",
+        "PH-193"
+      ],
       "uat_ids": [
         "UAT-01"
       ],
@@ -28,7 +32,17 @@
       ],
       "specialized_acceptance": "拒绝重复接管；缺基础规则无法正式启用",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-194",
+      "support_ph": [
+        "PH-192",
+        "PH-193"
+      ],
+      "contract_refs": [
+        "project/specs/PH-194.md",
+        "project/specs/PH-192.md",
+        "project/specs/PH-193.md"
+      ]
     },
     {
       "requirement_id": "V1-ORG-02",
@@ -37,7 +51,10 @@
       "acceptance_expectation": "过期链接、重复使用、枚举账号有拒绝路径",
       "primary_package": "WP-IDENTITY",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-144",
+        "PH-143"
+      ],
       "uat_ids": [
         "UAT-01",
         "UAT-15"
@@ -49,7 +66,15 @@
       ],
       "specialized_acceptance": "过期链接、重复使用、枚举账号有拒绝路径",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-144",
+      "support_ph": [
+        "PH-143"
+      ],
+      "contract_refs": [
+        "project/specs/PH-144.md",
+        "project/specs/PH-143.md"
+      ]
     },
     {
       "requirement_id": "V1-ORG-03",
@@ -58,7 +83,10 @@
       "acceptance_expectation": "越企业/越项目读取、写入、导出和附件均拒绝",
       "primary_package": "WP-IDENTITY",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-144",
+        "PH-143"
+      ],
       "uat_ids": [
         "UAT-15"
       ],
@@ -69,7 +97,15 @@
       ],
       "specialized_acceptance": "越企业/越项目读取、写入、导出和附件均拒绝",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-144",
+      "support_ph": [
+        "PH-143"
+      ],
+      "contract_refs": [
+        "project/specs/PH-144.md",
+        "project/specs/PH-143.md"
+      ]
     },
     {
       "requirement_id": "V1-ORG-04",
@@ -78,7 +114,9 @@
       "acceptance_expectation": "有账号无员工或无项目时给明确办理路径",
       "primary_package": "WP-PEOPLE",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-145"
+      ],
       "uat_ids": [
         "UAT-01",
         "UAT-04",
@@ -91,7 +129,12 @@
       ],
       "specialized_acceptance": "有账号无员工或无项目时给明确办理路径",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-145",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-145.md"
+      ]
     },
     {
       "requirement_id": "V1-ORG-05",
@@ -100,7 +143,10 @@
       "acceptance_expectation": "停用后的旧会话、PAT和后台任务不能继续写",
       "primary_package": "WP-IDENTITY",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-144",
+        "PH-143"
+      ],
       "uat_ids": [
         "UAT-15"
       ],
@@ -111,7 +157,15 @@
       ],
       "specialized_acceptance": "停用后的旧会话、PAT和后台任务不能继续写",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-144",
+      "support_ph": [
+        "PH-143"
+      ],
+      "contract_refs": [
+        "project/specs/PH-144.md",
+        "project/specs/PH-143.md"
+      ]
     },
     {
       "requirement_id": "V1-ORG-06",
@@ -120,7 +174,10 @@
       "acceptance_expectation": "PM/成员/审阅拿不到个人成本明细",
       "primary_package": "WP-IDENTITY",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-144",
+        "PH-143"
+      ],
       "uat_ids": [
         "UAT-15"
       ],
@@ -131,7 +188,15 @@
       ],
       "specialized_acceptance": "PM/成员/审阅拿不到个人成本明细",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-144",
+      "support_ph": [
+        "PH-143"
+      ],
+      "contract_refs": [
+        "project/specs/PH-144.md",
+        "project/specs/PH-143.md"
+      ]
     },
     {
       "requirement_id": "V1-ORG-07",
@@ -140,7 +205,10 @@
       "acceptance_expectation": "同账号多角色不能规避自审；不能移除最后有效负责人",
       "primary_package": "WP-IDENTITY",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-144",
+        "PH-143"
+      ],
       "uat_ids": [
         "UAT-01",
         "UAT-15"
@@ -152,7 +220,15 @@
       ],
       "specialized_acceptance": "同账号多角色不能规避自审；不能移除最后有效负责人",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-144",
+      "support_ph": [
+        "PH-143"
+      ],
+      "contract_refs": [
+        "project/specs/PH-144.md",
+        "project/specs/PH-143.md"
+      ]
     },
     {
       "requirement_id": "V1-ORG-08",
@@ -161,7 +237,10 @@
       "acceptance_expectation": "角色降级/密码变更/停用立即失效；无审批/支付/锁账工具",
       "primary_package": "WP-IDENTITY",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-144",
+        "PH-143"
+      ],
       "uat_ids": [
         "UAT-15"
       ],
@@ -172,7 +251,15 @@
       ],
       "specialized_acceptance": "角色降级/密码变更/停用立即失效；无审批/支付/锁账工具",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-144",
+      "support_ph": [
+        "PH-143"
+      ],
+      "contract_refs": [
+        "project/specs/PH-144.md",
+        "project/specs/PH-143.md"
+      ]
     },
     {
       "requirement_id": "V1-MD-01",
@@ -181,7 +268,9 @@
       "acceptance_expectation": "项目页与财务/合同引用更新一致，旧POST不保留第二写规则",
       "primary_package": "WP-PROJECT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-147"
+      ],
       "uat_ids": [
         "UAT-02"
       ],
@@ -192,7 +281,12 @@
       ],
       "specialized_acceptance": "项目页与财务/合同引用更新一致，旧POST不保留第二写规则",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-147",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-147.md"
+      ]
     },
     {
       "requirement_id": "V1-MD-02",
@@ -201,7 +295,9 @@
       "acceptance_expectation": "同名员工不自动合并；历史投入不丢失",
       "primary_package": "WP-PEOPLE",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-145"
+      ],
       "uat_ids": [
         "UAT-04",
         "UAT-15"
@@ -213,7 +309,12 @@
       ],
       "specialized_acceptance": "同名员工不自动合并；历史投入不丢失",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-145",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-145.md"
+      ]
     },
     {
       "requirement_id": "V1-MD-03",
@@ -222,7 +323,9 @@
       "acceptance_expectation": "收付、合同、发票选择同一ID，不靠名称匹配核销",
       "primary_package": "WP-PARTY",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-146"
+      ],
       "uat_ids": [
         "UAT-02"
       ],
@@ -233,7 +336,12 @@
       ],
       "specialized_acceptance": "收付、合同、发票选择同一ID，不靠名称匹配核销",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-146",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-146.md"
+      ]
     },
     {
       "requirement_id": "V1-MD-04",
@@ -242,7 +350,9 @@
       "acceptance_expectation": "导入与UI单位一致，拒绝不明确的小时/分钟和元/分",
       "primary_package": "WP-PEOPLE",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-145"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -251,7 +361,12 @@
       ],
       "specialized_acceptance": "导入与UI单位一致，拒绝不明确的小时/分钟和元/分",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-145",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-145.md"
+      ]
     },
     {
       "requirement_id": "V1-MD-05",
@@ -260,7 +375,9 @@
       "acceptance_expectation": "不能直接编辑当前余额，非授权人不可查看账号敏感信息",
       "primary_package": "WP-BANK",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-169"
+      ],
       "uat_ids": [
         "UAT-13"
       ],
@@ -271,7 +388,12 @@
       ],
       "specialized_acceptance": "不能直接编辑当前余额，非授权人不可查看账号敏感信息",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-169",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-169.md"
+      ]
     },
     {
       "requirement_id": "V1-MD-06",
@@ -280,7 +402,9 @@
       "acceptance_expectation": "合并前列影响范围；租户/主体不同不能合并",
       "primary_package": "WP-PARTY",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-146"
+      ],
       "uat_ids": [
         "UAT-02"
       ],
@@ -291,7 +415,12 @@
       ],
       "specialized_acceptance": "合并前列影响范围；租户/主体不同不能合并",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-146",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-146.md"
+      ]
     },
     {
       "requirement_id": "V1-MD-07",
@@ -300,7 +429,9 @@
       "acceptance_expectation": "无权人不能通过快捷新增获得维护权限",
       "primary_package": "WP-PARTY",
       "stage": "S1",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-146"
+      ],
       "uat_ids": [
         "UAT-02"
       ],
@@ -311,7 +442,12 @@
       ],
       "specialized_acceptance": "无权人不能通过快捷新增获得维护权限",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-146",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-146.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-01",
@@ -320,7 +456,9 @@
       "acceptance_expectation": "建立项目不要求先建任务树或完整组织架构",
       "primary_package": "WP-PROJECT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-147"
+      ],
       "uat_ids": [
         "UAT-01"
       ],
@@ -331,7 +469,12 @@
       ],
       "specialized_acceptance": "建立项目不要求先建任务树或完整组织架构",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-147",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-147.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-02",
@@ -340,7 +483,9 @@
       "acceptance_expectation": "移出项目后不能新报该项目，历史记录仍可追查",
       "primary_package": "WP-PROJECT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-147"
+      ],
       "uat_ids": [
         "UAT-15"
       ],
@@ -351,7 +496,12 @@
       ],
       "specialized_acceptance": "移出项目后不能新报该项目，历史记录仍可追查",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-147",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-147.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-03",
@@ -360,7 +510,10 @@
       "acceptance_expectation": "跨项目/循环依赖拒绝；历史任务保留",
       "primary_package": "WP-DELIVERY",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-149",
+        "PH-148"
+      ],
       "uat_ids": [
         "UAT-03"
       ],
@@ -371,7 +524,15 @@
       ],
       "specialized_acceptance": "跨项目/循环依赖拒绝；历史任务保留",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-149",
+      "support_ph": [
+        "PH-148"
+      ],
+      "contract_refs": [
+        "project/specs/PH-149.md",
+        "project/specs/PH-148.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-04",
@@ -380,7 +541,10 @@
       "acceptance_expectation": "日期到期、任务完成不能自动产生收入/应收",
       "primary_package": "WP-DELIVERY",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-149",
+        "PH-148"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-05",
@@ -393,7 +557,15 @@
       ],
       "specialized_acceptance": "日期到期、任务完成不能自动产生收入/应收",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-149",
+      "support_ph": [
+        "PH-148"
+      ],
+      "contract_refs": [
+        "project/specs/PH-149.md",
+        "project/specs/PH-148.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-05",
@@ -402,7 +574,10 @@
       "acceptance_expectation": "风险关闭留原因；没有收费批准不增加生效合同额",
       "primary_package": "WP-DELIVERY",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-149",
+        "PH-148"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -411,7 +586,15 @@
       ],
       "specialized_acceptance": "风险关闭留原因；没有收费批准不增加生效合同额",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-149",
+      "support_ph": [
+        "PH-148"
+      ],
+      "contract_refs": [
+        "project/specs/PH-149.md",
+        "project/specs/PH-148.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-06",
@@ -420,7 +603,9 @@
       "acceptance_expectation": "交付完成但有质保款时保持可办理财务",
       "primary_package": "WP-PROJECT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-147"
+      ],
       "uat_ids": [
         "UAT-10"
       ],
@@ -431,7 +616,12 @@
       ],
       "specialized_acceptance": "交付完成但有质保款时保持可办理财务",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-147",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-147.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-07",
@@ -440,7 +630,9 @@
       "acceptance_expectation": "暂停阻止普通新投入，仍允许合法实际收付和纠错",
       "primary_package": "WP-PROJECT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-147"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -449,7 +641,12 @@
       ],
       "specialized_acceptance": "暂停阻止普通新投入，仍允许合法实际收付和纠错",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-147",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-147.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-08",
@@ -458,7 +655,9 @@
       "acceptance_expectation": "跨模块明细跳转和金额口径一致，无权数据不下发",
       "primary_package": "WP-PROJECT-CLOSE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-185"
+      ],
       "uat_ids": [
         "UAT-02"
       ],
@@ -469,7 +668,12 @@
       ],
       "specialized_acceptance": "跨模块明细跳转和金额口径一致，无权数据不下发",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-185",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-185.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-09",
@@ -478,7 +682,9 @@
       "acceptance_expectation": "不允许用强制清零或删除未清项通过归档",
       "primary_package": "WP-PROJECT-CLOSE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-185"
+      ],
       "uat_ids": [
         "UAT-10"
       ],
@@ -489,7 +695,12 @@
       ],
       "specialized_acceptance": "不允许用强制清零或删除未清项通过归档",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-185",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-185.md"
+      ]
     },
     {
       "requirement_id": "V1-PRO-10",
@@ -498,7 +709,9 @@
       "acceptance_expectation": "不重新开放普通报工；保留“归档后处理”审计",
       "primary_package": "WP-PROJECT-CLOSE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-185"
+      ],
       "uat_ids": [
         "UAT-10"
       ],
@@ -509,7 +722,12 @@
       ],
       "specialized_acceptance": "不重新开放普通报工；保留“归档后处理”审计",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-185",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-185.md"
+      ]
     },
     {
       "requirement_id": "V1-CON-01",
@@ -518,7 +736,9 @@
       "acceptance_expectation": "拒绝一个合同金额在多个项目全额累计",
       "primary_package": "WP-CONTRACT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-150"
+      ],
       "uat_ids": [
         "UAT-02",
         "UAT-03"
@@ -530,7 +750,12 @@
       ],
       "specialized_acceptance": "拒绝一个合同金额在多个项目全额累计",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-150",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-150.md"
+      ]
     },
     {
       "requirement_id": "V1-CON-02",
@@ -539,7 +764,9 @@
       "acceptance_expectation": "不允许同一服务既按月费又按包内工时重复计收入",
       "primary_package": "WP-CONTRACT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-150"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-05",
@@ -552,7 +779,12 @@
       ],
       "specialized_acceptance": "不允许同一服务既按月费又按包内工时重复计收入",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-150",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-150.md"
+      ]
     },
     {
       "requirement_id": "V1-CON-03",
@@ -561,7 +793,9 @@
       "acceptance_expectation": "合同行和守恒；未知税务资格不能默认抵扣",
       "primary_package": "WP-CONTRACT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-150"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-17"
@@ -573,7 +807,12 @@
       ],
       "specialized_acceptance": "合同行和守恒；未知税务资格不能默认抵扣",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-150",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-150.md"
+      ]
     },
     {
       "requirement_id": "V1-CON-04",
@@ -582,7 +821,9 @@
       "acceptance_expectation": "无条件权利与仍有实质条件的款项分别显示",
       "primary_package": "WP-CONTRACT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-150"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-10"
@@ -594,7 +835,12 @@
       ],
       "specialized_acceptance": "无条件权利与仍有实质条件的款项分别显示",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-150",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-150.md"
+      ]
     },
     {
       "requirement_id": "V1-CON-05",
@@ -603,7 +849,9 @@
       "acceptance_expectation": "并发修订、过期版本和超上限拒绝",
       "primary_package": "WP-CONTRACT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-150"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-11"
@@ -615,7 +863,12 @@
       ],
       "specialized_acceptance": "并发修订、过期版本和超上限拒绝",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-150",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-150.md"
+      ]
     },
     {
       "requirement_id": "V1-CON-06",
@@ -624,7 +877,9 @@
       "acceptance_expectation": "未批准增价只进情景，不增加预计有效价款",
       "primary_package": "WP-CHANGE",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-151"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -633,7 +888,12 @@
       ],
       "specialized_acceptance": "未批准增价只进情景，不增加预计有效价款",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-151",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-151.md"
+      ]
     },
     {
       "requirement_id": "V1-CON-07",
@@ -642,7 +902,9 @@
       "acceptance_expectation": "项目、币种、对手不一致时阻止关联",
       "primary_package": "WP-CONTRACT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-150"
+      ],
       "uat_ids": [
         "UAT-06"
       ],
@@ -653,7 +915,12 @@
       ],
       "specialized_acceptance": "项目、币种、对手不一致时阻止关联",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-150",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-150.md"
+      ]
     },
     {
       "requirement_id": "V1-CON-08",
@@ -662,7 +929,9 @@
       "acceptance_expectation": "不以合同余额减收款代替应收，不以开票额代替收入",
       "primary_package": "WP-CHANGE",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-151"
+      ],
       "uat_ids": [
         "UAT-02",
         "UAT-11"
@@ -674,7 +943,12 @@
       ],
       "specialized_acceptance": "不以合同余额减收款代替应收，不以开票额代替收入",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-151",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-151.md"
+      ]
     },
     {
       "requirement_id": "V1-TIM-01",
@@ -683,7 +957,9 @@
       "acceptance_expectation": "当前项目授权、日总分钟和日期范围受控",
       "primary_package": "WP-TIME-INPUT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-152"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -694,7 +970,12 @@
       ],
       "specialized_acceptance": "当前项目授权、日总分钟和日期范围受控",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-152",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-152.md"
+      ]
     },
     {
       "requirement_id": "V1-TIM-02",
@@ -703,7 +984,9 @@
       "acceptance_expectation": "重复提交幂等；跨项目每日合计不超现行上限",
       "primary_package": "WP-TIME-INPUT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-152"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -714,7 +997,12 @@
       ],
       "specialized_acceptance": "重复提交幂等；跨项目每日合计不超现行上限",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-152",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-152.md"
+      ]
     },
     {
       "requirement_id": "V1-TIM-03",
@@ -723,7 +1011,9 @@
       "acceptance_expectation": "公司总投入可核对；未填与零投入区分",
       "primary_package": "WP-TIME-INPUT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-152"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -734,7 +1024,12 @@
       ],
       "specialized_acceptance": "公司总投入可核对；未填与零投入区分",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-152",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-152.md"
+      ]
     },
     {
       "requirement_id": "V1-TIM-04",
@@ -743,7 +1038,9 @@
       "acceptance_expectation": "代录本人业务也不能由业务本人自审",
       "primary_package": "WP-TIME-INPUT",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-152"
+      ],
       "uat_ids": [
         "UAT-04",
         "UAT-15"
@@ -755,7 +1052,12 @@
       ],
       "specialized_acceptance": "代录本人业务也不能由业务本人自审",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-152",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-152.md"
+      ]
     },
     {
       "requirement_id": "V1-TIM-05",
@@ -764,7 +1066,9 @@
       "acceptance_expectation": "退回不计正式成本；重复审批不重复过账",
       "primary_package": "WP-TIME-REVIEW",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-153"
+      ],
       "uat_ids": [
         "UAT-04",
         "UAT-15"
@@ -776,7 +1080,12 @@
       ],
       "specialized_acceptance": "退回不计正式成本；重复审批不重复过账",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-153",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-153.md"
+      ]
     },
     {
       "requirement_id": "V1-TIM-06",
@@ -785,7 +1094,9 @@
       "acceptance_expectation": "缺费率记录在项目未入账风险和月结检查一致出现",
       "primary_package": "WP-TIME-REVIEW",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-153"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -796,7 +1107,12 @@
       ],
       "specialized_acceptance": "缺费率记录在项目未入账风险和月结检查一致出现",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-153",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-153.md"
+      ]
     },
     {
       "requirement_id": "V1-TIM-07",
@@ -805,7 +1121,9 @@
       "acceptance_expectation": "扣减可计费小时不抹掉已发生人工成本",
       "primary_package": "WP-BILLABLE",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-154"
+      ],
       "uat_ids": [
         "UAT-05"
       ],
@@ -816,7 +1134,12 @@
       ],
       "specialized_acceptance": "扣减可计费小时不抹掉已发生人工成本",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-154",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-154.md"
+      ]
     },
     {
       "requirement_id": "V1-TIM-08",
@@ -825,7 +1148,9 @@
       "acceptance_expectation": "页面、导出、API的权限与分钟合计一致",
       "primary_package": "WP-TIME-REVIEW",
       "stage": "S2",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-153"
+      ],
       "uat_ids": [
         "UAT-15"
       ],
@@ -836,7 +1161,12 @@
       ],
       "specialized_acceptance": "页面、导出、API的权限与分钟合计一致",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-153",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-153.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-01",
@@ -845,7 +1175,9 @@
       "acceptance_expectation": "工资汇总可核对，权限限制到owner/finance",
       "primary_package": "WP-LABOR-POLICY",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-159"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -856,7 +1188,12 @@
       ],
       "specialized_acceptance": "工资汇总可核对，权限限制到owner/finance",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-159",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-159.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-02",
@@ -865,7 +1202,9 @@
       "acceptance_expectation": "节假日/带薪假不重复扣，零分母阻止正式计费",
       "primary_package": "WP-LABOR-POLICY",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-159"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -876,7 +1215,12 @@
       ],
       "specialized_acceptance": "节假日/带薪假不重复扣，零分母阻止正式计费",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-159",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-159.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-03",
@@ -885,7 +1229,9 @@
       "acceptance_expectation": "本月调薪不无痕改旧账；无资料不自动复制生效",
       "primary_package": "WP-LABOR-POLICY",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-159"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -896,7 +1242,12 @@
       ],
       "specialized_acceptance": "本月调薪不无痕改旧账；无资料不自动复制生效",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-159",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-159.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-04",
@@ -905,7 +1256,9 @@
       "acceptance_expectation": "金额整数分、Decimal；新算法上线不重算历史",
       "primary_package": "WP-LABOR-POLICY",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-159"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -916,7 +1269,12 @@
       ],
       "specialized_acceptance": "金额整数分、Decimal；新算法上线不重算历史",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-159",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-159.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-05",
@@ -925,7 +1283,10 @@
       "acceptance_expectation": "工资池总额与去向可复算，不让差额消失",
       "primary_package": "WP-LABOR-POST",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-161",
+        "PH-160"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -936,7 +1297,15 @@
       ],
       "specialized_acceptance": "工资池总额与去向可复算，不让差额消失",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-161",
+      "support_ph": [
+        "PH-160"
+      ],
+      "contract_refs": [
+        "project/specs/PH-161.md",
+        "project/specs/PH-160.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-06",
@@ -945,7 +1314,10 @@
       "acceptance_expectation": "同一补偿不同时进费率和额外费用",
       "primary_package": "WP-LABOR-POST",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-161",
+        "PH-160"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -956,7 +1328,15 @@
       ],
       "specialized_acceptance": "同一补偿不同时进费率和额外费用",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-161",
+      "support_ph": [
+        "PH-160"
+      ],
+      "contract_refs": [
+        "project/specs/PH-161.md",
+        "project/specs/PH-160.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-07",
@@ -965,7 +1345,9 @@
       "acceptance_expectation": "不为分摊再录一次原始费用；M07为费用操作模块，不另建同源台账",
       "primary_package": "WP-SHARED",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-165"
+      ],
       "uat_ids": [
         "UAT-07"
       ],
@@ -976,7 +1358,12 @@
       ],
       "specialized_acceptance": "不为分摊再录一次原始费用；M07为费用操作模块，不另建同源台账",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-165",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-165.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-08",
@@ -985,7 +1372,9 @@
       "acceptance_expectation": "分配总额=源额，不能超可分余额；零权重给待处理",
       "primary_package": "WP-SHARED",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-165"
+      ],
       "uat_ids": [
         "UAT-07"
       ],
@@ -996,7 +1385,12 @@
       ],
       "specialized_acceptance": "分配总额=源额，不能超可分余额；零权重给待处理",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-165",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-165.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-09",
@@ -1005,7 +1399,9 @@
       "acceptance_expectation": "源池和项目分配不能在公司汇总双计",
       "primary_package": "WP-SHARED",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-165"
+      ],
       "uat_ids": [
         "UAT-07"
       ],
@@ -1016,7 +1412,12 @@
       ],
       "specialized_acceptance": "源池和项目分配不能在公司汇总双计",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-165",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-165.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-10",
@@ -1025,7 +1426,10 @@
       "acceptance_expectation": "项目、非项目、待分配合计与来源总额一致",
       "primary_package": "WP-LABOR-POST",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-161",
+        "PH-160"
+      ],
       "uat_ids": [
         "UAT-04",
         "UAT-07"
@@ -1037,7 +1441,15 @@
       ],
       "specialized_acceptance": "项目、非项目、待分配合计与来源总额一致",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-161",
+      "support_ph": [
+        "PH-160"
+      ],
+      "contract_refs": [
+        "project/specs/PH-161.md",
+        "project/specs/PH-160.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-11",
@@ -1046,7 +1458,9 @@
       "acceptance_expectation": "工资付款只增加现金支出，不第二次确认人工成本",
       "primary_package": "WP-PAYROLL-CASH",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-172"
+      ],
       "uat_ids": [
         "UAT-04",
         "UAT-13"
@@ -1058,7 +1472,12 @@
       ],
       "specialized_acceptance": "工资付款只增加现金支出，不第二次确认人工成本",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-172",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-172.md"
+      ]
     },
     {
       "requirement_id": "V1-CST-12",
@@ -1067,7 +1486,9 @@
       "acceptance_expectation": "外包验收与员工标准费率不能覆盖同一投入来源",
       "primary_package": "WP-SPEND",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-163"
+      ],
       "uat_ids": [
         "UAT-06"
       ],
@@ -1078,7 +1499,12 @@
       ],
       "specialized_acceptance": "外包验收与员工标准费率不能覆盖同一投入来源",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-163",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-163.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-01",
@@ -1087,7 +1513,9 @@
       "acceptance_expectation": "本人费用和代录来源明确，同来源查重",
       "primary_package": "WP-EXPENSE",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-162"
+      ],
       "uat_ids": [
         "UAT-06"
       ],
@@ -1098,7 +1526,12 @@
       ],
       "specialized_acceptance": "本人费用和代录来源明确，同来源查重",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-162",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-162.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-02",
@@ -1107,7 +1540,9 @@
       "acceptance_expectation": "预测只计未履约部分，不同时算全额承诺与AC",
       "primary_package": "WP-SPEND",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-163"
+      ],
       "uat_ids": [
         "UAT-06"
       ],
@@ -1118,7 +1553,12 @@
       ],
       "specialized_acceptance": "预测只计未履约部分，不同时算全额承诺与AC",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-163",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-163.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-03",
@@ -1127,7 +1567,9 @@
       "acceptance_expectation": "预付款不因支付自动转成本；未耗用资产不伪装费用",
       "primary_package": "WP-SPEND",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-163"
+      ],
       "uat_ids": [
         "UAT-06"
       ],
@@ -1138,7 +1580,12 @@
       ],
       "specialized_acceptance": "预付款不因支付自动转成本；未耗用资产不伪装费用",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-163",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-163.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-04",
@@ -1147,7 +1594,9 @@
       "acceptance_expectation": "自审和二次过账拒绝；事务失败无半张凭证",
       "primary_package": "WP-EXPENSE",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-162"
+      ],
       "uat_ids": [
         "UAT-06"
       ],
@@ -1158,7 +1607,12 @@
       ],
       "specialized_acceptance": "自审和二次过账拒绝；事务失败无半张凭证",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-162",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-162.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-05",
@@ -1167,7 +1621,9 @@
       "acceptance_expectation": "补发票、付款时不新增一份同额成本",
       "primary_package": "WP-SPEND-CORRECTION",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-164"
+      ],
       "uat_ids": [
         "UAT-06",
         "UAT-17"
@@ -1179,7 +1635,12 @@
       ],
       "specialized_acceptance": "补发票、付款时不新增一份同额成本",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-164",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-164.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-06",
@@ -1188,7 +1649,9 @@
       "acceptance_expectation": "无票不默认为可抵扣，也不能让已发生支出悬空；税额调整不重复现金或应付",
       "primary_package": "WP-EXPENSE",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-162"
+      ],
       "uat_ids": [
         "UAT-17"
       ],
@@ -1199,7 +1662,12 @@
       ],
       "specialized_acceptance": "无票不默认为可抵扣，也不能让已发生支出悬空；税额调整不重复现金或应付",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-162",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-162.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-07",
@@ -1208,7 +1676,9 @@
       "acceptance_expectation": "借支不当成本；超出报销的剩余借支不自动清零",
       "primary_package": "WP-EMPLOYEE-ADVANCE",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-174"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -1217,7 +1687,12 @@
       ],
       "specialized_acceptance": "借支不当成本；超出报销的剩余借支不自动清零",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-174",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-174.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-08",
@@ -1226,7 +1701,9 @@
       "acceptance_expectation": "退款本身不自动反向成本；已核销关系按顺序处理",
       "primary_package": "WP-SPEND-CORRECTION",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-164"
+      ],
       "uat_ids": [
         "UAT-09"
       ],
@@ -1237,7 +1714,12 @@
       ],
       "specialized_acceptance": "退款本身不自动反向成本；已核销关系按顺序处理",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-164",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-164.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-09",
@@ -1246,7 +1728,9 @@
       "acceptance_expectation": "原额与分配守恒，同一附件/来源提示重复风险",
       "primary_package": "WP-SHARED",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-165"
+      ],
       "uat_ids": [
         "UAT-07"
       ],
@@ -1257,7 +1741,12 @@
       ],
       "specialized_acceptance": "原额与分配守恒，同一附件/来源提示重复风险",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-165",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-165.md"
+      ]
     },
     {
       "requirement_id": "V1-SPD-10",
@@ -1266,7 +1755,9 @@
       "acceptance_expectation": "年付服务不在付款/整单验收时一次费用化；每期只确认适用耗用，剩余ETC与未来待付分别计算",
       "primary_package": "WP-PREPAID-SERVICE",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-175"
+      ],
       "uat_ids": [
         "UAT-18"
       ],
@@ -1277,7 +1768,12 @@
       ],
       "specialized_acceptance": "年付服务不在付款/整单验收时一次费用化；每期只确认适用耗用，剩余ETC与未来待付分别计算",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-175",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-175.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-01",
@@ -1286,7 +1782,10 @@
       "acceptance_expectation": "未达实质条件只留计划，不生成正式应收",
       "primary_package": "WP-AR",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-156",
+        "PH-155"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-11"
@@ -1298,7 +1797,15 @@
       ],
       "specialized_acceptance": "未达实质条件只留计划，不生成正式应收",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-156",
+      "support_ph": [
+        "PH-155"
+      ],
+      "contract_refs": [
+        "project/specs/PH-156.md",
+        "project/specs/PH-155.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-02",
@@ -1307,7 +1814,9 @@
       "acceptance_expectation": "补票、改付款计划不重复新增应付",
       "primary_package": "WP-AP",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-157"
+      ],
       "uat_ids": [
         "UAT-06"
       ],
@@ -1318,7 +1827,12 @@
       ],
       "specialized_acceptance": "补票、改付款计划不重复新增应付",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-157",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-157.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-03",
@@ -1327,7 +1841,10 @@
       "acceptance_expectation": "质保扣留不视为折扣/成本节约，不提前算逾期",
       "primary_package": "WP-AR",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-156",
+        "PH-155"
+      ],
       "uat_ids": [
         "UAT-10"
       ],
@@ -1338,7 +1855,15 @@
       ],
       "specialized_acceptance": "质保扣留不视为折扣/成本节约，不提前算逾期",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-156",
+      "support_ph": [
+        "PH-155"
+      ],
+      "contract_refs": [
+        "project/specs/PH-156.md",
+        "project/specs/PH-155.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-04",
@@ -1347,7 +1872,10 @@
       "acceptance_expectation": "部分核销仅对剩余计账龄；不能手改余额",
       "primary_package": "WP-AR",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-156",
+        "PH-155"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-06",
@@ -1360,7 +1888,15 @@
       ],
       "specialized_acceptance": "部分核销仅对剩余计账龄；不能手改余额",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-156",
+      "support_ph": [
+        "PH-155"
+      ],
+      "contract_refs": [
+        "project/specs/PH-156.md",
+        "project/specs/PH-155.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-05",
@@ -1369,7 +1905,9 @@
       "acceptance_expectation": "PostgreSQL竞争核销不超额，重复请求不双记",
       "primary_package": "WP-CLEARING",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-170"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-14"
@@ -1381,7 +1919,12 @@
       ],
       "specialized_acceptance": "PostgreSQL竞争核销不超额，重复请求不双记",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-170",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-170.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-06",
@@ -1390,7 +1933,9 @@
       "acceptance_expectation": "部分抵扣守恒，抵扣后预测只算未清部分",
       "primary_package": "WP-CLEARING",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-170"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-06"
@@ -1402,7 +1947,12 @@
       ],
       "specialized_acceptance": "部分抵扣守恒，抵扣后预测只算未清部分",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-170",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-170.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-07",
@@ -1411,7 +1961,9 @@
       "acceptance_expectation": "撤销核销不等于退款；同一退回不能恢复两次",
       "primary_package": "WP-REFUND",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-171"
+      ],
       "uat_ids": [
         "UAT-09"
       ],
@@ -1422,7 +1974,12 @@
       ],
       "specialized_acceptance": "撤销核销不等于退款；同一退回不能恢复两次",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-171",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-171.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-08",
@@ -1431,7 +1988,9 @@
       "acceptance_expectation": "不以伪造收款消应收，不自动冲税或交付收入",
       "primary_package": "WP-CREDIT",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-158"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -1440,7 +1999,12 @@
       ],
       "specialized_acceptance": "不以伪造收款消应收，不自动冲税或交付收入",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-158",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-158.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-09",
@@ -1449,7 +2013,10 @@
       "acceptance_expectation": "负责人、下一步、变更证据可回查",
       "primary_package": "WP-AR",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-156",
+        "PH-155"
+      ],
       "uat_ids": [
         "UAT-10"
       ],
@@ -1460,7 +2027,15 @@
       ],
       "specialized_acceptance": "负责人、下一步、变更证据可回查",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-156",
+      "support_ph": [
+        "PH-155"
+      ],
+      "contract_refs": [
+        "project/specs/PH-156.md",
+        "project/specs/PH-155.md"
+      ]
     },
     {
       "requirement_id": "V1-SET-10",
@@ -1469,7 +2044,9 @@
       "acceptance_expectation": "无批准不得跨项目；不允许跨企业核销",
       "primary_package": "WP-CLEARING",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-170"
+      ],
       "uat_ids": [
         "UAT-15"
       ],
@@ -1480,7 +2057,12 @@
       ],
       "specialized_acceptance": "无批准不得跨项目；不允许跨企业核销",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-170",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-170.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-01",
@@ -1489,7 +2071,9 @@
       "acceptance_expectation": "导入与手工重复不产生两笔资金事实",
       "primary_package": "WP-BANK",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-169"
+      ],
       "uat_ids": [
         "UAT-13"
       ],
@@ -1500,7 +2084,12 @@
       ],
       "specialized_acceptance": "导入与手工重复不产生两笔资金事实",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-169",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-169.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-02",
@@ -1509,7 +2098,9 @@
       "acceptance_expectation": "不因未审批而丢失已发生现金，也不冒充审批通过",
       "primary_package": "WP-BANK",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-169"
+      ],
       "uat_ids": [
         "UAT-13"
       ],
@@ -1520,7 +2111,12 @@
       ],
       "specialized_acceptance": "不因未审批而丢失已发生现金，也不冒充审批通过",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-169",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-169.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-03",
@@ -1529,7 +2125,9 @@
       "acceptance_expectation": "归属汇总不超交易总额，核销不新建现金",
       "primary_package": "WP-CLEARING",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-170"
+      ],
       "uat_ids": [
         "UAT-13"
       ],
@@ -1540,7 +2138,12 @@
       ],
       "specialized_acceptance": "归属汇总不超交易总额，核销不新建现金",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-170",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-170.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-04",
@@ -1549,7 +2152,9 @@
       "acceptance_expectation": "收到预收不确认收入，支付预付不确认成本",
       "primary_package": "WP-CLEARING",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-170"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-06"
@@ -1561,7 +2166,12 @@
       ],
       "specialized_acceptance": "收到预收不确认收入，支付预付不确认成本",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-170",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-170.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-05",
@@ -1570,7 +2180,9 @@
       "acceptance_expectation": "部分退款可持续到余额为零，不允许超退或重复恢复",
       "primary_package": "WP-REFUND",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-171"
+      ],
       "uat_ids": [
         "UAT-09"
       ],
@@ -1581,7 +2193,12 @@
       ],
       "specialized_acceptance": "部分退款可持续到余额为零，不允许超退或重复恢复",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-171",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-171.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-06",
@@ -1590,7 +2207,9 @@
       "acceptance_expectation": "不与人工成本、费用或项目分配重复汇总",
       "primary_package": "WP-PAYROLL-CASH",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-172"
+      ],
       "uat_ids": [
         "UAT-04",
         "UAT-13"
@@ -1602,7 +2221,12 @@
       ],
       "specialized_acceptance": "不与人工成本、费用或项目分配重复汇总",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-172",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-172.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-07",
@@ -1611,7 +2235,9 @@
       "acceptance_expectation": "不能既计净收款又再扣同一手续费",
       "primary_package": "WP-FEE-TRANSFER",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-173"
+      ],
       "uat_ids": [
         "UAT-13"
       ],
@@ -1622,7 +2248,12 @@
       ],
       "specialized_acceptance": "不能既计净收款又再扣同一手续费",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-173",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-173.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-08",
@@ -1631,7 +2262,9 @@
       "acceptance_expectation": "不计经营收入/成本，不增加公司净流入",
       "primary_package": "WP-FEE-TRANSFER",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-173"
+      ],
       "uat_ids": [
         "UAT-13"
       ],
@@ -1642,7 +2275,12 @@
       ],
       "specialized_acceptance": "不计经营收入/成本，不增加公司净流入",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-173",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-173.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-09",
@@ -1651,7 +2289,9 @@
       "acceptance_expectation": "不直接编辑来自正式未清项的金额，只调整允许的预计日期/情景",
       "primary_package": "WP-FORECAST",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-179"
+      ],
       "uat_ids": [
         "UAT-08"
       ],
@@ -1662,7 +2302,12 @@
       ],
       "specialized_acceptance": "不直接编辑来自正式未清项的金额，只调整允许的预计日期/情景",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-179",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-179.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-10",
@@ -1671,7 +2316,9 @@
       "acceptance_expectation": "不重复计合同计划与应收，不自动顺延过期项",
       "primary_package": "WP-FORECAST",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-179"
+      ],
       "uat_ids": [
         "UAT-08"
       ],
@@ -1682,7 +2329,12 @@
       ],
       "specialized_acceptance": "不重复计合同计划与应收，不自动顺延过期项",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-179",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-179.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-11",
@@ -1691,7 +2343,9 @@
       "acceptance_expectation": "覆盖不全时不称公司银行可用余额；预测不等于利润",
       "primary_package": "WP-FORECAST",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-179"
+      ],
       "uat_ids": [
         "UAT-13"
       ],
@@ -1702,7 +2356,12 @@
       ],
       "specialized_acceptance": "覆盖不全时不称公司银行可用余额；预测不等于利润",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-179",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-179.md"
+      ]
     },
     {
       "requirement_id": "V1-CSH-12",
@@ -1711,7 +2370,9 @@
       "acceptance_expectation": "禁止删除旧流水或改核销额来凑账户余额",
       "primary_package": "WP-BANK",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-169"
+      ],
       "uat_ids": [
         "UAT-09",
         "UAT-13"
@@ -1723,7 +2384,12 @@
       ],
       "specialized_acceptance": "禁止删除旧流水或改核销额来凑账户余额",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-169",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-169.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-01",
@@ -1732,7 +2398,9 @@
       "acceptance_expectation": "发票号码/来源查重；不直接生成重复收入/成本",
       "primary_package": "WP-INVOICE",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-176"
+      ],
       "uat_ids": [
         "UAT-11"
       ],
@@ -1743,7 +2411,12 @@
       ],
       "specialized_acceptance": "发票号码/来源查重；不直接生成重复收入/成本",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-176",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-176.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-02",
@@ -1752,7 +2425,9 @@
       "acceptance_expectation": "一票多项、分次开票不超分配额度",
       "primary_package": "WP-INVOICE",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-176"
+      ],
       "uat_ids": [
         "UAT-11"
       ],
@@ -1763,7 +2438,12 @@
       ],
       "specialized_acceptance": "一票多项、分次开票不超分配额度",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-176",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-176.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-03",
@@ -1772,7 +2452,9 @@
       "acceptance_expectation": "红冲不自动当退款或删除原结算",
       "primary_package": "WP-INVOICE",
       "stage": "S4",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-176"
+      ],
       "uat_ids": [
         "UAT-11"
       ],
@@ -1783,7 +2465,12 @@
       ],
       "specialized_acceptance": "红冲不自动当退款或删除原结算",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-176",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-176.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-04",
@@ -1792,7 +2479,9 @@
       "acceptance_expectation": "收入页无第二个可编辑方法字段；已有事件后变更方法须合同版本及迁移/调整，不覆盖历史",
       "primary_package": "WP-REVENUE-FIXED",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-166"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-11"
@@ -1804,7 +2493,12 @@
       ],
       "specialized_acceptance": "收入页无第二个可编辑方法字段；已有事件后变更方法须合同版本及迁移/调整，不覆盖历史",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-166",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-166.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-05",
@@ -1813,7 +2507,9 @@
       "acceptance_expectation": "日期到期/成本花费/任务数量完成率不能自动确认",
       "primary_package": "WP-REVENUE-FIXED",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-166"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-11"
@@ -1825,7 +2521,12 @@
       ],
       "specialized_acceptance": "日期到期/成本花费/任务数量完成率不能自动确认",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-166",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-166.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-06",
@@ -1834,7 +2535,9 @@
       "acceptance_expectation": "同一服务记录不重复计量，累计不超批准明细上限",
       "primary_package": "WP-REVENUE-SERVICE",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-167"
+      ],
       "uat_ids": [
         "UAT-05",
         "UAT-11"
@@ -1846,7 +2549,12 @@
       ],
       "specialized_acceptance": "同一服务记录不重复计量，累计不超批准明细上限",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-167",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-167.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-07",
@@ -1855,7 +2563,9 @@
       "acceptance_expectation": "三期取整累计守恒；已锁期仅在开放期调整",
       "primary_package": "WP-REVENUE-FIXED",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-166"
+      ],
       "uat_ids": [
         "UAT-11"
       ],
@@ -1866,7 +2576,12 @@
       ],
       "specialized_acceptance": "三期取整累计守恒；已锁期仅在开放期调整",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-166",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-166.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-08",
@@ -1875,7 +2590,9 @@
       "acceptance_expectation": "结算和履约互相配对，不各生成一份收入",
       "primary_package": "WP-REVENUE-PAIR",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-168"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-11"
@@ -1887,7 +2604,12 @@
       ],
       "specialized_acceptance": "结算和履约互相配对，不各生成一份收入",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-168",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-168.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-09",
@@ -1896,7 +2618,9 @@
       "acceptance_expectation": "付款/到账/开票不改变已确认收入；毛利不叫净利润",
       "primary_package": "WP-REVENUE-PAIR",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-168"
+      ],
       "uat_ids": [
         "UAT-03",
         "UAT-11"
@@ -1908,7 +2632,12 @@
       ],
       "specialized_acceptance": "付款/到账/开票不改变已确认收入；毛利不叫净利润",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-168",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-168.md"
+      ]
     },
     {
       "requirement_id": "V1-REV-10",
@@ -1917,7 +2646,9 @@
       "acceptance_expectation": "数据不完整时不展示完整可信的实际经营结果",
       "primary_package": "WP-REVENUE-PAIR",
       "stage": "S3",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-168"
+      ],
       "uat_ids": [
         "UAT-01",
         "UAT-17"
@@ -1929,7 +2660,12 @@
       ],
       "specialized_acceptance": "数据不完整时不展示完整可信的实际经营结果",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-168",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-168.md"
+      ]
     },
     {
       "requirement_id": "V1-PLN-01",
@@ -1938,7 +2674,9 @@
       "acceptance_expectation": "不要求细任务树；预算不产生实际成本",
       "primary_package": "WP-BUDGET",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-177"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -1947,7 +2685,12 @@
       ],
       "specialized_acceptance": "不要求细任务树；预算不产生实际成本",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-177",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-177.md"
+      ]
     },
     {
       "requirement_id": "V1-PLN-02",
@@ -1956,7 +2699,9 @@
       "acceptance_expectation": "草稿不替换基线，历史当时预算可回查",
       "primary_package": "WP-BUDGET",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-177"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -1965,7 +2710,12 @@
       ],
       "specialized_acceptance": "草稿不替换基线，历史当时预算可回查",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-177",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-177.md"
+      ]
     },
     {
       "requirement_id": "V1-PLN-03",
@@ -1974,7 +2724,9 @@
       "acceptance_expectation": "计划费率与实际费率不互相覆盖",
       "primary_package": "WP-ETC",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-178"
+      ],
       "uat_ids": [
         "UAT-06",
         "UAT-18"
@@ -1986,7 +2738,12 @@
       ],
       "specialized_acceptance": "计划费率与实际费率不互相覆盖",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-178",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-178.md"
+      ]
     },
     {
       "requirement_id": "V1-PLN-04",
@@ -1995,7 +2752,9 @@
       "acceptance_expectation": "同一来源只能覆盖一次ETC，不与AC双计",
       "primary_package": "WP-ETC",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-178"
+      ],
       "uat_ids": [
         "UAT-06",
         "UAT-18"
@@ -2007,7 +2766,12 @@
       ],
       "specialized_acceptance": "同一来源只能覆盖一次ETC，不与AC双计",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-178",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-178.md"
+      ]
     },
     {
       "requirement_id": "V1-PLN-05",
@@ -2016,7 +2780,9 @@
       "acceptance_expectation": "部分验收只释放对应部分，未入账项过账后同步减少ETC",
       "primary_package": "WP-ETC",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-178"
+      ],
       "uat_ids": [
         "UAT-06",
         "UAT-18"
@@ -2028,7 +2794,12 @@
       ],
       "specialized_acceptance": "部分验收只释放对应部分，未入账项过账后同步减少ETC",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-178",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-178.md"
+      ]
     },
     {
       "requirement_id": "V1-PLN-06",
@@ -2037,7 +2808,9 @@
       "acceptance_expectation": "预算余额、实际管理毛利和预计结余分别命名",
       "primary_package": "WP-INSIGHT-METRICS",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-182"
+      ],
       "uat_ids": [
         "UAT-06",
         "UAT-18"
@@ -2049,7 +2822,12 @@
       ],
       "specialized_acceptance": "预算余额、实际管理毛利和预计结余分别命名",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-182",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-182.md"
+      ]
     },
     {
       "requirement_id": "V1-PLN-07",
@@ -2058,7 +2836,9 @@
       "acceptance_expectation": "未签变更不能掩盖基准预计亏损",
       "primary_package": "WP-ETC",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-178"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2067,7 +2847,12 @@
       ],
       "specialized_acceptance": "未签变更不能掩盖基准预计亏损",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-178",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-178.md"
+      ]
     },
     {
       "requirement_id": "V1-PLN-08",
@@ -2076,7 +2861,9 @@
       "acceptance_expectation": "无更新、缺费用、过期假设均提示，不能装作实时准确",
       "primary_package": "WP-ETC",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-178"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2085,7 +2872,12 @@
       ],
       "specialized_acceptance": "无更新、缺费用、过期假设均提示，不能装作实时准确",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-178",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-178.md"
+      ]
     },
     {
       "requirement_id": "V1-PLN-09",
@@ -2094,7 +2886,9 @@
       "acceptance_expectation": "新报价复制为草稿，不将历史实际金额复制成新事实",
       "primary_package": "WP-INSIGHT-METRICS",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-182"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2103,7 +2897,12 @@
       ],
       "specialized_acceptance": "新报价复制为草稿，不将历史实际金额复制成新事实",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-182",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-182.md"
+      ]
     },
     {
       "requirement_id": "V1-REC-01",
@@ -2112,7 +2911,9 @@
       "acceptance_expectation": "不把未分配差额静默摊给项目或隐藏",
       "primary_package": "WP-RECONCILE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-181"
+      ],
       "uat_ids": [
         "UAT-04"
       ],
@@ -2123,7 +2924,12 @@
       ],
       "specialized_acceptance": "不把未分配差额静默摊给项目或隐藏",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-181",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-181.md"
+      ]
     },
     {
       "requirement_id": "V1-REC-02",
@@ -2132,7 +2938,9 @@
       "acceptance_expectation": "发现未入账/重复确认/只付款无来源的异常",
       "primary_package": "WP-RECONCILE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-181"
+      ],
       "uat_ids": [
         "UAT-06",
         "UAT-17",
@@ -2145,7 +2953,12 @@
       ],
       "specialized_acceptance": "发现未入账/重复确认/只付款无来源的异常",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-181",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-181.md"
+      ]
     },
     {
       "requirement_id": "V1-REC-03",
@@ -2154,7 +2967,9 @@
       "acceptance_expectation": "资金事实、项目归属和核销三层分别守恒",
       "primary_package": "WP-RECONCILE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-181"
+      ],
       "uat_ids": [
         "UAT-13"
       ],
@@ -2165,7 +2980,12 @@
       ],
       "specialized_acceptance": "资金事实、项目归属和核销三层分别守恒",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-181",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-181.md"
+      ]
     },
     {
       "requirement_id": "V1-REC-04",
@@ -2174,7 +2994,9 @@
       "acceptance_expectation": "区分未结算履约/未履约结算，不通过造单消差",
       "primary_package": "WP-RECONCILE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-181"
+      ],
       "uat_ids": [
         "UAT-11"
       ],
@@ -2185,7 +3007,12 @@
       ],
       "specialized_acceptance": "区分未结算履约/未履约结算，不通过造单消差",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-181",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-181.md"
+      ]
     },
     {
       "requirement_id": "V1-REC-05",
@@ -2194,7 +3021,9 @@
       "acceptance_expectation": "允许未分配项不等于忽略不平衡；规则列明可警告/必须阻断",
       "primary_package": "WP-CLOSE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-180"
+      ],
       "uat_ids": [
         "UAT-14"
       ],
@@ -2205,7 +3034,12 @@
       ],
       "specialized_acceptance": "允许未分配项不等于忽略不平衡；规则列明可警告/必须阻断",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-180",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-180.md"
+      ]
     },
     {
       "requirement_id": "V1-REC-06",
@@ -2214,7 +3048,9 @@
       "acceptance_expectation": "锁期和写账竞争在真实PG多连接验证",
       "primary_package": "WP-CLOSE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-180"
+      ],
       "uat_ids": [
         "UAT-14"
       ],
@@ -2225,7 +3061,12 @@
       ],
       "specialized_acceptance": "锁期和写账竞争在真实PG多连接验证",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-180",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-180.md"
+      ]
     },
     {
       "requirement_id": "V1-REC-07",
@@ -2234,7 +3075,9 @@
       "acceptance_expectation": "不编辑账本、不关闭触发器、不重复冲销",
       "primary_package": "WP-CLOSE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-180"
+      ],
       "uat_ids": [
         "UAT-14"
       ],
@@ -2245,7 +3088,12 @@
       ],
       "specialized_acceptance": "不编辑账本、不关闭触发器、不重复冲销",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-180",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-180.md"
+      ]
     },
     {
       "requirement_id": "V1-REC-08",
@@ -2254,7 +3102,9 @@
       "acceptance_expectation": "公式注入转义；报表不靠用户再写公式才成立",
       "primary_package": "WP-EXPORT",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-186"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2263,7 +3113,12 @@
       ],
       "specialized_acceptance": "公式注入转义；报表不靠用户再写公式才成立",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-186",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-186.md"
+      ]
     },
     {
       "requirement_id": "V1-REC-09",
@@ -2272,7 +3127,9 @@
       "acceptance_expectation": "硬错误阻断正式交付/锁账；允许差异有责任人与办理记录",
       "primary_package": "WP-CLOSE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-180"
+      ],
       "uat_ids": [
         "UAT-14"
       ],
@@ -2283,7 +3140,12 @@
       ],
       "specialized_acceptance": "硬错误阻断正式交付/锁账；允许差异有责任人与办理记录",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-180",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-180.md"
+      ]
     },
     {
       "requirement_id": "V1-INS-01",
@@ -2292,7 +3154,9 @@
       "acceptance_expectation": "每条有原因、来源、责任人、下一步，不用装饰图冒充结论",
       "primary_package": "WP-WORKSPACES",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-184"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2301,7 +3165,12 @@
       ],
       "specialized_acceptance": "每条有原因、来源、责任人、下一步，不用装饰图冒充结论",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-184",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-184.md"
+      ]
     },
     {
       "requirement_id": "V1-INS-02",
@@ -2310,7 +3179,9 @@
       "acceptance_expectation": "本项目授权范围，个人工资/费率不下发",
       "primary_package": "WP-WORKSPACES",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-184"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2319,7 +3190,12 @@
       ],
       "specialized_acceptance": "本项目授权范围，个人工资/费率不下发",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-184",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-184.md"
+      ]
     },
     {
       "requirement_id": "V1-INS-03",
@@ -2328,7 +3204,9 @@
       "acceptance_expectation": "不必进入财务后台即可完成日常操作",
       "primary_package": "WP-WORKSPACES",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-184"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2337,7 +3215,12 @@
       ],
       "specialized_acceptance": "不必进入财务后台即可完成日常操作",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-184",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-184.md"
+      ]
     },
     {
       "requirement_id": "V1-INS-04",
@@ -2346,7 +3229,9 @@
       "acceptance_expectation": "点击原事实办理，不提供另一套“改余额”表格",
       "primary_package": "WP-WORKSPACES",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-184"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2355,7 +3240,12 @@
       ],
       "specialized_acceptance": "点击原事实办理，不提供另一套“改余额”表格",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-184",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-184.md"
+      ]
     },
     {
       "requirement_id": "V1-INS-05",
@@ -2364,7 +3254,9 @@
       "acceptance_expectation": "重试不重复待办；停用模块保留历史与队列，权限收回后不可访问",
       "primary_package": "WP-NOTIFY",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-183"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2373,7 +3265,12 @@
       ],
       "specialized_acceptance": "重试不重复待办；停用模块保留历史与队列，权限收回后不可访问",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-183",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-183.md"
+      ]
     },
     {
       "requirement_id": "V1-INS-06",
@@ -2382,7 +3279,9 @@
       "acceptance_expectation": "页面/导出/API逐分一致，不跨企业/角色泄露",
       "primary_package": "WP-INSIGHT-METRICS",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-182"
+      ],
       "uat_ids": [
         "UAT-02"
       ],
@@ -2393,7 +3292,12 @@
       ],
       "specialized_acceptance": "页面/导出/API逐分一致，不跨企业/角色泄露",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-182",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-182.md"
+      ]
     },
     {
       "requirement_id": "V1-INS-07",
@@ -2402,7 +3306,9 @@
       "acceptance_expectation": "空值不假零，不以不明评分替代真实缺项",
       "primary_package": "WP-INSIGHT-METRICS",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-182"
+      ],
       "uat_ids": [
         "UAT-01"
       ],
@@ -2413,7 +3319,12 @@
       ],
       "specialized_acceptance": "空值不假零，不以不明评分替代真实缺项",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-182",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-182.md"
+      ]
     },
     {
       "requirement_id": "V1-INS-08",
@@ -2422,7 +3333,9 @@
       "acceptance_expectation": "1440/390、键盘/焦点、默认/空/错误/加载/无权状态及无页面横溢",
       "primary_package": "WP-UI-ACCEPTANCE",
       "stage": "S5",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-026"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2431,7 +3344,12 @@
       ],
       "specialized_acceptance": "1440/390、键盘/焦点、默认/空/错误/加载/无权状态及无页面横溢",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-026",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-026.md"
+      ]
     },
     {
       "requirement_id": "V1-ONB-01",
@@ -2440,7 +3358,11 @@
       "acceptance_expectation": "重复安装不接管公司；密码不写日志；步骤可续接",
       "primary_package": "WP-ONBOARDING",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-194",
+        "PH-192",
+        "PH-193"
+      ],
       "uat_ids": [
         "UAT-01"
       ],
@@ -2451,7 +3373,17 @@
       ],
       "specialized_acceptance": "重复安装不接管公司；密码不写日志；步骤可续接",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-194",
+      "support_ph": [
+        "PH-192",
+        "PH-193"
+      ],
+      "contract_refs": [
+        "project/specs/PH-194.md",
+        "project/specs/PH-192.md",
+        "project/specs/PH-193.md"
+      ]
     },
     {
       "requirement_id": "V1-ONB-02",
@@ -2460,7 +3392,11 @@
       "acceptance_expectation": "缺关键期初只能试算或阻止正式启用，不能默认为0",
       "primary_package": "WP-OPENING",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-191",
+        "PH-189",
+        "PH-190"
+      ],
       "uat_ids": [
         "UAT-01",
         "UAT-12"
@@ -2472,7 +3408,17 @@
       ],
       "specialized_acceptance": "缺关键期初只能试算或阻止正式启用，不能默认为0",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-191",
+      "support_ph": [
+        "PH-189",
+        "PH-190"
+      ],
+      "contract_refs": [
+        "project/specs/PH-191.md",
+        "project/specs/PH-189.md",
+        "project/specs/PH-190.md"
+      ]
     },
     {
       "requirement_id": "V1-ONB-03",
@@ -2481,7 +3427,11 @@
       "acceptance_expectation": "历史汇总和同范围明细不得重复成本/收入",
       "primary_package": "WP-OPENING",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-191",
+        "PH-189",
+        "PH-190"
+      ],
       "uat_ids": [
         "UAT-12"
       ],
@@ -2492,7 +3442,17 @@
       ],
       "specialized_acceptance": "历史汇总和同范围明细不得重复成本/收入",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-191",
+      "support_ph": [
+        "PH-189",
+        "PH-190"
+      ],
+      "contract_refs": [
+        "project/specs/PH-191.md",
+        "project/specs/PH-189.md",
+        "project/specs/PH-190.md"
+      ]
     },
     {
       "requirement_id": "V1-ONB-04",
@@ -2501,7 +3461,11 @@
       "acceptance_expectation": "期初未清不再生成收入/成本，后续收付只核销和记现金",
       "primary_package": "WP-OPENING",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-191",
+        "PH-189",
+        "PH-190"
+      ],
       "uat_ids": [
         "UAT-12"
       ],
@@ -2512,7 +3476,17 @@
       ],
       "specialized_acceptance": "期初未清不再生成收入/成本，后续收付只核销和记现金",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-191",
+      "support_ph": [
+        "PH-189",
+        "PH-190"
+      ],
+      "contract_refs": [
+        "project/specs/PH-191.md",
+        "project/specs/PH-189.md",
+        "project/specs/PH-190.md"
+      ]
     },
     {
       "requirement_id": "V1-ONB-05",
@@ -2521,7 +3495,10 @@
       "acceptance_expectation": "同一文件重排重试幂等，错误行有原因和原值",
       "primary_package": "WP-IMPORT",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-188",
+        "PH-187"
+      ],
       "uat_ids": [
         "UAT-12"
       ],
@@ -2532,7 +3509,15 @@
       ],
       "specialized_acceptance": "同一文件重排重试幂等，错误行有原因和原值",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-188",
+      "support_ph": [
+        "PH-187"
+      ],
+      "contract_refs": [
+        "project/specs/PH-188.md",
+        "project/specs/PH-187.md"
+      ]
     },
     {
       "requirement_id": "V1-ONB-06",
@@ -2541,7 +3526,10 @@
       "acceptance_expectation": "无权限/越期/同键改内容拒绝，已正式过账回退走纠错",
       "primary_package": "WP-IMPORT",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-188",
+        "PH-187"
+      ],
       "uat_ids": [
         "UAT-12"
       ],
@@ -2552,7 +3540,15 @@
       ],
       "specialized_acceptance": "无权限/越期/同键改内容拒绝，已正式过账回退走纠错",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-188",
+      "support_ph": [
+        "PH-187"
+      ],
+      "contract_refs": [
+        "project/specs/PH-188.md",
+        "project/specs/PH-187.md"
+      ]
     },
     {
       "requirement_id": "V1-ONB-07",
@@ -2561,7 +3557,11 @@
       "acceptance_expectation": "新客户资料能与原表对照，未验证项不能签“已迁移正确”",
       "primary_package": "WP-OPENING",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-191",
+        "PH-189",
+        "PH-190"
+      ],
       "uat_ids": [
         "UAT-12"
       ],
@@ -2572,7 +3572,17 @@
       ],
       "specialized_acceptance": "新客户资料能与原表对照，未验证项不能签“已迁移正确”",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-191",
+      "support_ph": [
+        "PH-189",
+        "PH-190"
+      ],
+      "contract_refs": [
+        "project/specs/PH-191.md",
+        "project/specs/PH-189.md",
+        "project/specs/PH-190.md"
+      ]
     },
     {
       "requirement_id": "V1-ONB-08",
@@ -2581,7 +3591,11 @@
       "acceptance_expectation": "用户可导出本人授权数据与附件清单，例子不混入正式账",
       "primary_package": "WP-ONBOARDING",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-194",
+        "PH-192",
+        "PH-193"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2590,7 +3604,17 @@
       ],
       "specialized_acceptance": "用户可导出本人授权数据与附件清单，例子不混入正式账",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-194",
+      "support_ph": [
+        "PH-192",
+        "PH-193"
+      ],
+      "contract_refs": [
+        "project/specs/PH-194.md",
+        "project/specs/PH-192.md",
+        "project/specs/PH-193.md"
+      ]
     },
     {
       "requirement_id": "V1-OPS-01",
@@ -2599,7 +3623,10 @@
       "acceptance_expectation": "空机安装，端口/磁盘/镜像/迁移失败安全重试，不覆盖原数据",
       "primary_package": "WP-INSTALL",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-195",
+        "PH-003"
+      ],
       "uat_ids": [
         "UAT-16"
       ],
@@ -2610,7 +3637,15 @@
       ],
       "specialized_acceptance": "空机安装，端口/磁盘/镜像/迁移失败安全重试，不覆盖原数据",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-195",
+      "support_ph": [
+        "PH-003"
+      ],
+      "contract_refs": [
+        "project/specs/PH-195.md",
+        "project/specs/PH-003.md"
+      ]
     },
     {
       "requirement_id": "V1-OPS-02",
@@ -2619,7 +3654,9 @@
       "acceptance_expectation": "实际TLS访问及错误配置拒绝，不以配置存在代替实证",
       "primary_package": "WP-TLS",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-196"
+      ],
       "uat_ids": [
         "UAT-16"
       ],
@@ -2630,7 +3667,12 @@
       ],
       "specialized_acceptance": "实际TLS访问及错误配置拒绝，不以配置存在代替实证",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-196",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-196.md"
+      ]
     },
     {
       "requirement_id": "V1-OPS-03",
@@ -2639,7 +3681,10 @@
       "acceptance_expectation": "冻结基线到候选版升级演练，失败可恢复，不倒放账本",
       "primary_package": "WP-UPGRADE-RESTORE",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-198",
+        "PH-197"
+      ],
       "uat_ids": [
         "UAT-16"
       ],
@@ -2650,7 +3695,15 @@
       ],
       "specialized_acceptance": "冻结基线到候选版升级演练，失败可恢复，不倒放账本",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-198",
+      "support_ph": [
+        "PH-197"
+      ],
+      "contract_refs": [
+        "project/specs/PH-198.md",
+        "project/specs/PH-197.md"
+      ]
     },
     {
       "requirement_id": "V1-OPS-04",
@@ -2659,7 +3712,10 @@
       "acceptance_expectation": "PG隔离恢复后真实登录、报表/凭证/附件核对，记录RPO/RTO实测",
       "primary_package": "WP-UPGRADE-RESTORE",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-198",
+        "PH-197"
+      ],
       "uat_ids": [
         "UAT-16"
       ],
@@ -2670,7 +3726,15 @@
       ],
       "specialized_acceptance": "PG隔离恢复后真实登录、报表/凭证/附件核对，记录RPO/RTO实测",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-198",
+      "support_ph": [
+        "PH-197"
+      ],
+      "contract_refs": [
+        "project/specs/PH-198.md",
+        "project/specs/PH-197.md"
+      ]
     },
     {
       "requirement_id": "V1-OPS-05",
@@ -2679,7 +3743,10 @@
       "acceptance_expectation": "worker停止、磁盘近满、备份失败可被识别及办理",
       "primary_package": "WP-INSTALL",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-195",
+        "PH-003"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2688,7 +3755,15 @@
       ],
       "specialized_acceptance": "worker停止、磁盘近满、备份失败可被识别及办理",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-195",
+      "support_ph": [
+        "PH-003"
+      ],
+      "contract_refs": [
+        "project/specs/PH-195.md",
+        "project/specs/PH-003.md"
+      ]
     },
     {
       "requirement_id": "V1-OPS-06",
@@ -2697,7 +3772,10 @@
       "acceptance_expectation": "双审批、超核销、退款、分摊、期初和锁账竞争均有反例",
       "primary_package": "WP-PG-CONCURRENCY",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-200",
+        "PH-199"
+      ],
       "uat_ids": [
         "UAT-14"
       ],
@@ -2708,7 +3786,15 @@
       ],
       "specialized_acceptance": "双审批、超核销、退款、分摊、期初和锁账竞争均有反例",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-200",
+      "support_ph": [
+        "PH-199"
+      ],
+      "contract_refs": [
+        "project/specs/PH-200.md",
+        "project/specs/PH-199.md"
+      ]
     },
     {
       "requirement_id": "V1-OPS-07",
@@ -2717,7 +3803,10 @@
       "acceptance_expectation": "支持期、响应、数据导出/交还/删除约定有实际文档",
       "primary_package": "WP-SUPPORT",
       "stage": "S6",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-204",
+        "PH-203"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2726,7 +3815,15 @@
       ],
       "specialized_acceptance": "支持期、响应、数据导出/交还/删除约定有实际文档",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-204",
+      "support_ph": [
+        "PH-203"
+      ],
+      "contract_refs": [
+        "project/specs/PH-204.md",
+        "project/specs/PH-203.md"
+      ]
     },
     {
       "requirement_id": "V1-OPS-08",
@@ -2735,7 +3832,9 @@
       "acceptance_expectation": "排除runtime/.env/凭据/客户数据/虚拟环境/备份；不含用户个人Agent配置",
       "primary_package": "WP-RELEASE-PACKAGE",
       "stage": "S7",
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-205"
+      ],
       "uat_ids": [],
       "required_evidence": [
         "requirement_specific_acceptance",
@@ -2744,7 +3843,12 @@
       ],
       "specialized_acceptance": "排除runtime/.env/凭据/客户数据/虚拟环境/备份；不含用户个人Agent配置",
       "execution_status_source": "project/tasks.json_and_task_reports_after_promotion",
-      "evidence_refs": []
+      "evidence_refs": [],
+      "primary_ph": "PH-205",
+      "support_ph": [],
+      "contract_refs": [
+        "project/specs/PH-205.md"
+      ]
     }
   ],
   "uat_scenarios": [

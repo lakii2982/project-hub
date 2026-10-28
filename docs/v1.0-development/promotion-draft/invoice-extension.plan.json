@@ -1,0 +1,1176 @@
+{
+  "plan_version": 1,
+  "task": "PH-137",
+  "base": "f1115cf",
+  "status": "candidate_only_not_applied_not_implemented",
+  "canonical_contract": "C09",
+  "scope": "Candidate only.",
+  "existing_gap": {
+    "record": "Header only; no line/allocation creation.",
+    "reverse": "Cascade is proposed behavior, not existing support.",
+    "dto_boundary": "Dedicated inputs omit storage IDs/tenant/role/status/balance; invoice_id derived from invoice_ref."
+  },
+  "patches": [
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceRef",
+      "value": {
+        "allOf": [
+          {
+            "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+          },
+          {
+            "properties": {
+              "namespace": {
+                "const": "invoicing"
+              },
+              "kind": {
+                "enum": [
+                  "invoice"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceLineRef",
+      "value": {
+        "allOf": [
+          {
+            "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+          },
+          {
+            "properties": {
+              "namespace": {
+                "const": "invoicing"
+              },
+              "kind": {
+                "enum": [
+                  "invoice_line"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceAllocationRef",
+      "value": {
+        "allOf": [
+          {
+            "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+          },
+          {
+            "properties": {
+              "namespace": {
+                "const": "invoicing"
+              },
+              "kind": {
+                "enum": [
+                  "invoice_allocation"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceBusinessSourceRef",
+      "value": {
+        "oneOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "settlement"
+                  },
+                  "kind": {
+                    "enum": [
+                      "settlement"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "costing"
+                  },
+                  "kind": {
+                    "enum": [
+                      "expense_claim"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "costing"
+                  },
+                  "kind": {
+                    "enum": [
+                      "bank_charge"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceLineReversalSnapshot",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "original_line_ref",
+          "gross_cents",
+          "net_cents",
+          "tax_cents"
+        ],
+        "properties": {
+          "original_line_ref": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceLineRef"
+          },
+          "gross_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+          },
+          "net_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+          },
+          "tax_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+          }
+        }
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceAllocationReversalSnapshot",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "original_allocation_ref",
+          "original_line_ref",
+          "business_source_ref",
+          "gross_cents",
+          "net_cents",
+          "tax_cents"
+        ],
+        "properties": {
+          "original_allocation_ref": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceAllocationRef"
+          },
+          "original_line_ref": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceLineRef"
+          },
+          "business_source_ref": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceBusinessSourceRef"
+          },
+          "gross_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+          },
+          "net_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+          },
+          "tax_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+          }
+        }
+      }
+    },
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceAllocationInput",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "business_source_ref",
+          "gross_cents",
+          "net_cents",
+          "tax_cents"
+        ],
+        "properties": {
+          "business_source_ref": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceBusinessSourceRef"
+          },
+          "gross_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+          },
+          "net_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+          },
+          "tax_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+          }
+        }
+      }
+    },
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceLineInput",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "line_no",
+          "gross_cents",
+          "net_cents",
+          "tax_cents",
+          "allocations"
+        ],
+        "properties": {
+          "line_no": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "gross_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+          },
+          "net_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+          },
+          "tax_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+          },
+          "allocations": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "./write-dtos.schema.json#/$defs/InvoiceAllocationInput"
+            }
+          }
+        }
+      }
+    },
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceLinesAllocateInput",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "invoice_ref",
+          "lines"
+        ],
+        "properties": {
+          "invoice_ref": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceRef"
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "./write-dtos.schema.json#/$defs/InvoiceLineInput"
+            }
+          }
+        }
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/$defs/invoicing.lines.allocate~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "request_id",
+          "idempotency_key",
+          "payload",
+          "expected_version",
+          "occurred_on",
+          "posting_period"
+        ],
+        "properties": {
+          "contract": {
+            "const": "invoicing.lines.allocate/v1"
+          },
+          "request_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 160
+          },
+          "expected_version": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Version"
+          },
+          "occurred_on": {
+            "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+          },
+          "posting_period": {
+            "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "default": true
+          },
+          "payload": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceLinesAllocateInput"
+          }
+        },
+        "x-exposure": "authenticated_application_service",
+        "x-service-invariants": [
+          "See plan.service_rules; inherits company-lock/idempotency/dry-run rules of invoicing.invoice.record/v1; adds no PAT/AI exposure."
+        ]
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/invoicing.lines.allocate~1v1"
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/$defs/invoicing.lines.allocate~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "result_type",
+          "entity_refs",
+          "event_ids"
+        ],
+        "properties": {
+          "contract": {
+            "const": "invoicing.lines.allocate/v1"
+          },
+          "result_type": {
+            "enum": [
+              "created",
+              "existing",
+              "dry_run"
+            ]
+          },
+          "entity_refs": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 1000,
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "invoicing"
+                    },
+                    "kind": {
+                      "enum": [
+                        "invoice",
+                        "invoice_line",
+                        "invoice_allocation"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "event_ids": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "result_type": {
+                  "const": "dry_run"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "event_ids": {
+                  "maxItems": 0
+                },
+                "entity_refs": {
+                  "maxItems": 0
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/invoicing.lines.allocate~1v1"
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/$defs/invoicing.lines_allocated.v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "topic",
+          "schema_version",
+          "organization_id",
+          "source",
+          "occurred_at",
+          "payload"
+        ],
+        "properties": {
+          "event_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "topic": {
+            "const": "invoicing.lines_allocated.v1"
+          },
+          "schema_version": {
+            "const": 1
+          },
+          "organization_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "source": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceRef"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "line_refs",
+              "allocation_refs",
+              "invoice_version"
+            ],
+            "properties": {
+              "line_refs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1000,
+                "items": {
+                  "$ref": "./write-dtos.schema.json#/$defs/InvoiceLineRef"
+                }
+              },
+              "allocation_refs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1000,
+                "items": {
+                  "$ref": "./write-dtos.schema.json#/$defs/InvoiceAllocationRef"
+                }
+              },
+              "invoice_version": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Version"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/invoicing.lines_allocated.v1"
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/$defs/invoicing.reversed.v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "topic",
+          "schema_version",
+          "organization_id",
+          "source",
+          "occurred_at",
+          "payload"
+        ],
+        "properties": {
+          "event_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "topic": {
+            "const": "invoicing.reversed.v1"
+          },
+          "schema_version": {
+            "const": 1
+          },
+          "organization_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "source": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "invoicing"
+                  },
+                  "kind": {
+                    "enum": [
+                      "invoice_reversal"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "original_invoice_ref",
+              "line_reversals",
+              "allocation_reversals",
+              "gross_cents",
+              "net_cents",
+              "tax_cents"
+            ],
+            "properties": {
+              "original_invoice_ref": {
+                "$ref": "./write-dtos.schema.json#/$defs/InvoiceRef"
+              },
+              "line_reversals": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 1000,
+                "items": {
+                  "$ref": "./entities.schema.json#/$defs/InvoiceLineReversalSnapshot"
+                }
+              },
+              "allocation_reversals": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 1000,
+                "items": {
+                  "$ref": "./entities.schema.json#/$defs/InvoiceAllocationReversalSnapshot"
+                }
+              },
+              "gross_cents": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+              },
+              "net_cents": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+              },
+              "tax_cents": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/invoicing.reversed.v1"
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceReversal/properties/line_reversals",
+      "value": {
+        "type": "array",
+        "minItems": 0,
+        "maxItems": 1000,
+        "items": {
+          "$ref": "#/$defs/InvoiceLineReversalSnapshot"
+        }
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceReversal/properties/allocation_reversals",
+      "value": {
+        "type": "array",
+        "minItems": 0,
+        "maxItems": 1000,
+        "items": {
+          "$ref": "#/$defs/InvoiceAllocationReversalSnapshot"
+        }
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceReversal/properties/gross_cents",
+      "value": {
+        "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceReversal/properties/net_cents",
+      "value": {
+        "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/InvoiceReversal/properties/tax_cents",
+      "value": {
+        "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "replace",
+      "path": "/$defs/invoicing.invoice.reverse~1v1/x-service-invariants",
+      "value": [
+        "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
+        "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
+        "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "PROPOSED cascade extension, not current support: atomically append InvoiceReversal signed header and exact inverse snapshots of ALL effective lines/allocations. No partial reversal.",
+        "Each reverse snapshot references original line/allocation/source. Unique company/original invoice and original allocation prevents double reversal with changed key.",
+        "Never overwrite historical amounts/status; effective reversed state is projected, aggregate version alone advances. Header-only reversal has empty child arrays.",
+        "All children, header, audit, event, capacity release commit or roll back together. Same-key retry returns exact original result/event IDs; changed-key reversed invoice conflicts.",
+        "Current open period only, reversal_date<=today; omitted occurred_on defaults reversal_date, omitted posting_period defaults its month; supplied values must match. Do not reopen original locked period. Release source capacities exactly once.",
+        "Emit invoicing.reversed.v1 once transactionally; existing invoice.reverse result remains invoice_reversal refs with new event ID. No ledger/cost/income/obligation/cash posting.",
+        "Original invoice SourceRef.version is lock-checked; optional expected_version must agree. Existing optional envelope fields remain optional."
+      ]
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "replace",
+      "path": "/$defs/InvoiceReversal/required",
+      "value": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "original_invoice_ref",
+        "reason",
+        "reversal_date",
+        "line_reversals",
+        "allocation_reversals",
+        "gross_cents",
+        "net_cents",
+        "tax_cents"
+      ]
+    }
+  ],
+  "owner": {
+    "bridge": "invoicing sole allocation/coverage/reversal writer; settlement/costing supply authoritative eligibility/capacity.",
+    "implementation_owner": "WP-INVOICE integrator"
+  },
+  "service_rules": [
+    "Server derives tenant/actor/role/project/plugin context; owner or finance only. Closed schemas reject client organization/role/actor/status/balance. No PAT/AI writes.",
+    "Sources must already be approved/posted by another authorized approver: approved BankCharge (fee_bearer=company), posted ExpenseClaim, or eligible active/posted Settlement with approved upstream provenance. Allocation never approves a source; reject pending/self-approved provenance.",
+    "PG company lock first, then invoice and source locks in namespace/kind/id order; recheck auth/period/policy/versions/capacity. Facts, audit, outbox, idempotency result and version increment commit atomically.",
+    "expected_version = invoice_ref.version = live invoice version; source versions match live. Invoice active, same tenant/CNY, project visible, not reversed. line_no unique. Match supplier/customer through authoritative economic origin as specified below, not employee payee or net-receipt customer.",
+    "One call creates COMPLETE lines plus allocations of header-only invoice; no partial/incremental edits. Unique company/invoice/line_no and company/line/source independent of idempotency key.",
+    "Each header/line/allocation gross=net+tax; componentwise sum(lines)=header and sum(allocations)=line. Nonnegative integers, gross>0, component/header totals <=10^12. Decimal ROUND_HALF_UP, no float. Verify supplied tax against evidence.",
+    "Sales source only settlement.settlement receivable; purchase source settlement.settlement payable, costing.expense_claim or costing.bank_charge. Existing same-tenant/project/CNY eligible source, not reversed/cancelled. No arbitrary/manual/invoice/accounting source or manufactured obligation; BankCharge is a dependency on core-extension.plan.json, not an assertion canonical already supports it.",
+    "For selected source AND normalized origin, ALL effective allocations <= authoritative invoiceable gross/net/tax individually. Use FACE tax, not recoverable tax or deductibility. Missing/null face tax is unknown, never zero. No cost/income/obligation/cash posting.",
+    "occurred_on <= server today; posting_period matches month and is open; invoice_date <= occurred_on. Reject locked period, unauthorized project, disabled dependency or stale version.",
+    "Same company/contract/key + normalized input returns exact stored result/event IDs before stale-version rejection; changed input conflicts. Exclude request_id; default dry_run=true before hashing. Dry-run persists no idempotency/refs/events/version/capacity.",
+    "Changed key cannot reuse invoice/line/source; company lock, DB natural-key uniqueness and cross-invoice capacity recheck prevent double consume. Retry appends no facts/audit/outbox.",
+    "Purchase supplier: for employee reimbursement Settlement.payee.kind=employee, follow actual Settlement.source_ref to ExpenseClaim.counterparty_id. Employee is claimant/payee, never invoice supplier. Missing expense.counterparty_id => missing_evidence and refuse formal allocation until approved correction. Do not fabricate Supplier=Employee.",
+    "BankCharge.counterparty_id is bank/fee invoice supplier, never customer of original net receipt. Resolve and compare that supplier with purchase invoice.counterparty_id; if null require missing_evidence correction first. If aliased to expense/legacy origin, supplier and scope evidence must agree across chain, otherwise reject.",
+    "Sales AR still matches authorized receivable customer and invoice.counterparty_id; new purchase paths cannot relax sales customer/project/direction checks.",
+    "ExpenseClaim.tax_cents and BankCharge.tax_cents mean face tax. For confirmed face gross G and tax T, require 0<=T<=G and use invoiceable [G,G-T,T]. CostEvent.recoverable_tax_cents and deduction eligibility do not cap invoice tax and do not define invoice net.",
+    "Unknown/null/absent face tax permits recording invoice header evidence via existing invoicing.invoice.record/v1 but NOT invoicing.lines.allocate/v1; this command remains atomic complete allocation, so it cannot save unallocated lines. Complete approved expense/BankCharge evidence correction first; never auto-deduct tax, mutate historical cost or convert unknown to zero. No standalone unallocated-line write capability is claimed."
+  ],
+  "synthetic_examples": {
+    "schema_valid": [
+      {
+        "schema": "commands.schema.json#/$defs/invoicing.lines.allocate~1v1",
+        "value": {
+          "contract": "invoicing.lines.allocate/v1",
+          "request_id": "REQ_ALLOC_01",
+          "idempotency_key": "81000000",
+          "expected_version": 1,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "dry_run": false,
+          "payload": {
+            "invoice_ref": {
+              "namespace": "invoicing",
+              "kind": "invoice",
+              "id": "INV_01",
+              "version": 1
+            },
+            "lines": [
+              {
+                "line_no": 1,
+                "gross_cents": 11300,
+                "net_cents": 10000,
+                "tax_cents": 1300,
+                "allocations": [
+                  {
+                    "business_source_ref": {
+                      "namespace": "settlement",
+                      "kind": "settlement",
+                      "id": "SET_01",
+                      "version": 1
+                    },
+                    "gross_cents": 6780,
+                    "net_cents": 6000,
+                    "tax_cents": 780
+                  },
+                  {
+                    "business_source_ref": {
+                      "namespace": "settlement",
+                      "kind": "settlement",
+                      "id": "SET_02",
+                      "version": 1
+                    },
+                    "gross_cents": 4520,
+                    "net_cents": 4000,
+                    "tax_cents": 520
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "schema": "commands.schema.json#/$defs/invoicing.lines.allocate~1v1",
+        "value": {
+          "contract": "invoicing.lines.allocate/v1",
+          "request_id": "REQ_BANK_FACE_01",
+          "idempotency_key": "81000001",
+          "expected_version": 1,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "dry_run": false,
+          "payload": {
+            "invoice_ref": {
+              "namespace": "invoicing",
+              "kind": "invoice",
+              "id": "INV_BANK_01",
+              "version": 1
+            },
+            "lines": [
+              {
+                "line_no": 1,
+                "gross_cents": 200,
+                "net_cents": 190,
+                "tax_cents": 10,
+                "allocations": [
+                  {
+                    "business_source_ref": {
+                      "namespace": "costing",
+                      "kind": "bank_charge",
+                      "id": "FEE_BANK_01",
+                      "version": 1
+                    },
+                    "gross_cents": 200,
+                    "net_cents": 190,
+                    "tax_cents": 10
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "schema_invalid": [
+      {
+        "base": "schema_valid[0].value",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/payload/organization_id",
+            "value": "ORG_EVIL"
+          }
+        ],
+        "reason": "additionalProperties"
+      },
+      {
+        "base": "schema_valid[0].value",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/payload/lines/0/tax_cents",
+            "value": -1
+          }
+        ],
+        "reason": "CnyCents minimum"
+      },
+      {
+        "base": "schema_valid[0].value",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/payload/lines/0/id",
+            "value": "CLIENT_LINE"
+          }
+        ],
+        "reason": "server allocated line identity"
+      },
+      {
+        "base": "schema_valid[0].value",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/payload/lines/0/allocations/0/business_source_ref/kind",
+            "value": "invoice"
+          }
+        ],
+        "reason": "wrong business source kind"
+      }
+    ],
+    "service_cases": [
+      {
+        "name": "full_allocate",
+        "seed": {
+          "header": [
+            11300,
+            10000,
+            1300
+          ],
+          "source_SET_01_capacity": [
+            6780,
+            6000,
+            780
+          ],
+          "source_SET_02_capacity": [
+            4520,
+            4000,
+            520
+          ],
+          "approved_by": "OTHER_FINANCE"
+        },
+        "expected": {
+          "header_equals_lines_equals_allocations": [
+            11300,
+            10000,
+            1300
+          ],
+          "remaining_source_components": [
+            0,
+            0,
+            0
+          ],
+          "new_lines": 1,
+          "new_allocations": 2,
+          "new_cost_income_obligation_cash_postings": 0,
+          "invoice_version": 2
+        }
+      },
+      {
+        "name": "reverse_full",
+        "command": "invoicing.invoice.reverse/v1",
+        "expected": {
+          "header_delta": [
+            -11300,
+            -10000,
+            -1300
+          ],
+          "line_deltas": [
+            [
+              -11300,
+              -10000,
+              -1300
+            ]
+          ],
+          "allocation_deltas": [
+            [
+              -6780,
+              -6000,
+              -780
+            ],
+            [
+              -4520,
+              -4000,
+              -520
+            ]
+          ],
+          "effective_invoice_components": [
+            0,
+            0,
+            0
+          ],
+          "source_capacities_restored": [
+            [
+              6780,
+              6000,
+              780
+            ],
+            [
+              4520,
+              4000,
+              520
+            ]
+          ],
+          "historical_amount_updates": 0
+        }
+      },
+      {
+        "name": "schema_valid_but_bad_arithmetic",
+        "mutation": "line tax_cents=1299",
+        "expected": "Schema valid; service rejects gross != net+tax and header mismatch."
+      },
+      {
+        "name": "expense_payable_alias_double_invoice",
+        "seed": {
+          "ExpenseClaim:E": {
+            "gross_cents": 11300,
+            "tax_cents": 1300
+          },
+          "Settlement:S": {
+            "source_ref": {
+              "namespace": "costing",
+              "kind": "expense_claim",
+              "id": "E",
+              "version": 1
+            },
+            "gross_cents": 11300,
+            "net_cents": 10000,
+            "tax_cents": 1300
+          }
+        },
+        "steps": [
+          {
+            "invoice": "A",
+            "business_source_ref": "costing.expense_claim:E",
+            "amount": [
+              11300,
+              10000,
+              1300
+            ],
+            "expected": "accept; origin E remaining [0,0,0]"
+          },
+          {
+            "invoice": "B",
+            "business_source_ref": "settlement.settlement:S",
+            "amount": [
+              11300,
+              10000,
+              1300
+            ],
+            "expected": "atomic reject origin capacity, though selected S unused; no line/allocation/event/version effects"
+          }
+        ]
+      },
+      {
+        "name": "expense_payable_alias_partial",
+        "seed": "same E/S; fresh empty coverage",
+        "steps": [
+          {
+            "invoice": "A",
+            "business_source_ref": "costing.expense_claim:E",
+            "amount": [
+              6780,
+              6000,
+              780
+            ],
+            "expected": "accept"
+          },
+          {
+            "invoice": "B",
+            "business_source_ref": "settlement.settlement:S",
+            "amount": [
+              4520,
+              4000,
+              520
+            ],
+            "expected": "accept; origin total [11300,10000,1300], remaining [0,0,0]"
+          }
+        ],
+        "reverse_A": {
+          "origin_released": [
+            6780,
+            6000,
+            780
+          ],
+          "origin_remaining_consumed": [
+            4520,
+            4000,
+            520
+          ],
+          "retry_release": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "name": "bank_face_tax_nondeductible",
+        "seed": {
+          "BankCharge": {
+            "id": "FEE_BANK_01",
+            "status": "approved",
+            "gross_cents": 200,
+            "tax_cents": 10,
+            "counterparty_id": "BANK_SUPPLIER_01",
+            "existing_cost_ref": null,
+            "fee_bearer": "company"
+          },
+          "invoice_counterparty_id": "BANK_SUPPLIER_01",
+          "invoice_header": [
+            200,
+            190,
+            10
+          ],
+          "deductible": false,
+          "cost_before": 200,
+          "recoverable_tax_before": 0
+        },
+        "request": "schema_valid[1].value",
+        "expected": {
+          "allocation": "accept",
+          "invoiceable_components": [
+            200,
+            190,
+            10
+          ],
+          "selected_source_consumed": [
+            200,
+            190,
+            10
+          ],
+          "origin_consumed": [
+            200,
+            190,
+            10
+          ],
+          "cost_after": 200,
+          "recoverable_tax_after": 0,
+          "new_cost_or_cash_postings": 0
+        }
+      },
+      {
+        "name": "unknown_face_tax_not_zero",
+        "variants": [
+          {
+            "entity": "BankCharge",
+            "tax_cents": null
+          },
+          {
+            "entity": "ExpenseClaim",
+            "tax_cents": null
+          },
+          {
+            "entity": "ExpenseClaim",
+            "tax_field_absent": true
+          }
+        ],
+        "expected": "Header fact may be recorded; formal allocation rejects missing_evidence atomically, even with CostEvent recoverable_tax_cents=0. Require existing approved source evidence correction; no auto cost/tax mutation."
+      },
+      {
+        "name": "employee_payee_not_invoice_supplier",
+        "seed": {
+          "settlement_payee_kind": "employee",
+          "settlement_source": "actual source_ref -> ExpenseClaim E",
+          "expense_counterparty_id": null
+        },
+        "expected": "missing_evidence; never match invoice supplier against employee. Once approved counterparty evidence supplied, only matching merchant may allocate."
+      },
+      {
+        "name": "bank_alias_origin_shared",
+        "seed": "BankCharge B existing_cost_ref -> CostEvent C.source -> ExpenseClaim E; E face [200,190,10] and existing allocation [200,190,10]",
+        "expected": "B allocation rejected by origin E cap though B unused; no additional cost or origin capacity."
+      },
+      {
+        "name": "legacy_bank_alias_unproven",
+        "seed": "BankCharge existing_cost_ref -> legacy ledger_posting without trusted expense origin/coverage or face-tax evidence",
+        "expected": "missing_evidence or invalid_source; no inferred fresh origin, no allocation."
+      }
+    ]
+  },
+  "verification": {
+    "performed": [
+      "projectctl check/next/brief PH-137 passed on Python3.12; existing 55 command definitions unchanged except annotations; reverse-U11 remains compatible. Original reverse invariants retained. Checked actual Settlement.source_ref and ExpenseClaim gross_cents/tax_cents.",
+      "Read core-extension BankCharge fields and CostEvent.source/recoverable_tax_cents; preserved all 4 schema_invalid. New arithmetic cases are deterministic service expectations, not product execution.",
+      "Rechecked all patch parents/local schema references in memory and all 55 old command validation definitions unchanged; bank fixture arithmetic 200=190+10 and 4 negative schema examples preserved."
+    ],
+    "unverified": [
+      "jsonschema/referencing unavailable; fixture outcomes are expectations. Product/DB/PG concurrency/browser/production and independent review not executed."
+    ]
+  },
+  "canonical_coverage": {
+    "owner": "invoicing; server-only resolver/coverage index",
+    "typed_chain": "Resolve InvoiceAllocation.business_source_ref with typed schema. Settlement.source_ref is actual upstream; ExpenseClaim is terminal (no source/source_ref). BankCharge.existing_cost_ref=null => terminal costing.bank_charge identity. Non-null cost_event => inspect actual CostEvent.source recursively to original ExpenseClaim/approved economic expense. ledger_posting alias => trusted preserved legacy cost-book/source mapping to original economic expense, not arbitrary LedgerPosting ID. Unsupported/ambiguous/cyclic or unproven same-origin/amount/supplier/scope coverage rejects.",
+    "identity": "(organization_id, terminal namespace, kind, id, economic line when actual typed origin has a line). Exclude version, idempotency key, invoice, selected channel and path. Direct expense_claim E and settlement S whose source_ref resolves to E have one identity. BankCharge aliases via existing_cost_ref share the same original expense/legacy origin as direct expense and settlement; bank cash receipt customer/version/channel cannot create a fresh coverage bucket.",
+    "capacity": "Company-lock then lock selected source, chain and origin; recheck versions. Enforce BOTH selected-source and origin gross/net/tax caps. Count each effective allocation ID once across ALL invoices/paths. Never sum direct/indirect available amounts. Source-owner writes share company lock. BankCharge aliases retain their own selected-source cap as well as shared original expense/legacy cap; never count either path as a second available balance. Unproven legacy cap/tax mapping is ineligible.",
+    "expense_split": "ExpenseClaim.gross_cents/tax_cents and BankCharge.gross_cents/tax_cents are face values. Confirmed tax yields net=gross-tax. Missing/null/absent tax is unknown, not 0; CostEvent.recoverable_tax_cents is never used as face tax. ExpenseClaim has no net_cents/source_ref field.",
+    "conservation": "Origin cap comes from original economic fact, not downstream settlement sums. Atomic selected+origin consumption represents one economic coverage; queries use same resolver.",
+    "reverse": "Snapshot origin identity in server-only allocation coverage metadata. Reverse original allocation selected+origin coverage exactly once with unique reversal constraint; never re-key by changed version/path/key; inconsistent provenance rejects. BankCharge/CostEvent/legacy aliases release the immutable original origin snapshot, never their alias ID; same original allocation may release once only."
+  },
+  "patch_base": "docs/v1.0-development/contracts"
+}

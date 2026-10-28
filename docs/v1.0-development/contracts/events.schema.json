@@ -2527,6 +2527,1699 @@
         "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
         "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
       ]
+    },
+    "delivery.service_confirmation_changed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "properties": {
+        "event_id": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/event_id"
+        },
+        "schema_version": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/schema_version"
+        },
+        "organization_id": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/organization_id"
+        },
+        "occurred_at": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/occurred_at"
+        },
+        "topic": {
+          "const": "delivery.service_confirmation_changed.v1"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "delivery"
+                },
+                "kind": {
+                  "const": "service_confirmation"
+                }
+              }
+            }
+          ]
+        },
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/payload"
+            },
+            {
+              "properties": {
+                "posting_event_refs": {
+                  "maxItems": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "costing.commitment_changed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "properties": {
+        "event_id": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/event_id"
+        },
+        "schema_version": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/schema_version"
+        },
+        "organization_id": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/organization_id"
+        },
+        "occurred_at": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/occurred_at"
+        },
+        "topic": {
+          "const": "costing.commitment_changed.v1"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "costing"
+                },
+                "kind": {
+                  "const": "spend_commitment"
+                }
+              }
+            }
+          ]
+        },
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/payload"
+            },
+            {
+              "properties": {
+                "posting_event_refs": {
+                  "maxItems": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "delivery.project_close_changed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "properties": {
+        "event_id": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/event_id"
+        },
+        "schema_version": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/schema_version"
+        },
+        "organization_id": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/organization_id"
+        },
+        "occurred_at": {
+          "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/occurred_at"
+        },
+        "topic": {
+          "const": "delivery.project_close_changed.v1"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "delivery"
+                },
+                "kind": {
+                  "const": "delivery_close"
+                }
+              }
+            }
+          ]
+        },
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "./events.schema.json#/$defs/delivery.accepted.v1/properties/payload"
+            },
+            {
+              "properties": {
+                "posting_event_refs": {
+                  "maxItems": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "cash.classification_recorded.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.classification_recorded.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_classification"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "namespace": {
+                        "const": "cash"
+                      },
+                      "kind": {
+                        "enum": [
+                          "cash_classification",
+                          "payroll_cash_link"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 0,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ]
+    },
+    "cash.internal_transfer_linked.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.internal_transfer_linked.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "internal_transfer"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "namespace": {
+                        "const": "cash"
+                      },
+                      "kind": {
+                        "enum": [
+                          "internal_transfer",
+                          "cash_classification"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 0,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ]
+    },
+    "cash.classification_reversed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.classification_reversed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_classification_reversal"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "namespace": {
+                        "const": "cash"
+                      },
+                      "kind": {
+                        "const": "cash_classification_reversal"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 0,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "namespace": {
+                        "const": "cash"
+                      },
+                      "kind": {
+                        "const": "accounting_event"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "original_classification_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "cash_classification"
+                    }
+                  }
+                }
+              ]
+            },
+            "reversed_payroll_link_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "namespace": {
+                        "const": "cash"
+                      },
+                      "kind": {
+                        "const": "payroll_cash_link"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs",
+            "original_classification_ref",
+            "reversed_payroll_link_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ]
+    },
+    "cash.internal_transfer_reversed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.internal_transfer_reversed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "internal_transfer_reversal"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 0,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "original_internal_transfer_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "internal_transfer"
+                    }
+                  }
+                }
+              ]
+            },
+            "classification_reversal_refs": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "namespace": {
+                        "const": "cash"
+                      },
+                      "kind": {
+                        "const": "cash_classification_reversal"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs",
+            "original_internal_transfer_ref",
+            "classification_reversal_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ]
+    },
+    "invoicing.lines_allocated.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "invoicing.lines_allocated.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "$ref": "./write-dtos.schema.json#/$defs/InvoiceRef"
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "line_refs",
+            "allocation_refs",
+            "invoice_version"
+          ],
+          "properties": {
+            "line_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./write-dtos.schema.json#/$defs/InvoiceLineRef"
+              }
+            },
+            "allocation_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./write-dtos.schema.json#/$defs/InvoiceAllocationRef"
+              }
+            },
+            "invoice_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            }
+          }
+        }
+      }
+    },
+    "invoicing.reversed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "invoicing.reversed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "invoicing"
+                },
+                "kind": {
+                  "enum": [
+                    "invoice_reversal"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "original_invoice_ref",
+            "line_reversals",
+            "allocation_reversals",
+            "gross_cents",
+            "net_cents",
+            "tax_cents"
+          ],
+          "properties": {
+            "original_invoice_ref": {
+              "$ref": "./write-dtos.schema.json#/$defs/InvoiceRef"
+            },
+            "line_reversals": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./entities.schema.json#/$defs/InvoiceLineReversalSnapshot"
+              }
+            },
+            "allocation_reversals": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./entities.schema.json#/$defs/InvoiceAllocationReversalSnapshot"
+              }
+            },
+            "gross_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            },
+            "net_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            },
+            "tax_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+            }
+          }
+        }
+      }
+    },
+    "cash.transaction_draft_saved.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.transaction_draft_saved.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 0,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ]
+    },
+    "cash.party_matched.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.party_matched.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_party_match"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 0,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ]
+    },
+    "cash.correction_draft_saved.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.correction_draft_saved.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_correction_request"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 0,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ]
+    },
+    "cash.transaction_corrected.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.transaction_corrected.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_correction"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ]
+    },
+    "cash.manual_plan_saved.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.manual_plan_saved.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "manual_cash_plan"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "costing.bank_charge_saved.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "costing.bank_charge_saved.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "bank_charge"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "cash.receipt_fee_settled.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "cash.receipt_fee_settled.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "receipt_fee_settlement"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "settlement.receipt_fee_settlement_reversed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "settlement.receipt_fee_settlement_reversed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "receipt_fee_settlement"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "insights.reconciliation_refreshed.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "insights.reconciliation_refreshed.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "reconciliation_case"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
+    },
+    "insights.reconciliation_case_updated.v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "topic": {
+          "const": "insights.reconciliation_case_updated.v1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "reconciliation_case"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed_refs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              }
+            },
+            "posting_event_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "accounting_event"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "changed_refs",
+            "posting_event_refs"
+          ]
+        }
+      },
+      "required": [
+        "event_id",
+        "topic",
+        "schema_version",
+        "organization_id",
+        "source",
+        "occurred_at",
+        "payload"
+      ],
+      "x-service-invariants": [
+        "Server-only event; org/source resolved under company lock, same transaction as facts/audit.",
+        "Versioned source must remain retrievable after later changes/reversal. Consumers dedupe event_id; outbox never repairs a half-committed financial write."
+      ]
     }
   },
   "oneOf": [
@@ -2613,6 +4306,63 @@
     },
     {
       "$ref": "#/$defs/delivery.evidence_attached.v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.service_confirmation_changed.v1"
+    },
+    {
+      "$ref": "#/$defs/costing.commitment_changed.v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.project_close_changed.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.classification_recorded.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.internal_transfer_linked.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.classification_reversed.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.internal_transfer_reversed.v1"
+    },
+    {
+      "$ref": "#/$defs/invoicing.lines_allocated.v1"
+    },
+    {
+      "$ref": "#/$defs/invoicing.reversed.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction_draft_saved.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.party_matched.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.correction_draft_saved.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction_corrected.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.manual_plan_saved.v1"
+    },
+    {
+      "$ref": "#/$defs/costing.bank_charge_saved.v1"
+    },
+    {
+      "$ref": "#/$defs/cash.receipt_fee_settled.v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.receipt_fee_settlement_reversed.v1"
+    },
+    {
+      "$ref": "#/$defs/insights.reconciliation_refreshed.v1"
+    },
+    {
+      "$ref": "#/$defs/insights.reconciliation_case_updated.v1"
     }
   ]
 }

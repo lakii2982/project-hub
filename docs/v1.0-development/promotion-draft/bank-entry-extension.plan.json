@@ -1,0 +1,2031 @@
+{
+  "schema_version": 1,
+  "task": "PH-137",
+  "scope": "WP-BANK only",
+  "status": "proposal_not_applied_or_accepted",
+  "canonical_observation": "Verified f1115cf PayeeRef already supports counterparty/employee/own_account and bare unidentified. Keep shared PayeeRef and AR/AP unchanged. Cash-only BankPayeeRef adds only optional nullable bank_label to unidentified; company kind prohibited. own_account.id resolves same-company FundingAccount.",
+  "patch_format": "Per-file RFC6902 blueprint; target-relative $ref. Recursively expand sole-key $plan_ref from local fragments. No application authorized.",
+  "schema_patch_blueprint": [
+    {
+      "file": "contract-bundle.schema.json",
+      "op": "add",
+      "path": "/$defs/BankPayeeRef",
+      "value": {
+        "anyOf": [
+          {
+            "$ref": "./contract-bundle.schema.json#/$defs/PayeeRef"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "unidentified"
+              },
+              "bank_label": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/BankCashDraft",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "funding_account_id",
+          "transaction_date",
+          "direction",
+          "gross_cents",
+          "external_source_key",
+          "payee"
+        ],
+        "properties": {
+          "funding_account_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "transaction_date": {
+            "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+          },
+          "direction": {
+            "enum": [
+              "in",
+              "out"
+            ]
+          },
+          "gross_cents": {
+            "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+          },
+          "external_source_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "evidence": {
+            "$plan_ref": "#/fragments/s1"
+          },
+          "payee": {
+            "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+          }
+        }
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "replace",
+      "path": "/$defs/cash.transaction.record~1v1/properties/payload/properties/payee",
+      "value": {
+        "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "replace",
+      "path": "/$defs/CashTransaction/properties/payee",
+      "value": {
+        "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "replace",
+      "path": "/$defs/CashTransaction/properties/status/enum",
+      "value": [
+        "draft",
+        "pending",
+        "approved",
+        "rejected",
+        "active",
+        "posted",
+        "reversed",
+        "superseded"
+      ]
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "replace",
+      "path": "/$defs/CashTransaction/x-contract-status-enum",
+      "value": [
+        "draft",
+        "pending",
+        "approved",
+        "rejected",
+        "active",
+        "posted",
+        "reversed",
+        "superseded"
+      ]
+    },
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/CashCorrectionDraft",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "original_cash_ref": {
+            "$plan_ref": "#/fragments/s2"
+          },
+          "corrected_fields": {
+            "$plan_ref": "#/fragments/s4"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "evidence": {
+            "$plan_ref": "#/fragments/s6"
+          }
+        },
+        "required": [
+          "original_cash_ref",
+          "corrected_fields",
+          "reason",
+          "evidence"
+        ]
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.transaction.draft.save~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "request_id",
+          "idempotency_key",
+          "payload"
+        ],
+        "properties": {
+          "contract": {
+            "const": "cash.transaction.draft.save/v1"
+          },
+          "request_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 160
+          },
+          "expected_version": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Version"
+          },
+          "occurred_on": {
+            "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+          },
+          "posting_period": {
+            "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+          },
+          "source": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "default": true
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "entity_id": {
+                "$plan_ref": "#/fragments/s7"
+              },
+              "expected_version": {
+                "$plan_ref": "#/fragments/s8"
+              },
+              "fields": {
+                "$ref": "./write-dtos.schema.json#/$defs/BankCashDraft"
+              }
+            },
+            "required": [
+              "fields"
+            ]
+          }
+        },
+        "x-exposure": "authenticated_draft_service"
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.transaction.draft.save~1v1"
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.transaction.draft.save~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "result_type",
+          "entity_refs",
+          "event_ids"
+        ],
+        "properties": {
+          "contract": {
+            "const": "cash.transaction.draft.save/v1"
+          },
+          "result_type": {
+            "enum": [
+              "created",
+              "updated",
+              "existing",
+              "dry_run"
+            ]
+          },
+          "entity_refs": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 1,
+            "items": {
+              "$plan_ref": "#/fragments/s2"
+            }
+          },
+          "event_ids": {
+            "$plan_ref": "#/fragments/s9"
+          }
+        },
+        "allOf": [
+          {
+            "$plan_ref": "#/fragments/s10"
+          },
+          {
+            "$plan_ref": "#/fragments/s12"
+          }
+        ]
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.transaction.draft.save~1v1"
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.transaction_draft_saved.v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "event_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "topic": {
+            "const": "cash.transaction_draft_saved.v1"
+          },
+          "schema_version": {
+            "const": 1
+          },
+          "organization_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "source": {
+            "$plan_ref": "#/fragments/s2"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payload": {
+            "$plan_ref": "#/fragments/s15"
+          }
+        },
+        "required": [
+          "event_id",
+          "topic",
+          "schema_version",
+          "organization_id",
+          "source",
+          "occurred_at",
+          "payload"
+        ]
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.transaction_draft_saved.v1"
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.party.match~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "request_id",
+          "idempotency_key",
+          "payload"
+        ],
+        "properties": {
+          "contract": {
+            "const": "cash.party.match/v1"
+          },
+          "request_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 160
+          },
+          "expected_version": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Version"
+          },
+          "occurred_on": {
+            "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+          },
+          "posting_period": {
+            "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+          },
+          "source": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "default": true
+          },
+          "payload": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "const": "identify"
+                  },
+                  "cash_transaction_ref": {
+                    "$plan_ref": "#/fragments/s2"
+                  },
+                  "payee": {
+                    "$plan_ref": "#/fragments/s20"
+                  },
+                  "evidence": {
+                    "$plan_ref": "#/fragments/s6"
+                  }
+                },
+                "required": [
+                  "action",
+                  "cash_transaction_ref",
+                  "payee",
+                  "evidence"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "const": "reverse"
+                  },
+                  "match_ref": {
+                    "$plan_ref": "#/fragments/s27"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "evidence": {
+                    "$plan_ref": "#/fragments/s6"
+                  }
+                },
+                "required": [
+                  "action",
+                  "match_ref",
+                  "reason",
+                  "evidence"
+                ]
+              }
+            ]
+          }
+        },
+        "x-exposure": "authenticated_application_service"
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.party.match~1v1"
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.party.match~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "result_type",
+          "entity_refs",
+          "event_ids"
+        ],
+        "properties": {
+          "contract": {
+            "const": "cash.party.match/v1"
+          },
+          "result_type": {
+            "enum": [
+              "created",
+              "updated",
+              "existing",
+              "dry_run"
+            ]
+          },
+          "entity_refs": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 1,
+            "items": {
+              "$plan_ref": "#/fragments/s27"
+            }
+          },
+          "event_ids": {
+            "$plan_ref": "#/fragments/s9"
+          }
+        },
+        "allOf": [
+          {
+            "$plan_ref": "#/fragments/s10"
+          },
+          {
+            "$plan_ref": "#/fragments/s12"
+          }
+        ]
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.party.match~1v1"
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.party_matched.v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "event_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "topic": {
+            "const": "cash.party_matched.v1"
+          },
+          "schema_version": {
+            "const": 1
+          },
+          "organization_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "source": {
+            "$plan_ref": "#/fragments/s27"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payload": {
+            "$plan_ref": "#/fragments/s15"
+          }
+        },
+        "required": [
+          "event_id",
+          "topic",
+          "schema_version",
+          "organization_id",
+          "source",
+          "occurred_at",
+          "payload"
+        ]
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.party_matched.v1"
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.transaction.correction.draft.save~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "request_id",
+          "idempotency_key",
+          "payload"
+        ],
+        "properties": {
+          "contract": {
+            "const": "cash.transaction.correction.draft.save/v1"
+          },
+          "request_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 160
+          },
+          "expected_version": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Version"
+          },
+          "occurred_on": {
+            "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+          },
+          "posting_period": {
+            "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+          },
+          "source": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "default": true
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "entity_id": {
+                "$plan_ref": "#/fragments/s7"
+              },
+              "expected_version": {
+                "$plan_ref": "#/fragments/s8"
+              },
+              "fields": {
+                "$ref": "./write-dtos.schema.json#/$defs/CashCorrectionDraft"
+              }
+            },
+            "required": [
+              "fields"
+            ]
+          }
+        },
+        "x-exposure": "authenticated_draft_service"
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.transaction.correction.draft.save~1v1"
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.transaction.correction.draft.save~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "result_type",
+          "entity_refs",
+          "event_ids"
+        ],
+        "properties": {
+          "contract": {
+            "const": "cash.transaction.correction.draft.save/v1"
+          },
+          "result_type": {
+            "enum": [
+              "created",
+              "updated",
+              "existing",
+              "dry_run"
+            ]
+          },
+          "entity_refs": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 1,
+            "items": {
+              "$plan_ref": "#/fragments/s29"
+            }
+          },
+          "event_ids": {
+            "$plan_ref": "#/fragments/s9"
+          }
+        },
+        "allOf": [
+          {
+            "$plan_ref": "#/fragments/s10"
+          },
+          {
+            "$plan_ref": "#/fragments/s12"
+          }
+        ]
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.transaction.correction.draft.save~1v1"
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.correction_draft_saved.v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "event_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "topic": {
+            "const": "cash.correction_draft_saved.v1"
+          },
+          "schema_version": {
+            "const": 1
+          },
+          "organization_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "source": {
+            "$plan_ref": "#/fragments/s29"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payload": {
+            "$plan_ref": "#/fragments/s15"
+          }
+        },
+        "required": [
+          "event_id",
+          "topic",
+          "schema_version",
+          "organization_id",
+          "source",
+          "occurred_at",
+          "payload"
+        ]
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.correction_draft_saved.v1"
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.transaction.correct~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "request_id",
+          "idempotency_key",
+          "payload",
+          "source",
+          "occurred_on",
+          "posting_period"
+        ],
+        "properties": {
+          "contract": {
+            "const": "cash.transaction.correct/v1"
+          },
+          "request_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 160
+          },
+          "expected_version": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Version"
+          },
+          "occurred_on": {
+            "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+          },
+          "posting_period": {
+            "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+          },
+          "source": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "default": true
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "approved_correction_ref": {
+                "$plan_ref": "#/fragments/s29"
+              }
+            },
+            "required": [
+              "approved_correction_ref"
+            ]
+          }
+        },
+        "x-exposure": "internal_approved_handler_only"
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.transaction.correct~1v1"
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.transaction.correct~1v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract",
+          "result_type",
+          "entity_refs",
+          "event_ids"
+        ],
+        "properties": {
+          "contract": {
+            "const": "cash.transaction.correct/v1"
+          },
+          "result_type": {
+            "enum": [
+              "created",
+              "updated",
+              "existing",
+              "dry_run"
+            ]
+          },
+          "entity_refs": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 1,
+            "items": {
+              "$plan_ref": "#/fragments/s32"
+            }
+          },
+          "event_ids": {
+            "$plan_ref": "#/fragments/s9"
+          }
+        },
+        "allOf": [
+          {
+            "$plan_ref": "#/fragments/s10"
+          },
+          {
+            "$plan_ref": "#/fragments/s12"
+          }
+        ]
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.transaction.correct~1v1"
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/$defs/cash.transaction_corrected.v1",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "event_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "topic": {
+            "const": "cash.transaction_corrected.v1"
+          },
+          "schema_version": {
+            "const": 1
+          },
+          "organization_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "source": {
+            "$plan_ref": "#/fragments/s32"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "changed_refs": {
+                "$plan_ref": "#/fragments/s17"
+              },
+              "posting_event_refs": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 1000,
+                "items": {
+                  "$plan_ref": "#/fragments/s19"
+                }
+              }
+            },
+            "required": [
+              "changed_refs",
+              "posting_event_refs"
+            ]
+          }
+        },
+        "required": [
+          "event_id",
+          "topic",
+          "schema_version",
+          "organization_id",
+          "source",
+          "occurred_at",
+          "payload"
+        ]
+      }
+    },
+    {
+      "file": "events.schema.json",
+      "op": "add",
+      "path": "/oneOf/-",
+      "value": {
+        "$ref": "#/$defs/cash.transaction_corrected.v1"
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/CashPartyMatch",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "organization_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "version": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cash_transaction_ref": {
+            "$plan_ref": "#/fragments/s2"
+          },
+          "action": {
+            "enum": [
+              "identify",
+              "reverse"
+            ]
+          },
+          "identified_payee": {
+            "anyOf": [
+              {
+                "$plan_ref": "#/fragments/s20"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "original_match_ref": {
+            "anyOf": [
+              {
+                "$plan_ref": "#/fragments/s27"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1000
+          },
+          "evidence": {
+            "$plan_ref": "#/fragments/s6"
+          }
+        },
+        "required": [
+          "id",
+          "organization_id",
+          "version",
+          "created_at",
+          "cash_transaction_ref",
+          "action",
+          "identified_payee",
+          "original_match_ref",
+          "reason",
+          "evidence"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "action": {
+                  "const": "identify"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "identified_payee": {
+                  "$plan_ref": "#/fragments/s20"
+                },
+                "original_match_ref": {
+                  "type": "null"
+                },
+                "reason": {
+                  "type": "null"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "identified_payee": {
+                  "type": "null"
+                },
+                "original_match_ref": {
+                  "$plan_ref": "#/fragments/s27"
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                }
+              }
+            }
+          }
+        ],
+        "x-owner": "cash",
+        "x-record-kind": "append_only_fact"
+      }
+    },
+    {
+      "file": "source-registry.json",
+      "op": "add",
+      "path": "/objects/CashPartyMatch",
+      "value": {
+        "namespace": "cash",
+        "kind": "cash_party_match",
+        "owner": "cash"
+      }
+    },
+    {
+      "file": "contract-bundle.schema.json",
+      "op": "add",
+      "path": "/$defs/SourceRef/oneOf/-",
+      "value": {
+        "$plan_ref": "#/fragments/s28"
+      }
+    },
+    {
+      "file": "relationships.json",
+      "op": "add",
+      "path": "/relationships/cash-party-match",
+      "value": {
+        "owner": "cash",
+        "canonical_record": "CashPartyMatch",
+        "kind": "append_only_fact",
+        "schema_ref": "./entities.schema.json#/$defs/CashPartyMatch"
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/CashCorrectionRequest",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "organization_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "version": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "pending",
+              "approved",
+              "rejected",
+              "superseded"
+            ]
+          },
+          "fields": {
+            "$ref": "./write-dtos.schema.json#/$defs/CashCorrectionDraft"
+          },
+          "previous_effective_correction_ref": {
+            "$plan_ref": "#/fragments/s34"
+          }
+        },
+        "required": [
+          "id",
+          "organization_id",
+          "version",
+          "created_at",
+          "status",
+          "fields",
+          "previous_effective_correction_ref"
+        ],
+        "x-owner": "cash",
+        "x-record-kind": "owned_fact"
+      }
+    },
+    {
+      "file": "source-registry.json",
+      "op": "add",
+      "path": "/objects/CashCorrectionRequest",
+      "value": {
+        "namespace": "cash",
+        "kind": "cash_correction_request",
+        "owner": "cash"
+      }
+    },
+    {
+      "file": "contract-bundle.schema.json",
+      "op": "add",
+      "path": "/$defs/SourceRef/oneOf/-",
+      "value": {
+        "$plan_ref": "#/fragments/s30"
+      }
+    },
+    {
+      "file": "relationships.json",
+      "op": "add",
+      "path": "/relationships/cash-correction-request",
+      "value": {
+        "owner": "cash",
+        "canonical_record": "CashCorrectionRequest",
+        "kind": "owned_fact",
+        "schema_ref": "./entities.schema.json#/$defs/CashCorrectionRequest"
+      }
+    },
+    {
+      "file": "entities.schema.json",
+      "op": "add",
+      "path": "/$defs/CashCorrection",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "organization_id": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          },
+          "version": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "original_cash_ref": {
+            "$plan_ref": "#/fragments/s2"
+          },
+          "approved_correction_ref": {
+            "$plan_ref": "#/fragments/s29"
+          },
+          "previous_correction_ref": {
+            "$plan_ref": "#/fragments/s34"
+          },
+          "corrected_fields": {
+            "$plan_ref": "#/fragments/s4"
+          },
+          "external_source_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "occurred_on": {
+            "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+          },
+          "posting_period": {
+            "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+          },
+          "reversal_posting_refs": {
+            "$plan_ref": "#/fragments/s35"
+          },
+          "replacement_posting_refs": {
+            "$plan_ref": "#/fragments/s35"
+          }
+        },
+        "required": [
+          "id",
+          "organization_id",
+          "version",
+          "created_at",
+          "original_cash_ref",
+          "approved_correction_ref",
+          "previous_correction_ref",
+          "corrected_fields",
+          "external_source_key",
+          "occurred_on",
+          "posting_period",
+          "reversal_posting_refs",
+          "replacement_posting_refs"
+        ],
+        "x-owner": "cash",
+        "x-record-kind": "append_only_fact"
+      }
+    },
+    {
+      "file": "source-registry.json",
+      "op": "add",
+      "path": "/objects/CashCorrection",
+      "value": {
+        "namespace": "cash",
+        "kind": "cash_correction",
+        "owner": "cash"
+      }
+    },
+    {
+      "file": "contract-bundle.schema.json",
+      "op": "add",
+      "path": "/$defs/SourceRef/oneOf/-",
+      "value": {
+        "$plan_ref": "#/fragments/s33"
+      }
+    },
+    {
+      "file": "relationships.json",
+      "op": "add",
+      "path": "/relationships/cash-correction",
+      "value": {
+        "owner": "cash",
+        "canonical_record": "CashCorrection",
+        "kind": "append_only_fact",
+        "schema_ref": "./entities.schema.json#/$defs/CashCorrection"
+      }
+    },
+    {
+      "file": "commands.schema.json",
+      "op": "add",
+      "path": "/$defs/core.document.decide~1v1/properties/payload/properties/source/allOf/1/properties/kind/enum/-",
+      "value": "cash_correction_request"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/commands/-",
+      "value": "cash.transaction.draft.save/v1"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/commands/-",
+      "value": "cash.party.match/v1"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/commands/-",
+      "value": "cash.transaction.correction.draft.save/v1"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/commands/-",
+      "value": "cash.transaction.correct/v1"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/events/-",
+      "value": "cash.transaction_draft_saved.v1"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/events/-",
+      "value": "cash.party_matched.v1"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/events/-",
+      "value": "cash.correction_draft_saved.v1"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/events/-",
+      "value": "cash.transaction_corrected.v1"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/objects/-",
+      "value": "CashPartyMatch"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/bridges/-",
+      "value": "cash-party-match"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/definitions/entities/-",
+      "value": {
+        "name": "CashPartyMatch",
+        "owner": "cash",
+        "schema_ref": "./entities.schema.json#/$defs/CashPartyMatch"
+      }
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/objects/-",
+      "value": "CashCorrectionRequest"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/bridges/-",
+      "value": "cash-correction-request"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/definitions/entities/-",
+      "value": {
+        "name": "CashCorrectionRequest",
+        "owner": "cash",
+        "schema_ref": "./entities.schema.json#/$defs/CashCorrectionRequest"
+      }
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/objects/-",
+      "value": "CashCorrection"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/contract_catalog/7/bridges/-",
+      "value": "cash-correction"
+    },
+    {
+      "file": "contract-catalog.json",
+      "op": "add",
+      "path": "/definitions/entities/-",
+      "value": {
+        "name": "CashCorrection",
+        "owner": "cash",
+        "schema_ref": "./entities.schema.json#/$defs/CashCorrection"
+      }
+    },
+    {
+      "file": "write-dtos.schema.json",
+      "op": "add",
+      "path": "/$defs/CashTransaction/properties/payee",
+      "value": {
+        "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+      }
+    },
+    {
+      "file": "query-results.schema.json",
+      "op": "replace",
+      "path": "/$defs/cash.transaction.get~1v1/properties/data/properties/transaction",
+      "value": {
+        "allOf": [
+          {
+            "$ref": "./entities.schema.json#/$defs/CashTransaction"
+          },
+          {
+            "properties": {
+              "payee": {
+                "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "command-results.schema.json",
+      "op": "add",
+      "path": "/$defs/core.document.decide~1v1/properties/entity_refs/items/allOf/1/properties/kind/enum/-",
+      "value": "cash_correction_request"
+    }
+  ],
+  "existing_pointers": [
+    "commands.schema.json#/$defs/cash.transaction.record~1v1",
+    "commands.schema.json#/$defs/core.document.decide~1v1",
+    "contract-bundle.schema.json#/$defs/PayeeRef",
+    "entities.schema.json#/$defs/CashTransaction",
+    "catalog-completeness.schema.json#/$defs/LedgerPosting/properties/amount_cents",
+    "catalog-completeness.schema.json#/$defs/LedgerPosting/properties/book"
+  ],
+  "service_semantics": {
+    "common": [
+      "Owner/finance only; tenant from CommandContext. No PM/employee/PAT approval/post/match/correct; no payment/bank API or workflow engine.",
+      "PG lock company -> periods -> cash/draft/request/effective correction/match stable ids -> uniqueness. Recheck roles/versions/tenant/dates/dependencies. SQLite cannot prove concurrency.",
+      "Post integer cents 1..10^12; no float/bool. Draft update needs expected_version and editable state; new draft needs absent/null entity_id and version. Pending/approved snapshots immutable; server stamps maker.",
+      "dry_run defaults true before hashing: full checks, zero durable writes/refs/events. Same key/input returns original after auth; changed input conflicts. New keys cannot bypass provenance/effective uniqueness. Commit approval/facts/audit/outbox/ledger atomically.",
+      "created/updated returns one root ref+event; existing original receipt. Draft/match events have no accounting refs. Match changed_refs=new relation. Correction changed_refs=root, posting_event_refs=both accounting events; tenant-role filtering and event-id dedupe."
+    ],
+    "draft_and_record": [
+      "Cash draft reuses existing record fields. BankPayeeRef=unchanged PayeeRef plus unidentified with optional nullable bank_label<=200; bare unidentified remains valid. No company kind or second company identity. own_account.id must resolve existing same-company FundingAccount under lock, never CP/Employee id.",
+      "core.document.decide cash_transaction handler: maker submits, distinct owner/finance reviews. Approval validates evidence, nonfuture date, open period, active same-company account, source uniqueness/payee, then internally calls cash.record on exact immutable approved snapshot in same transaction.",
+      "Keep all legacy record JSON shapes/optional fields. cash.record is internal posting: server-only approval/import context resolves approved snapshot/hash and reviewer. No client approval flag; source/dry_run=false alone insufficient. Authorized import needs equivalent independent approval. Unauthorized schema-valid direct post rejects.",
+      "Unique logical bank origin=company+frozen original bank-source namespace+original funding-account identity+external stable source key. Different original accounts may legitimately share the same bank sequence string. Freeze namespace/account at first approved import/record; corrected account/date/direction and new request keys never recompute or release this original identity. Approved draft id remains CashTransaction id; no second fact. Keep posted snapshot/source history immutable.",
+      "Unidentified bank cash is directly recordable through authorized record/import posting context without prior party matching, remains real cash and unmatched. Only formal clearance requires effective identified eligible party. own_account.id is same-company FundingAccount, eligible for internal transfer, never external AR/AP counterparty. Raw payee/bank_label immutable after posting."
+    ],
+    "party_match": [
+      "identify appends CashPartyMatch for effective posted cash to existing same-company CP/Employee or own_account FundingAccount. No company kind, party/account auto-creation or second company identity. History relation id; at most one effective identification per logical bank origin under company lock. Known CP/Employee/own_account baseline authoritative; baseline change needs correction draft.",
+      "reverse appends action=reverse relation pointing to original identification; one reversal per original stable match id. Server resolves cash and tenant; original identify is retained, not edited. After reversal unknown baseline becomes unidentified again; later identify gets new stable relation id.",
+      "Both actions reject effective clearance/allocation/refund/return/payroll/classification/transfer/fee or other downstream dependence until dependency owner legally reverses it. No silent cascade. Raw original bank_label/payee untouched. Effective payee is one derived result: valid identification else approved baseline. Zero new cash/cost/revenue/ledger; never a refund.",
+      "Consumers cash classification, payroll, refund, transfer and clearance resolve this same effective identity under lock, not raw CashTransaction.payee; PM/employee outputs omit wage data."
+    ],
+    "correction": [
+      "Correction draft selects original logical bank cash and complete corrected_fields. No external_source_key input: inherit original business key and provenance. Account, amount, direction, date and BankPayeeRef may change only with same-company accounts/parties and supporting evidence; gross positive, date not future. CashCorrectionRequest source kind is cash/cash_correction_request.",
+      "Register core.document.decide cash_correction_request handler; submit/approve/return/reject reuse existing independent-review rules. Maker cannot approve, stale approved version cannot post. Approval internally calls cash.transaction.correct/v1 with only approved request ref and server approval capability in same transaction; never expose as PAT/AI payment tool. This explicit command separates editable draft from immutable append, not a second approval.",
+      "Approval locks bank origin and rejects effective clearance/allocation/classification/payroll/transfer/fee/refund/return/match dependencies. Owner reversal first; no cascade. Freeze exact original version+effective predecessor at draft save, compare at approve; competing stale request cannot post.",
+      "Append CashCorrection and two AccountingEvents: reversal strictly negates EVERY currently effective original/replacement cash posting, retaining original book (cash_in or cash_out), scope/account, origin and source lineage; never switch reversal to opposite book. Then append replacement positive cash posting using corrected direction book and corrected funding account. Zero cost/revenue postings. Net cash changes only by correction delta, not a real refund; no cash.refunded event.",
+      "CashTransaction id, original row, external_source_key and original bank provenance remain immutable. No new logical bank origin or second CashTransaction. CashCorrection.corrected_fields is immutable effective snapshot projection; corrected transaction date is supported fact correction, original date remains visible. original_cash_ref always stable base, previous_correction_ref links exact effective predecessor; requests chain, never branch.",
+      "Locked old period stays locked: reversal/replacement post in selected OPEN adjustment period containing occurred_on<=today. occurred_on=correction recognition; corrected bank date stays evidence. Disclose delta in adjustment period, preserve locked snapshots and full fact lineage. Only correction overrides original-period-open rule.",
+      "Unique correction consumption per approved request and effective predecessor (organization+logical bank origin+previous correction id/null); no permanent single-correction ban. Multiple corrections allowed only serial approved chain. Old source key remains reserved permanently; changed funding account/date/direction cannot escape source uniqueness. Concurrent approvals lock origin and reject stale loser.",
+      "Core cash_transaction approval does not approve correction implicitly. New correction handler receives exact request kind only. One atomic root corrected event includes two accounting refs; accounting events/ledger are append-only, never balance update. Failure at any step rolls back approval and all reversals/replacements.",
+      "CashCorrectionRequest.previous_effective_correction_ref is a required server-derived frozen field, null on first correction. Draft save captures it and original_cash_ref.version atomically; approval compares both. It is not an editable client approval flag."
+    ]
+  },
+  "ownership_and_wiring": {
+    "owner": "cash for all new entities/services/relations; core only dispatches registered owner handlers and accounting/audit/outbox primitives",
+    "new_source_pairs": {
+      "CashPartyMatch": [
+        "cash",
+        "cash_party_match"
+      ],
+      "CashCorrectionRequest": [
+        "cash",
+        "cash_correction_request"
+      ],
+      "CashCorrection": [
+        "cash",
+        "cash_correction"
+      ]
+    },
+    "root_must_wire": [
+      "Compiler extends definition/object enums consistently; exact source-registry/SourceRef/relationship/C08 catalog/entity-definition/DTO/Entity/QueryResult patches are included here.",
+      "Runtime handler authorization, effective-payee queries and approval atomicity require implementation and independent review, not additional schema invention."
+    ],
+    "freeze_blocker": "Blueprint includes exact structural wiring; schema compiler validation and independent review remain required. No product implementation or runtime acceptance asserted."
+  },
+  "synthetic_schema_examples": [
+    {
+      "contract": "cash.transaction.draft.save/v1",
+      "request_id": "req-bank-sample",
+      "idempotency_key": "bank-sample-0001",
+      "dry_run": true,
+      "payload": {
+        "fields": {
+          "funding_account_id": "account-A",
+          "transaction_date": "2026-10-20",
+          "direction": "in",
+          "gross_cents": 10000,
+          "external_source_key": "bank-origin-001",
+          "payee": {
+            "kind": "unidentified",
+            "bank_label": null
+          }
+        }
+      }
+    },
+    {
+      "contract": "cash.transaction.draft.save/v1",
+      "request_id": "req-bank-sample",
+      "idempotency_key": "bank-sample-0001",
+      "dry_run": true,
+      "payload": {
+        "fields": {
+          "funding_account_id": "account-A",
+          "transaction_date": "2026-10-20",
+          "direction": "in",
+          "gross_cents": 10000,
+          "external_source_key": "bank-origin-001",
+          "payee": {
+            "kind": "own_account",
+            "id": "account-B"
+          }
+        }
+      }
+    },
+    {
+      "contract": "cash.party.match/v1",
+      "request_id": "req-bank-sample",
+      "idempotency_key": "bank-sample-0001",
+      "dry_run": true,
+      "payload": {
+        "action": "identify",
+        "cash_transaction_ref": {
+          "namespace": "cash",
+          "kind": "cash_transaction",
+          "id": "cash-A",
+          "version": 1
+        },
+        "payee": {
+          "kind": "counterparty",
+          "id": "party-A"
+        },
+        "evidence": [
+          {
+            "evidence_id": "proof-bank-A",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "kind": "bank_proof"
+          }
+        ]
+      }
+    },
+    {
+      "contract": "cash.transaction.correct/v1",
+      "request_id": "req-bank-sample",
+      "idempotency_key": "bank-sample-0001",
+      "dry_run": true,
+      "payload": {
+        "approved_correction_ref": {
+          "namespace": "cash",
+          "kind": "cash_correction_request",
+          "id": "correction-request-A",
+          "version": 1
+        }
+      },
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_correction_request",
+        "id": "correction-request-A",
+        "version": 1
+      },
+      "occurred_on": "2026-10-20",
+      "posting_period": "2026-10"
+    },
+    {
+      "contract": "cash.transaction.record/v1",
+      "request_id": "legacy-req-A",
+      "idempotency_key": "legacy-record-001",
+      "payload": {
+        "funding_account_id": "account-A",
+        "transaction_date": "2026-10-20",
+        "direction": "out",
+        "gross_cents": 10000,
+        "external_source_key": "bank-old-001",
+        "payee": {
+          "kind": "employee",
+          "id": "employee-A"
+        }
+      }
+    }
+  ],
+  "service_counterexamples": [
+    {
+      "input": "bare legacy CP/Employee cash.record JSON under unauthorized API context",
+      "reject_or_result": "schema-valid but APPROVAL_CONTEXT_REQUIRED; zero post"
+    },
+    {
+      "input": "unidentified cash attempts formal clearance",
+      "reject_or_result": "PARTY_UNIDENTIFIED; cash remains real and unmatched"
+    },
+    {
+      "input": "payee kind=company, or own_account.id points to foreign-company account/CP/Employee",
+      "reject_or_result": "company schema rejects; own_account resolves FundingAccount only and same tenant, otherwise ACCOUNT_SCOPE"
+    },
+    {
+      "input": "cross-company account/party/match/correction",
+      "reject_or_result": "TENANT_SCOPE; no existence/wage leak"
+    },
+    {
+      "input": "maker approves cash or correction",
+      "reject_or_result": "SELF_REVIEW; no ledger"
+    },
+    {
+      "input": "party identify twice under new key, or reverse twice",
+      "reject_or_result": "ACTIVE_MATCH_CONFLICT / ALREADY_REVERSED; zero extra effects"
+    },
+    {
+      "input": "match/reverse/correct with effective payroll/transfer/clearance/refund/fee",
+      "reject_or_result": "DEPENDENT_RELATION; explicit owner reversal first"
+    },
+    {
+      "input": "correction request includes external_source_key replacement",
+      "reject_or_result": "schema rejects; original business key stays reserved"
+    },
+    {
+      "input": "two approved corrections race same predecessor",
+      "reject_or_result": "one commits; stale loser no reversal or replacement"
+    },
+    {
+      "input": "locked old cash_in10000 corrected to cash_out9000 in open period",
+      "reject_or_result": "append cash_in -10000 and cash_out +9000 in OPEN adjustment period; delta net -19000; old snapshot unchanged, not refund"
+    },
+    {
+      "input": "second serial correction of previous cash_out9000 to cash_out8000",
+      "reject_or_result": "reverse cash_out -9000 then cash_out +8000; original source unchanged; effective 8000 once"
+    },
+    {
+      "input": "future corrected date/closed adjustment period/stale request version",
+      "reject_or_result": "FUTURE_DATE/PERIOD_LOCKED/VERSION_CONFLICT"
+    },
+    {
+      "input": "fault after reversal before replacement/outbox",
+      "reject_or_result": "rollback approval + both events + all postings"
+    },
+    {
+      "input": "replay same frozen bank namespace+original funding account+external stable key using changed effective account/date/request key",
+      "reject_or_result": "DUP_BANK_SOURCE; no extra logical cash"
+    },
+    {
+      "input": "authorized record/import posts unidentified cash before any party.match",
+      "reject_or_result": "accept real cash unchanged/unmatched; no prior match required; clearance alone rejects PARTY_UNIDENTIFIED"
+    },
+    {
+      "input": "two distinct original funding accounts both have external bank sequence 123 in their respective bank namespaces",
+      "reject_or_result": "allow two distinct logical origins; correcting one account later never changes either reserved origin"
+    }
+  ],
+  "verification": {
+    "performed": [
+      "Read required schemas; PayeeRef verified at f1115cf; JSON parsed; patch paths materialized in memory",
+      "Expanded all operations and replayed against git show f1115cf in memory; shared PayeeRef unchanged"
+    ],
+    "not_performed": [
+      "schema case validation: local Python3.12 lacks jsonschema",
+      "canonical application",
+      "runtime/PG/browser/product tests",
+      "contract acceptance"
+    ]
+  },
+  "base": "f1115cf",
+  "fragments": {
+    "s1": {
+      "type": "array",
+      "items": {
+        "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+      }
+    },
+    "s3": {
+      "properties": {
+        "namespace": {
+          "const": "cash"
+        },
+        "kind": {
+          "const": "cash_transaction"
+        }
+      }
+    },
+    "s2": {
+      "allOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        {
+          "$plan_ref": "#/fragments/s3"
+        }
+      ]
+    },
+    "s5": {
+      "funding_account_id": {
+        "$ref": "./contract-bundle.schema.json#/$defs/Id"
+      },
+      "transaction_date": {
+        "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+      },
+      "direction": {
+        "enum": [
+          "in",
+          "out"
+        ]
+      },
+      "gross_cents": {
+        "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+      },
+      "evidence": {
+        "$plan_ref": "#/fragments/s1"
+      },
+      "payee": {
+        "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+      }
+    },
+    "s4": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "funding_account_id",
+        "transaction_date",
+        "direction",
+        "gross_cents",
+        "payee"
+      ],
+      "properties": {
+        "$plan_ref": "#/fragments/s5"
+      }
+    },
+    "s6": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": {
+        "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+      }
+    },
+    "s7": {
+      "anyOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "s8": {
+      "anyOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "s9": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 1,
+      "items": {
+        "$ref": "./contract-bundle.schema.json#/$defs/Id"
+      }
+    },
+    "s11": {
+      "properties": {
+        "event_ids": {
+          "maxItems": 0
+        },
+        "entity_refs": {
+          "maxItems": 0
+        }
+      }
+    },
+    "s10": {
+      "if": {
+        "properties": {
+          "result_type": {
+            "const": "dry_run"
+          }
+        }
+      },
+      "then": {
+        "$plan_ref": "#/fragments/s11"
+      }
+    },
+    "s13": {
+      "properties": {
+        "result_type": {
+          "enum": [
+            "created",
+            "updated",
+            "existing"
+          ]
+        }
+      }
+    },
+    "s14": {
+      "properties": {
+        "entity_refs": {
+          "minItems": 1
+        },
+        "event_ids": {
+          "minItems": 1
+        }
+      }
+    },
+    "s12": {
+      "if": {
+        "$plan_ref": "#/fragments/s13"
+      },
+      "then": {
+        "$plan_ref": "#/fragments/s14"
+      }
+    },
+    "s17": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": {
+        "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+      }
+    },
+    "s19": {
+      "allOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "accounting_event"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "s18": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 0,
+      "items": {
+        "$plan_ref": "#/fragments/s19"
+      }
+    },
+    "s16": {
+      "changed_refs": {
+        "$plan_ref": "#/fragments/s17"
+      },
+      "posting_event_refs": {
+        "$plan_ref": "#/fragments/s18"
+      }
+    },
+    "s15": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "$plan_ref": "#/fragments/s16"
+      },
+      "required": [
+        "changed_refs",
+        "posting_event_refs"
+      ]
+    },
+    "s22": {
+      "kind": {
+        "const": "counterparty"
+      },
+      "id": {
+        "$ref": "./contract-bundle.schema.json#/$defs/Id"
+      }
+    },
+    "s21": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "$plan_ref": "#/fragments/s22"
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    "s24": {
+      "kind": {
+        "const": "employee"
+      },
+      "id": {
+        "$ref": "./contract-bundle.schema.json#/$defs/Id"
+      }
+    },
+    "s23": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "$plan_ref": "#/fragments/s24"
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    "s26": {
+      "kind": {
+        "const": "own_account"
+      },
+      "id": {
+        "$ref": "./contract-bundle.schema.json#/$defs/Id"
+      }
+    },
+    "s25": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "$plan_ref": "#/fragments/s26"
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    "s20": {
+      "oneOf": [
+        {
+          "$plan_ref": "#/fragments/s21"
+        },
+        {
+          "$plan_ref": "#/fragments/s23"
+        },
+        {
+          "$plan_ref": "#/fragments/s25"
+        }
+      ]
+    },
+    "s28": {
+      "properties": {
+        "namespace": {
+          "const": "cash"
+        },
+        "kind": {
+          "const": "cash_party_match"
+        }
+      }
+    },
+    "s27": {
+      "allOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        {
+          "$plan_ref": "#/fragments/s28"
+        }
+      ]
+    },
+    "s31": {
+      "namespace": {
+        "const": "cash"
+      },
+      "kind": {
+        "const": "cash_correction_request"
+      }
+    },
+    "s30": {
+      "properties": {
+        "$plan_ref": "#/fragments/s31"
+      }
+    },
+    "s29": {
+      "allOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        {
+          "$plan_ref": "#/fragments/s30"
+        }
+      ]
+    },
+    "s33": {
+      "properties": {
+        "namespace": {
+          "const": "cash"
+        },
+        "kind": {
+          "const": "cash_correction"
+        }
+      }
+    },
+    "s32": {
+      "allOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        {
+          "$plan_ref": "#/fragments/s33"
+        }
+      ]
+    },
+    "s34": {
+      "anyOf": [
+        {
+          "$plan_ref": "#/fragments/s32"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "s37": {
+      "properties": {
+        "namespace": {
+          "const": "core"
+        },
+        "kind": {
+          "const": "ledger_posting"
+        }
+      }
+    },
+    "s36": {
+      "allOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        {
+          "$plan_ref": "#/fragments/s37"
+        }
+      ]
+    },
+    "s35": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": {
+        "$plan_ref": "#/fragments/s36"
+      }
+    }
+  },
+  "synthetic_result_examples": [
+    {
+      "contract": "core.document.decide/v1",
+      "result_type": "created",
+      "entity_refs": [
+        {
+          "namespace": "cash",
+          "kind": "cash_correction_request",
+          "id": "correction-request-001",
+          "version": 1
+        }
+      ],
+      "event_ids": [
+        "event-correction-approved-001"
+      ]
+    }
+  ]
+}

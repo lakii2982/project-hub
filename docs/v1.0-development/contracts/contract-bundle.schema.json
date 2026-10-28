@@ -1231,6 +1231,96 @@
               "const": "source_consumption"
             }
           }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "payroll_cash_link"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "cash_classification_reversal"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "internal_transfer_reversal"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "cash_party_match"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "cash_correction_request"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "cash_correction"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "cash"
+            },
+            "kind": {
+              "const": "manual_cash_plan"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "costing"
+            },
+            "kind": {
+              "const": "bank_charge"
+            }
+          }
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "settlement"
+            },
+            "kind": {
+              "const": "receipt_fee_settlement"
+            }
+          }
         }
       ],
       "x-service-invariants": [
@@ -1599,7 +1689,17 @@
                   "TraceLink",
                   "WarrantyTerm",
                   "WorkItem",
-                  "WorkforceCoverage"
+                  "WorkforceCoverage",
+                  "SourceConsumption",
+                  "PayrollCashLink",
+                  "CashClassificationReversal",
+                  "InternalTransferReversal",
+                  "CashPartyMatch",
+                  "CashCorrectionRequest",
+                  "CashCorrection",
+                  "ManualCashPlan",
+                  "BankCharge",
+                  "ReceiptFeeSettlement"
                 ]
               }
             }
@@ -1723,7 +1823,17 @@
                   "TraceLink",
                   "WarrantyTerm",
                   "WorkItem",
-                  "WorkforceCoverage"
+                  "WorkforceCoverage",
+                  "SourceConsumption",
+                  "PayrollCashLink",
+                  "CashClassificationReversal",
+                  "InternalTransferReversal",
+                  "CashPartyMatch",
+                  "CashCorrectionRequest",
+                  "CashCorrection",
+                  "ManualCashPlan",
+                  "BankCharge",
+                  "ReceiptFeeSettlement"
                 ]
               }
             }
@@ -2288,6 +2398,32 @@
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         }
       }
+    },
+    "BankPayeeRef": {
+      "anyOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/PayeeRef"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "unidentified"
+            },
+            "bank_label": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
     }
   }
 }

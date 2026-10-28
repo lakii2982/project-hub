@@ -150,6 +150,60 @@
       "canonical_record": "Evidence",
       "kind": "embedded_reference",
       "schema_ref": "./entities.schema.json#/$defs/Evidence"
+    },
+    "cash-payroll-pool-payment": {
+      "owner": "cash",
+      "canonical_record": "PayrollCashLink",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/PayrollCashLink"
+    },
+    "cash-classification-fact": {
+      "owner": "cash",
+      "canonical_record": "CashClassification",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/CashClassification"
+    },
+    "cash-internal-transfer-pair": {
+      "owner": "cash",
+      "canonical_record": "InternalTransfer",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/InternalTransfer"
+    },
+    "cash-classification-reversal": {
+      "owner": "cash",
+      "canonical_record": "CashClassificationReversal",
+      "kind": "append_only_fact",
+      "schema_ref": "./entities.schema.json#/$defs/CashClassificationReversal"
+    },
+    "cash-internal-transfer-reversal": {
+      "owner": "cash",
+      "canonical_record": "InternalTransferReversal",
+      "kind": "append_only_fact",
+      "schema_ref": "./entities.schema.json#/$defs/InternalTransferReversal"
+    },
+    "cash-party-match": {
+      "owner": "cash",
+      "canonical_record": "CashPartyMatch",
+      "kind": "append_only_fact",
+      "schema_ref": "./entities.schema.json#/$defs/CashPartyMatch"
+    },
+    "cash-correction-request": {
+      "owner": "cash",
+      "canonical_record": "CashCorrectionRequest",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/CashCorrectionRequest"
+    },
+    "cash-correction": {
+      "owner": "cash",
+      "canonical_record": "CashCorrection",
+      "kind": "append_only_fact",
+      "schema_ref": "./entities.schema.json#/$defs/CashCorrection"
+    },
+    "receipt-fee-settlement": {
+      "owner": "settlement",
+      "canonical_record": "ReceiptFeeSettlement",
+      "kind": "owned_fact",
+      "schema_ref": "./entities.schema.json#/$defs/ReceiptFeeSettlement"
     }
   },
   "invariant": "A conceptual relation reuses the named canonical fact/projection; it does not authorize an extra table or duplicated maintenance surface."

@@ -184,7 +184,8 @@
         "time.billable.confirm/v1",
         "delivery.acceptance.draft.save/v1",
         "delivery.service_confirmation.draft.save/v1",
-        "time.timesheet.draft.save/v1"
+        "time.timesheet.draft.save/v1",
+        "delivery.project.close/v1"
       ],
       "queries": [
         "delivery.performance.available/v1",
@@ -193,7 +194,9 @@
       "events": [
         "delivery.accepted.v1",
         "time.approved.v1",
-        "time.billable_confirmed.v1"
+        "time.billable_confirmed.v1",
+        "delivery.service_confirmation_changed.v1",
+        "delivery.project_close_changed.v1"
       ]
     },
     {
@@ -216,7 +219,8 @@
         "CostEvent",
         "AllocationRun",
         "AllocationTarget",
-        "TaxQualification"
+        "TaxQualification",
+        "BankCharge"
       ],
       "bridges": [
         "cost-source-allocation",
@@ -231,7 +235,8 @@
         "costing.expense_claim.draft.save/v1",
         "costing.spend_commitment.draft.save/v1",
         "costing.spend_acceptance.draft.save/v1",
-        "costing.prepaid_service.draft.save/v1"
+        "costing.prepaid_service.draft.save/v1",
+        "costing.bank_charge.draft.save/v1"
       ],
       "queries": [
         "costing.source.available/v1",
@@ -239,7 +244,9 @@
       ],
       "events": [
         "costing.cost_posted.v1",
-        "costing.allocated.v1"
+        "costing.allocated.v1",
+        "costing.commitment_changed.v1",
+        "costing.bank_charge_saved.v1"
       ],
       "consumed_bridges": [
         "vendor-workforce-exclusion"
@@ -261,11 +268,13 @@
         "BadDebtDisposition",
         "Clearance",
         "Offset",
-        "AgingCase"
+        "AgingCase",
+        "ReceiptFeeSettlement"
       ],
       "bridges": [
         "cash-openitem-clearance",
-        "advance-openitem-offset"
+        "advance-openitem-offset",
+        "receipt-fee-settlement"
       ],
       "commands": [
         "settlement.open_item.create/v1",
@@ -274,7 +283,8 @@
         "settlement.offset.create/v1",
         "settlement.settlement.draft.save/v1",
         "settlement.credit_adjustment.draft.save/v1",
-        "settlement.bad_debt_disposition.draft.save/v1"
+        "settlement.bad_debt_disposition.draft.save/v1",
+        "settlement.receipt_fee_settlement.reverse/v1"
       ],
       "queries": [
         "settlement.open_item.get/v1",
@@ -283,7 +293,8 @@
       "events": [
         "settlement.open_item_created.v1",
         "settlement.cleared.v1",
-        "settlement.clearance_reversed.v1"
+        "settlement.clearance_reversed.v1",
+        "settlement.receipt_fee_settlement_reversed.v1"
       ]
     },
     {
@@ -304,18 +315,38 @@
         "BankReturn",
         "InternalTransfer",
         "CashForecastItem",
-        "EmployeeAdvance"
+        "EmployeeAdvance",
+        "CashPartyMatch",
+        "CashCorrectionRequest",
+        "CashCorrection"
       ],
       "bridges": [
         "cash-transaction-allocation",
-        "forecast-source-coverage"
+        "forecast-source-coverage",
+        "cash-party-match",
+        "cash-correction-request",
+        "cash-correction",
+        "cash-classification-fact",
+        "cash-payroll-pool-payment",
+        "cash-classification-reversal",
+        "cash-internal-transfer-pair",
+        "cash-internal-transfer-reversal"
       ],
       "commands": [
         "cash.transaction.record/v1",
         "cash.allocation.create/v1",
         "cash.refund.record/v1",
         "cash.return.record/v1",
-        "cash.funding_account.draft.save/v1"
+        "cash.funding_account.draft.save/v1",
+        "cash.transaction.draft.save/v1",
+        "cash.party.match/v1",
+        "cash.transaction.correction.draft.save/v1",
+        "cash.transaction.correct/v1",
+        "cash.receipt_fee_settlement.record/v1",
+        "cash.classification.record/v1",
+        "cash.classification.reverse/v1",
+        "cash.internal_transfer.link/v1",
+        "cash.internal_transfer.reverse/v1"
       ],
       "queries": [
         "cash.transaction.get/v1",
@@ -324,7 +355,16 @@
       "events": [
         "cash.transaction_recorded.v1",
         "cash.refunded.v1",
-        "cash.returned.v1"
+        "cash.returned.v1",
+        "cash.transaction_draft_saved.v1",
+        "cash.party_matched.v1",
+        "cash.correction_draft_saved.v1",
+        "cash.transaction_corrected.v1",
+        "cash.receipt_fee_settled.v1",
+        "cash.classification_recorded.v1",
+        "cash.classification_reversed.v1",
+        "cash.internal_transfer_linked.v1",
+        "cash.internal_transfer_reversed.v1"
       ],
       "consumed_bridges": [
         "cash-openitem-clearance"
@@ -354,7 +394,8 @@
         "invoicing.invoice.record/v1",
         "invoicing.invoice.reverse/v1",
         "management_revenue.recognize/v1",
-        "management_revenue.match/v1"
+        "management_revenue.match/v1",
+        "invoicing.lines.allocate/v1"
       ],
       "queries": [
         "invoicing.unallocated.get/v1",
@@ -363,7 +404,9 @@
       "events": [
         "invoicing.recorded.v1",
         "management_revenue.recognized.v1",
-        "management_revenue.matched.v1"
+        "management_revenue.matched.v1",
+        "invoicing.lines_allocated.v1",
+        "invoicing.reversed.v1"
       ]
     },
     {
@@ -381,7 +424,8 @@
         "Scenario",
         "ForecastSource",
         "ForecastCoverage",
-        "EstimateRelease"
+        "EstimateRelease",
+        "ManualCashPlan"
       ],
       "bridges": [
         "etc-actual-release"
@@ -393,7 +437,8 @@
         "planning.budget_version.draft.save/v1",
         "planning.budget_line.draft.save/v1",
         "planning.e_t_c_version.draft.save/v1",
-        "planning.e_t_c_item.draft.save/v1"
+        "planning.e_t_c_item.draft.save/v1",
+        "cash.manual_plan.draft.save/v1"
       ],
       "queries": [
         "planning.eac.get/v1",
@@ -402,7 +447,8 @@
       "events": [
         "planning.budget_approved.v1",
         "planning.etc_published.v1",
-        "cash.forecast_replaced.v1"
+        "cash.forecast_replaced.v1",
+        "cash.manual_plan_saved.v1"
       ],
       "consumed_bridges": [
         "forecast-source-coverage"
@@ -478,7 +524,9 @@
       ],
       "commands": [
         "insights.export.create/v1",
-        "delivery.evidence.attach/v1"
+        "delivery.evidence.attach/v1",
+        "insights.reconciliation.refresh/v1",
+        "insights.reconciliation.case.update/v1"
       ],
       "queries": [
         "insights.metric.get/v1",
@@ -487,7 +535,9 @@
       ],
       "events": [
         "insights.export_ready.v1",
-        "delivery.evidence_attached.v1"
+        "delivery.evidence_attached.v1",
+        "insights.reconciliation_refreshed.v1",
+        "insights.reconciliation_case_updated.v1"
       ]
     }
   ],
@@ -572,6 +622,21 @@
         "name": "MetricDefinition",
         "owner": "insights",
         "schema_ref": "./entities.schema.json#/$defs/MetricDefinition"
+      },
+      {
+        "name": "CashPartyMatch",
+        "owner": "cash",
+        "schema_ref": "./entities.schema.json#/$defs/CashPartyMatch"
+      },
+      {
+        "name": "CashCorrectionRequest",
+        "owner": "cash",
+        "schema_ref": "./entities.schema.json#/$defs/CashCorrectionRequest"
+      },
+      {
+        "name": "CashCorrection",
+        "owner": "cash",
+        "schema_ref": "./entities.schema.json#/$defs/CashCorrection"
       }
     ],
     "bridges": [

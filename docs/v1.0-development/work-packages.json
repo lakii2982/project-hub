@@ -12,7 +12,7 @@
     "requirements": 137,
     "uat_scenarios": 18
   },
-  "promotion_rule": "Independent planning PR and trusted BASE PH spec required; design scopes and IDs are not execution grants.",
+  "promotion_rule": "Formal PH references are registered in project/tasks.json and specs; design packages never grant dispatch. Proposed/blocked tasks require completed dependencies and a subsequent independently reviewed promotion PR.",
   "preparation_bootstrap": "PR69 / PH-123 authorizes PH130-PH137 startup preparation. Each implementation still requires its own trusted BASE contract after PH137; no design package is an execution grant.",
   "packages": [
     {
@@ -22,7 +22,9 @@
       "kind": "preparation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-130"
+      ],
       "depends_on": [],
       "requirement_ids": [],
       "domains": [
@@ -113,7 +115,9 @@
       "kind": "preparation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-131"
+      ],
       "depends_on": [
         "PRE-BASELINE"
       ],
@@ -208,7 +212,9 @@
       "kind": "preparation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-132"
+      ],
       "depends_on": [
         "PRE-BASELINE",
         "PRE-POLICY"
@@ -318,7 +324,9 @@
       "kind": "preparation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-133"
+      ],
       "depends_on": [
         "PRE-POLICY",
         "PRE-CONTRACTS"
@@ -412,7 +420,9 @@
       "kind": "preparation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-134"
+      ],
       "depends_on": [
         "PRE-CONTRACTS"
       ],
@@ -511,7 +521,9 @@
       "kind": "preparation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-135"
+      ],
       "depends_on": [
         "PRE-BASELINE",
         "PRE-CONTRACTS",
@@ -604,7 +616,9 @@
       "kind": "preparation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-136"
+      ],
       "depends_on": [
         "PRE-ESTIMATE"
       ],
@@ -695,7 +709,11 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-001",
+        "PH-002",
+        "PH-140"
+      ],
       "depends_on": [
         "PRE-GOVERNANCE"
       ],
@@ -789,7 +807,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-141",
+        "PH-142"
+      ],
       "depends_on": [
         "WP-SDK"
       ],
@@ -883,7 +904,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-143",
+        "PH-144"
+      ],
       "depends_on": [
         "WP-CORE"
       ],
@@ -983,7 +1007,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-145"
+      ],
       "depends_on": [
         "WP-IDENTITY"
       ],
@@ -1080,7 +1106,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-146"
+      ],
       "depends_on": [
         "WP-CORE"
       ],
@@ -1182,7 +1210,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-147"
+      ],
       "depends_on": [
         "WP-PEOPLE",
         "WP-PARTY"
@@ -1289,7 +1319,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-148",
+        "PH-149"
+      ],
       "depends_on": [
         "WP-PROJECT"
       ],
@@ -1386,7 +1419,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-150"
+      ],
       "depends_on": [
         "WP-PROJECT",
         "WP-PARTY"
@@ -1490,7 +1525,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-151"
+      ],
       "depends_on": [
         "WP-CONTRACT",
         "WP-DELIVERY"
@@ -1587,7 +1624,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-152"
+      ],
       "depends_on": [
         "WP-PEOPLE",
         "WP-PROJECT",
@@ -1688,7 +1727,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-153"
+      ],
       "depends_on": [
         "WP-TIME-INPUT"
       ],
@@ -1786,7 +1827,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-154"
+      ],
       "depends_on": [
         "WP-TIME-REVIEW",
         "WP-CONTRACT"
@@ -1887,7 +1930,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-155",
+        "PH-156"
+      ],
       "depends_on": [
         "WP-CONTRACT",
         "WP-DELIVERY",
@@ -1988,7 +2034,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-157"
+      ],
       "depends_on": [
         "WP-CONTRACT",
         "WP-PEOPLE",
@@ -2086,7 +2134,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-158"
+      ],
       "depends_on": [
         "WP-AR",
         "WP-AP"
@@ -2183,7 +2233,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-159"
+      ],
       "depends_on": [
         "WP-TIME-REVIEW",
         "WP-CORE"
@@ -2286,7 +2338,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-160",
+        "PH-161"
+      ],
       "depends_on": [
         "WP-LABOR-POLICY"
       ],
@@ -2387,7 +2442,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-162"
+      ],
       "depends_on": [
         "WP-AP",
         "WP-CORE"
@@ -2486,7 +2543,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-163"
+      ],
       "depends_on": [
         "WP-AP",
         "WP-CONTRACT",
@@ -2587,7 +2646,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-164"
+      ],
       "depends_on": [
         "WP-EXPENSE",
         "WP-SPEND",
@@ -2687,7 +2748,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-165"
+      ],
       "depends_on": [
         "WP-EXPENSE",
         "WP-TIME-REVIEW"
@@ -2787,7 +2850,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-166"
+      ],
       "depends_on": [
         "WP-CONTRACT",
         "WP-DELIVERY",
@@ -2890,7 +2955,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-167"
+      ],
       "depends_on": [
         "WP-REVENUE-FIXED",
         "WP-BILLABLE"
@@ -2989,7 +3056,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-168"
+      ],
       "depends_on": [
         "WP-REVENUE-SERVICE",
         "WP-AR",
@@ -3092,7 +3161,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-169"
+      ],
       "depends_on": [
         "WP-AR",
         "WP-AP",
@@ -3194,7 +3265,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-170"
+      ],
       "depends_on": [
         "WP-BANK",
         "WP-AR",
@@ -3301,7 +3374,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-171"
+      ],
       "depends_on": [
         "WP-CLEARING",
         "WP-CREDIT",
@@ -3405,7 +3480,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-172"
+      ],
       "depends_on": [
         "WP-BANK",
         "WP-LABOR-POST"
@@ -3507,7 +3584,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-173"
+      ],
       "depends_on": [
         "WP-BANK"
       ],
@@ -3603,7 +3682,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-174"
+      ],
       "depends_on": [
         "WP-CLEARING",
         "WP-EXPENSE",
@@ -3712,7 +3793,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-175"
+      ],
       "depends_on": [
         "WP-CLEARING",
         "WP-SPEND"
@@ -3820,7 +3903,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-176"
+      ],
       "depends_on": [
         "WP-AR",
         "WP-AP",
@@ -3921,7 +4006,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-177"
+      ],
       "depends_on": [
         "WP-CONTRACT",
         "WP-SPEND",
@@ -4025,7 +4112,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-178"
+      ],
       "depends_on": [
         "WP-BUDGET",
         "WP-SPEND-CORRECTION",
@@ -4134,7 +4223,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-179"
+      ],
       "depends_on": [
         "WP-CLEARING",
         "WP-REFUND",
@@ -4236,7 +4327,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-180"
+      ],
       "depends_on": [
         "WP-CORE",
         "WP-LABOR-POST",
@@ -4347,7 +4440,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-181"
+      ],
       "depends_on": [
         "WP-CLOSE",
         "WP-FORECAST",
@@ -4451,7 +4546,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-182"
+      ],
       "depends_on": [
         "WP-RECONCILE",
         "WP-ETC",
@@ -4556,7 +4653,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-183"
+      ],
       "depends_on": [
         "WP-FORECAST",
         "WP-RECONCILE",
@@ -4655,7 +4754,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-184"
+      ],
       "depends_on": [
         "WP-INSIGHT-METRICS",
         "WP-NOTIFY"
@@ -4761,7 +4862,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-185"
+      ],
       "depends_on": [
         "WP-WORKSPACES",
         "WP-CLOSE",
@@ -4866,7 +4969,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-186"
+      ],
       "depends_on": [
         "WP-RECONCILE",
         "WP-INSIGHT-METRICS"
@@ -4962,7 +5067,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-026"
+      ],
       "depends_on": [
         "WP-WORKSPACES",
         "WP-PROJECT-CLOSE",
@@ -5061,7 +5168,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-187",
+        "PH-188"
+      ],
       "depends_on": [
         "WP-RECONCILE",
         "WP-PROJECT-CLOSE"
@@ -5170,7 +5280,11 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-189",
+        "PH-190",
+        "PH-191"
+      ],
       "depends_on": [
         "WP-IMPORT",
         "WP-RECONCILE"
@@ -5275,7 +5389,11 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-192",
+        "PH-193",
+        "PH-194"
+      ],
       "depends_on": [
         "WP-OPENING",
         "WP-UI-ACCEPTANCE"
@@ -5383,7 +5501,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-003",
+        "PH-195"
+      ],
       "depends_on": [
         "WP-SDK",
         "WP-CORE"
@@ -5485,7 +5606,9 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-196"
+      ],
       "depends_on": [
         "WP-INSTALL"
       ],
@@ -5585,7 +5708,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-197",
+        "PH-198"
+      ],
       "depends_on": [
         "WP-INSTALL",
         "WP-OPENING",
@@ -5694,7 +5820,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-199",
+        "PH-200"
+      ],
       "depends_on": [
         "WP-CLOSE",
         "WP-OPENING",
@@ -5796,7 +5925,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-201",
+        "PH-202"
+      ],
       "depends_on": [
         "WP-ONBOARDING",
         "WP-UI-ACCEPTANCE",
@@ -5890,7 +6022,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-203",
+        "PH-204"
+      ],
       "depends_on": [
         "WP-ONBOARDING",
         "WP-UPGRADE-RESTORE"
@@ -5991,7 +6126,10 @@
       "kind": "implementation",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-139",
+        "PH-205"
+      ],
       "depends_on": [
         "WP-TLS",
         "WP-UPGRADE-RESTORE",
@@ -6095,7 +6233,9 @@
       "kind": "external_acceptance",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-206"
+      ],
       "depends_on": [
         "WP-RELEASE-PACKAGE",
         "WP-PROJECT-CLOSE",
@@ -6190,7 +6330,9 @@
       "kind": "release",
       "design_state": "design_candidate",
       "dispatch_allowed": false,
-      "ph_task_ids": [],
+      "ph_task_ids": [
+        "PH-207"
+      ],
       "depends_on": [
         "WP-CUSTOMER-UAT"
       ],

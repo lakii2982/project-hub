@@ -168,6 +168,54 @@
     },
     {
       "$ref": "#/$defs/core.document.decide~1v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.project.close~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.classification.record~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.internal_transfer.link~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.classification.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.internal_transfer.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/invoicing.lines.allocate~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.party.match~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction.correction.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction.correct~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.manual_plan.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.bank_charge.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.receipt_fee_settlement.record~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.receipt_fee_settlement.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.reconciliation.refresh~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.reconciliation.case.update~1v1"
     }
   ],
   "$defs": {
@@ -470,7 +518,8 @@
         "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
         "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
         "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
-        "Legacy posting resolves original stored cents and existing reversal service; never synthesizes or recalculates historical event/rate data."
+        "Legacy posting resolves original stored cents and existing reversal service; never synthesizes or recalculates historical event/rate data.",
+        "Reject any standalone reversal/replacement that invalidates a net clearance or fee cost supporting an effective ReceiptFeeSettlement; check inverse dependencies under same company lock for browser/import/API/internal/period paths. Require explicit open-period fee-settlement reversal first; no silent cash/cost cascade."
       ]
     },
     "masterdata.entity.upsert/v1": {
@@ -1560,7 +1609,8 @@
                         "salary_pool",
                         "expense_claim",
                         "spend_acceptance",
-                        "prepaid_service"
+                        "prepaid_service",
+                        "bank_charge"
                       ]
                     }
                   }
@@ -1584,7 +1634,8 @@
         "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
         "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
         "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
-        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "A BankCharge with an approved existing_cost_ref already has its company cost: reject a second cost posting, resolving the normalized original cost/bank-fee identity independent of alias type, version, channel and request key."
       ]
     },
     "costing.allocation.run/v1": {
@@ -1986,7 +2037,8 @@
         "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
         "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
         "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
-        "Same company transaction receives server-only FundingAvailabilityProof from cash application; never deserialize a caller-supplied proof/available balance. No cash model import in settlement."
+        "Same company transaction receives server-only FundingAvailabilityProof from cash application; never deserialize a caller-supplied proof/available balance. No cash model import in settlement.",
+        "Reject any standalone reversal/replacement that invalidates a net clearance or fee cost supporting an effective ReceiptFeeSettlement; check inverse dependencies under same company lock for browser/import/API/internal/period paths. Require explicit open-period fee-settlement reversal first; no silent cash/cost cascade."
       ]
     },
     "settlement.offset.create/v1": {
@@ -2158,7 +2210,7 @@
               }
             },
             "payee": {
-              "$ref": "./contract-bundle.schema.json#/$defs/PayeeRef"
+              "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
             }
           }
         }
@@ -2594,7 +2646,14 @@
         "No personal AI/PAT approval/payment/period-close capability is added by this schema.",
         "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
         "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
-        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint."
+        "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
+        "PROPOSED cascade extension, not current support: atomically append InvoiceReversal signed header and exact inverse snapshots of ALL effective lines/allocations. No partial reversal.",
+        "Each reverse snapshot references original line/allocation/source. Unique company/original invoice and original allocation prevents double reversal with changed key.",
+        "Never overwrite historical amounts/status; effective reversed state is projected, aggregate version alone advances. Header-only reversal has empty child arrays.",
+        "All children, header, audit, event, capacity release commit or roll back together. Same-key retry returns exact original result/event IDs; changed-key reversed invoice conflicts.",
+        "Current open period only, reversal_date<=today; omitted occurred_on defaults reversal_date, omitted posting_period defaults its month; supplied values must match. Do not reopen original locked period. Release source capacities exactly once.",
+        "Emit invoicing.reversed.v1 once transactionally; existing invoice.reverse result remains invoice_reversal refs with new event ID. No ledger/cost/income/obligation/cash posting.",
+        "Original invoice SourceRef.version is lock-checked; optional expected_version must agree. Existing optional envelope fields remain optional."
       ]
     },
     "management_revenue.recognize/v1": {
@@ -3177,7 +3236,8 @@
         "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
         "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
         "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
-        "Legacy posting resolves original stored cents and existing reversal service; never synthesizes or recalculates historical event/rate data."
+        "Legacy posting resolves original stored cents and existing reversal service; never synthesizes or recalculates historical event/rate data.",
+        "Reject any standalone reversal/replacement that invalidates a net clearance or fee cost supporting an effective ReceiptFeeSettlement; check inverse dependencies under same company lock for browser/import/API/internal/period paths. Require explicit open-period fee-settlement reversal first; no silent cash/cost cascade."
       ]
     },
     "insights.export.create/v1": {
@@ -4853,7 +4913,12 @@
                         "cash_transaction",
                         "refund",
                         "bank_return",
-                        "invoice"
+                        "invoice",
+                        "service_confirmation",
+                        "spend_commitment",
+                        "cash_correction_request",
+                        "manual_cash_plan",
+                        "bank_charge"
                       ]
                     }
                   }
@@ -4885,9 +4950,1462 @@
         "Approval validates full required domain facts/policy/source/evidence/period before atomic owner posting. Editing approved version creates new draft.",
         "No personal PAT/MCP/AI approval, payment or lock-period tool added. No external bank payment initiated; records describe actual bank facts."
       ]
+    },
+    "delivery.project.close/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "request_id": {
+          "$ref": "./commands.schema.json#/$defs/delivery.evidence.attach~1v1/properties/request_id"
+        },
+        "idempotency_key": {
+          "$ref": "./commands.schema.json#/$defs/delivery.evidence.attach~1v1/properties/idempotency_key"
+        },
+        "occurred_on": {
+          "$ref": "./commands.schema.json#/$defs/delivery.evidence.attach~1v1/properties/occurred_on"
+        },
+        "posting_period": {
+          "$ref": "./commands.schema.json#/$defs/delivery.evidence.attach~1v1/properties/posting_period"
+        },
+        "source": {
+          "$ref": "./commands.schema.json#/$defs/delivery.evidence.attach~1v1/properties/source"
+        },
+        "dry_run": {
+          "$ref": "./commands.schema.json#/$defs/delivery.evidence.attach~1v1/properties/dry_run"
+        },
+        "contract": {
+          "const": "delivery.project.close/v1"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "project_id",
+            "expected_version",
+            "action",
+            "close_evidence"
+          ],
+          "properties": {
+            "project_id": {
+              "$ref": "./entities.schema.json#/$defs/DeliveryClose/properties/project_id"
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            },
+            "action": {
+              "$ref": "./entities.schema.json#/$defs/DeliveryClose/properties/phase"
+            },
+            "close_evidence": {
+              "$ref": "./entities.schema.json#/$defs/DeliveryClose/properties/close_evidence"
+            }
+          }
+        }
+      },
+      "x-exposure": "browser_workflow_adapter_only",
+      "x-service-invariants": [
+        "Service checks below are implementation obligations, not enforced by JSON Schema.",
+        "No PAT/MCP/AI approval or period-lock tools.",
+        "Server defaults omitted dry_run to true before canonical hashing."
+      ]
+    },
+    "cash.classification.record/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload",
+        "source",
+        "occurred_on",
+        "posting_period"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.classification.record/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cash_transaction_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "cash_transaction"
+                    }
+                  }
+                }
+              ]
+            },
+            "classification": {
+              "enum": [
+                "payroll",
+                "tax",
+                "payment",
+                "receipt",
+                "advance"
+              ]
+            },
+            "salary_pool_links": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1000,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "salary_pool_ref": {
+                    "allOf": [
+                      {
+                        "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                      },
+                      {
+                        "properties": {
+                          "namespace": {
+                            "const": "costing"
+                          },
+                          "kind": {
+                            "const": "salary_pool"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "linked_cents": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000000000
+                  },
+                  "payment_component": {
+                    "enum": [
+                      "wage",
+                      "employer_social_insurance",
+                      "employee_social_insurance",
+                      "housing_fund",
+                      "withheld_tax"
+                    ]
+                  }
+                },
+                "required": [
+                  "salary_pool_ref",
+                  "linked_cents",
+                  "payment_component"
+                ]
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          },
+          "required": [
+            "cash_transaction_ref",
+            "classification",
+            "salary_pool_links",
+            "evidence"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "classification": {
+                    "const": "payroll"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "salary_pool_links": {
+                    "minItems": 1
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "salary_pool_links": {
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "x-exposure": "authenticated_application_service"
+    },
+    "cash.internal_transfer.link/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload",
+        "source",
+        "occurred_on",
+        "posting_period"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.internal_transfer.link/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "out_cash_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "cash_transaction"
+                    }
+                  }
+                }
+              ]
+            },
+            "in_cash_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "cash_transaction"
+                    }
+                  }
+                }
+              ]
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          },
+          "required": [
+            "out_cash_ref",
+            "in_cash_ref",
+            "evidence"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_application_service"
+    },
+    "cash.classification.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload",
+        "source",
+        "occurred_on",
+        "posting_period"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.classification.reverse/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "classification_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "cash_classification"
+                    }
+                  }
+                }
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          },
+          "required": [
+            "classification_ref",
+            "reason",
+            "evidence"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_application_service"
+    },
+    "cash.internal_transfer.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload",
+        "source",
+        "occurred_on",
+        "posting_period"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.internal_transfer.reverse/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "internal_transfer_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "internal_transfer"
+                    }
+                  }
+                }
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          },
+          "required": [
+            "internal_transfer_ref",
+            "reason",
+            "evidence"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_application_service"
+    },
+    "invoicing.lines.allocate/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload",
+        "expected_version",
+        "occurred_on",
+        "posting_period"
+      ],
+      "properties": {
+        "contract": {
+          "const": "invoicing.lines.allocate/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "$ref": "./write-dtos.schema.json#/$defs/InvoiceLinesAllocateInput"
+        }
+      },
+      "x-exposure": "authenticated_application_service",
+      "x-service-invariants": [
+        "See plan.service_rules; inherits company-lock/idempotency/dry-run rules of invoicing.invoice.record/v1; adds no PAT/AI exposure."
+      ]
+    },
+    "cash.transaction.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.transaction.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/BankCashDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service"
+    },
+    "cash.party.match/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.party.match/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "const": "identify"
+                },
+                "cash_transaction_ref": {
+                  "allOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                    },
+                    {
+                      "properties": {
+                        "namespace": {
+                          "const": "cash"
+                        },
+                        "kind": {
+                          "const": "cash_transaction"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "payee": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "counterparty"
+                        },
+                        "id": {
+                          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "id"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "employee"
+                        },
+                        "id": {
+                          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "id"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "own_account"
+                        },
+                        "id": {
+                          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "id"
+                      ]
+                    }
+                  ]
+                },
+                "evidence": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1000,
+                  "items": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+                  }
+                }
+              },
+              "required": [
+                "action",
+                "cash_transaction_ref",
+                "payee",
+                "evidence"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "const": "reverse"
+                },
+                "match_ref": {
+                  "allOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                    },
+                    {
+                      "properties": {
+                        "namespace": {
+                          "const": "cash"
+                        },
+                        "kind": {
+                          "const": "cash_party_match"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "evidence": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1000,
+                  "items": {
+                    "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+                  }
+                }
+              },
+              "required": [
+                "action",
+                "match_ref",
+                "reason",
+                "evidence"
+              ]
+            }
+          ]
+        }
+      },
+      "x-exposure": "authenticated_application_service"
+    },
+    "cash.transaction.correction.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.transaction.correction.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_version": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Version"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "$ref": "./write-dtos.schema.json#/$defs/CashCorrectionDraft"
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      },
+      "x-exposure": "authenticated_draft_service"
+    },
+    "cash.transaction.correct/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload",
+        "source",
+        "occurred_on",
+        "posting_period"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.transaction.correct/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "approved_correction_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "cash_correction_request"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "required": [
+            "approved_correction_ref"
+          ]
+        }
+      },
+      "x-exposure": "internal_approved_handler_only"
+    },
+    "cash.manual_plan.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.manual_plan.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "$ref": "./write-dtos.schema.json#/$defs/ManualCashPlanDraft"
+        }
+      },
+      "x-exposure": "browser_workflow_adapter_only",
+      "x-service-invariants": [
+        "Authenticated company/member/project, company-first lock, enabled owner, expected version, period, stable original source, idempotency and full rollback required.",
+        "No PAT/MCP/AI approval, payment initiation or closing tools. Server derives actor/company; dry_run persists no facts, ledger, audit, outbox or idempotency result.",
+        "owner/finance or authorized project PM may draft only in allowed scope; no PM nonproject/company access. gross_cents must be positive; this is an estimate, never an open item or actual receipt/payment.",
+        "Create requires plan_id/expected_version null; edit requires both existing same-company values, new revision after approval, never overwrite approved range or historical forecast snapshot.",
+        "Stable original source_key is independent of amount/date/version/channel/request key. A new key must not bypass an existing legacy_cash_plan_id mapping.",
+        "legacy_cash_plan_id is server migration provenance and forbidden client input. Existing core.CashPlan table/PK and historical rows remain; one cutover alias per company/old ID, old URL/API/import delegate same cash service after explicit cutover. Never leave two editable amounts/dates.",
+        "Only approved plans enter forecast. Undated stays undated, overdue stays overdue; conservative scenario excludes conditional plans but never shifts or deletes their follow-up. Approval uses separately frozen core.document.decide handler, distinct creator/reviewer.",
+        "Updating a plan does not move an actual/open-item contractual due date; source coverage links remain owned only by cash.forecast.replace. Partial supersession preserves residual."
+      ]
+    },
+    "costing.bank_charge.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.bank_charge.draft.save/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "$ref": "./write-dtos.schema.json#/$defs/BankChargeDraft"
+        }
+      },
+      "x-exposure": "browser_workflow_adapter_only",
+      "x-service-invariants": [
+        "Authenticated company/member/project, company-first lock, enabled owner, expected version, period, stable original source, idempotency and full rollback required.",
+        "No PAT/MCP/AI approval, payment initiation or closing tools. Server derives actor/company; dry_run persists no facts, ledger, audit, outbox or idempotency result.",
+        "owner/finance record only; employee claimant is absent, never invent an employee or supplier for a bank fee. Draft has zero financial effect.",
+        "counterparty_id is the fee issuer/bank supplier when known, distinct from the incoming cash customer; never compare a customer AR party to this supplier. tax_cents is nullable invoice-face tax, not recoverable tax. Unknown stays null. Confirming invoice face tax or supplier metadata does not itself change posted expense; tax deductibility/cost delta uses existing TaxQualification and approved open-period correction.",
+        "v1 supports one complete fee per original bank cash source only. Unique (company, original bank source identity) excludes BankCharge ID, amount, date, evidence changes, method/version and request key; a changed draft revises the same charge, not another charge. Cost and fee-settlement use distinct purpose keys on that same original bank identity. Multiple fee lines require later explicit planning.",
+        "Bank source, charge identity/evidence and original covered range identify one charge regardless of request key/version. Company liability/actual fee must be supported; a net receipt alone does not prove the gross payer payment or company fee responsibility.",
+        "Distinct owner/finance approval under new registered core.document.decide bank_charge handler; only company fee_bearer may become company expense; unknown or counterparty responsibility cannot silently post company cost.",
+        "costing.cost.post uses the same approved BankCharge once as expense source. Gross/net/recoverable tax follow existing TaxQualification and unknown-tax policy; do not infer deductible tax from a fee amount. No second cost when cash classification or AR settlement references the fee.",
+        "When existing_cost_ref is provided, bind a currently effective same-company/project approved cost event, or a positive legacy cost-book entry with preserved legacy origin, to this exact bank fee using explicit evidence and distinct approval. Derive gross from its approved gross/tax basis; client gross is forbidden in this branch. Bare legacy net-only amount without adequate gross/tax evidence rejects, never assumes zero tax.",
+        "Existing cost basis must be expense-kind: CostEvent.cost_kind=expense or an effective legacy cost posting resolving to an approved expense document. Salary/labor, shared allocation, vendor acceptance, prepayment consumption and cash-book rows are not eligible even if amounts happen to match.",
+        "An aliased CostEvent must resolve through its actual typed source to an ExpenseClaim or approved legacy expense, never back to this or another BankCharge. Reject cyclic/self fee-cost aliases. A directly posted BankCharge uses existing_cost_ref=null and its normal source posting path.",
+        "One effective fee-cost binding per original cost identity and original bank fee identity. Existing expense/cost and bank-charge aliases share company-cost consumption; do not post through BankCharge when linked. Never copy an existing expense into another cost, edit historical cents, fake a new AccountingEvent for legacy, or permit later cost reversal while an effective fee settlement depends on it.",
+        "v1 existing-cost reuse requires verified complete obligation/payment coverage: no outstanding AP from that same normalized expense/fee origin and no separate cash/advance/other funding payment of that same fee. Unknown coverage is policy_unconfirmed, never assumed zero. An expense with unpaid AP or a fee paid separately rejects this net-withholding settlement route; do not erase AP, invent cash clearance or introduce an unapproved AP offset."
+      ]
+    },
+    "cash.receipt_fee_settlement.record/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.receipt_fee_settlement.record/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cash_transaction_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "cash_transaction"
+                    }
+                  }
+                }
+              ]
+            },
+            "cash_expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            },
+            "open_item_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "open_item"
+                    }
+                  }
+                }
+              ]
+            },
+            "open_item_expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            },
+            "bank_charge_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "bank_charge"
+                    }
+                  }
+                }
+              ]
+            },
+            "bank_charge_expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            },
+            "existing_net_clearance_ref": {
+              "anyOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                    },
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "clearance"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "occurred_on": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "posting_period": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          },
+          "required": [
+            "cash_transaction_ref",
+            "cash_expected_version",
+            "open_item_ref",
+            "open_item_expected_version",
+            "bank_charge_ref",
+            "bank_charge_expected_version",
+            "existing_net_clearance_ref",
+            "occurred_on",
+            "posting_period",
+            "evidence"
+          ]
+        }
+      },
+      "x-exposure": "browser_workflow_adapter_only",
+      "x-service-invariants": [
+        "Authenticated company/member/project, company-first lock, enabled owner, expected version, period, stable original source, idempotency and full rollback required.",
+        "No PAT/MCP/AI approval, payment initiation or closing tools. Server derives actor/company; dry_run persists no facts, ledger, audit, outbox or idempotency result.",
+        "cash application orchestrates, settlement alone owns ReceiptFeeSettlement relation. Actual net bank CashTransaction and ledger remain unchanged; no synthetic gross cash or fee cash is created.",
+        "Requires net incoming same-company cash, receivable same counterparty/project, approved company-borne charge and explicit evidence of gross payer payment and withheld fee. Mere net receipt is insufficient.",
+        "Resolve BankCharge.cash_transaction_ref and input cash_transaction_ref to original bank identities and require exact equality, not just company/project/counterparty similarity. Existing net clearance must be effective and not reversed; fee cost must currently be posted and not reversed/superseded, not merely posted in history.",
+        "Require exactly one unreversed application per original bank charge under v1; server computes applied_cents from approved gross fee, never accepts client balance or fee-settlement amount. This v1 does not support arbitrary partial/split or multiple-open-item fee application; report the limitation rather than guessing.",
+        "If existing_net_clearance_ref supplied, verify it connects exactly this net cash and open item and equals the actual net receipt; do not clear again. Otherwise ordinary clearance consumes only actual net cash via unchanged FundingAvailabilityProof in same lock/transaction.",
+        "First-use target open remaining must equal net actual receipt plus fee, or after exact verified prior net clearance must equal fee. Any mismatch, prior unrelated consumption, partial availability or unsupported combination rejects all changes.",
+        "Resolve fee cost basis either from the approved BankCharge source posting or its explicitly approved existing_cost_ref alias, never both. It must currently be effective exactly once with verified same-bank fee gross/tax linkage, not reversed. No extra cost/AR/right/revenue/cash entry. Noncash fee settlement is not a discount, bad debt, advance or a funding availability proof.",
+        "Recheck same-origin AP/payment coverage at settlement time under company lock. For linked existing costs, outstanding AP or a prior separate fee payment/advance offset blocks this route; incomplete legacy obligation coverage blocks with policy_unconfirmed. No AP is deleted or silently cleared. Wrong expense classification must be corrected through its existing approved expense+obligation reversal workflow before a new direct bank-charge source is posted.",
+        "BankCharge is one source for company expense and a separate one-time settlement purpose; amount/version/channel changes cannot reset either source consumption. Rollback joins clearance, bridge, consumption, audit/outbox atomically.",
+        "Reverse dependency is enforced at every service entry: while this receipt-fee settlement is effective, net clearance and supporting fee cost cannot be individually reversed/replaced/voided. First explicitly reverse the fee-settlement bridge in an open period, then correct its dependencies. No silent cascade creates refunds or alters cash/cost."
+      ]
+    },
+    "settlement.receipt_fee_settlement.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "settlement.receipt_fee_settlement.reverse/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "original_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "receipt_fee_settlement"
+                    }
+                  }
+                }
+              ]
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            },
+            "occurred_on": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "posting_period": {
+              "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            }
+          },
+          "required": [
+            "original_ref",
+            "expected_version",
+            "occurred_on",
+            "posting_period",
+            "reason",
+            "evidence"
+          ]
+        }
+      },
+      "x-exposure": "browser_workflow_adapter_only",
+      "x-service-invariants": [
+        "Authenticated company/member/project, company-first lock, enabled owner, expected version, period, stable original source, idempotency and full rollback required.",
+        "No PAT/MCP/AI approval, payment initiation or closing tools. Server derives actor/company; dry_run persists no facts, ledger, audit, outbox or idempotency result.",
+        "owner/finance; append immutable negative applied_cents linked original, at most one full reversal in v1; restore only fee-settlement AR range, never net cash clearance, cost or bank money.",
+        "No automatic refund or cost reversal; a separate approved actual fee correction follows its original source. Retrying same request returns original result; another key cannot reverse twice. Closed-period correction is explicit open-period adjustment with original preserved.",
+        "A strict linked negative reversal removes only active fee-settlement consumption so a later correctly evidenced application may reuse the same original fee source up to its original amount; original records and anti-duplicate history remain. Never delete or reset the original source record/key."
+      ]
+    },
+    "insights.reconciliation.refresh/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "insights.reconciliation.refresh/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scope": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
+            },
+            "as_of_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            }
+          },
+          "required": [
+            "scope",
+            "as_of_date"
+          ]
+        }
+      },
+      "x-exposure": "browser_workflow_adapter_only",
+      "x-service-invariants": [
+        "Authenticated company/member/project, company-first lock, enabled owner, expected version, period, stable original source, idempotency and full rollback required.",
+        "No PAT/MCP/AI approval, payment initiation or closing tools. Server derives actor/company; dry_run persists no facts, ledger, audit, outbox or idempotency result.",
+        "owner/finance under company lock re-read authorized canonical sources and watermarks; create/update explanatory reconciliation cases from deterministic differences, never from client amounts. Stable case key is company+rule_code+normalized original source identities+original business coverage_key; versions/watermarks/report run dates never identify a new case.",
+        "A changed watermark appends an immutable version/snapshot of the same case, retaining original difference, sources, owner and notes history. Current difference/source/watermark are server-derived fields. Older as_of refresh cannot overwrite a newer current snapshot.",
+        "Queries remain read-only. Refresh has no ledger/cost/cash/revenue/open-item side effects and cannot manufacture balancing documents. Source watermarks and private field authorization remain explicit."
+      ]
+    },
+    "insights.reconciliation.case.update/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "request_id",
+        "idempotency_key",
+        "payload"
+      ],
+      "properties": {
+        "contract": {
+          "const": "insights.reconciliation.case.update/v1"
+        },
+        "request_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "expected_version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "source": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "case_ref": {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "reconciliation_case"
+                    }
+                  }
+                }
+              ]
+            },
+            "expected_version": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            },
+            "action": {
+              "enum": [
+                "assign",
+                "annotate",
+                "resolve"
+              ]
+            },
+            "owner_member_id": {
+              "anyOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "resolution_note": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "case_ref",
+            "expected_version",
+            "action",
+            "owner_member_id",
+            "resolution_note"
+          ]
+        }
+      },
+      "x-exposure": "browser_workflow_adapter_only",
+      "x-service-invariants": [
+        "Authenticated company/member/project, company-first lock, enabled owner, expected version, period, stable original source, idempotency and full rollback required.",
+        "No PAT/MCP/AI approval, payment initiation or closing tools. Server derives actor/company; dry_run persists no facts, ledger, audit, outbox or idempotency result.",
+        "owner/finance may assign/resolve; assigned authorized project PM may only annotate within own scope. Company/source authorization is rechecked, no client difference_cents/status/source_refs inputs.",
+        "assign requires active same-company authorized owner_member_id; annotate/resolve require nonempty resolution_note. Action-specific irrelevant nonnull fields reject.",
+        "resolve re-reads canonical differences under same company lock; only zero difference and no unresolved required evidence may close the case. A nonzero explained difference remains pending with note; it is never marked zero by editing workflow data.",
+        "Before closing append the newly verified zero-difference snapshot and exact source watermark, then close against that snapshot in the same transaction; retain old nonzero versions and notes, never close while exposing an obsolete nonzero current snapshot.",
+        "Case source/difference snapshot is server-only, immutable audit preserves each note/version. No cash/cost/income/open-item adjustment or fake reconciliation document."
+      ]
     }
   },
-  "x-command-count": 55,
+  "x-command-count": 71,
   "x-service-enforced": [
     "derive organization/actor/field access from CommandContext",
     "idempotency normalized digest and persisted result",

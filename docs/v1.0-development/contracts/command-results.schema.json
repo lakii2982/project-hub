@@ -168,6 +168,54 @@
     },
     {
       "$ref": "#/$defs/core.document.decide~1v1"
+    },
+    {
+      "$ref": "#/$defs/delivery.project.close~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.classification.record~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.internal_transfer.link~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.classification.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.internal_transfer.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/invoicing.lines.allocate~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.party.match~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction.correction.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.transaction.correct~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.manual_plan.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/costing.bank_charge.draft.save~1v1"
+    },
+    {
+      "$ref": "#/$defs/cash.receipt_fee_settlement.record~1v1"
+    },
+    {
+      "$ref": "#/$defs/settlement.receipt_fee_settlement.reverse~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.reconciliation.refresh~1v1"
+    },
+    {
+      "$ref": "#/$defs/insights.reconciliation.case.update~1v1"
     }
   ],
   "$defs": {
@@ -4055,7 +4103,1358 @@
                       "cash_transaction",
                       "refund",
                       "bank_return",
-                      "invoice"
+                      "invoice",
+                      "service_confirmation",
+                      "spend_commitment",
+                      "cash_correction_request",
+                      "bank_charge",
+                      "manual_cash_plan"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "x-service-invariants": [
+        "No arbitrary masked_data; domain queries return only authorized fields.",
+        "dry_run has no durable events/ledger/outbox/idempotency effects."
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "delivery.project.close/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "delivery.project.close/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "delivery_close"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "x-service-invariants": [
+        "No arbitrary masked_data; domain queries return only authorized fields.",
+        "dry_run has no durable events/ledger/outbox/idempotency effects."
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.classification.record/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.classification.record/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "cash"
+                  },
+                  "kind": {
+                    "const": "cash_classification"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              },
+              "entity_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "enum": [
+                  "created",
+                  "existing"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "entity_refs": {
+                "minItems": 1,
+                "maxItems": 1
+              },
+              "event_ids": {
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.internal_transfer.link/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.internal_transfer.link/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "cash"
+                  },
+                  "kind": {
+                    "const": "internal_transfer"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              },
+              "entity_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "enum": [
+                  "created",
+                  "existing"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "entity_refs": {
+                "minItems": 1,
+                "maxItems": 1
+              },
+              "event_ids": {
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.classification.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.classification.reverse/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "cash"
+                  },
+                  "kind": {
+                    "const": "cash_classification_reversal"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              },
+              "entity_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "enum": [
+                  "created",
+                  "existing"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "entity_refs": {
+                "minItems": 1,
+                "maxItems": 1
+              },
+              "event_ids": {
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.internal_transfer.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.internal_transfer.reverse/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "cash"
+                  },
+                  "kind": {
+                    "const": "internal_transfer_reversal"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              },
+              "entity_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "enum": [
+                  "created",
+                  "existing"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "entity_refs": {
+                "minItems": 1,
+                "maxItems": 1
+              },
+              "event_ids": {
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "invoicing.lines.allocate/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "invoicing.lines.allocate/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "invoicing"
+                  },
+                  "kind": {
+                    "enum": [
+                      "invoice",
+                      "invoice_line",
+                      "invoice_allocation"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              },
+              "entity_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.transaction.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.transaction.draft.save/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "updated",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "cash"
+                  },
+                  "kind": {
+                    "const": "cash_transaction"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              },
+              "entity_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "enum": [
+                  "created",
+                  "updated",
+                  "existing"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "entity_refs": {
+                "minItems": 1
+              },
+              "event_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.party.match/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.party.match/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "updated",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "cash"
+                  },
+                  "kind": {
+                    "const": "cash_party_match"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              },
+              "entity_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "enum": [
+                  "created",
+                  "updated",
+                  "existing"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "entity_refs": {
+                "minItems": 1
+              },
+              "event_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.transaction.correction.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.transaction.correction.draft.save/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "updated",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "cash"
+                  },
+                  "kind": {
+                    "const": "cash_correction_request"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              },
+              "entity_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "enum": [
+                  "created",
+                  "updated",
+                  "existing"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "entity_refs": {
+                "minItems": 1
+              },
+              "event_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.transaction.correct/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.transaction.correct/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "updated",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "cash"
+                  },
+                  "kind": {
+                    "const": "cash_correction"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              },
+              "entity_refs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "enum": [
+                  "created",
+                  "updated",
+                  "existing"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "entity_refs": {
+                "minItems": 1
+              },
+              "event_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.manual_plan.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.manual_plan.draft.save/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "manual_cash_plan"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "x-service-invariants": [
+        "No arbitrary masked_data; domain queries return only authorized fields.",
+        "dry_run has no durable events/ledger/outbox/idempotency effects."
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "costing.bank_charge.draft.save/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "costing.bank_charge.draft.save/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "bank_charge"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "x-service-invariants": [
+        "No arbitrary masked_data; domain queries return only authorized fields.",
+        "dry_run has no durable events/ledger/outbox/idempotency effects."
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cash.receipt_fee_settlement.record/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "cash.receipt_fee_settlement.record/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "receipt_fee_settlement"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "x-service-invariants": [
+        "No arbitrary masked_data; domain queries return only authorized fields.",
+        "dry_run has no durable events/ledger/outbox/idempotency effects."
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "settlement.receipt_fee_settlement.reverse/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "settlement.receipt_fee_settlement.reverse/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "receipt_fee_settlement"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "x-service-invariants": [
+        "No arbitrary masked_data; domain queries return only authorized fields.",
+        "dry_run has no durable events/ledger/outbox/idempotency effects."
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "insights.reconciliation.refresh/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "insights.reconciliation.refresh/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "reconciliation_case"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          }
+        }
+      },
+      "x-service-invariants": [
+        "No arbitrary masked_data; domain queries return only authorized fields.",
+        "dry_run has no durable events/ledger/outbox/idempotency effects."
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result_type": {
+                "const": "dry_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "event_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "insights.reconciliation.case.update/v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "result_type",
+        "entity_refs",
+        "event_ids"
+      ],
+      "properties": {
+        "contract": {
+          "const": "insights.reconciliation.case.update/v1"
+        },
+        "result_type": {
+          "enum": [
+            "created",
+            "existing",
+            "dry_run"
+          ]
+        },
+        "entity_refs": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "reconciliation_case"
                     ]
                   }
                 }

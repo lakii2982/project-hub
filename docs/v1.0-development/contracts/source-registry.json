@@ -520,6 +520,51 @@
       "namespace": "core",
       "kind": "source_consumption",
       "owner": "core"
+    },
+    "PayrollCashLink": {
+      "namespace": "cash",
+      "kind": "payroll_cash_link",
+      "owner": "cash"
+    },
+    "CashClassificationReversal": {
+      "namespace": "cash",
+      "kind": "cash_classification_reversal",
+      "owner": "cash"
+    },
+    "InternalTransferReversal": {
+      "namespace": "cash",
+      "kind": "internal_transfer_reversal",
+      "owner": "cash"
+    },
+    "CashPartyMatch": {
+      "namespace": "cash",
+      "kind": "cash_party_match",
+      "owner": "cash"
+    },
+    "CashCorrectionRequest": {
+      "namespace": "cash",
+      "kind": "cash_correction_request",
+      "owner": "cash"
+    },
+    "CashCorrection": {
+      "namespace": "cash",
+      "kind": "cash_correction",
+      "owner": "cash"
+    },
+    "ManualCashPlan": {
+      "namespace": "cash",
+      "kind": "manual_cash_plan",
+      "owner": "cash"
+    },
+    "BankCharge": {
+      "namespace": "costing",
+      "kind": "bank_charge",
+      "owner": "costing"
+    },
+    "ReceiptFeeSettlement": {
+      "namespace": "settlement",
+      "kind": "receipt_fee_settlement",
+      "owner": "settlement"
     }
   },
   "read_projections": [

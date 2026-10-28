@@ -1,0 +1,36 @@
+{
+  "state": "materialized_design_unmerged_PH137_not_runtime",
+  "base_sha": "f1115cfd043a9f3a9a7ffc05d6a88d772e324920",
+  "patch_entries": 201,
+  "canonical_sha256": {
+    "requirements-coverage.json": "72e9192317e258a11a91ee3b66527e1d6a10c481d1ae9b9ce140e012160abf2e",
+    "write-dtos.schema.json": "cce1965e774032131c90bbe1e2b40426738c5dc75fe47ae81624af8b787ecab3",
+    "queries.schema.json": "50245c71bbff40c5afcced62446f5762afba8ab53e54909a3751a534e4dd4442",
+    "events.schema.json": "47df2a83b172cb269ce350e4f57b71ca42fa5e7a3faab64840fc919a9a090709",
+    "catalog-completeness.schema.json": "9429db71c4a0f775cdd2ff61045eadba85a37983c3ac9b1d16b9f4f16dd9fb94",
+    "entities.schema.json": "658a21e4b46800bed51fbf891ca328fb757dcbd8f03d384e98df24ff50644492",
+    "query-results.schema.json": "5b698c58b36b32af7f5e1ec5559983ee1e540fd967bb9005135543d93396485d",
+    "contract-catalog.json": "6b7882b5a652cf2329545958bce865db70810ffd06f78ef9bec74b34b9b311da",
+    "relationships.json": "5af3a01e71e3c64895c5ccdd59e20c2cedf0ebc2137f6f39b8d0bff6e4adce3e",
+    "source-registry.json": "faa3cb109525596c304dc50b0cc3a6fab2394419fc11543e5b67b471a21e6df9",
+    "contract-bundle.schema.json": "6046e83646633ddb972d7cc81cdc6c1c4b0c1845d5abc80ca094403d21c9fda5",
+    "commands.schema.json": "387bf9b2715424f848e6321edf1904cdd74dfefa35887fd2ed7c9659ccf8a369",
+    "command-results.schema.json": "aac4931f1eebcf4f3a47df52feb6d624b2667eead6002ef6532c826eb5dc584e"
+  },
+  "input_sha256": {
+    "core-extension.plan.json": "69868c69d2773304674c1581c2bad3c28f7717fe66fefc9895451f2faef3e544",
+    "bank-entry-extension.plan.json": "7055c364efb2586a2c87433ac1f1e9098a7acd89176c47886ed4fc2d7cee0ac5",
+    "cash-extension.plan.json": "614d98d4445148e431e36fbdc70251af53c86729ce7e7400f4cd86d552ce6b24",
+    "invoice-extension.plan.json": "7312ae502fa6237357bb32302907bb711db65858564d3879c63f46987b4fa345",
+    "delivery-extension.plan.json": "83f28695807bf2e0c512da86b68839f6e1d4fdf4cb69f334b5b2c8ebbfe864c3",
+    "extension-schema-samples.json": "bbb1a6d641ef1b47f47aaf5d88f14ec3fda8e2331866e727c62ab11b130cc9a6"
+  },
+  "financial_history_changed": false,
+  "runtime_business_verified": false,
+  "independent_static_reviews": [
+    "ph137_s1_s3_acceptance delivery limited PASS",
+    "ph137_s4_s5_acceptance cash/invoice P1 fixes limited PASS",
+    "ph137_gap_design root fee/source/reconciliation closure limited PASS",
+    "ph137_gap_design existing-cost alias/AP coverage limited PASS"
+  ]
+}

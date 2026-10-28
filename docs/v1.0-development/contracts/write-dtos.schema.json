@@ -2090,6 +2090,9 @@
               "type": "null"
             }
           ]
+        },
+        "payee": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
         }
       },
       "x-contract-status-enum": [
@@ -4496,6 +4499,800 @@
         "Legacy rows stay physically unchanged; adapter projects original project scope/cents. legacy_project cash is registered historical project cash, never a verified bank balance.",
         "New bank cash uses funding_account scope once; project attribution is cash allocation, not another cash posting.",
         "Company cost sums all cost scopes once; allocation posts equal/opposite scope shifts with net company zero."
+      ]
+    },
+    "CashClassificationRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cash_transaction_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "classification": {
+          "enum": [
+            "payroll",
+            "tax",
+            "payment",
+            "receipt",
+            "advance"
+          ]
+        },
+        "salary_pool_links": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "salary_pool_ref": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "namespace": {
+                        "const": "costing"
+                      },
+                      "kind": {
+                        "const": "salary_pool"
+                      }
+                    }
+                  }
+                ]
+              },
+              "linked_cents": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000000000
+              },
+              "payment_component": {
+                "enum": [
+                  "wage",
+                  "employer_social_insurance",
+                  "employee_social_insurance",
+                  "housing_fund",
+                  "withheld_tax"
+                ]
+              }
+            },
+            "required": [
+              "salary_pool_ref",
+              "linked_cents",
+              "payment_component"
+            ]
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "required": [
+        "cash_transaction_ref",
+        "classification",
+        "salary_pool_links",
+        "evidence"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "payroll"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "salary_pool_links": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "salary_pool_links": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "InternalTransferLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "out_cash_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "in_cash_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "required": [
+        "out_cash_ref",
+        "in_cash_ref",
+        "evidence"
+      ]
+    },
+    "CashClassificationReverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "classification_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_classification"
+                }
+              }
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "required": [
+        "classification_ref",
+        "reason",
+        "evidence"
+      ]
+    },
+    "InternalTransferReverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "internal_transfer_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "internal_transfer"
+                }
+              }
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "required": [
+        "internal_transfer_ref",
+        "reason",
+        "evidence"
+      ]
+    },
+    "InvoiceRef": {
+      "allOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "invoicing"
+            },
+            "kind": {
+              "enum": [
+                "invoice"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "InvoiceLineRef": {
+      "allOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "invoicing"
+            },
+            "kind": {
+              "enum": [
+                "invoice_line"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "InvoiceAllocationRef": {
+      "allOf": [
+        {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+        },
+        {
+          "properties": {
+            "namespace": {
+              "const": "invoicing"
+            },
+            "kind": {
+              "enum": [
+                "invoice_allocation"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "InvoiceBusinessSourceRef": {
+      "oneOf": [
+        {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "settlement"
+                },
+                "kind": {
+                  "enum": [
+                    "settlement"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "costing"
+                },
+                "kind": {
+                  "enum": [
+                    "expense_claim"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "costing"
+                },
+                "kind": {
+                  "enum": [
+                    "bank_charge"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "InvoiceAllocationInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "business_source_ref",
+        "gross_cents",
+        "net_cents",
+        "tax_cents"
+      ],
+      "properties": {
+        "business_source_ref": {
+          "$ref": "./write-dtos.schema.json#/$defs/InvoiceBusinessSourceRef"
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        }
+      }
+    },
+    "InvoiceLineInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line_no",
+        "gross_cents",
+        "net_cents",
+        "tax_cents",
+        "allocations"
+      ],
+      "properties": {
+        "line_no": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "allocations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceAllocationInput"
+          }
+        }
+      }
+    },
+    "InvoiceLinesAllocateInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invoice_ref",
+        "lines"
+      ],
+      "properties": {
+        "invoice_ref": {
+          "$ref": "./write-dtos.schema.json#/$defs/InvoiceRef"
+        },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./write-dtos.schema.json#/$defs/InvoiceLineInput"
+          }
+        }
+      }
+    },
+    "BankCashDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "funding_account_id",
+        "transaction_date",
+        "direction",
+        "gross_cents",
+        "external_source_key",
+        "payee"
+      ],
+      "properties": {
+        "funding_account_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "transaction_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "direction": {
+          "enum": [
+            "in",
+            "out"
+          ]
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "external_source_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        },
+        "payee": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+        }
+      }
+    },
+    "CashCorrectionDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "original_cash_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "corrected_fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "funding_account_id",
+            "transaction_date",
+            "direction",
+            "gross_cents",
+            "payee"
+          ],
+          "properties": {
+            "funding_account_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "transaction_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "direction": {
+              "enum": [
+                "in",
+                "out"
+              ]
+            },
+            "gross_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            },
+            "payee": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+            }
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "required": [
+        "original_cash_ref",
+        "corrected_fields",
+        "reason",
+        "evidence"
+      ]
+    },
+    "ManualCashPlanDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "plan_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_version": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "direction": {
+          "enum": [
+            "in",
+            "out"
+          ]
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "expected_date": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "certainty": {
+          "enum": [
+            "confirmed",
+            "conditional"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "required": [
+        "plan_id",
+        "expected_version",
+        "source_key",
+        "scope",
+        "title",
+        "direction",
+        "gross_cents",
+        "expected_date",
+        "certainty",
+        "evidence"
+      ]
+    },
+    "BankChargeDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cash_transaction_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "existing_cost_ref": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                    },
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "cost_event"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                    },
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "ledger_posting"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
+        },
+        "fee_bearer": {
+          "enum": [
+            "company",
+            "counterparty",
+            "unconfirmed"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        },
+        "counterparty_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tax_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "cash_transaction_ref",
+        "existing_cost_ref",
+        "occurred_on",
+        "posting_period",
+        "scope",
+        "fee_bearer",
+        "evidence"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "existing_cost_ref": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "gross_cents"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "gross_cents"
+              ]
+            }
+          }
+        }
       ]
     }
   }

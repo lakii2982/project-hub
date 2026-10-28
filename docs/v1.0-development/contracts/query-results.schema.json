@@ -859,7 +859,18 @@
           "additionalProperties": false,
           "properties": {
             "transaction": {
-              "$ref": "./entities.schema.json#/$defs/CashTransaction"
+              "allOf": [
+                {
+                  "$ref": "./entities.schema.json#/$defs/CashTransaction"
+                },
+                {
+                  "properties": {
+                    "payee": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+                    }
+                  }
+                }
+              ]
             },
             "allocated_cents": {
               "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
