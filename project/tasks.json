@@ -2042,7 +2042,7 @@
       "title": "验证契约夹具、PG多连接与准备环境CI",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -2082,7 +2082,7 @@
       "title": "完成工作包估算、关键路径与验证容量计划",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [

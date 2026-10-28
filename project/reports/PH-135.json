@@ -34,8 +34,18 @@
     },
     {
       "command": "python manage.py test tests.test_v1_preparation tests.test_v1_preparation_pg --verbosity 2",
-      "result": "not_run",
-      "evidence": "DedicatedPG CIpending. Not passed to unsupported parse_acceptance; actualcurrentCI must establish nonSkip."
+      "result": "pass",
+      "evidence": "Actual CI40623378734 job122602457418:9tests4.659s,no skips;4PG markers actual2backendPIDs/NOWAIT+release/rollback/unique and2schema markers verified in rawlog. Separate schemajob1226024570495tests8.356s,no skips. This is PGprimitive/preparation qualification, not financialbusinessUAT."
+    },
+    {
+      "command": "python -B docs/v1.0-development/fixtures/verify_legacy.py --repo .",
+      "result": "pass",
+      "evidence": "Actual CI40623378734 job122602457276:PH135_LEGACY_EXECUTED builds=2 cents=58 overwrite_rejected=true. Both frozen119a049 servicebuilds equal businessbytes+integrity, no productionDB."
+    },
+    {
+      "command": "Existing Verifier final candidate fixed acceptance",
+      "result": "pass",
+      "evidence": "Actual second wholecandidate proofba07ceea-9445-4efa-94c3-2d50699ee9ec, diff41830482...,fixed6+migratePASS,449tests97.640s11explicit skips. This binding precedes final CI/status evidence update; currentPR CI must confirm final commit."
     }
   ],
   "review": {
@@ -43,19 +53,19 @@
     "reviewer": "Independent /root/ph133_review",
     "status": "pass",
     "findings": [],
-    "evidence": "Read-only source+final metadata review. Independently read actualVerifier proof andBASE/contract/diff binding, confirmed fixed6+migrate exit0 and current3code SHA equals tested snapshot. Source checks actual2PIDs/NOWAIT conflict and release/company-row scope/rollback visibility/composite unique. 19/449 counts/timing from primary rawlog review, proof binds loghashes. CurrentPG/schema/legacyCI stillrequired; not taskcompletion."
+    "evidence": "Read-only source+final metadata review. Independently read actualVerifier proof andBASE/contract/diff binding, confirmed fixed6+migrate exit0 and current3code SHA equals tested snapshot. Source checks actual2PIDs/NOWAIT conflict and release/company-row scope/rollback visibility/composite unique. 19/449 counts/timing from primary rawlog review, proof binds loghashes. 8053697 actualPG/schema/legacyCI passed; final completion metadata currentCI stillrequired. Independent final limitedreview:only7metadata/evidence files vs8053697,3codefiles unchanged; readsecondba07 proof fixed6+migrateexit0;135done→136ready matchesexisting dependencycontract, no136execution beforemerge. ExactCI markers from primary realrawlog read, reviewer didnot independently fetchremote logs."
   },
   "deviations": [
     "Native Kimi run62f50fc1... cancelled after562s when preliminary review found synchronization could pass without contender issuing SQL; no native completed claim. Exact3-file manifest checked; primary took over.",
     "Primary changed lock proof to actual NOWAIT conflict while holder retained row, other company row allowed, same row allowed after release; rollback/unique use separate actual connections and no direct financial-balance edits.",
     "Added schema-required environment fail,3 tamper rejection variants and separate frozen2build legacyCI; original8required and productionrequirements unchanged.",
-    "Local schema/PG unavailable; explicit11 total skips not accepted as respective domain evidence. DedicatedCI mandatory before taskdone.",
+    "Local schema/PG11total skips were not accepted as qualification; actual dedicatedCI9directedPG+schema tests and5schema-only tests ran with no skips, plus2legacybuilds.",
     "Live5DRF Dependabot alerts(3high/2medium) require P0 formal planning inPH137; no unplanneddependency edit."
   ],
   "unverified": [
-    "Targeted schema/PG tests and new dedicatedworkflow actual run pending; do not mark PH135done or136ready until realPGnonSkip and legacyCI pass.",
+    "Actual preparation schema/PG/legacy qualification passed on8053697; after evidence/status-only completion update currentPR all11checks must again pass before merge. PH136canrun onlyaftermerge.",
     "No future financialUAT/concurrent settlement/refund/allocation or newupgrade/cutover verified; PGprimitive qualification is narrower.",
     "No productbrowser/customer/TLS/targetLinux/DB+nonemptyattachmentrestore or release/deploy authorization.",
-    "Final candidate localVerifier and currentPR original8required plus3preparationCI must pass; PGpending taskremainsin_review."
+    "Final completion metadata requires limited independent review and currentPR all11checks before normalmerge."
   ]
 }
