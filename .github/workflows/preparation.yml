@@ -106,10 +106,15 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - run: pip install -r requirements.txt
+      - name: Install frozen legacy dependencies in a separate environment
+        run: |
+          git --no-replace-objects show 119a04916e3e96a5e4d86516a5f13e841faf2f67:requirements.txt > "$RUNNER_TEMP/ph139-frozen-requirements.txt"
+          python -m venv "$RUNNER_TEMP/ph139-legacy-venv"
+          "$RUNNER_TEMP/ph139-legacy-venv/bin/python" -m pip install -r "$RUNNER_TEMP/ph139-frozen-requirements.txt"
+          "$RUNNER_TEMP/ph139-legacy-venv/bin/python" -c "import rest_framework; assert rest_framework.VERSION == '3.16.1'; print('PH139_FROZEN_DRF_VERSION=' + rest_framework.VERSION)"
       - name: Rebuild frozen legacy twice without live database inputs
         run: |
-          python -B docs/v1.0-development/fixtures/verify_legacy.py --repo "$PWD" > preparation-legacy.json
+          "$RUNNER_TEMP/ph139-legacy-venv/bin/python" -B docs/v1.0-development/fixtures/verify_legacy.py --repo "$PWD" > preparation-legacy.json
           python - <<'PYCODE'
           import json
           proof=json.load(open('preparation-legacy.json'))

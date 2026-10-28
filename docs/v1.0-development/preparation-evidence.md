@@ -30,3 +30,17 @@
 源码及完整metadata独立复核通过，复核者读取机器回执并核对3代码SHA。最终候选第二回执ba07ceea-9445-4efa-94c3-2d50699ee9ec固定6+migrate也实际PASS，449测试97.640s、11跳过边界同上。
 
 当前PR75源代码提交8053697实际原8required和新增3检查均通过。新准备运行[40623378734](https://github.com/lakii2982/project-hub/actions/runs/40623378734)：schema-only5项8.356s；PG定向9项4.659s（包含5准备测试和4PG测试），均无skip；2schema+4PG执行标志在原始CI日志已核实；legacy2build/58cents/拒绝覆盖标志实际出现。PG只证明现有基础设施，未来业务UAT及生产/客户边界不变。证据/状态收口后仍须当前最终提交全部11检查及正常合入。
+
+## PH139 · 正式依赖安全薄片（2026-10-29，实施中）
+
+PH137已在PR77最终head `3e0d5ba3b7c9e4918d12da81f7bf7e0d8dfa0f94`全部11项检查成功、讨论解决后正常合入 `f0a61ad4d4cf1569a6034b832e7b0906fc3fedc1`。本片首次真实修改依赖/兼容测试，规划中的财务新功能仍未实现。
+
+实时上游[3.18.2发行记录](https://github.com/encode/django-rest-framework/releases/tag/3.18.2)及仓库Dependabot实际查询确认：三个高风险公告GHSA-3547-9m27-7rxg（非文本codec）、GHSA-33wh-fxxf-88vv（Accept解析）、GHSA-xw6w-gcfp-cf8m（TokenProxy删除）首修3.18.2；两个中风险GHSA-2m8g-3cmr-wg3w（请求体上限）和GHSA-g47c-3xmw-q6m2（AdminRenderer）首修3.17.2。本片目标固定3.18.2；告警最终关闭仍以合入后的实时GitHub状态为准。
+
+已实际创建独立合成验证环境：Python3.12、Django5.2.18、DRF3.18.2，pip check无破损依赖，manage check及迁移漂移检查通过，现有17项个人API测试通过。迁移并seed_demo后的隔离SQLite完整性为1企业47账本行、无错误；不涉及原目录实际数据库。
+
+冻结旧构建另用从`119a04916e3e96a5e4d86516a5f13e841faf2f67:requirements.txt`安装的独立环境，实际断言DRF3.16.1。两次真实旧库构建仍为4行`[2,2,2,52]`、合计58分，业务SHA均`fb6ede3c5ac1c05d63515caebca82aa28dd873f0026fc853d8877503dd537ab0`，拒绝覆盖及原文件hash不变均通过。这是冻结旧构建证据，不是新财务迁移或目标恢复验收。
+
+专项安全回归、全部新依赖回归、独立复核、当前PR/真实PG与正常合入仍待本片完成后记录。本片不启用AdminRenderer/DRF authtoken，不新增支付/审批接口，不改变旧账或收入/成本口径；不存在的产品路径不得写成已利用/已验收。
+
+PH139实施补记：Kimi59c2061d完成，Controller验BASE/两文件SHA回收；主控修Client提前编码恶意charset，使用真实wirebytes并断言未调用codec reader。13专项包括深参数Accept及真实validation spy通过，最终SHA见报告。完整462中455执行通过/7明确环境跳过，schema5项全执行。首跑两项临时目录别名问题在旧依赖复现，canonicalTMPDIR后全绿，未改原测试/隔离权限。独立安全审查通过，当前CI/PG/合入仍按PR收口。
