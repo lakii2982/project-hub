@@ -1,0 +1,39 @@
+{
+  "task_id": "PH-136",
+  "summary": "Static62package estimates, resource/critical-path plan and external-gate uncertainty, not a runtime scheduler or execution authority.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actualcheck accepts60tasks."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual19governance tests2.558s PASS."
+    },
+    {
+      "command": "python /private/tmp/ph136_plan.py",
+      "result": "pass",
+      "evidence": "Root actually generated62unique rows,all original dependency/requirement references,2scenarios; checked role interval nonoverlap/predecessor finishes and makespan≥critical/resource lowerbound. Focusminutes20460–57870; critical8375–23690; capacity13595–37930; buffered16994–56895. Estimates hypotheses,not productvelocity."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph134_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Independent read-only arithmetic recomputed sourceSHA/62nodes/55formal/137owners/eachdependency+domain+deliverable; allrole sums,weightedcritical paths,resource lowerbounds,6phase resource nooverlap/predecessorCI,postintegrationvalidation/finalreview,buffer andcapacitymetrics match. Complete9-file metadata review scopedtoBASE; no native success/product velocity/datepromise; currentCIstillrequired."
+  },
+  "deviations": [
+    "Qualified nativeClaude5b3c5c56... had6Bash permission_denied,484s then safeController cancellation with no artifact. No permission expansion/retry or native delivery claim; root tookover current authorized2docs.",
+    "Estimate classes are integrator assumptions because no real product-development sample exists; document/CI timings used only as observation,not extrapolated business throughput.",
+    "Static conservative scheduling table covers final postintegration validation+review andCIseriality; no claim heuristic is optimal or externalwaits zero."
+  ],
+  "unverified": [
+    "No product code/UI/business/production/customer execution in this task.",
+    "Actual product throughput,real target/customer cycles andquota waits unknown; windows exclude these and cannot promise release date.",
+    "PH137plannedformalcontracts/SDKfreeze/P0DRFfixscope stillpending; no proposed business promotion.",
+    "Current independent review/final fixed checks/PRall11CI andnormalmerge required."
+  ]
+}
