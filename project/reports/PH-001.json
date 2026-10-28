@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "CanonicalTMPDIR=/private/tmp: clean productrequirements venv actual484tests88.942s OK,476executed/8explicit skips(4realPG,3schema,1supplementalSDKparity). Fixed MCP verification venv actual484tests94.088s OK,480executed/4realPGskips, bothpreparation schema markers executed."
+      "evidence": "Final after container-subclass fix: canonicalTMPDIR cleanproduct485tests89.313s OK,477executed/8explicit skips(4PG3prepSchema1SDKparity). Earlierfixedtoolfull484tests94.088s480executed/4PGskip; finalfixedtooltarget36allPASS supplements the addedcase."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -30,7 +30,7 @@
     {
       "command": "python manage.py test tests.test_plugin_sdk tests.test_plugins --verbosity 1",
       "result": "pass",
-      "evidence": "Fixedverification env35allPASS0.278s inclschema/Pythonparity. Fresh productrequirements-only venv34executedPASS/1parityskip0.267s; independentreview confirmed both. Allruntime rejection/dependency/immutable/legacy cases execute withoutjsonschema."
+      "evidence": "FinalfixedMCPtool36allPASS0.296s; cleanproduct36total35executedPASS/1supplementalparityskip0.261s. Independent36all0.306s PASS. Runtime structural/dependency/immutable/legacy rejections do notrequirejsonschema."
     }
   ],
   "review": {
@@ -38,14 +38,15 @@
     "reviewer": "Independent /root/ph001_sdk_review",
     "status": "pass",
     "findings": [],
-    "evidence": "Code scope limitedPASS after clean-product dependency guard fix. Independently35allpass in fixedverification env and34pass/1explicitparityskip in product-only env. Final metadata/ADR/DoR/BASEallowlist closure PASS; currentCI stillrequired."
+    "evidence": "Code scope limitedPASS after clean-product dependency guard fix. Independently35allpass in fixedverification env and34pass/1explicitparityskip in product-only env. Final metadata/ADR/DoR/BASEallowlist closure PASS; currentCI stillrequired. IndependentPRP2container-subclassclosure PASS; finaltarget36allverified."
   },
   "deviations": [
     "NativeClaude5664f089-099f-4ad0-a7b8-7303abee8bec timed_out/deadline_exceeded. Root inspected exact8files vsBASE6940892 and salvaged unverified source, never nativecompleted claim. Originalscope/SHA receipt retained privately.",
     "Initial27specialtests had3fail2errors plus concrete missing complete-context/manifestgraph/snapshot robustness. Scoped integration repaired fixtures, fail-closedcontexts, reused Registry.validate_graph, immutable snapshots and deployment identities; independentreview followed.",
     "App label may differ from plugin_id. Controlled installed_apps supports module strings or strict module/plugin_id mapping; builder only augments existing matching installedlabel/module, no extra metadata field or speculative imports.",
     "Independentreview detected schema-tool import absent from productrequirements. Supplemental parity now uses existing optional-tool pattern; actualfixedMCPenv executes it, cleanproductenv explicitly skips it. No new product dependency, test deletion, parser/guard weakening or CI waiver.",
-    "Issue80 mirrors frozenPH002; ready transition is conditional on this currentPR allgreen+normalmerge. PH005 separatelyreadyscope candidates stayprivate, not bundled in SDK PR."
+    "Issue80 mirrors frozenPH002; ready transition is conditional on this currentPR allgreen+normalmerge. PH005 separatelyreadyscope candidates stayprivate, not bundled in SDK PR.",
+    "PR81 P2 identified mutable OrderedDict/list subclasses accepted by legacy manifest validation. _freeze now recursively handles those supported subclasses without changing acceptance rules; regression test plus independentclosure and finalcleanproduct485fullpassed. Currentnewhead11CI stillrequired."
   ],
   "unverified": [
     "Unified service/API/import/background guards and static URL mounting are PH002, not implemented here; route access is declaration only.",

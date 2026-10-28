@@ -3,6 +3,7 @@ import importlib.util
 import json
 import unittest
 import urllib.request
+from collections import OrderedDict
 from copy import deepcopy
 from hashlib import sha256
 from pathlib import Path
@@ -241,6 +242,26 @@ class RegistrySnapshotTests(TestCase):
         validated = validate_domain_metadata(DOMAIN_METADATA, ExamplePlugin.manifest, CATALOG, INSTALLED)
         validated["routes"].append({"name": "x", "path": "x/", "access": "history_read"})
         self.assertEqual(len(DOMAIN_METADATA["routes"]), 1)
+
+    def test_legacy_accepted_container_subclasses_are_deep_frozen(self):
+        class CapabilityList(list):
+            pass
+        manifest = OrderedDict(ExamplePlugin.manifest)
+        manifest["requires"] = OrderedDict()
+        manifest["capabilities"] = CapabilityList(["sample:read"])
+        Registry.validate(manifest)
+        result = build_domain_registry([descriptor(manifest=manifest)])
+        self.assertEqual(dict(result.errors), {})
+        frozen = result.domains["example_domain"]["manifest"]
+        with self.assertRaises(TypeError):
+            frozen["default_enabled"] = True
+        with self.assertRaises(TypeError):
+            frozen["requires"]["ghost"] = ">=0.1"
+        self.assertEqual(frozen["capabilities"], ("sample:read",))
+        manifest["requires"]["later"] = ">=1"
+        manifest["capabilities"].append("changed")
+        self.assertEqual(dict(frozen["requires"]), {})
+        self.assertEqual(frozen["capabilities"], ("sample:read",))
 
     def test_duplicate_namespace_and_label_reject_both_sides_keep_unrelated(self):
         registry = build_domain_registry([descriptor(), descriptor(),

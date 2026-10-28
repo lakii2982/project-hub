@@ -243,5 +243,7 @@ Python3.12下19治理测试2.093秒、固定schema环境5准备测试4.521秒实
 旧冻结独立3.16.1依赖两构建58分/同SHA、覆盖拒绝和hash不变通过。老安全反例真实红、新13绿；非文本codec未进reader、大请求未进真实业务验证，Accept长度/数量/深参数有界。独立安全审查PASS，真实PG/当前全部CI/合入另取当次PR证据，无生产客户证据。
 
 ## PH001 · SDK1实际验证（2026-10-29）
-固定MCP工具环境35专项全执行0.278秒；仅requirements的全新产品环境34执行1补充schema-parity明示跳过0.267秒。产品不新增jsonschema依赖；结构拒绝/上下文/版本图/冲突/不变性/真实AppConfig/旧启用升级规则等测试仍执行。独立复核在两个环境重复确认。
-全量canonicalTMPDIR：干净产品484项88.942秒，476执行通过8skip(4PG/3准备schema/1SDKparity)；固定工具484项94.088秒，480执行通过4PGskip，准备schema双marker实际执行。check/migrationdrift/pipcheck/seeded47entry完整性通过。原生Claude超时非成功；root回收并修复后才有这些证据。无产品浏览器/客户/生产声明，当前PG和CI以PR为准。
+最终固定MCP工具环境36专项全执行0.296秒；仅requirements的全新产品环境35执行1补充schema-parity明示跳过0.261秒。产品不新增jsonschema依赖；结构拒绝/上下文/版本图/冲突/不变性/真实AppConfig/旧启用升级规则等测试仍执行。独立复核在两个环境重复确认。
+全量canonicalTMPDIR：最终干净产品485项89.313秒，477执行通过8skip(4PG/3准备schema/1SDKparity)；前候选固定工具484项94.088秒，480执行通过4PGskip，准备schema双marker实际执行。check/migrationdrift/pipcheck/seeded47entry完整性通过。原生Claude超时非成功；root回收并修复后才有这些证据。无产品浏览器/客户/生产声明，当前PG和CI以PR为准。
+
+PR81审阅补记：旧manifest允许的OrderedDict/list子类也已递归冻结；新增反例及独立复核通过，未放宽旧接纳规则。

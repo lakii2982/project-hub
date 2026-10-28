@@ -103,9 +103,9 @@ def build_domain_registry(installed_descriptors):
 
 def _freeze(value):
     """递归冻结：dict -> MappingProxyType，list -> tuple；快照不可被外部篡改。"""
-    if type(value) is dict:
+    if isinstance(value, dict):
         return MappingProxyType({key: _freeze(item) for key, item in value.items()})
-    if type(value) is list:
+    if isinstance(value, list):
         return tuple(_freeze(item) for item in value)
     return value
 
