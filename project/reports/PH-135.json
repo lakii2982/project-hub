@@ -1,0 +1,61 @@
+{
+  "task_id": "PH-135",
+  "summary": "Qualify preparation schema/fixtures/legacy and real PostgreSQL primitives with independent additive CI; no product feature changes.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual60taskcheck PASS. ExistingVerifier no-auth/network-denied snapshot; receiptbd1ef002-f08e-4ad0-a316-df6245b1099b."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual19tests PASS2.092s. ExistingVerifier no-auth/network-denied snapshot; receiptbd1ef002-f08e-4ad0-a316-df6245b1099b."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actualnoissues. ExistingVerifier no-auth/network-denied snapshot; receiptbd1ef002-f08e-4ad0-a316-df6245b1099b."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actualnochanges. ExistingVerifier no-auth/network-denied snapshot; receiptbd1ef002-f08e-4ad0-a316-df6245b1099b."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual449tests93.505s,438pass/11skip(old4,PG4,schema3); skips not PG/schema proof. ExistingVerifier no-auth/network-denied snapshot; receiptbd1ef002-f08e-4ad0-a316-df6245b1099b."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "ActualnewemptySQLiteaftermigrate ok,organizations0entries0; notgold/productionintegrity. ExistingVerifier no-auth/network-denied snapshot; receiptbd1ef002-f08e-4ad0-a316-df6245b1099b."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_preparation tests.test_v1_preparation_pg --verbosity 2",
+      "result": "not_run",
+      "evidence": "DedicatedPG CIpending. Not passed to unsupported parse_acceptance; actualcurrentCI must establish nonSkip."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph133_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Read-only source+final metadata review. Independently read actualVerifier proof andBASE/contract/diff binding, confirmed fixed6+migrate exit0 and current3code SHA equals tested snapshot. Source checks actual2PIDs/NOWAIT conflict and release/company-row scope/rollback visibility/composite unique. 19/449 counts/timing from primary rawlog review, proof binds loghashes. CurrentPG/schema/legacyCI stillrequired; not taskcompletion."
+  },
+  "deviations": [
+    "Native Kimi run62f50fc1... cancelled after562s when preliminary review found synchronization could pass without contender issuing SQL; no native completed claim. Exact3-file manifest checked; primary took over.",
+    "Primary changed lock proof to actual NOWAIT conflict while holder retained row, other company row allowed, same row allowed after release; rollback/unique use separate actual connections and no direct financial-balance edits.",
+    "Added schema-required environment fail,3 tamper rejection variants and separate frozen2build legacyCI; original8required and productionrequirements unchanged.",
+    "Local schema/PG unavailable; explicit11 total skips not accepted as respective domain evidence. DedicatedCI mandatory before taskdone.",
+    "Live5DRF Dependabot alerts(3high/2medium) require P0 formal planning inPH137; no unplanneddependency edit."
+  ],
+  "unverified": [
+    "Targeted schema/PG tests and new dedicatedworkflow actual run pending; do not mark PH135done or136ready until realPGnonSkip and legacyCI pass.",
+    "No future financialUAT/concurrent settlement/refund/allocation or newupgrade/cutover verified; PGprimitive qualification is narrower.",
+    "No productbrowser/customer/TLS/targetLinux/DB+nonemptyattachmentrestore or release/deploy authorization.",
+    "Final candidate localVerifier and currentPR original8required plus3preparationCI must pass; PGpending taskremainsin_review."
+  ]
+}
