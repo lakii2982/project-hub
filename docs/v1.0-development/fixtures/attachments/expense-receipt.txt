@@ -1,0 +1,1 @@
+Synthetic expense receipt: EXP-TAX-UNKNOWN, ENT-A, amount CNY 106.00, tax qualification initially unknown.

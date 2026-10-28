@@ -1,0 +1,3794 @@
+{
+  "schema_version": 1,
+  "classification": "planned_coverage_not_acceptance",
+  "product_plan_sha256": "c9baba5140aeaa76539c5748bb4ebfbbdb2d40c5a376a82178074d12d705b0fe",
+  "requirements": [
+    {
+      "requirement_id": "V1-ORG-01",
+      "title": "建立企业、起账日、币种、时区与核对负责人",
+      "uat_ids": [
+        "UAT-01"
+      ],
+      "specialized_case_id": "SPEC-V1-ORG-01",
+      "business_rule": "企业为唯一租户；发生正式账后不直接改主体和本位币",
+      "acceptance": "拒绝重复接管；缺基础规则无法正式启用",
+      "target_objects": [
+        "OrganizationProfile",
+        "CommandContext",
+        "MembershipScope",
+        "EmployeeBinding",
+        "SensitiveReadAudit",
+        "AgentGrant"
+      ],
+      "contracts": [
+        "C01"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ORG-02",
+      "title": "创建账号、设置初始激活和密码恢复",
+      "uat_ids": [
+        "UAT-01",
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-ORG-02",
+      "business_rule": "复用现有账号；激活/恢复凭据有期限、一次性且不写明文日志",
+      "acceptance": "过期链接、重复使用、枚举账号有拒绝路径",
+      "target_objects": [
+        "OrganizationProfile",
+        "CommandContext",
+        "MembershipScope",
+        "EmployeeBinding",
+        "SensitiveReadAudit",
+        "AgentGrant"
+      ],
+      "contracts": [
+        "C01"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ORG-03",
+      "title": "分配角色与项目范围，支持多人兼任职责",
+      "uat_ids": [
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-ORG-03",
+      "business_rule": "服务端同时验证角色、项目、敏感字段；账号角色不代表全项目权",
+      "acceptance": "越企业/越项目读取、写入、导出和附件均拒绝",
+      "target_objects": [
+        "OrganizationProfile",
+        "CommandContext",
+        "MembershipScope",
+        "EmployeeBinding",
+        "SensitiveReadAudit",
+        "AgentGrant"
+      ],
+      "contracts": [
+        "C01"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ORG-04",
+      "title": "管理账号与员工关联",
+      "uat_ids": [
+        "UAT-01",
+        "UAT-04",
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-ORG-04",
+      "business_rule": "绑定单一有效员工身份，保留代录人",
+      "acceptance": "有账号无员工或无项目时给明确办理路径",
+      "target_objects": [
+        "OrganizationProfile",
+        "CommandContext",
+        "MembershipScope",
+        "EmployeeBinding",
+        "SensitiveReadAudit",
+        "AgentGrant"
+      ],
+      "contracts": [
+        "C01"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ORG-05",
+      "title": "离职、停用和重新启用",
+      "uat_ids": [
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-ORG-05",
+      "business_rule": "历史保留；立即撤销当前会话/令牌及新写权限",
+      "acceptance": "停用后的旧会话、PAT和后台任务不能继续写",
+      "target_objects": [
+        "OrganizationProfile",
+        "CommandContext",
+        "MembershipScope",
+        "EmployeeBinding",
+        "SensitiveReadAudit",
+        "AgentGrant"
+      ],
+      "contracts": [
+        "C01"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ORG-06",
+      "title": "查看权限与敏感资料读取记录",
+      "uat_ids": [
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-ORG-06",
+      "business_rule": "工资、个人费率和明细严格遮蔽，不能藏在HTML/context/导出",
+      "acceptance": "PM/成员/审阅拿不到个人成本明细",
+      "target_objects": [
+        "OrganizationProfile",
+        "CommandContext",
+        "MembershipScope",
+        "EmployeeBinding",
+        "SensitiveReadAudit",
+        "AgentGrant"
+      ],
+      "contracts": [
+        "C01"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ORG-07",
+      "title": "配置最小两人分权与交接负责人",
+      "uat_ids": [
+        "UAT-01",
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-ORG-07",
+      "business_rule": "制单/本人业务不得自审；负责人离职前完成交接",
+      "acceptance": "同账号多角色不能规避自审；不能移除最后有效负责人",
+      "target_objects": [
+        "OrganizationProfile",
+        "CommandContext",
+        "MembershipScope",
+        "EmployeeBinding",
+        "SensitiveReadAudit",
+        "AgentGrant"
+      ],
+      "contracts": [
+        "C01"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ORG-08",
+      "title": "查看并撤销个人接入授权",
+      "uat_ids": [
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-ORG-08",
+      "business_rule": "保留本人、scope、项目、期限及默认dry_run规则",
+      "acceptance": "角色降级/密码变更/停用立即失效；无审批/支付/锁账工具",
+      "target_objects": [
+        "OrganizationProfile",
+        "CommandContext",
+        "MembershipScope",
+        "EmployeeBinding",
+        "SensitiveReadAudit",
+        "AgentGrant"
+      ],
+      "contracts": [
+        "C01"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-MD-01",
+      "title": "统一维护项目主档",
+      "uat_ids": [
+        "UAT-02"
+      ],
+      "specialized_case_id": "SPEC-V1-MD-01",
+      "business_rule": "现有 Project 稳定ID；各页面转向同一命令",
+      "acceptance": "项目页与财务/合同引用更新一致，旧POST不保留第二写规则",
+      "target_objects": [
+        "Project",
+        "Employee",
+        "Counterparty",
+        "FundingAccount",
+        "MergeMap"
+      ],
+      "contracts": [
+        "C03"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-MD-02",
+      "title": "统一维护员工、岗位、生效和停用日期",
+      "uat_ids": [
+        "UAT-04",
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-MD-02",
+      "business_rule": "Employee 与账号分离，工资/工时引用同ID",
+      "acceptance": "同名员工不自动合并；历史投入不丢失",
+      "target_objects": [
+        "Project",
+        "Employee",
+        "Counterparty",
+        "FundingAccount",
+        "MergeMap"
+      ],
+      "contracts": [
+        "C03"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-MD-03",
+      "title": "统一维护往来方与联系人",
+      "uat_ids": [
+        "UAT-02"
+      ],
+      "specialized_case_id": "SPEC-V1-MD-03",
+      "business_rule": "一实体可兼客户/供应商；同企业内查重和人工确认",
+      "acceptance": "收付、合同、发票选择同一ID，不靠名称匹配核销",
+      "target_objects": [
+        "Project",
+        "Employee",
+        "Counterparty",
+        "FundingAccount",
+        "MergeMap"
+      ],
+      "contracts": [
+        "C03"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-MD-04",
+      "title": "管理成本类别、非项目去向和单位",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-MD-04",
+      "business_rule": "共享字典版本，停用不删除历史引用",
+      "acceptance": "导入与UI单位一致，拒绝不明确的小时/分钟和元/分",
+      "target_objects": [
+        "Project",
+        "Employee",
+        "Counterparty",
+        "FundingAccount",
+        "MergeMap"
+      ],
+      "contracts": [
+        "C03"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-MD-05",
+      "title": "维护资金账户及账户责任人",
+      "uat_ids": [
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-MD-05",
+      "business_rule": "唯一归属企业；余额从期初和交易派生",
+      "acceptance": "不能直接编辑当前余额，非授权人不可查看账号敏感信息",
+      "target_objects": [
+        "Project",
+        "Employee",
+        "Counterparty",
+        "FundingAccount",
+        "MergeMap"
+      ],
+      "contracts": [
+        "C03"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-MD-06",
+      "title": "修正重复和错误主数据",
+      "uat_ids": [
+        "UAT-02"
+      ],
+      "specialized_case_id": "SPEC-V1-MD-06",
+      "business_rule": "未引用记录可作废；已引用合并须映射及审计，禁止直接删历史",
+      "acceptance": "合并前列影响范围；租户/主体不同不能合并",
+      "target_objects": [
+        "Project",
+        "Employee",
+        "Counterparty",
+        "FundingAccount",
+        "MergeMap"
+      ],
+      "contracts": [
+        "C03"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-MD-07",
+      "title": "从业务表单快速选择或申请新增资料",
+      "uat_ids": [
+        "UAT-02"
+      ],
+      "specialized_case_id": "SPEC-V1-MD-07",
+      "business_rule": "调用原资料域表单/服务，按权限办理",
+      "acceptance": "无权人不能通过快捷新增获得维护权限",
+      "target_objects": [
+        "Project",
+        "Employee",
+        "Counterparty",
+        "FundingAccount",
+        "MergeMap"
+      ],
+      "contracts": [
+        "C03"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-01",
+      "title": "建项目，选收费模板、负责人、客户和起止日期",
+      "uat_ids": [
+        "UAT-01"
+      ],
+      "specialized_case_id": "SPEC-V1-PRO-01",
+      "business_rule": "引用项目/往来方稳定ID，不复制合同金额",
+      "acceptance": "建立项目不要求先建任务树或完整组织架构",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-02",
+      "title": "配团队、职责和工时可录范围",
+      "uat_ids": [
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-PRO-02",
+      "business_rule": "复用项目授权；成员与员工映射明确",
+      "acceptance": "移出项目后不能新报该项目，历史记录仍可追查",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-03",
+      "title": "建真实交付里程碑和关键任务",
+      "uat_ids": [
+        "UAT-03"
+      ],
+      "specialized_case_id": "SPEC-V1-PRO-03",
+      "business_rule": "关键任务关联同项目节点；普通工时不强绑任务",
+      "acceptance": "跨项目/循环依赖拒绝；历史任务保留",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-04",
+      "title": "登记验收/服务确认、证据和确认日期",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-05",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-PRO-04",
+      "business_rule": "唯一履约事实ID，供结算和收入引用",
+      "acceptance": "日期到期、任务完成不能自动产生收入/应收",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-05",
+      "title": "记录风险、延期、返工与处理人",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-PRO-05",
+      "business_rule": "可链接变更、预计项、验收或应收，不重复建事实",
+      "acceptance": "风险关闭留原因；没有收费批准不增加生效合同额",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-06",
+      "title": "分别查看交付进展和财务状态",
+      "uat_ids": [
+        "UAT-10"
+      ],
+      "specialized_case_id": "SPEC-V1-PRO-06",
+      "business_rule": "项目阶段、交付结项、未清项和财务归档是不同字段/状态",
+      "acceptance": "交付完成但有质保款时保持可办理财务",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-07",
+      "title": "暂停/取消/恢复项目",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-PRO-07",
+      "business_rule": "保留来源；取消合同、撤销未来承诺等通过对应领域命令",
+      "acceptance": "暂停阻止普通新投入，仍允许合法实际收付和纠错",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-08",
+      "title": "项目详情联查合同、成本、收付和资料",
+      "uat_ids": [
+        "UAT-02"
+      ],
+      "specialized_case_id": "SPEC-V1-PRO-08",
+      "business_rule": "页面是聚合只读视图，业务动作回各域标准入口",
+      "acceptance": "跨模块明细跳转和金额口径一致，无权数据不下发",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-09",
+      "title": "业务结项与财务归档",
+      "uat_ids": [
+        "UAT-10"
+      ],
+      "specialized_case_id": "SPEC-V1-PRO-09",
+      "business_rule": "结项确认剩余工作；归档检查未清、预收预付、待审、未归属和风险",
+      "acceptance": "不允许用强制清零或删除未清项通过归档",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PRO-10",
+      "title": "归档后办理迟到款项和历史更正",
+      "uat_ids": [
+        "UAT-10"
+      ],
+      "specialized_case_id": "SPEC-V1-PRO-10",
+      "business_rule": "经授权走受限财务后续流程，开放期追加事件",
+      "acceptance": "不重新开放普通报工；保留“归档后处理”审计",
+      "target_objects": [
+        "Project",
+        "DeliveryMilestone",
+        "Acceptance",
+        "ServiceConfirmation",
+        "DeliveryClose"
+      ],
+      "contracts": [
+        "C03",
+        "C05",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CON-01",
+      "title": "登记客户合同与项目对应关系",
+      "uat_ids": [
+        "UAT-02",
+        "UAT-03"
+      ],
+      "specialized_case_id": "SPEC-V1-CON-01",
+      "business_rule": "首版一合同属一项目，可含多收费明细；跨项目主合同拆子合同引用",
+      "acceptance": "拒绝一个合同金额在多个项目全额累计",
+      "target_objects": [
+        "Contract",
+        "ContractVersion",
+        "ContractLine",
+        "PaymentTerm",
+        "WarrantyTerm",
+        "MethodPolicySelection",
+        "ContractChange"
+      ],
+      "contracts": [
+        "C04"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CON-02",
+      "title": "配固定价/里程碑、确认工时、固定服务期明细",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-05",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-CON-02",
+      "business_rule": "各明细选择唯一管理收入和结算方法，成本费率与售价分离",
+      "acceptance": "不允许同一服务既按月费又按包内工时重复计收入",
+      "target_objects": [
+        "Contract",
+        "ContractVersion",
+        "ContractLine",
+        "PaymentTerm",
+        "WarrantyTerm",
+        "MethodPolicySelection",
+        "ContractChange"
+      ],
+      "contracts": [
+        "C04"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CON-03",
+      "title": "保存含税、不含税和税额及凭据",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-17"
+      ],
+      "specialized_case_id": "SPEC-V1-CON-03",
+      "business_rule": "含税=不含税+税额；不按行业猜税率；税额待确认单列",
+      "acceptance": "合同行和守恒；未知税务资格不能默认抵扣",
+      "target_objects": [
+        "Contract",
+        "ContractVersion",
+        "ContractLine",
+        "PaymentTerm",
+        "WarrantyTerm",
+        "MethodPolicySelection",
+        "ContractChange"
+      ],
+      "contracts": [
+        "C04"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CON-04",
+      "title": "登记收款条件、日期和质保条款",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-10"
+      ],
+      "specialized_case_id": "SPEC-V1-CON-04",
+      "business_rule": "条件计划链接合同明细，不直接创建应收",
+      "acceptance": "无条件权利与仍有实质条件的款项分别显示",
+      "target_objects": [
+        "Contract",
+        "ContractVersion",
+        "ContractLine",
+        "PaymentTerm",
+        "WarrantyTerm",
+        "MethodPolicySelection",
+        "ContractChange"
+      ],
+      "contracts": [
+        "C04"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CON-05",
+      "title": "批准合同版本与累计上限",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-CON-05",
+      "business_rule": "批准后只增版本；新版本处理已有履约/结算影响",
+      "acceptance": "并发修订、过期版本和超上限拒绝",
+      "target_objects": [
+        "Contract",
+        "ContractVersion",
+        "ContractLine",
+        "PaymentTerm",
+        "WarrantyTerm",
+        "MethodPolicySelection",
+        "ContractChange"
+      ],
+      "contracts": [
+        "C04"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CON-06",
+      "title": "追加工作、增减价、延期与终止",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-CON-06",
+      "business_rule": "草稿/待客户确认/已批准/拒绝或撤销；生效后联动范围与预测",
+      "acceptance": "未批准增价只进情景，不增加预计有效价款",
+      "target_objects": [
+        "Contract",
+        "ContractVersion",
+        "ContractLine",
+        "PaymentTerm",
+        "WarrantyTerm",
+        "MethodPolicySelection",
+        "ContractChange"
+      ],
+      "contracts": [
+        "C04"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CON-07",
+      "title": "供应商服务约定/支出承诺关联",
+      "uat_ids": [
+        "UAT-06"
+      ],
+      "specialized_case_id": "SPEC-V1-CON-07",
+      "business_rule": "共用往来方与统一合同服务；支出承诺引用明细，不复制供应商",
+      "acceptance": "项目、币种、对手不一致时阻止关联",
+      "target_objects": [
+        "Contract",
+        "ContractVersion",
+        "ContractLine",
+        "PaymentTerm",
+        "WarrantyTerm",
+        "MethodPolicySelection",
+        "ContractChange"
+      ],
+      "contracts": [
+        "C04"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CON-08",
+      "title": "查看合同履约、结算、票据和收款关联",
+      "uat_ids": [
+        "UAT-02",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-CON-08",
+      "business_rule": "全部引用来源ID/有效版本；各维度单独累计",
+      "acceptance": "不以合同余额减收款代替应收，不以开票额代替收入",
+      "target_objects": [
+        "Contract",
+        "ContractVersion",
+        "ContractLine",
+        "PaymentTerm",
+        "WarrantyTerm",
+        "MethodPolicySelection",
+        "ContractChange"
+      ],
+      "contracts": [
+        "C04"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-TIM-01",
+      "title": "本人按项目、日期、分钟和说明记录投入",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-TIM-01",
+      "business_rule": "复用 Timesheet；任务为历史兼容引用，不强制填",
+      "acceptance": "当前项目授权、日总分钟和日期范围受控",
+      "target_objects": [
+        "Timesheet",
+        "BillableConfirmation",
+        "NonProjectWork"
+      ],
+      "contracts": [
+        "C05"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-TIM-02",
+      "title": "周视图批量填写、复制常用项目和草稿",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-TIM-02",
+      "business_rule": "复制只生成待确认草稿；不能复制批准事实",
+      "acceptance": "重复提交幂等；跨项目每日合计不超现行上限",
+      "target_objects": [
+        "Timesheet",
+        "BillableConfirmation",
+        "NonProjectWork"
+      ],
+      "contracts": [
+        "C05"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-TIM-03",
+      "title": "记录售前、管理、培训、空闲等非项目投入",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-TIM-03",
+      "business_rule": "去向统一字典；与客户项目成本分开，不强摊",
+      "acceptance": "公司总投入可核对；未填与零投入区分",
+      "target_objects": [
+        "Timesheet",
+        "BillableConfirmation",
+        "NonProjectWork"
+      ],
+      "contracts": [
+        "C05"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-TIM-04",
+      "title": "授权代录和补录",
+      "uat_ids": [
+        "UAT-04",
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-TIM-04",
+      "business_rule": "保存业务员工、操作人、原因；停用/锁期规则仍执行",
+      "acceptance": "代录本人业务也不能由业务本人自审",
+      "target_objects": [
+        "Timesheet",
+        "BillableConfirmation",
+        "NonProjectWork"
+      ],
+      "contracts": [
+        "C05"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-TIM-05",
+      "title": "提交、审核、退回和更正",
+      "uat_ids": [
+        "UAT-04",
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-TIM-05",
+      "business_rule": "审批绑定版本；已过账更正用冲销/调整",
+      "acceptance": "退回不计正式成本；重复审批不重复过账",
+      "target_objects": [
+        "Timesheet",
+        "BillableConfirmation",
+        "NonProjectWork"
+      ],
+      "contracts": [
+        "C05"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-TIM-06",
+      "title": "缺费率/资料时列待处理",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-TIM-06",
+      "business_rule": "可以保存事实，不能以0计正式成本；关联责任人",
+      "acceptance": "缺费率记录在项目未入账风险和月结检查一致出现",
+      "target_objects": [
+        "Timesheet",
+        "BillableConfirmation",
+        "NonProjectWork"
+      ],
+      "contracts": [
+        "C05"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-TIM-07",
+      "title": "客户可计费工时确认",
+      "uat_ids": [
+        "UAT-05"
+      ],
+      "specialized_case_id": "SPEC-V1-TIM-07",
+      "business_rule": "引用既有投入及确认差异、合同售价；不复制投入",
+      "acceptance": "扣减可计费小时不抹掉已发生人工成本",
+      "target_objects": [
+        "Timesheet",
+        "BillableConfirmation",
+        "NonProjectWork"
+      ],
+      "contracts": [
+        "C05"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-TIM-08",
+      "title": "汇总及导出本人/授权项目投入",
+      "uat_ids": [
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-TIM-08",
+      "business_rule": "同一查询口径；不得输出个人工资或费率",
+      "acceptance": "页面、导出、API的权限与分钟合计一致",
+      "target_objects": [
+        "Timesheet",
+        "BillableConfirmation",
+        "NonProjectWork"
+      ],
+      "contracts": [
+        "C05"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-01",
+      "title": "按员工/月录入综合人工成本池",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-01",
+      "business_rule": "固定工资、奖金、单位社保公积金等按政策纳入；个人代扣不重复加",
+      "acceptance": "工资汇总可核对，权限限制到owner/finance",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-02",
+      "title": "确认有效工时分母和成本政策",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-02",
+      "business_rule": "政策、月历、扣除和确认人版本化；非客户实际工时合计作分母",
+      "acceptance": "节假日/带薪假不重复扣，零分母阻止正式计费",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-03",
+      "title": "生成费率/人工成本快照",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-03",
+      "business_rule": "业务日和方法版本固定；暂估/已核对区分",
+      "acceptance": "本月调薪不无痕改旧账；无资料不自动复制生效",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-04",
+      "title": "将批准投入计算为一次项目成本",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-04",
+      "business_rule": "现有逐行HALF_UP与未来月度取整组有显式切换边界",
+      "acceptance": "金额整数分、Decimal；新算法上线不重算历史",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-05",
+      "title": "月度核对人工实际与已分配差额",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-05",
+      "business_rule": "项目、非项目、空闲/未分配及调整守恒；记录差异处理",
+      "acceptance": "工资池总额与去向可复算，不让差额消失",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-06",
+      "title": "处理奖金、加班和跨期补录调整",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-06",
+      "business_rule": "先检查是否已包含在池，开放期有来源调整",
+      "acceptance": "同一补偿不同时进费率和额外费用",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-07",
+      "title": "引用共享费用来源并选择适用范围",
+      "uat_ids": [
+        "UAT-07"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-07",
+      "business_rule": "同一costing App内，外部费用子域唯一拥有来源，分配子域仅拥有分配运行",
+      "acceptance": "不为分摊再录一次原始费用；M07为费用操作模块，不另建同源台账",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-08",
+      "title": "按批准工时/约定手工权重分摊",
+      "uat_ids": [
+        "UAT-07"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-08",
+      "business_rule": "权重、目标、期间、规则版本；最大余数到分且稳定排序",
+      "acceptance": "分配总额=源额，不能超可分余额；零权重给待处理",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-09",
+      "title": "重分摊和跨期调整",
+      "uat_ids": [
+        "UAT-07"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-09",
+      "business_rule": "先反向原分配再建新运行；锁期走开放期调整",
+      "acceptance": "源池和项目分配不能在公司汇总双计",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-10",
+      "title": "成本明细与公司对照",
+      "uat_ids": [
+        "UAT-04",
+        "UAT-07"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-10",
+      "business_rule": "逐来源穿透至批准单/工时/分配，个人细节按权过滤",
+      "acceptance": "项目、非项目、待分配合计与来源总额一致",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-11",
+      "title": "工资支付及现金分配",
+      "uat_ids": [
+        "UAT-04",
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-11",
+      "business_rule": "工资批次引用同人工池；现金分配权重与成本权重可不同且有版本",
+      "acceptance": "工资付款只增加现金支出，不第二次确认人工成本",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CST-12",
+      "title": "防止外包人工重复计费",
+      "uat_ids": [
+        "UAT-06"
+      ],
+      "specialized_case_id": "SPEC-V1-CST-12",
+      "business_rule": "供应商工时覆盖标识与合同验收成本关联",
+      "acceptance": "外包验收与员工标准费率不能覆盖同一投入来源",
+      "target_objects": [
+        "SalaryPool",
+        "CostPolicy",
+        "RateSnapshot",
+        "CostEvent",
+        "AllocationRun"
+      ],
+      "contracts": [
+        "C06"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-01",
+      "title": "员工报销/财务直接费用登记",
+      "uat_ids": [
+        "UAT-06"
+      ],
+      "specialized_case_id": "SPEC-V1-SPD-01",
+      "business_rule": "引用项目/非项目、类别、往来方、事实日期、证据",
+      "acceptance": "本人费用和代录来源明确，同来源查重",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-02",
+      "title": "支出承诺、分期和剩余履约",
+      "uat_ids": [
+        "UAT-06"
+      ],
+      "specialized_case_id": "SPEC-V1-SPD-02",
+      "business_rule": "引用供应商约定；尚未履约不是实际成本",
+      "acceptance": "预测只计未履约部分，不同时算全额承诺与AC",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-03",
+      "title": "记录外包验收、采购耗用或服务发生",
+      "uat_ids": [
+        "UAT-06"
+      ],
+      "specialized_case_id": "SPEC-V1-SPD-03",
+      "business_rule": "保存确认数量/金额、依据及确认人",
+      "acceptance": "预付款不因支付自动转成本；未耗用资产不伪装费用",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-04",
+      "title": "提交、业务确认与财务复核",
+      "uat_ids": [
+        "UAT-06"
+      ],
+      "specialized_case_id": "SPEC-V1-SPD-04",
+      "business_rule": "一次确认成本，关联建立同来源应付/员工报销未清项",
+      "acceptance": "自审和二次过账拒绝；事务失败无半张凭证",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-05",
+      "title": "未到票成本暂估与后续确认",
+      "uat_ids": [
+        "UAT-06",
+        "UAT-17"
+      ],
+      "specialized_case_id": "SPEC-V1-SPD-05",
+      "business_rule": "暂估与正式记录是同来源版本/反向调整，不并存加总",
+      "acceptance": "补发票、付款时不新增一份同额成本",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-06",
+      "title": "含税/税额/抵扣资格待确认",
+      "uat_ids": [
+        "UAT-17"
+      ],
+      "specialized_case_id": "SPEC-V1-SPD-06",
+      "business_rule": "沿A11：资格未知先按含税暂计成本，后确认可抵扣时在开放期追加成本减少/税额增加调整，保留原事件",
+      "acceptance": "无票不默认为可抵扣，也不能让已发生支出悬空；税额调整不重复现金或应付",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-07",
+      "title": "员工借支和报销抵扣",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-SPD-07",
+      "business_rule": "借支归资金往来，报销确认成本，抵扣关系唯一",
+      "acceptance": "借支不当成本；超出报销的剩余借支不自动清零",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-08",
+      "title": "退货、折让、作废和更正",
+      "uat_ids": [
+        "UAT-09"
+      ],
+      "specialized_case_id": "SPEC-V1-SPD-08",
+      "business_rule": "业务调整、应付更正和真实退款分开引用原单",
+      "acceptance": "退款本身不自动反向成本；已核销关系按顺序处理",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-09",
+      "title": "共享费用提交与一笔多项目",
+      "uat_ids": [
+        "UAT-07"
+      ],
+      "specialized_case_id": "SPEC-V1-SPD-09",
+      "business_rule": "来源唯一，归属用分配桥，不让员工分别复制多张单",
+      "acceptance": "原额与分配守恒，同一附件/来源提示重复风险",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SPD-10",
+      "title": "跨期预付服务逐期耗用",
+      "uat_ids": [
+        "UAT-18"
+      ],
+      "specialized_case_id": "SPEC-V1-SPD-10",
+      "business_rule": "保存服务起止、分期方法、待耗用余额和耗用确认；付款、验收与成本期间分离",
+      "acceptance": "年付服务不在付款/整单验收时一次费用化；每期只确认适用耗用，剩余ETC与未来待付分别计算",
+      "target_objects": [
+        "ExpenseClaim",
+        "SpendCommitment",
+        "SpendAcceptance",
+        "PrepaidService",
+        "TaxQualification",
+        "EmployeeAdvance"
+      ],
+      "contracts": [
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-01",
+      "title": "由履约/验收及条款发起客户结算",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-SET-01",
+      "business_rule": "引用合同明细与来源版本；确认权利成立条件",
+      "acceptance": "未达实质条件只留计划，不生成正式应收",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-02",
+      "title": "由费用/外包验收来源建立应付",
+      "uat_ids": [
+        "UAT-06"
+      ],
+      "specialized_case_id": "SPEC-V1-SET-02",
+      "business_rule": "唯一来源键，不再确认同一成本",
+      "acceptance": "补票、改付款计划不重复新增应付",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-03",
+      "title": "拆分到期款和质保款",
+      "uat_ids": [
+        "UAT-10"
+      ],
+      "specialized_case_id": "SPEC-V1-SET-03",
+      "business_rule": "独立未清行或条件计划，保存释放条件和到期日",
+      "acceptance": "质保扣留不视为折扣/成本节约，不提前算逾期",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-04",
+      "title": "查看未清明细和账龄",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-06",
+        "UAT-10"
+      ],
+      "specialized_case_id": "SPEC-V1-SET-04",
+      "business_rule": "期初+新增+调整-核销/抵扣/处置派生余额",
+      "acceptance": "部分核销仅对剩余计账龄；不能手改余额",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-05",
+      "title": "一笔资金核多项、一项多笔核销",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-14"
+      ],
+      "specialized_case_id": "SPEC-V1-SET-05",
+      "business_rule": "同租户/合法对手/人民币；校验资金可用额和未清额",
+      "acceptance": "PostgreSQL竞争核销不超额，重复请求不双记",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-06",
+      "title": "预收/预付抵扣正式未清项",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-06"
+      ],
+      "specialized_case_id": "SPEC-V1-SET-06",
+      "business_rule": "唯一分配关系，不增加现金、收入或成本",
+      "acceptance": "部分抵扣守恒，抵扣后预测只算未清部分",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-07",
+      "title": "撤销核销与银行退回",
+      "uat_ids": [
+        "UAT-09"
+      ],
+      "specialized_case_id": "SPEC-V1-SET-07",
+      "business_rule": "撤销关联恢复双方余额；银行退回另记真实反向现金",
+      "acceptance": "撤销核销不等于退款；同一退回不能恢复两次",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-08",
+      "title": "折让、减免和坏账处理",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-SET-08",
+      "business_rule": "区分类型、权限和税额；坏账损失单列",
+      "acceptance": "不以伪造收款消应收，不自动冲税或交付收入",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-09",
+      "title": "到期争议、承诺延期与催办",
+      "uat_ids": [
+        "UAT-10"
+      ],
+      "specialized_case_id": "SPEC-V1-SET-09",
+      "business_rule": "保留原到期日；批准变更与未批准承诺分开",
+      "acceptance": "负责人、下一步、变更证据可回查",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-SET-10",
+      "title": "跨项目核销的例外办理",
+      "uat_ids": [
+        "UAT-15"
+      ],
+      "specialized_case_id": "SPEC-V1-SET-10",
+      "business_rule": "首版默认阻止；必要时同对手专项批准、分配守恒",
+      "acceptance": "无批准不得跨项目；不允许跨企业核销",
+      "target_objects": [
+        "Settlement",
+        "OpenItem",
+        "Clearance",
+        "AdvanceOffset",
+        "CreditAdjustment",
+        "BadDebtDisposition"
+      ],
+      "contracts": [
+        "C07"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-01",
+      "title": "手工/CSV登记银行实际收付",
+      "uat_ids": [
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-01",
+      "business_rule": "账户、交易日、金额、外部来源ID、对手和证据唯一",
+      "acceptance": "导入与手工重复不产生两笔资金事实",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-02",
+      "title": "待匹配、待认领和非项目资金",
+      "uat_ids": [
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-02",
+      "business_rule": "银行事实可先存在，归属/业务确认后再匹配",
+      "acceptance": "不因未审批而丢失已发生现金，也不冒充审批通过",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-03",
+      "title": "项目归属与核销办理",
+      "uat_ids": [
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-03",
+      "business_rule": "引用交易和SET核销服务，源金额不变",
+      "acceptance": "归属汇总不超交易总额，核销不新建现金",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-04",
+      "title": "客户预收与供应商预付",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-06"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-04",
+      "business_rule": "同一真实交易的业务分类，可抵扣余额派生",
+      "acceptance": "收到预收不确认收入，支付预付不确认成本",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-05",
+      "title": "预收/预付退款及银行退票",
+      "uat_ids": [
+        "UAT-09"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-05",
+      "business_rule": "关联原事实、可退额度、已退款累计和业务调整",
+      "acceptance": "部分退款可持续到余额为零，不允许超退或重复恢复",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-06",
+      "title": "工资、社保、税费及其他公司收付",
+      "uat_ids": [
+        "UAT-04",
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-06",
+      "business_rule": "公司/项目/非项目去向明确，引用原成本/往来来源",
+      "acceptance": "不与人工成本、费用或项目分配重复汇总",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-07",
+      "title": "银行手续费和净额到账拆分",
+      "uat_ids": [
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-07",
+      "business_rule": "以原流水总额和关联手续费来源核对",
+      "acceptance": "不能既计净收款又再扣同一手续费",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-08",
+      "title": "内部账户互转",
+      "uat_ids": [
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-08",
+      "business_rule": "成对关联且可检查缺失一侧，公司范围抵销",
+      "acceptance": "不计经营收入/成本，不增加公司净流入",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-09",
+      "title": "日期可控的现金计划",
+      "uat_ids": [
+        "UAT-08"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-09",
+      "business_rule": "引用合同条件、未清项或工资等来源，人工预计单列",
+      "acceptance": "不直接编辑来自正式未清项的金额，只调整允许的预计日期/情景",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-10",
+      "title": "13周基准和保守预测",
+      "uat_ids": [
+        "UAT-08"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-10",
+      "business_rule": "来源升级替代、部分拆分、预收抵扣、逾期单列",
+      "acceptance": "不重复计合同计划与应收，不自动顺延过期项",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-11",
+      "title": "查看账户覆盖范围及资金预测",
+      "uat_ids": [
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-11",
+      "business_rule": "账户期初、非项目和未匹配齐备且核对后显示该范围余额",
+      "acceptance": "覆盖不全时不称公司银行可用余额；预测不等于利润",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-CSH-12",
+      "title": "纠正实际流水并保留真实日期",
+      "uat_ids": [
+        "UAT-09",
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-CSH-12",
+      "business_rule": "关联冲正/更正事件，入账期和银行日分别记录",
+      "acceptance": "禁止删除旧流水或改核销额来凑账户余额",
+      "target_objects": [
+        "FundingAccount",
+        "CashTransaction",
+        "CashAllocation",
+        "AdvanceBalance",
+        "Refund",
+        "BankReturn",
+        "InternalTransfer",
+        "CashForecastItem"
+      ],
+      "contracts": [
+        "C08",
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-01",
+      "title": "登记销项/进项发票及附件",
+      "uat_ids": [
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-01",
+      "business_rule": "invoicing唯一维护；往来方和来源引用统一资料",
+      "acceptance": "发票号码/来源查重；不直接生成重复收入/成本",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-02",
+      "title": "发票分配到结算或支出明细",
+      "uat_ids": [
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-02",
+      "business_rule": "多对多分配，含税/税额/不含税守恒",
+      "acceptance": "一票多项、分次开票不超分配额度",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-03",
+      "title": "待票、补票和红冲/作废",
+      "uat_ids": [
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-03",
+      "business_rule": "红冲关联原发票，业务义务与税额变动分别判断",
+      "acceptance": "红冲不自动当退款或删除原结算",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-04",
+      "title": "按合同明细已批准方法执行管理收入",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-04",
+      "business_rule": "contracts唯一维护方法选择/业务政策；management_revenue只引用其版本并记录算法执行版本",
+      "acceptance": "收入页无第二个可编辑方法字段；已有事件后变更方法须合同版本及迁移/调整，不覆盖历史",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-05",
+      "title": "固定价/里程碑履约确认收入",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-05",
+      "business_rule": "引用批准验收/履约范围及不含税金额",
+      "acceptance": "日期到期/成本花费/任务数量完成率不能自动确认",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-06",
+      "title": "工时和固定服务期收入计量",
+      "uat_ids": [
+        "UAT-05",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-06",
+      "business_rule": "引用客户确认分钟/服务期间，方法互斥",
+      "acceptance": "同一服务记录不重复计量，累计不超批准明细上限",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-07",
+      "title": "累计计量、调整、终止和折让",
+      "uat_ids": [
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-07",
+      "business_rule": "累计目标取差额，按来源精确分币；负调整留因",
+      "acceptance": "三期取整累计守恒；已锁期仅在开放期调整",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-08",
+      "title": "先履约后结算、先结算后履约配对",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-08",
+      "business_rule": "同合同明细记录未结算履约与已结算未履约关系",
+      "acceptance": "结算和履约互相配对，不各生成一份收入",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-09",
+      "title": "收入、成本与期间结果追溯",
+      "uat_ids": [
+        "UAT-03",
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-09",
+      "business_rule": "同一基准日和范围，分清当期/累计/预测及调整",
+      "acceptance": "付款/到账/开票不改变已确认收入；毛利不叫净利润",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REV-10",
+      "title": "显示缺证据、待确认税额与不可计算项",
+      "uat_ids": [
+        "UAT-01",
+        "UAT-17"
+      ],
+      "specialized_case_id": "SPEC-V1-REV-10",
+      "business_rule": "不能默认0，提示责任人和阻断范围",
+      "acceptance": "数据不完整时不展示完整可信的实际经营结果",
+      "target_objects": [
+        "Invoice",
+        "InvoiceAllocation",
+        "RevenueRecognition",
+        "PerformanceSettlementMatch"
+      ],
+      "contracts": [
+        "C04",
+        "C05",
+        "C09"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PLN-01",
+      "title": "编制首个项目成本预算",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-PLN-01",
+      "business_rule": "人天/费率、外包和费用分项；含税现金预算另列",
+      "acceptance": "不要求细任务树；预算不产生实际成本",
+      "target_objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "EstimateRelease"
+      ],
+      "contracts": [
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PLN-02",
+      "title": "批准预算基线和变更",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-PLN-02",
+      "business_rule": "B0/Bn版本、原因和人；Project只读当前批准值",
+      "acceptance": "草稿不替换基线，历史当时预算可回查",
+      "target_objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "EstimateRelease"
+      ],
+      "contracts": [
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PLN-03",
+      "title": "PM每周更新剩余自有投入",
+      "uat_ids": [
+        "UAT-06",
+        "UAT-18"
+      ],
+      "specialized_case_id": "SPEC-V1-PLN-03",
+      "business_rule": "数量、计划费率、假设、责任人与日期快照",
+      "acceptance": "计划费率与实际费率不互相覆盖",
+      "target_objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "EstimateRelease"
+      ],
+      "contracts": [
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PLN-04",
+      "title": "纳入未履约承诺和其他剩余成本",
+      "uat_ids": [
+        "UAT-06",
+        "UAT-18"
+      ],
+      "specialized_case_id": "SPEC-V1-PLN-04",
+      "business_rule": "采购、待发生费用、待入账、售后/风险估计互斥分类",
+      "acceptance": "同一来源只能覆盖一次ETC，不与AC双计",
+      "target_objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "EstimateRelease"
+      ],
+      "contracts": [
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PLN-05",
+      "title": "实际确认后释放相应剩余预计",
+      "uat_ids": [
+        "UAT-06",
+        "UAT-18"
+      ],
+      "specialized_case_id": "SPEC-V1-PLN-05",
+      "business_rule": "以来源/覆盖范围升级，不按同金额盲删",
+      "acceptance": "部分验收只释放对应部分，未入账项过账后同步减少ETC",
+      "target_objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "EstimateRelease"
+      ],
+      "contracts": [
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PLN-06",
+      "title": "预计完工总成本与结余",
+      "uat_ids": [
+        "UAT-06",
+        "UAT-18"
+      ],
+      "specialized_case_id": "SPEC-V1-PLN-06",
+      "business_rule": "AC+ETC，生效不含税项目价款减EAC；直接/分摊后分层",
+      "acceptance": "预算余额、实际管理毛利和预计结余分别命名",
+      "target_objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "EstimateRelease"
+      ],
+      "contracts": [
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PLN-07",
+      "title": "批准变化与未批准变化情景",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-PLN-07",
+      "business_rule": "基准仅有效价款和范围，风险/机会单列",
+      "acceptance": "未签变更不能掩盖基准预计亏损",
+      "target_objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "EstimateRelease"
+      ],
+      "contracts": [
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PLN-08",
+      "title": "查看预计版本变化与异常原因",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-PLN-08",
+      "business_rule": "本次/上次差异可下钻至新增投入、费率和承诺",
+      "acceptance": "无更新、缺费用、过期假设均提示，不能装作实时准确",
+      "target_objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "EstimateRelease"
+      ],
+      "contracts": [
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-PLN-09",
+      "title": "结项复盘支持下一次报价",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-PLN-09",
+      "business_rule": "复用实际投入/成本和收费结果，形成参考模板",
+      "acceptance": "新报价复制为草稿，不将历史实际金额复制成新事实",
+      "target_objects": [
+        "BudgetVersion",
+        "BudgetLine",
+        "ETCVersion",
+        "ETCItem",
+        "Scenario",
+        "EstimateRelease"
+      ],
+      "contracts": [
+        "C10"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REC-01",
+      "title": "工资池与项目/非项目去向核对",
+      "uat_ids": [
+        "UAT-04"
+      ],
+      "specialized_case_id": "SPEC-V1-REC-01",
+      "business_rule": "原始工资汇总、分配和差额同来源",
+      "acceptance": "不把未分配差额静默摊给项目或隐藏",
+      "target_objects": [
+        "ReconciliationCase",
+        "PeriodPrecheck",
+        "PeriodClose",
+        "AdjustmentRequest",
+        "IntegrityFinding"
+      ],
+      "contracts": [
+        "C02",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REC-02",
+      "title": "费用/外包来源与成本/应付核对",
+      "uat_ids": [
+        "UAT-06",
+        "UAT-17",
+        "UAT-18"
+      ],
+      "specialized_case_id": "SPEC-V1-REC-02",
+      "business_rule": "同来源验收、成本、义务、票税和资金分别核对",
+      "acceptance": "发现未入账/重复确认/只付款无来源的异常",
+      "target_objects": [
+        "ReconciliationCase",
+        "PeriodPrecheck",
+        "PeriodClose",
+        "AdjustmentRequest",
+        "IntegrityFinding"
+      ],
+      "contracts": [
+        "C02",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REC-03",
+      "title": "银行余额、流水、归属和核销核对",
+      "uat_ids": [
+        "UAT-13"
+      ],
+      "specialized_case_id": "SPEC-V1-REC-03",
+      "business_rule": "指明账户覆盖范围、截止日与未匹配",
+      "acceptance": "资金事实、项目归属和核销三层分别守恒",
+      "target_objects": [
+        "ReconciliationCase",
+        "PeriodPrecheck",
+        "PeriodClose",
+        "AdjustmentRequest",
+        "IntegrityFinding"
+      ],
+      "contracts": [
+        "C02",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REC-04",
+      "title": "合同、收入、结算、发票差异核对",
+      "uat_ids": [
+        "UAT-11"
+      ],
+      "specialized_case_id": "SPEC-V1-REC-04",
+      "business_rule": "同明细累计金额及配对，差异可有合法原因",
+      "acceptance": "区分未结算履约/未履约结算，不通过造单消差",
+      "target_objects": [
+        "ReconciliationCase",
+        "PeriodPrecheck",
+        "PeriodClose",
+        "AdjustmentRequest",
+        "IntegrityFinding"
+      ],
+      "contracts": [
+        "C02",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REC-05",
+      "title": "期间预检查及未完成项处理",
+      "uat_ids": [
+        "UAT-14"
+      ],
+      "specialized_case_id": "SPEC-V1-REC-05",
+      "business_rule": "缺费率、来源重复、未复核、超核销等阻断；允许例外必须授权保留",
+      "acceptance": "允许未分配项不等于忽略不平衡；规则列明可警告/必须阻断",
+      "target_objects": [
+        "ReconciliationCase",
+        "PeriodPrecheck",
+        "PeriodClose",
+        "AdjustmentRequest",
+        "IntegrityFinding"
+      ],
+      "contracts": [
+        "C02",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REC-06",
+      "title": "期间确认与只前移锁定",
+      "uat_ids": [
+        "UAT-14"
+      ],
+      "specialized_case_id": "SPEC-V1-REC-06",
+      "business_rule": "保存事件范围、摘要与算法版本；不解锁覆盖历史",
+      "acceptance": "锁期和写账竞争在真实PG多连接验证",
+      "target_objects": [
+        "ReconciliationCase",
+        "PeriodPrecheck",
+        "PeriodClose",
+        "AdjustmentRequest",
+        "IntegrityFinding"
+      ],
+      "contracts": [
+        "C02",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REC-07",
+      "title": "开放期冲销、差额和补录",
+      "uat_ids": [
+        "UAT-14"
+      ],
+      "specialized_case_id": "SPEC-V1-REC-07",
+      "business_rule": "反向复制原分币值、关联更正，保留业务日/入账期",
+      "acceptance": "不编辑账本、不关闭触发器、不重复冲销",
+      "target_objects": [
+        "ReconciliationCase",
+        "PeriodPrecheck",
+        "PeriodClose",
+        "AdjustmentRequest",
+        "IntegrityFinding"
+      ],
+      "contracts": [
+        "C02",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REC-08",
+      "title": "导出核对底稿和可追溯报告",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-REC-08",
+      "business_rule": "与页面同口径，列期间、数据水位、来源和敏感权限",
+      "acceptance": "公式注入转义；报表不靠用户再写公式才成立",
+      "target_objects": [
+        "ReconciliationCase",
+        "PeriodPrecheck",
+        "PeriodClose",
+        "AdjustmentRequest",
+        "IntegrityFinding"
+      ],
+      "contracts": [
+        "C02",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-REC-09",
+      "title": "运行完整性与异常清单",
+      "uat_ids": [
+        "UAT-14"
+      ],
+      "specialized_case_id": "SPEC-V1-REC-09",
+      "business_rule": "统一检查金额、来源、余额、跨域配对和审计链",
+      "acceptance": "硬错误阻断正式交付/锁账；允许差异有责任人与办理记录",
+      "target_objects": [
+        "ReconciliationCase",
+        "PeriodPrecheck",
+        "PeriodClose",
+        "AdjustmentRequest",
+        "IntegrityFinding"
+      ],
+      "contracts": [
+        "C02",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-INS-01",
+      "title": "老板看需决策项目",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-INS-01",
+      "business_rule": "统一读模型汇总预计亏损、成本漏项、回款与资金风险",
+      "acceptance": "每条有原因、来源、责任人、下一步，不用装饰图冒充结论",
+      "target_objects": [
+        "MetricDefinition",
+        "ReadModelWatermark",
+        "DataGap",
+        "TraceLink",
+        "ExportManifest"
+      ],
+      "contracts": [
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-INS-02",
+      "title": "PM看本人项目待办",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-INS-02",
+      "business_rule": "待审投入、未报价变化、验收、剩余预计更新和应收跟进",
+      "acceptance": "本项目授权范围，个人工资/费率不下发",
+      "target_objects": [
+        "MetricDefinition",
+        "ReadModelWatermark",
+        "DataGap",
+        "TraceLink",
+        "ExportManifest"
+      ],
+      "contracts": [
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-INS-03",
+      "title": "员工看本人填报与退回",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-INS-03",
+      "business_rule": "本人待补、待审和费用状态，同记录链接",
+      "acceptance": "不必进入财务后台即可完成日常操作",
+      "target_objects": [
+        "MetricDefinition",
+        "ReadModelWatermark",
+        "DataGap",
+        "TraceLink",
+        "ExportManifest"
+      ],
+      "contracts": [
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-INS-04",
+      "title": "核对人员看跨模块异常",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-INS-04",
+      "business_rule": "工资、成本、未清、资金、发票、期初和期间任务",
+      "acceptance": "点击原事实办理，不提供另一套“改余额”表格",
+      "target_objects": [
+        "MetricDefinition",
+        "ReadModelWatermark",
+        "DataGap",
+        "TraceLink",
+        "ExportManifest"
+      ],
+      "contracts": [
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-INS-05",
+      "title": "站内通知、到期扫描与责任分派",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-INS-05",
+      "business_rule": "Outbox+幂等消费者，按来源ID去重和权限过滤",
+      "acceptance": "重试不重复待办；停用模块保留历史与队列，权限收回后不可访问",
+      "target_objects": [
+        "MetricDefinition",
+        "ReadModelWatermark",
+        "DataGap",
+        "TraceLink",
+        "ExportManifest"
+      ],
+      "contracts": [
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-INS-06",
+      "title": "项目/客户/公司汇总及穿透",
+      "uat_ids": [
+        "UAT-02"
+      ],
+      "specialized_case_id": "SPEC-V1-INS-06",
+      "business_rule": "共享指标定义、基准日、范围、调整口径与更新时间",
+      "acceptance": "页面/导出/API逐分一致，不跨企业/角色泄露",
+      "target_objects": [
+        "MetricDefinition",
+        "ReadModelWatermark",
+        "DataGap",
+        "TraceLink",
+        "ExportManifest"
+      ],
+      "contracts": [
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-INS-07",
+      "title": "展示数据缺口与更新滞后",
+      "uat_ids": [
+        "UAT-01"
+      ],
+      "specialized_case_id": "SPEC-V1-INS-07",
+      "business_rule": "缺成本、待确认、未匹配和未知日期逐项列明",
+      "acceptance": "空值不假零，不以不明评分替代真实缺项",
+      "target_objects": [
+        "MetricDefinition",
+        "ReadModelWatermark",
+        "DataGap",
+        "TraceLink",
+        "ExportManifest"
+      ],
+      "contracts": [
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-INS-08",
+      "title": "搜索、筛选、手机和键盘办理",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-INS-08",
+      "business_rule": "复用PH-023令牌/模式；新增导航须先规划更新规范/样张",
+      "acceptance": "1440/390、键盘/焦点、默认/空/错误/加载/无权状态及无页面横溢",
+      "target_objects": [
+        "MetricDefinition",
+        "ReadModelWatermark",
+        "DataGap",
+        "TraceLink",
+        "ExportManifest"
+      ],
+      "contracts": [
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ONB-01",
+      "title": "按向导从零建立公司与首项目",
+      "uat_ids": [
+        "UAT-01"
+      ],
+      "specialized_case_id": "SPEC-V1-ONB-01",
+      "business_rule": "只编排各域统一服务，不在向导内另建核算规则",
+      "acceptance": "重复安装不接管公司；密码不写日志；步骤可续接",
+      "target_objects": [
+        "OnboardingSession",
+        "OpeningBatch",
+        "OpeningCoverage",
+        "OpeningEvent",
+        "ImportPreview",
+        "ImportConflict"
+      ],
+      "contracts": [
+        "C03",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ONB-02",
+      "title": "选择从零或存量承接及截止日",
+      "uat_ids": [
+        "UAT-01",
+        "UAT-12"
+      ],
+      "specialized_case_id": "SPEC-V1-ONB-02",
+      "business_rule": "试算与正式启用状态分开；覆盖范围有批准人",
+      "acceptance": "缺关键期初只能试算或阻止正式启用，不能默认为0",
+      "target_objects": [
+        "OnboardingSession",
+        "OpeningBatch",
+        "OpeningCoverage",
+        "OpeningEvent",
+        "ImportPreview",
+        "ImportConflict"
+      ],
+      "contracts": [
+        "C03",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ONB-03",
+      "title": "明细重建或余额承接",
+      "uat_ids": [
+        "UAT-12"
+      ],
+      "specialized_case_id": "SPEC-V1-ONB-03",
+      "business_rule": "同项目/期间/类别覆盖互斥，不同类别可分别选择",
+      "acceptance": "历史汇总和同范围明细不得重复成本/收入",
+      "target_objects": [
+        "OnboardingSession",
+        "OpeningBatch",
+        "OpeningCoverage",
+        "OpeningEvent",
+        "ImportPreview",
+        "ImportConflict"
+      ],
+      "contracts": [
+        "C03",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ONB-04",
+      "title": "承接成本、收入、未清、预收预付和资金",
+      "uat_ids": [
+        "UAT-12"
+      ],
+      "specialized_case_id": "SPEC-V1-ONB-04",
+      "business_rule": "各域专用期初事件，共用导入批次和来源",
+      "acceptance": "期初未清不再生成收入/成本，后续收付只核销和记现金",
+      "target_objects": [
+        "OnboardingSession",
+        "OpeningBatch",
+        "OpeningCoverage",
+        "OpeningEvent",
+        "ImportPreview",
+        "ImportConflict"
+      ],
+      "contracts": [
+        "C03",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ONB-05",
+      "title": "模板、字段映射和导入预览",
+      "uat_ids": [
+        "UAT-12"
+      ],
+      "specialized_case_id": "SPEC-V1-ONB-05",
+      "business_rule": "主数据先匹配稳定ID，导入键与文件名/行号无关",
+      "acceptance": "同一文件重排重试幂等，错误行有原因和原值",
+      "target_objects": [
+        "OnboardingSession",
+        "OpeningBatch",
+        "OpeningCoverage",
+        "OpeningEvent",
+        "ImportPreview",
+        "ImportConflict"
+      ],
+      "contracts": [
+        "C03",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ONB-06",
+      "title": "原子提交、冲突与回退",
+      "uat_ids": [
+        "UAT-12"
+      ],
+      "specialized_case_id": "SPEC-V1-ONB-06",
+      "business_rule": "预览不留业务痕迹，提交全有或全无；大批次先冻结边界",
+      "acceptance": "无权限/越期/同键改内容拒绝，已正式过账回退走纠错",
+      "target_objects": [
+        "OnboardingSession",
+        "OpeningBatch",
+        "OpeningCoverage",
+        "OpeningEvent",
+        "ImportPreview",
+        "ImportConflict"
+      ],
+      "contracts": [
+        "C03",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ONB-07",
+      "title": "开账核对报告和责任人确认",
+      "uat_ids": [
+        "UAT-12"
+      ],
+      "specialized_case_id": "SPEC-V1-ONB-07",
+      "business_rule": "项目与公司范围、历史盲区和未分配项明确",
+      "acceptance": "新客户资料能与原表对照，未验证项不能签“已迁移正确”",
+      "target_objects": [
+        "OnboardingSession",
+        "OpeningBatch",
+        "OpeningCoverage",
+        "OpeningEvent",
+        "ImportPreview",
+        "ImportConflict"
+      ],
+      "contracts": [
+        "C03",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-ONB-08",
+      "title": "自助说明、样例与数据导出",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-ONB-08",
+      "business_rule": "演练与正式数据隔离；跨模块使用同一来源链接",
+      "acceptance": "用户可导出本人授权数据与附件清单，例子不混入正式账",
+      "target_objects": [
+        "OnboardingSession",
+        "OpeningBatch",
+        "OpeningCoverage",
+        "OpeningEvent",
+        "ImportPreview",
+        "ImportConflict"
+      ],
+      "contracts": [
+        "C03",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-OPS-01",
+      "title": "Ubuntu24.04+Composev2安装与诊断",
+      "uat_ids": [
+        "UAT-16"
+      ],
+      "specialized_case_id": "SPEC-V1-OPS-01",
+      "business_rule": "独立密钥/数据库/卷，应用与DB不直接暴露公网",
+      "acceptance": "空机安装，端口/磁盘/镜像/迁移失败安全重试，不覆盖原数据",
+      "target_objects": [
+        "DeploymentManifest",
+        "BackupManifest",
+        "RestoreEvidence",
+        "ConcurrencyTestEvidence",
+        "ReleaseManifest"
+      ],
+      "contracts": [
+        "C02",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-OPS-02",
+      "title": "真实域名HTTPS与安全配置",
+      "uat_ids": [
+        "UAT-16"
+      ],
+      "specialized_case_id": "SPEC-V1-OPS-02",
+      "business_rule": "Caddy、Cookie、HSTS、代理边界和证书续期",
+      "acceptance": "实际TLS访问及错误配置拒绝，不以配置存在代替实证",
+      "target_objects": [
+        "DeploymentManifest",
+        "BackupManifest",
+        "RestoreEvidence",
+        "ConcurrencyTestEvidence",
+        "ReleaseManifest"
+      ],
+      "contracts": [
+        "C02",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-OPS-03",
+      "title": "支持的版本升级和兼容回退",
+      "uat_ids": [
+        "UAT-16"
+      ],
+      "specialized_case_id": "SPEC-V1-OPS-03",
+      "business_rule": "迁移只追加，先备份；旧代码仅在结构兼容时回退",
+      "acceptance": "冻结基线到候选版升级演练，失败可恢复，不倒放账本",
+      "target_objects": [
+        "DeploymentManifest",
+        "BackupManifest",
+        "RestoreEvidence",
+        "ConcurrencyTestEvidence",
+        "ReleaseManifest"
+      ],
+      "contracts": [
+        "C02",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-OPS-04",
+      "title": "数据库与非空附件联合备份",
+      "uat_ids": [
+        "UAT-16"
+      ],
+      "specialized_case_id": "SPEC-V1-OPS-04",
+      "business_rule": "一致快照、清单、哈希、权限、保留与异地副本约定",
+      "acceptance": "PG隔离恢复后真实登录、报表/凭证/附件核对，记录RPO/RTO实测",
+      "target_objects": [
+        "DeploymentManifest",
+        "BackupManifest",
+        "RestoreEvidence",
+        "ConcurrencyTestEvidence",
+        "ReleaseManifest"
+      ],
+      "contracts": [
+        "C02",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-OPS-05",
+      "title": "健康、任务积压、容量与失败可见",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-OPS-05",
+      "business_rule": "不记录密码/令牌/薪酬原文；告警指向可操作诊断",
+      "acceptance": "worker停止、磁盘近满、备份失败可被识别及办理",
+      "target_objects": [
+        "DeploymentManifest",
+        "BackupManifest",
+        "RestoreEvidence",
+        "ConcurrencyTestEvidence",
+        "ReleaseManifest"
+      ],
+      "contracts": [
+        "C02",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-OPS-06",
+      "title": "PostgreSQL多连接安全验证",
+      "uat_ids": [
+        "UAT-14"
+      ],
+      "specialized_case_id": "SPEC-V1-OPS-06",
+      "business_rule": "统一公司锁、行锁、版本、幂等与事务回滚",
+      "acceptance": "双审批、超核销、退款、分摊、期初和锁账竞争均有反例",
+      "target_objects": [
+        "DeploymentManifest",
+        "BackupManifest",
+        "RestoreEvidence",
+        "ConcurrencyTestEvidence",
+        "ReleaseManifest"
+      ],
+      "contracts": [
+        "C02",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-OPS-07",
+      "title": "客户支持、授权排障与退出",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-OPS-07",
+      "business_rule": "数据归属客户，最小临时访问；升级与恢复责任明确",
+      "acceptance": "支持期、响应、数据导出/交还/删除约定有实际文档",
+      "target_objects": [
+        "DeploymentManifest",
+        "BackupManifest",
+        "RestoreEvidence",
+        "ConcurrencyTestEvidence",
+        "ReleaseManifest"
+      ],
+      "contracts": [
+        "C02",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    },
+    {
+      "requirement_id": "V1-OPS-08",
+      "title": "安全发布包和交付清单",
+      "uat_ids": [],
+      "specialized_case_id": "SPEC-V1-OPS-08",
+      "business_rule": "版本单一来源、同提交CI、许可证与资产摘要",
+      "acceptance": "排除runtime/.env/凭据/客户数据/虚拟环境/备份；不含用户个人Agent配置",
+      "target_objects": [
+        "DeploymentManifest",
+        "BackupManifest",
+        "RestoreEvidence",
+        "ConcurrencyTestEvidence",
+        "ReleaseManifest"
+      ],
+      "contracts": [
+        "C02",
+        "C11",
+        "C12"
+      ],
+      "execution_status": "not_run",
+      "evidence_required": [
+        "requirement_specific_acceptance",
+        "actual_final_candidate_regression",
+        "independent_review_if_S"
+      ]
+    }
+  ]
+}

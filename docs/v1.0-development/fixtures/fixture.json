@@ -1,0 +1,5330 @@
+{
+  "fixture_id": "PH134-SYNTHETIC-20261028",
+  "version": "1.0",
+  "source_contracts": [
+    "docs/v1.0-delivery-plan.md#9",
+    "docs/v1.0-development/validation-and-release.md#1",
+    "docs/accounting-rules.md#A01-A25,T01-T29"
+  ],
+  "fixed_context": {
+    "timezone": "Asia/Shanghai",
+    "currency": "CNY",
+    "random_seed": "PH-V1-SYNTHETIC-20261028",
+    "opening": "2026-09-01",
+    "september_lock": "2026-09-30",
+    "october_open": "2026-10-01",
+    "as_of": "2026-10-31",
+    "algorithm": "monthly_group_half_up_largest_remainder_v1"
+  },
+  "scenario_policy": {
+    "baseline": "Every UAT starts from a fresh fixed fixture baseline; UAT branches never accumulate mutations from another UAT.",
+    "state_units": "All numeric state fields are integer CNY cents. null means not applicable, not zero and not omitted.",
+    "state_keys": [
+      "company_cost_cents",
+      "management_revenue_net_cents",
+      "receivable_gross_cents",
+      "payable_gross_cents",
+      "net_cash_movement_cents",
+      "advance_balance_cents",
+      "unconsumed_prepaid_service_cents",
+      "etc_cost_cents",
+      "remaining_forecast_magnitude_cents"
+    ],
+    "command_binding": "Each stage binds frozen named envelopes in command-samples.json or explicitly declares a procedural operation. Semantic inputs are oracle setup, never API DTOs.",
+    "labor_history": "Confirmed: new-accounting-month labour uses monthly pool/group rounding; OPEN-20260831 legacy balances remain opening coverage and are not rebuilt into new monthly groups.",
+    "cost_scope": "company_cost_cents includes entire confirmed salary pool; allocations only redistribute cost; project_cost_cents separately reported for labor stages.",
+    "forecast": "remaining_forecast_magnitude_cents is a scenario-direction magnitude, not signed company forecast or bank balance. Inflow UAT03/08/10/11/12/14; outflow UAT06/07/17/18; null means unconfigured. Cash is cumulative within scenario.",
+    "oracle": "Every stage state is a future expected snapshot at fixed_context.as_of, organization ENT-A, CNY, effective adjustments included; no query/product result was executed. Null ETC means no approved remaining-cost estimate.",
+    "pipeline": "Seed facts are explicitly approved setup records; draft.save samples require future submit and independent approval before post/recognize. dry_run=false denotes intended future authenticated browser/service execution, never personal AI authorization.",
+    "cash_opening": "net_cash_movement_cents excludes brought-forward bank balance. UAT12 carries separate declared opening100000 and expected account150000 after new receipt50000. Other scenario bank movements must not be presented as full bank balances."
+  },
+  "enterprises": [
+    {
+      "id": "ENT-A",
+      "name": "星河实施演练有限公司",
+      "accounts": [
+        "BA-A-OPER",
+        "BA-A-SAV"
+      ]
+    },
+    {
+      "id": "ENT-B",
+      "name": "远帆技术演练有限公司",
+      "accounts": [
+        "BA-B-OPER"
+      ]
+    }
+  ],
+  "identities": [
+    {
+      "id": "U-A-OWNER",
+      "enterprise": "ENT-A",
+      "roles": [
+        "owner"
+      ],
+      "active": true
+    },
+    {
+      "id": "U-A-FIN-1",
+      "enterprise": "ENT-A",
+      "roles": [
+        "finance"
+      ],
+      "active": true
+    },
+    {
+      "id": "U-A-FIN-2",
+      "enterprise": "ENT-A",
+      "roles": [
+        "finance"
+      ],
+      "active": true
+    },
+    {
+      "id": "U-A-PM-FIXED",
+      "enterprise": "ENT-A",
+      "roles": [
+        "pm"
+      ],
+      "projects": [
+        "P-FIXED",
+        "P-LEGACY"
+      ],
+      "active": true
+    },
+    {
+      "id": "U-A-PM-HOURLY",
+      "enterprise": "ENT-A",
+      "roles": [
+        "pm"
+      ],
+      "projects": [
+        "P-HOURLY"
+      ],
+      "active": true
+    },
+    {
+      "id": "U-A-PM-UNASSIGNED",
+      "enterprise": "ENT-A",
+      "roles": [
+        "pm"
+      ],
+      "projects": [],
+      "active": true
+    },
+    {
+      "id": "U-A-MEMBER",
+      "enterprise": "ENT-A",
+      "roles": [
+        "member"
+      ],
+      "active": true
+    },
+    {
+      "id": "U-A-DISABLED",
+      "enterprise": "ENT-A",
+      "roles": [
+        "member"
+      ],
+      "active": false
+    },
+    {
+      "id": "U-B-OWNER",
+      "enterprise": "ENT-B",
+      "roles": [
+        "owner"
+      ],
+      "active": true
+    },
+    {
+      "id": "U-B-FIN",
+      "enterprise": "ENT-B",
+      "roles": [
+        "finance"
+      ],
+      "active": true
+    }
+  ],
+  "employees": [
+    {
+      "id": "E-A-ALICE",
+      "enterprise": "ENT-A",
+      "account": "U-A-MEMBER",
+      "active": true,
+      "salary_cents": 2000000,
+      "employer_benefits_cents": 400000,
+      "effective_minutes": 9600
+    },
+    {
+      "id": "E-A-BOB",
+      "enterprise": "ENT-A",
+      "account": null,
+      "active": true,
+      "note": "no-login employee; proxy actor and business employee are both retained"
+    },
+    {
+      "id": "E-A-CHEN",
+      "enterprise": "ENT-A",
+      "account": "U-A-DISABLED",
+      "active": false
+    },
+    {
+      "id": "E-B-DEV",
+      "enterprise": "ENT-B",
+      "account": null,
+      "active": true
+    }
+  ],
+  "counterparties": [
+    {
+      "id": "CP-A-CUSTOMER",
+      "enterprise": "ENT-A",
+      "roles": [
+        "customer"
+      ]
+    },
+    {
+      "id": "CP-A-VENDOR",
+      "enterprise": "ENT-A",
+      "roles": [
+        "supplier"
+      ]
+    },
+    {
+      "id": "CP-B-CUSTOMER",
+      "enterprise": "ENT-B",
+      "roles": [
+        "customer"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "P-FIXED",
+      "enterprise": "ENT-A",
+      "template": "fixed_milestone",
+      "contract": "C-FIXED"
+    },
+    {
+      "id": "P-HOURLY",
+      "enterprise": "ENT-A",
+      "template": "confirmed_time",
+      "contract": "C-HOURLY"
+    },
+    {
+      "id": "P-SERVICE",
+      "enterprise": "ENT-A",
+      "template": "fixed_service_period",
+      "contract": "C-SERVICE"
+    },
+    {
+      "id": "P-LEGACY",
+      "enterprise": "ENT-A",
+      "template": "legacy_balance_takeover"
+    },
+    {
+      "id": "P-B-PRIVATE",
+      "enterprise": "ENT-B",
+      "template": "fixed_milestone",
+      "contract": "C-B-PRIVATE"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "C-FIXED",
+      "project": "P-FIXED",
+      "customer": "CP-A-CUSTOMER",
+      "approved_net_cents": 100000,
+      "approved_tax_cents": 6000,
+      "approved_gross_cents": 106000,
+      "retention": "settlement allocation within the 100000 net contract value; not separate income",
+      "main_settlement_net_cents": 90000,
+      "retention_net_cents": 10000,
+      "approved_change": {
+        "id": "CHG-F-01",
+        "net_delta_cents": 20000,
+        "status": "approved",
+        "applies_only_to": "UAT-02"
+      },
+      "draft_change": {
+        "id": "CHG-F-02",
+        "net_delta_cents": 10000,
+        "status": "draft",
+        "must_not_change_baseline": true
+      }
+    },
+    {
+      "id": "C-HOURLY",
+      "project": "P-HOURLY",
+      "customer": "CP-A-CUSTOMER",
+      "net_rate_cents_per_hour": 25000,
+      "confirmed_minutes_cap": 480
+    },
+    {
+      "id": "C-SERVICE",
+      "project": "P-SERVICE",
+      "customer": "CP-A-CUSTOMER",
+      "net_cents": 120000,
+      "tax_cents": 7200,
+      "gross_cents": 127200
+    },
+    {
+      "id": "C-B-PRIVATE",
+      "project": "P-B-PRIVATE",
+      "customer": "CP-B-CUSTOMER",
+      "net_cents": 40000,
+      "tax_cents": 2400,
+      "gross_cents": 42400
+    }
+  ],
+  "files": [
+    {
+      "id": "ATT-CONTRACT",
+      "kind": "attachment",
+      "path": "attachments/contract.txt",
+      "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+    },
+    {
+      "id": "ATT-EXPENSE",
+      "kind": "attachment",
+      "path": "attachments/expense-receipt.txt",
+      "sha256": "c5088e28ae39765c53b09399763f465e024456d727a9cdf3bf8a38e82c65ece4"
+    },
+    {
+      "id": "ATT-RESTORE",
+      "kind": "attachment",
+      "path": "attachments/restore-proof.txt",
+      "sha256": "39c0fcbfd54a682235cb81432e2219052d9676d9bb6cb2e9876972ee873c6347"
+    },
+    {
+      "id": "CSV-AP-NORMAL",
+      "kind": "csv",
+      "path": "samples/payables.csv",
+      "sha256": "0292f26b653448be5241b5e0126ce49fb59af36b113df8c4c43574213d671ecb"
+    },
+    {
+      "id": "CSV-AP-REORDERED",
+      "kind": "csv",
+      "path": "samples/payables-reordered.csv",
+      "sha256": "9a2666b2cb4acae0bfa4a95ffdb53a40aacf410ab19dac10907bf29570eac4ce"
+    },
+    {
+      "id": "CSV-AP-CONFLICT",
+      "kind": "csv",
+      "path": "samples/payables-conflict.csv",
+      "sha256": "e5da815c6d5a8dffc35b132792a078cfc5d079b56cf2f32171cdfe6e95dbea61"
+    },
+    {
+      "id": "CSV-HIST-COST",
+      "kind": "csv",
+      "path": "samples/historical-costs.csv",
+      "sha256": "11b26b0d870e6df7efafb6215ebbd87c813803b2c6e57be4132bb6386fc2bbea"
+    }
+  ],
+  "facts": {
+    "labor": {
+      "id": "LAB-OCT-A",
+      "pool_cents": 2400000,
+      "employee": "E-A-ALICE",
+      "entries": [
+        {
+          "id": "TS-F-600",
+          "project": "P-FIXED",
+          "minutes": 600,
+          "confirmed_billable_minutes": 0
+        },
+        {
+          "id": "TS-H-600",
+          "project": "P-HOURLY",
+          "minutes": 600,
+          "confirmed_billable_minutes": 480
+        },
+        {
+          "id": "TS-NP-120",
+          "project": null,
+          "minutes": 120
+        }
+      ],
+      "allocations": {
+        "P-FIXED": 150000,
+        "P-HOURLY": 150000,
+        "non_project": 30000,
+        "unallocated": 2070000
+      },
+      "capacity_minutes": 9600
+    },
+    "outsource": {
+      "id": "OUT-01",
+      "commitment_cents": 100000,
+      "prepayment_cents": 20000,
+      "accepted_cents": 40000,
+      "remaining_commitment_cents": 60000,
+      "tail_payment_cents": 20000
+    },
+    "shared": {
+      "main": {
+        "id": "SE-10000",
+        "amount_cents": 10000,
+        "initial": {
+          "P-FIXED": 3334,
+          "P-HOURLY": 3333,
+          "non_project": 3333
+        },
+        "reallocation": {
+          "P-FIXED": 2500,
+          "P-HOURLY": 5000,
+          "non_project": 2500
+        }
+      },
+      "rounding_special": {
+        "id": "SE-10001",
+        "amount_cents": 10001,
+        "equal": {
+          "P-FIXED": 3334,
+          "P-HOURLY": 3334,
+          "non_project": 3333
+        }
+      }
+    },
+    "tax_unknown": {
+      "id": "EXP-TAX-UNKNOWN",
+      "gross_cents": 10600,
+      "deductible_tax_cents": 600,
+      "final_cost_cents": 10000
+    },
+    "annual_prepaid": {
+      "id": "PREPAID-ANNUAL",
+      "paid_cents": 120000,
+      "month_one_cost_cents": 10000,
+      "remaining_cents": 110000
+    },
+    "opening": {
+      "id": "OPEN-20260831",
+      "legacy_cost_cents": 200000,
+      "legacy_receivable_cents": 50000,
+      "bank_opening_cents": 100000,
+      "cutoff_date": "2026-08-31",
+      "covered_historical_cost_sample": {
+        "file_id": "CSV-HIST-COST",
+        "source_date": "2026-08-08",
+        "cost_cents": 10000,
+        "included_in_legacy_cost_cents": 200000,
+        "settled_before_cutoff": true,
+        "outstanding_payable_cents": 0
+      }
+    },
+    "period_race": {
+      "source_id": "SE-SEP-10000",
+      "amount_cents": 10000,
+      "occurred_on": "2026-09-15",
+      "posting_period": "2026-09",
+      "seed_status": "approved but unposted; independent September source, not October SE-10000"
+    }
+  },
+  "rejection_catalog": {
+    "R-SAME-REVIEW": {
+      "reason": "submitter_or_business_applicant_cannot_final_review",
+      "effect": "reject; no ledger event, audit business event, allocation, clearance or balance mutation"
+    },
+    "R-CROSS-TENANT": {
+      "reason": "referenced_object_enterprise_differs_from_actor_enterprise",
+      "effect": "reject; no ledger event, audit business event, attachment/export disclosure or balance mutation"
+    },
+    "R-UNASSIGNED": {
+      "reason": "pm_has_no_project_scope",
+      "effect": "reject; no ledger event, audit business event or disclosure"
+    },
+    "R-DISABLED": {
+      "reason": "identity_or_employee_inactive_on_business_date",
+      "effect": "reject; no ledger event, audit business event or balance mutation"
+    },
+    "R-DUP-SOURCE": {
+      "reason": "same_enterprise_purpose_original_namespace_kind_id_detail_period_coverage_already_consumed_even_when_version_channel_or_request_key_changes",
+      "effect": "reject_or_return_original_idempotent_result; no additional ledger/audit business event"
+    },
+    "R-IDEMPOTENCY-CONFLICT": {
+      "reason": "same_import_key_with_different_effective_content",
+      "effect": "conflict; no ledger event, audit business event or overwrite"
+    },
+    "R-OVER-CLEAR": {
+      "reason": "clearance_exceeds_cash_available_or_open_item_balance",
+      "effect": "reject; no clearance, ledger/audit business event or balance mutation"
+    },
+    "R-DUP-RETURN": {
+      "reason": "original_receipt_return_already_effective",
+      "effect": "reject; no second reverse cash, ledger/audit business event or balance mutation"
+    },
+    "R-CLOSED-PERIOD": {
+      "reason": "posting_period_locked",
+      "effect": "reject; no ledger/audit business event in locked period"
+    },
+    "R-DUP-CASH": {
+      "reason": "bank_source_already_registered",
+      "effect": "reject_or_return_original_idempotent_result; no second cash, ledger/audit business event or allocation"
+    },
+    "R-HASH": {
+      "reason": "stored_attachment_sha256_differs_from_restored_bytes",
+      "effect": "fail verification; no release acceptance result"
+    },
+    "R-FUTURE-DATE": {
+      "reason": "actual date later than fixed as_of",
+      "effect": "reject; no business mutation; security rejection audit may be appended without financial facts"
+    },
+    "R-FLOAT": {
+      "reason": "bool or floating amount/minutes including integral float",
+      "effect": "reject; no business mutation; security rejection audit may be appended without financial facts"
+    },
+    "R-POOL-CAPACITY": {
+      "reason": "missing/zero capacity or approved minutes exceed capacity",
+      "effect": "reject; no business mutation; security rejection audit may be appended without financial facts"
+    },
+    "R-COVERAGE": {
+      "reason": "overlap with active opening or performance coverage",
+      "effect": "reject; no business mutation; security rejection audit may be appended without financial facts"
+    },
+    "R-POLICY": {
+      "reason": "missing customer-approved price or allocation policy",
+      "effect": "reject; no business mutation; security rejection audit may be appended without financial facts"
+    },
+    "R-STALE-VERSION": {
+      "reason": "source expected version differs under company lock",
+      "effect": "reject; no business mutation; security rejection audit may be appended without financial facts"
+    },
+    "R-DUP-METHOD": {
+      "reason": "same employee/month already has old posted labor",
+      "effect": "reject; no business mutation; security rejection audit may be appended without financial facts"
+    }
+  },
+  "uat_sequences": [
+    {
+      "id": "UAT-01",
+      "coverage": [
+        "ENT-A",
+        "E-A-ALICE",
+        "P-FIXED",
+        "C-FIXED",
+        "TS-F-600"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "ENT-A"
+          ],
+          "stage_id": "UAT-01-S01",
+          "semantic_operation": "isolated_seed_enterprise_and_roles",
+          "oracle_inputs": {
+            "enterprise_id": "ENT-A"
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [],
+          "procedural_operation": "Use isolated setup/bootstrap fixture; no frozen enterprise-create command. No user settings are modified.",
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "LAB-OCT-A",
+            "TS-F-600"
+          ],
+          "stage_id": "UAT-01-S02",
+          "semantic_operation": "labor.post",
+          "oracle_inputs": {
+            "time_id": "TS-F-600",
+            "reviewer": "U-A-FIN-2"
+          },
+          "expected": {
+            "company_cost_cents": 2400000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "project_cost_cents": 150000,
+          "nonproject_and_unallocated_cost_cents": 2250000,
+          "command_sample_ids": [
+            "LAB-POST",
+            "LAB-ALLOCATE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-SAME-REVIEW",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-01",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-SAME-REVIEW",
+          "mutate": "submitter_or_business_applicant_cannot_final_review",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-01-bootstrap",
+          "inputs": "new enterprise, start date, CNY and Asia/Shanghai; invite four roles; no complex task tree",
+          "expected": "No facts means incomplete coverage, never complete financial result",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-01-first-review",
+          "inputs": "member prepares time, finance2 independently approves, deny own review",
+          "expected": "One approved source and allocation; one company pool cost 2400000, P-FIXED 150000",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "coverage": [
+        "P-FIXED",
+        "C-FIXED",
+        "CHG-F-01",
+        "ATT-CONTRACT"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "P-FIXED"
+          ],
+          "stage_id": "UAT-02-S01",
+          "semantic_operation": "masterdata.rename",
+          "oracle_inputs": {
+            "project_id": "P-FIXED",
+            "name": "北斗上线实施修订名"
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "PROJECT-RENAME"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "C-FIXED",
+            "CHG-F-01",
+            "ATT-CONTRACT"
+          ],
+          "stage_id": "UAT-02-S02",
+          "semantic_operation": "contract.change.approve",
+          "oracle_inputs": {
+            "change_id": "CHG-F-01"
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "CHANGE-APPROVE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "assertions": {
+        "effective_contract_net_cents": 120000,
+        "approved_snapshot_preserved": true
+      },
+      "negative": [
+        "R-DUP-SOURCE",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-02",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-SOURCE",
+          "mutate": "same_enterprise_purpose_original_namespace_kind_id_detail_period_coverage_already_consumed_even_when_version_channel_or_request_key_changes",
+          "expected": "reject_or_original_result_without_new_financial_effects",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-02-references",
+          "inputs": "rename P-FIXED and CP-A-CUSTOMER, revisit project/contract/invoice/cash views",
+          "expected": "same stable ids; prior approved snapshot remains readable; no duplicate customer or contract amount",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-02-change-version",
+          "inputs": "draft +10000 then separately approve +20000 only on UAT02 branch",
+          "expected": "draft leaves approved net100000; approved version net120000 tax7200 gross127200; no revenue/cash merely from change",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "coverage": [
+        "P-FIXED",
+        "C-FIXED"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "BANK-U03-PRE"
+          ],
+          "stage_id": "UAT-03-S01",
+          "semantic_operation": "cash.record",
+          "oracle_inputs": {
+            "type": "customer_prepayment",
+            "amount_cents": 31800
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 31800,
+            "advance_balance_cents": 31800,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U03-PRE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "C-FIXED",
+            "FUL-U03"
+          ],
+          "stage_id": "UAT-03-S02",
+          "semantic_operation": "revenue.recognize",
+          "oracle_inputs": {
+            "net_cents": 50000,
+            "fulfillment_id": "FUL-U03"
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 50000,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 31800,
+            "advance_balance_cents": 31800,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "FUL-U03",
+            "FUL-U03-CONFIRM",
+            "REV-U03"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "SET-U03"
+          ],
+          "stage_id": "UAT-03-S03",
+          "semantic_operation": "settlement.create",
+          "oracle_inputs": {
+            "gross_cents": 53000,
+            "net_cents": 50000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 50000,
+            "receivable_gross_cents": 53000,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 31800,
+            "advance_balance_cents": 31800,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 53000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required",
+            "forecast_scope": "SET-U03 settled current50percent tranche only; scalar excludes later conditional contract50percent. Never label scalar as entire contract/company forecast."
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "SET-U03",
+            "SET-U03-OPEN"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
+          "forecast_components": {
+            "current_settled_tranche_uncleared_cents": 53000,
+            "later_unsettled_conditional_cents": 53000,
+            "later_range_source": "C-FIXED approved remaining50percent, not yet covered by FUL-U03/SET-U03; no duplicate consumption",
+            "combined_remaining_magnitude_cents": 106000,
+            "scope": "ENT-A/P-FIXED inbound only; current and later mutually exclusive contract coverage",
+            "unapplied_advance_note": "Before explicit S04 offset, advance31800 remains separate available credit; cannot silently remove current AR or claim all forecast is net bank availability."
+          }
+        },
+        {
+          "source_ids": [
+            "BANK-U03-PRE",
+            "SET-U03"
+          ],
+          "stage_id": "UAT-03-S04",
+          "semantic_operation": "prepayment.clear",
+          "oracle_inputs": {
+            "amount_cents": 31800
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 50000,
+            "receivable_gross_cents": 21200,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 31800,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 21200
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required",
+            "forecast_scope": "SET-U03 settled current50percent tranche only; scalar excludes later conditional contract50percent. Never label scalar as entire contract/company forecast."
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "CLEAR-U03-PRE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
+          "forecast_components": {
+            "current_settled_tranche_uncleared_cents": 21200,
+            "later_unsettled_conditional_cents": 53000,
+            "later_range_source": "C-FIXED approved remaining50percent, not yet covered by FUL-U03/SET-U03; no duplicate consumption",
+            "combined_remaining_magnitude_cents": 74200,
+            "scope": "ENT-A/P-FIXED inbound only; current and later mutually exclusive contract coverage",
+            "unapplied_advance_note": "Before explicit S04 offset, advance31800 remains separate available credit; cannot silently remove current AR or claim all forecast is net bank availability."
+          }
+        },
+        {
+          "source_ids": [
+            "BANK-U03-REC",
+            "SET-U03"
+          ],
+          "stage_id": "UAT-03-S05",
+          "semantic_operation": "cash.record_and_clear",
+          "oracle_inputs": {
+            "amount_cents": 21200
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 50000,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 53000,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 0
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required",
+            "forecast_scope": "SET-U03 settled current50percent tranche only; scalar excludes later conditional contract50percent. Never label scalar as entire contract/company forecast."
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U03-REC",
+            "CLEAR-U03-REC"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
+          "forecast_components": {
+            "current_settled_tranche_uncleared_cents": 0,
+            "later_unsettled_conditional_cents": 53000,
+            "later_range_source": "C-FIXED approved remaining50percent, not yet covered by FUL-U03/SET-U03; no duplicate consumption",
+            "combined_remaining_magnitude_cents": 53000,
+            "scope": "ENT-A/P-FIXED inbound only; current and later mutually exclusive contract coverage",
+            "unapplied_advance_note": "Before explicit S04 offset, advance31800 remains separate available credit; cannot silently remove current AR or claim all forecast is net bank availability."
+          }
+        }
+      ],
+      "negative": [
+        "R-OVER-CLEAR",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-03",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-OVER-CLEAR",
+          "mutate": "clearance_exceeds_cash_available_or_open_item_balance",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-03-later-contract-coverage",
+          "inputs": {
+            "contract_gross_cents": 106000,
+            "fulfilled_and_settled_gross_cents": 53000,
+            "current_tranche_fully_received_cents": 53000,
+            "later_unsettled_conditional_gross_cents": 53000
+          },
+          "expected": {
+            "current_tranche_receivable_cents": 0,
+            "later_conditional_forecast_cents": 53000,
+            "combined_future_inbound_cents": 53000,
+            "management_revenue_net_cents": 50000,
+            "net_cash_movement_cents": 53000
+          },
+          "coverage_rule": "Only first50percent consumed by actual/settlement; remaining50percent retains conditional forecast until own eligibility. Rebuilding forecast may not recreate consumed first half or erase second half.",
+          "command_binding": "Procedural future forecast creation/refresh: no new API invented; use frozen query and future domain service once implemented.",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-04",
+      "coverage": [
+        "LAB-OCT-A",
+        "TS-F-600",
+        "TS-H-600",
+        "TS-NP-120"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "LAB-OCT-A"
+          ],
+          "stage_id": "UAT-04-S01",
+          "semantic_operation": "labor.pool.post",
+          "oracle_inputs": {
+            "pool_cents": 2400000
+          },
+          "expected": {
+            "company_cost_cents": 2400000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "expected_allocation_state": "unallocated; full 2400000 company cost recognized once",
+          "command_sample_ids": [
+            "LAB-POOL-DRAFT",
+            "LAB-POST"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "LAB-OCT-A",
+            "TS-F-600",
+            "TS-H-600",
+            "TS-NP-120"
+          ],
+          "allocation": {
+            "P-FIXED": 150000,
+            "P-HOURLY": 150000,
+            "non_project": 30000,
+            "unallocated": 2070000
+          },
+          "stage_id": "UAT-04-S02",
+          "semantic_operation": "labor.allocate",
+          "oracle_inputs": {
+            "time_ids": [
+              "TS-F-600",
+              "TS-H-600",
+              "TS-NP-120"
+            ]
+          },
+          "expected": {
+            "company_cost_cents": 2400000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "project_cost_cents": 300000,
+          "nonproject_cost_cents": 30000,
+          "unallocated_cost_cents": 2070000,
+          "command_sample_ids": [
+            "LAB-ALLOCATE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "BANK-U04-PAY"
+          ],
+          "stage_id": "UAT-04-S03",
+          "semantic_operation": "cash.record",
+          "oracle_inputs": {
+            "type": "payroll",
+            "amount_cents": 1200000
+          },
+          "expected": {
+            "company_cost_cents": 2400000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": -1200000,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U04-PAY"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-UNASSIGNED",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-04",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-UNASSIGNED",
+          "mutate": "pm_has_no_project_scope",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-04-pool-adjustment",
+          "inputs": "same employee/month reconciled components corrected from2400000 to2400101, D9600, minutes600/600/120/8280",
+          "expected": "append company delta101; new targets150007/150006/30001/2070087; old run reversed by stored cents; final total2400101; no extra cost from allocating",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-04-salary-privacy",
+          "inputs": "PM and member attempt component/rate/individual salary reads",
+          "expected": "deny or field-minimize at service/query/export; project aggregate150000 allowed",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-04-capacity",
+          "inputs": "capacity missing/0; minutes9601 with D9600",
+          "expected": "reject final allocation; preserve unallocated salary fact; do not fake capacity",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-05",
+      "coverage": [
+        "P-HOURLY",
+        "C-HOURLY",
+        "TS-H-600"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "TS-H-600"
+          ],
+          "stage_id": "UAT-05-S01",
+          "semantic_operation": "time.confirm_billable",
+          "oracle_inputs": {
+            "time_id": "TS-H-600",
+            "minutes": 480
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BILLABLE-CONFIRM"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "LAB-OCT-A",
+            "TS-H-600"
+          ],
+          "stage_id": "UAT-05-S02",
+          "semantic_operation": "labor.post",
+          "oracle_inputs": {
+            "time_id": "TS-H-600"
+          },
+          "expected": {
+            "company_cost_cents": 2400000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "project_cost_cents": 150000,
+          "nonproject_and_unallocated_cost_cents": 2250000,
+          "command_sample_ids": [
+            "LAB-POST",
+            "LAB-ALLOCATE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "TS-H-600",
+            "C-HOURLY"
+          ],
+          "stage_id": "UAT-05-S03",
+          "semantic_operation": "revenue.recognize",
+          "oracle_inputs": {
+            "contract_id": "C-HOURLY",
+            "minutes": 480,
+            "rate_cents_per_hour": 25000
+          },
+          "expected": {
+            "company_cost_cents": 2400000,
+            "management_revenue_net_cents": 200000,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "project_cost_cents": 150000,
+          "nonproject_and_unallocated_cost_cents": 2250000,
+          "command_sample_ids": [
+            "REV-U05"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-DUP-SOURCE",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-05",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-SOURCE",
+          "mutate": "same_enterprise_purpose_original_namespace_kind_id_detail_period_coverage_already_consumed_even_when_version_channel_or_request_key_changes",
+          "expected": "reject_or_original_result_without_new_financial_effects",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": []
+    },
+    {
+      "id": "UAT-06",
+      "coverage": [
+        "OUT-01",
+        "CP-A-VENDOR"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "OUT-01"
+          ],
+          "stage_id": "UAT-06-S01",
+          "semantic_operation": "commitment.create",
+          "oracle_inputs": {
+            "amount_cents": 100000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": 100000,
+            "remaining_forecast_magnitude_cents": 100000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "estimate_basis": "Separate approved ETC snapshot of remaining accepted-service cost; never copied from AP/AR.",
+          "command_sample_ids": [
+            "OUT-01-DRAFT"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "BANK-U06-PRE"
+          ],
+          "stage_id": "UAT-06-S02",
+          "semantic_operation": "cash.record",
+          "oracle_inputs": {
+            "type": "vendor_prepayment",
+            "amount_cents": 20000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": -20000,
+            "advance_balance_cents": 20000,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": 100000,
+            "remaining_forecast_magnitude_cents": 80000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "estimate_basis": "Separate approved ETC snapshot of remaining accepted-service cost; never copied from AP/AR.",
+          "command_sample_ids": [
+            "BANK-U06-PRE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "OUT-01",
+            "ACC-U06"
+          ],
+          "stage_id": "UAT-06-S03",
+          "semantic_operation": "service.accept",
+          "oracle_inputs": {
+            "amount_cents": 40000
+          },
+          "expected": {
+            "company_cost_cents": 40000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 40000,
+            "net_cash_movement_cents": -20000,
+            "advance_balance_cents": 20000,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": 60000,
+            "remaining_forecast_magnitude_cents": 80000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "estimate_basis": "Separate approved ETC snapshot of remaining accepted-service cost; never copied from AP/AR.",
+          "command_sample_ids": [
+            "ACC-U06-DRAFT",
+            "COST-U06",
+            "SET-U06",
+            "SET-U06-OPEN"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
+          "forecast_components_cents": {
+            "remaining_service": 60000,
+            "payable": 40000,
+            "prepayment_available": -20000
+          }
+        },
+        {
+          "source_ids": [
+            "BANK-U06-PRE",
+            "BANK-U06-TAIL",
+            "ACC-U06"
+          ],
+          "stage_id": "UAT-06-S04",
+          "semantic_operation": "prepayment.clear_and_pay",
+          "oracle_inputs": {
+            "clear_cents": 20000,
+            "pay_cents": 20000
+          },
+          "expected": {
+            "company_cost_cents": 40000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": -40000,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": 60000,
+            "remaining_forecast_magnitude_cents": 60000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "estimate_basis": "Separate approved ETC snapshot of remaining accepted-service cost; never copied from AP/AR.",
+          "command_sample_ids": [
+            "CLEAR-U06-PRE",
+            "BANK-U06-TAIL",
+            "CLEAR-U06-TAIL"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-DUP-SOURCE",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-06",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-SOURCE",
+          "mutate": "same_enterprise_purpose_original_namespace_kind_id_detail_period_coverage_already_consumed_even_when_version_channel_or_request_key_changes",
+          "expected": "reject_or_original_result_without_new_financial_effects",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-06-invoice-later",
+          "inputs": "purchase invoice gross40000 linked after accepted cost40000 and payment40000",
+          "expected": "cost remains40000, cash remains-40000, payable0, remaining service ETC60000",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-07",
+      "coverage": [
+        "SE-10000"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "SE-10000"
+          ],
+          "stage_id": "UAT-07-S01",
+          "semantic_operation": "shared.post",
+          "oracle_inputs": {
+            "amount_cents": 10000
+          },
+          "expected": {
+            "company_cost_cents": 10000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 10000,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 10000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "SHARED-DRAFT",
+            "SHARED-POST",
+            "SET-U07",
+            "SET-U07-OPEN"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "SE-10000"
+          ],
+          "allocation": {
+            "P-FIXED": 3334,
+            "P-HOURLY": 3333,
+            "non_project": 3333
+          },
+          "stage_id": "UAT-07-S02",
+          "semantic_operation": "shared.allocate",
+          "oracle_inputs": {
+            "weights": {
+              "P-FIXED": 1,
+              "P-HOURLY": 1,
+              "non_project": 1
+            }
+          },
+          "expected": {
+            "company_cost_cents": 10000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 10000,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 10000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "SHARED-ALLOCATE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "SE-10000"
+          ],
+          "allocation": {
+            "P-FIXED": 2500,
+            "P-HOURLY": 5000,
+            "non_project": 2500
+          },
+          "stage_id": "UAT-07-S03",
+          "semantic_operation": "shared.reverse_and_reallocate",
+          "oracle_inputs": {
+            "weights": {
+              "P-FIXED": 1,
+              "P-HOURLY": 2,
+              "non_project": 1
+            }
+          },
+          "expected": {
+            "company_cost_cents": 10000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 10000,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 10000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "SHARED-REVERSE",
+            "SHARED-REALLOCATE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-DUP-SOURCE",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-07",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-SOURCE",
+          "mutate": "same_enterprise_purpose_original_namespace_kind_id_detail_period_coverage_already_consumed_even_when_version_channel_or_request_key_changes",
+          "expected": "reject_or_original_result_without_new_financial_effects",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": []
+    },
+    {
+      "id": "UAT-08",
+      "coverage": [
+        "PLAN-U08",
+        "AR-U08"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "PLAN-U08"
+          ],
+          "stage_id": "UAT-08-S01",
+          "semantic_operation": "forecast.condition.create",
+          "oracle_inputs": {
+            "amount_cents": 10000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 10000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [],
+          "procedural_operation": "Approved conditional forecast seed PLAN-U08=10000; no frozen forecast-create command; prepare via future owner service.",
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "PLAN-U08",
+            "AR-U08"
+          ],
+          "stage_id": "UAT-08-S02",
+          "semantic_operation": "settlement.create",
+          "oracle_inputs": {
+            "amount_cents": 6000,
+            "replaces_plan_cents": 6000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 6000,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 10000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "SET-U08",
+            "SET-U08-OPEN",
+            "FORECAST-REPLACE"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "BANK-U08",
+            "AR-U08"
+          ],
+          "stage_id": "UAT-08-S03",
+          "semantic_operation": "cash.record_and_clear",
+          "oracle_inputs": {
+            "amount_cents": 2000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 4000,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 2000,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 8000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U08",
+            "CLEAR-U08"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-DUP-SOURCE",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-08",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-SOURCE",
+          "mutate": "same_enterprise_purpose_original_namespace_kind_id_detail_period_coverage_already_consumed_even_when_version_channel_or_request_key_changes",
+          "expected": "reject_or_original_result_without_new_financial_effects",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-08-partial-replacement",
+          "inputs": "conditional10000 replaced6000, received2000",
+          "expected": "future formal4000+conditional4000=8000; actual2000; never10000+4000",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-09",
+      "coverage": [
+        "BANK-U09-PRE",
+        "AR-U09",
+        "BANK-U09-RETURN"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "BANK-U09-PRE",
+            "BANK-U09-REFUND"
+          ],
+          "stage_id": "UAT-09-S01",
+          "semantic_operation": "cash.record_and_refund",
+          "oracle_inputs": {
+            "prepayment_cents": 31800,
+            "refund_cents": 10000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 21800,
+            "advance_balance_cents": 21800,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U09-PRE",
+            "REFUND-U09"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "AR-U09",
+            "BANK-U09-REC",
+            "BANK-U09-RETURN"
+          ],
+          "stage_id": "UAT-09-S02",
+          "semantic_operation": "cash.return_cleared_receipt",
+          "oracle_inputs": {
+            "original_receipt_cents": 10000,
+            "return_cents": 3000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 3000,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 28800,
+            "advance_balance_cents": 21800,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 3000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "cash_equation_cents": [
+            31800,
+            -10000,
+            10000,
+            -3000
+          ],
+          "command_sample_ids": [
+            "BANK-U09-REC",
+            "RETURN-U09"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
+          "seed_before_stage": "Create and approve settlement10000/AR-U09, record BANK-U09-REC10000 and clear it fully before returning3000; first branch cash21800 is retained."
+        }
+      ],
+      "negative": [
+        "R-DUP-RETURN",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-09",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-RETURN",
+          "mutate": "original_receipt_return_already_effective",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-09-receipt-prerequisite",
+          "inputs": "before return, original settlement10000 and receipt10000 must already be cleared",
+          "expected": "cash prior refund branch21800+10000=31800; receivable0; return3000 -> cash28800, receivable3000; no automatic revenue reversal",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-10",
+      "coverage": [
+        "C-FIXED",
+        "P-FIXED"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "C-FIXED",
+            "FUL-U10"
+          ],
+          "stage_id": "UAT-10-S01",
+          "semantic_operation": "revenue.recognize",
+          "oracle_inputs": {
+            "net_cents": 100000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 100000,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "FUL-U10",
+            "FUL-U10-CONFIRM",
+            "REV-U10"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "C-FIXED",
+            "SET-U10"
+          ],
+          "stage_id": "UAT-10-S02",
+          "semantic_operation": "settlement.create",
+          "oracle_inputs": {
+            "main_net_cents": 90000,
+            "retention_net_cents": 10000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 100000,
+            "receivable_gross_cents": 106000,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 106000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "SET-U10-MAIN",
+            "SET-U10-MAIN-OPEN",
+            "SET-U10-RET",
+            "SET-U10-RET-OPEN"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "BANK-U10-MAIN",
+            "SET-U10"
+          ],
+          "stage_id": "UAT-10-S03",
+          "semantic_operation": "cash.record_and_clear",
+          "oracle_inputs": {
+            "main_gross_cents": 95400
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 100000,
+            "receivable_gross_cents": 10600,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 95400,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 10600
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U10-MAIN",
+            "CLEAR-U10"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "assertions": {
+        "retention_not_overdue_before": "2027-10-31",
+        "business_close_permitted": true
+      },
+      "negative": [
+        "R-OVER-CLEAR",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-10",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-OVER-CLEAR",
+          "mutate": "clearance_exceeds_cash_available_or_open_item_balance",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-10-business-close",
+          "inputs": "after main receipt95400 with retention10600 due2027-10-31",
+          "expected": "business close allowed; not overdue at2026-10-31; unclosed financial retention remains10600",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-10-late-receipt",
+          "inputs": "advance business clock to2027-10-31; record retained10600 then clear and archive",
+          "expected": "cumulative cash106000; receivable0; revenue100000 unchanged; original final archive remains append-only",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-11",
+      "coverage": [
+        "REV-U11-I",
+        "REV-U11-S",
+        "INV-SALES-01",
+        "CN-SALES-01"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "REV-U11-I"
+          ],
+          "stage_id": "UAT-11-S01",
+          "semantic_operation": "revenue_then_settlement",
+          "oracle_inputs": {
+            "net_cents": 10000,
+            "gross_cents": 10600
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 10000,
+            "receivable_gross_cents": 10600,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 10600
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "REV-U11-I",
+            "SET-U11-I",
+            "SET-U11-I-OPEN"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "REV-U11-S"
+          ],
+          "stage_id": "UAT-11-S02",
+          "semantic_operation": "settlement_then_revenue",
+          "oracle_inputs": {
+            "net_cents": 10000,
+            "gross_cents": 10600
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 20000,
+            "receivable_gross_cents": 21200,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 21200
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "SET-U11-S",
+            "SET-U11-S-OPEN",
+            "REV-U11-S"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "INV-SALES-01",
+            "CN-SALES-01"
+          ],
+          "stage_id": "UAT-11-S03",
+          "semantic_operation": "invoice_and_credit_note.link",
+          "oracle_inputs": {
+            "invoice": "INV-SALES-01",
+            "credit_note": "CN-SALES-01"
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 20000,
+            "receivable_gross_cents": 21200,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 21200
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "INVOICE-U11",
+            "INVOICE-REVERSE-U11"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-DUP-SOURCE",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-11",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-SOURCE",
+          "mutate": "same_enterprise_purpose_original_namespace_kind_id_detail_period_coverage_already_consumed_even_when_version_channel_or_request_key_changes",
+          "expected": "reject_or_original_result_without_new_financial_effects",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-11-independent-coverages",
+          "inputs": "FUL-U11-I covers milestone0..1000 basis points; FUL-U11-S covers1000..2000",
+          "expected": "two non-overlapping net10000 performance facts; final revenue20000; both settlements21200 gross",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-11-match",
+          "inputs": "link both recognized sources to corresponding settlement sources",
+          "expected": "matched net20000; no second revenue or receivable; invoice and credit note do not create refund",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-12",
+      "coverage": [
+        "OPEN-20260831",
+        "P-LEGACY"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "OPEN-20260831"
+          ],
+          "stage_id": "UAT-12-S01",
+          "semantic_operation": "opening.load",
+          "oracle_inputs": {
+            "coverage_id": "OPEN-20260831"
+          },
+          "expected": {
+            "company_cost_cents": 200000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 50000,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 50000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "OPEN-DRAFT",
+            "OPEN-COMMIT"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
+          "expected_account_balance_with_declared_opening_cents": 100000
+        },
+        {
+          "source_ids": [
+            "OPEN-20260831",
+            "CSV-HIST-COST"
+          ],
+          "stage_id": "UAT-12-S02",
+          "semantic_operation": "historical_detail.import",
+          "oracle_inputs": {
+            "period": "covered",
+            "cutoff_date": "2026-08-31",
+            "historical_source_date": "2026-08-08",
+            "cost_cents": 10000,
+            "already_in_opening_cost_cents": 200000,
+            "settled_before_cutoff": true
+          },
+          "expected": {
+            "company_cost_cents": 200000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 50000,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 50000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [],
+          "procedural_operation": "Preview historical-costs.csv inside covered cost range through2026-08-31; reject duplicate posting or reference-only, no new cost/payable/cash. Historical10000 is already included in brought-forward200000 and was paid before cutoff.",
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
+          "expected_account_balance_with_declared_opening_cents": 100000
+        },
+        {
+          "source_ids": [
+            "BANK-U12",
+            "OPEN-20260831"
+          ],
+          "stage_id": "UAT-12-S03",
+          "semantic_operation": "cash.record_and_clear",
+          "oracle_inputs": {
+            "amount_cents": 50000
+          },
+          "expected": {
+            "company_cost_cents": 200000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 50000,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 0
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U12",
+            "CLEAR-U12"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
+          "expected_account_balance_with_declared_opening_cents": 150000
+        }
+      ],
+      "negative": [
+        "R-DUP-SOURCE",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-12",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": "OPEN-20260831",
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-SOURCE",
+          "mutate": "same_enterprise_purpose_original_namespace_kind_id_detail_period_coverage_already_consumed_even_when_version_channel_or_request_key_changes",
+          "expected": "reject_or_original_result_without_new_financial_effects",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-12-new-period-is-not-overlap",
+          "inputs": {
+            "file_id": "CSV-AP-NORMAL",
+            "source_date": "2026-10-08",
+            "opening_cutoff": "2026-08-31"
+          },
+          "expected": "Do not reject this later-period row solely for opening-period overlap; apply ordinary permissions/source/period/approval checks. Separate fresh branch; not posted by S02.",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-13",
+      "coverage": [
+        "BA-A-OPER",
+        "BA-A-SAV",
+        "BANK-U13",
+        "BANK-U13-UNMATCHED"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "BANK-U13"
+          ],
+          "stage_id": "UAT-13-S01",
+          "semantic_operation": "cash.record_fee_net",
+          "oracle_inputs": {
+            "gross_cents": 10000,
+            "fee_cents": 100,
+            "net_cents": 9900
+          },
+          "expected": {
+            "company_cost_cents": 100,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 9900,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U13",
+            "BANK-U13-FEE",
+            "BANK-FEE-COST"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "BANK-U13-XFER"
+          ],
+          "stage_id": "UAT-13-S02",
+          "semantic_operation": "cash.internal_transfer",
+          "oracle_inputs": {
+            "amount_cents": 25000,
+            "from": "BA-A-OPER",
+            "to": "BA-A-SAV"
+          },
+          "expected": {
+            "company_cost_cents": 100,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 9900,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U13-XFER-OUT",
+            "BANK-U13-XFER-IN"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness.",
+          "atomicity_requirement": "Two leg envelopes illustrate field shapes only. Future internal-transfer owner must link and commit both legs atomically; two unrelated record commands are insufficient."
+        },
+        {
+          "source_ids": [
+            "BANK-U13-UNMATCHED"
+          ],
+          "stage_id": "UAT-13-S03",
+          "semantic_operation": "cash.record_unmatched",
+          "oracle_inputs": {
+            "amount_cents": 700
+          },
+          "expected": {
+            "company_cost_cents": 100,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 10600,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "BANK-U13-UNMATCHED"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-DUP-CASH",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-13",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-CASH",
+          "mutate": "bank_source_already_registered",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-13-multi-project",
+          "inputs": "one bank inflow10000, allocate6000 to P-FIXED +4000 P-HOURLY; fee100 to P-FIXED",
+          "expected": "source cash10000 once, allocation total10000; net company9900 after separate fee; do not add allocations as bank entries",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-13-transfer",
+          "inputs": "25000 between operating and savings with synthetic opening account coverage>=25000",
+          "expected": "two linked legs -25000/+25000; company net0; account balances each reflect leg; not two unrelated ordinary receipts",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-13-payroll-and-unmatched",
+          "inputs": "payroll1200000 independently after prior10600 cumulative bank movement",
+          "expected": "new cash cumulative-1189400; fee cost remains100; unclassified700 remains visible, not silently project revenue",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-14",
+      "coverage": [
+        "AR-U14",
+        "SE-SEP-10000",
+        "2026-09"
+      ],
+      "requires": "real PostgreSQL two independent connections and deterministic barrier",
+      "steps": [
+        {
+          "source_ids": [
+            "AR-U14"
+          ],
+          "stage_id": "UAT-14-S01",
+          "semantic_operation": "parallel.clear",
+          "oracle_inputs": {
+            "competing_cleared_cents": [
+              8000,
+              8000
+            ],
+            "single_existing_cash_cents": 10000,
+            "receivable_gross_cents": 10000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 2000,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 10000,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 2000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "CONCURRENT-CLEAR-A",
+            "CONCURRENT-CLEAR-B"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "2026-09",
+            "SE-SEP-10000"
+          ],
+          "stage_id": "UAT-14-S02",
+          "semantic_operation": "parallel.lock_and_post",
+          "oracle_inputs": {
+            "period": "2026-09",
+            "scheduled_winner": "close",
+            "barrier": "closer locks company row first; poster signals ready before close commit, then poster acquires lock and must recheck September closed",
+            "cost_source": "SE-SEP-10000",
+            "amount_cents": 10000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 2000,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 10000,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 2000
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "PERIOD-CLOSE",
+            "PERIOD-RACE-SEP-POST"
+          ],
+          "expected_command_results": "Close-wins branch: close commits at declared watermark, September post rechecks under same company lock and rejects with zero new cost/ledger/outbox. Cash/open-item state remains after S01.",
+          "alternative_branches": [
+            {
+              "id": "UAT-14-S02-post-wins",
+              "reset_to": "state immediately before S02; independent execution from close-wins branch",
+              "barrier": "poster holds company lock first and commits September10000; closer then acquires and revalidates watermark",
+              "expected": {
+                "company_cost_cents": 10000,
+                "management_revenue_net_cents": 0,
+                "receivable_gross_cents": 2000,
+                "payable_gross_cents": 0,
+                "net_cash_movement_cents": 10000,
+                "advance_balance_cents": 0,
+                "unconsumed_prepaid_service_cents": 0,
+                "etc_cost_cents": null,
+                "remaining_forecast_magnitude_cents": 2000
+              },
+              "close_behavior": "First old expected_last_event_id must conflict after new posting; read fresh preflight/watermark and close by authorized command. Posted event belongs to final close watermark. Never assert unchanged stale close command succeeds.",
+              "execution_status": "not_run"
+            }
+          ]
+        }
+      ],
+      "negative": [
+        "R-OVER-CLEAR",
+        "R-CLOSED-PERIOD",
+        "R-DUP-RETURN",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-14",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ],
+        "preexisting_cash_receipt_cents": 10000,
+        "preexisting_receivable_cents": 10000,
+        "preexisting_cash_source": {
+          "namespace": "cash",
+          "kind": "cash_transaction",
+          "id": "BANK-U14",
+          "version": 1
+        },
+        "preexisting_open_item": {
+          "namespace": "settlement",
+          "kind": "open_item",
+          "id": "AR-U14",
+          "version": 1
+        }
+      },
+      "rejection_cases": [
+        {
+          "id": "R-OVER-CLEAR",
+          "mutate": "clearance_exceeds_cash_available_or_open_item_balance",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-CLOSED-PERIOD",
+          "mutate": "posting_period_locked",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-DUP-RETURN",
+          "mutate": "original_receipt_return_already_effective",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-14-approval-race",
+          "inputs": "two separate PG connections approve same salary/source with barrier",
+          "expected": "one effective financial source, second returns original/conflict; company cost2400000 once",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-14-clearance-race",
+          "inputs": "open item10000, same available bank source10000; two requests8000 simultaneously",
+          "expected": "one8000 clearance, remaining2000; one original bank fact10000; residual cash2000 stays unallocated",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-14-refund-race",
+          "inputs": "two refunds8000 against original advance10000",
+          "expected": "at most8000 valid refund, remaining2000; losing transaction rolls back all cross-domain facts",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-14-allocation-race",
+          "inputs": "two allocations same cost/policy/input version with barrier",
+          "expected": "one effective run; no cost duplication; original/negative targets preserved",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-14-period-race",
+          "inputs": "company-lock barrier: close September competes with September posting",
+          "expected": "either post commits before close and enters close watermark, or close wins and post rejected entirely; no write after close",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-14-rollback",
+          "inputs": "injected failure after facts before outbox commit",
+          "expected": "all facts/ledger/bridges/outbox rollback, audit/integrity valid; query same idempotency key before retry",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-15",
+      "coverage": [
+        "ENT-A",
+        "ENT-B",
+        "P-FIXED",
+        "P-B-PRIVATE",
+        "C-B-PRIVATE"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "ENT-A"
+          ],
+          "stage_id": "UAT-15-S01",
+          "semantic_operation": "authorized_finance_read_and_rejection_checks",
+          "oracle_inputs": {
+            "actor": "U-A-FIN-2",
+            "enterprise": "ENT-A"
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [],
+          "procedural_operation": "Authenticated finance query followed by PM/member/disabled/cross-tenant requests at all read/export/evidence entry points.",
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-UNASSIGNED",
+        "R-DISABLED",
+        "R-CROSS-TENANT",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-15",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-UNASSIGNED",
+          "mutate": "pm_has_no_project_scope",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-DISABLED",
+          "mutate": "identity_or_employee_inactive_on_business_date",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-CROSS-TENANT",
+          "mutate": "referenced_object_enterprise_differs_from_actor_enterprise",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-15-all-entrypoints",
+          "inputs": "pages/API/CSV/export/attachment/admin with ENT-A token targeting ENT-B",
+          "expected": "deny without existence disclosure; financial state unchanged",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-15-role-revoke",
+          "inputs": "old session/PAT of PM reassigned to member, then retry cached action",
+          "expected": "reauthorize each service call; deny elevated action",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-15-employee-inactive",
+          "inputs": "employee leaving before selected business day",
+          "expected": "reject new facts on inactive day; authorized historical reads retained",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-15-plugin-disable",
+          "inputs": "disable owner business plugin then read/write/import/admin route",
+          "expected": "all owner service entry points gate new work; historical and queued records retained, dependencies checked",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-16",
+      "coverage": [
+        "ATT-RESTORE",
+        "ENT-A"
+      ],
+      "requires": "authorized Linux/PG target environment only",
+      "steps": [
+        {
+          "source_ids": [
+            "ATT-RESTORE"
+          ],
+          "stage_id": "UAT-16-S01",
+          "semantic_operation": "backup.restore.verify",
+          "oracle_inputs": {
+            "attachment_id": "ATT-RESTORE"
+          },
+          "expected": {
+            "company_cost_cents": null,
+            "management_revenue_net_cents": null,
+            "receivable_gross_cents": null,
+            "payable_gross_cents": null,
+            "net_cash_movement_cents": null,
+            "advance_balance_cents": null,
+            "unconsumed_prepaid_service_cents": null,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": null
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [],
+          "procedural_operation": "Authorized Linux/PG database+nonempty attachment backup/restore procedure; not a business JSON command.",
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-HASH",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-16",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-HASH",
+          "mutate": "stored_attachment_sha256_differs_from_restored_bytes",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-16-restore-chain",
+          "inputs": "Linux/PG target with business chain and each nonempty synthetic attachment; snapshot database+assets+configuration refs",
+          "expected": "isolated restore then real login, role checks, reports, source hashes and attachment bytes; measure RPO/RTO; keep target authorization/evidence separately",
+          "execution_status": "not_run"
+        },
+        {
+          "id": "UAT-16-failure-recovery",
+          "inputs": "interrupt upgrade and repeat; attempt old code compatibility rollback only after compatibility proof",
+          "expected": "preserve original58 cents, source PK and audit chain; no trigger disable, no balance edits, no fake AccountingEvent for legacy",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-17",
+      "coverage": [
+        "EXP-TAX-UNKNOWN",
+        "ATT-EXPENSE"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "EXP-TAX-UNKNOWN",
+            "ATT-EXPENSE"
+          ],
+          "stage_id": "UAT-17-S01",
+          "semantic_operation": "expense.post_unknown_tax",
+          "oracle_inputs": {
+            "gross_cents": 10600
+          },
+          "expected": {
+            "company_cost_cents": 10600,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 10600,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 10600
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "TAX-UNKNOWN-DRAFT",
+            "TAX-UNKNOWN-POST",
+            "SET-U17",
+            "SET-U17-OPEN"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "EXP-TAX-UNKNOWN"
+          ],
+          "stage_id": "UAT-17-S02",
+          "semantic_operation": "expense.open_period_tax_adjust",
+          "oracle_inputs": {
+            "cost_delta_cents": -600,
+            "tax_delta_cents": 600
+          },
+          "expected": {
+            "company_cost_cents": 10000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 10600,
+            "net_cash_movement_cents": 0,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 0,
+            "etc_cost_cents": null,
+            "remaining_forecast_magnitude_cents": 10600
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "command_sample_ids": [
+            "PERIOD-CLOSE",
+            "TAX-ADJUST"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-CLOSED-PERIOD",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-17",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ],
+        "periods": {
+          "2026-09": "initially open for S01; close after S01",
+          "2026-10": "open for S02 adjustment"
+        }
+      },
+      "rejection_cases": [
+        {
+          "id": "R-CLOSED-PERIOD",
+          "mutate": "posting_period_locked",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-17-tax-posting-date",
+          "inputs": "expense actual2026-09-15 in initially open September; lock September only after expense posted; adjustment in October",
+          "expected": "original10600 cost remains; append-600 cost/+600 tax; effective cost10000 and AP10600; no cash delta",
+          "execution_status": "not_run"
+        }
+      ]
+    },
+    {
+      "id": "UAT-18",
+      "coverage": [
+        "PREPAID-ANNUAL",
+        "P-SERVICE"
+      ],
+      "steps": [
+        {
+          "source_ids": [
+            "PREPAID-ANNUAL",
+            "BANK-U18"
+          ],
+          "stage_id": "UAT-18-S01",
+          "semantic_operation": "cash.record_prepaid_service",
+          "oracle_inputs": {
+            "amount_cents": 120000
+          },
+          "expected": {
+            "company_cost_cents": 0,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": -120000,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 120000,
+            "etc_cost_cents": 120000,
+            "remaining_forecast_magnitude_cents": 0
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "estimate_basis": "Separate approved ETC snapshot of remaining accepted-service cost; never copied from AP/AR.",
+          "command_sample_ids": [
+            "PREPAID-DRAFT",
+            "BANK-U18"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        },
+        {
+          "source_ids": [
+            "PREPAID-ANNUAL"
+          ],
+          "stage_id": "UAT-18-S02",
+          "semantic_operation": "prepaid_service.consume",
+          "oracle_inputs": {
+            "period": "2026-10",
+            "amount_cents": 10000
+          },
+          "expected": {
+            "company_cost_cents": 10000,
+            "management_revenue_net_cents": 0,
+            "receivable_gross_cents": 0,
+            "payable_gross_cents": 0,
+            "net_cash_movement_cents": -120000,
+            "advance_balance_cents": 0,
+            "unconsumed_prepaid_service_cents": 110000,
+            "etc_cost_cents": 110000,
+            "remaining_forecast_magnitude_cents": 0
+          },
+          "state_observation": {
+            "as_of_date": "2026-10-31",
+            "scope": "ENT-A scenario coverage only",
+            "currency": "CNY",
+            "effective_adjustments": true,
+            "watermark": "after this stage commit; future product evidence required"
+          },
+          "approval_requirement": "Drafts require submit and independent reviewer; referenced seed sources already approved at declared version.",
+          "estimate_basis": "Separate approved ETC snapshot of remaining accepted-service cost; never copied from AP/AR.",
+          "command_sample_ids": [
+            "PREPAID-CONSUME"
+          ],
+          "expected_command_results": "After future execution compare receipts, immutable source/ledger/audit/outbox and query watermarks; these sample ids are schema examples only, not an executable product harness."
+        }
+      ],
+      "negative": [
+        "R-DUP-SOURCE",
+        "R-FUTURE-DATE",
+        "R-STALE-VERSION"
+      ],
+      "base_id": "BASE-UAT-18",
+      "execution_status": "not_run",
+      "reset_policy": "Fresh isolated seed; never inherit another UAT mutations",
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      },
+      "rejection_cases": [
+        {
+          "id": "R-DUP-SOURCE",
+          "mutate": "same_enterprise_purpose_original_namespace_kind_id_detail_period_coverage_already_consumed_even_when_version_channel_or_request_key_changes",
+          "expected": "reject_or_original_result_without_new_financial_effects",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-FUTURE-DATE",
+          "mutate": "actual date later than fixed as_of",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        },
+        {
+          "id": "R-STALE-VERSION",
+          "mutate": "source expected version differs under company lock",
+          "expected": "reject",
+          "after": "same ledger/source-consumption/bridge/balance state as immediately before request; authorization failures disclose no object or evidence"
+        }
+      ],
+      "additional_cases": [
+        {
+          "id": "UAT-18-twelve-periods",
+          "inputs": "approved monthly consumption10000 for12 nonoverlapping months; full payment120000 first",
+          "expected": "month1 cost10000 unconsumed110000 future payable0; month12 cost120000 unconsumed0; no upfront full cost",
+          "execution_status": "not_run"
+        }
+      ]
+    }
+  ],
+  "specialized_not_directly_uat": [
+    {
+      "id": "SPEC-ACTIVATION",
+      "source_coverage": [
+        "U-A-MEMBER"
+      ],
+      "expected": {
+        "one_time_first": "accepted",
+        "reuse": "R-DUP-SOURCE",
+        "expired": "reject_activation_token_expired"
+      }
+    },
+    {
+      "id": "SPEC-ADVANCE",
+      "source_coverage": [
+        "E-A-ALICE"
+      ],
+      "states": [
+        {
+          "advance": 10000,
+          "cost": 0,
+          "cash": -10000
+        },
+        {
+          "advance": 2000,
+          "cost": 8000,
+          "payable": 8000,
+          "cash": -10000
+        },
+        {
+          "advance": 2000,
+          "cost": 8000,
+          "payable": 0,
+          "cash": -10000
+        },
+        {
+          "advance": 0,
+          "cost": 8000,
+          "payable": 0,
+          "cash": -8000
+        }
+      ],
+      "negative": [
+        "R-DUP-SOURCE"
+      ]
+    },
+    {
+      "id": "SPEC-ROLE-REVOCATION",
+      "expected": "old_session_must_reauthorize_and_be_rejected"
+    },
+    {
+      "id": "SPEC-CSV-IDEMPOTENCY",
+      "source_coverage": [
+        "CSV-AP-NORMAL",
+        "CSV-AP-REORDERED",
+        "CSV-AP-CONFLICT"
+      ],
+      "expected": {
+        "normal": "created",
+        "reordered": "return_existing",
+        "conflict": "R-IDEMPOTENCY-CONFLICT"
+      }
+    },
+    {
+      "id": "SPEC-ROUNDING-10001",
+      "source_coverage": [
+        "SE-10001"
+      ],
+      "expected": {
+        "allocations": [
+          3334,
+          3334,
+          3333
+        ],
+        "sum": 10001
+      }
+    },
+    {
+      "id": "SPEC-SERVICE-REVENUE",
+      "command_sample_ids": [
+        "SERVICE-CONFIRM-DRAFT",
+        "REV-SERVICE-OCT"
+      ],
+      "expected_net_revenue_cents": 10000,
+      "negative": [
+        "R-POLICY",
+        "R-COVERAGE"
+      ],
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SPEC-MONTHLY-ROUNDING",
+      "inputs": {
+        "pool_cents": 101,
+        "capacity_minutes": 60,
+        "target_minutes": {
+          "P-FIXED": 3,
+          "P-HOURLY": 31,
+          "unallocated": 26
+        }
+      },
+      "expected_allocation_cents": {
+        "P-FIXED": 5,
+        "P-HOURLY": 52,
+        "unallocated": 44
+      },
+      "legacy_original_lines_cents": [
+        2,
+        2,
+        2,
+        52
+      ],
+      "legacy_total_cents": 58,
+      "negative": [
+        "R-POOL-CAPACITY",
+        "R-DUP-METHOD"
+      ],
+      "execution_status": "not_run"
+    }
+  ],
+  "declared_source_ids": [
+    "CL-FIXED",
+    "CL-HOURLY",
+    "CL-SERVICE",
+    "CL-B-PRIVATE",
+    "LAB-OCT-A",
+    "TS-F-600",
+    "TS-H-600",
+    "TS-NP-120",
+    "BANK-U04-PAY",
+    "BILLABLE-U05",
+    "BANK-U03-PRE",
+    "FUL-U03",
+    "SET-U03",
+    "AR-U03",
+    "BANK-U03-REC",
+    "BANK-U06-PRE",
+    "OUT-01",
+    "ACC-U06",
+    "SET-U06",
+    "AP-U06",
+    "BANK-U06-TAIL",
+    "SE-10000",
+    "SET-U07",
+    "SHARED-BASIS-V1",
+    "SHARED-BASIS-V2",
+    "FUL-U08",
+    "SET-U08",
+    "PLAN-U08",
+    "BANK-U08",
+    "AR-U08",
+    "BANK-U09-PRE",
+    "BANK-U09-REC",
+    "FUL-U10",
+    "SET-U10-MAIN",
+    "SET-U10-RET",
+    "BANK-U10-MAIN",
+    "AR-U10-MAIN",
+    "FUL-U11-I",
+    "SET-U11-I",
+    "FUL-U11-S",
+    "SET-U11-S",
+    "INV-SALES-01",
+    "BANK-U12",
+    "AR-OPEN",
+    "BANK-U13",
+    "BANK-U13-FEE",
+    "EXP-BANK-FEE",
+    "BANK-U13-XFER-OUT",
+    "BANK-U13-XFER-IN",
+    "BANK-U13-UNMATCHED",
+    "BANK-U14-A",
+    "AR-U14",
+    "BANK-U14-B",
+    "EXP-TAX-UNKNOWN",
+    "EVT-TAX-UNKNOWN",
+    "BANK-U18",
+    "PREPAID-ANNUAL",
+    "SERVICE-OCT",
+    "ENT-A",
+    "ENT-B",
+    "P-FIXED",
+    "P-HOURLY",
+    "P-SERVICE",
+    "P-LEGACY",
+    "P-B-PRIVATE",
+    "C-FIXED",
+    "C-HOURLY",
+    "C-SERVICE",
+    "C-B-PRIVATE",
+    "CHG-F-01",
+    "SE-10001",
+    "OPEN-20260831",
+    "ATT-CONTRACT",
+    "ATT-EXPENSE",
+    "ATT-RESTORE",
+    "CSV-AP-NORMAL",
+    "CN-SALES-01",
+    "BANK-U09-REFUND",
+    "AR-U09",
+    "BANK-U09-RETURN",
+    "SET-U10",
+    "REV-U11-I",
+    "REV-U11-S",
+    "BA-A-OPER",
+    "BA-A-SAV",
+    "BANK-U13-XFER",
+    "2026-09",
+    "CP-A-VENDOR",
+    "BANK-U14",
+    "SET-U17"
+  ],
+  "confirmed_contract_measurement_policy": {
+    "scope": "one formal contract maps to one project",
+    "fixed_milestone": "recognize management revenue only from approved acceptance",
+    "confirmed_time": "recognize management revenue only from customer-confirmed billable minutes",
+    "fixed_service_period": "recognize management revenue only from confirmed service-period coverage",
+    "configuration": "parameters are customer onboarding policy configuration captured by policy version",
+    "separation": "settlement, invoicing and receipts create/match open-item, invoice and cash facts; none independently creates duplicate management revenue"
+  },
+  "boundary_counterexamples": [
+    {
+      "id": "BND-01",
+      "case": "UAT-03 branch accidentally includes CHG-F-01 or UAT-10 retention as new contract value",
+      "must_reject_or_prevent": "branch base is C-FIXED approved version before CHG-F-01; retention splits existing 100000 net, so revenue cannot exceed the selected contract version"
+    },
+    {
+      "id": "BND-02",
+      "case": "UAT-12 imports covered historical detail after opening balance",
+      "must_reject_or_reference_only": "same project/category/period coverage intersects OPEN-20260831; no new cost event"
+    },
+    {
+      "id": "BND-03",
+      "case": "integer state uses amount=100 without semantic unit",
+      "must_reject": "schema requires named *_cents field; no unit guessing"
+    },
+    {
+      "id": "BND-04",
+      "case": "ENT-A actor supplies P-B-PRIVATE or C-B-PRIVATE ID",
+      "must_return": "permission_denied or not_found under frozen hiding policy, with no disclosure or business-side effect"
+    },
+    {
+      "id": "BND-05",
+      "case": "reordered CSV same key is treated as different solely due column order",
+      "must_return": "existing result after canonical content normalization; changed amount must be idempotency_conflict"
+    },
+    {
+      "id": "BND-06",
+      "case": "UAT-14 runs against SQLite/single connection",
+      "must_mark": "not_run/blocked for PG concurrency evidence, never pass"
+    }
+  ],
+  "later_product_validation_required": [
+    "All eighteen UAT business executions, receipts and real query snapshots remain not_run.",
+    "All service rejection/state/permission/atomicity/idempotency rules remain not_run; schema rejection is separate.",
+    "UAT14 real PostgreSQL multi-connection with deterministic barriers; UAT16 authorized Linux/PG database+attachments restore and measured RPO/RTO.",
+    "Upgrade rehearsal of new migrations, old-entry/source/audit comparison, repeat upgrade, interruption recovery, cutover and rollback remain not_run.",
+    "1440/390 browser, keyboard/focus, empty/error/loading/unavailable and overflow remain not_run."
+  ],
+  "status": "preparation_fixture_only",
+  "contract_baseline": "573ac46",
+  "primary_roles": [
+    "owner",
+    "finance",
+    "pm",
+    "member"
+  ],
+  "bases": [
+    {
+      "id": "BASE-UAT-01",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-02",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-03",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-04",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-05",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-06",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-07",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-08",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-09",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-10",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-11",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-12",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": "OPEN-20260831",
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-13",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-14",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 10000,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 10000,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ],
+        "preexisting_cash_receipt_cents": 10000,
+        "preexisting_receivable_cents": 10000,
+        "preexisting_cash_source": {
+          "namespace": "cash",
+          "kind": "cash_transaction",
+          "id": "BANK-U14",
+          "version": 1
+        },
+        "preexisting_open_item": {
+          "namespace": "settlement",
+          "kind": "open_item",
+          "id": "AR-U14",
+          "version": 1
+        }
+      }
+    },
+    {
+      "id": "BASE-UAT-15",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-16",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    },
+    {
+      "id": "BASE-UAT-17",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ],
+        "periods": {
+          "2026-09": "initially open for S01; close after S01",
+          "2026-10": "open for S02 adjustment"
+        }
+      }
+    },
+    {
+      "id": "BASE-UAT-18",
+      "financial_state": {
+        "company_cost_cents": 0,
+        "management_revenue_net_cents": 0,
+        "receivable_gross_cents": 0,
+        "payable_gross_cents": 0,
+        "net_cash_movement_cents": 0,
+        "advance_balance_cents": 0,
+        "unconsumed_prepaid_service_cents": 0,
+        "etc_cost_cents": null,
+        "remaining_forecast_magnitude_cents": null
+      },
+      "seed_manifest": {
+        "enterprise_ids": [
+          "ENT-A",
+          "ENT-B"
+        ],
+        "financial_opening": null,
+        "contract_version": "C-FIXED-v1",
+        "excluded": [
+          "CHG-F-01 approval except UAT-02",
+          "all other UAT bank/settlement/fulfillment mutations"
+        ]
+      }
+    }
+  ],
+  "source_registry": [
+    {
+      "label": "CL-FIXED",
+      "object": "ContractLine",
+      "source": {
+        "namespace": "contracts",
+        "kind": "contract_line",
+        "id": "CL-FIXED",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "CL-HOURLY",
+      "object": "ContractLine",
+      "source": {
+        "namespace": "contracts",
+        "kind": "contract_line",
+        "id": "CL-HOURLY",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "CL-SERVICE",
+      "object": "ContractLine",
+      "source": {
+        "namespace": "contracts",
+        "kind": "contract_line",
+        "id": "CL-SERVICE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "CL-B-PRIVATE",
+      "object": "ContractLine",
+      "source": {
+        "namespace": "contracts",
+        "kind": "contract_line",
+        "id": "CL-B-PRIVATE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "LAB-OCT-A",
+      "object": "SalaryPool",
+      "source": {
+        "namespace": "costing",
+        "kind": "salary_pool",
+        "id": "LAB-OCT-A",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "TS-F-600",
+      "object": "Timesheet",
+      "source": {
+        "namespace": "time",
+        "kind": "timesheet",
+        "id": "TS-F-600",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "TS-H-600",
+      "object": "Timesheet",
+      "source": {
+        "namespace": "time",
+        "kind": "timesheet",
+        "id": "TS-H-600",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "TS-NP-120",
+      "object": "Timesheet",
+      "source": {
+        "namespace": "time",
+        "kind": "timesheet",
+        "id": "TS-NP-120",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U04-PAY",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U04-PAY",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BILLABLE-U05",
+      "object": "BillableConfirmation",
+      "source": {
+        "namespace": "time",
+        "kind": "billable_confirmation",
+        "id": "BILLABLE-U05",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U03-PRE",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U03-PRE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "FUL-U03",
+      "object": "Acceptance",
+      "source": {
+        "namespace": "delivery",
+        "kind": "acceptance",
+        "id": "FUL-U03",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U03",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U03",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "AR-U03",
+      "object": "OpenItem",
+      "source": {
+        "namespace": "settlement",
+        "kind": "open_item",
+        "id": "AR-U03",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U03-REC",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U03-REC",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U06-PRE",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U06-PRE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "OUT-01",
+      "object": "SpendCommitment",
+      "source": {
+        "namespace": "costing",
+        "kind": "spend_commitment",
+        "id": "OUT-01",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "ACC-U06",
+      "object": "SpendAcceptance",
+      "source": {
+        "namespace": "costing",
+        "kind": "spend_acceptance",
+        "id": "ACC-U06",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U06",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U06",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "AP-U06",
+      "object": "OpenItem",
+      "source": {
+        "namespace": "settlement",
+        "kind": "open_item",
+        "id": "AP-U06",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U06-TAIL",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U06-TAIL",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SE-10000",
+      "object": "ExpenseClaim",
+      "source": {
+        "namespace": "costing",
+        "kind": "expense_claim",
+        "id": "SE-10000",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U07",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U07",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SHARED-BASIS-V1",
+      "object": "CostPolicy",
+      "source": {
+        "namespace": "costing",
+        "kind": "cost_policy",
+        "id": "SHARED-BASIS-V1",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SHARED-BASIS-V2",
+      "object": "CostPolicy",
+      "source": {
+        "namespace": "costing",
+        "kind": "cost_policy",
+        "id": "SHARED-BASIS-V2",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "FUL-U08",
+      "object": "Acceptance",
+      "source": {
+        "namespace": "delivery",
+        "kind": "acceptance",
+        "id": "FUL-U08",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U08",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U08",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "PLAN-U08",
+      "object": "ForecastCoverage",
+      "source": {
+        "namespace": "cash",
+        "kind": "forecast_coverage",
+        "id": "PLAN-U08",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U08",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U08",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "AR-U08",
+      "object": "OpenItem",
+      "source": {
+        "namespace": "settlement",
+        "kind": "open_item",
+        "id": "AR-U08",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U09-PRE",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U09-PRE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U09-REC",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U09-REC",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "FUL-U10",
+      "object": "Acceptance",
+      "source": {
+        "namespace": "delivery",
+        "kind": "acceptance",
+        "id": "FUL-U10",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U10-MAIN",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U10-MAIN",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U10-RET",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U10-RET",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U10-MAIN",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U10-MAIN",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "AR-U10-MAIN",
+      "object": "OpenItem",
+      "source": {
+        "namespace": "settlement",
+        "kind": "open_item",
+        "id": "AR-U10-MAIN",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "FUL-U11-I",
+      "object": "Acceptance",
+      "source": {
+        "namespace": "delivery",
+        "kind": "acceptance",
+        "id": "FUL-U11-I",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U11-I",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U11-I",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "FUL-U11-S",
+      "object": "Acceptance",
+      "source": {
+        "namespace": "delivery",
+        "kind": "acceptance",
+        "id": "FUL-U11-S",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U11-S",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U11-S",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "INV-SALES-01",
+      "object": "Invoice",
+      "source": {
+        "namespace": "invoicing",
+        "kind": "invoice",
+        "id": "INV-SALES-01",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U12",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U12",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "AR-OPEN",
+      "object": "OpenItem",
+      "source": {
+        "namespace": "settlement",
+        "kind": "open_item",
+        "id": "AR-OPEN",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U13",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U13",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U13-FEE",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U13-FEE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "EXP-BANK-FEE",
+      "object": "ExpenseClaim",
+      "source": {
+        "namespace": "costing",
+        "kind": "expense_claim",
+        "id": "EXP-BANK-FEE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U13-XFER-OUT",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U13-XFER-OUT",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U13-XFER-IN",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U13-XFER-IN",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U13-UNMATCHED",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U13-UNMATCHED",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U14-A",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U14-A",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "AR-U14",
+      "object": "OpenItem",
+      "source": {
+        "namespace": "settlement",
+        "kind": "open_item",
+        "id": "AR-U14",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U14-B",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U14-B",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "EXP-TAX-UNKNOWN",
+      "object": "ExpenseClaim",
+      "source": {
+        "namespace": "costing",
+        "kind": "expense_claim",
+        "id": "EXP-TAX-UNKNOWN",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "EVT-TAX-UNKNOWN",
+      "object": "AccountingEvent",
+      "source": {
+        "namespace": "core",
+        "kind": "accounting_event",
+        "id": "EVT-TAX-UNKNOWN",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U18",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U18",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "PREPAID-ANNUAL",
+      "object": "PrepaidService",
+      "source": {
+        "namespace": "costing",
+        "kind": "prepaid_service",
+        "id": "PREPAID-ANNUAL",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SERVICE-OCT",
+      "object": "ServiceConfirmation",
+      "source": {
+        "namespace": "delivery",
+        "kind": "service_confirmation",
+        "id": "SERVICE-OCT",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "ENT-A",
+      "object": "OrganizationProfile",
+      "source": {
+        "namespace": "masterdata",
+        "kind": "organization_profile",
+        "id": "ENT-A",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "ENT-B",
+      "object": "OrganizationProfile",
+      "source": {
+        "namespace": "masterdata",
+        "kind": "organization_profile",
+        "id": "ENT-B",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "P-FIXED",
+      "object": "Project",
+      "source": {
+        "namespace": "masterdata",
+        "kind": "project",
+        "id": "P-FIXED",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "P-HOURLY",
+      "object": "Project",
+      "source": {
+        "namespace": "masterdata",
+        "kind": "project",
+        "id": "P-HOURLY",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "P-SERVICE",
+      "object": "Project",
+      "source": {
+        "namespace": "masterdata",
+        "kind": "project",
+        "id": "P-SERVICE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "P-LEGACY",
+      "object": "Project",
+      "source": {
+        "namespace": "masterdata",
+        "kind": "project",
+        "id": "P-LEGACY",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "P-B-PRIVATE",
+      "object": "Project",
+      "source": {
+        "namespace": "masterdata",
+        "kind": "project",
+        "id": "P-B-PRIVATE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-B"
+    },
+    {
+      "label": "C-FIXED",
+      "object": "Contract",
+      "source": {
+        "namespace": "contracts",
+        "kind": "contract",
+        "id": "C-FIXED",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "C-HOURLY",
+      "object": "Contract",
+      "source": {
+        "namespace": "contracts",
+        "kind": "contract",
+        "id": "C-HOURLY",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "C-SERVICE",
+      "object": "Contract",
+      "source": {
+        "namespace": "contracts",
+        "kind": "contract",
+        "id": "C-SERVICE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "C-B-PRIVATE",
+      "object": "Contract",
+      "source": {
+        "namespace": "contracts",
+        "kind": "contract",
+        "id": "C-B-PRIVATE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-B"
+    },
+    {
+      "label": "CHG-F-01",
+      "object": "ContractChange",
+      "source": {
+        "namespace": "contracts",
+        "kind": "contract_change",
+        "id": "CHG-F-01",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SE-10001",
+      "object": "ExpenseClaim",
+      "source": {
+        "namespace": "costing",
+        "kind": "expense_claim",
+        "id": "SE-10001",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "OPEN-20260831",
+      "object": "OpeningBatch",
+      "source": {
+        "namespace": "onboarding",
+        "kind": "opening_batch",
+        "id": "OPEN-20260831",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "ATT-CONTRACT",
+      "object": "Evidence",
+      "source": {
+        "namespace": "delivery",
+        "kind": "evidence",
+        "id": "ATT-CONTRACT",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "ATT-EXPENSE",
+      "object": "Evidence",
+      "source": {
+        "namespace": "delivery",
+        "kind": "evidence",
+        "id": "ATT-EXPENSE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "ATT-RESTORE",
+      "object": "Evidence",
+      "source": {
+        "namespace": "delivery",
+        "kind": "evidence",
+        "id": "ATT-RESTORE",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "CSV-AP-NORMAL",
+      "object": "ImportPreview",
+      "source": {
+        "namespace": "onboarding",
+        "kind": "import_preview",
+        "id": "CSV-AP-NORMAL",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "CN-SALES-01",
+      "object": "InvoiceReversal",
+      "source": {
+        "namespace": "invoicing",
+        "kind": "invoice_reversal",
+        "id": "CN-SALES-01",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U09-REFUND",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U09-REFUND",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "AR-U09",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "AR-U09",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U09-RETURN",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U09-RETURN",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U10",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U10",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "REV-U11-I",
+      "object": "RevenueRecognition",
+      "source": {
+        "namespace": "management_revenue",
+        "kind": "revenue_recognition",
+        "id": "REV-U11-I",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "REV-U11-S",
+      "object": "RevenueRecognition",
+      "source": {
+        "namespace": "management_revenue",
+        "kind": "revenue_recognition",
+        "id": "REV-U11-S",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BA-A-OPER",
+      "object": "FundingAccount",
+      "source": {
+        "namespace": "cash",
+        "kind": "funding_account",
+        "id": "BA-A-OPER",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BA-A-SAV",
+      "object": "FundingAccount",
+      "source": {
+        "namespace": "cash",
+        "kind": "funding_account",
+        "id": "BA-A-SAV",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U13-XFER",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U13-XFER",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "2026-09",
+      "object": "AccountingPeriod",
+      "source": {
+        "namespace": "core",
+        "kind": "accounting_period",
+        "id": "2026-09",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "CP-A-VENDOR",
+      "object": "Counterparty",
+      "source": {
+        "namespace": "contracts",
+        "kind": "counterparty",
+        "id": "CP-A-VENDOR",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "BANK-U14",
+      "object": "CashTransaction",
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction",
+        "id": "BANK-U14",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SET-U17",
+      "object": "Settlement",
+      "source": {
+        "namespace": "settlement",
+        "kind": "settlement",
+        "id": "SET-U17",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "SE-SEP-10000",
+      "object": "ExpenseClaim",
+      "source": {
+        "namespace": "costing",
+        "kind": "expense_claim",
+        "id": "SE-SEP-10000",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    },
+    {
+      "label": "CSV-HIST-COST",
+      "object": "ImportPreview",
+      "source": {
+        "namespace": "onboarding",
+        "kind": "import_preview",
+        "id": "CSV-HIST-COST",
+        "version": 1
+      },
+      "enterprise_id": "ENT-A"
+    }
+  ],
+  "source_consumption_key": [
+    "enterprise",
+    "purpose",
+    "original namespace",
+    "original kind",
+    "original stable id",
+    "detail",
+    "period",
+    "coverage"
+  ],
+  "excluded_from_consumption_key": [
+    "version",
+    "request_id",
+    "idempotency_key",
+    "UI/CSV/API channel"
+  ],
+  "coverage_policy": "Requirement-by-requirement trace in requirements-coverage.json; coverage is planned, never implementation proof.",
+  "approval_actors": {
+    "preparer": "U-A-FIN-1",
+    "independent_financial_reviewer": "U-A-FIN-2",
+    "business_employee": "E-A-ALICE",
+    "pm": "U-A-PM-FIXED",
+    "rule": "No actor reviews own prepared or own employee-business source; no finance sample implies PAT approval capability."
+  },
+  "roles_and_visibility": [
+    {
+      "role": "owner",
+      "allowed": "company authorized totals, decisions, project drilldown",
+      "rejected": "self-review; cross tenant; mutation of posted facts"
+    },
+    {
+      "role": "finance",
+      "allowed": "independent reconciliation and authorized sensitive payroll evidence",
+      "rejected": "own business review; cross tenant; closed period posting"
+    },
+    {
+      "role": "pm",
+      "allowed": "assigned project totals and work input",
+      "rejected": "unassigned project; individual salary/rate; financial approval"
+    },
+    {
+      "role": "member",
+      "allowed": "own timesheet and expense draft/submission",
+      "rejected": "others salary/rate; approval; cross tenant; foreign attachment/export"
+    }
+  ],
+  "legacy_expectations": {
+    "baseline_sha": "119a04916e3e96a5e4d86516a5f13e841faf2f67",
+    "books": [
+      "cost",
+      "cash_in",
+      "cash_out"
+    ],
+    "signed_amounts_preserved": true,
+    "original_cost_lines_cents": [
+      2,
+      2,
+      2,
+      52
+    ],
+    "total_cost_cents": 58,
+    "legacy_projection": {
+      "origin": "legacy",
+      "accounting_event_id": null,
+      "source": "original document/timesheet PK"
+    },
+    "must_compare": [
+      "original PK",
+      "minutes",
+      "business date",
+      "rate snapshot",
+      "signed cents",
+      "book",
+      "source PK/token",
+      "posting_key",
+      "original audit payload and chain hashes"
+    ],
+    "upgrade_execution": "not_run"
+  },
+  "contract_artifact_sha256": {
+    "catalog-completeness.schema.json": "9429db71c4a0f775cdd2ff61045eadba85a37983c3ac9b1d16b9f4f16dd9fb94",
+    "command-results.schema.json": "b6f9b161503d5ec8f583a2ab42fca51e3eb8da9956093bc90ce19c2b4a092c52",
+    "commands.schema.json": "6fe9fd36c2316863d99f2b9fb09f041b792b9d73435fe5ba48c5418060f43613",
+    "contract-bundle.schema.json": "b18ac1ab1def16f2bcbd8fa58d3dc37f2bbd041f367a1e5529397ed68e520695",
+    "contract-catalog.json": "dc38a83a3f9352f6b036f28771ab2c43364125be8bb018cf1a8e354e281b20ae",
+    "entities.schema.json": "9db0fb87b3d5c9ddffd09453fcffa13e9a8f0bd832a2fc7508e62bfb64c80e76",
+    "events.schema.json": "fc894b1170c9c3ed84af5ee9707194507adf1ed63a622b5acc86e90876fa0b0a",
+    "queries.schema.json": "b4e521c0298019b46bcf3155a0ad11cfb3c6671ac3e111e5476dc451c4d66d32",
+    "query-results.schema.json": "02c40c467a458da0a59533bcf20af3b7147250da840399f394a23dce3d22ce51",
+    "relationships.json": "01b342c6b5ec2c6d99084cbbf6138995f5ef6f03430478bd3086f2b511391f7f",
+    "requirements-coverage.json": "72e9192317e258a11a91ee3b66527e1d6a10c481d1ae9b9ce140e012160abf2e",
+    "source-registry.json": "0459fa3588e748db4d5af0d50d2c47d4aebb2baa6e70dde3812b996bd1bab806",
+    "write-dtos.schema.json": "61db900327ecedd9341ea24382ca407da926a6991921ad65a9be2b0058483631"
+  }
+}

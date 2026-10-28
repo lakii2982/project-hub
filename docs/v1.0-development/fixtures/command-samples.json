@@ -1,0 +1,2908 @@
+{
+  "classification": "schema_examples_only",
+  "samples": [
+    {
+      "id": "C-FIXED-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.contract.draft.save/v1",
+        "request_id": "C-FIXED-DRAFT",
+        "idempotency_key": "00000001",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "project_id": "P-FIXED",
+            "counterparty_id": "CP-A-CUSTOMER",
+            "contract_code": "C-FIXED",
+            "signed_on": "2026-09-01"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CL-FIXED",
+      "schema": "write-dtos.schema.json",
+      "definition": "ContractLine",
+      "value": {
+        "line_no": 1,
+        "net_cents": 100000,
+        "tax_cents": 6000,
+        "gross_cents": 106000,
+        "pricing_configuration": {
+          "template": "fixed_milestone",
+          "policy_ref": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          },
+          "currency": "CNY",
+          "confirmed_by_customer_required": true,
+          "net_cap_cents": 100000,
+          "milestones": [
+            {
+              "milestone_id": "M-FIXED-01",
+              "allocated_net_cents": 100000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "C-FIXED-SUBMIT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.version.submit/v1",
+        "request_id": "C-FIXED-SUBMIT",
+        "idempotency_key": "00000002",
+        "dry_run": false,
+        "payload": {
+          "contract_id": "C-FIXED",
+          "lines": [
+            {
+              "line_no": 1,
+              "net_cents": 100000,
+              "tax_cents": 6000,
+              "gross_cents": 106000,
+              "pricing_configuration": {
+                "template": "fixed_milestone",
+                "policy_ref": {
+                  "policy_id": "POLICY-SYN-1",
+                  "version": 1
+                },
+                "currency": "CNY",
+                "confirmed_by_customer_required": true,
+                "net_cap_cents": 100000,
+                "milestones": [
+                  {
+                    "milestone_id": "M-FIXED-01",
+                    "allocated_net_cents": 100000
+                  }
+                ]
+              }
+            }
+          ],
+          "effective_on": "2026-09-01",
+          "evidence": [
+            {
+              "evidence_id": "ATT-CONTRACT",
+              "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+            }
+          ]
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "C-FIXED-APPROVE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.version.approve/v1",
+        "request_id": "C-FIXED-APPROVE",
+        "idempotency_key": "00000003",
+        "dry_run": false,
+        "payload": {
+          "contract_version_id": "C-FIXED-v1",
+          "expected_version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "C-HOURLY-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.contract.draft.save/v1",
+        "request_id": "C-HOURLY-DRAFT",
+        "idempotency_key": "00000004",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "project_id": "P-HOURLY",
+            "counterparty_id": "CP-A-CUSTOMER",
+            "contract_code": "C-HOURLY",
+            "signed_on": "2026-09-01"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CL-HOURLY",
+      "schema": "write-dtos.schema.json",
+      "definition": "ContractLine",
+      "value": {
+        "line_no": 1,
+        "net_cents": 200000,
+        "tax_cents": 12000,
+        "gross_cents": 212000,
+        "pricing_configuration": {
+          "template": "confirmed_time",
+          "policy_ref": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          },
+          "currency": "CNY",
+          "confirmed_by_customer_required": true,
+          "net_cap_cents": 200000,
+          "time_unit": "hour",
+          "unit_minutes": 60,
+          "unit_price_cents": 25000
+        }
+      }
+    },
+    {
+      "id": "C-HOURLY-SUBMIT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.version.submit/v1",
+        "request_id": "C-HOURLY-SUBMIT",
+        "idempotency_key": "00000005",
+        "dry_run": false,
+        "payload": {
+          "contract_id": "C-HOURLY",
+          "lines": [
+            {
+              "line_no": 1,
+              "net_cents": 200000,
+              "tax_cents": 12000,
+              "gross_cents": 212000,
+              "pricing_configuration": {
+                "template": "confirmed_time",
+                "policy_ref": {
+                  "policy_id": "POLICY-SYN-1",
+                  "version": 1
+                },
+                "currency": "CNY",
+                "confirmed_by_customer_required": true,
+                "net_cap_cents": 200000,
+                "time_unit": "hour",
+                "unit_minutes": 60,
+                "unit_price_cents": 25000
+              }
+            }
+          ],
+          "effective_on": "2026-09-01",
+          "evidence": [
+            {
+              "evidence_id": "ATT-CONTRACT",
+              "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+            }
+          ]
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "C-HOURLY-APPROVE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.version.approve/v1",
+        "request_id": "C-HOURLY-APPROVE",
+        "idempotency_key": "00000006",
+        "dry_run": false,
+        "payload": {
+          "contract_version_id": "C-HOURLY-v1",
+          "expected_version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "C-SERVICE-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.contract.draft.save/v1",
+        "request_id": "C-SERVICE-DRAFT",
+        "idempotency_key": "00000007",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "project_id": "P-SERVICE",
+            "counterparty_id": "CP-A-CUSTOMER",
+            "contract_code": "C-SERVICE",
+            "signed_on": "2026-09-01"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CL-SERVICE",
+      "schema": "write-dtos.schema.json",
+      "definition": "ContractLine",
+      "value": {
+        "line_no": 1,
+        "net_cents": 120000,
+        "tax_cents": 7200,
+        "gross_cents": 127200,
+        "pricing_configuration": {
+          "template": "fixed_service_period",
+          "policy_ref": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          },
+          "currency": "CNY",
+          "confirmed_by_customer_required": true,
+          "net_cap_cents": 120000,
+          "service_start": "2026-10-01",
+          "service_end": "2027-09-30",
+          "period_unit": "calendar_month",
+          "partial_period_rule": "no_partial",
+          "service_schedule": [
+            {
+              "coverage_start": "2026-10-01",
+              "coverage_end": "2026-10-31",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2026-11-01",
+              "coverage_end": "2026-11-30",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2026-12-01",
+              "coverage_end": "2026-12-31",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2027-01-01",
+              "coverage_end": "2027-01-31",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2027-02-01",
+              "coverage_end": "2027-02-28",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2027-03-01",
+              "coverage_end": "2027-03-31",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2027-04-01",
+              "coverage_end": "2027-04-30",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2027-05-01",
+              "coverage_end": "2027-05-31",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2027-06-01",
+              "coverage_end": "2027-06-30",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2027-07-01",
+              "coverage_end": "2027-07-31",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2027-08-01",
+              "coverage_end": "2027-08-31",
+              "allocated_net_cents": 10000
+            },
+            {
+              "coverage_start": "2027-09-01",
+              "coverage_end": "2027-09-30",
+              "allocated_net_cents": 10000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "C-SERVICE-SUBMIT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.version.submit/v1",
+        "request_id": "C-SERVICE-SUBMIT",
+        "idempotency_key": "00000008",
+        "dry_run": false,
+        "payload": {
+          "contract_id": "C-SERVICE",
+          "lines": [
+            {
+              "line_no": 1,
+              "net_cents": 120000,
+              "tax_cents": 7200,
+              "gross_cents": 127200,
+              "pricing_configuration": {
+                "template": "fixed_service_period",
+                "policy_ref": {
+                  "policy_id": "POLICY-SYN-1",
+                  "version": 1
+                },
+                "currency": "CNY",
+                "confirmed_by_customer_required": true,
+                "net_cap_cents": 120000,
+                "service_start": "2026-10-01",
+                "service_end": "2027-09-30",
+                "period_unit": "calendar_month",
+                "partial_period_rule": "no_partial",
+                "service_schedule": [
+                  {
+                    "coverage_start": "2026-10-01",
+                    "coverage_end": "2026-10-31",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2026-11-01",
+                    "coverage_end": "2026-11-30",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2026-12-01",
+                    "coverage_end": "2026-12-31",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2027-01-01",
+                    "coverage_end": "2027-01-31",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2027-02-01",
+                    "coverage_end": "2027-02-28",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2027-03-01",
+                    "coverage_end": "2027-03-31",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2027-04-01",
+                    "coverage_end": "2027-04-30",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2027-05-01",
+                    "coverage_end": "2027-05-31",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2027-06-01",
+                    "coverage_end": "2027-06-30",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2027-07-01",
+                    "coverage_end": "2027-07-31",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2027-08-01",
+                    "coverage_end": "2027-08-31",
+                    "allocated_net_cents": 10000
+                  },
+                  {
+                    "coverage_start": "2027-09-01",
+                    "coverage_end": "2027-09-30",
+                    "allocated_net_cents": 10000
+                  }
+                ]
+              }
+            }
+          ],
+          "effective_on": "2026-09-01",
+          "evidence": [
+            {
+              "evidence_id": "ATT-CONTRACT",
+              "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+            }
+          ]
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "C-SERVICE-APPROVE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.version.approve/v1",
+        "request_id": "C-SERVICE-APPROVE",
+        "idempotency_key": "00000009",
+        "dry_run": false,
+        "payload": {
+          "contract_version_id": "C-SERVICE-v1",
+          "expected_version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "C-B-PRIVATE-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.contract.draft.save/v1",
+        "request_id": "C-B-PRIVATE-DRAFT",
+        "idempotency_key": "00000010",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "project_id": "P-B-PRIVATE",
+            "counterparty_id": "CP-B-CUSTOMER",
+            "contract_code": "C-B-PRIVATE",
+            "signed_on": "2026-09-01"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CL-B-PRIVATE",
+      "schema": "write-dtos.schema.json",
+      "definition": "ContractLine",
+      "value": {
+        "line_no": 1,
+        "net_cents": 40000,
+        "tax_cents": 2400,
+        "gross_cents": 42400,
+        "pricing_configuration": {
+          "template": "fixed_milestone",
+          "policy_ref": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          },
+          "currency": "CNY",
+          "confirmed_by_customer_required": true,
+          "net_cap_cents": 40000,
+          "milestones": [
+            {
+              "milestone_id": "M-B-01",
+              "allocated_net_cents": 40000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "C-B-PRIVATE-SUBMIT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.version.submit/v1",
+        "request_id": "C-B-PRIVATE-SUBMIT",
+        "idempotency_key": "00000011",
+        "dry_run": false,
+        "payload": {
+          "contract_id": "C-B-PRIVATE",
+          "lines": [
+            {
+              "line_no": 1,
+              "net_cents": 40000,
+              "tax_cents": 2400,
+              "gross_cents": 42400,
+              "pricing_configuration": {
+                "template": "fixed_milestone",
+                "policy_ref": {
+                  "policy_id": "POLICY-SYN-1",
+                  "version": 1
+                },
+                "currency": "CNY",
+                "confirmed_by_customer_required": true,
+                "net_cap_cents": 40000,
+                "milestones": [
+                  {
+                    "milestone_id": "M-B-01",
+                    "allocated_net_cents": 40000
+                  }
+                ]
+              }
+            }
+          ],
+          "effective_on": "2026-09-01",
+          "evidence": [
+            {
+              "evidence_id": "ATT-CONTRACT",
+              "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+            }
+          ]
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "C-B-PRIVATE-APPROVE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.version.approve/v1",
+        "request_id": "C-B-PRIVATE-APPROVE",
+        "idempotency_key": "00000012",
+        "dry_run": false,
+        "payload": {
+          "contract_version_id": "C-B-PRIVATE-v1",
+          "expected_version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "PROJECT-RENAME",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "masterdata.entity.upsert/v1",
+        "request_id": "PROJECT-RENAME",
+        "idempotency_key": "00000013",
+        "dry_run": false,
+        "payload": {
+          "entity_kind": "Project",
+          "entity_id": "P-FIXED",
+          "expected_version": 1,
+          "fields": {
+            "code": "P-FIXED",
+            "name": "北斗上线实施修订名",
+            "manager_membership_id": "U-A-PM-FIXED",
+            "start_date": "2026-09-01",
+            "end_date": "2027-09-30"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CHANGE-APPROVE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "contracts.change.decide/v1",
+        "request_id": "CHANGE-APPROVE",
+        "idempotency_key": "00000014",
+        "dry_run": false,
+        "payload": {
+          "contract_change_id": "CHG-F-01",
+          "decision": "approved"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "LAB-POOL-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.salary_pool.draft.save/v1",
+        "request_id": "LAB-POOL-DRAFT",
+        "idempotency_key": "00000015",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "employee_id": "E-A-ALICE",
+            "period": "2026-10",
+            "policy_version": {
+              "policy_id": "POLICY-SYN-1",
+              "version": 1
+            },
+            "valuation_state": "reconciled_actual",
+            "covered_through": "2026-10-31",
+            "allocation_inputs": {
+              "salary_components": [
+                {
+                  "component_code": "salary",
+                  "amount_cents": 2000000,
+                  "evidence": [
+                    {
+                      "evidence_id": "ATT-CONTRACT",
+                      "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+                    }
+                  ]
+                },
+                {
+                  "component_code": "employer_benefits",
+                  "amount_cents": 400000,
+                  "evidence": [
+                    {
+                      "evidence_id": "ATT-CONTRACT",
+                      "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+                    }
+                  ]
+                }
+              ],
+              "capacity_minutes": 9600
+            }
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "LAB-POST",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.cost.post/v1",
+        "request_id": "LAB-POST",
+        "idempotency_key": "00000016",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "salary_pool",
+            "id": "LAB-OCT-A",
+            "version": 1
+          },
+          "occurred_on": "2026-10-15",
+          "posting_period": "2026-10"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "LAB-ALLOCATE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.allocation.run/v1",
+        "request_id": "LAB-ALLOCATE",
+        "idempotency_key": "00000017",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "salary_pool",
+            "id": "LAB-OCT-A",
+            "version": 1
+          },
+          "period": "2026-10",
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          },
+          "basis_refs": [
+            {
+              "namespace": "time",
+              "kind": "timesheet",
+              "id": "TS-F-600",
+              "version": 1
+            },
+            {
+              "namespace": "time",
+              "kind": "timesheet",
+              "id": "TS-H-600",
+              "version": 1
+            },
+            {
+              "namespace": "time",
+              "kind": "timesheet",
+              "id": "TS-NP-120",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U04-PAY",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U04-PAY",
+        "idempotency_key": "00000018",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "out",
+          "gross_cents": 1200000,
+          "external_source_key": "00000019",
+          "payee": {
+            "kind": "employee",
+            "id": "E-A-ALICE"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BILLABLE-CONFIRM",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "time.billable.confirm/v1",
+        "request_id": "BILLABLE-CONFIRM",
+        "idempotency_key": "00000020",
+        "dry_run": false,
+        "payload": {
+          "timesheet_ref": {
+            "namespace": "time",
+            "kind": "timesheet",
+            "id": "TS-H-600",
+            "version": 1
+          },
+          "contract_line_ref": {
+            "namespace": "contracts",
+            "kind": "contract_line",
+            "id": "CL-HOURLY",
+            "version": 1
+          },
+          "confirmed_minutes": 480,
+          "evidence": [
+            {
+              "evidence_id": "ATT-CONTRACT",
+              "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+            }
+          ]
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "REV-U05",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "management_revenue.recognize/v1",
+        "request_id": "REV-U05",
+        "idempotency_key": "00000021",
+        "dry_run": false,
+        "payload": {
+          "contract_line_ref": {
+            "namespace": "contracts",
+            "kind": "contract_line",
+            "id": "CL-HOURLY",
+            "version": 1
+          },
+          "performance_ref": {
+            "namespace": "time",
+            "kind": "billable_confirmation",
+            "id": "BILLABLE-U05",
+            "version": 1
+          },
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U03-PRE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U03-PRE",
+        "idempotency_key": "00000022",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 31800,
+          "external_source_key": "00000023",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "FUL-U03",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "delivery.acceptance.draft.save/v1",
+        "request_id": "FUL-U03",
+        "idempotency_key": "00000024",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "project_id": "P-FIXED",
+            "contract_line_ref": {
+              "namespace": "contracts",
+              "kind": "contract_line",
+              "id": "CL-FIXED",
+              "version": 1
+            },
+            "confirmed_on": "2026-10-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ],
+            "milestone_coverages": [
+              {
+                "milestone_id": "M-FIXED-01",
+                "from_basis_points": 0,
+                "to_basis_points": 5000
+              }
+            ]
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "FUL-U03-CONFIRM",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "delivery.acceptance.confirm/v1",
+        "request_id": "FUL-U03-CONFIRM",
+        "idempotency_key": "00000025",
+        "dry_run": false,
+        "payload": {
+          "acceptance_id": "FUL-U03",
+          "expected_version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "REV-U03",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "management_revenue.recognize/v1",
+        "request_id": "REV-U03",
+        "idempotency_key": "00000026",
+        "dry_run": false,
+        "payload": {
+          "contract_line_ref": {
+            "namespace": "contracts",
+            "kind": "contract_line",
+            "id": "CL-FIXED",
+            "version": 1
+          },
+          "performance_ref": {
+            "namespace": "delivery",
+            "kind": "acceptance",
+            "id": "FUL-U03",
+            "version": 1
+          },
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U03",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.settlement.draft.save/v1",
+        "request_id": "SET-U03",
+        "idempotency_key": "00000027",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "direction": "receivable",
+            "payee": {
+              "kind": "counterparty",
+              "id": "CP-A-CUSTOMER"
+            },
+            "source_ref": {
+              "namespace": "delivery",
+              "kind": "acceptance",
+              "id": "FUL-U03",
+              "version": 1
+            },
+            "gross_cents": 53000,
+            "net_cents": 50000,
+            "tax_cents": 3000,
+            "settled_on": "2026-10-15",
+            "due_date": "2026-11-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ],
+            "contract_line_ref": {
+              "namespace": "contracts",
+              "kind": "contract_line",
+              "id": "CL-FIXED",
+              "version": 1
+            }
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U03-OPEN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.open_item.create/v1",
+        "request_id": "SET-U03-OPEN",
+        "idempotency_key": "00000028",
+        "dry_run": false,
+        "payload": {
+          "settlement_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U03",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CLEAR-U03-PRE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.clearance.create/v1",
+        "request_id": "CLEAR-U03-PRE",
+        "idempotency_key": "00000029",
+        "dry_run": false,
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U03-PRE",
+            "version": 1
+          },
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": "AR-U03",
+            "version": 1
+          },
+          "cleared_cents": 31800
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U03-REC",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U03-REC",
+        "idempotency_key": "00000030",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 21200,
+          "external_source_key": "00000031",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CLEAR-U03-REC",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.clearance.create/v1",
+        "request_id": "CLEAR-U03-REC",
+        "idempotency_key": "00000032",
+        "dry_run": false,
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U03-REC",
+            "version": 1
+          },
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": "AR-U03",
+            "version": 1
+          },
+          "cleared_cents": 21200
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "OUT-01-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.spend_commitment.draft.save/v1",
+        "request_id": "OUT-01-DRAFT",
+        "idempotency_key": "00000033",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "counterparty_id": "CP-A-VENDOR",
+            "gross_cents": 100000,
+            "committed_on": "2026-10-01",
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            }
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U06-PRE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U06-PRE",
+        "idempotency_key": "00000034",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "out",
+          "gross_cents": 20000,
+          "external_source_key": "00000035",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-VENDOR"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "ACC-U06-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.spend_acceptance.draft.save/v1",
+        "request_id": "ACC-U06-DRAFT",
+        "idempotency_key": "00000036",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "commitment_ref": {
+              "namespace": "costing",
+              "kind": "spend_commitment",
+              "id": "OUT-01",
+              "version": 1
+            },
+            "accepted_on": "2026-10-15",
+            "gross_cents": 40000,
+            "net_cents": 40000,
+            "tax_cents": 0,
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ]
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "COST-U06",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.cost.post/v1",
+        "request_id": "COST-U06",
+        "idempotency_key": "00000037",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "spend_acceptance",
+            "id": "ACC-U06",
+            "version": 1
+          },
+          "occurred_on": "2026-10-15",
+          "posting_period": "2026-10"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U06",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.settlement.draft.save/v1",
+        "request_id": "SET-U06",
+        "idempotency_key": "00000038",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "direction": "payable",
+            "payee": {
+              "kind": "counterparty",
+              "id": "CP-A-VENDOR"
+            },
+            "source_ref": {
+              "namespace": "costing",
+              "kind": "spend_acceptance",
+              "id": "ACC-U06",
+              "version": 1
+            },
+            "gross_cents": 40000,
+            "net_cents": 40000,
+            "tax_cents": 0,
+            "settled_on": "2026-10-15",
+            "due_date": "2026-11-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ]
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U06-OPEN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.open_item.create/v1",
+        "request_id": "SET-U06-OPEN",
+        "idempotency_key": "00000039",
+        "dry_run": false,
+        "payload": {
+          "settlement_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U06",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CLEAR-U06-PRE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.clearance.create/v1",
+        "request_id": "CLEAR-U06-PRE",
+        "idempotency_key": "00000040",
+        "dry_run": false,
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U06-PRE",
+            "version": 1
+          },
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": "AP-U06",
+            "version": 1
+          },
+          "cleared_cents": 20000
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U06-TAIL",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U06-TAIL",
+        "idempotency_key": "00000041",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "out",
+          "gross_cents": 20000,
+          "external_source_key": "00000042",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-VENDOR"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CLEAR-U06-TAIL",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.clearance.create/v1",
+        "request_id": "CLEAR-U06-TAIL",
+        "idempotency_key": "00000043",
+        "dry_run": false,
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U06-TAIL",
+            "version": 1
+          },
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": "AP-U06",
+            "version": 1
+          },
+          "cleared_cents": 20000
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SHARED-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.expense_claim.draft.save/v1",
+        "request_id": "SHARED-DRAFT",
+        "idempotency_key": "00000044",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "nonproject",
+              "id": "NP-A"
+            },
+            "occurred_on": "2026-10-15",
+            "category_id": "CAT-SHARED",
+            "gross_cents": 10000,
+            "tax_cents": 0,
+            "claimant_employee_id": "E-A-ALICE",
+            "evidence": [
+              {
+                "evidence_id": "ATT-EXPENSE",
+                "sha256": "c5088e28ae39765c53b09399763f465e024456d727a9cdf3bf8a38e82c65ece4"
+              }
+            ]
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SHARED-POST",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.cost.post/v1",
+        "request_id": "SHARED-POST",
+        "idempotency_key": "00000045",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "expense_claim",
+            "id": "SE-10000",
+            "version": 1
+          },
+          "occurred_on": "2026-10-15",
+          "posting_period": "2026-10"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U07",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.settlement.draft.save/v1",
+        "request_id": "SET-U07",
+        "idempotency_key": "00000046",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "direction": "payable",
+            "payee": {
+              "kind": "counterparty",
+              "id": "CP-A-VENDOR"
+            },
+            "source_ref": {
+              "namespace": "costing",
+              "kind": "expense_claim",
+              "id": "SE-10000",
+              "version": 1
+            },
+            "gross_cents": 10000,
+            "net_cents": 10000,
+            "tax_cents": 0,
+            "settled_on": "2026-10-15",
+            "due_date": "2026-11-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ]
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U07-OPEN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.open_item.create/v1",
+        "request_id": "SET-U07-OPEN",
+        "idempotency_key": "00000047",
+        "dry_run": false,
+        "payload": {
+          "settlement_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U07",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SHARED-ALLOCATE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.allocation.run/v1",
+        "request_id": "SHARED-ALLOCATE",
+        "idempotency_key": "00000048",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "expense_claim",
+            "id": "SE-10000",
+            "version": 1
+          },
+          "period": "2026-10",
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          },
+          "basis_refs": [
+            {
+              "namespace": "costing",
+              "kind": "cost_policy",
+              "id": "SHARED-BASIS-V1",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SHARED-REVERSE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.allocation.reverse/v1",
+        "request_id": "SHARED-REVERSE",
+        "idempotency_key": "00000049",
+        "dry_run": false,
+        "payload": {
+          "allocation_run_id": "SHARED-RUN-1",
+          "reason": "Approved reallocation"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SHARED-REALLOCATE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.allocation.run/v1",
+        "request_id": "SHARED-REALLOCATE",
+        "idempotency_key": "00000050",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "expense_claim",
+            "id": "SE-10000",
+            "version": 1
+          },
+          "period": "2026-10",
+          "policy_version": {
+            "policy_id": "POLICY-SHARED-2",
+            "version": 2
+          },
+          "basis_refs": [
+            {
+              "namespace": "costing",
+              "kind": "cost_policy",
+              "id": "SHARED-BASIS-V2",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U08",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.settlement.draft.save/v1",
+        "request_id": "SET-U08",
+        "idempotency_key": "00000051",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "direction": "receivable",
+            "payee": {
+              "kind": "counterparty",
+              "id": "CP-A-CUSTOMER"
+            },
+            "source_ref": {
+              "namespace": "delivery",
+              "kind": "acceptance",
+              "id": "FUL-U08",
+              "version": 1
+            },
+            "gross_cents": 6000,
+            "net_cents": 6000,
+            "tax_cents": 0,
+            "settled_on": "2026-10-15",
+            "due_date": "2026-11-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ],
+            "contract_line_ref": {
+              "namespace": "contracts",
+              "kind": "contract_line",
+              "id": "CL-FIXED",
+              "version": 1
+            }
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U08-OPEN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.open_item.create/v1",
+        "request_id": "SET-U08-OPEN",
+        "idempotency_key": "00000052",
+        "dry_run": false,
+        "payload": {
+          "settlement_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U08",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "FORECAST-REPLACE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.forecast.replace/v1",
+        "request_id": "FORECAST-REPLACE",
+        "idempotency_key": "00000053",
+        "dry_run": false,
+        "payload": {
+          "lower_source_ref": {
+            "namespace": "cash",
+            "kind": "forecast_coverage",
+            "id": "PLAN-U08",
+            "version": 1
+          },
+          "higher_source_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U08",
+            "version": 1
+          },
+          "replaced_cents": 6000
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U08",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U08",
+        "idempotency_key": "00000054",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 2000,
+          "external_source_key": "00000055",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CLEAR-U08",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.clearance.create/v1",
+        "request_id": "CLEAR-U08",
+        "idempotency_key": "00000056",
+        "dry_run": false,
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U08",
+            "version": 1
+          },
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": "AR-U08",
+            "version": 1
+          },
+          "cleared_cents": 2000
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U09-PRE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U09-PRE",
+        "idempotency_key": "00000057",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 31800,
+          "external_source_key": "00000058",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "REFUND-U09",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.refund.record/v1",
+        "request_id": "REFUND-U09",
+        "idempotency_key": "00000059",
+        "dry_run": false,
+        "payload": {
+          "original_cash_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U09-PRE",
+            "version": 1
+          },
+          "refund_date": "2026-10-16",
+          "gross_cents": 10000,
+          "reason": "Customer refund"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U09-REC",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U09-REC",
+        "idempotency_key": "00000060",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 10000,
+          "external_source_key": "00000061",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "RETURN-U09",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.return.record/v1",
+        "request_id": "RETURN-U09",
+        "idempotency_key": "00000062",
+        "dry_run": false,
+        "payload": {
+          "original_cash_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U09-REC",
+            "version": 1
+          },
+          "return_date": "2026-10-17",
+          "gross_cents": 3000
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "FUL-U10",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "delivery.acceptance.draft.save/v1",
+        "request_id": "FUL-U10",
+        "idempotency_key": "00000063",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "project_id": "P-FIXED",
+            "contract_line_ref": {
+              "namespace": "contracts",
+              "kind": "contract_line",
+              "id": "CL-FIXED",
+              "version": 1
+            },
+            "confirmed_on": "2026-10-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ],
+            "milestone_coverages": [
+              {
+                "milestone_id": "M-FIXED-01",
+                "from_basis_points": 0,
+                "to_basis_points": 10000
+              }
+            ]
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "FUL-U10-CONFIRM",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "delivery.acceptance.confirm/v1",
+        "request_id": "FUL-U10-CONFIRM",
+        "idempotency_key": "00000064",
+        "dry_run": false,
+        "payload": {
+          "acceptance_id": "FUL-U10",
+          "expected_version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "REV-U10",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "management_revenue.recognize/v1",
+        "request_id": "REV-U10",
+        "idempotency_key": "00000065",
+        "dry_run": false,
+        "payload": {
+          "contract_line_ref": {
+            "namespace": "contracts",
+            "kind": "contract_line",
+            "id": "CL-FIXED",
+            "version": 1
+          },
+          "performance_ref": {
+            "namespace": "delivery",
+            "kind": "acceptance",
+            "id": "FUL-U10",
+            "version": 1
+          },
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U10-MAIN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.settlement.draft.save/v1",
+        "request_id": "SET-U10-MAIN",
+        "idempotency_key": "00000066",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "direction": "receivable",
+            "payee": {
+              "kind": "counterparty",
+              "id": "CP-A-CUSTOMER"
+            },
+            "source_ref": {
+              "namespace": "delivery",
+              "kind": "acceptance",
+              "id": "FUL-U10",
+              "version": 1
+            },
+            "gross_cents": 95400,
+            "net_cents": 90000,
+            "tax_cents": 5400,
+            "settled_on": "2026-10-15",
+            "due_date": "2026-11-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ],
+            "contract_line_ref": {
+              "namespace": "contracts",
+              "kind": "contract_line",
+              "id": "CL-FIXED",
+              "version": 1
+            }
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U10-MAIN-OPEN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.open_item.create/v1",
+        "request_id": "SET-U10-MAIN-OPEN",
+        "idempotency_key": "00000067",
+        "dry_run": false,
+        "payload": {
+          "settlement_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U10-MAIN",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U10-RET",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.settlement.draft.save/v1",
+        "request_id": "SET-U10-RET",
+        "idempotency_key": "00000068",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "direction": "receivable",
+            "payee": {
+              "kind": "counterparty",
+              "id": "CP-A-CUSTOMER"
+            },
+            "source_ref": {
+              "namespace": "delivery",
+              "kind": "acceptance",
+              "id": "FUL-U10",
+              "version": 1
+            },
+            "gross_cents": 10600,
+            "net_cents": 10000,
+            "tax_cents": 600,
+            "settled_on": "2026-10-15",
+            "due_date": "2027-10-31",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ],
+            "contract_line_ref": {
+              "namespace": "contracts",
+              "kind": "contract_line",
+              "id": "CL-FIXED",
+              "version": 1
+            }
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U10-RET-OPEN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.open_item.create/v1",
+        "request_id": "SET-U10-RET-OPEN",
+        "idempotency_key": "00000069",
+        "dry_run": false,
+        "payload": {
+          "settlement_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U10-RET",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U10-MAIN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U10-MAIN",
+        "idempotency_key": "00000070",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 95400,
+          "external_source_key": "00000071",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CLEAR-U10",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.clearance.create/v1",
+        "request_id": "CLEAR-U10",
+        "idempotency_key": "00000072",
+        "dry_run": false,
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U10-MAIN",
+            "version": 1
+          },
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": "AR-U10-MAIN",
+            "version": 1
+          },
+          "cleared_cents": 95400
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "REV-U11-I",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "management_revenue.recognize/v1",
+        "request_id": "REV-U11-I",
+        "idempotency_key": "00000073",
+        "dry_run": false,
+        "payload": {
+          "contract_line_ref": {
+            "namespace": "contracts",
+            "kind": "contract_line",
+            "id": "CL-FIXED",
+            "version": 1
+          },
+          "performance_ref": {
+            "namespace": "delivery",
+            "kind": "acceptance",
+            "id": "FUL-U11-I",
+            "version": 1
+          },
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U11-I",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.settlement.draft.save/v1",
+        "request_id": "SET-U11-I",
+        "idempotency_key": "00000074",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "direction": "receivable",
+            "payee": {
+              "kind": "counterparty",
+              "id": "CP-A-CUSTOMER"
+            },
+            "source_ref": {
+              "namespace": "delivery",
+              "kind": "acceptance",
+              "id": "FUL-U11-I",
+              "version": 1
+            },
+            "gross_cents": 10600,
+            "net_cents": 10000,
+            "tax_cents": 600,
+            "settled_on": "2026-10-15",
+            "due_date": "2026-11-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ],
+            "contract_line_ref": {
+              "namespace": "contracts",
+              "kind": "contract_line",
+              "id": "CL-FIXED",
+              "version": 1
+            }
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U11-I-OPEN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.open_item.create/v1",
+        "request_id": "SET-U11-I-OPEN",
+        "idempotency_key": "00000075",
+        "dry_run": false,
+        "payload": {
+          "settlement_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U11-I",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "REV-U11-S",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "management_revenue.recognize/v1",
+        "request_id": "REV-U11-S",
+        "idempotency_key": "00000076",
+        "dry_run": false,
+        "payload": {
+          "contract_line_ref": {
+            "namespace": "contracts",
+            "kind": "contract_line",
+            "id": "CL-FIXED",
+            "version": 1
+          },
+          "performance_ref": {
+            "namespace": "delivery",
+            "kind": "acceptance",
+            "id": "FUL-U11-S",
+            "version": 1
+          },
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U11-S",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.settlement.draft.save/v1",
+        "request_id": "SET-U11-S",
+        "idempotency_key": "00000077",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "direction": "receivable",
+            "payee": {
+              "kind": "counterparty",
+              "id": "CP-A-CUSTOMER"
+            },
+            "source_ref": {
+              "namespace": "delivery",
+              "kind": "acceptance",
+              "id": "FUL-U11-S",
+              "version": 1
+            },
+            "gross_cents": 10600,
+            "net_cents": 10000,
+            "tax_cents": 600,
+            "settled_on": "2026-10-15",
+            "due_date": "2026-11-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ],
+            "contract_line_ref": {
+              "namespace": "contracts",
+              "kind": "contract_line",
+              "id": "CL-FIXED",
+              "version": 1
+            }
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U11-S-OPEN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.open_item.create/v1",
+        "request_id": "SET-U11-S-OPEN",
+        "idempotency_key": "00000078",
+        "dry_run": false,
+        "payload": {
+          "settlement_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U11-S",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "INVOICE-U11",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "invoicing.invoice.record/v1",
+        "request_id": "INVOICE-U11",
+        "idempotency_key": "00000079",
+        "dry_run": false,
+        "payload": {
+          "direction": "sales",
+          "counterparty_id": "CP-A-CUSTOMER",
+          "invoice_number": "SYN-U11-1",
+          "invoice_date": "2026-10-15",
+          "gross_cents": 21200,
+          "net_cents": 20000,
+          "tax_cents": 1200,
+          "evidence": [
+            {
+              "evidence_id": "ATT-CONTRACT",
+              "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+            }
+          ]
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "INVOICE-REVERSE-U11",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "invoicing.invoice.reverse/v1",
+        "request_id": "INVOICE-REVERSE-U11",
+        "idempotency_key": "00000080",
+        "dry_run": false,
+        "payload": {
+          "original_invoice_ref": {
+            "namespace": "invoicing",
+            "kind": "invoice",
+            "id": "INV-SALES-01",
+            "version": 1
+          },
+          "reason": "Synthetic credit note",
+          "reversal_date": "2026-10-16"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "OPEN-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "onboarding.opening_batch.draft.save/v1",
+        "request_id": "OPEN-DRAFT",
+        "idempotency_key": "00000081",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "cutoff_date": "2026-08-31",
+            "mode": "carry_balance",
+            "input_digest": "bcdd23bf14cee35b36dfc39efc59d5d3f6a2af16427273c3399b3381d4ab9d72"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "OPEN-COMMIT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "onboarding.opening.commit/v1",
+        "request_id": "OPEN-COMMIT",
+        "idempotency_key": "00000082",
+        "dry_run": false,
+        "payload": {
+          "opening_batch_id": "OPEN-20260831",
+          "expected_version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U12",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U12",
+        "idempotency_key": "00000083",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 50000,
+          "external_source_key": "00000084",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CLEAR-U12",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.clearance.create/v1",
+        "request_id": "CLEAR-U12",
+        "idempotency_key": "00000085",
+        "dry_run": false,
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U12",
+            "version": 1
+          },
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": "AR-OPEN",
+            "version": 1
+          },
+          "cleared_cents": 50000
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U13",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U13",
+        "idempotency_key": "00000086",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 10000,
+          "external_source_key": "00000087",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U13-FEE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U13-FEE",
+        "idempotency_key": "00000088",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "out",
+          "gross_cents": 100,
+          "external_source_key": "00000089",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-VENDOR"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-FEE-COST",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.cost.post/v1",
+        "request_id": "BANK-FEE-COST",
+        "idempotency_key": "00000090",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "expense_claim",
+            "id": "EXP-BANK-FEE",
+            "version": 1
+          },
+          "occurred_on": "2026-10-15",
+          "posting_period": "2026-10"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U13-XFER-OUT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U13-XFER-OUT",
+        "idempotency_key": "00000091",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "out",
+          "gross_cents": 25000,
+          "external_source_key": "00000092",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U13-XFER-IN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U13-XFER-IN",
+        "idempotency_key": "00000093",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-SAV",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 25000,
+          "external_source_key": "00000094",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U13-UNMATCHED",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U13-UNMATCHED",
+        "idempotency_key": "00000095",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 700,
+          "external_source_key": "00000096",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CONCURRENT-CLEAR-A",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.clearance.create/v1",
+        "request_id": "CONCURRENT-CLEAR-A",
+        "idempotency_key": "00000097",
+        "dry_run": false,
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U14",
+            "version": 1
+          },
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": "AR-U14",
+            "version": 1
+          },
+          "cleared_cents": 8000
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "CONCURRENT-CLEAR-B",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.clearance.create/v1",
+        "request_id": "CONCURRENT-CLEAR-B",
+        "idempotency_key": "00000098",
+        "dry_run": false,
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U14",
+            "version": 1
+          },
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": "AR-U14",
+            "version": 1
+          },
+          "cleared_cents": 8000
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "PERIOD-CLOSE",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "period.close/v1",
+        "request_id": "PERIOD-CLOSE",
+        "idempotency_key": "00000099",
+        "dry_run": false,
+        "payload": {
+          "period": "2026-09",
+          "expected_last_event_id": "EVT-SEP-LAST"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "TAX-UNKNOWN-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.expense_claim.draft.save/v1",
+        "request_id": "TAX-UNKNOWN-DRAFT",
+        "idempotency_key": "00000100",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "occurred_on": "2026-09-15",
+            "category_id": "CAT-TRAVEL",
+            "gross_cents": 10600,
+            "claimant_employee_id": "E-A-ALICE",
+            "evidence": [
+              {
+                "evidence_id": "ATT-EXPENSE",
+                "sha256": "c5088e28ae39765c53b09399763f465e024456d727a9cdf3bf8a38e82c65ece4"
+              }
+            ]
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "TAX-UNKNOWN-POST",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.cost.post/v1",
+        "request_id": "TAX-UNKNOWN-POST",
+        "idempotency_key": "00000101",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "expense_claim",
+            "id": "EXP-TAX-UNKNOWN",
+            "version": 1
+          },
+          "occurred_on": "2026-09-15",
+          "posting_period": "2026-09"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "TAX-ADJUST",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "period.adjustment.post/v1",
+        "request_id": "TAX-ADJUST",
+        "idempotency_key": "00000102",
+        "dry_run": false,
+        "payload": {
+          "original_event_ref": {
+            "namespace": "core",
+            "kind": "accounting_event",
+            "id": "EVT-TAX-UNKNOWN",
+            "version": 1
+          },
+          "reason": "Approved deductible tax 600; original gross retained",
+          "posting_period": "2026-10"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "PREPAID-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.prepaid_service.draft.save/v1",
+        "request_id": "PREPAID-DRAFT",
+        "idempotency_key": "00000103",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "counterparty_id": "CP-A-VENDOR",
+            "gross_cents": 120000,
+            "service_start": "2026-10-01",
+            "service_end": "2027-09-30",
+            "consumption_method": "monthly_straight_line",
+            "scope": {
+              "kind": "project",
+              "id": "P-SERVICE"
+            }
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "BANK-U18",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U18",
+        "idempotency_key": "00000104",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "out",
+          "gross_cents": 120000,
+          "external_source_key": "00000105",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-VENDOR"
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "PREPAID-CONSUME",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.cost.post/v1",
+        "request_id": "PREPAID-CONSUME",
+        "idempotency_key": "00000106",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "prepaid_service",
+            "id": "PREPAID-ANNUAL",
+            "version": 1
+          },
+          "occurred_on": "2026-10-15",
+          "posting_period": "2026-10"
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SERVICE-CONFIRM-DRAFT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "delivery.service_confirmation.draft.save/v1",
+        "request_id": "SERVICE-CONFIRM-DRAFT",
+        "idempotency_key": "00000107",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "project_id": "P-SERVICE",
+            "contract_line_ref": {
+              "namespace": "contracts",
+              "kind": "contract_line",
+              "id": "CL-SERVICE",
+              "version": 1
+            },
+            "confirmed_on": "2026-10-31",
+            "coverage_start": "2026-10-01",
+            "coverage_end": "2026-10-31",
+            "evidence": [
+              {
+                "evidence_id": "ATT-CONTRACT",
+                "sha256": "13e69d425085bf38a3001652ee42c8389f491c245bf96b0f5125147457bbf494"
+              }
+            ]
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "REV-SERVICE-OCT",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "management_revenue.recognize/v1",
+        "request_id": "REV-SERVICE-OCT",
+        "idempotency_key": "00000108",
+        "dry_run": false,
+        "payload": {
+          "contract_line_ref": {
+            "namespace": "contracts",
+            "kind": "contract_line",
+            "id": "CL-SERVICE",
+            "version": 1
+          },
+          "performance_ref": {
+            "namespace": "delivery",
+            "kind": "service_confirmation",
+            "id": "SERVICE-OCT",
+            "version": 1
+          },
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U17",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.settlement.draft.save/v1",
+        "request_id": "SET-U17",
+        "idempotency_key": "00000109",
+        "dry_run": false,
+        "payload": {
+          "fields": {
+            "scope": {
+              "kind": "project",
+              "id": "P-FIXED"
+            },
+            "settled_on": "2026-09-15",
+            "direction": "payable",
+            "payee": {
+              "kind": "employee",
+              "id": "E-A-ALICE"
+            },
+            "source_ref": {
+              "namespace": "costing",
+              "kind": "expense_claim",
+              "id": "EXP-TAX-UNKNOWN",
+              "version": 1
+            },
+            "gross_cents": 10600,
+            "net_cents": 10600,
+            "tax_cents": 0,
+            "due_date": "2026-10-15",
+            "evidence": [
+              {
+                "evidence_id": "ATT-EXPENSE",
+                "sha256": "c5088e28ae39765c53b09399763f465e024456d727a9cdf3bf8a38e82c65ece4"
+              }
+            ]
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "SET-U17-OPEN",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.open_item.create/v1",
+        "request_id": "SET-U17-OPEN",
+        "idempotency_key": "00000110",
+        "dry_run": false,
+        "payload": {
+          "settlement_ref": {
+            "namespace": "settlement",
+            "kind": "settlement",
+            "id": "SET-U17",
+            "version": 1
+          }
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "PERIOD-RACE-SEP-POST",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.cost.post/v1",
+        "request_id": "PERIOD-RACE-SEP-POST",
+        "idempotency_key": "00000111",
+        "dry_run": false,
+        "payload": {
+          "cost_source_ref": {
+            "namespace": "costing",
+            "kind": "expense_claim",
+            "id": "SE-SEP-10000",
+            "version": 1
+          },
+          "occurred_on": "2026-09-15",
+          "posting_period": "2026-09"
+        }
+      },
+      "execution_status": "not_run"
+    }
+  ],
+  "negative_schema_samples": [
+    {
+      "id": "bool_amount",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U03-PRE",
+        "idempotency_key": "00000022",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": true,
+          "external_source_key": "00000023",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      }
+    },
+    {
+      "id": "integral_float_amount",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U03-PRE",
+        "idempotency_key": "00000022",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 31800.0,
+          "external_source_key": "00000023",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      }
+    },
+    {
+      "id": "fraction_amount",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U03-PRE",
+        "idempotency_key": "00000022",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 31800.5,
+          "external_source_key": "00000023",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      }
+    },
+    {
+      "id": "money_limit",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U03-PRE",
+        "idempotency_key": "00000022",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 1000000000001,
+          "external_source_key": "00000023",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        }
+      }
+    },
+    {
+      "id": "caller_org",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U03-PRE",
+        "idempotency_key": "00000022",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 31800,
+          "external_source_key": "00000023",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          }
+        },
+        "organization_id": "ENT-B"
+      }
+    },
+    {
+      "id": "caller_approver",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.transaction.record/v1",
+        "request_id": "BANK-U03-PRE",
+        "idempotency_key": "00000022",
+        "dry_run": false,
+        "payload": {
+          "funding_account_id": "BA-A-OPER",
+          "transaction_date": "2026-10-15",
+          "direction": "in",
+          "gross_cents": 31800,
+          "external_source_key": "00000023",
+          "payee": {
+            "kind": "counterparty",
+            "id": "CP-A-CUSTOMER"
+          },
+          "approved_by_member_id": "U-A-OWNER"
+        }
+      }
+    },
+    {
+      "id": "raw_revenue_amount",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "management_revenue.recognize/v1",
+        "request_id": "REV-U03",
+        "idempotency_key": "00000026",
+        "dry_run": false,
+        "payload": {
+          "contract_line_ref": {
+            "namespace": "contracts",
+            "kind": "contract_line",
+            "id": "CL-FIXED",
+            "version": 1
+          },
+          "performance_ref": {
+            "namespace": "delivery",
+            "kind": "acceptance",
+            "id": "FUL-U03",
+            "version": 1
+          },
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          },
+          "recognized_net_cents": 50000
+        }
+      }
+    },
+    {
+      "id": "wrong_performance_source",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "management_revenue.recognize/v1",
+        "request_id": "REV-U03",
+        "idempotency_key": "00000026",
+        "dry_run": false,
+        "payload": {
+          "contract_line_ref": {
+            "namespace": "contracts",
+            "kind": "contract_line",
+            "id": "CL-FIXED",
+            "version": 1
+          },
+          "performance_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": "BANK-U03-PRE",
+            "version": 1
+          },
+          "policy_version": {
+            "policy_id": "POLICY-SYN-1",
+            "version": 1
+          }
+        }
+      }
+    }
+  ]
+}

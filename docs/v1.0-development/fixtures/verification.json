@@ -1,0 +1,140 @@
+{
+  "kind": "actual_frozen_synthetic_preparation_checks_not_product_uat",
+  "result": "pass",
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "baseline_sha": "119a04916e3e96a5e4d86516a5f13e841faf2f67",
+  "input_sha256": {
+    "build_legacy.py": "d816735fa33c96bf4ccf764bdc82a86911512ec8fcbb40df4996751576f3732f",
+    "seed_legacy.py": "7b48c54981b2f177f9d2e309ec38abf90b4c11d9ec629a9f2be0bc516dd8b7a2",
+    "verify_legacy.py": "aa432a7c69f8409671a2b8236be17323b88c65afbde4d8550bff45aa7bde06b5"
+  },
+  "frozen_source_no_replace_objects": true,
+  "archive_digest_checked": true,
+  "runs": [
+    {
+      "run": "run-a",
+      "builder_exit_code": 0,
+      "commands": [
+        {
+          "argv": [
+            "python",
+            "manage.py",
+            "migrate",
+            "--noinput"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python",
+            "manage.py",
+            "shell",
+            "-c",
+            "exec(open('_synthetic_seed.py').read())"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python",
+            "manage.py",
+            "verify_integrity",
+            "--json"
+          ],
+          "exit_code": 0
+        }
+      ],
+      "archive_sha256": "4ae5b5648c7716006830f6a21b73af3ac12eef4a0bd592c0d0b2dee1f30e9ef5",
+      "business_sha256": "fb6ede3c5ac1c05d63515caebca82aa28dd873f0026fc853d8877503dd537ab0",
+      "counts": {
+        "audit": 9,
+        "domain_events": 9,
+        "employees": 1,
+        "ledger": 4,
+        "memberships": 3,
+        "organizations": 1,
+        "projects": 1,
+        "rates": 2,
+        "timesheets": 4
+      },
+      "total_cost_cents": 58,
+      "integrity": {
+        "ok": true,
+        "errors": [],
+        "organizations": 1,
+        "entries": 4
+      }
+    },
+    {
+      "run": "run-b",
+      "builder_exit_code": 0,
+      "commands": [
+        {
+          "argv": [
+            "python",
+            "manage.py",
+            "migrate",
+            "--noinput"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python",
+            "manage.py",
+            "shell",
+            "-c",
+            "exec(open('_synthetic_seed.py').read())"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python",
+            "manage.py",
+            "verify_integrity",
+            "--json"
+          ],
+          "exit_code": 0
+        }
+      ],
+      "archive_sha256": "4ae5b5648c7716006830f6a21b73af3ac12eef4a0bd592c0d0b2dee1f30e9ef5",
+      "business_sha256": "fb6ede3c5ac1c05d63515caebca82aa28dd873f0026fc853d8877503dd537ab0",
+      "counts": {
+        "audit": 9,
+        "domain_events": 9,
+        "employees": 1,
+        "ledger": 4,
+        "memberships": 3,
+        "organizations": 1,
+        "projects": 1,
+        "rates": 2,
+        "timesheets": 4
+      },
+      "total_cost_cents": 58,
+      "integrity": {
+        "ok": true,
+        "errors": [],
+        "organizations": 1,
+        "entries": 4
+      }
+    }
+  ],
+  "business_bytes_identical": true,
+  "original_lines_cents": [
+    2,
+    2,
+    2,
+    52
+  ],
+  "existing_output_refused": true,
+  "existing_database_hash_unchanged": true,
+  "output_location": "external temporary directory; retained for local inspection only; no database copied to source",
+  "not_verified": [
+    "new migrations or upgrade/cutover",
+    "PostgreSQL multi-connection",
+    "Linux database+attachment restore",
+    "product UAT",
+    "browser UI"
+  ]
+}
