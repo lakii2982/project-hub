@@ -818,6 +818,12 @@
             },
             "as_of_date": {
               "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "scenario": {
+              "enum": [
+                "base",
+                "conservative"
+              ]
             }
           },
           "required": [

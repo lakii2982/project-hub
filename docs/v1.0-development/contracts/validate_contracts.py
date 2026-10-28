@@ -3,6 +3,9 @@ from pathlib import Path
 import json
 import hashlib
 import re
+import contextlib
+import io
+import runpy
 from jsonschema import Draft202012Validator, FormatChecker, validators
 from referencing import Registry, Resource
 from referencing.exceptions import NoSuchResource
@@ -70,7 +73,13 @@ def main():
         assert set(names)==set(schemas[file]['$defs']),field+' catalog mismatch'
     assert set(schemas['commands.schema.json']['$defs'])==set(schemas['command-results.schema.json']['$defs'])
     assert set(schemas['queries.schema.json']['$defs'])==set(schemas['query-results.schema.json']['$defs'])
-    print(json.dumps({'result':'pass','kind':'offline_preparation_schema_only','schemas':len(schemas),'resolved_refs':count,'requirements':137,'commands':len(schemas['commands.schema.json']['$defs']),'queries':25,'events':28,'strict_python_integer':True,'runtime_business_verified':False}))
+    supplemental=None
+    extension=HERE.parent/'promotion-draft/check-extension-plans.py'
+    if (extension.parent/'extension-freeze.json').exists():
+        capture=io.StringIO()
+        with contextlib.redirect_stdout(capture):runpy.run_path(str(extension),run_name='__main__')
+        supplemental=json.loads(capture.getvalue())
+    print(json.dumps({'result':'pass','kind':'offline_preparation_schema_only','schemas':len(schemas),'resolved_refs':count,'requirements':137,'commands':len(schemas['commands.schema.json']['$defs']),'queries':len(schemas['queries.schema.json']['$defs']),'events':len(schemas['events.schema.json']['$defs']),'strict_python_integer':True,'supplemental_design_examples':supplemental,'runtime_business_verified':False}))
 
 
 if __name__=='__main__':main()

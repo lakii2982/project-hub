@@ -1,0 +1,1284 @@
+{
+  "classification": "supplemental_schema_examples_only",
+  "positive": [
+    {
+      "id": "cash.manual_plan.draft.save/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.manual_plan.draft.save/v1",
+        "request_id": 1,
+        "idempotency_key": "00000001",
+        "payload": {
+          "plan_id": null,
+          "expected_version": null,
+          "source_key": "MANUAL-PLAN-01",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "title": "合成项目预计收款",
+          "direction": "in",
+          "gross_cents": 10000,
+          "expected_date": null,
+          "certainty": "conditional",
+          "evidence": []
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "costing.bank_charge.draft.save/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.bank_charge.draft.save/v1",
+        "request_id": 2,
+        "idempotency_key": "00000002",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "gross_cents": 200,
+          "existing_cost_ref": null,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "fee_bearer": "company",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "costing.bank_charge.draft.save/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.bank_charge.draft.save/v1",
+        "request_id": 3,
+        "idempotency_key": "00000003",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "existing_cost_ref": {
+            "namespace": "core",
+            "kind": "ledger_posting",
+            "id": 1,
+            "version": 1
+          },
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "fee_bearer": "company",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "cash.receipt_fee_settlement.record/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.receipt_fee_settlement.record/v1",
+        "request_id": 4,
+        "idempotency_key": "00000004",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "cash_expected_version": 1,
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": 1,
+            "version": 1
+          },
+          "open_item_expected_version": 1,
+          "bank_charge_ref": {
+            "namespace": "costing",
+            "kind": "bank_charge",
+            "id": 1,
+            "version": 1
+          },
+          "bank_charge_expected_version": 1,
+          "existing_net_clearance_ref": null,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "settlement.receipt_fee_settlement.reverse/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.receipt_fee_settlement.reverse/v1",
+        "request_id": 5,
+        "idempotency_key": "00000005",
+        "payload": {
+          "original_ref": {
+            "namespace": "settlement",
+            "kind": "receipt_fee_settlement",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "reason": "合成核对纠错",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "insights.reconciliation.refresh/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "insights.reconciliation.refresh/v1",
+        "request_id": 6,
+        "idempotency_key": "00000006",
+        "payload": {
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "as_of_date": "2026-10-28"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "insights.reconciliation.case.update/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "insights.reconciliation.case.update/v1",
+        "request_id": 7,
+        "idempotency_key": "00000007",
+        "payload": {
+          "case_ref": {
+            "namespace": "insights",
+            "kind": "reconciliation_case",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "action": "annotate",
+          "owner_member_id": null,
+          "resolution_note": "合成来源待核对，不编辑差异金额"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "cash.classification.record/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.classification.record/v1",
+        "request_id": 8,
+        "idempotency_key": "00000008",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "classification": "payroll",
+          "salary_pool_links": [
+            {
+              "salary_pool_ref": {
+                "namespace": "costing",
+                "kind": "salary_pool",
+                "id": 1,
+                "version": 1
+              },
+              "linked_cents": 8000,
+              "payment_component": "wage"
+            }
+          ],
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "cash_transaction",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "cash.classification.reverse/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.classification.reverse/v1",
+        "request_id": 9,
+        "idempotency_key": "00000009",
+        "payload": {
+          "classification_ref": {
+            "namespace": "cash",
+            "kind": "cash_classification",
+            "id": 1,
+            "version": 1
+          },
+          "reason": "合成错误分类撤销",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "cash_classification",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "cash.internal_transfer.link/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.internal_transfer.link/v1",
+        "request_id": 10,
+        "idempotency_key": "00000010",
+        "payload": {
+          "out_cash_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "in_cash_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 2,
+            "version": 1
+          },
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "cash_transaction",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "cash.internal_transfer.reverse/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.internal_transfer.reverse/v1",
+        "request_id": 11,
+        "idempotency_key": "00000011",
+        "payload": {
+          "internal_transfer_ref": {
+            "namespace": "cash",
+            "kind": "internal_transfer",
+            "id": 1,
+            "version": 1
+          },
+          "reason": "合成互转错配撤销",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "internal_transfer",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "delivery.project.close/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "delivery.project.close/v1",
+        "request_id": 12,
+        "idempotency_key": "00000012",
+        "payload": {
+          "project_id": 1,
+          "expected_version": 1,
+          "action": "business_complete",
+          "close_evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "core.document.decide/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "core.document.decide/v1",
+        "request_id": 13,
+        "idempotency_key": "00000013",
+        "payload": {
+          "source": {
+            "namespace": "delivery",
+            "kind": "service_confirmation",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "decision": "approve",
+          "note": "合成独立复核样例"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "core.document.decide/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "core.document.decide/v1",
+        "request_id": 14,
+        "idempotency_key": "00000014",
+        "payload": {
+          "source": {
+            "namespace": "costing",
+            "kind": "spend_commitment",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "decision": "approve",
+          "note": "合成独立复核样例"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "core.document.decide/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "core.document.decide/v1",
+        "request_id": 15,
+        "idempotency_key": "00000015",
+        "payload": {
+          "source": {
+            "namespace": "costing",
+            "kind": "bank_charge",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "decision": "approve",
+          "note": "合成独立复核样例"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    },
+    {
+      "id": "core.document.decide/v1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "core.document.decide/v1",
+        "request_id": 16,
+        "idempotency_key": "00000016",
+        "payload": {
+          "source": {
+            "namespace": "cash",
+            "kind": "manual_cash_plan",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "decision": "approve",
+          "note": "合成独立复核样例"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "execution_status": "not_run"
+    }
+  ],
+  "negative": [
+    {
+      "id": "actor_override_0",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.manual_plan.draft.save/v1",
+        "request_id": 1,
+        "idempotency_key": "00000001",
+        "payload": {
+          "plan_id": null,
+          "expected_version": null,
+          "source_key": "MANUAL-PLAN-01",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "title": "合成项目预计收款",
+          "direction": "in",
+          "gross_cents": 10000,
+          "expected_date": null,
+          "certainty": "conditional",
+          "evidence": [],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_1",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.bank_charge.draft.save/v1",
+        "request_id": 2,
+        "idempotency_key": "00000002",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "gross_cents": 200,
+          "existing_cost_ref": null,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "fee_bearer": "company",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_2",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.bank_charge.draft.save/v1",
+        "request_id": 3,
+        "idempotency_key": "00000003",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "existing_cost_ref": {
+            "namespace": "core",
+            "kind": "ledger_posting",
+            "id": 1,
+            "version": 1
+          },
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "fee_bearer": "company",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_3",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.receipt_fee_settlement.record/v1",
+        "request_id": 4,
+        "idempotency_key": "00000004",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "cash_expected_version": 1,
+          "open_item_ref": {
+            "namespace": "settlement",
+            "kind": "open_item",
+            "id": 1,
+            "version": 1
+          },
+          "open_item_expected_version": 1,
+          "bank_charge_ref": {
+            "namespace": "costing",
+            "kind": "bank_charge",
+            "id": 1,
+            "version": 1
+          },
+          "bank_charge_expected_version": 1,
+          "existing_net_clearance_ref": null,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_4",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "settlement.receipt_fee_settlement.reverse/v1",
+        "request_id": 5,
+        "idempotency_key": "00000005",
+        "payload": {
+          "original_ref": {
+            "namespace": "settlement",
+            "kind": "receipt_fee_settlement",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "reason": "合成核对纠错",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_5",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "insights.reconciliation.refresh/v1",
+        "request_id": 6,
+        "idempotency_key": "00000006",
+        "payload": {
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "as_of_date": "2026-10-28",
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_6",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "insights.reconciliation.case.update/v1",
+        "request_id": 7,
+        "idempotency_key": "00000007",
+        "payload": {
+          "case_ref": {
+            "namespace": "insights",
+            "kind": "reconciliation_case",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "action": "annotate",
+          "owner_member_id": null,
+          "resolution_note": "合成来源待核对，不编辑差异金额",
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_7",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.classification.record/v1",
+        "request_id": 8,
+        "idempotency_key": "00000008",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "classification": "payroll",
+          "salary_pool_links": [
+            {
+              "salary_pool_ref": {
+                "namespace": "costing",
+                "kind": "salary_pool",
+                "id": 1,
+                "version": 1
+              },
+              "linked_cents": 8000,
+              "payment_component": "wage"
+            }
+          ],
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "cash_transaction",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_8",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.classification.reverse/v1",
+        "request_id": 9,
+        "idempotency_key": "00000009",
+        "payload": {
+          "classification_ref": {
+            "namespace": "cash",
+            "kind": "cash_classification",
+            "id": 1,
+            "version": 1
+          },
+          "reason": "合成错误分类撤销",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "cash_classification",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_9",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.internal_transfer.link/v1",
+        "request_id": 10,
+        "idempotency_key": "00000010",
+        "payload": {
+          "out_cash_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "in_cash_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 2,
+            "version": 1
+          },
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "cash_transaction",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_10",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.internal_transfer.reverse/v1",
+        "request_id": 11,
+        "idempotency_key": "00000011",
+        "payload": {
+          "internal_transfer_ref": {
+            "namespace": "cash",
+            "kind": "internal_transfer",
+            "id": 1,
+            "version": 1
+          },
+          "reason": "合成互转错配撤销",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "internal_transfer",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_11",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "delivery.project.close/v1",
+        "request_id": 12,
+        "idempotency_key": "00000012",
+        "payload": {
+          "project_id": 1,
+          "expected_version": 1,
+          "action": "business_complete",
+          "close_evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ],
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_12",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "core.document.decide/v1",
+        "request_id": 13,
+        "idempotency_key": "00000013",
+        "payload": {
+          "source": {
+            "namespace": "delivery",
+            "kind": "service_confirmation",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "decision": "approve",
+          "note": "合成独立复核样例",
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_13",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "core.document.decide/v1",
+        "request_id": 14,
+        "idempotency_key": "00000014",
+        "payload": {
+          "source": {
+            "namespace": "costing",
+            "kind": "spend_commitment",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "decision": "approve",
+          "note": "合成独立复核样例",
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_14",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "core.document.decide/v1",
+        "request_id": 15,
+        "idempotency_key": "00000015",
+        "payload": {
+          "source": {
+            "namespace": "costing",
+            "kind": "bank_charge",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "decision": "approve",
+          "note": "合成独立复核样例",
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "actor_override_15",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "core.document.decide/v1",
+        "request_id": 16,
+        "idempotency_key": "00000016",
+        "payload": {
+          "source": {
+            "namespace": "cash",
+            "kind": "manual_cash_plan",
+            "id": 1,
+            "version": 1
+          },
+          "expected_version": 1,
+          "decision": "approve",
+          "note": "合成独立复核样例",
+          "organization_id": "UNTRUSTED-COMPANY"
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "unknown client company field",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "invalid_money_0_bool",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.manual_plan.draft.save/v1",
+        "request_id": 1,
+        "idempotency_key": "00000001",
+        "payload": {
+          "plan_id": null,
+          "expected_version": null,
+          "source_key": "MANUAL-PLAN-01",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "title": "合成项目预计收款",
+          "direction": "in",
+          "gross_cents": true,
+          "expected_date": null,
+          "certainty": "conditional",
+          "evidence": []
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "strict integer excludes bool/float",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "invalid_money_0_float",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.manual_plan.draft.save/v1",
+        "request_id": 1,
+        "idempotency_key": "00000001",
+        "payload": {
+          "plan_id": null,
+          "expected_version": null,
+          "source_key": "MANUAL-PLAN-01",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "title": "合成项目预计收款",
+          "direction": "in",
+          "gross_cents": 1.0,
+          "expected_date": null,
+          "certainty": "conditional",
+          "evidence": []
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "strict integer excludes bool/float",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "invalid_money_1_bool",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.bank_charge.draft.save/v1",
+        "request_id": 2,
+        "idempotency_key": "00000002",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "gross_cents": true,
+          "existing_cost_ref": null,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "fee_bearer": "company",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "strict integer excludes bool/float",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "invalid_money_1_float",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "costing.bank_charge.draft.save/v1",
+        "request_id": 2,
+        "idempotency_key": "00000002",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "gross_cents": 1.0,
+          "existing_cost_ref": null,
+          "occurred_on": "2026-10-28",
+          "posting_period": "2026-10",
+          "scope": {
+            "kind": "project",
+            "id": 1
+          },
+          "fee_bearer": "company",
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10"
+      },
+      "reason": "strict integer excludes bool/float",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "invalid_money_7_bool",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.classification.record/v1",
+        "request_id": 8,
+        "idempotency_key": "00000008",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "classification": "payroll",
+          "salary_pool_links": [
+            {
+              "salary_pool_ref": {
+                "namespace": "costing",
+                "kind": "salary_pool",
+                "id": 1,
+                "version": 1
+              },
+              "linked_cents": true,
+              "payment_component": "wage"
+            }
+          ],
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "cash_transaction",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "reason": "strict integer excludes bool/float",
+      "execution_status": "not_run"
+    },
+    {
+      "id": "invalid_money_7_float",
+      "schema": "commands.schema.json",
+      "value": {
+        "contract": "cash.classification.record/v1",
+        "request_id": 8,
+        "idempotency_key": "00000008",
+        "payload": {
+          "cash_transaction_ref": {
+            "namespace": "cash",
+            "kind": "cash_transaction",
+            "id": 1,
+            "version": 1
+          },
+          "classification": "payroll",
+          "salary_pool_links": [
+            {
+              "salary_pool_ref": {
+                "namespace": "costing",
+                "kind": "salary_pool",
+                "id": 1,
+                "version": 1
+              },
+              "linked_cents": 1.0,
+              "payment_component": "wage"
+            }
+          ],
+          "evidence": [
+            {
+              "evidence_id": 1,
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "kind": "bank_proof"
+            }
+          ]
+        },
+        "dry_run": false,
+        "occurred_on": "2026-10-28",
+        "posting_period": "2026-10",
+        "source": {
+          "namespace": "cash",
+          "kind": "cash_transaction",
+          "id": 1,
+          "version": 1
+        }
+      },
+      "reason": "strict integer excludes bool/float",
+      "execution_status": "not_run"
+    }
+  ],
+  "service_and_database_executed": false
+}

@@ -10,7 +10,7 @@
   "product_uat_passed": false,
   "database_read": false,
   "input_sha256": {
-    "fixture.json": "9cb2d8726ef212dda8966671e82f31e3ebfb5a617e874f5198c035b25342b318",
+    "fixture.json": "2620e168fce0c88b5f2fcaeaf60b4e2cba577263e7c10a5df308887a5223b733",
     "command-samples.json": "575e0f77def7ee1ce770fa5be11e0b9ed4aa2b51ea1cae9de3a71cdb49fa0ad5",
     "requirements-coverage.json": "7f8c1049e02e946ff44142d331723b4704fe2ee3d290e37212aebc6f5cc888af",
     "check_fixture.py": "d5044c022ee1f0f3656f92a751ef565af86c18257a145f2c408a7f88fa06a47f"

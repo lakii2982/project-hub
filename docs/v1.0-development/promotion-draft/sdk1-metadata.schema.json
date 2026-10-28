@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:project-hub:planning:sdk1-metadata:1",
+  "title": "PH137 SDK1 metadata proposal; not approved runtime contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plugin_id",
+    "django_app",
+    "contracts",
+    "routes",
+    "migration_dependencies"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1",
+      "type": "string"
+    },
+    "plugin_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,79}$"
+    },
+    "django_app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module",
+        "label"
+      ],
+      "properties": {
+        "module": {
+          "type": "string",
+          "pattern": "^pmo_plugins\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+        },
+        "label": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        }
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commands",
+        "queries",
+        "events"
+      ],
+      "properties": {
+        "commands": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "queries": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "events": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "path",
+          "access"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^(?:[a-z][a-z0-9_-]*/)*$"
+          },
+          "access": {
+            "enum": [
+              "business_read",
+              "business_write",
+              "history_read"
+            ]
+          }
+        }
+      }
+    },
+    "migration_dependencies": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "1",
+  "plugin_id": "example_domain",
+  "django_app": {
+    "module": "pmo_plugins.example_domain",
+    "label": "example_domain"
+  },
+  "contracts": {
+    "commands": [],
+    "queries": [],
+    "events": []
+  },
+  "routes": [
+    {
+      "name": "overview",
+      "path": "",
+      "access": "business_read"
+    }
+  ],
+  "migration_dependencies": []
+}

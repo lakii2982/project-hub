@@ -17,6 +17,46 @@ def check(condition, message):
 def main():
     registry = json.loads((DESIGN / "work-packages.json").read_text())
     trace = json.loads((DESIGN / "requirement-trace.json").read_text())
+    plan = json.loads((DESIGN / "implementation-plan.json").read_text())
+    live = json.loads((ROOT / "project/tasks.json").read_text())["tasks"]
+    tasks = {t["id"]: t for t in live}
+    check(len(tasks) == len(live), "Duplicate live PH ID")
+    slices = plan["implementation_slices"]
+    slice_ids = {s["ph_id"] for s in slices}
+    check(len(slice_ids) == len(slices) == 72, "Expected 72 implementation slices plus security")
+    check(slice_ids | {"PH-139"} == {"PH-001", "PH-002", "PH-003", "PH-026"} |
+          {f"PH-{i}" for i in range(139, 208)}, "Formal PH allocation differs")
+    expected_packages = {}
+    primary_owners = {}
+    support_owners = {}
+    for item in slices:
+        ph = item["ph_id"]
+        check(ph in tasks, f"Missing live task: {ph}")
+        task = tasks[ph]
+        check(task["spec"] == item["spec_path"] and (ROOT / task["spec"]).is_file(),
+              f"Missing or mismatched formal spec: {ph}")
+        check(task["allowed_paths"] == item["allowed_paths"], f"Formal allowlist differs: {ph}")
+        check(set(item["depends_on"]) <= set(task["depends_on"]), f"Missing dependency gate: {ph}")
+        check(set(item["acceptance"]) <= set(task["acceptance"]), f"Missing acceptance gate: {ph}")
+        expected_packages.setdefault(item["package_id"], []).append(ph)
+        for req in item["requirement_ids"]:
+            check(req not in primary_owners, f"Duplicate primary PH: {req}")
+            primary_owners[req] = ph
+        for req in item["support_requirement_ids"]:
+            support_owners.setdefault(req, []).append(ph)
+    security = tasks.get("PH-139", {})
+    check(security.get("depends_on") == ["PH-137"], "Security must follow PH137")
+    check((ROOT / security.get("spec", "missing")).is_file(), "Missing security spec")
+    security_paths = {"requirements.txt", ".github/workflows/preparation.yml",
+                      "tests/test_drf_security_compatibility.py",
+                      "docs/v1.0-development/preparation-evidence.md", "docs/delivery-status.md",
+                      "docs/verification.md", "project/tasks.json", "project/manifest.json",
+                      "project/reports/PH-139.json", "project/handoffs/PH-139.md"}
+    check(set(security.get("allowed_paths", [])) == security_paths,
+          "Fixed security scope differs")
+    expected_packages.setdefault("WP-RELEASE-PACKAGE", []).insert(0, "PH-139")
+    check(plan["global_dispatch_allowed"] is False, "Contract plan cannot dispatch")
+    check(primary_owners == plan["requirement_primary_ph"], "Unique primary PH allocation differs")
     source = (ROOT / "docs/v1.0-delivery-plan.md").read_text()
     original = {}
     for line in source.splitlines():
@@ -36,7 +76,14 @@ def main():
     for p in packs:
         check(p["design_state"] == "design_candidate" and p["dispatch_allowed"] is False,
               f"Design package became dispatchable: {p['id']}")
-        check(not p["ph_task_ids"], "PH promotion requires a reviewed design schema/authority transition")
+        if p["kind"] == "preparation":
+            prep_order = [x["id"] for x in packs if x["kind"] == "preparation"]
+            expected = [f"PH-{130 + prep_order.index(p['id'])}"]
+        else:
+            expected = expected_packages.get(p["id"], [])
+        check(p["ph_task_ids"] == expected and bool(expected), f"Package PH allocation differs: {p['id']}")
+        for ph in p["ph_task_ids"]:
+            check(ph in tasks and (ROOT / tasks[ph]["spec"]).is_file(), f"Unknown package task/spec: {ph}")
         for field in ("entry_checks", "exit_checks", "specific_deliverables", "contract_to_freeze"):
             check(bool(p[field]), f"Missing {field}: {p['id']}")
         check(len(set(p["depends_on"])) == len(p["depends_on"]), "Duplicate dependency")
@@ -84,7 +131,16 @@ def main():
               f"Trace text differs from product source: {req}")
         check(row["specialized_acceptance"] == original[req][2] and not row["evidence_refs"],
               f"Design cannot claim execution evidence: {req}")
-        check(not row["ph_task_ids"], "Design has not been promoted into live PH contracts")
+        primary = primary_owners.get(req)
+        check(primary in by_id[row["primary_package"]]["ph_task_ids"],
+              f"Primary PH does not belong to primary package: {req}")
+        support = [ph for ph in support_owners.get(req, []) if ph != primary]
+        check(primary is not None and row.get("primary_ph") == primary,
+              f"Missing or differing unique primary PH: {req}")
+        check(row.get("support_ph") == support and row["ph_task_ids"] == [primary] + support,
+              f"Requirement support PH allocation differs: {req}")
+        check(row.get("contract_refs") == [tasks[ph]["spec"] for ph in row["ph_task_ids"]],
+              f"Requirement spec references differ: {req}")
         for uat in row["uat_ids"]:
             check(uat in uats and req in uats[uat]["requirement_ids"], f"Inconsistent UAT relation: {req}")
     for uat, row in uats.items():

@@ -3772,6 +3772,9 @@
         "status": {
           "enum": [
             "draft",
+            "pending",
+            "approved",
+            "rejected",
             "active",
             "posted",
             "reversed",
@@ -3815,11 +3818,14 @@
           "description": "Derived for external counterparty only; employee uses direct Employee id."
         },
         "payee": {
-          "$ref": "./contract-bundle.schema.json#/$defs/PayeeRef"
+          "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
         }
       },
       "x-contract-status-enum": [
         "draft",
+        "pending",
+        "approved",
+        "rejected",
         "active",
         "posted",
         "reversed",
@@ -3901,7 +3907,8 @@
         "superseded"
       ],
       "x-owner": "cash",
-      "x-record-kind": "owned_fact"
+      "x-record-kind": "owned_fact",
+      "x-unique-key": "Historical identity is organization_id + classification stable id; at most one effective classification per organization + cash stable id. Effective excludes only classifications with a valid full append-only reversal; retain all originals and reversals."
     },
     "CashAllocation": {
       "type": "object",
@@ -4226,7 +4233,9 @@
         "out_cash_ref",
         "in_cash_ref",
         "transfer_date",
-        "gross_cents"
+        "gross_cents",
+        "out_transaction_date",
+        "in_transaction_date"
       ],
       "properties": {
         "id": {
@@ -4262,6 +4271,12 @@
         },
         "gross_cents": {
           "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "out_transaction_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "in_transaction_date": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
         }
       },
       "x-contract-status-enum": [
@@ -4558,7 +4573,12 @@
         "created_at",
         "original_invoice_ref",
         "reason",
-        "reversal_date"
+        "reversal_date",
+        "line_reversals",
+        "allocation_reversals",
+        "gross_cents",
+        "net_cents",
+        "tax_cents"
       ],
       "properties": {
         "id": {
@@ -4606,6 +4626,31 @@
         },
         "reversal_date": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "line_reversals": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/InvoiceLineReversalSnapshot"
+          }
+        },
+        "allocation_reversals": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/InvoiceAllocationReversalSnapshot"
+          }
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        },
+        "net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        },
+        "tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
         }
       },
       "x-contract-status-enum": [
@@ -6772,6 +6817,33 @@
               "type": "null"
             }
           ]
+        },
+        "case_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "readOnly": true
+        },
+        "rule_code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "readOnly": true
+        },
+        "coverage_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "readOnly": true
+        },
+        "snapshot_watermark": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+          },
+          "readOnly": true
         }
       },
       "required": [
@@ -6814,13 +6886,15 @@
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
         "etc_cents": {
-          "const": 0
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
         },
         "unresolved_count": {
-          "const": 0
+          "type": "integer",
+          "minimum": 0
         },
         "unapproved_count": {
-          "const": 0
+          "type": "integer",
+          "minimum": 0
         },
         "close_evidence": {
           "type": "array",
@@ -6829,6 +6903,12 @@
           "items": {
             "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
           }
+        },
+        "phase": {
+          "enum": [
+            "business_complete",
+            "financial_archive"
+          ]
         }
       },
       "required": [
@@ -6843,7 +6923,35 @@
         "close_evidence"
       ],
       "x-record-kind": "owned_fact",
-      "x-owner": "delivery"
+      "x-owner": "delivery",
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "phase"
+            ],
+            "properties": {
+              "phase": {
+                "const": "business_complete"
+              }
+            }
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "etc_cents": {
+                "const": 0
+              },
+              "unresolved_count": {
+                "const": 0
+              },
+              "unapproved_count": {
+                "const": 0
+              }
+            }
+          }
+        }
+      ]
     },
     "IntegrityFinding": {
       "type": "object",
@@ -7400,6 +7508,1294 @@
         "Versions resolve immutable inputs; changed versions do not permit full reposting. Corrections append linked delta/reversal and coverage release.",
         "Stable id/version identifies the immutable original claim. Effective consumed/released coverage is derived from linked append-only accounting events; an adjustment reuses original claim and cannot create a second claim for the same business key."
       ]
+    },
+    "PayrollCashLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "reversed"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "classification_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_classification"
+                }
+              }
+            }
+          ]
+        },
+        "cash_transaction_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "salary_pool_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "costing"
+                },
+                "kind": {
+                  "const": "salary_pool"
+                }
+              }
+            }
+          ]
+        },
+        "linked_cents": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000000
+        },
+        "payment_component": {
+          "enum": [
+            "wage",
+            "employer_social_insurance",
+            "employee_social_insurance",
+            "housing_fund",
+            "withheld_tax"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "classification_ref",
+        "cash_transaction_ref",
+        "salary_pool_ref",
+        "linked_cents",
+        "payment_component"
+      ],
+      "x-owner": "cash",
+      "x-record-kind": "owned_fact",
+      "x-unique-key": "organization_id + classification stable id + cash_transaction stable id + salary_pool stable id + payment_component; historical row key excludes reference versions and request/idempotency keys"
+    },
+    "CashClassificationReversal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "const": "posted"
+        },
+        "classification_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_classification"
+                }
+              }
+            }
+          ]
+        },
+        "cash_transaction_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        },
+        "reversed_payroll_links": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "original_link_ref": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "namespace": {
+                        "const": "cash"
+                      },
+                      "kind": {
+                        "const": "payroll_cash_link"
+                      }
+                    }
+                  }
+                ]
+              },
+              "released_cents": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000000000
+              }
+            },
+            "required": [
+              "original_link_ref",
+              "released_cents"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "created_at",
+        "status",
+        "classification_ref",
+        "cash_transaction_ref",
+        "occurred_on",
+        "posting_period",
+        "reason",
+        "evidence",
+        "reversed_payroll_links"
+      ],
+      "x-owner": "cash",
+      "x-record-kind": "append_only_fact",
+      "x-unique-key": "organization_id + original classification stable id; each original payroll link reversed at most once"
+    },
+    "InternalTransferReversal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "const": "posted"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "internal_transfer_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "internal_transfer"
+                }
+              }
+            }
+          ]
+        },
+        "out_classification_reversal_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_classification_reversal"
+                }
+              }
+            }
+          ]
+        },
+        "in_classification_reversal_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_classification_reversal"
+                }
+              }
+            }
+          ]
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "internal_transfer_ref",
+        "out_classification_reversal_ref",
+        "in_classification_reversal_ref",
+        "occurred_on",
+        "posting_period",
+        "reason",
+        "evidence"
+      ],
+      "x-owner": "cash",
+      "x-record-kind": "append_only_fact",
+      "x-unique-key": "organization_id + original internal transfer stable id; excludes request key/version"
+    },
+    "InvoiceLineReversalSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "original_line_ref",
+        "gross_cents",
+        "net_cents",
+        "tax_cents"
+      ],
+      "properties": {
+        "original_line_ref": {
+          "$ref": "./write-dtos.schema.json#/$defs/InvoiceLineRef"
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        },
+        "net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        },
+        "tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        }
+      }
+    },
+    "InvoiceAllocationReversalSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "original_allocation_ref",
+        "original_line_ref",
+        "business_source_ref",
+        "gross_cents",
+        "net_cents",
+        "tax_cents"
+      ],
+      "properties": {
+        "original_allocation_ref": {
+          "$ref": "./write-dtos.schema.json#/$defs/InvoiceAllocationRef"
+        },
+        "original_line_ref": {
+          "$ref": "./write-dtos.schema.json#/$defs/InvoiceLineRef"
+        },
+        "business_source_ref": {
+          "$ref": "./write-dtos.schema.json#/$defs/InvoiceBusinessSourceRef"
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        },
+        "net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        },
+        "tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        }
+      }
+    },
+    "CashPartyMatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "cash_transaction_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "action": {
+          "enum": [
+            "identify",
+            "reverse"
+          ]
+        },
+        "identified_payee": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "const": "counterparty"
+                    },
+                    "id": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "id"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "const": "employee"
+                    },
+                    "id": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "id"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "const": "own_account"
+                    },
+                    "id": {
+                      "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "id"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "original_match_ref": {
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "cash_party_match"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 1000
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "created_at",
+        "cash_transaction_ref",
+        "action",
+        "identified_payee",
+        "original_match_ref",
+        "reason",
+        "evidence"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "const": "identify"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "identified_payee": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "counterparty"
+                      },
+                      "id": {
+                        "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "id"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "employee"
+                      },
+                      "id": {
+                        "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "id"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "own_account"
+                      },
+                      "id": {
+                        "$ref": "./contract-bundle.schema.json#/$defs/Id"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "id"
+                    ]
+                  }
+                ]
+              },
+              "original_match_ref": {
+                "type": "null"
+              },
+              "reason": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "identified_payee": {
+                "type": "null"
+              },
+              "original_match_ref": {
+                "allOf": [
+                  {
+                    "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                  },
+                  {
+                    "properties": {
+                      "namespace": {
+                        "const": "cash"
+                      },
+                      "kind": {
+                        "const": "cash_party_match"
+                      }
+                    }
+                  }
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            }
+          }
+        }
+      ],
+      "x-owner": "cash",
+      "x-record-kind": "append_only_fact"
+    },
+    "CashCorrectionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "pending",
+            "approved",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "fields": {
+          "$ref": "./write-dtos.schema.json#/$defs/CashCorrectionDraft"
+        },
+        "previous_effective_correction_ref": {
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "cash_correction"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "created_at",
+        "status",
+        "fields",
+        "previous_effective_correction_ref"
+      ],
+      "x-owner": "cash",
+      "x-record-kind": "owned_fact"
+    },
+    "CashCorrection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "original_cash_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "approved_correction_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "namespace": {
+                  "const": "cash"
+                },
+                "kind": {
+                  "const": "cash_correction_request"
+                }
+              }
+            }
+          ]
+        },
+        "previous_correction_ref": {
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "cash"
+                    },
+                    "kind": {
+                      "const": "cash_correction"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "corrected_fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "funding_account_id",
+            "transaction_date",
+            "direction",
+            "gross_cents",
+            "payee"
+          ],
+          "properties": {
+            "funding_account_id": {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            "transaction_date": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            "direction": {
+              "enum": [
+                "in",
+                "out"
+              ]
+            },
+            "gross_cents": {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+              }
+            },
+            "payee": {
+              "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+            }
+          }
+        },
+        "external_source_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "reversal_posting_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "core"
+                  },
+                  "kind": {
+                    "const": "ledger_posting"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "replacement_posting_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              },
+              {
+                "properties": {
+                  "namespace": {
+                    "const": "core"
+                  },
+                  "kind": {
+                    "const": "ledger_posting"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "created_at",
+        "original_cash_ref",
+        "approved_correction_ref",
+        "previous_correction_ref",
+        "corrected_fields",
+        "external_source_key",
+        "occurred_on",
+        "posting_period",
+        "reversal_posting_refs",
+        "replacement_posting_refs"
+      ],
+      "x-owner": "cash",
+      "x-record-kind": "append_only_fact"
+    },
+    "ManualCashPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "source_key",
+        "scope",
+        "title",
+        "direction",
+        "gross_cents",
+        "expected_date",
+        "certainty",
+        "evidence",
+        "legacy_cash_plan_id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "pending",
+            "approved",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "direction": {
+          "enum": [
+            "in",
+            "out"
+          ]
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "expected_date": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "certainty": {
+          "enum": [
+            "confirmed",
+            "conditional"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        },
+        "legacy_cash_plan_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-owner": "cash",
+      "x-record-kind": "owned_fact"
+    },
+    "BankCharge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "cash_transaction_ref",
+        "gross_cents",
+        "existing_cost_ref",
+        "counterparty_id",
+        "tax_cents",
+        "occurred_on",
+        "posting_period",
+        "scope",
+        "fee_bearer",
+        "evidence"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "pending",
+            "approved",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "cash_transaction_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "existing_cost_ref": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                    },
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "cost_event"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                    },
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "ledger_posting"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "counterparty_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tax_cents": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurred_on": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "posting_period": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
+        },
+        "scope": {
+          "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
+        },
+        "fee_bearer": {
+          "enum": [
+            "company",
+            "counterparty",
+            "unconfirmed"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "x-owner": "costing",
+      "x-record-kind": "owned_fact"
+    },
+    "ReceiptFeeSettlement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "organization_id",
+        "version",
+        "status",
+        "created_at",
+        "cash_transaction_ref",
+        "open_item_ref",
+        "bank_charge_ref",
+        "net_clearance_ref",
+        "applied_cents",
+        "reverses_ref",
+        "evidence"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "organization_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Version"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "active",
+            "posted",
+            "reversed",
+            "superseded"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "cash_transaction_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "cash_transaction"
+                }
+              }
+            }
+          ]
+        },
+        "open_item_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "open_item"
+                }
+              }
+            }
+          ]
+        },
+        "bank_charge_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "bank_charge"
+                }
+              }
+            }
+          ]
+        },
+        "net_clearance_ref": {
+          "allOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "clearance"
+                }
+              }
+            }
+          ]
+        },
+        "applied_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SignedCnyCents"
+        },
+        "reverses_ref": {
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "receipt_fee_settlement"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
+          }
+        }
+      },
+      "x-owner": "settlement",
+      "x-record-kind": "owned_fact"
     }
   },
   "x-cross-record-constraints": [
