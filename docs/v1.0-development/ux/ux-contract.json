@@ -1,0 +1,134 @@
+{
+  "artifact": "Project Hub 1.0 开工低保真原型",
+  "scope": "页面结构、职责可见性、固定合成数据、状态和唯一维护方关系；不是产品业务实现。",
+  "offline": true,
+  "external_assets": false,
+  "roles": {
+    "老板/负责人": [
+      "经营例外",
+      "项目/公司汇总",
+      "异常责任人"
+    ],
+    "项目经理": [
+      "授权项目待办",
+      "验收",
+      "剩余预计"
+    ],
+    "员工": [
+      "本人工时",
+      "本人费用",
+      "退回处理"
+    ],
+    "财务/核对人员": [
+      "费用来源",
+      "结算与现金",
+      "月末异常"
+    ]
+  },
+  "privacy": {
+    "pm_and_employee_cannot_view": [
+      "个人工资",
+      "个人费率"
+    ],
+    "prototype_enforcement": "职责切换隐藏非授权区块；财务页拒绝态。静态HTML中的合成数据仍可查看源码，不能替代服务端权限。"
+  },
+  "billing_templates": [
+    "固定总价/里程碑",
+    "按确认人天或工时",
+    "固定服务期"
+  ],
+  "path": [
+    "开账",
+    "合同/投入/费用",
+    "结算/收付",
+    "核对",
+    "追溯"
+  ],
+  "fixed_synthetic_values": {
+    "approved_contract_ex_tax_cny": 100000,
+    "accepted_delivery_cny": 50000,
+    "settlement_cny": 50000,
+    "cash_receipt_cny": 20000,
+    "employee_minutes": 480,
+    "expense_cny": 2400,
+    "payroll_pool_cny": 24000,
+    "allocated_payroll_cny": 23400,
+    "unallocated_gap_cny": 600
+  },
+  "states": [
+    "默认",
+    "空",
+    "筛选空",
+    "错误",
+    "加载",
+    "无权"
+  ],
+  "data_ownership": {
+    "合同、收费模板、批准版本": "contracts",
+    "交付节点、验收证据": "delivery",
+    "投入、可计费确认": "time",
+    "成本、工资池、费用来源": "costing",
+    "结算、未清项、核销关系": "settlement",
+    "实际现金、账户、预收预付": "cash",
+    "发票与分配": "invoicing",
+    "收入事件与算法执行": "management_revenue",
+    "项目、员工主档": "masterdata (existing core source)",
+    "成员、项目授权范围": "identity"
+  },
+  "selectors": {
+    "banner": "[data-testid='prototype-banner']",
+    "role": "[data-testid='role-select']",
+    "flow": "[data-testid='task-flow']",
+    "opening_route": "[data-testid='opening-route']",
+    "opening_date": "[data-testid='opening-date']",
+    "opening_preview": "[data-testid='preview-opening']",
+    "template": "[data-testid='template-select']",
+    "contract": "[data-testid='show-contract']",
+    "finance_access": "[data-testid='finance-access']",
+    "settlement_table": "[data-testid='settlement-table']",
+    "reconcile_table": "[data-testid='reconcile-table']",
+    "gap": "[data-testid='open-gap']",
+    "ownership": "[data-testid='ownership-grid']",
+    "state_gallery": "[data-testid='state-gallery']"
+  },
+  "interaction_limits": [
+    "开账按钮仅校验日期并显示合成预览。",
+    "收费模板仅切换说明。",
+    "核对按钮仅展开合成差额。",
+    "任何按钮不审批、不记账、不导入、不锁期。"
+  ],
+  "viewports": [
+    1440,
+    390
+  ],
+  "accessibility": [
+    "skip link",
+    "语义main/nav/section/table",
+    "原生button/select/input",
+    "focus-visible",
+    "tablist方向键/Home/End"
+  ],
+  "role_visibility": {
+    "owner": [
+      "opening",
+      "project",
+      "input",
+      "settlement",
+      "reconcile"
+    ],
+    "pm": [
+      "project",
+      "input"
+    ],
+    "employee": [
+      "input"
+    ],
+    "finance": [
+      "opening",
+      "project",
+      "input",
+      "settlement",
+      "reconcile"
+    ]
+  }
+}
