@@ -76,7 +76,7 @@
       "title": "SDK-1：冻结业务插件元数据与独立示例App",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -2194,7 +2194,7 @@
       "title": "先行修复DRF安全依赖并隔离冻结旧构建",
       "kind": "fix",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -2225,7 +2225,7 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/78",
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-139.md"
     },
     {
       "id": "PH-140",

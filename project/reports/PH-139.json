@@ -1,0 +1,70 @@
+{
+  "task_id": "PH-139",
+  "summary": "PinDRF3.18.2, actual API security/compatibility regressions and independent frozen legacy dependencies. No API/business/financial/schema expansion.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual129task check; repeat after metadata."
+    },
+    {
+      "command": "python -m pip check",
+      "result": "pass",
+      "evidence": "Python3.12.14/Django5.2.18/DRF3.18.2 actual no broken requirements."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual no system issues."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "TMPDIR=/private/tmp actual462tests83.203s OK:455 executed,7skipped(4realPG/3schemas). Separate pinned schema environment actual5tests all executed."
+    },
+    {
+      "command": "python manage.py test tests.test_drf_security_compatibility -v 2",
+      "result": "pass",
+      "evidence": "Actual13tests0.360s PASS; independent13tests0.400s PASS. RealHTTP endpoints/auth/tenant/codec/size/Accept/token bound checks."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "PMO_DB isolated migrated/seed_demo:oktrue,1organization47entries,0errors; originaldatabase untouched."
+    },
+    {
+      "command": "PH135_REQUIRE_SCHEMAS=1 python -m unittest tests.test_v1_preparation -v",
+      "result": "pass",
+      "evidence": "Pinned schema environment actual5tests4.739s PASS, bothrequiredmarkers executed."
+    },
+    {
+      "command": "frozen-venv/bin/python -B docs/v1.0-development/fixtures/verify_legacy.py --repo .",
+      "result": "pass",
+      "evidence": "Frozen119a049requirements independent DRF3.16.1 asserted; actual2builds58cents/identical businessSHAfb6ede3c5ac1c05d63515caebca82aa28dd873f0026fc853d8877503dd537ab0,overwrite refused,originalhash unchanged."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph139_security_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual13security+17existingAPI PASS. FinaltestSHA63b5c907229cf7c43e48a4860709f91620945dc573d734e0732f45f491232654; Final10file metadata/DoR/allowlist/legacy/integrity independent closure PASS. CurrentCI/PG/merge stillrequired."
+  },
+  "deviations": [
+    "NativeKimi59c2061d-6fee-49e9-92a0-8a2af832db28 completed2file artifact; Controller BASE/scope/SHA validated. Integrator fixed client-side hostilecharset encoding by realwirebytes and improved realvalidation/Accept assertions; nativecompletion not productacceptance.",
+    "Initial461fulltests had2macOS /var vs/private temporary-path failures; same2failed on frozenDRF3.16.1. CanonicalTMPDIR=/private/tmp madebothpass without modifying tests/security rules; final462fullpass.",
+    "OldDRF targeted regressions intentionally red: unsafecodec reader invoked/oldbz2decoder realexception, oversizeJSON entersrealvalidation. New13pass; not a mock-only security proof.",
+    "Officialrelease+actual5openDependabot advisory ranges verified fixed3.18.2/3.17.2. AdminRenderer/authtoken not enabled, not claimed as locally exploited paths."
+  ],
+  "unverified": [
+    "No local realPG; currentPR PGdomain/preparationmulticonnection required. SQLite not concurrency evidence.",
+    "Exact-head all11CI/normalmerge and postmerge Dependabot state pending.",
+    "No new1.0financial implementation/production/TLS/restore/customer acceptance.",
+    "PH001 ready candidate executable only after normalmerge/currentBASE confirms139done andotherdepsdone; scope frozenPH137."
+  ]
+}
