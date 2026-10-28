@@ -76,7 +76,7 @@
       "title": "SDK-1：冻结业务插件元数据与独立示例App",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -115,14 +115,14 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/5",
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-001.md"
     },
     {
       "id": "PH-002",
       "title": "SDK-2：统一入口门控与命名空间路由",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -156,7 +156,7 @@
         "python manage.py verify_integrity --json",
         "python manage.py test tests.test_plugin_sdk tests.test_plugins --verbosity 1"
       ],
-      "github_issue": null,
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/80",
       "owner": null,
       "blockers": [],
       "handoff": null
