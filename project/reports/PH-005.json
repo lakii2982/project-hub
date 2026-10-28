@@ -1,0 +1,39 @@
+{
+  "task_id": "PH-005",
+  "summary": "Four-role decision information contract and offline wireframe; canonical source mapping, basis/missing-data separation. No product backend.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual final130task check PASS after rebase onto independent planning6b4653b."
+    },
+    {
+      "command": "python -m unittest tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual4tests0.004s PASS; broaderprojectctl+governance19tests2.012s PASS."
+    },
+    {
+      "command": "node docs/product/owner-workspace-assets/check-browser.cjs",
+      "result": "pass",
+      "evidence": "ActualChromium151 offline1440/390,4roles5states,Tab/arrows/Home/End/crossrolefocus/mobilemodal+44px;8widths320..1440 nooverflow/errors/externalnetwork. FinalHTML/tokens/PNGsha inbrowser-evidence;rootvisuallyinspectedtwofinalscreenshots. Staticprototypeonly."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph005_contract_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Finance/productsemantics limitedPASS afterbasis/currentMVP correction. QueryIDs/pointers valid; sameS03income50000/AR53000/cashandunoffsetadvance31800verified. Finalmetadata/HTML/boundSHAclosure PASS; missing-not-zero assertions checked with nonempty owner/finance cases. CurrentCI stillrequired."
+  },
+  "deviations": [
+    "NativeOpenCodee11900fe-29fb-4035-a6ec-049ef179bace timed_out, notcompleted. Rootsalvagedexact3files; HTMLpartial thencompletedbyintegration. Rootfixedsingle-sharedtokens/keyboard/tabfocus/touch/caption/roleappendix,reranactualbrowser.",
+    "BASE005doesnotallowmanifest/delivery-status/verification; only005docs/ADR/report/handoff/tasksupdated. ActivehandoffremainsPH138fromnewBASE; later authorized integrator may summarize globalstatus.",
+    "CurrentMVP/targetcontract,income,settlement,newETC/EACseparated; no0forunknown/no duplicateformulaor decisionledger. Trialquestions areusabilitychecks,notnewpermissionorstartupapproval.",
+    "PR82 original BASEriskA criticalpath rejection fixed only after independent planningPR84 normalmerge6b4653b. PublicCSS SHA generic-api-key falsepositive removed by structured path/sha256 array, actualbrowser rerun; no scanner waiver and no credential. Unmerged005branch history rewritten with explicit expected-head lease."
+  ],
+  "unverified": [
+    "Noactualworkspacebackend/API/readmodels/authisolation/productUI/businesswrites. HTMLcontainsknownsyntheticfixtures.",
+    "Noactualcustomerinterviews/willingnesstopay/trialsignoff/productiondeployment/release.",
+    "Current exacthead all11 CI and normalmerge required; independent staticreview does not substitute CI."
+  ]
+}

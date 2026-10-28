@@ -1,0 +1,71 @@
+{
+  "input_artifacts": [
+    {
+      "path": "owner-workspace-wireframe.html",
+      "sha256": "3cf32d8e749d9f53aeb7d3085e10980428aae0737fc417224bc7d2132345fa94"
+    },
+    {
+      "path": "../engineering/ui-tokens.css",
+      "sha256": "d33a392e2b94e90f6e18b34e95cd0e169c73944f8b9eb07581c2ccf25247cd82"
+    }
+  ],
+  "artifact_sha256": {
+    "browser-1440.png": "789b402f86ff7286c1d554967380f87b26bc55f06369781bc3a9a1d7d2a0a9b7",
+    "browser-390.png": "1789980a707ed7f17c49f8c5ac0dfecb486a40ae641bb2ea2d8c5832ed807819"
+  },
+  "kind": "actual_browser_static_prototype_only",
+  "engine": "151.0.7922.34",
+  "run_at": "2026-10-29T01:16:13.655Z",
+  "product_backend_verified": false,
+  "customer_acceptance": false,
+  "results": [
+    {
+      "width": 1440,
+      "roles": 4,
+      "states": 5,
+      "checks": [
+        "state-denial-hides-all-workspace",
+        "missing-not-zero",
+        "tab-arrows-home-end",
+        "cross-role-action-focus",
+        "no-page-errors",
+        "offline-no-network"
+      ],
+      "no_body_overflow_widths": [
+        320,
+        360,
+        390,
+        480,
+        640,
+        768,
+        1024,
+        1440
+      ]
+    },
+    {
+      "width": 390,
+      "roles": 4,
+      "states": 5,
+      "checks": [
+        "state-denial-hides-all-workspace",
+        "missing-not-zero",
+        "tab-arrows-home-end",
+        "cross-role-action-focus",
+        "mobile-dialog-tab-escape-return",
+        "44px-touch-targets",
+        "no-page-errors",
+        "offline-no-network"
+      ],
+      "no_body_overflow_widths": [
+        320,
+        360,
+        390,
+        480,
+        640,
+        768,
+        1024,
+        1440
+      ]
+    }
+  ]
+}
