@@ -260,3 +260,8 @@ PG新测试用线程独立连接/backend PID/pg_blocking_pids验证禁用等待�
 ## PH208 · 规划验证（2026-10-29）
 
 131task check、19治理2.042秒通过，独立131check/19tests通过；边归属与规范哈希两具体设计缺口已补，再审PASS。没有140产品运行、旧库升级、PG或浏览器证据。前序002实际PG成功仅记录前序事实，不迁移为新薄片验收。
+
+## PH140 · 实际验证（2026-10-29）
+
+固定工具环境61组合60执行1PGskip；独立61同0.505s，SDK48/47执行1skip0.249s。全量510项93.920s、505执行5PGskip，strictschema与99正8负marker实读；check/drift通过。
+冻结旧依赖重建后，当前代码7步骤全部0：migrate两次均无待执行DDL，实际MigrationLoader(connection)33已应用图与checkedfactory成功，旧58分/22表39PK/三componenthash与snapshot前后重复字节一致，完整性1企业4entryok。无新schema迁移/真实PG/部署/客户证明，当前CI另核。原生取消无产物与接管实现证据分开。
