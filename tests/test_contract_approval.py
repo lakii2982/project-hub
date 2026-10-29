@@ -361,6 +361,11 @@ from django.test import TransactionTestCase
 class ContractApprovalConcurrencyTests(Fixture, TransactionTestCase):
     def setUp(self):
         super().setUp()
+        # Isolate the original contract lifecycle scenarios from newer dependants.
+        from core.plugin_runtime import get_registry, set_enabled
+        for plugin_id in ('management_revenue', 'delivery'):
+            if plugin_id in get_registry().manifests:
+                set_enabled(self.owner, plugin_id, False)
         self.finance = self.member('finance')
         self.contract = self.make_contract()
         self.version = service.save_version(self.owner, self.contract.pk, lines=[{

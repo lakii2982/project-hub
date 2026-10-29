@@ -256,6 +256,8 @@ class OrgForm(forms.ModelForm):
                 raise ValidationError("截止日前还有待审批单据或工时，请先处理再锁账")
             from .labor_cutover import check_monthly_close
             check_monthly_close(self.instance, value)
+            from .revenue_accounting import check_revenue_close
+            check_revenue_close(self.instance, value)
         return value
 
 class ImportForm(BaseForm):

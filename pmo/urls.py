@@ -52,6 +52,10 @@ urlpatterns = [
 
 # SDK routes use frozen metadata and server-owned callable bindings only.
 plugin_entry_point = getattr(settings, "PMO_PLUGIN_ENTRY_POINT", None)
+if plugin_entry_point == "business_v1":
+    from pmo_plugins.delivery.urls import entry_point
+    plugin_entry_point = entry_point()
+    settings.PMO_PLUGIN_ENTRY_POINT = plugin_entry_point
 if plugin_entry_point == "contracts_costing":
     from pmo_plugins.costing.urls import entry_point
     plugin_entry_point = entry_point()

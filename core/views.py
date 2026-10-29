@@ -103,14 +103,17 @@ def project_detail(request, pk):
     display_entries = project.entries.select_related("document", "timesheet")
     if request.member.role not in WRITE_FINANCE: display_entries = display_entries.filter(timesheet__isnull=True)
     contract_totals, contracts_unavailable = None, False
+    revenue_summary = None
     if finance_read:
+        from pmo_plugins.management_revenue.services import project_revenue_summary
+        revenue_summary = project_revenue_summary(request.member, project.pk)
         from pmo_plugins.contracts.approval_services import project_contract_totals
         try:
             contract_totals = project_contract_totals(request.member, project.pk)
         except PermissionDenied:
             contracts_unavailable = True
     return render(request, "project_detail.html", {"nav": "projects", "project": project,
-        "contract_totals": contract_totals, "contracts_unavailable": contracts_unavailable,
+        "revenue_summary": revenue_summary, "contract_totals": contract_totals, "contracts_unavailable": contracts_unavailable,
         "summary": redact_card(project_summary(project), request.member),
         "tasks": project.tasks.filter(Q(milestone__isnull=False) | Q(cash_plan__isnull=False)).select_related("owner__user", "dependency", "milestone", "cash_plan"),
         "historical_tasks": project.tasks.filter(milestone__isnull=True, cash_plan__isnull=True).select_related("owner__user", "dependency"),
@@ -378,7 +381,9 @@ def finance(request):
         if is_enabled(request.member.organization, "costing"):
             from pmo_plugins.costing.services import company_labor_summary
             labor_summary = company_labor_summary(request.member)
-    return render(request, "finance.html", {"labor_summary": labor_summary, "nav": "finance", "metrics": metrics, "forecast_overdue": overdue_plan_totals(project_list), "cashflow": cash_forecast(project_list),
+    from pmo_plugins.management_revenue.services import project_revenue_summary
+    revenue_summary = project_revenue_summary(request.member, selected or None)
+    return render(request, "finance.html", {"revenue_summary": revenue_summary, "labor_summary": labor_summary, "nav": "finance", "metrics": metrics, "forecast_overdue": overdue_plan_totals(project_list), "cashflow": cash_forecast(project_list),
         "documents": Document.objects.filter(project__in=qs).select_related("project", "submitted_by").prefetch_related("evidence_files")[:200],
         "entries": display_entries[:200],
         "plans": plans, "projects": visible_projects(request.member), "selected_project": selected})
@@ -481,7 +486,7 @@ def csv_safe(value):
 @workspace_view
 def export_data(request, kind):
     projects_qs = visible_projects(request.member)
-    if kind in {"ledger", "plans", "time"}:
+    if kind in {"ledger", "plans", "time", "management-revenue"}:
         if not can_read_finance(request.member): raise PermissionDenied()
         if request.member.role == "pm": projects_qs = projects_qs.filter(manager=request.member)
     selected = request.GET.get("project", "")
@@ -505,6 +510,19 @@ def export_data(request, kind):
                 posting.amount_cents, "", "", str(posting.reverses_posting_id or ""), "current",
                 str(event.pk), event.labor_origin_ref.get("id", ""), event.source.get("id", ""),
                 str(event.reverses_event_id or "")])
+    elif kind == "management-revenue":
+        if request.member.role not in {"owner", "finance", "auditor"}:
+            raise PermissionDenied("管理收入明细导出限公司财务读取角色")
+        from pmo_plugins.management_revenue.services import revenue_export_rows
+        mapping = {str(p.pk): p for p in projects_qs}
+        rows.append(["项目编号", "记录类型", "业务日期", "过账期间", "管理收入净额_分", "收入原记录", "原验收", "合同批准版本", "合同明细", "核算事件", "冲销原核算事件"])
+        for item in revenue_export_rows(request.member, selected or None):
+            project = mapping.get(item["project_id"])
+            if project is not None:
+                rows.append([project.code, "收入确认" if item["kind"] == "revenue_recognition" else "收入冲销",
+                    item["occurred_on"], item["posting_period"], item["amount_cents"], item["recognition_id"],
+                    item["acceptance_id"], item["contract_version_id"], item["contract_line_id"],
+                    item["accounting_event_id"], item["reverses_event_id"]])
     elif kind == "projects":
         rows.append(["项目编号", "项目名称", "客户", "阶段", "负责人", "开始日", "交付日"])
         for p in projects_qs: rows.append([p.code, p.name, p.client, p.get_stage_display(), str(p.manager), p.start_date, p.end_date])
