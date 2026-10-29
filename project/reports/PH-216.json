@@ -1,0 +1,31 @@
+{
+  "task_id": "PH-216",
+  "summary": "Freeze next monthly-labor customer business slice with one Timesheet and core cost ledger; no product implementation.",
+  "tests": [
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual fixed Python3.12 run: 19 tests in 2.153s, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Root final run after actual independent S PASS; see command output, 140 tasks."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/labor_design_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual independent read-only /root/labor_design_review final S PASS: zero-cost lifecycle, dates, whole coverage lock, nullable member identity, private claim, exact whitelist and original six tasks unchanged; independent 19 tests OK in 2.152s. Planning only."
+  },
+  "deviations": [
+    "Necessary core financial facts are bounded salary_pool/allocation_run business support, not generic SDK work or reuse of stopped PH210 WIP.",
+    "Original proposed tasks and dependencies preserved; PH217 supports but does not complete their full contracts."
+  ],
+  "unverified": [
+    "Exact-head planning CI and merge pending.",
+    "PH217 product, migrations, PG, browser and customer acceptance not executed."
+  ]
+}
