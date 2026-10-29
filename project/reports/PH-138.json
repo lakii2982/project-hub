@@ -11,6 +11,11 @@
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
       "result": "pass",
       "evidence": "Actual19governance testsPASS; independent19PASS. No gate code changes."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 1e06bc93d7568d086a4a99897d6552c9e5e63fce --task PH-138",
+      "result": "pass",
+      "evidence": "Committed ac56dc1 declaration-only scope proof ok:true. Actual independent review and tests separately recorded."
     }
   ],
   "review": {
@@ -23,7 +28,8 @@
   "deviations": [
     "Integrator overlooked local005 verify-change failure; PR82CI correctlyblocked BASEriskA tasks.json criticalpath. SeparateSplanning used, not self-authorized in005 implementationPR.",
     "PH208 is pureplanning successor required by138spec, not business implementation authority. Candidate138done/208ready onlyeffective aftercurrentCI+normalmerge.",
-    "PR82CSS SHA generic-api-key falsepositive andPH002version guard bug are separate authorized implementation work, deliberately not mixed here."
+    "PR82CSS SHA generic-api-key falsepositive andPH002version guard bug are separate authorized implementation work, deliberately not mixed here.",
+    "First PR84 event body omitted required Task line and governance correctly rejected; PR body corrected, this evidence commit triggers fresh event; no gate bypass."
   ],
   "unverified": [
     "PR82/PH002 not accepted or merged bythisplanning; full1.0business/production/customer unverified.",
