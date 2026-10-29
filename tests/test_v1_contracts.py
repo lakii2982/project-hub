@@ -231,6 +231,14 @@ class ContractsBusinessTests(Fixture, TestCase):
 
 @skipUnless(connection.vendor == 'postgresql', 'Requires PostgreSQL real independent connections; SQLite does not prove locking')
 class ContractsConcurrencyTests(Fixture, TransactionTestCase):
+    def setUp(self):
+        super().setUp()
+        # Isolate the original contract lifecycle scenarios from newer dependants.
+        from core.plugin_runtime import get_registry, set_enabled
+        for plugin_id in ('management_revenue', 'delivery'):
+            if plugin_id in get_registry().manifests:
+                set_enabled(self.owner, plugin_id, False)
+
     def compete(self, kind):
         barrier = Barrier(2)
         def worker():
