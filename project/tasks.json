@@ -122,7 +122,7 @@
       "title": "SDK-2：统一入口门控与命名空间路由",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -159,7 +159,7 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/80",
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-002.md"
     },
     {
       "id": "PH-003",

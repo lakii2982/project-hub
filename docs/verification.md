@@ -251,3 +251,8 @@ PR81审阅补记：旧manifest允许的OrderedDict/list子类也已递归冻结�
 ## PH138 · 纯规划检查（2026-10-29）
 
 Python3.12实际130任务check、19治理测试通过，独立静态S复核通过；208补齐业务schema不适用理由和范围拒绝/通过预期。没有执行这些未来反例作为产品结果，也没有修改治理检查器。最终候选/当前CI/正常合入另核；PR82风险与摘要误报、002版本门控问题保持未验收状态。
+
+## PH002 · 入口接线实际验证（2026-10-29）
+
+Python3.12.14固定MCP/schema环境：52专项0.434秒、51执行1PGskip；独立复跑相同。root补实际pmo.urls挂载/默认无路由/停用拒绝，真实CSRF客户端反例。canonicalTMPDIR全量501项93.788秒496执行5PGskip，严格schema/99正8负夹具marker实读。check/migrationdrift无问题；既有隔离演练库47entries完整性ok。
+PG新测试用线程独立连接/backend PID/pg_blocking_pids验证禁用等待公司锁，不能用本机SQLite跳过当通过；当前PG CI须另核。原生初稿失败与root修复分开记录，无客户/生产/浏览器验收。

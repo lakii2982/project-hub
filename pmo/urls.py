@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import path, register_converter
 from django.contrib.auth import views as auth
 from core import views, api, plugin_views
@@ -48,3 +49,8 @@ urlpatterns = [
     path("documents/<pid:pk>/evidence/", views.upload_evidence, name="upload-evidence"),
     path("evidence/<pid:pk>/download/", views.download_evidence, name="download-evidence"),
 ]
+
+# SDK routes use frozen metadata and server-owned callable bindings only.
+plugin_entry_point = getattr(settings, "PMO_PLUGIN_ENTRY_POINT", None)
+if plugin_entry_point is not None:
+    urlpatterns += plugin_entry_point.urlpatterns(plugin_views.plugin_entry)

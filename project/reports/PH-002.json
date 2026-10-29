@@ -1,0 +1,62 @@
+{
+  "task_id": "PH-002",
+  "summary": "Trusted SDK entrypoint with static namespaced routes, fresh member/company/project context, exact snapshot version/dependency enable gate, company-lock reauthorization and transaction rollback. Legacy hooks require organization and enabled registry. No new business tables or financial rules.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final130tasks actualcheck PASS; independent finalrepeat PASS."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual Django check clean; no changes detected. No model/migration/dependency changes."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual pinned Python3.12 check: No changes detected."
+    },
+    {
+      "command": "python manage.py test tests.test_plugin_sdk tests.test_plugins --verbosity 1",
+      "result": "pass",
+      "evidence": "Fixed MCP/schema tool environment Python3.12.14,52 tests0.434s:51 executed pass/1 realPG skipped. Independent52same result. Actual pmo.urls mounting/default unmounted/HTTP disabled and enforce_csrf_checks rejection included. After unused fixturepassword removal actual52again0.360s pass1PGskip."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "501tests93.788s,496 executed pass/5PGskip. Strict preparation schemas and99positive8negative fixture markers actually executed. Canonical TMPDIR avoids existing macOS private-path alias issue without test changes. Code commit eafba21 rebased without code change onto planning-only6b4653b; current CI reruns exact candidate."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual existing isolated PH139 syntheticDB,oktrue1organization47entries no errors. No claim emptyDB proves real ledger."
+    },
+    {
+      "command": "PR85 first candidate PostgreSQL domain job123205236569",
+      "result": "pass",
+      "evidence": "ActualPostgreSQL17.11 full501/493executed8skip57.308s, seeded47entryintegrity ok. Includes new realPG thread/blockingPIDtest;8skips are4schema+4macOS-only, notPG. This oldhead0c1b039 is intermediateevidence only: final candidate CI remains required."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph002_candidate_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Root integration six-file limitedPASS and actual52targeted1PGskip; previous snapshot/global version mismatch P1 reproduced then fixed/regression rejects. Snapshot/live version/requires/default_enabled/kernelAPI recursively consistent. Lock-inner recheck, channel/CSRF/rollback and effective PG blocker-PID assertions reviewed. Final metadata closure independently passed: actual130check/raw501log/47entryjson/6BASEcommands. Current exact-head CI and normalmerge remain pending."
+  },
+  "deviations": [
+    "NativeKimi38bdfe07 completed and Controllervalidated four originalfiles; immutable rawcache SHAverified. Candidate first44tests4fail1error and snapshot version P1 NOT accepted. Root integration worker fixed only4allowedfiles; root copied fixed files plus shared settings/URLwiring and actual productionURLConf test. Native originalhashes are not hashes of integration fixes.",
+    "No new App/models/migrations or financial services. Default PMO_PLUGIN_ENTRY_POINT=None; trusted deployment code may supply fixed registry/callables. No request-controlled imports, route converters or default enabled business plugin.",
+    "Route access labels classify routing only. Generic guard checks explicitproject context; HTTP payload project parsing/role/period/source/field privacy/idempotency remain existing owner-service responsibility, not assumed from schema or route metadata. Legacy hook receives already authorized snapshot; its company/enable gate does not claim new member/project authorization.",
+    "History_read and separately bound reversal remain available afterdisable; reversal still needs active write-capable member and original owner-service checks. Queue retained. No arbitrary reversal delegation or PAT/MCP approval/payment tools.",
+    "PH140 stays proposed. Dependency completion does not self-promote successor; independent planning/DoR and trustedBASE merge required.",
+    "InitialPR85gitleaks generic-api-key matched unused synthetic unit-test password. Removed password entirely: create_user has unusable password, HTTPtests still force_login; no real credential, no allowlist/scanner change. Rewrite own unmerged branch with explicit old-head lease to remove unused literal from scan history.",
+    "Rebased onto actual005merge72ee245; only002taskstatus/handoff changed versusnewBASE. Prior005static completion summarized without claiming backend."
+  ],
+  "unverified": [
+    "Current exact-head full11 CI including realPG lock test and normalmerge pending; localSQLite is not PG evidence.",
+    "No new productUI/browser/customer/targetLinux/TLS/restore/production validation; HTTP client tests are not browser or customer signoff.",
+    "1.0 business modules, migration scanner/atomic registration, finances/first-use experience remain future tasks. No release/deployment."
+  ]
+}
