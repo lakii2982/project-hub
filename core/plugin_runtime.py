@@ -88,7 +88,9 @@ class Registry:
             visiting.remove(plugin_id); done.add(plugin_id)
         for key in ([plugin_id] if plugin_id else self.manifests): visit(key)
 
-    def call_one(self, plugin_id, hook, **kwargs):
+    def call_one(self, plugin_id, hook, *, organization, **kwargs):
+        if organization is None or plugin_id not in self.plugins or not is_enabled(organization, plugin_id, registry=self):
+            raise PermissionDenied("插件旧入口缺少有效公司上下文或已停用")
         plugin = self.plugins[plugin_id]
         others = [p for key, p in self.plugins.items() if key != plugin_id]
         caller = self.manager.subset_hook_caller(hook, remove_plugins=others)
@@ -102,8 +104,8 @@ def plugin_catalog():
     registry = get_registry()
     return [dict(spec) for spec in registry.manifests.values()]
 
-def is_enabled(organization, plugin_id, _seen=None):
-    registry = get_registry()
+def is_enabled(organization, plugin_id, _seen=None, *, registry=None):
+    registry = registry if registry is not None else get_registry()
     spec = registry.manifests.get(plugin_id)
     if not spec: return False
     seen = set(_seen or ())
@@ -112,7 +114,7 @@ def is_enabled(organization, plugin_id, _seen=None):
     state = PluginState.objects.filter(organization=organization, plugin_id=plugin_id).first()
     if state and state.version != spec["version"]: return False
     enabled = state.enabled if state else spec["default_enabled"]
-    return enabled and all(is_enabled(organization, dependency, seen) for dependency in spec["requires"])
+    return enabled and all(is_enabled(organization, dependency, seen, registry=registry) for dependency in spec["requires"])
 
 @transaction.atomic
 def set_enabled(member, plugin_id, enabled):
@@ -142,7 +144,7 @@ def collect_insights(organization, snapshots, include_finance=True):
         if "insights:emit" not in spec["capabilities"] or not is_enabled(organization, plugin_id): continue
         for snapshot in snapshots:
             try:
-                groups = registry.call_one(plugin_id, "project_insights", snapshot=copy.deepcopy(snapshot), include_finance=include_finance)
+                groups = registry.call_one(plugin_id, "project_insights", organization=organization, snapshot=copy.deepcopy(snapshot), include_finance=include_finance)
                 validated = []
                 for group in groups:
                     if not isinstance(group, list) or len(group) > 100: raise ValueError("invalid insights")
@@ -192,7 +194,7 @@ def dispatch_pending(limit=50):
             try:
                 event = {"event_id": str(delivery.event.event_id), "organization_id": org.pk,
                          "topic": delivery.event.topic, "data": delivery.event.data}
-                groups = registry.call_one(delivery.plugin_id, "event_received", event=event)
+                groups = registry.call_one(delivery.plugin_id, "event_received", organization=org, event=event)
                 result = groups[0] if groups else {"message": "事件已接收"}
                 if not isinstance(result, dict) or not set(result) <= {"message", "topic", "event_id"} or len(json.dumps(result, ensure_ascii=False)) > 4000: raise ValueError("invalid event result")
                 delivery.result = result

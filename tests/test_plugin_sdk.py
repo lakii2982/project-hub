@@ -1,4 +1,4 @@
-"""SDK-1 专项测试（PH-001）：元数据结构/语义校验、注册快照与旧manifest回归。"""
+"""SDK-1/2 专项：元数据快照、版本授权、统一入口、CSRF及公司锁回归。"""
 import importlib.util
 import json
 import unittest
@@ -445,3 +445,458 @@ class LegacyManifestTests(TestCase):
                 self.assertTrue(state.enabled)
                 self.assertEqual(PluginState.objects.count(), before + 1)
                 state.delete()
+
+
+import types
+import pluggy
+from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied
+from django.test import Client
+from django.utils import timezone
+
+from core.models import (AuditEvent, DomainEvent, EventDelivery, Membership,
+                         Organization, PluginState, Project)
+from core.plugin_sdk.runtime import PluginEntryPoint
+from core.plugin_views import plugin_entry
+from core.services import audit
+
+
+hookimpl = pluggy.HookimplMarker("project_hub")
+
+
+class EntryPointTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.organization = Organization.objects.create(name="SDK2 entry")
+        cls.other_organization = Organization.objects.create(name="SDK2 other")
+        cls.user = get_user_model().objects.create_user("sdk2-owner")
+        cls.member = Membership.objects.create(
+            organization=cls.organization, user=cls.user, role="owner"
+        )
+        today = timezone.localdate()
+        cls.project = Project.objects.create(
+            organization=cls.organization, manager=cls.member, code="SDK2-1",
+            name="SDK2 project", client="client", start_date=today, end_date=today,
+        )
+        cls.other_project = Project.objects.create(
+            organization=cls.other_organization, manager=cls.member, code="SDK2-2",
+            name="Other project", client="client", start_date=today, end_date=today,
+        )
+
+    def setUp(self):
+        self.read_handler = mock.Mock(return_value={"ok": "read"})
+        self.write_handler = mock.Mock(return_value={"ok": "write"})
+        self.history_handler = mock.Mock(return_value={"ok": "history"})
+        self.reversal_handler = mock.Mock(return_value={"ok": "reversal"})
+        metadata = changed(routes=[
+            {"name": "overview", "path": "", "access": "business_read"},
+            {"name": "command", "path": "commands/", "access": "business_write"},
+            {"name": "history", "path": "history/", "access": "history_read"},
+        ])
+        self.manifest = dict(ExamplePlugin.manifest, default_enabled=True)
+        installed = descriptor(metadata=metadata, manifest=self.manifest)
+        domains = build_domain_registry([installed])
+        self.assertTrue(domains.is_available("example_domain"))
+        legacy = Registry(instances=[type("Plugin", (), {"manifest": self.manifest})()])
+        patcher = mock.patch("core.plugin_runtime.get_registry", return_value=legacy)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.entry = PluginEntryPoint(
+            domains,
+            {"example_domain": {
+                "overview": self.read_handler,
+                "command": self.write_handler,
+                "history": self.history_handler,
+            }},
+            {"example_domain": {"command": self.reversal_handler}},
+        )
+
+    def disable(self, version=None):
+        return PluginState.objects.update_or_create(
+            organization=self.organization,
+            plugin_id="example_domain",
+            defaults={"enabled": False, "version": version or self.manifest["version"],
+                      "changed_by": self.user},
+        )[0]
+
+    def assert_no_new_business_facts(self, counts):
+        current = (AuditEvent.objects.count(), DomainEvent.objects.count(),
+                   EventDelivery.objects.count())
+        self.assertEqual(current, counts)
+
+    def fact_counts(self):
+        return (AuditEvent.objects.count(), DomainEvent.objects.count(),
+                EventDelivery.objects.count())
+
+    def test_service_import_and_background_use_same_guard_and_call_handler(self):
+        for channel in ("service", "import", "background"):
+            with self.subTest(channel=channel):
+                result = self.entry.dispatch(
+                    self.member, "example_domain", "command",
+                    payload={"value": channel}, project=self.project, channel=channel,
+                )
+                self.assertEqual(result, {"ok": "write"})
+        self.assertEqual(self.write_handler.call_count, 3)
+        contexts = [call.args[0] for call in self.write_handler.call_args_list]
+        self.assertEqual([context.channel for context in contexts],
+                         ["service", "import", "background"])
+        for context in contexts:
+            self.assertEqual(context.organization, self.organization)
+            self.assertEqual(context.member.pk, self.member.pk)
+            self.assertEqual(context.project, self.project)
+
+    def test_real_http_static_routes_and_disabled_rejection(self):
+        urlconf = types.ModuleType("sdk2_test_urls")
+        urlconf.urlpatterns = self.entry.urlpatterns(plugin_entry)
+        self.assertEqual([pattern.pattern._route for pattern in urlconf.urlpatterns], [
+            "modules/example_domain/", "modules/example_domain/commands/",
+            "modules/example_domain/history/",
+        ])
+        client = Client()
+        client.force_login(self.user)
+        with override_settings(ROOT_URLCONF=urlconf, PMO_PLUGIN_ENTRY_POINT=self.entry):
+            self.assertEqual(client.get("/modules/example_domain/").json(), {"ok": "read"})
+            response = client.post("/modules/example_domain/commands/", {"value": "1"})
+            self.assertEqual(response.json(), {"ok": "write"})
+            self.assertEqual(client.get("/modules/example_domain/commands/").status_code, 405)
+            self.disable()
+            before = self.write_handler.call_count
+            counts = self.fact_counts()
+            self.assertEqual(client.post("/modules/example_domain/commands/").status_code, 403)
+            self.assertEqual(client.get("/modules/example_domain/").status_code, 403)
+            self.assertEqual(self.write_handler.call_count, before)
+            self.assert_no_new_business_facts(counts)
+            response = client.get("/modules/example_domain/history/")
+            self.assertEqual(response.json(), {"ok": "history"})
+        self.assertTrue(self.read_handler.called)
+        self.assertTrue(self.history_handler.called)
+
+    def test_project_urlconf_mounts_only_explicit_trusted_bindings(self):
+        from importlib import reload
+        from django.urls import clear_url_caches, resolve, Resolver404
+        import pmo.urls as project_urls
+
+        client = Client()
+        client.force_login(self.user)
+        try:
+            with override_settings(ROOT_URLCONF="pmo.urls", PMO_PLUGIN_ENTRY_POINT=self.entry):
+                reload(project_urls)
+                clear_url_caches()
+                self.assertEqual(resolve("/modules/example_domain/").func, plugin_entry)
+                self.assertEqual(client.get("/modules/example_domain/").json(), {"ok": "read"})
+                self.disable()
+                self.assertEqual(client.post("/modules/example_domain/commands/").status_code, 403)
+            with override_settings(PMO_PLUGIN_ENTRY_POINT=None):
+                reload(project_urls)
+                clear_url_caches()
+                with self.assertRaises(Resolver404):
+                    resolve("/modules/example_domain/", urlconf=project_urls)
+                self.assertEqual(resolve("/health/", urlconf=project_urls).url_name, "health")
+        finally:
+            reload(project_urls)
+            clear_url_caches()
+
+    def test_disabled_preserves_history_and_queue_without_new_writes(self):
+        audit(self.member, "project.updated", self.project, {})
+        delivery = EventDelivery.objects.create(
+            event=DomainEvent.objects.get(), plugin_id="example_domain", status="pending"
+        )
+        self.disable()
+        counts = self.fact_counts()
+        with self.assertRaises(PermissionDenied):
+            self.entry.dispatch(self.member, "example_domain", "command", payload={})
+        self.assertFalse(self.write_handler.called)
+        self.assert_no_new_business_facts(counts)
+        self.assertEqual(
+            self.entry.dispatch(self.member, "example_domain", "history", channel="background"),
+            {"ok": "history"},
+        )
+        delivery.refresh_from_db()
+        self.assertEqual((delivery.status, delivery.attempts), ("pending", 0))
+        self.assert_no_new_business_facts(counts)
+
+    def test_revoked_cross_company_project_and_stale_upgrade_are_closed(self):
+        cases = []
+        self.member.active = False
+        self.member.save(update_fields=["active"])
+        cases.append(lambda: self.entry.dispatch(self.member, "example_domain", "command"))
+        with self.assertRaises(PermissionDenied):
+            cases.pop()()
+        self.assertFalse(self.write_handler.called)
+        self.member.active = True
+        self.member.save(update_fields=["active"])
+        cases.extend([
+            lambda: self.entry.dispatch(self.member, "example_domain", "command",
+                                        project=self.other_project),
+            lambda: self.entry.dispatch(self.member, "example_domain", "command",
+                                        organization=self.other_organization),
+        ])
+        for operation in cases:
+            with self.subTest(operation=operation):
+                counts = self.fact_counts()
+                with self.assertRaises(PermissionDenied):
+                    operation()
+                self.assertFalse(self.write_handler.called)
+                self.assert_no_new_business_facts(counts)
+        PluginState.objects.create(
+            organization=self.organization, plugin_id="example_domain", enabled=True,
+            version="0.0.1", changed_by=self.user,
+        )
+        with self.assertRaises(PermissionDenied):
+            self.entry.dispatch(self.member, "example_domain", "command")
+        self.assertFalse(self.write_handler.called)
+
+    def test_read_role_project_and_history_authorization_still_apply(self):
+        self.member.role = "auditor"
+        self.member.save(update_fields=["role"])
+        with self.assertRaises(PermissionDenied):
+            self.entry.dispatch(self.member, "example_domain", "command")
+        self.assertFalse(self.write_handler.called)
+        with self.assertRaises(PermissionDenied):
+            self.entry.dispatch(self.member, "example_domain", "history",
+                                project=self.other_project)
+        self.assertFalse(self.history_handler.called)
+
+    def test_only_registered_reversal_survives_disable(self):
+        self.disable()
+        with self.assertRaises(PermissionDenied):
+            self.entry.dispatch(self.member, "example_domain", "command",
+                                payload={"is_reversal": True})
+        self.assertFalse(self.write_handler.called)
+        result = self.entry.reverse(self.member, "example_domain", "command",
+                                    payload={"source": "registered"})
+        self.assertEqual(result, {"ok": "reversal"})
+        self.reversal_handler.assert_called_once()
+        with self.assertRaises(PermissionDenied):
+            self.entry.reverse(self.member, "example_domain", "overview")
+
+    def test_legacy_direct_hook_requires_company_and_enabled_state(self):
+        received = mock.Mock(return_value={"message": "ok"})
+        class LegacyPlugin:
+            manifest = self.manifest
+            @hookimpl
+            def event_received(self, event):
+                return received(event)
+        legacy = Registry(instances=[LegacyPlugin()])
+        with mock.patch("core.plugin_runtime.get_registry", return_value=legacy):
+            with self.assertRaises(TypeError):
+                legacy.call_one("example_domain", "event_received", event={})
+            self.assertFalse(received.called)
+            result = legacy.call_one("example_domain", "event_received",
+                                     organization=self.organization, event={})
+            self.assertEqual(result, [{"message": "ok"}])
+            self.disable()
+            with self.assertRaises(PermissionDenied):
+                legacy.call_one("example_domain", "event_received",
+                                organization=self.organization, event={})
+            self.assertEqual(received.call_count, 1)
+
+    def test_unknown_static_handler_binding_is_rejected(self):
+        with self.assertRaises(ValueError):
+            PluginEntryPoint(self.entry.domain_registry,
+                             {"example_domain": {"missing": self.read_handler}})
+        with self.assertRaises(PermissionDenied):
+            PluginEntryPoint(self.entry.domain_registry, {}).dispatch(
+                self.member, "example_domain", "overview"
+            )
+        self.assertFalse(self.read_handler.called)
+
+    def test_snapshot_upgrade_cannot_borrow_old_global_approval(self):
+        PluginState.objects.create(organization=self.organization, plugin_id="example_domain",
+            enabled=True, version=self.manifest["version"], changed_by=self.user)
+        newer = dict(self.manifest, version="0.2.0")
+        snapshot = build_domain_registry([descriptor(
+            metadata=deepcopy(dict(DOMAIN_METADATA, routes=[
+                {"name": "command", "path": "commands/", "access": "business_write"}])),
+            manifest=newer)])
+        entry = PluginEntryPoint(snapshot, {"example_domain": {"command": self.write_handler}})
+        counts = self.fact_counts()
+        with self.assertRaises(PermissionDenied):
+            entry.dispatch(self.member, "example_domain", "command")
+        self.write_handler.assert_not_called()
+        self.assert_no_new_business_facts(counts)
+        # With both registries upgraded and no persisted approval, retain defaults.
+        PluginState.objects.all().delete()
+        live = Registry(instances=[type("Plugin", (), {"manifest": newer})()])
+        with mock.patch("core.plugin_runtime.get_registry", return_value=live):
+            self.assertEqual(entry.dispatch(self.member, "example_domain", "command"),
+                             {"ok": "write"})
+        self.assertFalse(PluginState.objects.exists())
+
+    def test_dependency_snapshot_mismatch_blocks_only_affected_domain(self):
+        consumer = descriptor("consumer", manifest=dict(self.manifest, id="consumer",
+            requires={"example_domain": ">=0.1"}))
+        dependency = descriptor(manifest=dict(self.manifest, version="0.2.0"))
+        unrelated = descriptor("unrelated", manifest=dict(self.manifest, id="unrelated"))
+        domains = build_domain_registry([consumer, dependency, unrelated])
+        live = Registry(instances=[type("Plugin", (), {"manifest": m})() for m in
+            (consumer["manifest"], self.manifest, unrelated["manifest"])])
+        affected, safe = mock.Mock(), mock.Mock(return_value={"ok": True})
+        entry = PluginEntryPoint(domains, {"consumer": {"overview": affected},
+                                          "unrelated": {"overview": safe}})
+        with mock.patch("core.plugin_runtime.get_registry", return_value=live):
+            with self.assertRaises(PermissionDenied):
+                entry.dispatch(self.member, "consumer", "overview")
+            self.assertEqual(entry.dispatch(self.member, "unrelated", "overview"), {"ok": True})
+        affected.assert_not_called()
+        safe.assert_called_once()
+
+    def test_disabled_channels_and_company_lock_recheck(self):
+        self.disable()
+        counts = self.fact_counts()
+        for channel in ("service", "import", "background", "legacy"):
+            with self.subTest(channel=channel), self.assertRaises(PermissionDenied):
+                self.entry.dispatch(self.member, "example_domain", "command", channel=channel)
+        self.write_handler.assert_not_called()
+        self.assert_no_new_business_facts(counts)
+        PluginState.objects.all().delete()
+        from core.services import lock_company
+        def disable_while_locking(member):
+            result = lock_company(member)
+            self.disable()
+            return result
+        with mock.patch("core.plugin_sdk.runtime.lock_company", side_effect=disable_while_locking):
+            with self.assertRaises(PermissionDenied):
+                self.entry.dispatch(self.member, "example_domain", "command")
+        self.write_handler.assert_not_called()
+        self.assertFalse(PluginState.objects.exists())  # transaction rolled back
+
+    def test_snapshot_version_rechecked_after_company_lock(self):
+        from core.services import lock_company
+        initial = self.entry.domain_registry
+        upgraded = build_domain_registry([descriptor(manifest=dict(self.manifest, version="0.2.0"),
+            metadata=changed(routes=[{"name": "command", "path": "commands/",
+                                      "access": "business_write"}]))])
+        def swap_snapshot(member):
+            result = lock_company(member)
+            self.entry.domain_registry = upgraded
+            return result
+        try:
+            with mock.patch("core.plugin_sdk.runtime.lock_company", side_effect=swap_snapshot):
+                with self.assertRaises(PermissionDenied):
+                    self.entry.dispatch(self.member, "example_domain", "command")
+        finally:
+            self.entry.domain_registry = initial
+        self.write_handler.assert_not_called()
+
+    def test_http_write_missing_csrf_is_rejected_before_handler(self):
+        urlconf = types.ModuleType("sdk2_csrf_urls")
+        urlconf.urlpatterns = self.entry.urlpatterns(plugin_entry)
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.user)
+        counts = self.fact_counts()
+        with override_settings(ROOT_URLCONF=urlconf, PMO_PLUGIN_ENTRY_POINT=self.entry):
+            response = client.post("/modules/example_domain/commands/", {"value": "1"})
+        self.assertEqual(response.status_code, 403)
+        self.write_handler.assert_not_called()
+        self.assert_no_new_business_facts(counts)
+
+    def test_handler_failure_rolls_back_audit_and_event(self):
+        def failing(context, payload):
+            audit(context.member, "project.updated", self.project, {})
+            raise ValueError("rehearsal failure")
+        entry = PluginEntryPoint(self.entry.domain_registry,
+                                 {"example_domain": {"command": failing}})
+        counts = self.fact_counts()
+        with self.assertRaisesRegex(ValueError, "rehearsal failure"):
+            entry.dispatch(self.member, "example_domain", "command")
+        self.assert_no_new_business_facts(counts)
+
+from django.test import TransactionTestCase
+
+
+@unittest.skipUnless(connection.vendor == "postgresql", "Real company-lock concurrency requires PostgreSQL")
+class EntryPointPostgresLockTests(TransactionTestCase):
+    def setUp(self):
+        self.organization = Organization.objects.create(name="SDK2 PG rehearsal")
+        self.user = get_user_model().objects.create_user("sdk2-pg-owner")
+        self.member = Membership.objects.create(organization=self.organization,
+                                                user=self.user, role="owner")
+        self.manifest = dict(ExamplePlugin.manifest, default_enabled=True)
+        self.registry = Registry(instances=[type("Plugin", (), {"manifest": self.manifest})()])
+        metadata = changed(routes=[{"name": "command", "path": "commands/",
+                                    "access": "business_write"}])
+        self.domains = build_domain_registry([descriptor(metadata=metadata, manifest=self.manifest)])
+
+    def test_write_and_disable_share_company_lock_and_failure_rolls_back(self):
+        import threading
+        import time
+        from django.db import close_old_connections
+        from core.plugin_runtime import set_enabled
+        entered, release, contender_ready = (threading.Event() for _ in range(3))
+        errors, pids = [], {}
+
+        def handler(context, payload):
+            audit(context.member, "sdk.rehearsal", self.organization, {})
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT pg_backend_pid()")
+                pids["writer"] = cursor.fetchone()[0]
+            entered.set()
+            if not release.wait(10):
+                raise RuntimeError("test release timeout")
+            raise ValueError("rollback rehearsal")
+
+        entry = PluginEntryPoint(self.domains, {"example_domain": {"command": handler}})
+
+        def write():
+            close_old_connections()
+            try:
+                entry.dispatch(Membership.objects.get(pk=self.member.pk), "example_domain", "command")
+            except ValueError as error:
+                if str(error) != "rollback rehearsal":
+                    errors.append(error)
+            except BaseException as error:
+                errors.append(error)
+            finally:
+                connection.close()
+
+        def disable():
+            close_old_connections()
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT pg_backend_pid()")
+                    pids["disabler"] = cursor.fetchone()[0]
+                contender_ready.set()
+                set_enabled(Membership.objects.select_related("organization", "user").get(pk=self.member.pk),
+                            "example_domain", False)
+            except BaseException as error:
+                errors.append(error)
+            finally:
+                connection.close()
+
+        with mock.patch("core.plugin_runtime.get_registry", return_value=self.registry):
+            writer = threading.Thread(target=write)
+            disabler = threading.Thread(target=disable)
+            writer.start()
+            try:
+                self.assertTrue(entered.wait(5), errors)
+                disabler.start()
+                self.assertTrue(contender_ready.wait(5), errors)
+                blockers = []
+                deadline = time.monotonic() + 5
+                while time.monotonic() < deadline:
+                    with connection.cursor() as cursor:
+                        cursor.execute("SELECT pg_blocking_pids(%s)", [pids["disabler"]])
+                        blockers = cursor.fetchone()[0]
+                    if pids["writer"] in blockers:
+                        break
+                    time.sleep(0.01)
+                self.assertIn(pids["writer"], blockers)
+            finally:
+                release.set()
+                writer.join(10)
+                if disabler.ident is not None:
+                    disabler.join(10)
+            self.assertFalse(writer.is_alive())
+            self.assertFalse(disabler.is_alive())
+            self.assertEqual(errors, [])
+            self.assertFalse(AuditEvent.objects.filter(action="sdk.rehearsal").exists())
+            self.assertFalse(DomainEvent.objects.exists())
+            state = PluginState.objects.get(organization=self.organization, plugin_id="example_domain")
+            self.assertFalse(state.enabled)
+            # A later invocation sees the completed disable and cannot run a handler.
+            normal = mock.Mock()
+            entry = PluginEntryPoint(self.domains, {"example_domain": {"command": normal}})
+            with self.assertRaises(PermissionDenied):
+                entry.dispatch(self.member, "example_domain", "command")
+            normal.assert_not_called()

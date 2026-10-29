@@ -88,3 +88,6 @@ AI_MODEL = os.getenv("PMO_AI_MODEL", "deepseek-v4.1-flash")
 AI_API_KEY = os.getenv("PMO_AI_API_KEY", "")
 
 PMO_PLUGIN_MODULES = ("pmo_plugins.project_health.plugin", "pmo_plugins.delivery_watch.plugin", "pmo_plugins.agent_gateway.plugin")
+
+# Trusted process-local SDK bindings; no domain routes are mounted by default.
+PMO_PLUGIN_ENTRY_POINT = None

@@ -1,6 +1,9 @@
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_protect
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.contrib import messages
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import render, redirect
 from .access import current_membership, require_member
 from .models import DomainEvent, EventDelivery
@@ -28,3 +31,33 @@ def plugin_settings(request):
         "unexpanded_count": DomainEvent.objects.filter(organization=member.organization, expanded_at__isnull=True).count(),
         "failed_count": rows.filter(status="failed").count(), "blocked_count": rows.filter(status="blocked").count(),
         "pending_events": rows.filter(status__in=["pending", "retry"]).count()})
+
+
+@login_required
+@csrf_protect
+def plugin_entry(request, plugin_id, route_name):
+    entry_point = getattr(settings, "PMO_PLUGIN_ENTRY_POINT", None)
+    if entry_point is None:
+        raise PermissionDenied("插件入口未配置")
+    access = entry_point.route_access(plugin_id, route_name)
+    expected = "POST" if access == "business_write" else "GET"
+    if request.method != expected:
+        return HttpResponseNotAllowed([expected])
+    member = current_membership(request)
+    # Payload project identifiers are resolved and authorized by the trusted
+    # handler's existing owner service, not by route access metadata. No client
+    # organization/member/role field is used to construct the execution context.
+    payload = request.POST if expected == "POST" else request.GET
+    result = entry_point.dispatch(
+        member,
+        plugin_id,
+        route_name,
+        payload=payload,
+        channel="http",
+        request=request,
+    )
+    if isinstance(result, HttpResponse):
+        return result
+    if isinstance(result, dict):
+        return JsonResponse(result)
+    raise ValidationError("插件处理器响应无效")
