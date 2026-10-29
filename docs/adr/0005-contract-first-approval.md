@@ -1,0 +1,31 @@
+# ADR-0005 · 同一合同owner内完成首次独立批准，不引入财务过账
+
+状态：PH213独立规划候选，随规划PR审阅合入后作为PH214契约；不表示产品已实现。依据：PH212已合入同域客户、联系人及合同头草稿；用户要求继续1.0直接业务；原PH146/147/150依赖和proposed完整保留。
+
+## 决策
+
+下一业务片提供三个收费模板、付款/质保条件、不可变提交版本、另一负责人批准与首次生效。继续pmo_plugins.contracts同owner与同Contract；复用现存core.Project/Milestone，不建替身项目或交付事实。每合同一个项目；一个项目可以有多合同。原任务仅增加新片为后续支持前置，不认领原全需求完成。
+
+首次批准effective_on不得未来；draft→submitted冻结→approved/rejected，rejected终态另建draft。首片不改已批准合同、不做替代/终止。submitted/active阻止PH212头编辑。草稿和submitted的明细/付款/质保仅存版本draft_content候选JSON及header_snapshot，submitted后冻结；真实ContractLine/PaymentTerm/WarrantyTerm/MethodPolicySelection仅在批准事务创建，避免草稿明细强制携带尚不存在的批准PolicyRef。批准页面只读真实批准记录；候选仅留不可变提交证据，没有两套可编辑事实。批准快照必须能唯一追溯到所属版本，因此ContractLine必需contract_version_id；原canonical ContractVersion无条件要求审批人，不能表达草稿，改为approved/superseded条件必填，并补服务器created_by/submitted_by/approved_on。精确字段和后续文件范围取project/specs/PH-214.md。
+
+批准同时明确批准三模板的具体规则参数。MethodPolicySelection是每条批准明细唯一不可变规则事实；policy_id=该selection UUID，policy version=1，status=approved，effective_from来自合同，approved_by来自实际独立审批人；PricingConfiguration.policy_ref和line.method_policy均由服务器从此事实投影。候选UI不接受客户端PolicyRef或approved状态。没有另建通用政策表/注册器；PolicyVersion现为值投影而非source-registry独立owner实体。同公司/同line/approved/版本/as_of检查由contracts具名解析服务完成。未来正式收入/结算集成仍依原PH150及其前置验收，不因存在批准配置而自动授权记账。
+
+三模板沿canonical PricingConfiguration：固定节点价款分配、客户确认工时单位与单价、服务期间及价款分配；本片仅配置批准，不运行管理收入算法。净+税=含税，全部价税/分配/条款/单位价/cap均非负整数分[0,10^12]且累计受同一上限约束；不猜税额、客户确认或部分期间规则。付款条款合计≤明细含税额；质保必须标识为warranty付款条款内的子集，不再加一次价款。全部明细继承同一父项目及客户，现存core.Milestone是明确的内部PK引用，不伪装新delivery事实。
+
+## 真实批准证据而非假附件
+
+当前core.Evidence强制document FK，是现有财务单据附件，不存在EvidenceFile。不得造费用单据、挪用单据附件或搭建第二个附件owner以满足合同证据字段。本片保存人工contract_reference及非空审批review_note；实际批准生成AuditEvent后，以EvidenceRef(kind=approval,evidence_id=AuditEvent.pk字符串,sha256=event_hash)记录这次内部授权批准。PolicyVersion.evidence_ref仍按既有SourceRef类型投影为core/audit_record/同一审计ID/version1，不把EvidenceRef错塞进SourceRef。服务器验证同公司、版本及摘要，不能把客户端ID/hash当作批准授权。草稿/提交不填假批准证据或假审批人；上传、客户签署、客户履约确认均未实现且不声称已验证。
+
+## 唯一审计与事件，无核算副作用
+
+沿现有公司锁与atomic，锁内重读身份/模块/项目/客户/版本。owner/finance制单提交；其他owner/finance独立批准；制单人与提交人均不得自审。auditor只读、PM仅授权项目只读，普通成员拒绝。动作幂等与版本冲突、批准竞争、撤权/停用等待均须实际测试。
+
+现有core.services.audit默认自动创建简略DomainEvent，不能再叠发同一批准事件。采用服务内固定保留plugin.* action记录真实AuditEvent（复用现有不自动发事件分支），不改core audit或SDK；其后同事务填批准状态、元数据和上述audit EvidenceRef，再显式创建一条canonical contracts.version_approved.v1 DomainEvent。审计payload包含冻结输入digest及人工审查内容，不循环引用其自身hash。DomainEvent.event_id与data.event_id一致，source/changed_refs为真实contracts typed refs，posting_event_refs=[]。失败整笔回滚，事件source仍唯一指向该AuditEvent；独立S复核须验证审计链与消费兼容性。若该技术路径不能通过复核则回规划修正，不悄改总线或发第二条事件。
+
+批准不写AccountingEvent/SourceConsumption/LedgerEntry/OpenItem/CashPlan/管理收入，不回填Project.contract_cents或其他旧财务字段。当前canonical批准事件允许空posting_event_refs；因此合同配置批准不依赖先实现通用过账内核。批准前后费用/成本/现金/预算与旧账摘要必须不变，不能以合同active声称已有收入或债权。
+
+## 代价与验证
+
+窄schema修正在后续PH214执行而非本规划PR：ContractVersion状态条件与服务器字段、ContractLine版本FK、WarrantyTerm付款条款子集引用、MethodPolicySelection批准配置快照及值投影约束。内部浏览器候选DTO与未来canonical写DTO明确分开，不开放PAT/MCP或宣称完整公共命令实现。若发现需要超出此范围的canonical结构调整，先另行规划。
+
+验收三模板各完整批准生效、100000净额+6000税=106000含税；自审/撤权/停用/跨域/缺规则/超分配/旧版本/未来日期无副作用；单一完整事件schema验证；PG实际双连接批准与控制操作竞争；现有五项竞争回归；非空旧库升级保留原单/账本/附件；1440/390及键盘办理；全量/迁移/完整性与当前CI通过，独立安全财务复核。本文无实现、自动化、PG、浏览器或生产PASS声明，无部署或发布授权。

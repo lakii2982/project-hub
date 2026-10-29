@@ -279,3 +279,5 @@ PG新测试用线程独立连接/backend PID/pg_blocking_pids验证禁用等待�
 固定Python3.12工具环境，TMPDIR=/private/tmp；全量525/515执行通过/10PG跳过，专项15/10通过/5PG跳过，治理19通过；check0错误7已有SDK W003，迁移漂移无变化。PG新增两连接同名/同编号与停用先持锁、撤权先持锁、业务先提交的实际阻塞断言已编码，SQLite不作PG证明。当前PR实际CI另核。
 
 非空旧库备份副本实际应用contracts0001，再次migrate无待执行；前后和重复快照22旧表39PK、4旧成本2+2+2+52=58分、审计来源字节相同，SHA04dc594d2a607a322c626efdd883332ebfe7b7a9c42a63a38c663d77d6d9ef82。原库未写入。独立合成浏览器DB，Chromium151真实登录、双角色party/联系人/合同draft创建编辑、客户改名由FK反映、错误保留与焦点、PM/auditor/member、1440/390与320至1440八宽无页面横溢；root读图。运行日志与截图留原项目目录的私有忽略runtime/ph212-browser（不在隔离工作区），未装入产品/发布包。没有生产/TLS/客户签收或新财务过账验收。
+
+PH212远端补证：PR96最终9e3da6741dbe523a9a420a3f43d0ec810f1fa935，当前原8required+3准备检查及CodeQL汇总均SUCCESS，0未解决讨论，正常squash9dcfc825af85d3876baf0fb7c17636549cb053ca。PG17.11真实作业123297062026（Actions40828522014）525测试/517执行通过8非PG环境跳过60.073s，5新增PG竞争未跳过，当前新contracts0001迁移实际应用；与本机515执行/10PG跳过分别记录。PH213仅规划，不新增任何产品/PG/浏览器通过声明。
