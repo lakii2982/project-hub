@@ -2,7 +2,8 @@
 from copy import deepcopy
 from datetime import timedelta
 import uuid
-from unittest import mock
+import importlib.util
+from unittest import mock, skipUnless
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.test import TestCase
@@ -184,6 +185,27 @@ class AcceptanceRevenueTests(RevenueFixture, TestCase):
         other=self.member('pm')
         self.denied(lambda:revenue.project_revenue_summary(other,self.project.pk))
 
+    def test_canonical_event_envelopes_follow_real_posting_once(self):
+        source=self.acceptance(); row=self.recognize(source); adjustment=self.reverse(row)
+        for fact,topic,event_source in [(row,'management_revenue.recognized.v1',row.source_ref),
+                (adjustment,'core.posting_reversed.v1',{'namespace':'core','kind':'accounting_event',
+                    'id':str(adjustment.accounting_event_id),'version':1})]:
+            events=DomainEvent.objects.filter(source__entity_id=str(fact.pk))
+            self.assertEqual(events.count(),1)
+            event=events.get()
+            self.assertEqual(event.topic,topic)
+            self.assertEqual(event.data['event_id'],str(event.event_id))
+            self.assertEqual(event.data['organization_id'],str(self.org.pk))
+            self.assertEqual(event.data['schema_version'],1)
+            self.assertEqual(event.data['source'],event_source)
+            self.assertEqual(event.data['payload']['changed_refs'],[fact.source_ref])
+            self.assertEqual(event.data['payload']['posting_event_refs'],[{'namespace':'core',
+                'kind':'accounting_event','id':str(fact.accounting_event_id),'version':1}])
+            self.assertEqual(fact.accounting_event.source,fact.source_ref)
+            self.assertEqual(fact.accounting_event.claim.source['id'],str(source.pk))
+
+    @skipUnless(importlib.util.find_spec('jsonschema') is not None and importlib.util.find_spec('referencing') is not None,
+                'Strict schema tooling is optional in the business runtime; financial-chain tests remain unconditional')
     def test_canonical_events_validate_strictly(self):
         import runpy
         from pathlib import Path
@@ -315,3 +337,21 @@ class AcceptanceRevenueTests(RevenueFixture, TestCase):
         before=all_facts();delivery.review_acceptance(self.finance,submitted.pk,expected_version=submitted.version,
             request_token=uuid.uuid4(),decision='approve',note='独立核对预览')
         self.assertEqual(before,all_facts());submitted.refresh_from_db();self.assertEqual(submitted.status,'submitted')
+
+
+    def test_new_business_dependency_guard_blocks_contract_disable_without_half_write(self):
+        from core.plugin_runtime import set_enabled, is_enabled
+        self.assertTrue(is_enabled(self.org,'delivery'))
+        self.assertTrue(is_enabled(self.org,'management_revenue'))
+        before=self.facts()+(PluginState.objects.count(),)
+        with self.assertRaises(ValidationError):set_enabled(self.owner,'contracts',False)
+        self.assertEqual(before,self.facts()+(PluginState.objects.count(),))
+        self.assertTrue(is_enabled(self.org,'contracts'))
+        set_enabled(self.owner,'management_revenue',False)
+        before=self.facts()+(PluginState.objects.count(),)
+        with self.assertRaises(ValidationError):set_enabled(self.owner,'contracts',False)
+        self.assertEqual(before,self.facts()+(PluginState.objects.count(),))
+        self.assertTrue(is_enabled(self.org,'contracts'))
+        set_enabled(self.owner,'delivery',False)
+        set_enabled(self.owner,'contracts',False)
+        self.assertFalse(is_enabled(self.org,'contracts'))

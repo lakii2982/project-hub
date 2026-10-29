@@ -53,7 +53,7 @@ def acceptance_detail(context,payload):
         cover.amount_display=money(cover.accepted_net_cents)
     recognition=getattr(row,'revenue_recognition',None)
     return render(context.request,'delivery/acceptance_detail.html',base(member,**detail,coverage_rows=covers,
-        amount_display=money(row.accepted_net_cents),recognition=recognition,
+        amount_display=money(row.accepted_net_cents),recognition=recognition,replaced_detail_url=url('acceptance_detail',id=row.replaces_acceptance_id) if row.replaces_acceptance_id else '',
         revenue_display=money(recognition.recognized_net_cents) if recognition else '',
         action_links=[(url('acceptance_form',id=row.pk,action=action),label) for action,label in links]))
 
