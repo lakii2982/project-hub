@@ -1,0 +1,59 @@
+{
+  "task_id": "PH-140",
+  "summary": "Read-only actual Django AppConfig/effective migration graph validation and checked registry/entrypoint factories. Reject invalid candidates/bindings without publishing partial references or writing DB; no new models/migrations or financial rules.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Finalmetadata actual131tasks PASS; independent131PASS."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual pinnedPython3.12 Django check no issues."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "No changes detected; models/old migrations untouched."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual fixedschema-tool Python3.12.14 canonicalTMPDIR full510tests93.920s,505 executed pass/5PGskip. Strictschema/99positive8negative fixture markers actually executed. Full testsetup builds fresh schema; no newDDL inthisslice."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual frozen synthetic existingDB after currentmigrate and repeat,1org4entries/noerrors; storedold58cents/[2,2,2,52] unchanged. Not emptyDB evidence."
+    },
+    {
+      "command": "python manage.py test tests.test_plugin_sdk tests.test_plugins --verbosity 1",
+      "result": "pass",
+      "evidence": "61target60executedpass1PGskip; independent61same0.505s. SDKalone48/47pass1PGskip0.249s; all52prior combinedtests retained plus9new."
+    },
+    {
+      "command": "Frozen build_legacy.py then current migrate, checked factory with MigrationLoader(connection), read-only snapshots, repeated migrate and verify_integrity",
+      "result": "pass",
+      "evidence": "Actual7step privateharness all0:33graphnodes/33applied, explicit installedzero-model example/checkfactory success, no business handler dispatched. Bothmigrate No migrations to apply: thisis compatibility/scanner replay, NOT newDDL/1.0cutover validation. 22oldtables/39PKrows and allthreecomponent hashes match original; before/after/repeat canonicalbytes equal SHA04dc594d2a607a322c626efdd883332ebfe7b7a9c42a63a38c663d77d6d9ef82. Frozenbuilder source/archive checked and oldenvDRF3.16.1; currentproduct3.18.2."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/sdk3_contract_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual two-file independentPASS and61targeted/48SDK, exception chain, AppConfig/graph, model-empty migration, candidate/binding error and full core data/settings/route preservation checked. Implementation context /root/ph140_integration differs; reviewer read-only. Finalmetadata/raw upgrade evidence closure PASS:8BASEscopefiles,6fixedcommands,510rawlog,7steps0,3snapshots independent byte/SHA equal22tables39PKrows; currentCI/PG andmerge separate."
+  },
+  "deviations": [
+    "NativeClaude a1bd5932 repeatedly hit tool approval/path restrictions with nofiles. Cancelled viaController, terminalcancelled confirmed, no widenedpermissions/config change; original process returned cancelling at cancellation boundary, not calledcompleted. Root took over via bounded integrationworker2files. Raw failurelogs preserved privately.",
+    "Onlynewmigrations.py and test_plugin_sdk.py changed; checkedfactories wrap existingSDK1/2, no registry/metadata/__init__/settings/URL edits. Defaultentrypoint remainsNone and business plugins off; futuretrusted wiring must explicitlyuse checkedfactory. No hotplug, global publish, applymigration or DBrollback promise.",
+    "Read-only actual existingDB snapshots generated separately; seed_legacy never rerun on existingDB. Snapshot roles read real Membership, JSON/date/PK ordering perPH208contract; originalbusiness.json wholeSHA and new snapshotSHA kept distinct. No historicalrecalculation.",
+    "PH141 staysproposed: independentDoRpreaudit found source-policy/reversal/period/persistence gaps; nextPH209separateplanning beforecanonicalfix orpromotion. ThisSDKtaskdoesnot grantmissingfinancialauthority."
+  ],
+  "unverified": [
+    "Current exact-head all11 CI/realPG/normalmerge pending; localSQLite skips not PG proof.",
+    "No new financialkernel/source/policy/period implementation or business plugin, newDDL/cutover, browserUI/targetLinux/TLS/restore/customer/production/release validation.",
+    "Trusted in-process deployment code remains able to bypass lowlevel factories; thisis deterministic integration API, not a sandbox or cross-process atomicpublish."
+  ]
+}

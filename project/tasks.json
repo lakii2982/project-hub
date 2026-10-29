@@ -2232,7 +2232,7 @@
       "title": "最小 SDK 注册、契约查询与全入口门控（3片）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -2267,7 +2267,7 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/88",
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-140.md"
     },
     {
       "id": "PH-141",

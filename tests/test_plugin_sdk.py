@@ -900,3 +900,208 @@ class EntryPointPostgresLockTests(TransactionTestCase):
             with self.assertRaises(PermissionDenied):
                 entry.dispatch(self.member, "example_domain", "command")
             normal.assert_not_called()
+
+
+@override_settings(INSTALLED_APPS=[*settings.INSTALLED_APPS,
+    "pmo_plugins.example_domain.apps.ExampleDomainConfig"])
+class MigrationPreparationTests(TestCase):
+    """SDK-3: deployment candidates are never published or persisted here."""
+
+    def setUp(self):
+        from core.plugin_sdk.migrations import prepare_plugin_entry_point
+        self.old = prepare_plugin_entry_point([descriptor()], {})
+        self.old_routes = tuple(self.old._routes)
+        self.old_settings = settings.PMO_PLUGIN_ENTRY_POINT
+        organization = Organization.objects.create(name="SDK3 rehearsal")
+        user = get_user_model().objects.create_user("sdk3-owner")
+        member = Membership.objects.create(organization=organization, user=user, role="owner")
+        audit(member, "project.updated", organization, {})
+        EventDelivery.objects.create(event=DomainEvent.objects.get(),
+                                     plugin_id="example_domain", status="pending")
+        self.before = self.facts()
+
+    def facts(self):
+        # All product tables, including ledger, audit, outbox and queues.
+        return {model._meta.label: list(model.objects.order_by("pk").values())
+                for model in apps.get_app_config("core").get_models()}
+
+    def assert_unchanged(self):
+        self.assertEqual(self.facts(), self.before)
+        self.assertEqual(tuple(self.old._routes), self.old_routes)
+        self.assertIs(settings.PMO_PLUGIN_ENTRY_POINT, self.old_settings)
+        self.assertTrue(self.old.domain_registry.is_available("example_domain"))
+
+    def reject(self, operation, code):
+        from core.plugin_sdk.migrations import MigrationContractError
+        with self.assertRaises(MigrationContractError) as caught:
+            operation()
+        self.assertIn(code, caught.exception.codes)
+        self.assertEqual(caught.exception.codes, tuple(sorted(set(caught.exception.codes))))
+        self.assertIsNone(caught.exception.__context__)
+        self.assertIsNone(caught.exception.__cause__)
+        self.assertNotIn("secret", str(caught.exception))
+        self.assert_unchanged()
+
+    def test_current_graph_zero_model_and_repeat_preparation(self):
+        from core.plugin_sdk.migrations import prepare_domain_registry, validate_migration_dependencies
+        from django.db.migrations.loader import MigrationLoader
+        with CaptureQueriesContext(connection) as queries:
+            first = prepare_domain_registry([descriptor()])
+            second = prepare_domain_registry([descriptor()])
+            validate_migration_dependencies(first, MigrationLoader(None))
+        self.assertEqual(len(queries), 0)
+        self.assertEqual(first.domains, second.domains)
+        self.assert_unchanged()
+
+    def test_invalid_candidates_fake_app_and_bad_binding(self):
+        from core.plugin_sdk.migrations import prepare_domain_registry, prepare_plugin_entry_point
+        self.reject(lambda: prepare_domain_registry([descriptor(), descriptor("fake")]),
+                    "deployment.app_mismatch")
+        self.reject(lambda: prepare_domain_registry([descriptor(), descriptor()]), "candidate.invalid")
+        forged = changed(django_app={"module": "pmo_plugins.forged", "label": "example_domain"})
+        self.reject(lambda: prepare_domain_registry([descriptor(metadata=forged)]),
+                    "deployment.app_mismatch")
+        for bindings in ({"example_domain": {"missing": lambda: None}},
+                         {"example_domain": {"overview": 1}}):
+            self.reject(lambda: prepare_plugin_entry_point([descriptor()], bindings), "binding.invalid")
+        self.reject(lambda: prepare_plugin_entry_point([descriptor()], {},
+                    {"example_domain": {"missing": lambda: None}}), "binding.invalid")
+
+    def test_model_app_without_nodes_and_empty_migration_package(self):
+        from core.plugin_sdk.migrations import prepare_domain_registry
+        from django.db.migrations.loader import MigrationLoader
+        config = apps.get_app_config("example_domain")
+        for migrated in (False, True):
+            loader = MigrationLoader(None)
+            if migrated:
+                loader.unmigrated_apps.discard("example_domain")
+                loader.migrated_apps.add("example_domain")
+            with mock.patch.object(config, "get_models", return_value=iter([object()])):
+                self.reject(lambda: prepare_domain_registry([descriptor()], loader=loader),
+                            "migration.models_without_migrations")
+
+    def test_loader_constructor_failure_is_sanitized_without_chain(self):
+        from core.plugin_sdk.migrations import prepare_domain_registry
+        from django.db.migrations.exceptions import NodeNotFoundError, CircularDependencyError
+        for error, code in ((NodeNotFoundError("secret SQL /path", ("secret", "missing")),
+                             "migration.missing_node"),
+                            (CircularDependencyError("secret"), "migration.cycle"),
+                            (RuntimeError("secret"), "migration.graph_invalid")):
+            with mock.patch("core.plugin_sdk.migrations.MigrationLoader", side_effect=error):
+                self.reject(lambda: prepare_domain_registry([descriptor()]), code)
+
+    def loader(self):
+        from django.db.migrations.loader import MigrationLoader
+        from django.db.migrations.graph import MigrationGraph
+        loader = MigrationLoader(None)
+        loader.graph = MigrationGraph()
+        loader.disk_migrations = {}
+        loader.unmigrated_apps.discard("example_domain")
+        loader.migrated_apps.add("example_domain")
+        return loader
+
+    def node(self, loader, label, name):
+        from django.db.migrations import Migration
+        key = (label, name)
+        migration = Migration(name, label)
+        loader.graph.add_node(key, migration)
+        loader.disk_migrations[key] = migration
+        return key
+
+    def test_effective_edges_missing_cycle_undeclared_and_reverse(self):
+        from core.plugin_sdk.migrations import prepare_domain_registry
+        loader = self.loader()
+        one = self.node(loader, "example_domain", "one")
+        two = self.node(loader, "example_domain", "two")
+        core = self.node(loader, "core", "one")
+        loader.graph.add_dependency(None, two, one)
+        prepare_domain_registry([descriptor()], loader=loader)
+        loader.graph.add_dependency(None, one, core)
+        self.reject(lambda: prepare_domain_registry([descriptor()], loader=loader),
+                    "migration.undeclared_dependency")
+        declared = descriptor(metadata=changed(migration_dependencies=["core"]))
+        prepare_domain_registry([declared], loader=loader)
+        loader.graph.add_dependency(None, core, two)
+        self.reject(lambda: prepare_domain_registry([declared], loader=loader), "migration.cycle")
+        loader = self.loader()
+        one = self.node(loader, "example_domain", "one")
+        core = self.node(loader, "core", "one")
+        loader.graph.add_dependency(None, core, one)
+        self.reject(lambda: prepare_domain_registry([descriptor()], loader=loader),
+                    "migration.reverse_dependency")
+        loader.graph.add_dependency(None, one, ("core", "missing"), skip_validation=True)
+        self.reject(lambda: prepare_domain_registry([descriptor()], loader=loader), "migration.missing_node")
+
+    def temporary_loader(self, migrations):
+        """Real Django loader resolves special dependencies and squashes."""
+        import sys
+        import tempfile
+        from django.db.migrations.loader import MigrationLoader
+        from contextlib import ExitStack
+        stack = ExitStack()
+        self.addCleanup(stack.close)
+        root = Path(stack.enter_context(tempfile.TemporaryDirectory()))
+        package = root / "sdk3_migrations"
+        package.mkdir()
+        (package / "__init__.py").write_text("")
+        for name, body in migrations.items():
+            (package / (name + ".py")).write_text(
+                "from django.db import migrations\nfrom django.conf import settings\n"
+                "class Migration(migrations.Migration):\n    operations = []\n" + body)
+        sys.path.insert(0, str(root))
+        def cleanup():
+            sys.path.remove(str(root))
+            for key in list(sys.modules):
+                if key == "sdk3_migrations" or key.startswith("sdk3_migrations."):
+                    del sys.modules[key]
+        self.addCleanup(cleanup)
+        stack.enter_context(override_settings(MIGRATION_MODULES={"example_domain": "sdk3_migrations"}))
+        return MigrationLoader(None)
+
+    def test_real_first_latest_swappable_and_squashed_edges(self):
+        from core.plugin_sdk.migrations import prepare_domain_registry
+        loader = self.temporary_loader({
+            "0001_initial": "    dependencies = [('core', '__first__')]\n",
+            "0002_next": "    dependencies = [('example_domain', '0001_initial'), ('core', '__latest__')]\n",
+            "0003_squashed": "    replaces = [('example_domain', '0001_initial'), ('example_domain', '0002_next')]\n    dependencies = [('core', '__latest__'), migrations.swappable_dependency(settings.AUTH_USER_MODEL)]\n",
+        })
+        self.assertIn(("example_domain", "0003_squashed"), loader.graph.nodes)
+        self.assertNotIn(("example_domain", "0001_initial"), loader.graph.nodes)
+        good = descriptor(metadata=changed(migration_dependencies=["core", "auth"]),
+                          installed_apps=dict(INSTALLED, auth="django.contrib.auth"))
+        prepare_domain_registry([good], loader=loader)
+        self.reject(lambda: prepare_domain_registry([descriptor()], loader=loader),
+                    "migration.undeclared_dependency")
+
+    def test_real_run_before_is_owned_by_dependent_app(self):
+        from core.plugin_sdk.migrations import prepare_domain_registry
+        loader = self.temporary_loader({
+            "0001_initial": "    run_before = [('core', '__first__')]\n",
+        })
+        self.reject(lambda: prepare_domain_registry([descriptor()], loader=loader),
+                    "migration.reverse_dependency")
+
+
+    def test_real_run_before_dependency_is_declared_by_domain(self):
+        from core.plugin_sdk.migrations import prepare_domain_registry
+        loader = self.loader()
+        domain = self.node(loader, "example_domain", "first")
+        shared = self.node(loader, "core", "first")
+        # Equivalent effective edge to core.run_before=[example_domain].
+        loader.disk_migrations[shared].run_before = [domain]
+        loader.graph.add_dependency(None, domain, shared)
+        good = descriptor(metadata=changed(migration_dependencies=["core"]))
+        prepare_domain_registry([good], loader=loader)
+        self.reject(lambda: prepare_domain_registry([descriptor()], loader=loader),
+                    "migration.undeclared_dependency")
+
+    def test_shared_edges_remain_valid_and_unknown_graph_app_is_rejected(self):
+        from core.plugin_sdk.migrations import prepare_domain_registry
+        loader = self.loader()
+        core = self.node(loader, "core", "first")
+        auth = self.node(loader, "auth", "first")
+        loader.graph.add_dependency(None, core, auth)
+        prepare_domain_registry([descriptor()], loader=loader)
+        self.node(loader, "not_installed", "first")
+        self.reject(lambda: prepare_domain_registry([descriptor()], loader=loader),
+                    "migration.graph_invalid")
