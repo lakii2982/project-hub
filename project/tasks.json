@@ -5491,7 +5491,7 @@
       "title": "后续需求独立规划入口（接续PH-208）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -5517,14 +5517,14 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/90",
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-209.md"
     },
     {
       "id": "PH-210",
       "title": "补全单一冲销引用与原现金消费契约",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -5567,7 +5567,7 @@
       "title": "后续需求独立规划入口（接续PH-209）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [

@@ -1,0 +1,33 @@
+{
+  "task_id": "PH-209",
+  "summary": "Plan two minimal canonical fixes: single server-only reversal reference/read-only bridge and permanent original-bank cash claim. Keep PH141proposed and add210prerequisite; no canonical or runtime code inthisplanningPR.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Finalcandidate actual133task check PASS; independentfinal133PASS."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual final19governance2.007s PASS; independent final19in1.985s PASS."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/ph002_candidate_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Staticplan limitedPASS after concrete correction-chain feedback. Fullreverse+fullreplacement and permanentbank_effect consistent with frozenbankplan; oneeventref/readonlybridge/legacyadapter preserved. FourJSONworker and rootscope sufficient, oldhashhistory separated;133check actual. Finalmetadataclosure PASS:10BASEscopefiles,141proposed,210/211readyscope and dependency closure; no canonical/product edits."
+  },
+  "deviations": [
+    "IndependentPH141DoR preaudit failed source-policy/reversal/period/persistence completeness; do not auto-promote141 after140. Preserveoriginal140dependency and add210, later211must inspect remainingDoR.",
+    "Selectedcash internalconsumer to connect originalCashTransaction to stablebank_effect claim; neverclearance,classification orversion/requestnonce. Initialprivatewording aboutdelta/release corrected beforeplanningcommit to strict existingbank fullreverse+fullreplacement with originalclaim permanent; no financialpolicy change.",
+    "PH210docs-only minimalfix has exact4JSONworker scope and root-onlyhash/test/report files. No permission to change validators/workflows/newobjects or businesscode. PH211 inherits pureplanning scope. Candidate209done/210ready/211ready effectiveonly aftercurrentCI+normalmerge.",
+    "PH140PR89 final3224dd2 all11SUCCESS/no threads/normalmerge46f9cb0 confirmed, not reused as new210or141product evidence."
+  ],
+  "unverified": [
+    "Thisplanningdoesnot modify or validate newcanonicalJSON/service/schema examples, posting/reversal/period/model/PG/business/customer/production; PH210/141remain futurework untiltrustedstate.",
+    "Currentexacthead full11CI/normalmerge pending; staticreviewandgovernancechecks not productacceptance."
+  ]
+}
