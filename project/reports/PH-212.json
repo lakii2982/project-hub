@@ -15,7 +15,7 @@
     {
       "command": "python manage.py makemigrations --check --dry-run",
       "result": "pass",
-      "evidence": "No changes detected; root generated new contracts0001 after finalmodelshape. Applied only syntheticDB/CI, no old applied migration modified."
+      "evidence": "No changes detected; root generated new contracts0001 after finalmodelshape. Applied only syntheticDB; current CI pending, no old applied migration modified."
     },
     {
       "command": "python manage.py test tests --verbosity 1",
@@ -53,7 +53,7 @@
     "reviewer": "Independent /root/contracts_review read-only, separate from root/backendwriter",
     "status": "pass",
     "findings": [],
-    "evidence": "Source+production HTTP boundary, normalizedreplay/version/companygate/FK/PM/rollback/singleowner reviewed twice. Independent actual15/10pass5PGskip, finalrace tests inspected for realwaiting/deadlock/unswallowedexceptions. Metadata finalseparate recheck requested. Actual PG/currentCI pending."
+    "evidence": "Source+production HTTP boundary, normalizedreplay/version/companygate/FK/PM/rollback/singleowner reviewed twice. Independent actual15/10pass5PGskip, finalrace tests inspected for realwaiting/deadlock/unswallowedexceptions. Finalmetadata135check/BASEscope independentPASS after evidencewordingcorrection. Actual PG/currentCI pending."
   },
   "deviations": [
     "Native Kimi1b5b80a5 timed_out at600s, NOT completed/Controller validated. Only5partial draftfiles manually salvaged with immutable SHAmanifest runtime/ph212-partial-candidate/salvage.json. Root+scoped implementationworker took over; no permission/config widening or infrastructuretask.",
