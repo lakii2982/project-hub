@@ -2493,7 +2493,8 @@
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-142",
-        "PH-110"
+        "PH-110",
+        "PH-212"
       ],
       "spec": "project/specs/PH-146.md",
       "allowed_paths": [
@@ -2701,7 +2702,8 @@
       "depends_on": [
         "PH-147",
         "PH-146",
-        "PH-110"
+        "PH-110",
+        "PH-212"
       ],
       "spec": "project/specs/PH-150.md",
       "allowed_paths": [
@@ -5567,7 +5569,7 @@
       "title": "后续需求独立规划入口（接续PH-209）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -5585,6 +5587,94 @@
         "docs/verification.md",
         "project/reports/PH-211.json",
         "project/handoffs/PH-211.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/93",
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-211.md"
+    },
+    {
+      "id": "PH-212",
+      "title": "客户供应商及项目合同草稿业务交付",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-140",
+        "PH-211"
+      ],
+      "spec": "project/specs/PH-212.md",
+      "allowed_paths": [
+        "pmo_plugins/contracts/models.py",
+        "pmo_plugins/contracts/party_services.py",
+        "pmo_plugins/contracts/party_forms.py",
+        "pmo_plugins/contracts/party_views.py",
+        "pmo_plugins/contracts/services.py",
+        "pmo_plugins/contracts/forms.py",
+        "pmo_plugins/contracts/views.py",
+        "pmo_plugins/contracts/domain_metadata.py",
+        "pmo_plugins/contracts/plugin.py",
+        "pmo_plugins/contracts/templates/contracts/party_list.html",
+        "pmo_plugins/contracts/templates/contracts/party_detail.html",
+        "pmo_plugins/contracts/templates/contracts/contract_form.html",
+        "pmo_plugins/contracts/templates/contracts/contract_detail.html",
+        "tests/test_v1_contracts.py",
+        "pmo_plugins/contracts/__init__.py",
+        "pmo_plugins/contracts/apps.py",
+        "pmo_plugins/contracts/urls.py",
+        "pmo_plugins/contracts/migrations/*.py",
+        "pmo/urls.py",
+        "pmo/settings.py",
+        "templates/base.html",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/reports/PH-212.json",
+        "project/handoffs/PH-212.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_contracts --verbosity 1"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/94",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-213",
+      "title": "后续业务迭代独立规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-211"
+      ],
+      "spec": "project/specs/PH-213.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-213.json",
+        "project/handoffs/PH-213.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
