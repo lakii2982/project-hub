@@ -1,0 +1,32 @@
+{
+  "task_id": "PH-213",
+  "summary": "Freeze next realbusiness three-template first contractapproval; preserve fulloriginaldependencies and solecontracts factowner, no posting/infrastructure/productcode in planning.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual137tasks after candidate214/215 registration."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual19governance tests in1.980s allpass; no business test rerun in this pureplanning."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/contracts_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual independent finalS PASS after nonnegativeamounts, supersededapprovalmetadata and1..1000changedrefs prewrite bound. Ninefileplanningonly, samepolicyowner/auditSourceRef/canonicalevent andoriginaldependencies checked; independent19governance executedpass. Root137check/19governance repeated, currentCI/merge separate."
+  },
+  "deviations": [
+    "Source fact: no generic approvedpolicy store and draftVersion schema requiredfakeapprover. Freeze narrowly scoped future214 schema/owner correction with immutable domainselection and real internalapproval audit, no restored210 or genericframework.",
+    "No fakefinancialDocument for contractattachment; auditapprovalref actualevidence only, notcustomerlegalproof. No receipt/income/cost/ARAP writes.",
+    "Original146/147/150deps preserved,150proposed plus214 supportingdependency; future214 notalloweduntilthisplanningnormalmerge."
+  ],
+  "unverified": [
+    "PH214 notimplemented; allschema/approvals/PG/browser/financialintegration/target/customeracceptance remainnotrun.",
+    "Currentplanning exactheadCI andnormalmerge pending."
+  ]
+}
