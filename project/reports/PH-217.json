@@ -91,6 +91,11 @@
       "command": "python -B docs/v1.0-development/fixtures/check_fixture.py",
       "result": "pass",
       "evidence": "Actual99positive8negative; frozen input and financial oracle unchanged, only authorized3artifact digests in2metadata updated."
+    },
+    {
+      "command": "python manage.py test tests.test_domain tests.test_monthly_labor tests.test_labor_cutover tests.test_api_security --verbosity 0",
+      "result": "pass",
+      "evidence": "Actual50 tests2.009s after PG nullable-project join fix; local SQLite only."
     }
   ],
   "review": {
@@ -98,12 +103,13 @@
     "reviewer": "Independent /root/labor_design_review",
     "status": "pass",
     "findings": [],
-    "evidence": "Actual final financial/security sourceS PASS after4 findings fixed; independent13 monthly/HTTP0.724s,3API0.505s,final6HTTP0.377s,diffcheck. Source review not PG/browser/production proof."
+    "evidence": "Actual final financial/security sourceS PASS after4 findings fixed; independent13 monthly/HTTP0.724s,3API0.505s,final6HTTP0.377s,diffcheck. Source review not PG/browser/production proof. Bounded independent S PASS actual one-line nullable join correction, company/row locks and permissions retained."
   },
   "deviations": [
     "Named salary_pool/allocation_run financial support only; no SDK/runner/CI/deployment edits or PH210 reuse.",
     "First independent confirmation approves component/method policy and salary together; capacity separately proposed/approved by two people.",
-    "Failed initial test label and trigger/projection mismatch retained privately, corrected without weakening append-only protection."
+    "Failed initial test label and trigger/projection mismatch retained privately, corrected without weakening append-only protection.",
+    "First real PR107 PG/container CI failed: nullable Timesheet.project made review SELECT FOR UPDATE target outer join. Actual fix limits row lock to self under existing company lock; independent bounded S PASS, no infrastructure edit. Newhead PG rerun required."
   ],
   "unverified": [
     "Exacthead current PR and7 real PG multi-connection cases pending; SQLite skips not PG evidence.",

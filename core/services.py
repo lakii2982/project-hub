@@ -223,7 +223,7 @@ def review(member, kind, pk, decision, note=""):
     model = {"time": Timesheet, "document": Document, "plan": CashPlan}.get(kind)
     if not model or decision not in {"approve", "reject"}:
         raise ValidationError("审批请求无效")
-    row = model.objects.select_for_update().select_related("project").get(pk=pk)
+    row = model.objects.select_for_update(of=("self",)).select_related("project").get(pk=pk)
     if kind == "time" and row.accounting_mode == "monthly_pool":
         from .labor_projection import review_monthly_time
         return review_monthly_time(member, row, decision, note)
