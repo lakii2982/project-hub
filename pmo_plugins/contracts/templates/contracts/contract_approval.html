@@ -2,6 +2,7 @@
 {% load money %}
 {% block title %}合同配置与独立审批{% endblock %}
 {% block contracts_content %}
+<style>.contracts-workspace fieldset{min-width:0;border:var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-6)}.contracts-workspace fieldset p{min-width:0}.contracts-workspace .form-grid label{font-size:var(--font-size-sm)}.contracts-workspace legend{font-weight:var(--font-weight-semibold);padding-inline:var(--space-2)}</style>
 <section class="page-header"><div><h1 tabindex="-1">{{ contract.contract_code }} · 配置与审批</h1><p>{{ contract.project.name }} · {{ contract.party.display_name }}{% if version %} · 第{{ version.version_no }}版 · {{ version.get_status_display }}{% endif %}</p></div><a class="button" href="{{ contract_url }}">合同详情</a></section>
 <p class="notice">批准合同与收费规则后首次生效。费用、收入、应收和现金均另按真实业务处理，本次不会入账。金额以元填写，最多两位小数。</p>
 {% if error %}<div class="notice error" role="alert" tabindex="-1">{{ error }}</div>{% endif %}
@@ -11,7 +12,7 @@
 <section class="panel"><div class="panel-heading"><h2>合同配置</h2></div><div class="panel-body form-grid">{{ configuration_form.as_p }}</div></section>
 <p>按明细行号关联节点、服务区间及条款。仅填写对应模板的参数；不需要的空行保留空白。保存后可继续增加配置行。</p>
 {% for name,title,group in sections %}<details class="panel" {% if name == 'lines' or group.errors %}open{% endif %}><summary class="panel-heading">{{ title }}</summary><div class="panel-body">{{ group.management_form }}{{ group.non_form_errors }}{% for row in group %}<fieldset class="form-grid"><legend>{{ title }} {{ forloop.counter }}</legend>{{ row.as_p }}</fieldset>{% endfor %}</div></details>{% endfor %}
-<button class="button primary" type="submit">保存配置草稿</button></form>
+<button class="button{% if not version %} primary{% endif %}" type="submit">保存配置草稿</button></form>
 {% endif %}
 {% if version %}
 <section class="panel"><div class="panel-heading"><h2>本版依据与内容</h2></div><div class="panel-body"><p>人工合同依据：{{ version.contract_reference }}</p><p>生效日期：{{ version.effective_on|date:'Y-m-d' }}</p>
@@ -24,4 +25,7 @@
 {% if submit_form %}<form method="post" action="{{ version_submit_url }}">{% csrf_token %}{{ submit_form.as_p }}<p>提交会冻结本版全部内容和合同头，请先保存并核对。</p><button type="submit" class="button primary">提交并冻结版本</button></form>{% endif %}
 {% if rejected_review %}<section class="notice"><p>未保存的审批说明：{{ rejected_review.review_note }}</p><p>记录已改变或不可审批，请查看当前版本状态。</p></section>{% endif %}
 {% if review_form %}<section class="panel"><div class="panel-heading"><h2>独立审批</h2></div><form method="post" action="{{ version_review_url }}" class="panel-body">{% csrf_token %}{{ review_form.as_p }}<p>批准同时确认本版三模板参数及付款/质保条件。缺依据请拒绝，不补猜值。</p><button type="submit" class="button primary">确认审批决定</button></form></section>{% elif version.status == 'submitted' %}<p class="notice">本版已冻结，等待另一位公司负责人或项目财务独立审批。</p>{% endif %}
+<script>
+(() => {const groups={confirmed_time:['time_unit','unit_minutes','unit_price_cents'],fixed_service_period:['service_start','service_end','period_unit','partial_period_rule'],fixed_milestone:[]};const all=Object.values(groups).flat();document.querySelectorAll('select[name$="-template"]').forEach(select=>{const row=select.closest('fieldset');const sync=()=>{all.forEach(key=>{const input=row.querySelector('[name$="-'+key+'"]');if(input){const active=(groups[select.value]||[]).includes(key);input.disabled=!active;input.closest('p').hidden=!active;}});};select.addEventListener('change',sync);sync();});const invalid=document.querySelector('.contracts-workspace [aria-invalid="true"],.contracts-workspace .notice.error');if(invalid)invalid.focus();})();
+</script>
 {% endblock %}

@@ -16,7 +16,7 @@ def _render(context, contract, version=None, *, form=None, sections=None, error=
     pending = contract.versions.filter(status='submitted').exists()
     editable = not pending and member.role in {'owner', 'finance'} and contract.status == 'draft' and (version is None or version.status == 'draft')
     if editable and form is None:
-        form = VersionForm(initial={'contract_id': contract.pk, 'version_id': version.pk if version else None,
+        form = VersionForm(auto_id='config_%s', initial={'contract_id': contract.pk, 'version_id': version.pk if version else None,
             'expected_version': version.version if version else None, 'request_token': uuid.uuid4(),
             'effective_on': version.effective_on if version else timezone.localdate(),
             'contract_reference': version.contract_reference if version else ''})
@@ -27,8 +27,8 @@ def _render(context, contract, version=None, *, form=None, sections=None, error=
     return render(context.request, 'contracts/contract_approval.html', _context(member,
         contract=contract, version=version, versions=service.list_versions(member, contract.pk),
         configuration_form=form if editable else None, rejected_review=bound_review.cleaned_data if bound_review and not can_review else None, sections=sections if editable else None,
-        submit_form=ActionForm(initial=action) if version and version.status == 'draft' and editable else None,
-        review_form=(bound_review or ReviewForm(initial=action)) if can_review else None,
+        submit_form=ActionForm(auto_id='submit_%s', initial=action) if version and version.status == 'draft' and editable else None,
+        review_form=(bound_review or ReviewForm(auto_id='review_%s', initial=action)) if can_review else None,
         approved_lines=version.lines.select_related('policy_selection').prefetch_related('payment_terms', 'warranty_terms') if version and version.status == 'approved' else [],
         candidate=[{**item, 'pricing_display': pricing_display(item['pricing_configuration'])} for item in version.draft_content.get('lines', [])] if version and version.status != 'approved' else [],
         error=error, version_save_url=url('version-save'), version_submit_url=url('version-submit'),
@@ -48,7 +48,7 @@ def version_save(context, payload):
     contract = get_contract(member, payload.get('contract_id'))
     version = service.get_version(member, payload['version_id']) if payload.get('version_id') else None
     # Parent form sees only its fields; all formset keys are strictly validated below.
-    form = VersionForm({k: payload[k] for k in payload if k in VersionForm.base_fields or k == 'csrfmiddlewaretoken'})
+    form = VersionForm({k: payload[k] for k in payload if k in VersionForm.base_fields or k == 'csrfmiddlewaretoken'}, auto_id='config_%s')
     sections = build_formsets(contract, payload, version.draft_content if version else None)
     allowed = set(VersionForm.base_fields) | {'csrfmiddlewaretoken'}
     for name, _, group in sections:
@@ -77,7 +77,7 @@ def version_save(context, payload):
 def _action(context, payload, reviewing=False):
     member = _writer(context.member)
     version = service.get_version(member, payload.get('version_id'))
-    form = ReviewForm(payload) if reviewing else ActionForm(payload)
+    form = ReviewForm(payload, auto_id='review_%s') if reviewing else ActionForm(payload, auto_id='submit_%s')
     error = ''
     if form.is_valid():
         data = form.cleaned_data
