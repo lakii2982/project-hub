@@ -1,0 +1,34 @@
+{
+  "task_id": "PH-208",
+  "summary": "Freeze SDK3 checked-registry/entrypoint factory, actual Django migration graph ownership and deterministic read-only legacy fingerprint. Candidate140ready only takes effect after independent planning PR normalmerge; no product code.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Finalcandidate actual131tasks check PASS and independent131PASS."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual19PASS2.042s; independent19PASS. No gate code edited."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/sdk3_contract_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "FinalstaticreadinessPASS after concrete run_before edge-owner and canonical legacy export fixes. Newmodule wrappers feasible within unchanged140whitelist; trueAppConfig, empty-modelmigration, loader construction sanitization and originalbinding semantics reviewed. Finalmetadata closure PASS:9BASEscopefiles,140status plus linkedIssue88,dependenciesclosed,209pureplanning scope unchanged; no SDK3 product execution claimed."
+  },
+  "deviations": [
+    "PH002PR85 final625d8d4 all11success/0threads/normalmergeff7aebd; PH005PR82 final19a4996all11success/normalmerge72ee245 confirmed before planning. Not reused as SDK3test results.",
+    "Added concrete API and validation constraints to existing140spec but preserved140scope/risk/dependencies/acceptance; no SDK1registry rewrite or new App/migration. Candidatepromotion via separateplanning only, not same implementationPR selfauthorization.",
+    "Native Kimi/DeepSeek child model startup unsupported and prior review atcapacity produced no qualified evidence; root designed, available independentreviewer validated. No unknown billed API or config change.",
+    "PH209 pureplanning successor inherits planningonlyscope/DoR; candidate208done/140ready/209ready become execution authority only aftercurrentCIandnormalmerge.",
+    "Native Controller requires a trusted linked GitHub issue. Linked newPH140Issue88 inside planning; Issue body explicitly not permission. Only taskstatus/github_issue differ; scope/risk/deps/acceptance unchanged."
+  ],
+  "unverified": [
+    "SDK3 implementation/tests, actual new/oldDB migration replay, fingerprint comparisons, PG/concurrency, UI/browser/customer/production are NOT run by thisplanning.",
+    "Currentexacthead full11CI and normalmerge pending; staticplan/testcheck do not substitute product acceptance."
+  ]
+}
