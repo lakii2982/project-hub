@@ -1,0 +1,70 @@
+{
+  "task_id": "PH-212",
+  "summary": "Real customer/supplier single-source records, contacts and existing-project contract draft registration/edit/read in the browser. New contracts App, guarded services and one additive migration; no financial posting, formal activation or copied legacy customer text.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "135 tasks actual check before implementation; final metadata check repeated below."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual0errors,7 urls.W003 warnings inherited from existing SDK colon route names. Known static paths used, no SDK modification/suppression."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "No changes detected; root generated new contracts0001 after finalmodelshape. Applied only syntheticDB; current CI pending, no old applied migration modified."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual fixed Python3.12/Django5.2.18/DRF3.18.2 toolenv full525 in90.000s,515executed pass/10 explicit PG skips (5existing+5new); strictschema/99positive8negative markers read. No previous tests weakened."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual cloned nonempty frozenoldDB after newcontracts0001 and repeatedmigrate:1org4entries58cents/noerrors; freshbrowser syntheticorg has0ledgerentries andvalid audit. Never reseeded oldDB."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_contracts --verbosity 1",
+      "result": "pass",
+      "evidence": "15 total:10 SQLite executedpass/5 PG explicit skips. Normal3-object create/edit/read, normalizednames+dualroles+tokens, staleversion/futuredate/FK/roles/revokeduser/member/disabled/non-draft, outboxrollback, CSRF/GET/unknowninput/HTTP PM+tenant+preservederrorinput. PG tests use independent connections and observed pg_blocking_pids for disable/revoke/write-first races plus duplicateparty/contract."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual19 in2.142s."
+    },
+    {
+      "command": "Actual Chromium business browser flow and 8 widths",
+      "result": "pass",
+      "evidence": "Chromium151.0.7922.34 real/login→party dualrole create→contact create/edit→contract draft create/detail/edit→party rename reflected by FK in contract.1440/390 plus320/360/640/768/1024/1280 no bodyoverflow. KeyboardEnter createsparty; invaliddate preservesinput/focus; filterempty, mobileEsc/focusrestore, auditor+PMread/member403. Root inspected actual1440/390 PNG. No JSerrors; syntheticonly. Date default localized HTML bug discovered and fixed with ISO widgetformat, actualHTML regressionadded. Native browser en-US date display is locale-specific, persistedISOdate."
+    },
+    {
+      "command": "Read-only oldbusiness snapshots before/after new0001/repeat + integrity",
+      "result": "pass",
+      "evidence": "Actual6steps all0 on SQLite backupcopy of frozen58centsDB. contracts0001 applied then repeat noDDL;22oldtables39PKrows/oldsource/rates/costs/auditchain canonical bytes identical SHA04dc594d2a607a322c626efdd883332ebfe7b7a9c42a63a38c663d77d6d9ef82. Original remains untouched. No newfinancialcutover claim."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/contracts_review read-only, separate from root/backendwriter",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Source+production HTTP boundary, normalizedreplay/version/companygate/FK/PM/rollback/singleowner reviewed twice. Independent actual15/10pass5PGskip, finalrace tests inspected for realwaiting/deadlock/unswallowedexceptions. Finalmetadata135check/BASEscope independentPASS after evidencewordingcorrection. Actual PG/currentCI pending."
+  },
+  "deviations": [
+    "Native Kimi1b5b80a5 timed_out at600s, NOT completed/Controller validated. Only5partial draftfiles manually salvaged with immutable SHAmanifest runtime/ph212-partial-candidate/salvage.json. Root+scoped implementationworker took over; no permission/config widening or infrastructuretask.",
+    "Contact org-wide name uniqueness invented by draft removed: same personal name across different counterparties is legitimate. Counterparty normalizedcompanyname and contractcode uniqueness retained. No independent Contact name uniqueness contract existed.",
+    "Root alone Appconfig/wiring/navigation/newmigration; backendworker models/services/forms/tests, independentreview separate. Models not copied tocore and old Project.client never synced. Existing audit/DomainEvent only, no new generic accounting framework.",
+    "Existing SDK generatescolon route names causing7W003 warnings. Static prefixed links avoid ambiguous reverse; intentionally no SDKrepair. Native partial used unsupported SQLite JSONcontains; replaced portable role filtering before actualtests.",
+    "Frontend reuses existing sharedbase/form/panel/navigation pattern and canonicaltokens scoped tobusiness; no frontendbuildchain/newdependencies. Existinggloballegacygreen shell preserved, no unrelatedsiteredesign. Read-only roles shown withoutmaintenancecontrols. Synchronouspages have no independentasync loading; POST shows saving state, serverguards remain authoritative."
+  ],
+  "unverified": [
+    "Exact-head current all11CI and5new PGconcurrency tests pending PR; localSQLite is not PGproof.",
+    "Only draftregistration delivered. Formalcontractversion/pricing/approval/activation, settlement/income/ARAP/cash/labor and rest of1.0 remain peroriginal146/150andothercontracts; theirdependencies preserved, not selfpromoted.",
+    "No productionrelease/deployment, targetLinux/TLS/backupsrestore or realcustomeracceptance. BrowseronlysyntheticisolatedDB; financiallegacy compatibility not newmonthlycutover."
+  ]
+}

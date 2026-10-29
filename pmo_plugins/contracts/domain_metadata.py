@@ -1,0 +1,15 @@
+DOMAIN_METADATA = {
+    'schema_version': '1', 'plugin_id': 'contracts',
+    'django_app': {'module': 'pmo_plugins.contracts', 'label': 'contracts'},
+    'contracts': {'commands': [], 'queries': [], 'events': []},
+    'migration_dependencies': ['core'],
+    'routes': [
+        {'name': name.replace('-', '_'), 'path': name + '/', 'access': access}
+        for name, access in (
+            ('parties', 'business_read'), ('party', 'business_read'),
+            ('party-save', 'business_write'), ('contact-save', 'business_write'),
+            ('contracts', 'business_read'), ('contract', 'business_read'),
+            ('contract-save', 'business_write'),
+        )
+    ],
+}
