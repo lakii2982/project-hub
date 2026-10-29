@@ -2,7 +2,8 @@
 from copy import deepcopy
 from datetime import timedelta
 import uuid
-from unittest import mock
+import importlib.util
+from unittest import mock, skipUnless
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.test import TestCase
 from core.models import AuditEvent, DomainEvent, LedgerEntry, CashPlan, Milestone, Membership, PluginState
@@ -58,17 +59,6 @@ class ContractApprovalTests(Fixture, TestCase):
         self.assertEqual(before, self.facts())
 
     def test_three_templates_first_approval_and_canonical_event(self):
-        from jsonschema import Draft202012Validator
-        from referencing import Registry, Resource
-        import json
-        from pathlib import Path
-        base = Path(__file__).resolve().parents[1] / 'docs/v1.0-development/contracts'
-        registry = Registry()
-        for path in base.glob('*.schema.json'):
-            document = json.loads(path.read_text())
-            if '$id' in document:
-                registry = registry.with_resource(document['$id'], Resource.from_contents(document))
-        events = json.loads((base / 'events.schema.json').read_text())
         for index, template in enumerate(('confirmed_time', 'fixed_milestone', 'fixed_service_period')):
             if index:
                 self.contract = self.make_contract(contract_code='T' + str(index))
@@ -89,12 +79,64 @@ class ContractApprovalTests(Fixture, TestCase):
             event = DomainEvent.objects.get(source_id=version.approval_audit_id)
             self.assertEqual(event.data['event_id'], str(event.event_id))
             self.assertEqual(event.data['payload']['posting_event_refs'], [])
-            schema = {'$ref': events['$id'] + '#/$defs/contracts.version_approved.v1'}
-            Draft202012Validator(schema, registry=registry).validate(event.data)
             self.assertEqual(version.evidence[0]['sha256'], version.approval_audit.event_hash)
             self.assertEqual(line.method_policy['evidence_ref']['kind'], 'audit_record')
         totals = service.approved_contract_totals(self.finance, self.project.pk)
         self.assertEqual((totals['net_cents'], totals['tax_cents'], totals['gross_cents']), (300000, 18000, 318000))
+
+    @skipUnless(importlib.util.find_spec('jsonschema') is not None, 'Strict schema tool dependency is not a product dependency')
+    def test_strict_contract_schema_states_relations_and_real_approval_event(self):
+        import runpy
+        from pathlib import Path
+        from jsonschema import ValidationError as SchemaError
+        api = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'docs/v1.0-development/contracts/validate_contracts.py'))
+        schemas, registry = api['load']()
+        def validate(name, value, file='entities.schema.json'):
+            api['validator']({'$ref': schemas[file]['$id'] + '#/$defs/' + name}, registry).validate(value)
+        draft = {'id': 'version', 'organization_id': self.org.pk, 'version': 1, 'status': 'draft',
+                 'created_at': '2026-10-29T01:00:00Z', 'contract_id': str(self.contract.pk),
+                 'version_no': 1, 'effective_on': self.today.isoformat(), 'created_by_member_id': self.owner.pk, 'evidence': []}
+        validate('ContractVersion', draft)
+        for bad in [dict(draft, approved_by_member_id=self.finance.pk), dict(draft, status='approved'),
+                    {k:v for k,v in draft.items() if k != 'created_by_member_id'}, dict(draft, status='submitted')]:
+            with self.assertRaises(SchemaError): validate('ContractVersion', bad)
+        approved = self.approve(self.submit(self.save()))
+        value = dict(draft, id=str(approved.pk), version=approved.version, status='approved',
+                     submitted_by_member_id=approved.submitted_by_member_id,
+                     approved_by_member_id=approved.approved_by_member_id,
+                     approved_on=approved.approved_on.isoformat(), evidence=approved.evidence)
+        validate('ContractVersion', value)
+        validate('ContractVersion', dict(value, status='superseded'))
+        event = DomainEvent.objects.get(source_id=approved.approval_audit_id)
+        validate('contracts.version_approved.v1', event.data, 'events.schema.json')
+        line = approved.lines.get()
+        line_data = {'id':str(line.pk), 'organization_id':self.org.pk, 'version':1, 'status':'approved',
+            'created_at':line.created_at.isoformat(), 'contract_id':str(self.contract.pk),
+            'contract_version_id':str(approved.pk), 'line_no':1, 'project_id':self.project.pk,
+            'counterparty_id':str(self.party.pk), 'pricing_template':line.pricing_template,
+            'net_cents':line.net_cents,'tax_cents':line.tax_cents,'gross_cents':line.gross_cents,
+            'method_policy':line.method_policy,'pricing_configuration':line.pricing_configuration}
+        validate('ContractLine', line_data)
+        selection=line.policy_selection
+        policy={'id':str(selection.pk),'organization_id':self.org.pk,'version':1,'status':'approved',
+            'created_at':selection.created_at.isoformat(),'contract_line_id':str(line.pk),
+            'policy_version':selection.policy_version,'pricing_configuration':selection.pricing_configuration,
+            'selected_on':selection.selected_on.isoformat(),'approved_by_member_id':selection.approved_by_member_id}
+        validate('MethodPolicySelection',policy)
+        bad_policy=dict(policy);bad_policy.pop('pricing_configuration')
+        with self.assertRaises(SchemaError):validate('MethodPolicySelection',bad_policy)
+        bad = dict(line_data); bad.pop('contract_version_id')
+        with self.assertRaises(SchemaError): validate('ContractLine',bad)
+        for amount in [True, 100000.0, -1]:
+            with self.assertRaises(SchemaError): validate('ContractLine',dict(line_data,net_cents=amount))
+        warranty = approved.lines.get().warranty_terms.get()
+        dto = {'contract_line_id':str(line.pk),'payment_term_id':str(warranty.payment_term_id),
+               'release_condition':warranty.release_condition,'gross_cents':warranty.gross_cents}
+        validate('WarrantyTerm',dto,'write-dtos.schema.json')
+        bad=dict(dto);bad.pop('payment_term_id')
+        with self.assertRaises(SchemaError):validate('WarrantyTerm',bad,'write-dtos.schema.json')
+        with self.assertRaises(SchemaError):validate('ContractVersion',{'contract_id':str(self.contract.pk),
+            'version_no':1,'effective_on':self.today.isoformat(),'approved_by_member_id':self.finance.pk},'write-dtos.schema.json')
 
     def test_save_submit_review_replay_and_old_version(self):
         token = uuid.uuid4()
@@ -250,6 +292,33 @@ class ContractApprovalTests(Fixture, TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertContains(response, '仍需核对的实际意见', status_code=400)
         self.assertContains(response, 'value="reject" selected', status_code=400)
+
+    def test_save_replay_returns_original_after_other_contract_coverage_approval(self):
+        token=uuid.uuid4(); original_contract=self.contract
+        first=self.save([self.line('fixed_service_period')],request_token=token)
+        self.contract=self.make_contract(contract_code='OTHER-COVERAGE')
+        self.approve(self.submit(self.save([self.line('fixed_service_period')])))
+        self.contract=original_contract
+        before=self.facts()
+        replay=self.save([self.line('fixed_service_period')],request_token=token)
+        self.assertEqual(replay.pk,first.pk)
+        self.assertEqual(before,self.facts())
+        self.denied(lambda:self.save([self.line('fixed_service_period')]))
+        self.denied(lambda:self.save([self.line('fixed_service_period')],request_token=token,contract_reference='改变原输入'))
+
+    def test_rejected_version_copy_prefills_new_form_without_writing_on_get(self):
+        version=self.submit(self.save())
+        service.review_version(self.finance,version.pk,expected_version=version.version,
+            request_token=uuid.uuid4(),decision='reject',review_note='请核对实际单价')
+        self.client.force_login(self.owner.user)
+        before=self.facts()
+        response=self.client.get('/modules/contracts/version/?copy='+str(version.pk))
+        self.assertEqual(response.status_code,200)
+        self.assertContains(response,'value="1000"')
+        self.assertContains(response,'value="实际合同经办依据"')
+        self.assertEqual(self.facts(),before)
+        self.assertNotContains(response,'name="version_id" value="'+str(version.pk)+'"')
+        version.refresh_from_db();self.assertEqual(version.status,'rejected')
 
 
 from concurrent.futures import ThreadPoolExecutor

@@ -31,6 +31,7 @@ def _render(context, contract, version=None, *, form=None, sections=None, error=
         review_form=(bound_review or ReviewForm(auto_id='review_%s', initial=action)) if can_review else None,
         approved_lines=version.lines.select_related('policy_selection').prefetch_related('payment_terms', 'warranty_terms') if version and version.status == 'approved' else [],
         candidate=[{**item, 'pricing_display': pricing_display(item['pricing_configuration'])} for item in version.draft_content.get('lines', [])] if version and version.status != 'approved' else [],
+        copy_version_url=url('version', copy=version.pk) if version and version.status == 'rejected' else '',
         error=error, version_save_url=url('version-save'), version_submit_url=url('version-submit'),
         version_review_url=url('version-review'), new_version_url=url('version', contract=contract.pk),
         contract_url=url('contract', id=contract.pk)), status=status)
@@ -38,6 +39,17 @@ def _render(context, contract, version=None, *, form=None, sections=None, error=
 
 def version_detail(context, payload):
     member = _reader(context.member)
+    if payload.get('copy'):
+        member = _writer(member)
+        source = service.get_version(member, payload['copy'])
+        if source.status != 'rejected':
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied('只有被拒绝版本可复制为新草稿')
+        form = VersionForm(auto_id='config_%s', initial={'contract_id': source.contract_id,
+            'request_token': uuid.uuid4(), 'effective_on': source.effective_on,
+            'contract_reference': source.contract_reference})
+        return _render(context, source.contract, form=form,
+                       sections=build_formsets(source.contract, content=source.draft_content))
     version = service.get_version(member, payload['id']) if payload.get('id') else None
     contract = version.contract if version else get_contract(member, payload.get('contract'))
     return _render(context, contract, version)

@@ -71,15 +71,16 @@ def _header(contract):
             'signed_on': contract.signed_on.isoformat() if contract.signed_on else None}
 
 
-def _normalize_lines(contract, lines):
+def _normalize_lines(contract, lines, *, validate_live=True):
     result, line_numbers, milestones_seen, intervals = [], set(), set(), []
     # All callers hold the company lock. Approved coverage in this same project
     # remains authoritative across different contracts, not only this candidate.
-    for selection in MethodPolicySelection.objects.filter(
-            organization=contract.organization, status='approved',
-            contract_line__contract_version__status='approved',
-            contract_line__contract_version__contract__project_id=contract.project_id).exclude(
-            contract_line__contract_version__contract_id=contract.pk):
+    existing_coverage = MethodPolicySelection.objects.filter(
+        organization=contract.organization, status='approved',
+        contract_line__contract_version__status='approved',
+        contract_line__contract_version__contract__project_id=contract.project_id).exclude(
+        contract_line__contract_version__contract_id=contract.pk) if validate_live else ()
+    for selection in existing_coverage:
         configuration = selection.pricing_configuration
         if configuration.get('template') == 'fixed_service_period':
             intervals.extend((_date(item['coverage_start']), _date(item['coverage_end']))
@@ -114,13 +115,17 @@ def _normalize_lines(contract, lines):
                 if type(raw) not in {int, str}:
                     _reject('节点无效')
                 try:
-                    milestone = Milestone.objects.get(pk=raw, project_id=contract.project_id)
+                    milestone_id = int(raw)
+                    if not 1 <= milestone_id <= 2**63-1:
+                        _reject('节点标识无效')
+                    if validate_live:
+                        Milestone.objects.get(pk=milestone_id, project_id=contract.project_id)
                 except (Milestone.DoesNotExist, ValueError, TypeError):
                     _reject('节点不存在或不属于本项目')
-                if milestone.pk in milestones_seen:
+                if milestone_id in milestones_seen:
                     _reject('同一版本不能重复分配节点')
-                milestones_seen.add(milestone.pk)
-                item['milestone_id'] = str(milestone.pk)
+                milestones_seen.add(milestone_id)
+                item['milestone_id'] = str(milestone_id)
                 allocation += _amount(item['allocated_net_cents'])
             if allocation != net:
                 _reject('节点价款分配合计须等于明细净额')
@@ -252,7 +257,9 @@ def save_version(member, contract_id, *, lines, effective_on, contract_reference
                  version_id=None, expected_version=None):
     member = _locked(member)
     contract = _contract_for_read(member, contract_id)
-    normalized = _normalize_lines(contract, lines)
+    # Hash deterministic submitted facts first. Live coverage/FK state must not
+    # invalidate the receipt of an already completed save.
+    normalized = _normalize_lines(contract, lines, validate_live=False)
     effective_on = _date(effective_on)
     if effective_on > timezone.localdate():
         _reject('首次生效日期不能在未来')
@@ -263,6 +270,7 @@ def save_version(member, contract_id, *, lines, effective_on, contract_reference
     if existing:
         return existing
     _available(member, contract)
+    normalized = _normalize_lines(contract, normalized)
     if contract.versions.filter(status='submitted').exists():
         _reject('合同已提交，候选内容不可修改')
     if version_id:

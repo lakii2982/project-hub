@@ -1,0 +1,107 @@
+{
+  "task_id": "PH-214",
+  "summary": "Three pricing templates, payment/warranty terms, frozen contract versions, independent internal approval and first activation in the existing contracts owner. Approved rules live once in MethodPolicySelection, project formal totals derive from approved lines; no financial posting or copied legacy balance.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual138tasks after finalreport status; root repeat beforecommit."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual0errors/11existingSDK colon-route W003 warnings retained; noSDKchange orwarning suppression."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "No changes detected. Root serialized newcontracts0002 from actual0001leaf, onlyfive newtables/coreFKrefs; no originalmigration edited."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actualfixedtool Python3.12.14 Django5.2.18/DRF3.18.2 canonicalTMPDIR full541 in90.947s:528executedpass/13explicitPGskip. Strictschema99positive8negative markers executed. Previous539pass run preceded newlyfoundreplayregression and is notfinalproof."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actualfrozen58cent oldDB backup after0001+0002/repeat:1org4entries/noerrors,22oldtables39PKrows identicalcanonicalbytes04dc594d2a607a322c626efdd883332ebfe7b7a9c42a63a38c663d77d6d9ef82. Populated212 syntheticDBcopy0002/repeat/integrity0,37preexistingtables236rows including3parties3contacts2draftcontracts preserved; expectednewmetadata5contenttypes20permissions allowed witholdmetadata rowbytesretained. Browser3approvals1org0ledgerentries/auditvalid. No originalDB reseeded."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_contracts tests.test_contract_approval --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual31total23executedpass8PGskips in0.847s. All15prior212 cases retained; 3template fullbusinessflow unconditionallyexecutes incleanproductenv withoutjsonschema. Separate stricttool testcase covers realapprovalevent, Versiondraft/submitted/approved/supersededmetadata, LineversionFK, warrantyparent, selectionconfig, serverDTO/centsfalsefloatnegative rejection. Productenv strictschemaextra explicitlyskips, not productdependency. Three addedPG tests plus5old do actualblockedconnection/uniqueapproval/controlrace, pendingcurrentCI."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
+      "result": "pass",
+      "evidence": "Actual9schema/offlineRefs2967, supplementaldesign checks pass after narrowlyauthorizedPH215digest sync. Schema only, notfinancialUAT."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/check_contract_cases.py",
+      "result": "pass",
+      "evidence": "Actual19positive37negative unchanged cases pass."
+    },
+    {
+      "command": "python -B docs/v1.0-development/fixtures/check_fixture.py",
+      "result": "pass",
+      "evidence": "Actual99positive8negative/92sources/18futureUATspec rows/137requirements pass. Financialoracle/fixturebusiness values untouched; onlytwo schemahashentries changed underPH215."
+    },
+    {
+      "command": "Actual Chromium3template configuration, submit and independentapproval business flow",
+      "result": "pass",
+      "evidence": "Chromium151.0.7922.34 realowner+finance separatelogins/contexts, fixed_milestone/confirmed_time/fixed_service_period each config→save→frozen submit→differentfinance approve→active; CNYyuan2dp UI→integercents,10%retentionwithinprice. Sourcepreview+8widths320/360/390/640/768/1024/1280/1440 nohorizontalbodyoverflow; actualkeyboardEnter formsubmit andnative details. Five roles includingPM/auditorread/member403. Projectformalnet300000tax18000gross318000derived with3exactversionlinks, oldestimate9999unchanged andclearlyhistorical; noincomeclaim. Rootread1440and390screenshots, noJSerrors. Browserresumed alreadycompletedfirstapproval aftercorrecting test currencygroupformat expectation, didnotrepeat oroverwriteit."
+    },
+    {
+      "command": "Regression RED then GREEN: same save receipt after other contract later approved overlapping service",
+      "result": "pass",
+      "evidence": "Independentreview found livechecks ahead ofreceipt. Addedtest actuallyfailedoldcode beforefix. Root separates deterministicnormalize/hash before_receipt andliveFK/coverage onlynewrequests; sametokenreturnsoriginal nofacts, newtokenblocked/changedsamekeyconflict. Finaltarget/full include regression."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/contracts_review, read-only separate from root and implementationworker",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual finalsourceS PASS after4 concreteclosures: crosscontractapprovedservicecoverage, boundreviewinputretention, exactprojectnettaxgross/versionlinks, replaylivenormalizationordering. Sourcepolicy/auditEvidence/canonicaloneevent/immutablecandidate-vs-approved sameowner/copyGETnoeffects/schemafourdigests reviewed. Independentapproval16tests12pass4skip (3PG+1missingstrictschema inprimaryvenv); rootstrict/full/browser separate. Finalmetadatarecheck requested; currentPG/CI remainsseparate."
+  },
+  "deviations": [
+    "ExistingKimi f3902885 completedonly2JSONschemas;Controller originalBASEa78e527/scope/SHA validated, rawimmutablecache preserved. Same2schema basebytes unchanged afterPH215rebasing; productcode byboundedworker/root, nativecollection notwholefeatureacceptance.",
+    "First schema/fixture check actuallyfailedfrozenhash drift. KeptbusinessWIPa9061e4 andnevereditedunauthorizedfiles. PH215 PR101 final414f830 all11current+CodeQLsuccess/0threads normalmerge0d35763 authorized exactly4existingdigestvalues. No fixture amounts/UAT/inputhash/validator/CI altered. Old/newdigestlineage below andGit history retained.",
+    "Backendworker hit transientmodelcapacity afterwritingrequestedfixes; boundedfollowup completed andtargettests actual28/20pass8PGskip. Root independentlyadded strictschema/replayREDGREEN/rejectedcopy regressions tofinal31, finalintegration no fake nativebusinesscompletion.",
+    "Approval audit uses fixed plugin.contracts.version.approved to suppress existinggenericOutbox branch thenone completecanonical contracts.version_approved.v1 in sameatomic; no coreaudit/SDK/bus rewrite. InternalapprovalAuditEvent EvidenceRef is notattachment/customerconfirmation. MethodPolicySelection is authoritative approvedconfiguration, valuesonLine/PolicyVersion are projections.",
+    "No publiccanonicalcommand/PAT/MCP endpoint added. Browser internalcandidateDTO has no callerpolicyapproval; actualindependentapproval explicitlyapprovesconfiguration andserverstampsrealSelectionRef. Firsteffective_on nonfuture only; approvedcontractchanges/termination remainfuturePH151. Original146/147/150andalltheirdependencies stayproposed/notcompleted.",
+    "Project.contract_cents/client retained as clearlylabeledhistoricalopeningestimates/text, nevercopied fromformalcontract. Formalvalueandcustomer fromexistingcontracts owner, disabled/unavailable neverfallbacktooldestimate asformal. Frontendmoneyinputs yuanDecimal2dp, centspersistent; nofinancialbasischange."
+  ],
+  "unverified": [
+    "Exact-head currentall11CI/realPG8domainracecases andnormalmerge pending; localSQLite skips notPGproof.",
+    "No financial AccountingEvent/SourceConsumption/LedgerPosting/income/ARAP/cash/laborpool implementation or1.0completeclaim. Internalcontractapproval isnotcustomerlegal/signature/performance acceptance.",
+    "No productionrelease/deployment/targetLinux/TLS/restore/customercontact orcustomerUAT. ExistinglegacyUI shell notfullyredesigned;11SDKroutecolonwarnings retained."
+  ],
+  "digest_lineage": [
+    {
+      "metadata": "docs/v1.0-development/fixtures/fixture.json",
+      "schema": "entities.schema.json",
+      "old": "658a21e4b46800bed51fbf891ca328fb757dcbd8f03d384e98df24ff50644492",
+      "new": "64352e65410359f1aed121925ccf12b73fa7335a98ede3fc64964562eacebbaa"
+    },
+    {
+      "metadata": "docs/v1.0-development/fixtures/fixture.json",
+      "schema": "write-dtos.schema.json",
+      "old": "cce1965e774032131c90bbe1e2b40426738c5dc75fe47ae81624af8b787ecab3",
+      "new": "c1b4c8859c4b0f75dc8f3724879fbf9b9304db2f0497064c61ecb4711b5ee141"
+    },
+    {
+      "metadata": "docs/v1.0-development/promotion-draft/extension-freeze.json",
+      "schema": "entities.schema.json",
+      "old": "658a21e4b46800bed51fbf891ca328fb757dcbd8f03d384e98df24ff50644492",
+      "new": "64352e65410359f1aed121925ccf12b73fa7335a98ede3fc64964562eacebbaa"
+    },
+    {
+      "metadata": "docs/v1.0-development/promotion-draft/extension-freeze.json",
+      "schema": "write-dtos.schema.json",
+      "old": "cce1965e774032131c90bbe1e2b40426738c5dc75fe47ae81624af8b787ecab3",
+      "new": "c1b4c8859c4b0f75dc8f3724879fbf9b9304db2f0497064c61ecb4711b5ee141"
+    }
+  ]
+}
