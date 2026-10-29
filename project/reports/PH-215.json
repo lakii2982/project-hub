@@ -1,0 +1,31 @@
+{
+  "task_id": "PH-215",
+  "summary": "Authorize only four existing SHA256 digest values accompanying alreadyauthorized contractentity/DTO changes; no product/schema/digest edits in planning.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual138taskcheck afterfinalindependentreview statusPASS, rootrepeatedbeforecommit."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual19governance allpass; rootprecommit repeat andindependent19/2.044s."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/contracts_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual independent read-only S PASS8planningfiles,precisefourexistingdigestvaluesonly,no product/schema/hashbody and nofinancialfixture/validator/CIchanges. Independent19governance2.044s."
+  },
+  "deviations": [
+    "PH214 realbusinesscandidate preservedlocalWIPa9061e4; no undo or repeat. Actualschemafieldchanges failedstrictfrozenhash checks; report failure honestly and scope supplement viaexistingready215 beforetouchingadditionalfiles.",
+    "Onlyexistingentities/writeDTOhashkeys intwometadataJSONfiles authorizedfuture214; full financialfixtures,inputhashes,CIvalidators untouched."
+  ],
+  "unverified": [
+    "Currentplanning exactheadCI andnormalmergepending.",
+    "PH214 fullbusiness/PG/browser/finalmigration/integration stillunverified; targeted20pass8PGskip notreleaseacceptance."
+  ]
+}
