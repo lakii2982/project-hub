@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual142tasks after final sourceS/update; command output required."
+      "evidence": "Actual143taskcheck after separately merged PH220 PR113/f98755c; BASEverify-current declaration PASS."
     },
     {
       "command": "python manage.py check",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual603 tests101.592s,577 executed pass26 environment skips including6 new PG cases. Subsequent display-only polishing HTTP5/0.818s passed; currentCI required for exact finalhead."
+      "evidence": "Current source1ab3ad2 local605/101.443s:579execute pass26PGenvironment skips; strictjsonschema actually executed in fixed local runtime. CurrentPG17.11 job123780504604 actual605/95.546s:595execute pass10skips (9 nonPG and optional schema tooling); all6 newPG and original contract races execute. All12checks SUCCESS/CLEAN/0threads at sourcehead."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -30,7 +30,7 @@
     {
       "command": "python manage.py test tests.test_acceptance_revenue tests.test_acceptance_revenue_concurrency tests.test_acceptance_revenue_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual30 tests2.467s:24 execute pass(19direct+5HTTP),6 real PG skipped onSQLite. Not PGproof."
+      "evidence": "Actual30 tests2.467s:24 execute pass(19direct+5HTTP),6 real PG skipped onSQLite. Not PGproof. Latest66target3.413s52pass14skip includes contract regressions; independent35/1.881s21pass14skip."
     },
     {
       "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
@@ -61,6 +61,16 @@
       "command": "Real Chromium login/customer income/5roles/8widths/keyboard",
       "result": "pass",
       "evidence": "Actual owner submit→finance independently accept→income0.34→exact reverseincome→reverseacceptance; new real-typed synthetic customer-reference replacement→otheractorapprove→income. 8widths320..1440 nooverflow;ownerfinanceauditorPM detail200/member403; keyboard skip link; replacementUUID hidden. No claim of external customer evidence verification or production."
+    },
+    {
+      "command": "python manage.py test tests.test_contract_approval tests.test_v1_contracts tests.test_acceptance_revenue tests.test_acceptance_revenue_concurrency tests.test_acceptance_revenue_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual66 tests3.413s:52execute pass14PGenvironment skip after PH220 authorized two class setups. Original bodies/commonFixture unchanged. Latest66target3.413s52pass14skip includes contract regressions; independent35/1.881s21pass14skip."
+    },
+    {
+      "command": "Current PostgreSQL17.11 CI source1ab3ad2 fullsuite/migrate/integrity",
+      "result": "pass",
+      "evidence": "https://github.com/lakii2982/project-hub/actions/runs/40968947432/job/123780504604 ;605/95.546s595pass10skip; integrity oktrue/errors[]; actual6newPG and originalcontractcases execute, no SQLite substitute."
     }
   ],
   "review": {
@@ -68,16 +78,17 @@
     "reviewer": "Independent /root/labor_design_review",
     "status": "pass",
     "findings": [],
-    "evidence": "Actual final financial/security sourceS PASS after strictdryrun fix; independent24 direct/HTTP2.571s/diffcheckpass. Checked core bridge, frozen price/source, C0, reversal, DB guards, permissions and dedicatedCSV. Not a PG/production proof."
+    "evidence": "Actual final financial/security sourceS PASS after strictdryrun fix; independent24 direct/HTTP2.571s/diffcheckpass. Checked core bridge, frozen price/source, C0, reversal, DB guards, permissions and dedicatedCSV. Not a PG/production proof. Supplement finalS PASS for two original PG setups and strictschema split; independently35 tests1.881s21pass14skip/diffcheck. CurrentPG still required."
   },
   "deviations": [
     "Root actual SDK metadata failure for undeclared direct contracts dependency fixed in new business manifest/metadata, no SDK change or bypass.",
     "Initialfixture PluginState changed_byUser error and HTTP wrongexpected400for403 corrected without weakening service/trigger or removing refusals.",
     "Real browser found Milestone object label and exposed technical IDs; changed to actual node name/readable contract version/collapsed trace, HTTP rerun pass.",
-    "Dryrun 0/None could persist initially; actual independent finding fixed strict bool at all8 delivery writes, real no-side-effect regressions passed."
+    "Dryrun 0/None could persist initially; actual independent finding fixed strict bool at all8 delivery writes, real no-side-effect regressions passed.",
+    "PR111 first real domainCI failed optional schema import and three old contract PG prerequisite scenarios because new dependencies correctly forbid disabling parent. Separate PH220 PR113 all12CI/independentS mergedf98755c before two original class setUp adaptations. No product dependency, SDK, CI, runtime dependency or old test body changed."
   ],
   "unverified": [
-    "Exacthead currentCI and6 real PostgreSQL races pending; local SQLite skips not counted as PGproof.",
+    "Final metadata head must retain current allCI/0threads/CLEAN before normalmerge; preceding exactsource1ab3ad2 all12successful actualPG evidenced.",
     "Production/customer environment/customer acceptance, file upload and all contract income methods not delivered by this slice.",
     "Full1.0 unfinished; original proposed tasks/dependencies remain unchanged."
   ]
