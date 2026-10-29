@@ -142,6 +142,8 @@ def update_contract_draft(member, contract_id, *, project_id, party_id, contract
         contract = Contract.objects.select_for_update().get(organization=member.organization, pk=contract_id)
     except (Contract.DoesNotExist, ValueError, ValidationError) as error:
         raise PermissionDenied("记录不存在或无权访问") from error
+    if contract.versions.filter(status="submitted").exists():
+        raise ValidationError("合同已提交审批，不能修改合同头")
     if contract.status != Contract.Status.DRAFT:
         raise ValidationError("只能编辑草稿合同；生效、终止或替代合同不可通过此服务修改")
     if contract.version != expected_version:

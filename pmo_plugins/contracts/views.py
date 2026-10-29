@@ -32,7 +32,8 @@ def contract_detail(context, payload):
             contract=contract, form=form, contract_save_url=url('contract-save')))
     return render(context.request, 'contracts/contract_detail.html', _context(member,
         contract=contract, edit_url=url('contract', id=contract.pk, edit=1),
-        party_url=url('party', id=contract.party_id)))
+        party_url=url('party', id=contract.party_id), configuration_url=url('version', contract=contract.pk),
+        configuration_versions=contract.versions.all(), pending=contract.versions.filter(status='submitted').exists()))
 
 
 def contract_save(context, payload):

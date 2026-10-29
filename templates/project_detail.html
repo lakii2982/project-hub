@@ -5,7 +5,7 @@
 {% block content %}
 <div class="project-detail" data-project-tabs>
   <section class="page-heading">
-    <div><div class="eyebrow">{{ project.code }} <span class="heading-dot">/</span> {{ project.get_template_display }}</div><h1>{{ project.name }}</h1><p>{{ project.client }} <span class="heading-dot">·</span> 项目经理 {{ project.manager }}</p></div>
+    <div><div class="eyebrow">{{ project.code }} <span class="heading-dot">/</span> {{ project.get_template_display }}</div><h1>{{ project.name }}</h1><p>立项客户文本（历史）：{{ project.client }} <span class="heading-dot">·</span> 项目经理 {{ project.manager }}</p></div>
     <div class="actions">
       {% if can_manage %}<a class="button" href="{% url 'project-edit' project.pk %}">编辑项目</a>{% endif %}
       <span class="badge health-{{ summary.health|slugify }}">{{ summary.health_label|default:'待评估' }}</span><span class="badge neutral">{{ project.get_stage_display }}</span>
@@ -89,7 +89,9 @@
       <article class="metric"><span class="metric-label">预算余额</span><strong {% if summary.remaining_cents < 0 %}class="text-warning"{% endif %}>¥ {{ summary.remaining_cents|money }}</strong><p>成本预算 − 已发生成本</p></article>
       <article class="metric featured"><span class="metric-label">项目净现金流</span><strong>¥ {{ summary.cash_net_cents|money }}</strong><p>收款 {{ summary.cash_in_cents|wan }} / 付款 {{ summary.cash_out_cents|wan }}</p></article>
     </div>
-    <div class="balance-strip"><span>计划待收 <strong>¥ {{ summary.receivable_cents|money }}</strong></span><span>计划待付 <strong>¥ {{ summary.payable_cents|money }}</strong></span><span>合同金额 <strong>¥ {{ project.contract_cents|money }}</strong></span></div>
+    <div class="balance-strip"><span>计划待收 <strong>¥ {{ summary.receivable_cents|money }}</strong></span><span>计划待付 <strong>¥ {{ summary.payable_cents|money }}</strong></span><span>立项预估合同额（历史） <strong>¥ {{ project.contract_cents|money }}</strong></span></div>
+    {% if contract_totals %}<div class="notice"><strong>正式合同含税合计 ¥ {{ contract_totals.gross_cents|money }}</strong><p>净额 ¥ {{ contract_totals.net_cents|money }} · 税额 ¥ {{ contract_totals.tax_cents|money }}。来自本项目已批准合同明细，不代表收入或应收。</p><ul>{% for item in contract_totals.contracts %}<li><a href="{% url 'dashboard' %}modules/contracts/version/?id={{ item.version_id }}">{{ item.contract_code }} · 第{{ item.version_no }}版 · {{ item.customer }}</a></li>{% endfor %}</ul></div>{% elif contracts_unavailable %}<div class="notice">正式合同金额当前不可用，请联系负责人检查模块与权限；历史立项预估不代表正式合同金额。</div>{% else %}<p class="notice">尚无本项目已批准合同，正式金额未配置；上方仅保留立项预估。</p>{% endif %}
+
     <div class="panel section-gap"><div class="panel-heading"><h2>收付款计划</h2>{% if can_manage or is_finance %}<a class="button" href="{% url 'new-object' 'plan' %}?project={{ project.pk }}">＋ 新建计划</a>{% endif %}</div>{% include 'partials/plans.html' with plans=cash_plans %}</div>
     <div class="panel section-gap">
       <div class="panel-heading"><div><h2>业务单据与附件</h2><p>最近 40 条，完整记录见项目财务。</p></div>{% if can_manage or is_finance %}<details class="action-menu"><summary class="button">新建单据 ＋</summary><div class="menu-popover"><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">成本费用</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">实际收款</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">实际付款</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=baseline">预算基线</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=change">预算变更</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=acceptance">项目验收</a></div></details>{% endif %}</div>

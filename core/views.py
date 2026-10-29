@@ -102,7 +102,15 @@ def project_detail(request, pk):
     for plan in plans: plan.remaining_cents = plan_remaining(plan)
     display_entries = project.entries.select_related("document", "timesheet")
     if request.member.role not in WRITE_FINANCE: display_entries = display_entries.filter(timesheet__isnull=True)
+    contract_totals, contracts_unavailable = None, False
+    if finance_read:
+        from pmo_plugins.contracts.approval_services import project_contract_totals
+        try:
+            contract_totals = project_contract_totals(request.member, project.pk)
+        except PermissionDenied:
+            contracts_unavailable = True
     return render(request, "project_detail.html", {"nav": "projects", "project": project,
+        "contract_totals": contract_totals, "contracts_unavailable": contracts_unavailable,
         "summary": redact_card(project_summary(project), request.member),
         "tasks": project.tasks.filter(Q(milestone__isnull=False) | Q(cash_plan__isnull=False)).select_related("owner__user", "dependency", "milestone", "cash_plan"),
         "historical_tasks": project.tasks.filter(milestone__isnull=True, cash_plan__isnull=True).select_related("owner__user", "dependency"),

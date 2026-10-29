@@ -142,3 +142,138 @@ class Contract(models.Model):
 
     def __str__(self):
         return self.contract_code
+
+
+class ContractVersion(models.Model):
+    def get_status_display(self):
+        return {'draft': '配置草稿', 'submitted': '待独立审批', 'approved': '已批准生效', 'rejected': '已拒绝', 'superseded': '历史批准版本'}.get(self.status, self.status)
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    contract = models.ForeignKey(Contract, on_delete=models.PROTECT, related_name='versions')
+    version = models.PositiveIntegerField(default=1)
+    version_no = models.PositiveIntegerField()
+    status = models.CharField(max_length=16, default='draft')
+    created_at = models.DateTimeField(auto_now_add=True)
+    effective_on = models.DateField()
+    created_by_member = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    submitted_by_member = models.ForeignKey('core.Membership', on_delete=models.PROTECT, null=True, related_name='+')
+    approved_by_member = models.ForeignKey('core.Membership', on_delete=models.PROTECT, null=True, related_name='+')
+    approved_on = models.DateTimeField(null=True)
+    approval_audit = models.ForeignKey('core.AuditEvent', on_delete=models.PROTECT, null=True)
+    review_note = models.TextField(blank=True)
+    contract_reference = models.CharField(max_length=240)
+    draft_content = models.JSONField(default=dict)
+    header_snapshot = models.JSONField(default=dict)
+    submitted_digest = models.CharField(max_length=64, blank=True)
+    evidence = models.JSONField(default=list)
+    action_receipts = models.JSONField(default=dict)
+
+    class Meta:
+        ordering = ['-version_no']
+        constraints = [
+            models.UniqueConstraint(fields=['contract', 'version_no'], name='contracts_version_number_unique'),
+            models.CheckConstraint(condition=(models.Q(status__in=['approved', 'superseded'], approved_by_member__isnull=False, approved_on__isnull=False) | models.Q(status__in=['draft', 'submitted', 'rejected'], approved_by_member__isnull=True, approved_on__isnull=True)), name='contracts_version_approval_state'),
+        ]
+
+
+class ContractLine(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    contract_version = models.ForeignKey(ContractVersion, on_delete=models.PROTECT, related_name='lines')
+    version = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=16, default='approved')
+    created_at = models.DateTimeField(auto_now_add=True)
+    line_no = models.PositiveIntegerField()
+    net_cents = models.PositiveBigIntegerField()
+    tax_cents = models.PositiveBigIntegerField()
+    gross_cents = models.PositiveBigIntegerField()
+
+    class Meta:
+        ordering = ['line_no']
+        constraints = [models.UniqueConstraint(fields=['contract_version', 'line_no'], name='contracts_line_number_unique')]
+
+    @property
+    def contract(self):
+        return self.contract_version.contract
+
+    @property
+    def project_id(self):
+        return self.contract.project_id
+
+    @property
+    def counterparty_id(self):
+        return self.contract.party_id
+
+    @property
+    def pricing_configuration(self):
+        return self.policy_selection.pricing_configuration
+
+    @property
+    def pricing_display(self):
+        return pricing_display(self.pricing_configuration)
+
+    @property
+    def method_policy(self):
+        return self.policy_selection.policy_version
+
+    @property
+    def pricing_template(self):
+        return self.pricing_configuration['template']
+
+
+class PaymentTerm(models.Model):
+    def get_condition_type_display(self):
+        return {'unconditional': '无条件', 'conditional': '附条件', 'warranty': '质保款'}.get(self.condition_type, '')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    contract_line = models.ForeignKey(ContractLine, on_delete=models.PROTECT, related_name='payment_terms')
+    version = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=16, default='active')
+    created_at = models.DateTimeField(auto_now_add=True)
+    condition_type = models.CharField(max_length=16)
+    gross_cents = models.PositiveBigIntegerField()
+    due_date = models.DateField(null=True)
+    release_condition = models.CharField(max_length=500, blank=True)
+
+
+class WarrantyTerm(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    contract_line = models.ForeignKey(ContractLine, on_delete=models.PROTECT, related_name='warranty_terms')
+    payment_term = models.ForeignKey(PaymentTerm, on_delete=models.PROTECT, related_name='warranty_terms')
+    version = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=16, default='active')
+    created_at = models.DateTimeField(auto_now_add=True)
+    release_condition = models.CharField(max_length=500)
+    release_on = models.DateField(null=True)
+    gross_cents = models.PositiveBigIntegerField()
+
+
+class MethodPolicySelection(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    contract_line = models.OneToOneField(ContractLine, on_delete=models.PROTECT, related_name='policy_selection')
+    version = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=16, default='approved')
+    created_at = models.DateTimeField(auto_now_add=True)
+    selected_on = models.DateField()
+    approved_by_member = models.ForeignKey('core.Membership', on_delete=models.PROTECT)
+    approval_audit = models.ForeignKey('core.AuditEvent', on_delete=models.PROTECT)
+    pricing_configuration = models.JSONField()
+
+    @property
+    def policy_version(self):
+        return {'policy_id': str(self.pk), 'version': self.version, 'status': self.status,
+                'effective_from': self.selected_on.isoformat(),
+                'approved_by_member_id': str(self.approved_by_member_id),
+                'evidence_ref': {'namespace': 'core', 'kind': 'audit_record', 'id': str(self.approval_audit_id), 'version': 1}}
+
+
+def pricing_display(configuration):
+    return {**configuration,
+        'template_label': {'fixed_milestone': '固定价节点', 'confirmed_time': '客户确认工时', 'fixed_service_period': '固定服务期'}.get(configuration['template'], ''),
+        'time_unit_label': {'hour': '小时', 'workday': '人天'}.get(configuration.get('time_unit'), ''),
+        'period_unit_label': {'calendar_month': '自然月', 'calendar_day': '自然日'}.get(configuration.get('period_unit'), ''),
+        'partial_period_rule_label': {'no_partial': '不允许部分期间', 'calendar_days': '按自然日'}.get(configuration.get('partial_period_rule'), '')}

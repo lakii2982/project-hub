@@ -513,10 +513,14 @@
       "additionalProperties": false,
       "required": [
         "contract_line_id",
+        "payment_term_id",
         "release_condition"
       ],
       "properties": {
         "contract_line_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "payment_term_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
         "release_condition": {

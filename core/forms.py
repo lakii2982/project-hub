@@ -29,7 +29,7 @@ class ProjectForm(BaseForm):
     template = forms.ChoiceField(choices=Project.Template.choices, label="项目类型")
     start_date = forms.DateField(label="开始日期", widget=forms.DateInput(attrs=DATE))
     end_date = forms.DateField(label="计划交付日期", widget=forms.DateInput(attrs=DATE))
-    contract_amount = forms.DecimalField(label="合同总额（含税，元）", max_digits=14, decimal_places=2, min_value=0, widget=forms.NumberInput(attrs=MONEY))
+    contract_amount = forms.DecimalField(label="立项预估合同额（含税，元）", max_digits=14, decimal_places=2, min_value=0, widget=forms.NumberInput(attrs=MONEY), help_text="仅保留立项时预估。正式合同客户与价款统一在客户与合同维护，不回填此历史值。")
     initial_budget = forms.DecimalField(label="拟定成本预算（元）", max_digits=14, decimal_places=2, min_value=Decimal("0.01"), widget=forms.NumberInput(attrs=MONEY), help_text="建立后自动提交预算基线，由另一位负责人审批")
     etc_amount = forms.DecimalField(label="预计剩余成本（元）", max_digits=14, decimal_places=2, min_value=0, widget=forms.NumberInput(attrs=MONEY), help_text="用于计算完工成本；可随项目进展更新")
     scope = forms.CharField(label="范围与交付物", widget=forms.Textarea, max_length=8000)
