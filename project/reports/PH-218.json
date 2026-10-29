@@ -1,0 +1,31 @@
+{
+  "task_id": "PH-218",
+  "summary": "Freeze customer fixed-milestone acceptance, management revenue, exact reversal and replacement-source chain; no business code or existing financial-rule changes.",
+  "tests": [
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual19 governance tests2.074s root; independent19/2.087s. Planning only."
+    },
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final actual142task check after independentS report update; exact command output required."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/labor_design_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual final independent planning S PASS: draft canonical conflict fixed without fake confirmer, concrete TX order/oneowner/immutableposted/sourceclaim/reversal/period/SQLitetrigger design verified; independent19governance2.087s/diffcheckpass. No productacceptance claim."
+  },
+  "deviations": [
+    "New ready219 supports fixed-milestone subset only; original proposed tasks and dependencies untouched.",
+    "Income stays management_revenue facts, not cost/cash postings; concrete nullable labor metadata and integrity branch permitted for actual new business."
+  ],
+  "unverified": [
+    "Planning exacthead CI and normal merge pending.",
+    "PH219 implementation, PG/browser/upgrade/customer acceptance not executed."
+  ]
+}
