@@ -320,6 +320,34 @@ class ContractApprovalTests(Fixture, TestCase):
         self.assertNotContains(response,'name="version_id" value="'+str(version.pk)+'"')
         version.refresh_from_db();self.assertEqual(version.status,'rejected')
 
+    def test_reject_submitted_version_after_other_contract_coverage_wins(self):
+        first=self.submit(self.save([self.line('fixed_service_period')]))
+        self.contract=self.make_contract(contract_code='PENDING-OVERLAP')
+        second=self.submit(self.save([self.line('fixed_service_period')]))
+        self.approve(first)
+        rejected=self.approve(second,decision='reject',review_note='重复服务覆盖，请修正')
+        self.assertEqual(rejected.status,'rejected')
+        self.assertEqual(ContractLine.objects.count(),1)
+        self.assertEqual(MethodPolicySelection.objects.count(),1)
+        self.assertFalse(LedgerEntry.objects.exists())
+
+    def test_reject_submitted_version_with_inactive_customer(self):
+        version=self.submit(self.save())
+        from pmo_plugins.contracts.models import Counterparty
+        Counterparty.objects.filter(pk=self.party.pk).update(status='inactive')
+        rejected=self.approve(version,decision='reject',review_note='客户状态失效，保留原版本')
+        self.assertEqual(rejected.status,'rejected')
+        self.assertFalse(ContractLine.objects.exists())
+        self.assertFalse(LedgerEntry.objects.exists())
+
+    def test_contract_detail_title_contains_only_contract_code(self):
+        import re
+        self.client.force_login(self.owner.user)
+        response=self.client.get('/modules/contracts/contract/?id='+str(self.contract.pk))
+        title=re.search(r'<title>(.*?)</title>',response.content.decode(),re.S).group(1)
+        self.assertEqual(title,self.contract.contract_code+' · 项目中枢')
+        self.assertEqual(response.content.decode().count('收费配置与版本'),1)
+
 
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier, Thread, Event

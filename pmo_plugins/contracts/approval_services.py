@@ -330,11 +330,20 @@ def review_version(member, version_id, *, expected_version, request_token, decis
     key, digest, existing = _receipt(member, 'review', request_token, payload)
     if existing:
         return existing
-    _available(member, version.contract)
     if version.status != 'submitted' or version.version != _version(expected_version):
         _reject('记录已处理或版本过期')
     if member.pk in {version.created_by_member_id, version.submitted_by_member_id}:
         _reject('制单人与提交人不能审批本合同')
+    # Refusing an invalid candidate must remain possible. Fresh role/module,
+    # tenant/project, state/version and independent reviewer checks still apply.
+    if decision == 'reject':
+        version.review_note = note
+        version.version += 1
+        version.status = 'rejected'
+        _record(version, key, digest)
+        audit(member, 'contracts.version.rejected', version, {'review_note': note})
+        return version
+    _available(member, version.contract)
     if version.header_snapshot != _header(version.contract) or version.submitted_digest != _frozen_digest(version):
         _reject('冻结内容不一致，拒绝审批')
     lines = _normalize_lines(version.contract, version.draft_content['lines'])
@@ -342,11 +351,6 @@ def review_version(member, version_id, *, expected_version, request_token, decis
         _reject('首次生效日期不能在未来')
     version.review_note = note
     version.version += 1
-    if decision == 'reject':
-        version.status = 'rejected'
-        _record(version, key, digest)
-        audit(member, 'contracts.version.rejected', version, {'review_note': note})
-        return version
     approval = audit(member, 'plugin.contracts.version.approved', version,
                      {'submitted_digest': version.submitted_digest, 'contract_reference': version.contract_reference, 'review_note': note})
     version.status, version.approved_by_member, version.approved_on = 'approved', member, timezone.now()

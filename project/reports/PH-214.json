@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actualfixedtool Python3.12.14 Django5.2.18/DRF3.18.2 canonicalTMPDIR full541 in90.947s:528executedpass/13explicitPGskip. Strictschema99positive8negative markers executed. Previous539pass run preceded newlyfoundreplayregression and is notfinalproof."
+      "evidence": "Finalactualfixedtool Python3.12 Django5.2.18/DRF3.18.2 canonicalTMPDIR full544 in97.213s:531executedpass/13PGskip afterPRreviewfixes. Strictschema99positive8negative markers executed. Earlier541/539 runs are historical, not thisfinalhead proof."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -30,7 +30,7 @@
     {
       "command": "python manage.py test tests.test_v1_contracts tests.test_contract_approval --verbosity 1",
       "result": "pass",
-      "evidence": "Actual31total23executedpass8PGskips in0.847s. All15prior212 cases retained; 3template fullbusinessflow unconditionallyexecutes incleanproductenv withoutjsonschema. Separate stricttool testcase covers realapprovalevent, Versiondraft/submitted/approved/supersededmetadata, LineversionFK, warrantyparent, selectionconfig, serverDTO/centsfalsefloatnegative rejection. Productenv strictschemaextra explicitlyskips, not productdependency. Three addedPG tests plus5old do actualblockedconnection/uniqueapproval/controlrace, pendingcurrentCI."
+      "evidence": "Actual34total26executedpass8PGskips in0.958s. All15prior212 cases retained; 3template fullbusinessflow unconditionallyexecutes incleanproductenv withoutjsonschema. Separate stricttool testcase covers realapprovalevent, Versiondraft/submitted/approved/supersededmetadata, LineversionFK, warrantyparent, selectionconfig, serverDTO/centsfalsefloatnegative rejection. Productenv strictschemaextra explicitlyskips, not productdependency. Three addedPG tests plus5old do actualblockedconnection/uniqueapproval/controlrace, pendingcurrentCI. Three PRreviewREDGREEN regressions: pendingoverlap/inactivecustomer canbe independentlyrejected, nochildposting; contracttitleonlycode/visiblepanelonce."
     },
     {
       "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
@@ -50,7 +50,7 @@
     {
       "command": "Actual Chromium3template configuration, submit and independentapproval business flow",
       "result": "pass",
-      "evidence": "Chromium151.0.7922.34 realowner+finance separatelogins/contexts, fixed_milestone/confirmed_time/fixed_service_period each config→save→frozen submit→differentfinance approve→active; CNYyuan2dp UI→integercents,10%retentionwithinprice. Sourcepreview+8widths320/360/390/640/768/1024/1280/1440 nohorizontalbodyoverflow; actualkeyboardEnter formsubmit andnative details. Five roles includingPM/auditorread/member403. Projectformalnet300000tax18000gross318000derived with3exactversionlinks, oldestimate9999unchanged andclearlyhistorical; noincomeclaim. Rootread1440and390screenshots, noJSerrors. Browserresumed alreadycompletedfirstapproval aftercorrecting test currencygroupformat expectation, didnotrepeat oroverwriteit."
+      "evidence": "Chromium151.0.7922.34 realowner+finance separatelogins/contexts, fixed_milestone/confirmed_time/fixed_service_period each config→save→frozen submit→differentfinance approve→active; CNYyuan2dp UI→integercents,10%retentionwithinprice. Sourcepreview+8widths320/360/390/640/768/1024/1280/1440 nohorizontalbodyoverflow; actualkeyboardEnter formsubmit andnative details. Five roles includingPM/auditorread/member403. Projectformalnet300000tax18000gross318000derived with3exactversionlinks, oldestimate9999unchanged andclearlyhistorical; noincomeclaim. Rootread1440and390screenshots, noJSerrors. Browserresumed alreadycompletedfirstapproval aftercorrecting test currencygroupformat expectation, didnotrepeat oroverwriteit. Finalactualbrowser title/panel check afterPRfix passed; approvedreadchecks do not repeat approvalwrites."
     },
     {
       "command": "Regression RED then GREEN: same save receipt after other contract later approved overlapping service",
@@ -63,7 +63,7 @@
     "reviewer": "Independent /root/contracts_review, read-only separate from root and implementationworker",
     "status": "pass",
     "findings": [],
-    "evidence": "Actual finalsourceS PASS after4 concreteclosures: crosscontractapprovedservicecoverage, boundreviewinputretention, exactprojectnettaxgross/versionlinks, replaylivenormalizationordering. Sourcepolicy/auditEvidence/canonicaloneevent/immutablecandidate-vs-approved sameowner/copyGETnoeffects/schemafourdigests reviewed. Independentapproval16tests12pass4skip (3PG+1missingstrictschema inprimaryvenv); rootstrict/full/browser separate. ActualfinalmetadataPASS25BASEscopefiles/fourdigests recomputed/138check; currentPG/CI remainsseparate."
+    "evidence": "Actual finalsourceS PASS after4 concreteclosures: crosscontractapprovedservicecoverage, boundreviewinputretention, exactprojectnettaxgross/versionlinks, replaylivenormalizationordering. Sourcepolicy/auditEvidence/canonicaloneevent/immutablecandidate-vs-approved sameowner/copyGETnoeffects/schemafourdigests reviewed. Independentapproval16tests12pass4skip (3PG+1missingstrictschema inprimaryvenv); rootstrict/full/browser separate. ActualfinalmetadataPASS25BASEscopefiles/fourdigests recomputed/138check; currentPG/CI remainsseparate. PR102 twoP2 actualREDGREEN corrections independentlyPASS: rejection keepsfreshidentity/module/tenant/project/state/version/selfguards, onlyapprovalrunsavailability/contentchecks; title/panelonce. Independent19approval15pass4skip0.624s. NewexactheadCI mustrerun."
   },
   "deviations": [
     "ExistingKimi f3902885 completedonly2JSONschemas;Controller originalBASEa78e527/scope/SHA validated, rawimmutablecache preserved. Same2schema basebytes unchanged afterPH215rebasing; productcode byboundedworker/root, nativecollection notwholefeatureacceptance.",
@@ -71,7 +71,8 @@
     "Backendworker hit transientmodelcapacity afterwritingrequestedfixes; boundedfollowup completed andtargettests actual28/20pass8PGskip. Root independentlyadded strictschema/replayREDGREEN/rejectedcopy regressions tofinal31, finalintegration no fake nativebusinesscompletion.",
     "Approval audit uses fixed plugin.contracts.version.approved to suppress existinggenericOutbox branch thenone completecanonical contracts.version_approved.v1 in sameatomic; no coreaudit/SDK/bus rewrite. InternalapprovalAuditEvent EvidenceRef is notattachment/customerconfirmation. MethodPolicySelection is authoritative approvedconfiguration, valuesonLine/PolicyVersion are projections.",
     "No publiccanonicalcommand/PAT/MCP endpoint added. Browser internalcandidateDTO has no callerpolicyapproval; actualindependentapproval explicitlyapprovesconfiguration andserverstampsrealSelectionRef. Firsteffective_on nonfuture only; approvedcontractchanges/termination remainfuturePH151. Original146/147/150andalltheirdependencies stayproposed/notcompleted.",
-    "Project.contract_cents/client retained as clearlylabeledhistoricalopeningestimates/text, nevercopied fromformalcontract. Formalvalueandcustomer fromexistingcontracts owner, disabled/unavailable neverfallbacktooldestimate asformal. Frontendmoneyinputs yuanDecimal2dp, centspersistent; nofinancialbasischange."
+    "Project.contract_cents/client retained as clearlylabeledhistoricalopeningestimates/text, nevercopied fromformalcontract. Formalvalueandcustomer fromexistingcontracts owner, disabled/unavailable neverfallbacktooldestimate asformal. Frontendmoneyinputs yuanDecimal2dp, centspersistent; nofinancialbasischange.",
+    "PR102 first4a86ff0 all11CI success but2P2threads correctlyblockedmerge. Added3tests actuallyRED then fixedinvalidcandidate rejection recovery/titlemarkup. Final544/34 and independentclosurePASS; no approval guard weakened, no finances touched. PriorCI is not newhead proof."
   ],
   "unverified": [
     "Exact-head currentall11CI/realPG8domainracecases andnormalmerge pending; localSQLite skips notPGproof.",

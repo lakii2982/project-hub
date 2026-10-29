@@ -284,6 +284,6 @@ PH212远端补证：PR96最终9e3da6741dbe523a9a420a3f43d0ec810f1fa935，当前�
 
 PH214本轮真实结果（尚未交付）：原生Kimi f3902885仅两schema completed且Controller/BASE/SHA验证；业务专项28中20通过8PG跳过。check_contract_cases19正37拒绝通过；validate_contracts因extension-freeze两schema摘要、check_fixture因fixture两schema摘要失败，不记通过。PH215独立规划只补必要四摘要值同步白名单，保持全部核算样例、冻结输入和检查不变；后续214实际修正并重跑，旧值Git/report追溯。
 
-PH214实际验证：固定工具全541/528执行通过13PG跳过90.947s；专项31/23执行通过8PG跳过0.847s，包含独立发现的保存回放实时覆盖冲突RED→GREEN。严格schema新状态/版本与条款归属/唯一规则/实际事件反例通过，9schema及19正37拒绝、99正8拒绝全部通过。schema摘要失败→PH215独立范围PR101合入→仅四摘要更新，全财务oracle/输入及验证器/CI未动。
+PH214实际验证：固定工具全544/531执行通过13PG跳过97.213s；专项34/26执行通过8PG跳过0.958s，包含独立发现的保存回放实时覆盖冲突RED→GREEN。严格schema新状态/版本与条款归属/唯一规则/实际事件反例通过，9schema及19正37拒绝、99正8拒绝全部通过。schema摘要失败→PH215独立范围PR101合入→仅四摘要更新，全财务oracle/输入及验证器/CI未动。
 
 Chromium151真实三模板各配置/提交/finance独立批准并active，元2dp输入整数分、价款内质保；五角色、八宽无body横溢、键盘、3个准确版本链接；项目正式价税300000+18000=318000与旧预估9999分区分。root读1440及390。私有日志/图在原项目runtime/ph214-browser与ph214-validation。已有212数据备份副本0002/重复/完整性0：37旧表236行（3party/3contact/2draft）保留，新增5表及仅新增metadata权限类型；旧58分副本新0001/0002/重复保留22旧表39PK/审计来源指纹04dc...。当前PR实PG/CI仍待核，不把本机13skip称生产并发正确。
