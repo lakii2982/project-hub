@@ -249,7 +249,7 @@
       "title": "冻结老板决策工作台的信息与交互契约",
       "kind": "research",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v0.2.0",
       "depends_on": [
@@ -273,7 +273,7 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/7",
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-005.md"
     },
     {
       "id": "PH-006",
