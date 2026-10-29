@@ -38,6 +38,11 @@ class Command(BaseCommand):
         from pmo_plugins.costing.models import SalaryPool, AllocationRun
         from django.db.models import Sum
         for event in AccountingEvent.objects.select_related('claim', 'reverses_event'):
+            if event.source.get('namespace') == 'management_revenue':
+                continue
+            if event.source.get('namespace') != 'costing' or not isinstance(event.labor_origin_ref, dict):
+                errors.append(f'accounting_event:{event.pk}:unknown_source')
+                continue
             postings = list(event.postings.all())
             if not postings or any(p.organization_id != event.organization_id for p in postings):
                 errors.append(f"labor_event:{event.pk}:posting_org_or_empty")
@@ -76,6 +81,8 @@ class Command(BaseCommand):
                 errors.append(f"allocation:{run.pk}:target_total")
             if run.accounting_event_id and (run.accounting_event.postings.aggregate(total=Sum('amount_cents'))['total'] or 0) != 0:
                 errors.append(f"allocation:{run.pk}:company_net_zero")
+        from core.revenue_accounting import revenue_integrity_errors
+        errors.extend(revenue_integrity_errors())
         result = {"ok": not errors, "errors": errors, "organizations": Organization.objects.count(), "entries": LedgerEntry.objects.count()}
         self.stdout.write(json.dumps(result, ensure_ascii=False) if options["json"] else ("完整性检查通过" if not errors else "\n".join(errors)))
         if errors: raise CommandError("项目账完整性检查未通过")

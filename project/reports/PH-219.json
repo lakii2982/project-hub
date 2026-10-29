@@ -1,0 +1,84 @@
+{
+  "task_id": "PH-219",
+  "summary": "Deliver fixed-milestone customer acceptance, independently verified coverage, management income, exact reversal and replacement-source trace with one fact owner per domain.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual142tasks after final sourceS/update; command output required."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actualexit0 with21 expected SDK colon naming warnings, no suppression."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actualexit0 No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual603 tests101.592s,577 executed pass26 environment skips including6 new PG cases. Subsequent display-only polishing HTTP5/0.818s passed; currentCI required for exact finalhead."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual synthetic browser income+negative adjustment+reversed Acceptance:ok=true/errors=[]; old58 and populated upgrade copies likewise pass."
+    },
+    {
+      "command": "python manage.py test tests.test_acceptance_revenue tests.test_acceptance_revenue_concurrency tests.test_acceptance_revenue_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual30 tests2.467s:24 execute pass(19direct+5HTTP),6 real PG skipped onSQLite. Not PGproof."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
+      "result": "pass",
+      "evidence": "Actual9schemas2975resolvedrefs, strict integers, schema proof only."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/check_contract_cases.py",
+      "result": "pass",
+      "evidence": "Actual19positive37negative."
+    },
+    {
+      "command": "python -B docs/v1.0-development/fixtures/check_fixture.py",
+      "result": "pass",
+      "evidence": "Actual99positive8negative. Only Acceptance/AcceptanceDraft optional replacement ref and corresponding2artifact digest values in2metadata changed; original financial oracle/frozen input unchanged."
+    },
+    {
+      "command": "Synthetic old58 backup migrate/repeat/integrity and original-column comparison",
+      "result": "pass",
+      "evidence": "35 originaltables/oldcolumns/rowvalues unchanged, cost58. All3steps exit0. Original snapshot7cd5e0bb4e76c6cd37d81e686037e2a9668a1857cc94a5d8c1ca38ed2f90bc91."
+    },
+    {
+      "command": "Synthetic populated monthly+approved-contract backup upgrade and append-only probes",
+      "result": "pass",
+      "evidence": "Read-only copy of PH217 monthly DB, add synthetic approved contract via real owner before freezing comparison baseline;55 oldtables oldcolumns/rowvalues unchanged aftermigrate/repeat/integrity, all0. Snapshot6027252245a2b5a0cabb874502175c9e43417095b2eadd55c78a1f43f505c77b. Actual6 SQL UPDATE/DELETE guards refuse coreEvent/Posting/Claim after SQLite nullable table rebuild. Original sourceDB untouched."
+    },
+    {
+      "command": "Real Chromium login/customer income/5roles/8widths/keyboard",
+      "result": "pass",
+      "evidence": "Actual owner submit→finance independently accept→income0.34→exact reverseincome→reverseacceptance; new real-typed synthetic customer-reference replacement→otheractorapprove→income. 8widths320..1440 nooverflow;ownerfinanceauditorPM detail200/member403; keyboard skip link; replacementUUID hidden. No claim of external customer evidence verification or production."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/labor_design_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual final financial/security sourceS PASS after strictdryrun fix; independent24 direct/HTTP2.571s/diffcheckpass. Checked core bridge, frozen price/source, C0, reversal, DB guards, permissions and dedicatedCSV. Not a PG/production proof."
+  },
+  "deviations": [
+    "Root actual SDK metadata failure for undeclared direct contracts dependency fixed in new business manifest/metadata, no SDK change or bypass.",
+    "Initialfixture PluginState changed_byUser error and HTTP wrongexpected400for403 corrected without weakening service/trigger or removing refusals.",
+    "Real browser found Milestone object label and exposed technical IDs; changed to actual node name/readable contract version/collapsed trace, HTTP rerun pass.",
+    "Dryrun 0/None could persist initially; actual independent finding fixed strict bool at all8 delivery writes, real no-side-effect regressions passed."
+  ],
+  "unverified": [
+    "Exacthead currentCI and6 real PostgreSQL races pending; local SQLite skips not counted as PGproof.",
+    "Production/customer environment/customer acceptance, file upload and all contract income methods not delivered by this slice.",
+    "Full1.0 unfinished; original proposed tasks/dependencies remain unchanged."
+  ]
+}

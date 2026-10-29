@@ -421,3 +421,78 @@ def approved_contract_totals(member, project_id):
 
 
 project_contract_totals = approved_contract_totals
+
+
+def approved_line_snapshot(member, line_ref, as_of):
+    """One authoritative frozen price read for customer acceptance and income."""
+    member = _reader(member)
+    _keys(line_ref, {'namespace', 'kind', 'id', 'version'}, {'namespace', 'kind', 'id', 'version'})
+    if line_ref['namespace'] != 'contracts' or line_ref['kind'] != 'contract_line' or type(line_ref['version']) is not int:
+        _reject('必须引用真实合同明细及整数批准版本')
+    when = _date(as_of)
+    try:
+        line = ContractLine.objects.select_related('contract_version__contract', 'policy_selection').get(
+            pk=line_ref['id'], organization=member.organization)
+    except (ContractLine.DoesNotExist, ValueError, ValidationError):
+        raise PermissionDenied('合同明细不存在或无权读取')
+    version, contract = line.contract_version, line.contract
+    _contract_for_read(member, contract.pk)
+    if (contract.status != 'active' or version.status != 'approved' or line.status != 'approved'
+            or line.version != 1 or line.version != line_ref['version'] or when < version.effective_on
+            or when > timezone.localdate() or contract.versions.filter(status='approved').count() != 1):
+        _reject('只有已生效合同的唯一批准版本可支持本次履约')
+    approval = version.approval_audit
+    if (not approval or approval.organization_id != member.organization_id
+            or approval.action != 'plugin.contracts.version.approved'
+            or approval.entity_id != str(version.pk)
+            or not version.approved_by_member_id
+            or approval.actor_id != version.approved_by_member.user_id
+            or version.header_snapshot != _header(contract)
+            or version.submitted_digest != _frozen_digest(version)
+            or approval.payload.get('submitted_digest') != version.submitted_digest):
+        _reject('合同批准依据与冻结摘要不一致')
+    candidates = version.draft_content.get('lines', [])
+    rows = list(version.lines.select_related('policy_selection'))
+    if len(rows) != len(candidates) or {r.line_no for r in rows} != {c['line_no'] for c in candidates}:
+        _reject('合同批准明细缺失或与冻结配置不一致')
+    for actual in rows:
+        candidate = next(c for c in candidates if c['line_no'] == actual.line_no)
+        try:
+            selection = actual.policy_selection
+        except MethodPolicySelection.DoesNotExist:
+            _reject('批准明细没有唯一规则来源')
+        config = selection.pricing_configuration
+        plain = {k: v for k, v in config.items() if k not in {'currency', 'confirmed_by_customer_required', 'policy_ref'}}
+        if (actual.organization_id != member.organization_id or actual.status != 'approved'
+                or any(getattr(actual, key) != candidate[key] for key in ('net_cents', 'tax_cents', 'gross_cents'))
+                or selection.organization_id != member.organization_id or selection.version != 1 or selection.status != 'approved'
+                or selection.selected_on != version.effective_on
+                or selection.approval_audit_id != approval.pk
+                or selection.approved_by_member_id != version.approved_by_member_id
+                or config.get('currency') != 'CNY' or config.get('confirmed_by_customer_required') is not True
+                or config.get('policy_ref') != {'policy_id': str(selection.pk), 'version': selection.version}
+                or plain != candidate['pricing_configuration']):
+            _reject('合同价款或规则已偏离原批准内容')
+    selection = line.policy_selection
+    return {'organization_id': member.organization_id, 'project_id': contract.project_id,
+            'contract_id': str(contract.pk), 'contract_code': contract.contract_code,
+            'counterparty_id': str(contract.party_id), 'contract_version_id': str(version.pk),
+            'contract_version_no': version.version_no, 'contract_version': version.version,
+            'line_id': str(line.pk), 'line_no': line.line_no,
+            'line_ref': _ref(line, 'contract_line'), 'selection_id': str(selection.pk),
+            'policy_version': deepcopy(selection.policy_version),
+            'pricing_configuration': deepcopy(selection.pricing_configuration),
+            'net_cents': line.net_cents, 'tax_cents': line.tax_cents, 'gross_cents': line.gross_cents,
+            'effective_on': version.effective_on.isoformat(), 'digest': version.submitted_digest,
+            'approval_audit_id': approval.pk, 'approval_audit_hash': approval.event_hash}
+
+
+def approved_line_choices(member):
+    """Candidates and prices share the exact same owner validation as writes."""
+    member = _reader(member)
+    rows = ContractLine.objects.filter(organization=member.organization, status='approved',
+        contract_version__status='approved', contract_version__contract__status='active')
+    from core.access import visible_projects
+    rows = rows.filter(contract_version__contract__project__in=visible_projects(member))
+    return [approved_line_snapshot(member, _ref(line, 'contract_line'), timezone.localdate())
+            for line in rows.order_by('contract_version__contract__contract_code', 'line_no')]

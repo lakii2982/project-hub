@@ -1716,6 +1716,31 @@
               }
             }
           }
+        },
+        "replaces_acceptance_ref": {
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "delivery"
+                    },
+                    "kind": {
+                      "const": "acceptance"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "readOnly": true
         }
       },
       "x-contract-status-enum": [

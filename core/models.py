@@ -115,7 +115,7 @@ class AccountingEvent(models.Model):
     reverses_event = models.OneToOneField('self', on_delete=models.PROTECT, null=True, related_name='reversal')
     claim = models.ForeignKey(SourceConsumption, on_delete=models.PROTECT, related_name='events')
     claim_effect_cents = models.BigIntegerField()
-    labor_origin_ref = models.JSONField()
+    labor_origin_ref = models.JSONField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

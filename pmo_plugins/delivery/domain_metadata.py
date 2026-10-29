@@ -1,0 +1,7 @@
+DOMAIN_METADATA = {
+    'schema_version':'1','plugin_id':'delivery',
+    'django_app':{'module':'pmo_plugins.delivery','label':'delivery'},
+    'contracts':{'commands':[],'queries':[],'events':[]},
+    'migration_dependencies':['core','contracts'],
+    'routes':[{'name':name,'path':name.replace('_','-')+'/','access':'business_read' if name in {'acceptance_list','acceptance_detail','acceptance_form'} else 'business_write'} for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action')],
+}
