@@ -1,0 +1,6 @@
+{% extends 'contracts/party_list.html' %}
+{% block title %}{{ contract.contract_code }}{% endblock %}
+{% block contracts_content %}
+<section class="page-header"><div><h1 tabindex="-1">{{ contract.contract_code }}</h1><p>项目合同记录 · {{ contract.get_status_display }} · 版本 {{ contract.version }}</p></div><a class="button" href="{{ contracts_url }}">返回合同列表</a></section>
+<section class="panel"><div class="panel-heading"><h2>合同信息</h2>{% if can_write and contract.status == 'draft' %}<a class="button primary" href="{{ edit_url }}">编辑草稿</a>{% endif %}</div><div class="panel-body"><dl class="detail-grid"><div><dt>所属项目</dt><dd><a href="{% url 'project-detail' contract.project_id %}">{{ contract.project.code }} · {{ contract.project.name }}</a></dd></div><div><dt>合同客户</dt><dd><a href="{{ party_url }}">{{ contract.party.display_name }}</a></dd></div><div><dt>签署日期</dt><dd>{{ contract.signed_on|date:'Y-m-d'|default:'未设置' }}</dd></div><div><dt>登记时间</dt><dd>{{ contract.created_at|date:'Y-m-d H:i' }}</dd></div></dl><p class="notice">草稿尚未生效，也未确认履约或收入。结算、开票和收款应各自记录，不因本次登记重复形成收入。</p></div></section>
+{% endblock %}

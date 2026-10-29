@@ -5602,7 +5602,7 @@
       "title": "客户供应商及项目合同草稿业务交付",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -5650,7 +5650,7 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/94",
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-212.md"
     },
     {
       "id": "PH-213",

@@ -14,7 +14,7 @@ CSRF_TRUSTED_ORIGINS = [x for x in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").
 INSTALLED_APPS = [
     "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
-    "axes", "rest_framework", "core",
+    "axes", "rest_framework", "core", "pmo_plugins.contracts.apps.ContractsConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware", "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -87,7 +87,7 @@ AI_BASE_URL = os.getenv("PMO_AI_BASE_URL", "")
 AI_MODEL = os.getenv("PMO_AI_MODEL", "deepseek-v4.1-flash")
 AI_API_KEY = os.getenv("PMO_AI_API_KEY", "")
 
-PMO_PLUGIN_MODULES = ("pmo_plugins.project_health.plugin", "pmo_plugins.delivery_watch.plugin", "pmo_plugins.agent_gateway.plugin")
+PMO_PLUGIN_MODULES = ("pmo_plugins.project_health.plugin", "pmo_plugins.delivery_watch.plugin", "pmo_plugins.agent_gateway.plugin", "pmo_plugins.contracts.plugin")
 
-# Trusted process-local SDK bindings; no domain routes are mounted by default.
-PMO_PLUGIN_ENTRY_POINT = None
+# Trusted process-local business binding; resolved after installed Apps are loaded.
+PMO_PLUGIN_ENTRY_POINT = "contracts"  # Explicit installed business binding, resolved in URLConf.
