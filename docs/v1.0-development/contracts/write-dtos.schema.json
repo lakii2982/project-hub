@@ -3847,7 +3847,14 @@
           "$ref": "./contract-bundle.schema.json#/$defs/PostingPeriod"
         },
         "policy_version": {
-          "$ref": "./contract-bundle.schema.json#/$defs/PolicyRef"
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/PolicyRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "source_evidence": {
           "type": "array",
@@ -3880,6 +3887,9 @@
       "required": [
         "employee_id",
         "period"
+      ],
+      "x-service-invariants": [
+        "Draft policy may be absent; final confirmation resolves a real independently approved immutable CostPolicy/PolicyVersion. Client cannot supply approved status or accounting facts."
       ]
     },
     "ExpenseClaimDraft": {

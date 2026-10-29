@@ -19,6 +19,19 @@ PROJECT_FIELDS = {"name", "client", "manager", "start_date", "end_date",
 RATE_FIELDS = {"employee", "effective_from", "hourly_amount", "basis"}
 
 
+def ensure_labor_destinations(member):
+    """Called under the cutover transaction; genuine non-project master data."""
+    from .models import NonProjectDestination
+    result = {}
+    for code, name in [('ADMIN', '公司非项目投入'), ('UNALLOCATED', '人工成本待分配')]:
+        row, created = NonProjectDestination.objects.get_or_create(
+            organization_id=member.organization_id, code=code, defaults={'name': name})
+        if created:
+            audit(member, 'plugin.costing.destination_created', row, {'code': code})
+        result[code] = row
+    return result
+
+
 def _reject_unknown(data, allowed):
     extra = set(data) - allowed
     if extra:

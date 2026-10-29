@@ -5821,7 +5821,7 @@
       "title": "月度人工首次确认、归集分配与原始来源追溯",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -5894,9 +5894,9 @@
         "python -B docs/v1.0-development/fixtures/check_fixture.py"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/105",
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-217.md"
     },
     {
       "id": "PH-218",

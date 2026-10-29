@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .access import visible_projects, can_manage
 from .models import (Project, Membership, Employee, CostRate, Task, Milestone, CashPlan,
-                     Document, Risk, Organization)
+                     Document, Risk, Organization, NonProjectDestination)
 from .services import cents
 
 DATE = {"type": "date"}
@@ -135,6 +135,7 @@ class PlanForm(ProjectScopedForm):
         self.fields["milestone"].queryset = Milestone.objects.filter(project__in=self.fields["project"].queryset)
 
 class TimeForm(ProjectScopedForm):
+    non_project_destination = forms.ModelChoiceField(queryset=NonProjectDestination.objects.none(), label="公司非项目投入", required=False)
     employee = forms.ModelChoiceField(queryset=Employee.objects.none(), label="员工")
     work_date = forms.DateField(label="工作日期", widget=forms.DateInput(attrs=DATE), initial=timezone.localdate)
     hours = forms.DecimalField(label="工时（小时）", max_digits=5, decimal_places=2, min_value=Decimal("0.01"), max_value=24,
@@ -145,6 +146,14 @@ class TimeForm(ProjectScopedForm):
         qs = Employee.objects.filter(organization=self.member.organization, active=True)
         if self.member.role == "member": qs = qs.filter(member=self.member)
         self.fields["employee"].queryset = qs
+        self.fields["project"].required = False
+        self.fields["non_project_destination"].queryset = NonProjectDestination.objects.filter(organization=self.member.organization, code="ADMIN", active=True)
+        self.fields["hours"].help_text = "最小单位为分钟；月度口径审批只确认投入，工资池分配形成成本。"
+    def clean(self):
+        data = super().clean()
+        if bool(data.get("project")) == bool(data.get("non_project_destination")):
+            raise ValidationError("项目与公司非项目投入请选择一项")
+        return data
     def clean_hours(self):
         hours = self.cleaned_data["hours"]
         if hours * 60 != int(hours * 60):
@@ -245,6 +254,8 @@ class OrgForm(forms.ModelForm):
             from .models import Timesheet
             if Document.objects.filter(project__organization=self.instance, status="submitted", occurred_on__lte=value).exists() or Timesheet.objects.filter(project__organization=self.instance, status="submitted", work_date__lte=value).exists():
                 raise ValidationError("截止日前还有待审批单据或工时，请先处理再锁账")
+            from .labor_cutover import check_monthly_close
+            check_monthly_close(self.instance, value)
         return value
 
 class ImportForm(BaseForm):

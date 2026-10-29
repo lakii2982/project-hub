@@ -17,6 +17,8 @@ def project_summary(project):
     totals = {"cost": 0, "cash_in": 0, "cash_out": 0}
     for row in project.entries.values("book").annotate(n=Sum("amount_cents")):
         totals[row["book"]] = row["n"]
+    from .labor_projection import project_monthly_cost
+    totals["cost"] += project_monthly_cost(project)
     linked = _key_tasks(project)
     count = linked.count()
     done = linked.filter(status="done").count()
@@ -56,6 +58,10 @@ def project_cost_burndown(project, today=None):
     daily = defaultdict(int)
     for occurred_on, amount in project.entries.filter(
             book=LedgerEntry.Book.COST).values_list("occurred_on", "amount_cents"):
+        daily[occurred_on] += int(amount)
+
+    from .labor_projection import project_cost_days
+    for occurred_on, amount in project_cost_days(project):
         daily[occurred_on] += int(amount)
 
     start, end = project.start_date, project.end_date

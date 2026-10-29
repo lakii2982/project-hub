@@ -96,41 +96,66 @@ def create_project(member, data):
 @transaction.atomic
 def submit_time(member, data, token):
     org = lock_company(member)
+    if set(data) - {"project", "non_project_destination", "employee", "task", "work_date", "minutes", "note"}:
+        raise ValidationError("工时包含非白名单字段")
+    # Existing browser, CSV and personal API all enter here.
+    from .labor_cutover import monthly_mode
+    from .labor_accounting import fresh_labor_member
+    from .models import Membership, NonProjectDestination
+    member = Membership.objects.select_related("organization", "user").get(pk=member.pk)
     require_write(member)
-    project = Project.objects.select_for_update().get(pk=data["project"].pk)
-    require_project(member, project)
-    check_open(project)
+    work_date = data["work_date"]
+    monthly = monthly_mode(org, work_date)
+    if monthly:
+        member = fresh_labor_member(member)
+    project = data.get("project")
+    destination = data.get("non_project_destination")
+    if bool(project) == bool(destination) or (destination and not monthly):
+        raise ValidationError("请选择一个项目或已启用月度口径的非项目去向")
+    if project:
+        project = Project.objects.select_for_update().get(pk=project.pk)
+        require_project(member, project)
+        check_open(project)
+    if destination:
+        destination = NonProjectDestination.objects.get(pk=destination.pk)
+        if destination.organization_id != org.pk or not destination.active or destination.code != "ADMIN":
+            raise ValidationError("非项目投入只能选择本公司有效的普通非项目去向")
     existing = Timesheet.objects.filter(token=token).first()
     if existing:
-        if existing.project_id != project.id or existing.submitted_by_id != member.user_id:
+        if existing.project_id != (project.pk if project else None) or existing.non_project_destination_id != (destination.pk if destination else None) or existing.submitted_by_id != member.user_id:
             raise ValidationError("提交标识已被使用")
         for field in ["employee", "task", "work_date", "minutes", "note"]:
             if getattr(existing, field) != data.get(field):
                 raise ValidationError("同一来源编号的工时内容已改变，请使用更正流程或新的来源编号")
         return existing
     employee = Employee.objects.select_related("member").get(pk=data["employee"].pk)
-    data = {**data, "employee": employee, "project": project}
     if employee.organization_id != org.id or not employee.active:
         raise ValidationError("员工不属于当前公司或已停用")
-    if member.role == "member" and (not employee.member_id or employee.member.user_id != member.user_id):
-        raise PermissionDenied("成员只能登记自己的工时")
-    if data.get("task") and data["task"].project_id != project.id:
+    if (member.role == "member" or (destination and member.role not in {"owner", "finance"})) and (not employee.member_id or employee.member.user_id != member.user_id):
+        raise PermissionDenied("成员只能登记自己的投入；非项目代录由负责人或财务办理")
+    if data.get("task") and (not project or data["task"].project_id != project.id):
         raise ValidationError("任务不属于所选项目")
-    work_date = data["work_date"]
     check_period(org, work_date)
     minutes = data["minutes"]
-    if not 1 <= minutes <= 1440:
-        raise ValidationError("单次工时须在1至1440分钟之间")
+    if type(minutes) is not int or not 1 <= minutes <= 1440:
+        raise ValidationError("单次工时须为1至1440整数分钟")
     spent = Timesheet.objects.filter(employee=employee, work_date=work_date,
         status__in=["submitted", "approved"]).aggregate(n=Sum("minutes"))["n"] or 0
     if spent + minutes > 1440:
-        raise ValidationError("同一员工跨项目的当日总工时不能超过24小时")
-    rate = CostRate.objects.filter(employee=employee, effective_from__lte=work_date).first()
-    if not rate:
-        raise ValidationError("该员工在工时日期没有有效成本费率，请先配置费率")
-    row = Timesheet.objects.create(**data, submitted_by=member.user, token=token,
-                                  hourly_rate_cents=rate.hourly_cents, cost_cents=time_cost(rate.hourly_cents, minutes), rate_basis=rate.basis)
-    audit(member, "time.submitted", row, {"minutes": minutes, "rate_id": rate.id})
+        raise ValidationError("同一员工跨项目与非项目的当日总工时不能超过24小时")
+    values = {**data, "employee": employee, "project": project}
+    if monthly:
+        values.update(organization=org, non_project_destination=destination, accounting_mode="monthly_pool",
+                      cost_state="unpriced", hourly_rate_cents=None, cost_cents=None, rate_basis="月度池待分配")
+        row = Timesheet.objects.create(**values, submitted_by=member.user, token=token)
+        audit(member, "plugin.costing.time_submitted", row, {"minutes": minutes, "mode": "monthly_pool"})
+    else:
+        rate = CostRate.objects.filter(employee=employee, effective_from__lte=work_date).first()
+        if not rate:
+            raise ValidationError("该员工在工时日期没有有效成本费率，请先配置费率")
+        row = Timesheet.objects.create(**values, submitted_by=member.user, token=token,
+            hourly_rate_cents=rate.hourly_cents, cost_cents=time_cost(rate.hourly_cents, minutes), rate_basis=rate.basis)
+        audit(member, "time.submitted", row, {"minutes": minutes, "rate_id": rate.id})
     return row
 
 @transaction.atomic
@@ -199,6 +224,9 @@ def review(member, kind, pk, decision, note=""):
     if not model or decision not in {"approve", "reject"}:
         raise ValidationError("审批请求无效")
     row = model.objects.select_for_update().select_related("project").get(pk=pk)
+    if kind == "time" and row.accounting_mode == "monthly_pool":
+        from .labor_projection import review_monthly_time
+        return review_monthly_time(member, row, decision, note)
     require_project(member, row.project)
     if kind == "time":
         if not can_manage(member, row.project) and member.role not in WRITE_FINANCE:
@@ -279,6 +307,9 @@ def reverse(member, kind, pk, note):
     if not model:
         raise ValidationError("无法冲销此类记录")
     row = model.objects.select_for_update().get(pk=pk)
+    if kind == "time" and row.accounting_mode == "monthly_pool":
+        from .labor_projection import reverse_monthly_time
+        return reverse_monthly_time(member, row, note)
     require_project(member, row.project)
     today = timezone.localdate()
     check_period(org, today)

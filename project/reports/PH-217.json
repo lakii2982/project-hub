@@ -1,0 +1,73 @@
+{
+  "task_id": "PH-217",
+  "summary": "Monthly labor first actual recognition, shared Timesheet, capacity, conserved allocation and exact reversal on core-owned append-only postings.",
+  "tests": [
+    {
+      "command": "python manage.py test tests --verbosity 0",
+      "result": "pass",
+      "evidence": "Final actual570 tests91.462s:551 executed pass19 environment skipped. Earlier finance template missing money load fixed and HTTP13 passed0.808s; failed runs retained privately. Added one later PG-only race requires current CI."
+    },
+    {
+      "command": "python manage.py test tests.test_monthly_labor",
+      "result": "pass",
+      "evidence": "Actual9 business tests0.388s:101 oracle,C0 lifecycle, immutable snapshots, dryrun and independence."
+    },
+    {
+      "command": "python manage.py test tests.test_labor_cutover",
+      "result": "pass",
+      "evidence": "Actual6 HTTP tests0.392s; independent6/0.377s; five roles, preserved errors, midcoverage OrgForm/settings lock refusal."
+    },
+    {
+      "command": "python manage.py test tests.test_api_security",
+      "result": "pass",
+      "evidence": "Actual5 tests0.520s: shared monthly API, no fallback, strict fields, reversed legacy source and PM nonproject refusal."
+    },
+    {
+      "command": "python manage.py check; python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Both actualexit0;16 SDK colon naming warnings, no migration drift."
+    },
+    {
+      "command": "python -B validate_contracts.py; check_contract_cases.py; check_fixture.py",
+      "result": "pass",
+      "evidence": "9 schemas2973 refs;19 positive37 negative;99 positive8 negative. Schema/fixture proof only. Three canonical SHA keys synchronized in two metadata files; business oracle unchanged."
+    },
+    {
+      "command": "python -m unittest discover -s integrations/mcp; smoke_stdio.py",
+      "result": "pass",
+      "evidence": "8 tests0.078s; actual stdio7tools. Initial missing worktree .agent-venv failed; unmodified logic reran with in-memory subprocess interpreter override to existing fixed runtime. No infrastructure/source edit."
+    },
+    {
+      "command": "Synthetic old58 backup upgrade/repeat/verify_integrity",
+      "result": "pass",
+      "evidence": "35 oldtables original columns/rows unchanged, cost58, all3 steps exit0. Snapshot SHA256 7cd5e0bb4e76c6cd37d81e686037e2a9668a1857cc94a5d8c1ca38ed2f90bc91."
+    },
+    {
+      "command": "Real Chromium login/monthly workflow/8 widths/5 roles",
+      "result": "pass",
+      "evidence": "Owner submit, finance confirm, owner capacity, finance approve, allocate/trace/unallocate. 320,350,390,640,768,1024,1280,1440 no overflow; narrow drawer right0 after transition settled; keyboard skip link. Owner/finance/auditor200 PM/member403. Final formatting rechecked after server restart."
+    },
+    {
+      "command": "Populated contract SQLite backup upgrade/repeat/integrity",
+      "result": "pass",
+      "evidence": "Actual43 oldtables original columns/rows preserved; all3 steps exit0; new metadata additions only. Original source DB untouched."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "Independent /root/labor_design_review",
+    "status": "pass",
+    "findings": [],
+    "evidence": "Actual final financial/security sourceS PASS after4 findings fixed; independent13 monthly/HTTP0.724s,3API0.505s,final6HTTP0.377s,diffcheck. Source review not PG/browser/production proof."
+  },
+  "deviations": [
+    "Named salary_pool/allocation_run financial support only; no SDK/runner/CI/deployment edits or PH210 reuse.",
+    "First independent confirmation approves component/method policy and salary together; capacity separately proposed/approved by two people.",
+    "Failed initial test label and trigger/projection mismatch retained privately, corrected without weakening append-only protection."
+  ],
+  "unverified": [
+    "Exacthead current PR and7 real PG multi-connection cases pending; SQLite skips not PG evidence.",
+    "Production/customer environment/customer acceptance not executed.",
+    "Full1.0 and cumulative wage corrections incomplete; original proposed tasks unchanged."
+  ]
+}
