@@ -23,7 +23,7 @@
     "reviewer": "Independent /root/ph005_contract_review",
     "status": "pass",
     "findings": [],
-    "evidence": "Finance/productsemantics limitedPASS afterbasis/currentMVP correction. QueryIDs/pointers valid; sameS03income50000/AR53000/cashandunoffsetadvance31800verified. Finalmetadata/HTML/boundSHAclosure PASS; missing-not-zero assertions checked with nonempty owner/finance cases. CurrentCI stillrequired."
+    "evidence": "Finance/productsemantics limitedPASS afterbasis/currentMVP correction. QueryIDs/pointers valid; sameS03income50000/AR53000/cashandunoffsetadvance31800verified. Finalmetadata/HTML/boundSHAclosure PASS; missing-not-zero assertions checked with nonempty owner/finance cases. CurrentCI stillrequired. Independent fixed6b4653b..fe4493a final PASS:11scopefiles,005onlystatus/handoff,structuredartifactSHA verified. Handoff old001 reference clarified as pre-rebase138current; no code or test changes."
   },
   "deviations": [
     "NativeOpenCodee11900fe-29fb-4035-a6ec-049ef179bace timed_out, notcompleted. Rootsalvagedexact3files; HTMLpartial thencompletedbyintegration. Rootfixedsingle-sharedtokens/keyboard/tabfocus/touch/caption/roleappendix,reranactualbrowser.",
