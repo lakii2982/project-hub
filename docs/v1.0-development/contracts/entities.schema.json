@@ -858,7 +858,7 @@
         "contract_id",
         "version_no",
         "effective_on",
-        "approved_by_member_id"
+        "created_by_member_id"
       ],
       "properties": {
         "id": {
@@ -892,12 +892,47 @@
         "effective_on": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
         },
+        "created_by_member_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id",
+          "readOnly": true
+        },
+        "submitted_by_member_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "readOnly": true
+        },
         "approved_by_member_id": {
-          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "readOnly": true
+        },
+        "approved_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "readOnly": true
         },
         "evidence": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "items": {
             "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
           }
@@ -911,7 +946,87 @@
         "superseded"
       ],
       "x-owner": "contracts",
-      "x-record-kind": "owned_fact"
+      "x-record-kind": "owned_fact",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "draft",
+                  "submitted",
+                  "rejected"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "approved_by_member_id": {
+                "type": "null"
+              },
+              "approved_on": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "approved",
+                  "superseded"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "approved_by_member_id",
+              "approved_on",
+              "evidence"
+            ],
+            "properties": {
+              "approved_by_member_id": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Id"
+              },
+              "approved_on": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "evidence": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "submitted",
+                  "approved",
+                  "rejected",
+                  "superseded"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "submitted_by_member_id"
+            ],
+            "properties": {
+              "submitted_by_member_id": {
+                "$ref": "./contract-bundle.schema.json#/$defs/Id"
+              }
+            }
+          }
+        }
+      ]
     },
     "ContractLine": {
       "type": "object",
@@ -923,6 +1038,7 @@
         "status",
         "created_at",
         "contract_id",
+        "contract_version_id",
         "line_no",
         "project_id",
         "counterparty_id",
@@ -957,6 +1073,10 @@
         },
         "contract_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "contract_version_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id",
+          "readOnly": true
         },
         "line_no": {
           "type": "integer",
@@ -1016,7 +1136,8 @@
           "readOnly": true
         },
         "pricing_configuration": {
-          "$ref": "./contract-bundle.schema.json#/$defs/PricingConfiguration"
+          "$ref": "./contract-bundle.schema.json#/$defs/PricingConfiguration",
+          "readOnly": true
         }
       },
       "x-contract-status-enum": [
@@ -1026,7 +1147,10 @@
         "superseded"
       ],
       "x-owner": "contracts",
-      "x-record-kind": "owned_fact"
+      "x-record-kind": "owned_fact",
+      "x-service-invariants": [
+        "pricing_configuration and method_policy are read-only value projections of this line's unique MethodPolicySelection; neither is a separately editable rule copy."
+      ]
     },
     "PaymentTerm": {
       "type": "object",
@@ -1108,6 +1232,7 @@
         "status",
         "created_at",
         "contract_line_id",
+        "payment_term_id",
         "release_condition"
       ],
       "properties": {
@@ -1134,6 +1259,10 @@
         "contract_line_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
+        "payment_term_id": {
+          "$ref": "./contract-bundle.schema.json#/$defs/Id",
+          "readOnly": true
+        },
         "release_condition": {
           "type": "string",
           "minLength": 1,
@@ -1159,7 +1288,11 @@
         "cancelled"
       ],
       "x-owner": "contracts",
-      "x-record-kind": "owned_fact"
+      "x-record-kind": "owned_fact",
+      "x-service-invariants": [
+        "payment_term_id resolves to a warranty PaymentTerm in the same organization and contract line; warranty value is a subset of that included payment, never an additional charge.",
+        "Each warranty gross_cents and the aggregate warranties for one payment term must not exceed that payment term's gross_cents."
+      ]
     },
     "MethodPolicySelection": {
       "type": "object",
@@ -1172,6 +1305,7 @@
         "created_at",
         "contract_line_id",
         "policy_version",
+        "pricing_configuration",
         "selected_on",
         "approved_by_member_id"
       ],
@@ -1199,13 +1333,19 @@
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
         },
         "policy_version": {
-          "$ref": "./contract-bundle.schema.json#/$defs/PolicyVersion"
+          "$ref": "./contract-bundle.schema.json#/$defs/PolicyVersion",
+          "readOnly": true
+        },
+        "pricing_configuration": {
+          "$ref": "./contract-bundle.schema.json#/$defs/PricingConfiguration",
+          "readOnly": true
         },
         "selected_on": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
         },
         "approved_by_member_id": {
-          "$ref": "./contract-bundle.schema.json#/$defs/Id"
+          "$ref": "./contract-bundle.schema.json#/$defs/Id",
+          "readOnly": true
         }
       },
       "x-contract-status-enum": [
@@ -1213,7 +1353,11 @@
         "superseded"
       ],
       "x-owner": "contracts",
-      "x-record-kind": "owned_fact"
+      "x-record-kind": "owned_fact",
+      "x-service-invariants": [
+        "Each approved contract line has exactly one immutable approved selection; pricing_configuration is its unique complete approved rule snapshot.",
+        "policy_version is a server-derived PolicyVersion value projected from this selection's id/version/status/selected_on/approved_by_member_id and its approval audit, never an independently editable configuration."
+      ]
     },
     "ContractChange": {
       "type": "object",

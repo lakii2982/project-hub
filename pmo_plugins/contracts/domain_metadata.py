@@ -10,6 +10,8 @@ DOMAIN_METADATA = {
             ('party-save', 'business_write'), ('contact-save', 'business_write'),
             ('contracts', 'business_read'), ('contract', 'business_read'),
             ('contract-save', 'business_write'),
+            ('version', 'business_read'), ('version-save', 'business_write'),
+            ('version-submit', 'business_write'), ('version-review', 'business_write'),
         )
     ],
 }
