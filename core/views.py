@@ -386,9 +386,9 @@ def finance(request):
 
 @workspace_view
 def timesheets(request):
-    rows = Timesheet.objects.filter(Q(project__in=visible_projects(request.member)) | (Q(organization=request.member.organization, project__isnull=True) if request.member.role in {"owner", "finance", "auditor", "member"} else Q(pk__in=[]))).select_related("project", "employee", "task", "submitted_by")
+    rows = Timesheet.objects.filter(Q(project__in=visible_projects(request.member)) | (Q(organization=request.member.organization, project__isnull=True) if request.member.role in {"owner", "finance", "auditor", "member"} else Q(organization=request.member.organization, project__isnull=True, employee__member=request.member))).select_related("project", "employee", "task", "submitted_by")
     if request.member.role == "member": rows = rows.filter(employee__member=request.member)
-    elif request.member.role == "pm": rows = rows.filter(project__manager=request.member)
+    elif request.member.role == "pm": rows = rows.filter(Q(project__manager=request.member) | Q(project__isnull=True, employee__member=request.member))
     totals = rows.filter(status="approved").aggregate(minutes=Sum("minutes"), cost=Sum("cost_cents"))
     return render(request, "time.html", {"nav": "time", "timesheets": rows[:300], "employees": Employee.objects.filter(organization=request.member.organization),
         "total_minutes": totals["minutes"] or 0, "total_cost_cents": (totals["cost"] or 0) if request.member.role != "member" else None})
@@ -492,9 +492,19 @@ def export_data(request, kind):
     rows = []
     if kind == "ledger":
         if request.member.role not in WRITE_FINANCE: raise PermissionDenied("项目账含个人核算信息，完整明细仅向项目财务与公司负责人开放")
-        rows.append(["项目编号", "项目名称", "业务日期", "账本", "分类", "金额_分", "来源单据", "来源工时", "冲销原记录"])
+        rows.append(["项目编号", "项目名称", "业务日期", "账本", "分类", "金额_分", "来源单据", "来源工时", "冲销原记录", "来源口径", "核算事件", "原始工资来源", "分配业务来源", "冲销原核算事件"])
         for e in LedgerEntry.objects.filter(project__in=projects_qs).select_related("project"):
-            rows.append([e.project.code, e.project.name, e.occurred_on, e.get_book_display(), e.category, e.amount_cents, e.document_id, e.timesheet_id, e.reverses_id])
+            rows.append([e.project.code, e.project.name, e.occurred_on, e.get_book_display(), e.category, e.amount_cents, e.document_id, e.timesheet_id, e.reverses_id, "legacy", "", "", "", ""])
+        from .models import LedgerPosting
+        project_map = {str(p.pk): p for p in projects_qs}
+        for posting in LedgerPosting.objects.filter(organization=request.member.organization, book="cost",
+                scope_kind="project", scope_id__in=project_map).select_related("accounting_event").order_by("created_at", "id"):
+            event = posting.accounting_event
+            project = project_map[posting.scope_id]
+            rows.append([project.code, project.name, event.occurred_on, "已发生成本", "labor",
+                posting.amount_cents, "", "", str(posting.reverses_posting_id or ""), "current",
+                str(event.pk), event.labor_origin_ref.get("id", ""), event.source.get("id", ""),
+                str(event.reverses_event_id or "")])
     elif kind == "projects":
         rows.append(["项目编号", "项目名称", "客户", "阶段", "负责人", "开始日", "交付日"])
         for p in projects_qs: rows.append([p.code, p.name, p.client, p.get_stage_display(), str(p.manager), p.start_date, p.end_date])

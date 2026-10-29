@@ -96,6 +96,16 @@
       "command": "python manage.py test tests.test_domain tests.test_monthly_labor tests.test_labor_cutover tests.test_api_security --verbosity 0",
       "result": "pass",
       "evidence": "Actual50 tests2.009s after PG nullable-project join fix; local SQLite only."
+    },
+    {
+      "command": "Current PR107 PostgreSQL domain run40910752293 job123577742842",
+      "result": "pass",
+      "evidence": "Actual a62e8cc PostgreSQL17.11:571 tests76.271s,562 executed pass9 non-PG skipped. All7 monthly PG multi-connection tests executed; new core0006/0007 andcosting0001/0002 actually applied. All12 headchecks success; later export/list correction requires fresh currentheadCI."
+    },
+    {
+      "command": "python manage.py test tests.test_api_security tests.test_http --verbosity 0",
+      "result": "pass",
+      "evidence": "Actual20 tests1.406s after real review export/list corrections: CSV current allocation/reversal refs and PM ownnonproject visibility scoped."
     }
   ],
   "review": {
@@ -103,16 +113,17 @@
     "reviewer": "Independent /root/labor_design_review",
     "status": "pass",
     "findings": [],
-    "evidence": "Actual final financial/security sourceS PASS after4 findings fixed; independent13 monthly/HTTP0.724s,3API0.505s,final6HTTP0.377s,diffcheck. Source review not PG/browser/production proof. Bounded independent S PASS actual one-line nullable join correction, company/row locks and permissions retained."
+    "evidence": "Actual final financial/security sourceS PASS after4 findings fixed; independent13 monthly/HTTP0.724s,3API0.505s,final6HTTP0.377s,diffcheck. Source review not PG/browser/production proof. Bounded independent S PASS actual one-line nullable join correction, company/row locks and permissions retained. Final export/list independent S PASS and actual2 regression tests0.104s, diffcheckpass."
   },
   "deviations": [
     "Named salary_pool/allocation_run financial support only; no SDK/runner/CI/deployment edits or PH210 reuse.",
     "First independent confirmation approves component/method policy and salary together; capacity separately proposed/approved by two people.",
     "Failed initial test label and trigger/projection mismatch retained privately, corrected without weakening append-only protection.",
-    "First real PR107 PG/container CI failed: nullable Timesheet.project made review SELECT FOR UPDATE target outer join. Actual fix limits row lock to self under existing company lock; independent bounded S PASS, no infrastructure edit. Newhead PG rerun required."
+    "First real PR107 PG/container CI failed: nullable Timesheet.project made review SELECT FOR UPDATE target outer join. Actual fix limits row lock to self under existing company lock; independent bounded S PASS, no infrastructure edit. Newhead PG rerun required.",
+    "GitHub review found current monthly postings absent from ledgerCSV and PM ownnonproject rows absent from time list; corrected owner export preserving legacy columns with explicit event/origin/reversal references and own-PM scope, with2 regressiontests."
   ],
   "unverified": [
-    "Exacthead current PR and7 real PG multi-connection cases pending; SQLite skips not PG evidence.",
+    "Final export/list correction exacthead allCI and normal PR merge pending. Earlier a62e8cc actualPG andall12CI pass do not substitute finalheadCI.",
     "Production/customer environment/customer acceptance not executed.",
     "Full1.0 and cumulative wage corrections incomplete; original proposed tasks unchanged."
   ]

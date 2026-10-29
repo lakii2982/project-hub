@@ -8,6 +8,7 @@ from core.services import review
 from core.plugin_runtime import set_enabled
 from tests import test_agent_api as legacy
 from tests import test_labor_cutover as browser
+from tests import test_monthly_labor as business
 
 
 class MonthlyTimeApiTests(TestCase):
@@ -78,4 +79,50 @@ class CutoverSourceAndRoleTests(TestCase):
         self.assertFalse(Timesheet.objects.exists())
         self.assertEqual(AuditEvent.objects.count(), count)
         self.assertFalse(LedgerEntry.objects.exists())
+
+
+class MonthlyLedgerAndListTests(TestCase):
+    setUp = business.MonthlyLaborBusinessTests.setUp
+    member = business.MonthlyLaborBusinessTests.member
+    save_pool = business.MonthlyLaborBusinessTests.save_pool
+    confirmed = business.MonthlyLaborBusinessTests.confirmed
+    capacity = business.MonthlyLaborBusinessTests.capacity
+    time = business.MonthlyLaborBusinessTests.time
+    allocate = business.MonthlyLaborBusinessTests.allocate
+
+    def test_ledger_csv_contains_current_allocation_and_exact_reversal_sources(self):
+        import csv, io
+        from pmo_plugins.costing import services
+        self.time(60, self.project)
+        pool, policy = self.capacity(self.confirmed())
+        run = self.allocate(pool, policy)
+        self.client.force_login(self.owner.user)
+        response = self.client.get('/export/ledger/', {'project': self.project.pk})
+        rows = list(csv.reader(io.StringIO(response.content.decode('utf-8-sig'))))
+        self.assertEqual(sum(int(row[5]) for row in rows[1:]), 101)
+        self.assertEqual(rows[1][9], 'current')
+        self.assertEqual(rows[1][10:13], [str(run.accounting_event_id), str(pool.pk), str(run.pk)])
+        services.reverse_allocation(self.owner, run.pk, request_token=uuid.uuid4(), reason='导出原分追溯核对', dry_run=False)
+        response = self.client.get('/export/ledger/', {'project': self.project.pk})
+        rows = list(csv.reader(io.StringIO(response.content.decode('utf-8-sig'))))
+        self.assertEqual(sum(int(row[5]) for row in rows[1:]), 0)
+        self.assertTrue(any(row[13] == str(run.accounting_event_id) and row[8] for row in rows[1:]))
+
+    def test_pm_sees_own_nonproject_input_but_not_other_employee_input(self):
+        from core.models import Employee, NonProjectDestination
+        from core.services import submit_time
+        pm = self.member('pm')
+        employee = Employee.objects.create(organization=self.org, member=pm, name='项目经理本人')
+        admin = NonProjectDestination.objects.get(organization=self.org, code='ADMIN')
+        row = submit_time(pm, {'project': None, 'non_project_destination': admin, 'employee': employee,
+            'work_date': self.today, 'minutes': 30, 'note': '本人非项目投入'}, uuid.uuid4())
+        other = submit_time(self.owner, {'project': None, 'non_project_destination': admin, 'employee': self.employee,
+            'work_date': self.today, 'minutes': 10, 'note': '其他员工的非项目投入'}, uuid.uuid4())
+        self.client.force_login(pm.user)
+        response = self.client.get('/time/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item.pk for item in response.context['timesheets']], [row.pk])
+        review(self.finance, 'time', row.pk, 'approve')
+        self.assertContains(self.client.get('/time/'), '本人非项目投入')
+        self.assertNotContains(self.client.get('/time/'), other.note)
 
