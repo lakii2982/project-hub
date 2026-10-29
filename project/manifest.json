@@ -5,7 +5,7 @@
   "version_source": "pyproject.toml",
   "current_iteration": "v0.2.0-foundations",
   "tasks_file": "project/tasks.json",
-  "active_handoff": "project/handoffs/PH-214.md",
+  "active_handoff": "project/handoffs/PH-216.md",
   "required_docs": [
     "AGENTS.md",
     "CONTRIBUTING.md",

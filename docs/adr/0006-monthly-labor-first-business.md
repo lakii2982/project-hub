@@ -1,0 +1,47 @@
+# ADR-0006 · 月度人工确认和归集分配共用core成本账
+
+状态：PH216技术决策已冻结，待独立财务/安全复核与规划PR合入可信BASE；不是实现许可。对应PH217的完整字段、白名单和反例以project/specs/PH-217.md为准；本文不是产品通过或开工声明。
+
+## 已有事实与目标
+
+用户已确认月度综合人工池与组取整，新方法monthly_comprehensive_capacity_v1、算法monthly_group_half_up_largest_remainder_v1；无需再询问是否采用此方法。现存core.Timesheet.project必填、hourly_rate_cents/cost_cents必填，core.submit_time强制选旧CostRate并逐行计算，core.review(time)直接写旧LedgerEntry。canonical Timesheet却支持nonproject/unpriced和月池分配。不能只写一个工资池CRUD就说新方法可用，也不能在新App另建可编辑工时把旧投入复制过去。
+
+下一片必须交付已发生工资确认→公司成本一次→项目/非项目/未分配守恒→账本和原工时追溯的完整用户结果。缺产能可确认已知工资并暂留未分配；分配时才要求正产能和真实完整已批覆盖。预计工资不是已发生工资，内部批准不是实际付款；项目人工成本不是利润。
+
+## 财务owner及成本路径
+
+新增真正core-owned AccountingEvent/LedgerPosting/SourceConsumption/AccountingPeriod，只为本片salary_pool/allocation_run来源实现严格具名路径，其他域/未知来源拒绝。costing拥有SalaryPool、CostPolicy、CostEvent、AllocationRun/Target；RateSnapshot是派生读投影。没有costing工资账本，也不创建假Document费用来借用旧ledger。
+
+确认已发生工资C，core成本账在真实UNALLOCATED非项目去向+ C一次；分配追加该scope−C及项目/非项目/未分配各目标+C合计，公司净0。查询公司金额不能把公司确认额再加分配额。101分、D60、分钟3/31/26，目标整数结果5/52/44；Decimal理想额取下界后按余数降序稳定分配，目标合计严格101。保存原整数结果与输入refs；撤销按原分反向，不重新执行当前费率/参数。
+
+来源claim稳定键不含请求key、可变version、渠道或新run UUID。公司确认占工资原稳定来源的recognition覆盖；分配占同pool的distribution覆盖；AllocationRun只是分配事件业务source，不是能重新消费同一工资的借口。recognition:employee/month与distribution:employee/month两类claim均排除covered_through，延长覆盖也不能另铸claim。claim.amount/event_ref永久不变；event_ref是预分配UUID的typed JSON，与实际event同事务创建，event.claim反向真实FK避免循环。C=0合法，不能仅凭sum claim_effect=0判定释放；必须检查原确认event未反冲、pool非终态和唯一active AllocationRun，run唯一性独立于金额并有数据库约束/公司锁。零额仍有真实事件，换key重复确认/双run及重复反冲必须拒绝。有效金额占用=sum追加event.claim_effect_cents，分配正effect=C而账本公司净0；反向event effect=−C释放占用，历史claim不删除、不重置。分配event.source为真实run，claim.source与event.labor_origin_ref仍是原pool。月末实际替代暂估是同origin累计差额，首片明确只支持每员工/月一份incurred_provisional或reconciled_actual发生确认，不提供累计再确认/替换金额。全冲销后终态，原approved_salary_snapshot永久可按批准SourceRef读取；拒绝新pool或新key全额再记，不伪称支持全部159/160/161。
+
+## 一家公司一个月首人工账本切换
+
+保留唯一core.Timesheet，新增服务器accounting_mode/cost_state和非项目归属；DB验证结构XOR与模式/null快照，同公司关系由服务和PG验证，不编造跨表JOIN CHECK；新月池行逐行费率/成本可以null，不能填0冒充已计价。旧表中所有原快照与58基线历史值原样保留。组织启用月必须月首、独立批准、对应期间开放；可安排未来干净月，但不能产生未来实际业务；启用前该月及之后已有旧已批成本或旧pending工时则拒绝，不静默重写或自动反冲。未批准旧行可明确拒绝/撤弃后，切换成功再按相同真实work_date重提新模式；已存在批准成本的月选择未来干净月，绝不通过改工时实际日期绕检查。
+
+启用后所有现有入口按真实work_date和公司切换记录路由，同一投入记录不复制：切换前仍用旧快照审批/反冲；新日期只批准投入、待月池分配，不写旧LedgerEntry。批准时在同一Timesheet的approved_input_snapshot冻结真实员工/日期/分钟/目标和身份/version，不改实际work_date，不建第二可编辑Time表。缺政策/产能也可保留真实已批分钟并标unpriced。core/API/MCP现有工时服务必须共用这项判断，不新增MCP工资/审批/记账能力。工时已被有效分配消费时拒绝直接反冲，先撤分配。core.imports.py现有CSV和core/api.py/MCP项目写入同样共用submit_time；非项目API未授权明确拒绝，不扩scope。core.context.py及templates/approvals.html补齐非项目待办与审核权限，避免project=null漏队列。
+
+成本读模型把旧LedgerEntry作为origin=legacy只读投影（保持源/符号/原分、不伪造历史event），切换后人工只读新core posting；原CostEvent/AllocationTarget不再叠加。非人工旧费用仍保留原book来源，不能以人工新账把全部成本换成不完整数字。所有缺工资/容量/批准覆盖明确单列。
+
+## 已确定的政策、非项目与反向关系
+
+CostPolicy正式批准构成/方法时允许capacity_confirmed=false、denominator=null，含employee/covered_through绑定；PolicyVersion由该CostPolicy UUID/1、真实独立批准人/audit派生，不收客户端approved PolicyRef。SalaryPoolDraft可缺政策，但发生确认前必须解析真实已批政策。后来正容量单独形成新的不可变CostPolicy快照，同工资来源及覆盖，capacity_confirmed=true且D>0，AllocationRun引用该新政策；原approved_salary_snapshot中的原工资政策不改，也不新增公司成本。计划planned实际确认动作拒绝。每员工/月首次确认可为incurred_provisional或reconciled_actual，覆盖必须在该月且≤今日。未来累计差额、更正替代和月末结算留原后续任务，不借新key重复来源。
+
+core.AccountingEvent模型增加server-only唯一reverses_event_ref、claim FK、signed claim_effect_cents、labor_origin_ref；其中只有reverses_event_ref新增到公开schema，其他三项为core私有字段，不新增公共claim_ref或未注册SourceRef kind；LedgerPosting增加可空唯一reverses_posting_id。source仍原真实pool/run，反向关系独立表达。内部current posting ref先解析原event、仅整event反冲；旧legacy没有event，调用现存反冲服务按原分处理，不合成历史事件。AccountingPeriod active时closed_through=null，posted必须closed日期；与原Organization.locked_through双重检查。工资覆盖固定monthstart..covered_through，整段不能与locked_through相交，不能只检查截止日。所有正向确认/分配的occurred_on=pool.covered_through、posting_period=pool.period服务器派生；反冲复制原日期及原开放期间，created_at记录真实操作时间，拒绝另选其他开放月或用当前操作日替换发生日期，不提供开放期累计调整。
+
+分配与撤分配是owner/finance执行的确定性动作，容量及全部依据已独立批准，不增加审批层；工资发生确认和全反冲必须独立于制单/提交/工资本人，Employee.member可空，制单/提交人始终禁自审；业务本人只按真实账号绑定识别，不猜姓名、不强迫开户。反冲需原因且无有效分配，禁止自动级联。CostEvent增加core_event只读桥，gross由真实postings派生，分配净额0，不能让业务桥成为第二余额。
+
+不建新masterdata App。逻辑masterdata沿当前core/masterdata.py拥有core.NonProjectDestination，切换时审计建立公司唯一ADMIN/UNALLOCATED真实去向，与现有Employee/Project同归属；Timesheet非项目FK留core内部，无跨域依赖环，不创建假Project。AllocationTarget沿原project/non_project_pool枚举，用两个不同真实去向ID区分普通非项目与未分配。
+
+这些是本次整合者确定的窄实现口径，不再留待实现中猜测。217只允许entities/catalog-completeness/write-dtos三份canonical及两hash metadata修改具名字段和不变式，SourceConsumption现有字段不扩、仅说明稳定claim与effect关系；不改命令、事件schema、来源注册或SDK。沿现有salary_pool/allocation_run/core.accounting_event类型。发事件使用已有适用C06 envelope与固定plugin.*审计前缀抑制简略重复Outbox，再同atomic创建唯一完整事件，不改core.audit。若独立复核发现现有事件无法表达，应在规划PR收口，不让执行者临场扩大白名单。
+
+客户工资构成、容量及实际发生依据仍需业务授权人员按本系统规则确认；已确认月池算法无需用户再次决策。独立S复核和可信BASE合入仍是实施门槛。原141/142/159/160/161/210所有依赖与proposed均保留，本片只支持其后续全域集成。
+
+现有Organization.locked_through设置写仍共用公司锁，增加monthly项目/非项目pending、未计价/未确认发生工资/容量及分配覆盖缺项检查；缺项显示且拒绝静默关闭。不能只看旧project计数或改日期逃避。本片只使既有锁设置认识新事实，不扩通用月结框架；core/reporting和finance/project页面显示单一账本来源及未分配缺口。
+
+## 风险控制与验收
+
+owner/finance可见工资及确认/分配，制单/提交/工资本人不能自审；PM仅授权项目汇总且不含工资池/个人费率，成员只本人投入；auditor同敏感只读授权。公司锁内重读身份、模块、期间、来源和依赖。业务/core账本/claim/唯一audit/Outbox同事务，失败无半笔，未知结果原key查询不盲重放。
+
+验收包括零额确认/重复与并发run/撤分配/终态冲销、无账号员工代录及真实绑定自审拒绝、跨锁截止覆盖整段拒绝、正反事件同原发生日/期间且真实操作时间分别留存，以及精确整数oracle、缺产能先确认、全套来源/角色/锁期/未来日期/重复版本与key拒绝；PG双连接确认/分配/反冲、期间锁/撤权/停用竞争；旧58及当前合同非空库升级原账不变、切换各入口一致；真实1440/390完整用户流程和工资隐私；固定全量/漂移/完整性/canonical验证、当前全部CI与独立S审阅。原141/142/159/160/161/210任务全部保留原依赖与proposed，不把局部业务路径当通用内核或完整1.0完成。无生产、发布或部署授权。
