@@ -3,9 +3,9 @@
   "summary": "Monthly labor first actual recognition, shared Timesheet, capacity, conserved allocation and exact reversal on core-owned append-only postings.",
   "tests": [
     {
-      "command": "python manage.py test tests --verbosity 0",
+      "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Final actual570 tests91.462s:551 executed pass19 environment skipped. Earlier finance template missing money load fixed and HTTP13 passed0.808s; failed runs retained privately. Added one later PG-only race requires current CI."
+      "evidence": "Final actual571 tests98.445s:551 executed pass20 environment skipped, including7 actual PG cases skipped locally. Previous570 run had2 finance-template failures, fixed money load; HTTP13 pass and final full571 pass."
     },
     {
       "command": "python manage.py test tests.test_monthly_labor",
@@ -51,6 +51,46 @@
       "command": "Populated contract SQLite backup upgrade/repeat/integrity",
       "result": "pass",
       "evidence": "Actual43 oldtables original columns/rows preserved; all3 steps exit0; new metadata additions only. Original source DB untouched."
+    },
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual140tasks check after in_review report/handoff."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actualexit0,16 SDK URL naming warnings."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actualexit0 No changes detected."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual synthetic current ledger after browser lifecycle ok=true/errors=[], old58 and populated contract upgrade integrity likewise pass."
+    },
+    {
+      "command": "python manage.py test tests.test_monthly_labor tests.test_monthly_labor_concurrency tests.test_labor_cutover --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual22 tests0.765s,15 executed pass7 PG skips; skips not PG concurrency evidence."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
+      "result": "pass",
+      "evidence": "Actual9schemas2973resolvedrefs strict integer validator."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/check_contract_cases.py",
+      "result": "pass",
+      "evidence": "Actual19positive37negative."
+    },
+    {
+      "command": "python -B docs/v1.0-development/fixtures/check_fixture.py",
+      "result": "pass",
+      "evidence": "Actual99positive8negative; frozen input and financial oracle unchanged, only authorized3artifact digests in2metadata updated."
     }
   ],
   "review": {
