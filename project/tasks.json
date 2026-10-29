@@ -2264,7 +2264,7 @@
         "python manage.py verify_integrity --json",
         "python manage.py test tests.test_plugin_sdk tests.test_plugins --verbosity 1"
       ],
-      "github_issue": null,
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/88",
       "owner": null,
       "blockers": [],
       "handoff": null
