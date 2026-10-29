@@ -2278,7 +2278,8 @@
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-140"
+        "PH-140",
+        "PH-210"
       ],
       "spec": "project/specs/PH-141.md",
       "allowed_paths": [
@@ -5508,6 +5509,82 @@
         "docs/verification.md",
         "project/reports/PH-209.json",
         "project/handoffs/PH-209.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/90",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-210",
+      "title": "补全单一冲销引用与原现金消费契约",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-209"
+      ],
+      "spec": "project/specs/PH-210.md",
+      "allowed_paths": [
+        "docs/v1.0-development/contracts/catalog-completeness.schema.json",
+        "docs/v1.0-development/contracts/entities.schema.json",
+        "docs/v1.0-development/contracts/relationships.json",
+        "docs/v1.0-development/contracts/commands.schema.json",
+        "docs/v1.0-development/contracts/source-registry.json",
+        "docs/v1.0-development/contracts/README.md",
+        "docs/v1.0-development/fixtures/fixture.json",
+        "docs/v1.0-development/promotion-draft/extension-freeze.json",
+        "tests/test_v1_preparation.py",
+        "docs/v1.0-development/verification.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-210.json",
+        "project/handoffs/PH-210.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "python -B docs/v1.0-development/contracts/validate_contracts.py",
+        "python -B docs/v1.0-development/contracts/check_contract_cases.py",
+        "python -B docs/v1.0-development/fixtures/check_fixture.py",
+        "python manage.py test tests.test_v1_preparation --verbosity 1"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/91",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-211",
+      "title": "后续需求独立规划入口（接续PH-209）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-209"
+      ],
+      "spec": "project/specs/PH-211.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-211.json",
+        "project/handoffs/PH-211.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
