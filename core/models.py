@@ -40,6 +40,106 @@ class Employee(models.Model):
     active = models.BooleanField(default=True)
     def __str__(self): return self.name
 
+class NonProjectDestination(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    code = models.CharField(max_length=24)
+    name = models.CharField(max_length=80)
+    version = models.PositiveIntegerField(default=1)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['organization', 'code'], name='labor_destination_org_code')]
+
+    def __str__(self):
+        return self.name
+
+
+class LaborCutover(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.OneToOneField(Organization, on_delete=models.PROTECT)
+    effective_from = models.DateField()
+    status = models.CharField(max_length=16, default='submitted')
+    version = models.PositiveIntegerField(default=1)
+    method = models.CharField(max_length=64, default='monthly_comprehensive_capacity_v1')
+    algorithm_version = models.CharField(max_length=64, default='monthly_group_half_up_largest_remainder_v1')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+', null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True)
+    approval_audit = models.ForeignKey('AuditEvent', on_delete=models.PROTECT, null=True, related_name='+')
+    request_token = models.UUIDField(unique=True)
+
+
+class AccountingPeriod(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    period = models.CharField(max_length=7)
+    version = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=16, default='active')
+    closed_through = models.DateField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['organization', 'period'], name='labor_accounting_org_period'),
+            models.CheckConstraint(condition=(Q(status='active', closed_through__isnull=True) | Q(status='posted', closed_through__isnull=False)), name='labor_period_closed_date')]
+
+
+class SourceConsumption(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    source = models.JSONField()
+    source_id = models.UUIDField()
+    consumer = models.CharField(max_length=64)
+    coverage_key = models.CharField(max_length=100)
+    amount_cents = models.PositiveBigIntegerField()
+    quantity_minutes = models.PositiveIntegerField(default=0)
+    event_ref = models.JSONField()
+    version = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['organization', 'consumer', 'source_id', 'coverage_key'], name='labor_stable_source_claim')]
+
+
+class AccountingEvent(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    version = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=16, default='posted')
+    source = models.JSONField()
+    event_type = models.CharField(max_length=80)
+    occurred_on = models.DateField()
+    posting_period = models.CharField(max_length=7)
+    algorithm_version = models.CharField(max_length=64)
+    reverses_event = models.OneToOneField('self', on_delete=models.PROTECT, null=True, related_name='reversal')
+    claim = models.ForeignKey(SourceConsumption, on_delete=models.PROTECT, related_name='events')
+    claim_effect_cents = models.BigIntegerField()
+    labor_origin_ref = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class LedgerPosting(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    accounting_event = models.ForeignKey(AccountingEvent, on_delete=models.PROTECT, related_name='postings')
+    version = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=16, default='posted')
+    book = models.CharField(max_length=12, default='cost')
+    amount_cents = models.BigIntegerField()
+    scope_kind = models.CharField(max_length=16)
+    scope_id = models.CharField(max_length=64)
+    line_index = models.PositiveIntegerField()
+    origin = models.CharField(max_length=16, default='current')
+    reverses_posting = models.OneToOneField('self', on_delete=models.PROTECT, null=True, related_name='reversal')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['accounting_event', 'line_index'], name='labor_event_line_unique'),
+            models.CheckConstraint(condition=Q(book='cost', origin='current', scope_kind__in=['project', 'nonproject']), name='labor_posting_cost_scope'),
+            models.CheckConstraint(condition=Q(amount_cents__gte=-10**12, amount_cents__lte=10**12), name='labor_posting_amount_bound')]
+
+
 class CostRate(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.PROTECT, related_name="rates")
     effective_from = models.DateField("生效日期")
@@ -152,20 +252,26 @@ class CashPlan(models.Model):
         constraints = [models.CheckConstraint(condition=Q(amount_cents__gt=0), name="positive_cash_plan")]
 
 class Timesheet(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, null=True, blank=True)
+    accounting_mode = models.CharField(max_length=24, default="legacy_snapshot", editable=False)
+    cost_state = models.CharField(max_length=24, default="legacy_snapshot", editable=False)
+    version = models.PositiveIntegerField(default=1)
+    approved_input_snapshot = models.JSONField(default=dict, editable=False)
+    non_project_destination = models.ForeignKey("NonProjectDestination", on_delete=models.PROTECT, null=True, blank=True)
     class Status(models.TextChoices):
         SUBMITTED = "submitted", "待审批"
         APPROVED = "approved", "已入账"
         REJECTED = "rejected", "已退回"
         REVERSED = "reversed", "已冲销"
-    project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name="timesheets")
+    project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name="timesheets", null=True, blank=True)
     employee = models.ForeignKey(Employee, on_delete=models.PROTECT)
     task = models.ForeignKey(Task, on_delete=models.PROTECT, null=True, blank=True)
     work_date = models.DateField()
     minutes = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(1440)])
     note = models.CharField(max_length=300)
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.SUBMITTED)
-    hourly_rate_cents = models.PositiveBigIntegerField()
-    cost_cents = models.PositiveBigIntegerField()
+    hourly_rate_cents = models.PositiveBigIntegerField(null=True, blank=True)
+    cost_cents = models.PositiveBigIntegerField(null=True, blank=True)
     rate_basis = models.CharField(max_length=240)
     submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="submitted_timesheets")
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="reviewed_timesheets")
@@ -173,9 +279,18 @@ class Timesheet(models.Model):
     review_note = models.CharField(max_length=300, blank=True)
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    def get_status_display(self):
+        if self.accounting_mode == 'monthly_pool':
+            return {'submitted': '投入待审批', 'approved': '投入已审批／成本见月池',
+                    'rejected': '已退回', 'reversed': '投入已撤销'}.get(self.status, self.status)
+        return self.Status(self.status).label
+
     class Meta:
         ordering = ["-work_date", "-id"]
-        constraints = [models.CheckConstraint(condition=Q(minutes__gte=1, minutes__lte=1440), name="valid_time_minutes")]
+        constraints = [models.CheckConstraint(condition=Q(minutes__gte=1, minutes__lte=1440), name="valid_time_minutes"),
+            models.CheckConstraint(condition=(Q(project__isnull=False, non_project_destination__isnull=True) | Q(project__isnull=True, non_project_destination__isnull=False)), name="labor_time_target_xor"),
+            models.CheckConstraint(condition=(Q(accounting_mode="legacy_snapshot", project__isnull=False, hourly_rate_cents__isnull=False, cost_cents__isnull=False) | Q(accounting_mode="monthly_pool", organization__isnull=False, hourly_rate_cents__isnull=True, cost_cents__isnull=True)), name="labor_time_mode_snapshot"),
+        ]
 
 class Document(models.Model):
     Status = Timesheet.Status

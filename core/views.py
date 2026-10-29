@@ -212,6 +212,7 @@ def new_object(request, kind):
             obj = create_from_form(request.member, kind, form.cleaned_data, form.cleaned_data["submission_token"])
             messages.success(request, "已提交；工时、单据和现金计划须经另一位负责人审批后生效" if kind in {"project", "time", "document", "plan"} else "已保存")
             if kind in {"employee", "rate", "member"}: return redirect("settings")
+            if kind == "time" and not obj.project_id: return redirect("timesheets")
             obj_project = obj if kind == "project" else getattr(obj, "project", project)
             return redirect("project-detail", pk=obj_project.pk)
         except (ValidationError, IntegrityError) as error: form.add_error(None, error_text(error))
@@ -244,7 +245,7 @@ def approvals(request):
     if request.member.role not in {"owner", "finance", "pm"}: raise PermissionDenied()
     projects_qs = visible_projects(request.member)
     if request.member.role == "pm": projects_qs = projects_qs.filter(manager=request.member)
-    pending_times = Timesheet.objects.filter(project__in=projects_qs, status="submitted").select_related("project", "employee", "submitted_by")
+    pending_times = Timesheet.objects.filter(Q(project__in=projects_qs) | (Q(organization=request.member.organization, project__isnull=True) if request.member.role in WRITE_FINANCE else Q(pk__in=[])), status="submitted").select_related("project", "employee", "submitted_by")
     can_money = request.member.role in WRITE_FINANCE
     pending_docs = Document.objects.filter(project__in=projects_qs, status="submitted").select_related("project", "submitted_by").prefetch_related("evidence_files") if can_money else []
     pending_plans = CashPlan.objects.filter(project__in=projects_qs, approved=False, rejected=False, active=True).select_related("project", "created_by") if can_money else []
@@ -256,7 +257,10 @@ def approvals(request):
 def review(request, kind, pk):
     model = {"time": Timesheet, "document": Document, "plan": CashPlan}.get(kind)
     if model is None: raise Http404()
-    get_object_or_404(model, pk=pk, project__in=visible_projects(request.member))
+    scope = Q(project__in=visible_projects(request.member))
+    if kind == "time" and request.member.role in WRITE_FINANCE:
+        scope |= Q(organization=request.member.organization, accounting_mode="monthly_pool", project__isnull=True)
+    get_object_or_404(model, scope, pk=pk)
     try:
         review_record(request.member, kind, pk, request.POST.get("decision"), request.POST.get("note", ""))
         messages.success(request, "审批已处理，项目账与预测已同步更新")
@@ -270,11 +274,14 @@ def review(request, kind, pk):
 def reverse(request, kind, pk):
     model = {"time": Timesheet, "document": Document}.get(kind)
     if model is None: raise Http404()
-    get_object_or_404(model, pk=pk, project__in=visible_projects(request.member))
+    scope = Q(project__in=visible_projects(request.member))
+    if kind == "time" and request.member.role in WRITE_FINANCE:
+        scope |= Q(organization=request.member.organization, accounting_mode="monthly_pool", project__isnull=True)
+    get_object_or_404(model, scope, pk=pk)
     try:
         row = reverse_record(request.member, kind, pk, request.POST.get("note", ""))
         messages.success(request, "已追加冲销记录，原记录完整保留")
-        return redirect("project-detail", pk=row.project_id)
+        return redirect("project-detail", pk=row.project_id) if row.project_id else redirect("timesheets")
     except ObjectDoesNotExist: raise Http404()
     except (ValidationError, IntegrityError) as error: messages.error(request, error_text(error))
     return redirect("finance")
@@ -365,7 +372,13 @@ def finance(request):
     for plan in plans: plan.remaining_cents = plan_remaining(plan)
     display_entries = LedgerEntry.objects.filter(project__in=qs).select_related("project", "document", "timesheet").order_by("-id")
     if request.member.role not in WRITE_FINANCE: display_entries = display_entries.filter(timesheet__isnull=True)
-    return render(request, "finance.html", {"nav": "finance", "metrics": metrics, "forecast_overdue": overdue_plan_totals(project_list), "cashflow": cash_forecast(project_list),
+    labor_summary = None
+    if request.member.role in {"owner", "finance", "auditor"}:
+        from .plugin_runtime import is_enabled
+        if is_enabled(request.member.organization, "costing"):
+            from pmo_plugins.costing.services import company_labor_summary
+            labor_summary = company_labor_summary(request.member)
+    return render(request, "finance.html", {"labor_summary": labor_summary, "nav": "finance", "metrics": metrics, "forecast_overdue": overdue_plan_totals(project_list), "cashflow": cash_forecast(project_list),
         "documents": Document.objects.filter(project__in=qs).select_related("project", "submitted_by").prefetch_related("evidence_files")[:200],
         "entries": display_entries[:200],
         "plans": plans, "projects": visible_projects(request.member), "selected_project": selected})
@@ -373,9 +386,9 @@ def finance(request):
 
 @workspace_view
 def timesheets(request):
-    rows = Timesheet.objects.filter(project__in=visible_projects(request.member)).select_related("project", "employee", "task", "submitted_by")
+    rows = Timesheet.objects.filter(Q(project__in=visible_projects(request.member)) | (Q(organization=request.member.organization, project__isnull=True) if request.member.role in {"owner", "finance", "auditor", "member"} else Q(organization=request.member.organization, project__isnull=True, employee__member=request.member))).select_related("project", "employee", "task", "submitted_by")
     if request.member.role == "member": rows = rows.filter(employee__member=request.member)
-    elif request.member.role == "pm": rows = rows.filter(project__manager=request.member)
+    elif request.member.role == "pm": rows = rows.filter(Q(project__manager=request.member) | Q(project__isnull=True, employee__member=request.member))
     totals = rows.filter(status="approved").aggregate(minutes=Sum("minutes"), cost=Sum("cost_cents"))
     return render(request, "time.html", {"nav": "time", "timesheets": rows[:300], "employees": Employee.objects.filter(organization=request.member.organization),
         "total_minutes": totals["minutes"] or 0, "total_cost_cents": (totals["cost"] or 0) if request.member.role != "member" else None})
@@ -479,17 +492,30 @@ def export_data(request, kind):
     rows = []
     if kind == "ledger":
         if request.member.role not in WRITE_FINANCE: raise PermissionDenied("项目账含个人核算信息，完整明细仅向项目财务与公司负责人开放")
-        rows.append(["项目编号", "项目名称", "业务日期", "账本", "分类", "金额_分", "来源单据", "来源工时", "冲销原记录"])
+        rows.append(["项目编号", "项目名称", "业务日期", "账本", "分类", "金额_分", "来源单据", "来源工时", "冲销原记录", "来源口径", "核算事件", "原始工资来源", "分配业务来源", "冲销原核算事件"])
         for e in LedgerEntry.objects.filter(project__in=projects_qs).select_related("project"):
-            rows.append([e.project.code, e.project.name, e.occurred_on, e.get_book_display(), e.category, e.amount_cents, e.document_id, e.timesheet_id, e.reverses_id])
+            rows.append([e.project.code, e.project.name, e.occurred_on, e.get_book_display(), e.category, e.amount_cents, e.document_id, e.timesheet_id, e.reverses_id, "legacy", "", "", "", ""])
+        from .models import LedgerPosting
+        project_map = {str(p.pk): p for p in projects_qs}
+        for posting in LedgerPosting.objects.filter(organization=request.member.organization, book="cost",
+                scope_kind="project", scope_id__in=project_map).select_related("accounting_event").order_by("created_at", "id"):
+            event = posting.accounting_event
+            project = project_map[posting.scope_id]
+            rows.append([project.code, project.name, event.occurred_on, "已发生成本", "labor",
+                posting.amount_cents, "", "", str(posting.reverses_posting_id or ""), "current",
+                str(event.pk), event.labor_origin_ref.get("id", ""), event.source.get("id", ""),
+                str(event.reverses_event_id or "")])
     elif kind == "projects":
         rows.append(["项目编号", "项目名称", "客户", "阶段", "负责人", "开始日", "交付日"])
         for p in projects_qs: rows.append([p.code, p.name, p.client, p.get_stage_display(), str(p.manager), p.start_date, p.end_date])
     elif kind == "time":
         personal_finance = request.member.role in WRITE_FINANCE
         rows.append(["项目编号", "员工", "日期", "分钟"] + (["成本_分", "费率_分每小时"] if personal_finance else []) + ["状态", "说明"])
-        for t in Timesheet.objects.filter(project__in=projects_qs).select_related("project", "employee"):
-            rows.append([t.project.code, t.employee.name, t.work_date, t.minutes] + ([t.cost_cents, t.hourly_rate_cents] if personal_finance else []) + [t.get_status_display(), t.note])
+        time_scope = Q(project__in=projects_qs)
+        if not selected and request.member.role in {"owner", "finance", "auditor"}:
+            time_scope |= Q(organization=request.member.organization, accounting_mode="monthly_pool", project__isnull=True)
+        for t in Timesheet.objects.filter(time_scope).select_related("project", "employee"):
+            rows.append([t.project.code if t.project_id else "公司非项目", t.employee.name, t.work_date, t.minutes] + ([t.cost_cents if t.cost_cents is not None else "", t.hourly_rate_cents if t.hourly_rate_cents is not None else ""] if personal_finance else []) + [t.get_status_display(), t.note])
     elif kind == "plans":
         rows.append(["项目编号", "方向", "事项", "交易对方", "到期日", "计划_分", "未结_分", "已批准", "有效"])
         for p in CashPlan.objects.filter(project__in=projects_qs).select_related("project"):

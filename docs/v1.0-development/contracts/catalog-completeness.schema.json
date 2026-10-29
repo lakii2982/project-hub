@@ -252,6 +252,17 @@
         },
         "algorithm_version": {
           "$ref": "./contract-bundle.schema.json#/$defs/AlgorithmVersion"
+        },
+        "reverses_event_ref": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "readOnly": true
         }
       }
     },
@@ -342,6 +353,17 @@
         },
         "legacy_source_id": {
           "$ref": "./contract-bundle.schema.json#/$defs/Id"
+        },
+        "reverses_posting_id": {
+          "anyOf": [
+            {
+              "$ref": "./contract-bundle.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "readOnly": true
         }
       },
       "allOf": [

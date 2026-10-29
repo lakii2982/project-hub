@@ -1,0 +1,11 @@
+{% extends 'costing/labor_list.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block labor_content %}
+<section class="page-header"><div><h1 tabindex="-1">{{ title }}</h1>{% if pool %}<p>{{ pool.employee }} · {{ pool.period }} · 覆盖至 {{ pool.covered_through|date:'Y-m-d' }}</p>{% endif %}</div><a class="button" href="{{ back_url }}">返回</a></section>
+<section class="panel"><div class="body">
+{% if action == 'confirm' %}<p class="notice">批准月度综合人工政策和本次已发生构成后，公司成本只确认一次，先归入未分配。容量未知不会当作零；本操作不代表工资已支付。</p>{% elif action == 'allocate' %}<p class="notice">服务器读取该员工覆盖期内全部有效已批投入，按批准容量分配；项目、普通非项目与未分配逐分守恒。不能手填权重或分配金额。</p>{% elif action == 'unallocate' %}<p class="notice">完整撤销有效分配，保留原分配及工时快照，成本回到未分配。不会撤销工资发生确认。</p>{% elif action == 'reverse' %}<p class="notice">须先撤销分配。完整冲销后该员工本月来源成为终态，不能重确认或另建同月来源。</p>{% elif action == 'save' %}<p class="notice">这里只登记已发生金额。服务根据覆盖截止日确定发生日期与过账月，不允许改到其他开放月份。未知容量可稍后独立核实。</p>{% endif %}
+<form method="post" action="{{ submit_url }}">{% csrf_token %}{% include 'partials/form_fields.html' %}
+{% if components %}<fieldset><legend>真实已发生工资构成（至少一项）</legend>{{ components.management_form }}{% if components.non_form_errors %}<div role="alert">{{ components.non_form_errors }}</div>{% endif %}{% for component in components %}<fieldset><legend>构成 {{ forloop.counter }}</legend>{% include 'partials/form_fields.html' with form=component %}</fieldset>{% endfor %}</fieldset>{% endif %}
+<div class="actions"><button type="submit" class="button primary">{{ title }}</button><a class="button" href="{{ back_url }}">取消</a></div></form>
+</div></section>
+{% endblock %}
