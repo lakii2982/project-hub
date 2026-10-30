@@ -8872,7 +8872,7 @@
       "title": "后续交付独立规划入口（接续 PH-282）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -8897,7 +8897,7 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": "worker-docs",
+      "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-286.md"
     },
@@ -9040,7 +9040,7 @@
       "title": "后续交付独立规划入口（接续 PH-286）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -9066,9 +9066,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-286 done 后置 ready（当前 PH-286 为 in_review，待独立 S 复核 pass 的最终证据 commit 再置 done/ready）。"
-      ],
+      "blockers": [],
       "handoff": null
     }
   ]
