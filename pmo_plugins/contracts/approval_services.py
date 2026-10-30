@@ -642,6 +642,15 @@ def _impact_payload(member, change):
     if not lines_after and change.change_type == 'termination':
         affected = lines_before
     amounts = _impact_amounts(member, list(affected))
+    # The business effective date comes from the recorded fact, never from the request date:
+    # a termination uses contract.terminated_on, an approved non-termination change uses the
+    # new ContractVersion.effective_on; drafts/rejected/withdrawn have no effective date yet.
+    effective_on = None
+    if change.status == 'approved':
+        if change.change_type == 'termination':
+            effective_on = contract.terminated_on
+        elif after is not None:
+            effective_on = after.effective_on
     payload = {
         'change_ref': {'namespace': 'contracts', 'kind': 'contract_change',
                        'id': str(change.pk), 'version': change.version},
@@ -649,7 +658,8 @@ def _impact_payload(member, change):
         'change_type_display': change.get_change_type_display(),
         'status': change.status, 'status_display': change.get_status_display(),
         'requested_on': change.requested_on.isoformat(),
-        'effective_on': change.requested_on.isoformat(), 'version': change.version,
+        'effective_on': effective_on.isoformat() if effective_on else None,
+        'version': change.version,
         'decision_note': change.decision_note,
         'contract_ref': {'namespace': 'contracts', 'kind': 'contract',
                          'id': str(contract.pk), 'version': contract.version},

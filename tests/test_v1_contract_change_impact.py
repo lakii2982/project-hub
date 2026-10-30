@@ -110,12 +110,24 @@ class ContractChangeImpactServiceTests(ImpactFixture, TestCase):
         listed = approval_services.contract_change_impact_list(self.owner, contract_id=self.contract.pk)
         self.assertEqual([row['change_ref']['id'] for row in listed], [str(decided.pk)])
 
+    def test_effective_on_uses_recorded_fact_not_request_date(self):
+        change = self.draft_change(lines=[self.line(unit_price=11000)])
+        self.assertIsNone(approval_services.contract_change_impact(self.owner, change.pk)['effective_on'])
+        decided = self.decide(change)
+        new_version = ContractVersion.objects.get(contract=self.contract, status='approved')
+        recorded = self.today - timedelta(days=2)
+        ContractVersion.objects.filter(pk=new_version.pk).update(effective_on=recorded)
+        impact = approval_services.contract_change_impact(self.owner, decided.pk)
+        self.assertEqual(impact['effective_on'], recorded.isoformat())
+        self.assertNotEqual(impact['effective_on'], impact['requested_on'])
+
     def test_termination_impact_and_deepened_blocking(self):
         change = self.draft_change(change_type='termination')
         decided = self.decide(change)
         impact = approval_services.contract_change_impact(self.owner, decided.pk)
         self.assertTrue(impact['terminated'])
         self.assertEqual(impact['terminated_on'], self.today.isoformat())
+        self.assertEqual(impact['effective_on'], impact['terminated_on'])
         self.assertIsNone(impact['after_version_ref'])
         self.assertEqual(impact['before_version_ref']['id'], str(self.approved.pk))
         self.assertEqual(impact['settlements'], {'count': 0, 'gross_cents': 0})
