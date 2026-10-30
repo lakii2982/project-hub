@@ -7443,7 +7443,7 @@
       "title": "PH-244 全量测试证据口径修正：772/55 → 773/56（rebase 前后口径）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -7464,7 +7464,7 @@
         "python manage.py test tests --verbosity 1"
       ],
       "github_issue": null,
-      "owner": "worker-contract",
+      "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-254.md"
     },
