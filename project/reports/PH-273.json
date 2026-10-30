@@ -1,0 +1,42 @@
+{
+  "task_id": "PH-273",
+  "summary": "PH-273 规划槽：解除 PH-269 交付阻塞的白名单修正 + 常规规划登记。①按 Lead 授权把 4 个既有测试文件加入 PH-269 allowed_paths 与 spec 精确白名单并写明用途（time 插件 requires={contracts} 使 contracts 模块停用被正确阻塞，故 3 个禁用/顺序 loop 测试需一并停用/恢复 time；verify_integrity 新增 time 分支使 cash bridge query-count 上限 80→84，保留第二段常量断言、不改断言语义）。②按 BASE 事实核号后登记 PH-274–PH-278：PH-274 onboarding 导入预览前置（插件 bootstrap + CSV 模板识别/字段映射只读预检，ready）、PH-275 合同变更影响只读追溯与终止阻断深化（ready）、PH-276 time confirmed 撤销与收入/结算只读配对（proposed，缺 PH-269 done）、PH-277 insights 读模型契约冻结（proposed，缺 PH-270 done）、PH-278 下一规划槽（proposed，缺 PH-273 done）；刷新 PH-251/252/256/257/262/271/272 blockers 到当前事实。③本片只做规划/登记，不实现业务、不建 scaffold、不改 contract schema，除 PH-269 白名单授权外不自扩白名单。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=200 (BASE 195 + PH-274..PH-278 五个登记；PH-269 allowed_paths 25→29；无重复/占位/依赖缺失问题)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    },
+    {
+      "command": "grep -rn '<PH-\\|{tid}' project/specs/PH-27*.md project/tasks.json",
+      "result": "pass",
+      "evidence": "Actual exit 1 with no output (no unreplaced task-id placeholders); new acceptance commands are all executable commands."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-273 planning reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: PH-269 whitelist expansion (4 files + spec purpose wording), old→new→impact accuracy, numbering basis (BASE max PH-273, no EXP ids/branches occupied PH-274+), only dependency-done tasks promoted to ready (PH-274/PH-275 ready; PH-276/277/278 proposed with precise blockers), refreshed existing blockers, no business code/scaffold/contract-schema change, and the executable acceptance commands. projectctl check and the 23-test governance suite pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "PH-269 whitelist expansion (Lead-authorized, source PH-269 implementation finding): allowed_paths 25→29 by adding tests/test_v1_contract_change.py, tests/test_v1_contract_change_http.py, tests/test_acceptance_revenue.py and tests/test_v1_cash_book_bridge.py; PH-269 spec 精确白名单 line updated with the same four files plus a 白名单扩容说明 paragraph stating each file's minimal-purpose edit (three disabled/ordering loop tests must also toggle time because time requires={contracts}; cash bridge query-count cap 80→84 while keeping the second constant-assertion segment and not changing assertion semantics). No other PH-269 contract field changed; PH-269 stays ready for implementation.",
+    "PH-273 spec risk line was aligned with the actual registration: instead of naming only PH-274 as the next planning slot, it now records PH-274–PH-277 executable slices plus PH-278 as the next planning slot (PH-274/PH-275 ready; PH-276/PH-277/PH-278 proposed with blockers).",
+    "PH-278 (next planning slot) is registered proposed rather than ready because its dependency PH-273 is in_review at this BASE; projectctl rejects a ready task whose dependency is not done. It becomes promotable once PH-273 is merged/done.",
+    "Numbering basis: BASE tasks.json max id is PH-273; there are no EXP-* task ids or remote EXP branches in this checkout, so PH-274–PH-278 are free and consecutive; no collision.",
+    "Only planning/registry files changed (specs, tasks, manifest, docs/verification, report/handoff); no business code, migration, scaffold, contract schema or route changed; no other task report/review block edited.",
+    "PH-274 is a deliberately narrowed prerequisite of PH-271 (onboarding bootstrap + read-only CSV template/mapping preview, no ImportConflict persistence, no normalized_commands, no submit/opening); PH-271 remains proposed for the full conflict/submission slice and is not promoted."
+  ],
+  "unverified": [
+    "PH-274/PH-275 are registered ready but not implemented; no runtime/browser/PG verification exists for them in this planning slice.",
+    "PH-276/PH-277/PH-278 remain proposed with blockers (PH-269/PH-270/PH-273 not done at this BASE); they must be re-checked by the next planning slot after those dependencies land.",
+    "No business code, migration, runtime test or browser check was executed in this docs-only planning slice beyond check/governance/placeholder verification.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD."
+  ]
+}
