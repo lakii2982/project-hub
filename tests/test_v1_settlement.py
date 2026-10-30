@@ -214,7 +214,13 @@ class SettlementLifecycleTests(SettlementFixture, TestCase):
         self.assertEqual(snapshot['status'], 'active')
         self.assertTrue(snapshot['is_canonical'])
         self.assertEqual(snapshot['items'][0]['partition_key'], items[0].partition_key)
-        self.assertEqual(len(receivable.open_items_for_settlement(self.auditor, first.pk)), 1)
+        self.assertEqual(snapshot['items'][0]['source_display'], snapshot['source_display'])
+        self.assertEqual(snapshot['source_display'],
+                         'delivery · acceptance · ' + first.source_ref['id'] + ' · v'
+                         + str(first.source_ref['version']))
+        read_items = receivable.open_items_for_settlement(self.auditor, first.pk)
+        self.assertEqual(len(read_items), 1)
+        self.assertEqual(read_items[0]['source_display'], snapshot['source_display'])
 
     def test_draft_only_registers_and_submit_approve_state_machine(self):
         self.approve_golden()
@@ -302,16 +308,22 @@ class SettlementLifecycleTests(SettlementFixture, TestCase):
                           evidence=[{'reference': '客户邮件确认 2026-10 结算 50% 到期款'}])
         note = draft.terms_snapshot['evidence_note']
         self.assertEqual(note, '客户邮件确认 2026-10 结算 50% 到期款')
-        kinds = {ref['kind'] for ref in draft.evidence}
-        self.assertEqual(kinds, {'approval', 'customer_confirmation', 'attachment'})
-        self.assertTrue(any(ref.get('reference') == note for ref in draft.evidence))
-        self.assertEqual(receivable.settlement_snapshot(self.owner, draft.pk)['evidence'], draft.evidence)
+        self.assertEqual({ref['kind'] for ref in draft.evidence},
+                         {'approval', 'customer_confirmation'})
+        self.assertTrue(all(set(ref) <= {'evidence_id', 'sha256', 'kind'}
+                            for ref in draft.evidence))
+        snapshot = receivable.settlement_snapshot(self.owner, draft.pk)
+        self.assertEqual(snapshot['evidence'], draft.evidence)
+        self.assertEqual(snapshot['evidence_note'], note)
+        self.assertEqual(snapshot['evidence_display'], note)
         text = self.save(self.term_values('payment_term')[:1], evidence='纯文本结算依据')
         self.assertEqual(text.terms_snapshot['evidence_note'], '纯文本结算依据')
         empty = self.save(self.term_values('payment_term')[:1], evidence=[])
         self.assertEqual(empty.terms_snapshot['evidence_note'], '')
         self.assertEqual({ref['kind'] for ref in empty.evidence},
                          {'approval', 'customer_confirmation'})
+        self.assertTrue(all(set(ref) <= {'evidence_id', 'sha256', 'kind'}
+                            for ref in empty.evidence))
         self.denied(lambda: self.save(self.term_values('payment_term')[:1], evidence=[{'note': 'x'}]))
 
 
@@ -411,6 +423,28 @@ class SettlementRefusalTests(SettlementFixture, TestCase):
         self.assertEqual(again.pk, submitted.pk)
         self.denied(lambda: receivable.submit_settlement(self.owner, first.pk,
             expected_version=first.version + 1, request_token=token2, dry_run=False))
+
+    def test_same_token_save_replays_after_period_lock_and_default_date(self):
+        self.approve_golden()
+        self.acceptance(0, 5000)
+        term_refs = self.term_values('payment_term')[:1]
+        token = uuid.uuid4()
+        first = self.save(term_refs, request_token=token)
+        explicit_token = uuid.uuid4()
+        explicit = self.save(term_refs, settled_on=self.today, request_token=explicit_token)
+        self.assertEqual(Settlement.objects.count(), 2)
+        self.org.locked_through = self.today
+        self.org.save()
+        replay = self.save(term_refs, request_token=token)
+        self.assertEqual(replay.pk, first.pk)
+        explicit_replay = self.save(term_refs, settled_on=self.today.isoformat(),
+                                    request_token=explicit_token)
+        self.assertEqual(explicit_replay.pk, explicit.pk)
+        self.denied(lambda: self.save(term_refs, settled_on=self.today - timedelta(days=1),
+                                      request_token=explicit_token))
+        self.assertEqual(Settlement.objects.count(), 2)
+        self.org.locked_through = None
+        self.org.save()
 
     def test_bool_and_float_arguments_are_rejected_everywhere(self):
         self.approve_golden()
@@ -625,6 +659,7 @@ class SettlementAgingTests(SettlementFixture, TestCase):
                             for item in data['items']))
         oldest = min(data['items'], key=lambda item: item['due_date'])
         self.assertEqual((oldest['bucket'], oldest['overdue_days']), ('90_plus', 100))
+        self.assertTrue(all(item['release_display'] == item['due_display'] for item in data['items']))
         boundary = aging.open_item_aging(self.owner, as_of=oldest['due_date'])['items']
         chosen = next(item for item in boundary if item['id'] == oldest['id'])
         self.assertEqual((chosen['bucket'], chosen['overdue_days']), ('not_due', 0))
@@ -646,6 +681,7 @@ class SettlementAgingTests(SettlementFixture, TestCase):
         self.assertEqual((retained['partition_kind'], retained['partition_label'],
                           retained['bucket'], retained['overdue_days']),
                          ('retention', '质保款', 'not_due', 0))
+        self.assertEqual(retained['release_display'], retained['due_display'])
         self.assertEqual(data['buckets'], {'not_due': 10600, '1_30': 53000, '31_60': 42400,
                                            '61_90': 0, '90_plus': 0})
         self.assertEqual(data['retention'], {'count': 1, 'gross_cents': 10600,

@@ -108,6 +108,7 @@ def _item_projection(item, as_of):
         'gross_display': _yuan(item.gross_cents), 'remaining_display': _yuan(item.gross_cents),
         'tax_display': _yuan(item.tax_cents),
         'due_date': item.due_date.isoformat(), 'due_display': item.due_date.isoformat(),
+        'release_display': item.due_date.isoformat(),
         'occurred_on': item.occurred_on.isoformat(), 'release_condition': item.release_condition,
         'overdue_days': overdue_days, 'bucket': bucket,
         'bucket_label': BUCKET_LABELS[bucket],

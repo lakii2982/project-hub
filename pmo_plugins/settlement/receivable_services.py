@@ -325,13 +325,9 @@ def _evidence_note(value):
     return note
 
 
-def _evidence_refs(derived, note):
-    refs = deepcopy(derived['evidence'])
-    if note:
-        digest = hashlib.sha256(note.encode()).hexdigest()
-        refs.append({'evidence_id': str(uuid.uuid5(uuid.NAMESPACE_URL, 'settlement-evidence:' + note)),
-                     'sha256': digest, 'kind': 'attachment', 'reference': note})
-    return refs
+def _evidence_refs(derived):
+    """Canonical EvidenceRef rows only (evidence_id/sha256/kind); UI text stays private."""
+    return deepcopy(derived['evidence'])
 
 
 def _receipt(member, action, request_token, payload, dry_run):
@@ -368,7 +364,7 @@ def _get(member, settlement_id, *, lock=False):
     return row
 
 
-def _approved_input(derived, member, approved_version, evidence):
+def _approved_input(derived, member, approved_version, evidence, evidence_note=''):
     return {
         'settlement_ref': None,  # replaced by the real ref after the row exists
         'version': approved_version,
@@ -378,7 +374,7 @@ def _approved_input(derived, member, approved_version, evidence):
         'counterparty_id': str(derived['counterparty_id']),
         'policy_version': deepcopy(derived['policy_version']),
         'pricing_configuration': deepcopy(derived['pricing_configuration']),
-        'terms_snapshot': deepcopy(derived['terms_snapshot']),
+        'terms_snapshot': {**deepcopy(derived['terms_snapshot']), 'evidence_note': evidence_note},
         'source_ref': deepcopy(derived['source_ref']),
         'source_performance': deepcopy(derived['source_performance']),
         'evidence': deepcopy(evidence),
@@ -400,14 +396,14 @@ def save_settlement(member, *, contract_line_ref, term_refs, request_token, sett
     member = _locked(member)
     contract_line_ref = _line_ref(contract_line_ref)
     term_refs = _term_refs(term_refs)
-    settled_on = timezone.localdate() if settled_on is None else _business_date(settled_on)
-    _period(member, settled_on)
+    # Explicit business dates hash as given; the server default hashes as "not supplied" so a
+    # same-token replay stays identical across midnight and still replays after period locking.
+    requested_on = None if settled_on is None else _business_date(settled_on)
     settlement_id = _optional_identifier(settlement_id)
-    if settlement_id is None and expected_version is not None:
-        _fail('新建结算不接受版本号')
     evidence_note = _evidence_note(evidence)
     payload = {'contract_line_ref': contract_line_ref, 'term_refs': term_refs,
-               'settled_on': settled_on.isoformat(), 'evidence_note': evidence_note,
+               'settled_on': requested_on.isoformat() if requested_on else None,
+               'evidence_note': evidence_note,
                'settlement_id': str(settlement_id) if settlement_id else None,
                'expected_version': expected_version, 'gross_cents': gross_cents, 'net_cents': net_cents,
                'tax_cents': tax_cents, 'due_date': due_date, 'direction': direction,
@@ -415,10 +411,14 @@ def save_settlement(member, *, contract_line_ref, term_refs, request_token, sett
     token, digest, existing = _receipt(member, 'save', request_token, payload, dry_run)
     if existing is not None:
         return existing
+    if settlement_id is None and expected_version is not None:
+        _fail('新建结算不接受版本号')
+    settled_on = requested_on or timezone.localdate()
+    _period(member, settled_on)
     derived = _derive(member, contract_line_ref, term_refs, settled_on)
     _echo(derived, gross_cents=gross_cents, net_cents=net_cents, tax_cents=tax_cents,
           due_date=due_date, direction=direction, payee_ref=payee_ref, scope=scope)
-    evidence = _evidence_refs(derived, evidence_note)
+    evidence = _evidence_refs(derived)
     terms_snapshot = {**deepcopy(derived['terms_snapshot']), 'evidence_note': evidence_note}
     if settlement_id:
         row = _get(member, settlement_id, lock=True)
@@ -528,7 +528,7 @@ def review_settlement(member, settlement_id, *, expected_version, request_token,
             or derived['source_ref'] != row.source_ref
             or derived['source_performance'] != row.source_performance
             or derived['terms_snapshot'] != frozen_terms
-            or _evidence_refs(derived, frozen_note) != row.evidence):
+            or _evidence_refs(derived) != row.evidence):
         _fail('批准条款或已确认履约累计已变化，请重新保存结算草稿后再审核')
     row.status = 'active'
     row.review_note = note
@@ -536,7 +536,7 @@ def review_settlement(member, settlement_id, *, expected_version, request_token,
     row.approved_by = member
     row.approved_at = timezone.now()
     row.approved_version = row.version
-    approved_input = _approved_input(derived, member, row.version, row.evidence)
+    approved_input = _approved_input(derived, member, row.version, row.evidence, frozen_note)
     approved_input['settlement_ref'] = row.settlement_ref
     row.approved_input_snapshot = approved_input
     if dry_run:
@@ -602,6 +602,18 @@ def withdraw_settlement(member, settlement_id, *, expected_version, request_toke
     return row
 
 
+def _source_display(ref):
+    """One-line stable rendering for browser "来源" columns; never a raw dict."""
+    if not isinstance(ref, dict) or not ref.get('kind'):
+        return '—'
+    parts = [str(ref[key]) for key in ('namespace', 'kind') if ref.get(key)]
+    if ref.get('id'):
+        parts.append(str(ref['id']))
+    if ref.get('version') is not None:
+        parts.append('v' + str(ref['version']))
+    return ' · '.join(parts)
+
+
 def settlement_snapshot(member, settlement_id, *, as_of=None):
     member = _fresh(member, check_module=False)
     row = _get(member, settlement_id)
@@ -615,10 +627,15 @@ def settlement_snapshot(member, settlement_id, *, as_of=None):
         'version': row.version, 'status': row.status,
         'project_id': str(row.project_id), 'contract_line_ref': deepcopy(row.contract_line_ref),
         'contract_line_id': str(row.contract_line_id), 'counterparty_id': str(row.counterparty_id),
-        'source_ref': deepcopy(row.source_ref), 'source_performance': deepcopy(row.source_performance),
+        'source_ref': deepcopy(row.source_ref), 'source_display': _source_display(row.source_ref),
+        'source_performance': deepcopy(row.source_performance),
         'policy_version': deepcopy(row.policy_version),
         'pricing_configuration': deepcopy(row.pricing_configuration),
         'terms_snapshot': deepcopy(row.terms_snapshot), 'evidence': deepcopy(row.evidence),
+        'evidence_note': row.terms_snapshot.get('evidence_note', '')
+        if isinstance(row.terms_snapshot, dict) else '',
+        'evidence_display': row.terms_snapshot.get('evidence_note', '')
+        if isinstance(row.terms_snapshot, dict) else '',
         'settled_on': row.settled_on, 'due_date': row.due_date,
         'gross_cents': row.gross_cents, 'net_cents': row.net_cents, 'tax_cents': row.tax_cents,
         'direction': 'receivable', 'scope': row.scope, 'payee': row.payee_ref,
@@ -642,6 +659,7 @@ def open_item_projection(item):
         'partition_key': item.partition_key, 'term_ref': deepcopy(item.term_ref),
         'counterparty_id': str(item.counterparty_id), 'payee': deepcopy(item.payee_ref),
         'scope': deepcopy(item.scope), 'source': deepcopy(item.source),
+        'source_display': _source_display(item.source),
         'gross_cents': item.gross_cents, 'tax_cents': item.tax_cents,
         'remaining_cents': item.gross_cents, 'due_date': item.due_date,
         'occurred_on': item.occurred_on, 'release_condition': item.release_condition,

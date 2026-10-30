@@ -220,10 +220,9 @@ def settlement_form(context, payload):
                     for term in (row['terms_snapshot'] or {}).get('selected', [])}
         initial = {'settlement_id': row['id'], 'expected_version': row['version'],
                    'settled_on': row['settled_on']}
-        references = [item.get('reference') for item in row.get('evidence', [])
-                      if isinstance(item, dict) and item.get('reference')]
-        if references:
-            initial['evidence'] = '；'.join(references)
+        note = row.get('evidence_note') or row.get('evidence_display')
+        if note:
+            initial['evidence'] = note
     for term in context_values['term_rows']:
         term['checked'] = term['key'] in selected
     form = SettlementForm(initial=initial, member=member, line_choices=choices,
@@ -300,8 +299,6 @@ def settlement_detail(context, payload):
                 links.append(('review', '独立核对结算'))
     action_links = [(_url('settlement_form', id=row.pk, action=action), label)
                     for action, label in links]
-    references = [item.get('reference') for item in row.evidence
-                  if isinstance(item, dict) and item.get('reference')]
     return render(context.request, 'settlement/receivable_detail.html', _base(
         member, settlement=row, items=items, terms=terms, sources=sources,
         action_links=action_links, status_display=row.get_status_display(),
@@ -309,7 +306,7 @@ def settlement_detail(context, payload):
         gross_display=_money(row.gross_cents),
         contract_line=f'{row.contract_line.contract.contract_code} · 第 {row.contract_line.line_no} 行',
         counterparty=row.counterparty.display_name,
-        evidence_display='；'.join(references)))
+        evidence_display=snapshot.get('evidence_display') or snapshot.get('evidence_note') or ''))
 
 
 def settlement_action(context, payload):

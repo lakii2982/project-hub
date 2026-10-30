@@ -200,11 +200,14 @@ class SettlementHTTPTests(SettlementHTTPFixture, TestCase):
         self.assertTrue(items[0].partition_kind == 'due')
         detail = self.client.get(DETAIL, {'id': row.pk})
         self.assertContains(detail, '到期未清')
+        self.assertContains(detail, 'delivery · acceptance')
+        self.assertNotContains(detail, '&#x27;namespace&#x27;')
         self.assertEqual(AccountingEvent.objects.count(), before_events)
         self.assertEqual((LedgerEntry.objects.count(), LedgerPosting.objects.count()), before_ledger)
         aging = self.client.get(AGING, {'as_of': self.today.isoformat()})
         self.assertEqual(aging.status_code, 200)
         self.assertContains(aging, '逾期31-60天')
+        self.assertContains(aging, (self.today - timedelta(days=40)).isoformat())
         self.assertContains(aging, '客户结算')
         csv_response = self.client.get(AGING, {'format': 'csv', 'as_of': self.today.isoformat()})
         self.assertEqual(csv_response.status_code, 200)
@@ -227,6 +230,8 @@ class SettlementHTTPTests(SettlementHTTPFixture, TestCase):
         self.assertContains(aging, '质保未清')
         self.assertContains(aging, '未到释放日')
         self.assertContains(aging, '未到期')
+        self.assertContains(aging, (self.today - timedelta(days=5)).isoformat())
+        self.assertContains(aging, (self.today + timedelta(days=365)).isoformat())
 
     def test_no_amount_or_partial_terms_injection_duplicate_and_idempotency(self):
         self.login(self.owner)
