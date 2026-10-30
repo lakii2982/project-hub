@@ -4,7 +4,7 @@ DOMAIN_METADATA = {
     'contracts': {'commands': [], 'queries': [], 'events': []},
     'migration_dependencies': ['core'],
     'routes': [{'name': name, 'path': name.replace('_', '-') + '/',
-                'access': 'business_read' if name in {'funding_account_list', 'funding_account_form', 'cash_transaction_list', 'cash_transaction_form', 'cash_transaction_detail', 'cash_refund_list', 'cash_refund_form', 'cash_bank_return_form', 'cash_classification_list', 'cash_classification_form', 'cash_classification_reverse', 'cash_internal_transfer_list', 'cash_internal_transfer_form', 'cash_internal_transfer_reverse'} else 'business_write'}
+                'access': 'business_read' if name in {'funding_account_list', 'funding_account_form', 'cash_transaction_list', 'cash_transaction_form', 'cash_transaction_detail', 'cash_refund_list', 'cash_refund_form', 'cash_bank_return_form', 'cash_classification_list', 'cash_classification_form', 'cash_classification_reverse', 'cash_internal_transfer_list', 'cash_internal_transfer_form', 'cash_internal_transfer_reverse', 'cash_bridge_snapshot', 'cash_bridge_issues'} else 'business_write'}
                for name in ('funding_account_list', 'funding_account_form', 'funding_account_save',
                             'funding_account_activate', 'cash_transaction_list', 'cash_transaction_form',
                             'cash_transaction_save', 'cash_transaction_detail', 'cash_party_match',
@@ -15,5 +15,5 @@ DOMAIN_METADATA = {
                             'cash_classification_reverse_save', 'cash_internal_transfer_list',
                             'cash_internal_transfer_form', 'cash_internal_transfer_save',
                             'cash_internal_transfer_reverse',
-                            'cash_internal_transfer_reverse_save')],
+                            'cash_internal_transfer_reverse_save', 'cash_bridge_snapshot', 'cash_bridge_issues')],
 }

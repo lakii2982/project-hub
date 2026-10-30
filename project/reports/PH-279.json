@@ -1,0 +1,59 @@
+{
+  "task_id": "PH-279",
+  "summary": "现金链路只读核对快照首片（无迁移/无写入口）：新增 pmo_plugins/cash/reconciliation_services.py，按公司聚合 posted 现金 → 有效 CashClassification → 账本 AccountingEvent/LedgerPosting/bank_effect claim → 退款/银行退回 → 内部互转成对，并经既有 classification_services.cash_book_coverage 汇总各银行账户现金账净额（含冲销，非银行余额）。提供 cash_bridge_snapshot（逐流水投影 + 账户净额 + 汇总）与 cash_bridge_issues（issue_code/refs/期望/实际异常清单，覆盖分类缺失/重复、事件缺失/重复、posting 数量/金额/账户范围不符、claim 缺失/净额不符、退款+退回超 gross、互转缺腿/金额日期不一致/跨 org）；refund/return 反向现金按退款事实覆盖、不误报未分类。offset_implemented 固定 false 占位（PH-241 未合入，不伪造 offset 事实）。owner/finance/auditor 只读；pm/member 拒绝；快照不写任何现金/账本/审计事实，无收据。浏览器新增只读快照/异常清单页与筛选（as_of/账户）。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=212; PH-279 recorded in_review with owner/handoff; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 80 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (cash domain metadata validates the two new read routes)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (this slice adds no model, table or migration; cash leaf stays 0006)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1: Ran 989 tests, FAILED (failures=5, errors=3, skipped=69) => 912 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE 6ddb951 baseline (976/5F+3E/69 plus the 13 new PH-279 tests); no new failures. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. This slice adds no ledger/amount business invariant and does not change existing verify_integrity semantics."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_cash_bridge_read tests.test_v1_cash_bridge_read_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 13 tests, OK => 13 passed (9 service + 4 HTTP). Covers clean receipt snapshot, unclassified posted cash issue, refund coverage without false classification_missing, internal-transfer pair/company net zero, as_of filtering, tampered event/posting issue codes, read-only fact counts and module-disabled history service read, role permissions, offset placeholder, and browser read/filters/405 boundaries."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-279 cash-reconciliation reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: read-only boundary (no migration/table/write/audit), bridge derivation (classification -> event -> posting/claim), refund/return coverage and derived-cash handling, internal-transfer pairing/company net, issue_code/refs/expected/actual fidelity against existing verify_integrity cash rules, offset_implemented=false placeholder, role gates (owner/finance/auditor; pm/member deny), as_of filtering, module-disabled history-read behavior, and the precise whitelist. projectctl check, check, makemigrations, verify_integrity and the scoped tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "PM access: the spec says pm may read only the cash-flow summary of projects they manage, but PH-239/240/245 cash facts (CashTransaction/FundingAccount/Refund/BankReturn/InternalTransfer/classification) carry no project attribution, so a project-scoped pm summary cannot be derived without leaking company-wide cash. This slice therefore denies pm (403) together with member rather than exposing org-wide cash, and discloses the spec/runtime mismatch for a future planning slot.",
+    "Module-disabled read: the named read services (cash_bridge_snapshot/cash_bridge_issues) intentionally keep history readable when the cash module is disabled (check_module=False semantics, matching existing cash read services); the browser routes are still gated by the plugin runtime snapshot and return 403 when the module is disabled. The service-level history read is tested; the HTTP 403 is the existing runtime behavior and is disclosed.",
+    "Offset: PH-241 is in_review and not a dependency; the snapshot exposes offset_implemented=false (and a per-row offset placeholder note) and never invents an offset fact, per the spec.",
+    "The snapshot is derived per request from existing owner facts/read helpers; it adds no table, migration, receipt, session persistence or generic audit write (the spec made the audit optional, so the read path stays side-effect free).",
+    "Refund/return reverse cash facts are intentionally unclassified and covered by the Refund/BankReturn fact; they are marked derived_cash=refund/bank_return and excluded from classification_missing so the gold case stays issues=[].",
+    "No verify_integrity assertion was changed or added; issue codes are aligned to the existing cash verification vocabulary but the snapshot does not mutate or extend the command.",
+    "Single worker owns the whole write set (cash reconciliation service/views/template/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run; the snapshot/issues UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "Offset facts (PH-241), automatic correction/export, write entries and any persisted snapshot remain unimplemented; pm project-scoped cash summary needs a project attribution contract (not available in the current cash schema)."
+  ]
+}

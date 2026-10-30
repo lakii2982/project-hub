@@ -920,3 +920,37 @@ def cash_internal_transfer_reverse_save(context, payload):
         back_url=_url('cash_internal_transfer_list'),
         explanation='撤转会为两条现金各追加一条撤分类记录与冲销 posting，'
                     '再把内部互转标记为已撤转；原事实不改不删，公司净现金仍为 0。'), status=400)
+
+
+def _bridge_filters(member, payload):
+    as_of = (payload or {}).get('as_of') or None
+    account_id = (payload or {}).get('funding_account') or None
+    return as_of, account_id or None
+
+
+def cash_bridge_snapshot(context, payload):
+    member = _fresh(context.member)
+    from . import reconciliation_services as recon
+    as_of, account_id = _bridge_filters(member, payload)
+    snapshot = recon.cash_bridge_snapshot(
+        member, as_of=as_of, funding_account_id=account_id)
+    return render(context.request, 'cash/bridge_snapshot.html', _base(
+        member, 'bridge', snapshot=snapshot, issues=snapshot['issues'],
+        mode='snapshot', account_options=_account_options(member),
+        as_of=snapshot['as_of'], selected_account=account_id or '',
+        issues_url=_url('cash_bridge_issues'),
+        snapshot_url=_url('cash_bridge_snapshot')))
+
+
+def cash_bridge_issues(context, payload):
+    member = _fresh(context.member)
+    from . import reconciliation_services as recon
+    as_of, account_id = _bridge_filters(member, payload)
+    result = recon.cash_bridge_issues(
+        member, as_of=as_of, funding_account_id=account_id)
+    return render(context.request, 'cash/bridge_snapshot.html', _base(
+        member, 'bridge', snapshot=result, issues=result['issues'],
+        mode='issues', account_options=_account_options(member),
+        as_of=result['as_of'], selected_account=account_id or '',
+        issues_url=_url('cash_bridge_issues'),
+        snapshot_url=_url('cash_bridge_snapshot')))
