@@ -1,0 +1,22 @@
+{% extends 'base.html' %}{% block title %}导入预览{% endblock %}{% block breadcrumb %}导入与期初 / 导入预览{% endblock %}{% block content %}
+<section class="page-heading"><div><div class="eyebrow">ONBOARDING · IMPORT PREVIEW</div><h1>导入预览</h1><p>只读识别 CSV 模板、字段映射与逐行格式/主数据预检；不写业务事实、账本、来源消费或规范事件，冲突清单仅在本次响应内临时存在。</p></div></section>
+<div class="settings-overview">
+<section class="panel"><div class="panel-heading"><h2>上传与预览</h2></div><div class="panel-body">
+{% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+{% if error_message %}<div class="message error" role="alert">{{ error_message }}</div>{% endif %}
+<form method="post" enctype="multipart/form-data" action="/modules/onboarding/import-preview-upload/">{% csrf_token %}
+<div class="form-field"><label for="import-kind">导入类型</label>{{ form.kind }}</div>
+<div class="form-field"><label for="import-file">CSV 文件</label>{{ form.file }}</div>
+<p class="help-text">支持 UTF-8（含 BOM）CSV，最大 1MB、最多 500 行；预览仅展示前 200 行。未知列进入未映射清单，缺失必填列/非法日期金额等进入行级错误。</p>
+<div class="actions"><button type="submit" class="button primary">预览 CSV</button></div>
+</form>
+</div></section>
+<section class="panel"><div class="panel-heading"><h2>支持的模板</h2></div><div class="panel-body"><div class="table-scroll"><table><thead><tr><th>类型</th><th>必填列</th></tr></thead><tbody>{% for template in templates %}<tr><th scope="row">{{ template.label }}（{{ template.kind }}）</th><td>{{ template.columns|join:', ' }}</td></tr>{% empty %}<tr><td colspan="2" class="table-empty">暂无模板。</td></tr>{% endfor %}</tbody></table></div></div></section>
+{% if result %}<section class="panel"><div class="panel-heading"><h2>预览结果</h2></div><div class="panel-body">
+<dl class="detail-grid"><div><dt>识别模板</dt><dd>{{ result.template_label }}（{{ result.template }}）</dd></div><div><dt>文件</dt><dd>{{ result.file_name }}</dd></div><div><dt>总行数 / 预览行数</dt><dd>{{ result.summary.row_count }} / {{ result.summary.preview_row_count }}</dd></div><div><dt>行级错误 / 冲突</dt><dd>{{ result.summary.error_count }} / {{ result.summary.conflict_count }}</dd></div><div><dt>未映射列</dt><dd>{% if result.unmapped_columns %}{{ result.unmapped_columns|join:', ' }}{% else %}—{% endif %}</dd></div></dl>
+<p class="help-text">本次预览未写入任何业务事实、账本或规范事件；冲突清单为临时投影，不持久化、不可提交。</p>
+{% if result.conflicts %}<div class="table-scroll"><table aria-label="导入预览冲突清单"><thead><tr><th>行号</th><th>字段</th><th>代码</th><th>说明</th></tr></thead><tbody>{% for conflict in result.conflicts %}<tr><td>{{ conflict.row_number }}</td><td>{{ conflict.field|default:'—' }}</td><td>{{ conflict.code }}</td><td>{{ conflict.message }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{% if result.rows %}<div class="table-scroll"><table aria-label="导入预览行"><thead><tr><th>行号</th><th>来源编号</th><th>项目编号</th><th>标准化值</th></tr></thead><tbody>{% for row in result.rows %}<tr><td>{{ row.line }}</td><td>{{ row.values.source_id }}</td><td>{{ row.values.project_code }}</td><td>{% for key,value in row.normalized.items %}{{ key }}={{ value }}{% if not forloop.last %}；{% endif %}{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</div></section>{% endif %}
+</div>
+{% endblock %}

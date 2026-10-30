@@ -79,7 +79,7 @@ class ContractChangeHTTPTests(ContractChangeFixture, TestCase):
             'status': 'approved'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(before, (ContractChange.objects.count(), DomainEvent.objects.count()))
-        for key in ('management_revenue', 'settlement', 'delivery', 'time', 'contracts'):
+        for key in ('onboarding', 'management_revenue', 'settlement', 'delivery', 'time', 'contracts'):
             from core.plugin_runtime import set_enabled
             set_enabled(self.owner, key, False)
         response = self.client.post('/modules/contracts/contract-change-save/', {

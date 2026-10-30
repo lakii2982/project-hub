@@ -8347,7 +8347,7 @@
       "title": "onboarding 导入预览实现前置：插件 bootstrap 与 CSV 模板识别/字段-主数据映射只读预检",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8395,9 +8395,9 @@
         "python manage.py test tests.test_v1_import_preview tests.test_v1_import_preview_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-274.md"
     },
     {
       "id": "PH-275",

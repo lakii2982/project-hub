@@ -314,6 +314,7 @@ class SettlementHTTPTests(SettlementHTTPFixture, TestCase):
         self.login(self.auditor)
         self.assertEqual(self.client.get(DETAIL, {'id': row.pk}).status_code, 200)
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'onboarding', False)
         set_enabled(self.owner, 'settlement', False)
         self.login(self.auditor)
         self.assertEqual(self.client.get(LIST).status_code, 403)

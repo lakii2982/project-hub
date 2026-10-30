@@ -187,6 +187,7 @@ class ClearanceHTTPTests(ClearanceHTTPFixture, TestCase):
         self.assertEqual(protected.post(CLEARANCE_CREATE,
                                        self.create_data(amount='10.00')).status_code, 403)
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'onboarding', False)
         set_enabled(self.owner, 'settlement', False)
         self.login(self.auditor)
         self.assertEqual(self.client.get(CLEARANCE_LIST).status_code, 403)
