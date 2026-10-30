@@ -561,3 +561,14 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 3. **核号**：BASE 最大 PH-282；远端分支/PR（含 EXP #143/#144 与 PH-269 PR #161）无 ≥283 占用 → PH-283 起连续登记。
 4. **新登记**：PH-283 结算未清/核销/退款覆盖只读核对（ready，deps PH-224/232/240/230 done）、PH-284 管理收入确认与结算/合同条款只读配对（ready，deps PH-219/222/224/232/265 done）、PH-285 核对底稿只读导出（proposed，缺 PH-181/182 与 PH-272/277）、PH-286 下一规划槽（proposed，待 PH-282 done 后置 ready）。count 204→208，编号 283-286 连续。
 5. blockers 刷新：PH-276 等 PH-269 done；其余 proposed 未虚假晋级。无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断，核对白名单修正用途/编号/晋级事实）；最终证据 HEAD bc47cf2 按槽惯例置 PH-282 done / PH-286 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=208；23 项治理 OK；verify-change --base 8748c1a --task PH-282 ok=true、11 文件全白名单。未验证：PH-283/284/285 未实现；PH-269/PH-274 自身的测试修改由其实现 PR/CI 验证。
+
+
+## PH-286 后续交付独立规划入口（接续 PH-282）+ PH-269/PH-274 补白名单（2026-10-31）
+
+基线e38b9a6（PH-282 合入后，count 208）。纯规划/契约文字片：
+1. **PH-269** allowed_paths/spec 精确白名单加 `tests/test_v1_contracts.py`（PG 并发测试 `set_enabled(...,'contracts',False)`；time requires={contracts} → 先停用/恢复 time；最小必要、不改业务断言）。
+2. **PH-274** allowed_paths/spec 精确白名单加 `tests/test_v1_contracts.py` 与 `tests/test_contract_approval.py`（二者均禁用 contracts；onboarding requires={contracts} → 先停用/恢复 onboarding；最小必要、不改业务断言）。
+3. **程序化比对**：PH-269/PH-274 的 spec 精确白名单与 tasks allowed_paths 逐项一致（spec-only=[]、tasks-only=[]）。
+4. **核号**：BASE 最大 PH-286；远端分支/PR（含 EXP #143/#144、PH-269 PR #161）无 ≥287 占用 → PH-287 起连续。
+5. **新登记**：PH-287 合同收费模板/生效条款只读快照与结算核对（ready，deps PH-214/265/224/232/219/222 done）、PH-288 银行账户/现金余额只读对账汇总（ready，deps PH-228/230/239/240/245 done）、PH-289 onboarding 导入提交/冲突持久化前置（proposed，缺 PH-274/PH-181/PH-185）、PH-290 下一规划槽（proposed，待 PH-286 done 后置 ready）。count 208→212，编号 287-290 连续。
+6. blockers 刷新：PH-276 等 PH-269 done；其余 proposed 未虚假晋级；无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-287/288/289 未实现；PH-269/PH-274 自身测试修改由其实现 PR/CI 验证；review由独立S复核。

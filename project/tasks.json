@@ -8127,6 +8127,7 @@
         "pmo/urls.py",
         "core/services.py",
         "core/management/commands/verify_integrity.py",
+        "tests/test_v1_contracts.py",
         "tests/test_contract_approval.py",
         "tests/test_v1_billable_confirmation.py",
         "tests/test_v1_billable_confirmation_http.py",
@@ -8367,6 +8368,8 @@
         "pmo_plugins/onboarding/templates/onboarding/import_preview_list.html",
         "pmo/settings.py",
         "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_contracts.py",
+        "tests/test_contract_approval.py",
         "tests/test_acceptance_revenue.py",
         "tests/test_v1_cash_http.py",
         "tests/test_v1_clearance_http.py",
@@ -8488,7 +8491,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-269（time 可计费确认实现首片，ready 未 done）done；PH-266（ADR 0011，done）、PH-219/PH-222（管理收入/结算配对，done）已满足。PH-269 合入 done 后由 PH-286 规划槽复核 DoR 再晋级。"
+        "缺 PH-269（time 可计费确认实现首片，ready 未 done）done；PH-266（ADR 0011，done）、PH-219/PH-222（管理收入/结算配对，done）已满足。PH-269 合入 done 后由 PH-290 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -8869,7 +8872,7 @@
       "title": "后续交付独立规划入口（接续 PH-282）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -8894,8 +8897,178 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
+      "owner": "worker-docs",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-286.md"
+    },
+    {
+      "id": "PH-287",
+      "title": "合同收费模板/生效条款只读快照与结算核对首片（无写入口、无迁移）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-214",
+        "PH-265",
+        "PH-224",
+        "PH-232",
+        "PH-219",
+        "PH-222"
+      ],
+      "spec": "project/specs/PH-287.md",
+      "allowed_paths": [
+        "pmo_plugins/contracts/terms_snapshot_services.py",
+        "pmo_plugins/contracts/views.py",
+        "pmo_plugins/contracts/forms.py",
+        "pmo_plugins/contracts/domain_metadata.py",
+        "pmo_plugins/contracts/templates/contracts/terms_snapshot.html",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_contract_terms_snapshot.py",
+        "tests/test_v1_contract_terms_snapshot_http.py",
+        "project/reports/PH-287.json",
+        "project/handoffs/PH-287.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_contract_terms_snapshot tests.test_v1_contract_terms_snapshot_http --verbosity 1"
+      ],
+      "github_issue": null,
       "owner": null,
       "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-288",
+      "title": "银行账户/现金余额只读对账汇总首片（无写入口、无迁移）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-228",
+        "PH-230",
+        "PH-239",
+        "PH-240",
+        "PH-245"
+      ],
+      "spec": "project/specs/PH-288.md",
+      "allowed_paths": [
+        "pmo_plugins/cash/bank_balance_services.py",
+        "pmo_plugins/cash/funding_views.py",
+        "pmo_plugins/cash/forms.py",
+        "pmo_plugins/cash/domain_metadata.py",
+        "pmo_plugins/cash/templates/cash/bank_balance_snapshot.html",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_bank_balance_read.py",
+        "tests/test_v1_bank_balance_read_http.py",
+        "project/reports/PH-288.json",
+        "project/handoffs/PH-288.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_bank_balance_read tests.test_v1_bank_balance_read_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-289",
+      "title": "onboarding 导入提交与冲突持久化前置：ImportPreview/ImportConflict 落库与逐域提交编排（无业务写）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-274",
+        "PH-181",
+        "PH-185"
+      ],
+      "spec": "project/specs/PH-289.md",
+      "allowed_paths": [
+        "pmo_plugins/onboarding/models.py",
+        "pmo_plugins/onboarding/preview_services.py",
+        "pmo_plugins/onboarding/commit_contract.py",
+        "pmo_plugins/onboarding/migrations/*.py",
+        "tests/test_v1_import_preview_persist.py",
+        "tests/test_v1_import_conflict.py",
+        "project/reports/PH-289.json",
+        "project/handoffs/PH-289.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_import_preview_persist tests.test_v1_import_conflict --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-274（onboarding 只读预览，ready 未 done）done 与 PH-181/PH-185（proposed）done；依赖完成后由 PH-290 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-290",
+      "title": "后续交付独立规划入口（接续 PH-286）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-286"
+      ],
+      "spec": "project/specs/PH-290.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-290.json",
+        "project/handoffs/PH-290.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "PH-286 done 后置 ready（当前 PH-286 为 in_review，待独立 S 复核 pass 的最终证据 commit 再置 done/ready）。"
+      ],
       "handoff": null
     }
   ]
