@@ -470,3 +470,10 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 ## PH-249 PH-232 覆盖公式口径同步（2026-10-31）
 
 基线26d0408（PH-248/PH-250合入后）。纯文档口径同步：project/specs/PH-232.md 余额口径改为「现金未核销余额/可用 = posted gross_cents − Σactive cleared − Σactive 退款 − Σactive 银行退回；Offset 扩展位 0」，并引用真实接口（refund_coverage_for_cash 返回 refunded/returned/total 且 offset_implemented=false；clearance_coverage_for_cash 返回 posted_gross/cleared/offset=0/total=cleared/offset_implemented=false，无 refunded 字段；create_clearance 上限按 gross−_cash_cleared−refund total 计算）；金样例/反例/verify_integrity 补退款退回扣减、不得再核销已退金额与 advance 排除待同步项（PH-241 契约 ready 未实现，不宣称已实现）。未改 PH-232 已交付实现描述/历史 pass/代码/测试/迁移，未宣称 Offset 已实现。实际执行与最终证据（HEAD 1b8d97c）：独立 S 复核 PASS，0 阻断（逐字段核对合并代码、公式/金样例/反例/边界均一致）；projectctl check ok=true/task_count=180；23 项治理测试 OK；verify-change --base 26d0408 --task PH-249 ok=true、6 文件全白名单。未验证：PH-241 的 advance 排除与 clearance/offset 互斥仅有契约/待同步项记录，运行时未实现；无产品代码/迁移/测试改动。
+
+
+## PH-258 后续交付独立规划入口（接续 PH-248）+ PH-254 验收契约缺陷修复（2026-10-31）
+
+基线79ee448（PH-249合入后）。纯规划/契约文字片，两部分：
+1. **PH-254 验收契约缺陷修复**：tasks.json 中 PH-254 acceptance 旧 4 条含字面占位符 `python scripts/projectctl.py verify-change --base <PH-254 BASE> --task PH-254`（projectctl 按字面比对 BASE acceptance 与 report pass 声明，占位符永不满足，PR #148 governance 已失败）→ 新 3 条（check、23项治理、`manage.py test tests --verbosity 1`）；PH-254 spec 验收段注明「verify-change 由报告 tests 记录实际 BASE/输出，不进 acceptance」；未改 PH-254 report/review 块/代码/已交付实现，PH-254 将 rebase 重跑 CI。
+2. **常规规划**：核号依据——BASE 最大 PH-258；检查 open PR #143/#144/#148 与远端分支的 tasks.json，均未占用 ≥259（最大 254/258），故从 PH-259 起连续登记：PH-259 发票插件归属与契约决策前置（ready，deps PH-224/PH-232 done；产出 ADR 并同步 PH-252 decision point/白名单）、PH-260 管理收入确认与结算配对首片（proposed，缺 PH-167/156/162/161）、PH-261 预算版本与 ETC 首片（proposed，缺 PH-177/164/161）、PH-262 经营指标与项目工作台读模型首片（proposed，缺 PH-182/183；insights app 归属待决策）、PH-263 下一规划槽（ready，deps PH-258 done）。count 180→185，编号 259-263 连续唯一；PH-251/252/255/256/257 保持 proposed（PH-252 前置改由 PH-259 决策）。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-254 修复后需其分支 rebase/CI 复跑；PH-259/260/261/262 未实现，无产品代码/迁移/浏览器/PG/CI证据；review由独立S复核。

@@ -7460,7 +7460,6 @@
       "acceptance": [
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v",
-        "python scripts/projectctl.py verify-change --base <PH-254 BASE> --task PH-254",
         "python manage.py test tests --verbosity 1"
       ],
       "github_issue": null,
@@ -7616,7 +7615,7 @@
       "title": "后续交付独立规划入口（接续 PH-248）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -7635,6 +7634,225 @@
         "docs/verification.md",
         "project/reports/PH-258.json",
         "project/handoffs/PH-258.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-258.md"
+    },
+    {
+      "id": "PH-259",
+      "title": "发票插件归属与契约决策前置：invoicing app 新建/复用、迁移 owner 与命令暴露",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-224",
+        "PH-232"
+      ],
+      "spec": "project/specs/PH-259.md",
+      "allowed_paths": [
+        "docs/adr/*",
+        "docs/engineering/*",
+        "project/specs/PH-252.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-259.json",
+        "project/handoffs/PH-259.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-260",
+      "title": "管理收入确认与结算配对首片：单一收入方法确认 + 与结算/成本的只读配对结果",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-167",
+        "PH-156",
+        "PH-162",
+        "PH-161"
+      ],
+      "spec": "project/specs/PH-260.md",
+      "allowed_paths": [
+        "pmo_plugins/management_revenue/models.py",
+        "pmo_plugins/management_revenue/services.py",
+        "pmo_plugins/management_revenue/views.py",
+        "pmo_plugins/management_revenue/forms.py",
+        "pmo_plugins/management_revenue/domain_metadata.py",
+        "pmo_plugins/management_revenue/urls.py",
+        "pmo_plugins/management_revenue/templates/management_revenue/revenue_recognition_form.html",
+        "pmo_plugins/management_revenue/templates/management_revenue/revenue_pairing_list.html",
+        "pmo_plugins/management_revenue/migrations/*.py",
+        "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_revenue_pairing.py",
+        "tests/test_v1_revenue_pairing_http.py",
+        "project/reports/PH-260.json",
+        "project/handoffs/PH-260.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_revenue_pairing tests.test_v1_revenue_pairing_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-167（工时/固定服务期收入）、PH-156（客户结算/未清）、PH-162（报销费用/发生确认）、PH-161（人工分配/差额）done；WP-REVENUE-PAIR 上游未完成。依赖完成后由 PH-263 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-261",
+      "title": "预算版本与 ETC 首片：预算版本/行草稿与批准、剩余预计（ETC）发布（不做预测覆盖）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-177",
+        "PH-164",
+        "PH-161"
+      ],
+      "spec": "project/specs/PH-261.md",
+      "allowed_paths": [
+        "pmo_plugins/planning/models.py",
+        "pmo_plugins/planning/budget_services.py",
+        "pmo_plugins/planning/etc_services.py",
+        "pmo_plugins/planning/views.py",
+        "pmo_plugins/planning/forms.py",
+        "pmo_plugins/planning/domain_metadata.py",
+        "pmo_plugins/planning/urls.py",
+        "pmo_plugins/planning/templates/planning/budget_form.html",
+        "pmo_plugins/planning/templates/planning/budget_list.html",
+        "pmo_plugins/planning/templates/planning/etc_form.html",
+        "pmo_plugins/planning/migrations/*.py",
+        "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_budget.py",
+        "tests/test_v1_budget_http.py",
+        "tests/test_v1_etc.py",
+        "project/reports/PH-261.json",
+        "project/handoffs/PH-261.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_budget tests.test_v1_budget_http tests.test_v1_etc --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-177（预算版本与批准）、PH-164（暂估/折让/更正）、PH-161（人工分配/差额）done；planning app 归属若需新建须先经规划确认。依赖完成后由 PH-263 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-262",
+      "title": "经营指标与项目工作台读模型首片：只读指标快照 + 项目汇总视图（无写入口）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-182",
+        "PH-183"
+      ],
+      "spec": "project/specs/PH-262.md",
+      "allowed_paths": [
+        "pmo_plugins/insights/models.py",
+        "pmo_plugins/insights/metric_services.py",
+        "pmo_plugins/insights/workspace_views.py",
+        "pmo_plugins/insights/forms.py",
+        "pmo_plugins/insights/domain_metadata.py",
+        "pmo_plugins/insights/urls.py",
+        "pmo_plugins/insights/templates/insights/workspace.html",
+        "pmo_plugins/insights/templates/insights/metrics_list.html",
+        "pmo_plugins/insights/migrations/*.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_insights_metrics.py",
+        "tests/test_v1_insights_metrics_http.py",
+        "project/reports/PH-262.json",
+        "project/handoffs/PH-262.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_insights_metrics tests.test_v1_insights_metrics_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-182（经营指标/缺口/复盘）与 PH-183（到期扫描/待办）done；insights app 归属为前置决策点；依赖/决策完成后由 PH-263 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-263",
+      "title": "后续交付独立规划入口（接续 PH-258）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-258"
+      ],
+      "spec": "project/specs/PH-263.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-263.json",
+        "project/handoffs/PH-263.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
