@@ -396,3 +396,8 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 ## PH-237 文档收尾（2026-10-30）
 
 基线5ee8af1（PH-236规划#130合入）。三处文档改动：ROADMAP.md与execution-protocol.md的ai-delivery-*旧链接改指archive（grep确认各自唯一改动点、目标文件存在）；CONTRIBUTING.md「环境与验收」段插入作用域测试指引一段（开发中模块级`--parallel`快速反馈、收尾全量一次作报告证据、CI按PR全量兜底；四条验收命令与其余部分diff为空）。独立复核（fresh context，与PH-236同轮双片审）内容PASS。实际执行：check、治理测试23项、`manage.py test tests.test_projectctl --parallel`作用域自证、verify-change均于最终HEAD实跑通过。未验证：全量产品套件本地未跑（CI覆盖）；墙钟时间复测待日常统计。
+
+
+## PH-238 后续交付独立规划入口（2026-10-30）
+
+基线3bc37d6（PH-210 PR#132合入；PH-237已由PR#131合入，本分支不重复交付）。纯规划片：登记PH-239（现金分类与账本桥接首片，ready——依赖PH-210/PH-230均done）、PH-240（退款与银行退回，proposed——缺PH-232 done）、PH-241（预收/预付抵扣Offset首片，proposed——缺PH-232/PH-239 done），各冻结字段/状态机/权限/幂等/金额/迁移/白名单/反例/验收命令/risk S；登记PH-242下一规划槽（ready，依赖PH-238 done）。PH-157/PH-158按spec判断不重复登记（PH-110 ready未done、其余上游proposed）。实际执行（最终HEAD）：check ok=true/task_count=164；治理测试23项OK；verify-change --base 3bc37d6 --task PH-238 ok=true、8个变更文件全在白名单；作用域测试19项OK。独立S复核首轮打回2条（PH-241迁移号、PH-157/158依赖事实），修复后二次复核PASS。未验证：PH-239/240/241均未实现，无产品代码/迁移/浏览器/PG/CI证据；PH-240/241待PH-232 done后由PH-242复核晋级。
