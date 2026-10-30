@@ -222,16 +222,36 @@ def save_funding_account(member, *, name, masked_identifier=None, request_token,
             _fail('仅可修改当前版本的银行账户草稿')
         if row.opening_cents != 0 or row.opening_on is None:
             _fail('银行账户期初余额或期初日期异常，不能继续编辑')
-        row.version += 1
-    else:
-        if expected_version is not None:
-            _fail('新建银行账户不接受已有版本号')
-        row = FundingAccount(organization=member.organization, created_by=member,
-                             account_owner='organization', opening_cents=0,
-                             opening_on=timezone.localdate(), status='draft', version=1)
+        if FundingAccount.objects.filter(organization=member.organization,
+                                         name=name).exclude(pk=row.pk).exists():
+            _fail('同名银行账户已存在，请使用不同名称')
+        if dry_run:
+            row.name, row.masked_identifier = name, masked
+            row.version += 1
+            return row
+        # Conditional update so only one worker can advance this draft's version/receipt.
+        try:
+            updated = FundingAccount.objects.filter(
+                pk=row.pk, organization=member.organization, version=row.version,
+                status='draft').update(name=name, masked_identifier=masked,
+                                       version=row.version + 1)
+        except IntegrityError:
+            _fail('同名银行账户已存在，请使用不同名称')
+        if updated != 1:
+            _fail('银行账户版本已变化，请刷新后重试')
+        row.refresh_from_db()
+        audit(member, 'cash.funding_account.saved', row,
+              {'name': row.name, 'masked_identifier': row.masked_identifier,
+               'status': row.status})
+        _record(member, 'funding_account.save', token, digest, row.account_ref)
+        return row
+    if expected_version is not None:
+        _fail('新建银行账户不接受已有版本号')
+    row = FundingAccount(organization=member.organization, created_by=member,
+                         account_owner='organization', opening_cents=0,
+                         opening_on=timezone.localdate(), status='draft', version=1)
     row.name, row.masked_identifier = name, masked
-    if FundingAccount.objects.filter(organization=member.organization, name=name).exclude(
-            pk=row.pk).exists():
+    if FundingAccount.objects.filter(organization=member.organization, name=name).exists():
         _fail('同名银行账户已存在，请使用不同名称')
     if not dry_run:
         try:
@@ -266,12 +286,19 @@ def activate_funding_account(member, account_id, *, expected_version, request_to
         _fail('仅可启用当前版本的银行账户草稿')
     if row.opening_cents != 0 or row.opening_on is None:
         _fail('期初余额必须为0且期初日期必须有效，期初导入留待后续片')
-    row.status, row.version = 'active', row.version + 1
-    if not dry_run:
-        row.save()
-        audit(member, 'cash.funding_account.activated', row,
-              {'name': row.name, 'opening_on': row.opening_on.isoformat()})
-        _record(member, 'funding_account.activate', token, digest, row.account_ref)
+    if dry_run:
+        row.status, row.version = 'active', row.version + 1
+        return row
+    # Conditional update: only one worker may flip draft->active and write the receipt.
+    updated = FundingAccount.objects.filter(pk=row.pk, organization=member.organization,
+                                            version=version, status='draft').update(
+        status='active', version=version + 1)
+    if updated != 1:
+        _fail('银行账户版本已变化，请刷新后重试')
+    row.refresh_from_db()
+    audit(member, 'cash.funding_account.activated', row,
+          {'name': row.name, 'opening_on': row.opening_on.isoformat()})
+    _record(member, 'funding_account.activate', token, digest, row.account_ref)
     return row
 
 

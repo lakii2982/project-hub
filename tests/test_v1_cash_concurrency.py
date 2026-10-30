@@ -80,6 +80,7 @@ class CashConcurrencyTests(CashFixture, TransactionTestCase):
 
     def test_account_activation_race_activates_once(self):
         draft = self.draft_account(name='并发激活户')
+        baseline = CashReceipt.objects.filter(action='funding_account.activate').count()
 
         def activate(_unused=None):
             return funding.activate_funding_account(self.owner_member(), draft.pk,
@@ -88,4 +89,21 @@ class CashConcurrencyTests(CashFixture, TransactionTestCase):
         self.assertEqual(sum(item[0] == 'ok' for item in results), 1, results)
         self.assertEqual(funding.funding_account_snapshot(self.owner, draft.pk)['version'], 2)
         self.assertEqual(funding.funding_account_snapshot(self.owner, draft.pk)['status'], 'active')
-        self.assertEqual(CashReceipt.objects.filter(action='funding_account.activate').count(), 1)
+        self.assertEqual(CashReceipt.objects.filter(action='funding_account.activate').count(),
+                         baseline + 1)
+
+    def test_same_version_account_edit_writes_one_receipt(self):
+        draft = self.draft_account(name='并发编辑户')
+        baseline = CashReceipt.objects.filter(action='funding_account.save').count()
+
+        def edit(_unused=None):
+            return funding.save_funding_account(self.owner_member(), name='并发编辑户',
+                masked_identifier='****9999', account_id=draft.pk,
+                expected_version=draft.version, request_token=uuid.uuid4(),
+                dry_run=False).pk
+        results = self.run_race(edit, edit)
+        self.assertEqual(sum(item[0] == 'ok' for item in results), 1, results)
+        snapshot = funding.funding_account_snapshot(self.owner, draft.pk)
+        self.assertEqual((snapshot['version'], snapshot['name']), (2, '并发编辑户'))
+        self.assertEqual(CashReceipt.objects.filter(action='funding_account.save').count(),
+                         baseline + 1)
