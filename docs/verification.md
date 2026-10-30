@@ -550,4 +550,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 2. **核号**：BASE 最大 PH-278；检查远端分支 tasks（含 EXP PR #143/#144 分支，最高 PH-254）与 open PR，均未占用 ≥279；故 PH-279 起连续登记。
 3. **新登记（ready，依赖全 done）**：PH-279 现金分类/账本桥接与退款/互转只读核对快照（deps PH-239/240/244/245/230/228/224 done；无迁移/无写入口）；PH-280 手续费批准/成本与净额只读配对（deps PH-244/250/224/232/230 done；无迁移）；PH-281 成员账号/项目范围与授权审计只读运营视图（deps PH-264/024/110 done）；PH-282 下一规划槽（deps PH-278 done）。count 200→204，编号 279-282 连续。
 4. **blockers 刷新**：PH-276 更新为“缺 PH-269 done（ready 未 done）”；其余 proposed（PH-251/252/255/256/257/260/261/262/271/272）依赖未 done，保持 proposed 并未虚假晋级。
-5. 占位符检查：改动 specs/tasks 无 `<PH-`/`{tid}`；acceptance 全可执行命令。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-279/280/281 未实现（无代码/迁移/运行时证据）；review由独立S复核。
+5. 占位符检查：改动 specs/tasks 无 `<PH-`/`{tid}`；acceptance 全可执行命令。独立 S 复核：首轮阻断（规划槽状态惯例——候选提前置 PH-278 done/PH-282 ready）→ 修复（PH-278 in_review+owner、PH-282 proposed+blocker）→ 二轮 PASS；最终证据 HEAD d7a5cdb 置 PH-278 done/PH-282 ready、blocker 清空。最终门禁：projectctl check ok=true/task_count=204；23 项治理 OK；verify-change --base 7d8877f --task PH-278 ok=true、10 文件全白名单。未验证：PH-279/280/281 未实现（无代码/迁移/运行时证据）；PH-282 为下一规划槽。
