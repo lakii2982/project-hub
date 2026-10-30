@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Final Lead integration rerun after rebase onto 79ee448: {\"command\":\"check\",\"ok\":true,\"task_count\":180} exit 0."
+      "evidence": "Final Lead integration rerun after rebase onto 897a352: {\"command\":\"check\",\"ok\":true,\"task_count\":185} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -28,9 +28,9 @@
       "evidence": "Actual run: Ran 23 tests in 2.492s, OK (2.492s)."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 79ee448 --task PH-254",
+      "command": "python scripts/projectctl.py verify-change --base 897a352 --task PH-254",
       "result": "pass",
-      "evidence": "Final Lead integration rerun after rebase onto 79ee448 (PH-249 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-254 allowed_paths."
+      "evidence": "Final Lead integration rerun after rebase onto 897a352 (PH-258 acceptance fix merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-254 allowed_paths."
     }
   ],
   "review": {
@@ -50,7 +50,8 @@
     "实际重跑口径与 PH-254 spec 预期数字不一致已披露：spec/PH-248 记录的“773 tests/56 skips”是 PH-244 合入时 main（ceded2e）的口径；本任务 BASE 26d0408 已包含 PH-239/PH-243/PH-248/PH-250/PH-253 等后续切片，实际为 849 tests/118.423s/62 skips，失败集仍为同一 8 项 macOS 基线。按 spec“若重跑结果与 773/56 不一致，以实际 BASE 输出为准并在报告披露，不虚构”，PH-244 report 行同时保留三个口径并解释差异来源。",
     "只改 PH-244 report 的全量测试 tests 条目 command/evidence 与 docs/verification.md PH-244 段落的校准句；PH-244 review 块、summary、其它 tests 行、deviations/unverified 原样保留，未把历史 reviewer pass 改写成新 SHA 通过。",
     "未改 PH-244 服务/模型/契约/测试代码，未改其它任务 report/handoff，未改 docs/delivery-status*；review 保持 pending，S 级 done 待独立复核 pass 后置位。",
-    "Lead integration rebase (26d0408 -> 79ee448) after PH-249 merged: only project/manifest.json conflicted (active_handoff -> PH-254); the full-suite evidence (849 tests / 5F+3E / 62 skips at BASE 26d0408) remains valid because PH-249 was docs-only, and gates were rerun green with the new BASE."
+    "Lead integration rebase (26d0408 -> 79ee448) after PH-249 merged: only project/manifest.json conflicted (active_handoff -> PH-254); the full-suite evidence (849 tests / 5F+3E / 62 skips at BASE 26d0408) remains valid because PH-249 was docs-only, and gates were rerun green with the new BASE.",
+    "Lead integration rebase (79ee448 -> 897a352) after PH-258 merged: only project/manifest.json conflicted; the PH-254 acceptance placeholder defect is fixed in BASE, so governance/verify-change now pass. Full-suite evidence unchanged by the docs-only PH-258 slice."
   ],
   "unverified": [
     "PH-244 final-main ceded2e 的 773/56 采用 PH-254 契约（来自 PH-248 记录）作为历史口径，未在本工作树直接复跑 ceded2e（该提交不在当前 BASE 历史的可直接工作树中）；本任务实际重跑的是自身 BASE 26d0408（849/62），二者失败集均为同一 8 项 macOS 基线。",
