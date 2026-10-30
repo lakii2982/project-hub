@@ -73,10 +73,11 @@
         "original_fixture_rejected": 8,
         "requirements": 137,
         "strict_tool_environment": "jsonschema 4.26.0 / referencing offline registry",
-        "independent": "pending independent S review",
+        "independent": "independent PH-210 reviewer (fresh context, read-only): PASS; independently reran all six BASE acceptance commands and the strict .agent-venv preparation run (7 tests, 0 skipped), recomputed the five canonical digests and rechecked every changed path against BASE allowed_paths (verify-change simulated ok=true, 15/15 in scope)",
         "runtime_business_verified": false
       },
-      "preserved_history": "Original base_sha, 201 patch entries, input_sha256 and independent_static_reviews kept unchanged; old passes are not restated as new-SHA passes."
+      "preserved_history": "Original base_sha, 201 patch entries, input_sha256 and independent_static_reviews kept unchanged; old passes are not restated as new-SHA passes.",
+      "notes": "BASE already contained an optional readOnly reverses_event_ref as SourceRef|null; PH-210 tightens it to allOf[SourceRef, const namespace=core, const kind=accounting_event] plus x-server-only and annotations. The PH-210 spec wording 'new field' is imprecise; no contract meaning is weakened."
     }
   ]
 }

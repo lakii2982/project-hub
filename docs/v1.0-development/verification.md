@@ -46,3 +46,5 @@
 固定jsonschema4.26离线环境实际执行：prep 7测试5.158s全执行0skip（含新增边界6正10拒绝），原19正37拒绝、99正8负、137需求与全部契约/来源归属保留；validate_contracts、check_contract_cases、check_fixture通过；projectctl check与23项治理测试通过。fixture仅刷新5个实际canonical摘要；extension-freeze保留原base_sha/201补丁/input_sha256/旧审阅历史，追加PH210前后SHA与本次设计验证，不把旧pass改写为新SHA通过。
 
 边界仅证明设计输入可校验：未运行来源resolver、批准/期间/模型事务、真实服务拒绝、数据库、PG并发、浏览器/客户/生产；现金/成本/收入口径未改，141及后续实现仍待。
+
+独立S复核（fresh context）实际重跑全部6条BASE验收命令与严格环境prep（7 tests 0 skip），PASS 0阻断；按复核跟进更新freeze的independent字段并记录BASE已有可选readOnly字段、本片为收紧的措辞说明。

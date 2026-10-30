@@ -5527,7 +5527,7 @@
       "title": "补全单一冲销引用与原现金消费契约",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -5561,7 +5561,7 @@
         "python manage.py test tests.test_v1_preparation --verbosity 1"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/91",
-      "owner": "worker-contract",
+      "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-210.md"
     },
