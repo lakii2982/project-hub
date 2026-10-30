@@ -1,0 +1,45 @@
+{
+  "task_id": "PH-266",
+  "summary": "Produced the time-domain ownership decision as ADR 0011 (docs/adr/0011-time-plugin-ownership.md), with the canonical BillableConfirmation (x-owner=time, owned_fact, draft/confirmed/reversed), the frozen time.billable.confirm/v1 command and time.billable_confirmed.v1 event, core.Timesheet/PH-025/PH-217 time facts, the contracts confirmed_time billing template and the settlement/management-revenue boundaries all checked against the shipped code and contracts. The ADR compares option A (new pmo_plugins.time plugin), B (put it in core), C (put it in contracts) and D (defer), with criteria for canonical owner consistency, kernel growth, migration ownership and sequence collisions, manifest/requires fit, routing and command exposure, labor/costing boundaries, test/deploy/rollback cost and future time-domain extraction, and decides option A: a new pmo_plugins.time app as the time write owner, carrying only BillableConfirmation in the first slice. It freezes the 8-field manifest (id=time, requires contracts, capabilities empty), an app-owned migration chain starting at 0001 (no changes to core 0009 / contracts 0002 / settlement 0005), delivery/urls root single-write binding, named-service/browser-only exposure of time.billable.confirm/v1 (no PAT/MCP/personal-AI approval/payment), core.Timesheet kept read-only and uncopied, and no revenue/ledger/cash/open-item/contract-template writes. PH-266's spec gained a frozen 'billable confirmation implementation-slice DoR skeleton' (fields/state machine/permissions/idempotency/amount/migration/exact candidate whitelist/counterexamples/concrete acceptance) for the next planning slot to freeze as PH-269+, without registering it ready; PH-154's spec gained an ownership/boundary note; PH-152/153/154 blockers now record the delivered PH-025/PH-217 capabilities and the ADR/implementation-slice dependency, and all three stay proposed. No scaffold, product code, migration or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE 1e4c480): exit 1, {\"command\":\"check\",\"errors\":[{\"code\":\"high_risk_review_required\",\"message\":\"risk S reports require a named reviewer with status pass\",\"path\":\"report.review\"}],\"ok\":false} — single review-pending error, no path/schema errors."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-266 on main 1e4c480 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "grep -q \"time.billable.confirm/v1\" docs/adr/0011-time-plugin-ownership.md",
+      "result": "pass",
+      "evidence": "Actual grep against the delivered ADR exits 0 (the canonical command appears in the background, decision constraints and exposure sections); no placeholder strings remain."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 1e4c480 --task PH-266",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE 1e4c480): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope — all 8 changed files (ADR 0011, PH-266 DoR skeleton, PH-154 note, tasks.json, manifest.json, docs/verification.md, PH-266 report/handoff) are inside BASE PH-266 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (time-domain ownership decision plus frozen spec/whitelist sync); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "The ADR decides option A (new pmo_plugins.time app) and PH-266's spec freezes an implementation-slice DoR skeleton for PH-269+, but this slice does not create the app scaffold, migration 0001, settings/PMO_PLUGIN_MODULES entries, delivery/urls binding, product code or tests; those are the future implementation slice's exact whitelist items.",
+    "PH-152/153/154 stay proposed: PH-152/153 already have their capability delivered in core by PH-025/PH-217 but still depend on PH-145/PH-147/PH-149/PH-110 (and PH-153) that are not done; PH-154 additionally waits for PH-153/PH-150 and for the next planning slot to freeze the implementation slice. Their blockers now state this and the ADR reference; no status changed.",
+    "The DoR skeleton's candidate whitelist includes core/services.py for a named read-only approved_timesheet_for_billable (root single write) and the plugin bootstrap files, so the future slice is executable without self-expanding its contract; the skeleton is not registered as a ready task here.",
+    "ADR 0011 deliberately keeps the existing time.timesheet.draft.save/v1 and time.timesheet.submit/v1 in the delivered core services and does not migrate them; only the new BillableConfirmation (x-owner=time) is owned by the new plugin.",
+    "No placeholder strings (<PH- or {tid}) remain in the changed specs/ADR/tasks; the acceptance grep command is executable and passes."
+  ],
+  "unverified": [
+    "The billable-confirmation implementation slice is not implemented: no time app, tables, migration, views, routes, tests or runtime evidence exist yet.",
+    "The ADR's runtime wiring (settings/PMO_PLUGIN_MODULES/delivery urls) and the core named read-only interface will only be exercised by the future PH-269+ implementation slice.",
+    "Full product test suite not run locally (docs/ADR-only slice); required CI checks cover the PR."
+  ]
+}

@@ -2851,7 +2851,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "工时填报/审批能力已由 PH-025/PH-217 在 core 交付；本片仍缺依赖 PH-145/PH-147/PH-149/PH-110 done（均 proposed）。可计费确认归属见 PH-266 ADR 0011；本片不改变状态。"
+      ],
       "handoff": null
     },
     {
@@ -2897,7 +2899,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "工时独立审批能力已由 PH-025/PH-217 在 core 交付；本片仍缺 PH-152（proposed）与 PH-110 done；可计费确认归属见 PH-266 ADR 0011，本片不改变状态。"
+      ],
       "handoff": null
     },
     {
@@ -2945,7 +2949,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "剩余客户可计费确认依赖 PH-266 ADR 0011（time 插件归属，已决策：新建 pmo_plugins.time）；仍缺 PH-153/PH-150 done；实现片候选 DoR 见 project/specs/PH-266.md，待下一规划槽冻结为 PH-269+ 再晋级 ready。本片保持 proposed。"
+      ],
       "handoff": null
     },
     {
@@ -7982,7 +7988,7 @@
       "title": "time 插件归属与可计费确认契约决策前置",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8011,7 +8017,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-266.md"
     },
     {
       "id": "PH-267",
