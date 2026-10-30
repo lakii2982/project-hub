@@ -1,0 +1,59 @@
+{
+  "task_id": "PH-230",
+  "summary": "Cash posting slice: draft cash transactions become immutable posted facts with exactly one canonical cash.transaction_recorded event, read-only account coverage estimates and a tightened posting guard. No ledger posting, classification, clearing, refund, correction, transfer, import or opening balance; PH-169/170/171 stay proposed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-review rerun: ok=true, task_count=153 at HEAD."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0; only pre-existing urls.W003 warnings (42), 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (cash 0003 published)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual 722 tests pass, 45 environment skips (SQLite; includes 5 PostgreSQL-only cash concurrency tests that CI must run)."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual ok=true on seeded, upgraded and real cash databases; posting/event/coverage invariants validated."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_cash tests.test_v1_cash_posting tests.test_v1_cash_concurrency tests.test_v1_cash_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual 37 tests pass (22 backend + 7 posting + 8 HTTP; the 5 PostgreSQL-only concurrency tests are skipped locally and executed by PR CI)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base bac9d33 --task PH-230",
+      "result": "pass",
+      "evidence": "Post-review actual rerun declared after execution (see handoff)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-230 implementation reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Review in progress."
+  },
+  "deviations": [
+    "No canonical cash.transaction.record/v1 channel is exposed; posting is a private service operating on an already-registered draft id to avoid a second write path.",
+    "Only one canonical cash.transaction_recorded.v1 event is written per posted transaction; a suppressed plugin.* audit is used as the DomainEvent source to avoid the OneToOne source conflict, while a generic cash.cash_transaction.posted audit records the business action.",
+    "Coverage is a private estimate (posted_net_estimate_cents/available_estimate_cents, cleared=0), labelled as not cash balance or available balance; canonical cash.account_coverage.get is deferred.",
+    "Posted time is derived from the latest posting audit timestamp; no posted_at field was added."
+  ],
+  "unverified": [
+    "PostgreSQL concurrency (5 tests incl. double posting) is executed by the PR CI job; local SQLite skips are not evidence.",
+    "Cash classification, ledger bridge, clearing (PH-170), refunds (PH-171), bank-file import, opening balances, production/customer UAT remain unverified/not implemented; PH-169 is not complete.",
+    "Browser evidence covers Chromium 320/390/768/1024/1440 only; printing/dark mode/touch/non-Chromium untested."
+  ]
+}

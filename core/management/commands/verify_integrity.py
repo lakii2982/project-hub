@@ -116,7 +116,7 @@ class Command(BaseCommand):
             canonical = _CashDomainEvent.objects.filter(
                 organization_id=transaction.organization_id,
                 topic='cash.transaction_recorded.v1',
-                source__id=str(transaction.pk))
+                data__source__id=str(transaction.pk))
             if transaction.status == 'posted':
                 if canonical.count() != 1:
                     errors.append(f"cash_transaction:{transaction.pk}:posted_event_count")

@@ -351,3 +351,9 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 
 基线35e0a25（PH-228现金事实首片合入）。登记PH-230“现金过账与账户覆盖”（ready，依赖PH-214/219/222/224/228）与PH-231规划槽；PH-229完成。本片只做draft→posted、恰一条cash.transaction_recorded.v1规范事件、只读账户覆盖（available=posted net、cleared=0）与过账守卫；明确不写AccountingEvent/LedgerPosting/LedgerEntry，不做分类/分配/核销/退款/更正/转账/导入/期初，不解除PH-169/170/171 proposed。实际执行check与19项治理测试；verify-change在review落pass后重跑。未验证：无产品代码/迁移/测试/浏览器/PG/CI；PH-169未完成。
 
+
+## PH-230 现金过账与账户覆盖（2026-10-30）
+
+基线bac9d33（PH-229规划合入）。实现草稿→posted私有过账服务（条件更新一胜、receipt 重放、occurred_on/posting_period 一致性、未来日/锁账/关期拒绝）、恰一条cash.transaction_recorded.v1规范事件（posting_event_refs=[]）、posted不可变（模型守卫+0003 SQLite/PG触发器）、只读账户覆盖估算（posted_in/out/net_estimate/available_estimate/cleared=0，UI标注非现金余额）、流水status_display/can_post/posted_at与详情/列表过账UI、verify_integrity过账/事件/覆盖分支。明确不写AccountingEvent/LedgerPosting/LedgerEntry，不做分类/分配/核销/退款/更正/转账/导入/期初。
+实际执行：全量722项通过、45项环境跳过（含5项cash PG-only并发）；cash目标37项通过（22+7+8）；check/makemigrations/verify_integrity通过；旧库/非空库升级完整性ok；浏览器证据见runtime/ph230-browser。未验证：PG并发、生产/UAT、分类/账本/核销/退款/导入/期初；PH-169未完成。
+
