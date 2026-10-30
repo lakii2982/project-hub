@@ -1,0 +1,41 @@
+{
+  "task_id": "PH-290",
+  "summary": "Consumed the PH-290 planning slot on main 6ddb951 (PH-277 and PH-275 merged; task_count 212 before registration) and verified dependency facts: PH-276 (time confirmed reversal/pairing) is now ready because PH-269 is done and PH-266/PH-219/PH-222 are done, while PH-280/281/283/284/287/288 stay ready and all other proposed tasks remain blocked on upstream proposed work. Numbering was checked (BASE max PH-290; no remote branch/PR occupies >=PH-291) and four tasks were registered continuously from PH-291: PH-291 cross-domain read-only operations reconciliation overview in the delivery layer (ready; deps PH-219/222/224/232/265/269/274 all done; no migration/write path, explicitly not a second insights owner), PH-292 onboarding import commit orchestration (proposed; needs PH-289/PH-181/PH-185), PH-293 invoice/tax/red-ink contract freeze ADR 0015 (proposed; needs PH-150/PH-155/PH-252) and PH-294 as the next planning slot (proposed until PH-290's review pass closes the slot). PH-276's spec and blockers were refreshed to done/ready; no other proposed task was promoted. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at the candidate revision (BASE 6ddb951, PH-290 in_review per slot convention): {\"command\":\"check\",\"ok\":true,\"task_count\":216}, exit 0 (check allows in_review with owner+handoff); final post-review entry recorded at the review-pass HEAD."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /tmp/ph290-planning on main 6ddb951 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 6ddb951 --task PH-290",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at the candidate revision (BASE 6ddb951): exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 10 changed files (PH-276 spec sync, 4 new specs PH-291..294, tasks.json, manifest.json, docs/verification.md, PH-290 report/handoff) are inside BASE PH-290 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (planning registration plus PH-276 promotion/dependency facts); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Planning-slot state convention: PH-290 is kept in_review with handoff and PH-294 is proposed with blocker 'PH-290 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-290 done and PH-294 ready and clear the blocker (same convention as prior planning slots).",
+    "PH-276 is correctly promoted to ready: PH-269 (time billable confirmation) is now done on this BASE plus PH-266/PH-219/PH-222 are done; its spec dependency/risk text and task blockers were refreshed accordingly. No other proposed task was promoted.",
+    "PH-291 is a delivery-layer read-only aggregation (not a second insights owner, not an implementation of PH-272) with all dependencies done and no migration/write path; PH-292/PH-293 are proposed with explicit blockers. PH-280/281/283/284/287/288 already ready were re-checked and left unchanged.",
+    "Numbering basis: BASE max PH-290; checked remote branches and open PRs (EXP-line #143/#144 etc.) - no >=PH-291 ids exist, so PH-291..PH-294 are continuous and free.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-291/PH-292/PH-293 are implementation/contract slices only registered (291 ready, 292/293 proposed); no product code, tests, migration, browser, PostgreSQL or CI evidence exists yet.",
+    "PH-276 is promoted but not implemented; it will be verified by its own implementation PR/CI.",
+    "PH-251/252/255/256/257/260/261/262/271/272/285/289/292/293 remain blocked on upstream proposed tasks; no promotion or scope change was made.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
