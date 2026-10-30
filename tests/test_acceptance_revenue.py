@@ -356,6 +356,8 @@ class AcceptanceRevenueTests(RevenueFixture, TestCase):
         from core.plugin_runtime import plugin_catalog
         if any(spec['id'] == 'settlement' for spec in plugin_catalog()):
             set_enabled(self.owner, 'settlement', False)
+        if any(spec['id'] == 'time' for spec in plugin_catalog()):
+            set_enabled(self.owner, 'time', False)
         set_enabled(self.owner,'delivery',False)
         set_enabled(self.owner,'contracts',False)
         self.assertFalse(is_enabled(self.org,'contracts'))

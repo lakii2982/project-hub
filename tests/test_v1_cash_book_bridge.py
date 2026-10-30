@@ -167,7 +167,8 @@ class CashBookBridgeTests(ClassificationFixture, TestCase):
         with CaptureQueriesContext(connection) as second:
             self.assertTrue(self.verify()['ok'])
         self.assertLessEqual(len(second.captured_queries), len(first.captured_queries) + 2)
-        self.assertLessEqual(len(first.captured_queries), 80)
+        # PH-269 adds a fixed-cost time billable-confirmation branch to verify_integrity.
+        self.assertLessEqual(len(first.captured_queries), 84)
 
     def _verify_payload(self):
         from io import StringIO
