@@ -40,10 +40,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-228 implementation reviewer (fresh context, read-only)",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Review in progress."
+    "reviewer": "independent PH-228 implementation reviewer (fresh context, read-only; multi-round)",
+    "status": "pass",
+    "findings": [
+      "Round 1 blockers fixed: inactive counterparty payees and inactive employees are rejected at new writes/identifications with status and active/inactive business-date windows; draft own-account payees rejected; opening_cents/opening_on frozen by model, service, CheckConstraint and SQLite/PostgreSQL UPDATE triggers; PostgreSQL match/receipt guards now raise SQLSTATE 23514; identify/reverse semantics frozen (single unreversed identification, reverse only current effective match, re-identify after reverse allowed).",
+      "Round 1 replay blocker fixed: structural payee normalization and digest first, then receipt replay, then external-key same-input replay, and only then live party/account state validation. Regression test proves deactivated counterparty/employee still replay the original transaction/match with no new facts, while new writes and changed inputs still reject.",
+      "Reviewer accepted the disclosed counterparty_id UUID deviation (no cross-owner FK) because a real FK would force the cash plugin to require contracts and re-break four existing test disable-order sites outside PH-228 whitelist; writes validate the counterparty through the named contracts service and verify_integrity checks same-organization existence. Residual risk: direct SQL could create orphans; DB-level FK would need separate planning.",
+      "Retained minors recorded in unverified: verify_integrity does not validate evidence/external-key format, payee JSON shape, current active state of historical identified payees, receipt refs or direct-SQL orphans; UI counterparty dropdown may show inactive parties (server rejects); browser Chromium-only; PostgreSQL races and production/UAT unverified."
+    ],
+    "evidence": "Reviewer reran the full suite (711 OK, 43 skip), the 31 cash tests (22 backend + 6 HTTP + 3 PG-only skip), probes for deactivation replay and opening-freeze IntegrityError, check/makemigrations, verify_integrity on the real cash browser database and upgraded legacy/populated copies (all ok:true), and parsed browser evidence on final HEAD c2f2f71 (36/36, dirty=false, 0 server 500s). Formal PASS is conditional on the PR PostgreSQL CI executing the 3 cash concurrency tests successfully."
   },
   "deviations": [
     "cash plugin manifest keeps requires={} and default_enabled=True; counterparty/employee reads use named contracts/core interfaces at service entry with module-enabled checks, so no new plugin dependency edge or test disable-order changes are introduced.",
@@ -59,6 +64,9 @@
   "unverified": [
     "PostgreSQL concurrency (3 tests) is executed by the PR CI job; local SQLite skips are not evidence.",
     "Cash posting, classification, allocation, clearing (PH-170), refunds (PH-171), bank-file import, opening balances, production/customer UAT remain unverified/not implemented; PH-169 is not complete.",
-    "Browser evidence covers Chromium 320/390/768/1024/1440 only, and the browser run did not click the account-activation button itself (activation was seeded through the real service; HTTP tests cover the UI activation path)."
+    "Browser evidence covers Chromium 320/390/768/1024/1440 only, and the browser run did not click the account-activation button itself (activation was seeded through the real service; HTTP tests cover the UI activation path).",
+    "verify_integrity does not validate evidence/external-key formats, payee JSON shape, receipt references, or the current active state of historical identified payees (historical facts may reference later-deactivated parties by design).",
+    "counterparty_id has no database FK (accepted deviation); direct SQL could create an orphan counterparty id, mitigated only by service checks and verify_integrity same-org existence checks.",
+    "UI counterparty dropdown may still list inactive parties; the server rejects such writes with a business error, but filtering the list is a future UX improvement."
   ]
 }
