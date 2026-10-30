@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual 706 tests pass, 43 environment skips (SQLite; includes 3 PostgreSQL-only cash concurrency tests that CI must run)."
+      "evidence": "Actual 711 tests pass, 43 environment skips (SQLite; includes 3 PostgreSQL-only cash concurrency tests that CI must run)."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -30,7 +30,7 @@
     {
       "command": "python manage.py test tests.test_v1_cash tests.test_v1_cash_concurrency tests.test_v1_cash_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual 26 tests pass (18 backend + 5 HTTP + 3 PG-only skipped locally)."
+      "evidence": "Actual 28 tests pass (22 backend + 6 HTTP; the 3 PostgreSQL-only concurrency tests are skipped locally and executed by the PR CI)."
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 200a507 --task PH-228",
@@ -50,7 +50,11 @@
     "Counterparty is stored as a validated UUID field rather than a cross-owner database FK, preserving the owner boundary; cash writes never read contracts tables directly.",
     "Drafts are not projected as canonical FundingAccount/CashTransaction entities and no canonical cash event is written; generic cash.* audits still create non-canonical DomainEvents through the existing audit helper.",
     "No ledger/Balance integration exists yet: cash facts are recorded but not posted; posting/classification is the next planning slot's priority and PH-169 is not complete.",
-    "Browser evidence on HEAD 2c71e9c: 32/32 checks pass, 0 failures; owner/finance write, auditor read-only, pm/member 403; payee never rendered as raw JSON; identify/reverse history visible; CSRF 403; 320-1440 no overflow; cash-disabled routes 403 while service history stays readable; 0 server 500s."
+    "Browser evidence on HEAD 2c71e9c: 32/32 checks pass, 0 failures; owner/finance write, auditor read-only, pm/member 403; payee never rendered as raw JSON; identify/reverse history visible; CSRF 403; 320-1440 no overflow; cash-disabled routes 403 while service history stays readable; 0 server 500s.",
+    "Accepted deviation: CashTransaction.counterparty_id remains a validated UUIDField instead of a cross-owner database FK. A real FK would force the cash plugin manifest to require contracts, which in turn re-breaks four existing test disable-order sites that PH-228 has no whitelist to change; writes still validate the counterparty through the named contracts service including status and active/inactive business-date windows, and this deviation is disclosed here.",
+    "Replay ordering is frozen: structural payee normalization and input digest first, then receipt replay, then external-key same-input replay, and only then live party/account state validation. Later counterparty/employee/account deactivation therefore cannot invalidate an existing fact replay.",
+    "PostgreSQL guards for CashPartyMatch/CashReceipt use dedicated guard functions raising SQLSTATE 23514 (not the generic P0001 helper), and FundingAccount opening_cents/opening_on are frozen by a database UPDATE trigger on both SQLite and PostgreSQL.",
+    "verify_integrity was extended: all funding accounts must have opening_cents=0 and opening_on, cash payee/identified counterparty/employee/own_account refs must exist in the same organization, reverse matches are unique, and no AccountingEvent may use the cash namespace."
   ],
   "unverified": [
     "PostgreSQL concurrency (3 tests) is executed by the PR CI job; local SQLite skips are not evidence.",
