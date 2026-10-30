@@ -1,0 +1,48 @@
+{
+  "task_id": "PH-238",
+  "summary": "Consumed the PH-238 planning slot on top of main 3bc37d6 (PH-237 delivered by a parallel line as PR #131 and PH-210 as PR #132; this branch carries only PH-238). Registered three concrete business slices — PH-239 (cash classification + ledger bridge first slice, ready), PH-240 (refund + bank return within original-cash coverage, proposed), PH-241 (customer-advance Offset first slice, proposed) — each with a frozen spec file covering fields, state machine, permissions, idempotency, amount rules, migrations, exact whitelist, counterexamples, acceptance commands and risk level; added PH-242 as the next independent planning slot (ready, depends on PH-238). PH-239 is registered ready because its dependencies PH-210 and PH-230 are both done on this BASE; PH-240 stays proposed because PH-232 is still ready-not-done, and PH-241 stays proposed because it additionally needs PH-232 and PH-239. Each proposed task carries its concrete blockers in tasks.json and will be re-evaluated by PH-242. PH-157/PH-158 were deliberately not re-registered as new numbered slices: their canonical specs and proposed tasks already exist, and their entire upstream chain (PH-142/PH-145/PH-150/PH-155/PH-156) is still proposed, so freezing a slice now would duplicate contract authority; PH-242 carries the slice-evaluation step. No product code, migration, tests or governance-gate change is included, and no PH-237 file is touched by this slice.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Entry will be finalized to the actual post-independent-review run. Pre-review actual run at the candidate revision (HEAD 0e48c56, BASE 3bc37d6): exit 1, {\"command\":\"check\",\"errors\":[{\"code\":\"high_risk_review_required\",\"message\":\"risk S reports require a named reviewer with status pass\",\"path\":\"report.review\"}],\"ok\":false} — a single review-pending error, no path/report-schema errors. Never declared pass before the reviewer landed."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /tmp/ph-docs-closeout on main 3bc37d6 with the main checkout venv: Ran 23 tests, OK; no test files touched by this planning slice."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 3bc37d6 --task PH-238",
+      "result": "not_run",
+      "evidence": "Entry will be finalized to the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE 3bc37d6): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope — the 8 changed files (4 new specs, PH-238 report/handoff, tasks.json, manifest.json) are all inside BASE PH-238 allowed_paths. Replaced with the post-review pass output after the reviewer lands."
+    },
+    {
+      "command": "python manage.py test tests.test_projectctl --parallel",
+      "result": "pass",
+      "evidence": "Actual scoped run as self-evidence of the CONTRIBUTING guidance delivered by main: the module-scoped test file passes standalone in the delivery worktree."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (project/tasks.json and project/manifest.json are projectctl CRITICAL_PATHS members); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "PH-237 was delivered and merged by a parallel line as PR #131 and PH-210 as PR #132 while this worktree still held a duplicate local PH-237 commit; per Lead instruction the duplicate was dropped and the branch was rebased twice onto the then-current main. Final BASE is 3bc37d6 and this branch has exactly one commit on top of it (PH-238 planning). No PH-237 or PH-210 content is modified by this slice.",
+    "PH-239 was first registered proposed against BASE b931be0 (where PH-210 was still ready-not-done) and promoted to ready after PH-210 merged as PR #132 on the final BASE 3bc37d6, because the registration rule only allows ready when every dependency is done; PH-230 was already done. PH-240/PH-241 remain proposed because PH-232 is still ready-not-done and PH-241 also needs PH-239.",
+    "PH-157/PH-158 were not re-registered under new PH numbers. Their canonical proposed specs already exist from PH-137 and their upstream chain (PH-142/PH-145/PH-150/PH-155/PH-156) is entirely proposed, so a frozen slice now would create a second contract authority before the upstream fields exist. Decision and missing-dependency list are recorded here and in PH-242's spec scope; no existing PH-157/PH-158 task field was changed.",
+    "Contract gaps disclosed in the new specs rather than invented: Offset has no registered canonical event and no offset.reverse command (PH-241 does record-only with generic audit and explicitly defers reversal to a future contract-planning slice); PH-239 defers payroll classification and AdvanceBalance/CashAllocation; PH-240 writes no ledger (cash facts only, bridge comes with PH-239).",
+    "Pre-review acceptance evidence: check and verify-change cannot pass while the risk-S review is pending; this report never claims them passed before the independent reviewer verdict and records the pre-review failures in the deviations and evidence text, with the passing entries finalized only from the post-review reruns. The reviewer's verdict applies to this candidate commit; any later evidence commit changes only report/verification records, not the registered planning content.",
+    "manifest.active_handoff was advanced to project/handoffs/PH-238.md for this final planning slot; PH-210's manifest value from main is superseded accordingly, as required for the final delivered planning slice.",
+    "docs/delivery-status.md and docs/delivery-status-archive.md were not touched (planning-only slice); docs/verification.md gets the PH-238 entry in the post-review evidence commit so that the entry describes actually executed commands."
+  ],
+  "unverified": [
+    "No product code, migration, tests, browser, PostgreSQL or CI evidence exists for PH-239/PH-240/PH-241; PH-239 is a frozen ready contract and PH-240/PH-241 are frozen proposed contracts.",
+    "PH-240/PH-241 readiness is conditional on PH-232 landing done (and PH-241 additionally on PH-239 done); the planner slot PH-242 must re-check DoR and dependencies and is the only authority to promote them.",
+    "The three business specs freeze fields/permissions/idempotency for slices that cannot be implemented before their upstream contracts land; field-level consistency with those upstream slices remains to be verified at implementation time.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover it on this PR."
+  ]
+}
