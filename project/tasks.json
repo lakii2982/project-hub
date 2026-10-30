@@ -8127,6 +8127,7 @@
         "pmo/urls.py",
         "core/services.py",
         "core/management/commands/verify_integrity.py",
+        "tests/test_contract_approval.py",
         "tests/test_v1_billable_confirmation.py",
         "tests/test_v1_billable_confirmation_http.py",
         "tests/test_v1_billable_confirmation_concurrency.py",
@@ -8366,6 +8367,13 @@
         "pmo_plugins/onboarding/templates/onboarding/import_preview_list.html",
         "pmo/settings.py",
         "pmo_plugins/delivery/urls.py",
+        "tests/test_acceptance_revenue.py",
+        "tests/test_v1_cash_http.py",
+        "tests/test_v1_clearance_http.py",
+        "tests/test_v1_settlement_http.py",
+        "tests/test_v1_contract_change.py",
+        "tests/test_v1_contract_change_http.py",
+        "tests/test_service_period_revenue_http.py",
         "tests/test_v1_import_preview.py",
         "tests/test_v1_import_preview_http.py",
         "docs/delivery-status.md",
@@ -8480,7 +8488,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-269（time 可计费确认实现首片，ready 未 done）done；PH-266（ADR 0011，done）、PH-219/PH-222（管理收入/结算配对，done）已满足。PH-269 合入 done 后由 PH-282 规划槽复核 DoR 再晋级。"
+        "缺 PH-269（time 可计费确认实现首片，ready 未 done）done；PH-266（ADR 0011，done）、PH-219/PH-222（管理收入/结算配对，done）已满足。PH-269 合入 done 后由 PH-286 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -8692,7 +8700,7 @@
       "title": "后续交付独立规划入口（接续 PH-278）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -8711,6 +8719,175 @@
         "docs/verification.md",
         "project/reports/PH-282.json",
         "project/handoffs/PH-282.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-282.md"
+    },
+    {
+      "id": "PH-283",
+      "title": "结算未清/核销/退款覆盖只读核对首片（无写入口、无迁移）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-224",
+        "PH-232",
+        "PH-240",
+        "PH-230"
+      ],
+      "spec": "project/specs/PH-283.md",
+      "allowed_paths": [
+        "pmo_plugins/settlement/coverage_read_services.py",
+        "pmo_plugins/settlement/receivable_views.py",
+        "pmo_plugins/settlement/receivable_forms.py",
+        "pmo_plugins/settlement/domain_metadata.py",
+        "pmo_plugins/settlement/templates/settlement/coverage_snapshot.html",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_settlement_coverage_read.py",
+        "tests/test_v1_settlement_coverage_read_http.py",
+        "project/reports/PH-283.json",
+        "project/handoffs/PH-283.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_settlement_coverage_read tests.test_v1_settlement_coverage_read_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-284",
+      "title": "管理收入确认与结算/合同条款只读配对核对首片（无写入口、无迁移）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-219",
+        "PH-222",
+        "PH-224",
+        "PH-232",
+        "PH-265"
+      ],
+      "spec": "project/specs/PH-284.md",
+      "allowed_paths": [
+        "pmo_plugins/management_revenue/pairing_read_services.py",
+        "pmo_plugins/management_revenue/views.py",
+        "pmo_plugins/management_revenue/forms.py",
+        "pmo_plugins/management_revenue/domain_metadata.py",
+        "pmo_plugins/management_revenue/templates/management_revenue/revenue_pairing_snapshot.html",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_revenue_pairing_read.py",
+        "tests/test_v1_revenue_pairing_read_http.py",
+        "project/reports/PH-284.json",
+        "project/handoffs/PH-284.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_revenue_pairing_read tests.test_v1_revenue_pairing_read_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-285",
+      "title": "核对底稿只读导出首片：结算/收入/现金核对清单的授权 CSV 导出（无写入口）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-181",
+        "PH-182",
+        "PH-272",
+        "PH-277"
+      ],
+      "spec": "project/specs/PH-285.md",
+      "allowed_paths": [
+        "pmo_plugins/insights/export_worksheet_services.py",
+        "pmo_plugins/insights/views.py",
+        "pmo_plugins/insights/forms.py",
+        "pmo_plugins/insights/domain_metadata.py",
+        "pmo_plugins/insights/templates/insights/export_worksheet_form.html",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_export_worksheet.py",
+        "tests/test_v1_export_worksheet_http.py",
+        "project/reports/PH-285.json",
+        "project/handoffs/PH-285.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_export_worksheet tests.test_v1_export_worksheet_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-181（四类核对/差额）、PH-182（经营指标/缺口）done，且 PH-272（insights 实现首片）与 PH-277（读模型契约冻结）未 done；依赖与 insights 只读接口就绪后由后续规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-286",
+      "title": "后续交付独立规划入口（接续 PH-282）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-282"
+      ],
+      "spec": "project/specs/PH-286.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-286.json",
+        "project/handoffs/PH-286.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

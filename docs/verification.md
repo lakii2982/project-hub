@@ -551,3 +551,13 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 3. **新登记（ready，依赖全 done）**：PH-279 现金分类/账本桥接与退款/互转只读核对快照（deps PH-239/240/244/245/230/228/224 done；无迁移/无写入口）；PH-280 手续费批准/成本与净额只读配对（deps PH-244/250/224/232/230 done；无迁移）；PH-281 成员账号/项目范围与授权审计只读运营视图（deps PH-264/024/110 done）；PH-282 下一规划槽（deps PH-278 done）。count 200→204，编号 279-282 连续。
 4. **blockers 刷新**：PH-276 更新为“缺 PH-269 done（ready 未 done）”；其余 proposed（PH-251/252/255/256/257/260/261/262/271/272）依赖未 done，保持 proposed 并未虚假晋级。
 5. 占位符检查：改动 specs/tasks 无 `<PH-`/`{tid}`；acceptance 全可执行命令。独立 S 复核：首轮阻断（规划槽状态惯例——候选提前置 PH-278 done/PH-282 ready）→ 修复（PH-278 in_review+owner、PH-282 proposed+blocker）→ 二轮 PASS；最终证据 HEAD d7a5cdb 置 PH-278 done/PH-282 ready、blocker 清空。最终门禁：projectctl check ok=true/task_count=204；23 项治理 OK；verify-change --base 7d8877f --task PH-278 ok=true、10 文件全白名单。未验证：PH-279/280/281 未实现（无代码/迁移/运行时证据）；PH-282 为下一规划槽。
+
+
+## PH-282 后续交付独立规划入口（接续 PH-278）+ PH-269/PH-274 白名单修正（2026-10-31）
+
+基线8748c1a（PH-278 合入后，count 204）。纯规划/契约文字片：
+1. **PH-269 allowed_paths/spec 白名单加 `tests/test_contract_approval.py`**：time `requires={contracts}` 使该 PG 并发审批测试在 contracts 停用 loop 中需先停用/恢复 time；spec 写明用途与“仅最小必要修改、不改业务断言语义”。
+2. **PH-274 allowed_paths/spec 白名单加 7 个测试文件**（test_acceptance_revenue、test_v1_cash_http、test_v1_clearance_http、test_v1_settlement_http、test_v1_contract_change、test_v1_contract_change_http、test_service_period_revenue_http）：onboarding `requires={contracts,settlement,cash}` 使既有禁用/顺序 loop 需先停用/恢复 onboarding；spec 写明最小必要修改、不改业务断言语义。
+3. **核号**：BASE 最大 PH-282；远端分支/PR（含 EXP #143/#144 与 PH-269 PR #161）无 ≥283 占用 → PH-283 起连续登记。
+4. **新登记**：PH-283 结算未清/核销/退款覆盖只读核对（ready，deps PH-224/232/240/230 done）、PH-284 管理收入确认与结算/合同条款只读配对（ready，deps PH-219/222/224/232/265 done）、PH-285 核对底稿只读导出（proposed，缺 PH-181/182 与 PH-272/277）、PH-286 下一规划槽（proposed，待 PH-282 done 后置 ready）。count 204→208，编号 283-286 连续。
+5. blockers 刷新：PH-276 等 PH-269 done；其余 proposed 未虚假晋级。无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断，核对白名单修正用途/编号/晋级事实）；最终证据 HEAD bc47cf2 按槽惯例置 PH-282 done / PH-286 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=208；23 项治理 OK；verify-change --base 8748c1a --task PH-282 ok=true、11 文件全白名单。未验证：PH-283/284/285 未实现；PH-269/PH-274 自身的测试修改由其实现 PR/CI 验证。
