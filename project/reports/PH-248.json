@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Post-final-review actual rerun with the recorded round-2 pass (reviewed HEAD 1a684d3): {\"command\":\"check\",\"ok\":true,\"task_count\":180}, exit 0. The earlier pre-review pending state is recorded in deviations."
+      "evidence": "Final Lead integration rerun after rebase onto e9657f7: {\"command\":\"check\",\"ok\":true,\"task_count\":180} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -13,9 +13,9 @@
       "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-248 on main c1cd18d with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base c1cd18d --task PH-248",
+      "command": "python scripts/projectctl.py verify-change --base e9657f7 --task PH-248",
       "result": "pass",
-      "evidence": "Post-final-review actual run at the review-pass HEAD 59bf686: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"c1cd18d\",\"head\":\"59bf6864794afa99d9a35b0e9b69368d98395d09\",\"report_path\":\"project/reports/PH-248.json\"}, exit 0; all 13 changed files inside BASE PH-248 allowed_paths and review.status=pass with the reviewer's final name/evidence."
+      "evidence": "Final Lead integration rerun after rebase onto e9657f7 (PH-250 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 changed files inside BASE PH-248 allowed_paths."
     }
   ],
   "review": {
@@ -39,7 +39,8 @@
     "PH-254's acceptance intentionally includes a full product-suite rerun (`manage.py test tests --verbosity 1`) because the fix is about a full-suite evidence number; if that run disagrees with 773/56 at implementation BASE, the implementer must record the actual BASE output and disclose it rather than copy 773/56.",
     "PH-256/PH-257 carry explicit app-ownership pre-decision points (importing / insights) mirroring the PH-252 invoicing pattern: the planning slot does not preset creating a new plugin app or SDK/plugin contract; the tasks stay proposed until the upstream planning confirms ownership.",
     "PH-254's whitelist deliberately excludes product code/tests and the PH-244 review block; only the single full-suite tests row and a verification calibration sentence may change.",
-    "Reviewer NON-BLOCKING NOTES recorded for the follow-on slices: (a) PH-249's spec sentence describing clearance_coverage_for_cash return fields must be aligned with the real interfaces when PH-249 edits PH-232 (the merged function returns cash_transaction_ref/posted_gross_cents/cleared_cents/offset_cents/total_cents/offset_implemented; refunded/returned/total come from refund_coverage_for_cash) - the PH-249 formula and function names are correct; (b) PH-254's 'ceded2e 基底/PH-244 合入后' phrasing is loose because PH-244 merged in the next main commit after ceded2e; the 773/56 premise and whitelist are correct. Neither affects the promoted contracts or gates."
+    "Reviewer NON-BLOCKING NOTES recorded for the follow-on slices: (a) PH-249's spec sentence describing clearance_coverage_for_cash return fields must be aligned with the real interfaces when PH-249 edits PH-232 (the merged function returns cash_transaction_ref/posted_gross_cents/cleared_cents/offset_cents/total_cents/offset_implemented; refunded/returned/total come from refund_coverage_for_cash) - the PH-249 formula and function names are correct; (b) PH-254's 'ceded2e 基底/PH-244 合入后' phrasing is loose because PH-244 merged in the next main commit after ceded2e; the 773/56 premise and whitelist are correct. Neither affects the promoted contracts or gates.",
+    "Lead integration rebase (c1cd18d -> e9657f7) after PH-250 merged: docs/verification.md conflict resolved by keeping all main entries and appending the PH-248 entry; manifest.active_handoff -> PH-248; tasks.json auto-merged with PH-250 done retained. Gates rerun green (check ok=true/180, verify-change --base e9657f7 ok=true)."
   ],
   "unverified": [
     "No product code, migration, runtime service, browser, PostgreSQL or CI evidence exists for PH-254/PH-255/PH-256/PH-257/PH-258; they are frozen planning contracts only.",
