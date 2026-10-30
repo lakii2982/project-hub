@@ -1,0 +1,41 @@
+{
+  "task_id": "PH-282",
+  "summary": "Consumed the PH-282 planning slot on main 8748c1a (PH-278 merged; task_count 204) and completed the two Lead-authorized cross-slice whitelist corrections: PH-269's allowed_paths and spec whitelist now include tests/test_contract_approval.py (time's requires={contracts} forces the existing PG concurrency approval test's disable loop to stop/restore time first) with the minimal-change/no-business-assertion-change note; and PH-274's allowed_paths and spec whitelist now include the seven existing test files (test_acceptance_revenue, test_v1_cash_http, test_v1_clearance_http, test_v1_settlement_http, test_v1_contract_change, test_v1_contract_change_http, test_service_period_revenue_http) because onboarding's requires={contracts,settlement,cash} forces those disable/order loops to stop/restore onboarding first, again with the minimal-change/no-business-assertion-change note. Numbering was checked (BASE max PH-282; no remote branch/PR occupies >=PH-283) and four tasks were registered continuously: PH-283 settlement open-item/clearance/refund-coverage read-only reconciliation (ready; deps PH-224/232/240/230 done), PH-284 management-revenue recognition vs settlement/contract-terms read-only pairing (ready; deps PH-219/222/224/232/265 done), PH-285 authorized CSV reconciliation-worksheet export (proposed; needs PH-181/182 and the PH-272/PH-277 insights interfaces) and PH-286 as the next planning slot (proposed until PH-282's review pass closes the slot). PH-276's blocker was refreshed to wait for PH-269 done; no other proposed task was promoted. No product code, migration, scaffold or contract-schema change was made; only planning/contract text.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at the candidate revision (BASE 8748c1a, PH-282 in_review per slot convention): {\"command\":\"check\",\"ok\":true,\"task_count\":208}, exit 0 (check allows in_review with owner+handoff and does not yet require the report pass); the final post-review entry will be recorded at the review-pass HEAD."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-282 on main 8748c1a with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 8748c1a --task PH-282",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at the candidate revision (BASE 8748c1a): exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (\"python scripts/projectctl.py check\" declaration is still the pre-review entry), no path_out_of_scope — all 11 changed files (PH-269/PH-274 whitelist+spec notes, 4 new specs PH-283..286, tasks.json, manifest.json, docs/verification.md, PH-282 report/handoff) are inside BASE PH-282 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (planning registration plus the two authorized whitelist corrections); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Planning-slot state convention: PH-282 is kept in_review with handoff and PH-286 is proposed with blocker 'PH-282 done 后置 ready'; after the independent review PASS, the final evidence commit will set PH-282 done and PH-286 ready and clear the blocker (same convention as PH-263/268/273/278).",
+    "The two whitelist corrections were made exactly as Lead-authorized and only as text: PH-269 gains tests/test_contract_approval.py (its spec note explains the time-requires-contracts disable-loop ordering), PH-274 gains the seven listed test files (its spec note explains the onboarding-requires-three-deps disable-loop ordering). Both notes require minimal necessary changes and forbid changing business assertion semantics. No other task's allowed_paths were expanded.",
+    "PH-283/PH-284 are registered ready with no migration/write path (read-only reconciliation/pairing over already-done owner facts); PH-285 is proposed with explicit blockers (PH-181/182 plus the not-yet-implemented insights interfaces); no existing proposed task was falsely promoted.",
+    "Numbering basis: BASE max PH-282; checked remote branches incl. the open EXP-line PR branches and PH-269 PR #161 and open PRs - no >=PH-283 ids exist, so PH-283..PH-286 are continuous and free.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-283/PH-284/PH-285 are implementation slices only registered (283/284 ready, 285 proposed); no product code, tests, migration, browser, PostgreSQL or CI evidence exists yet.",
+    "The PH-269/PH-274 whitelist expansions unblock their delivery but those implementations are not part of this slice; their actual minimal test edits/tests remain to be verified in their own PRs/CI.",
+    "PH-251/252/255/256/257/260/261/262/271/272/285 remain blocked on upstream proposed tasks; no promotion or scope change was made.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
