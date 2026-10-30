@@ -1,0 +1,43 @@
+{
+  "task_id": "PH-229",
+  "summary": "Register PH-230 (cash posting slice: draft cash transactions become immutable posted facts with one canonical cash.transaction_recorded event and read-only account coverage; no ledger/classification/clearing/refund) and PH-231 next planning slot. No product code changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-review actual rerun at HEAD a1b5b06: ok=true, task_count=153 (PH-229 done, PH-230/PH-231 ready, dependencies done)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 35e0a25 --task PH-229",
+      "result": "pass",
+      "evidence": "Post-review actual rerun at HEAD a1b5b06 against base 35e0a25: ok=true, 8 changed files all inside BASE allowed_paths, no errors."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-229 planning reviewer (fresh context, read-only; two rounds)",
+    "status": "pass",
+    "findings": [
+      "Round 1 blockers closed: PH-230 allowed_paths now includes pmo_plugins/cash/models.py (status constraint draft/posted) and tests/test_v1_cash_concurrency.py with the concurrency command in acceptance; private coverage fields renamed as estimates with UI wording forbidding cash-balance claims; canonical cash.transaction.record/v1 channel explicitly not exposed; no posted_at field; audit action frozen as cash.cash_transaction.posted.",
+      "Round 2 confirmed the six items and required only the report evidence to be filled from actual reruns after this verdict; it is filled before merge."
+    ],
+    "evidence": "Reviewer inspected PH-230/PH-231 specs, PH-230 allowed paths and acceptance commands, tasks/manifest/handoff/report, and the frozen cash contracts (CashTransaction posted enum, cash.transaction_recorded.v1 with posting_event_refs minItems=0, cash.account_coverage.get shape). Ran projectctl check/verify-change (blocked only by pending review), 19 governance tests, and confirmed dependency legality."
+  },
+  "deviations": [
+    "PH-230 is a deliberately narrow slice of PH-169: it posts bank facts (status/event/coverage) but writes no AccountingEvent/LedgerPosting/LedgerEntry and performs no classification/allocation/clearing/refund/correction/transfer/import/opening balance; those remain later slices.",
+    "PH-230 dependencies are the done cash/AR slices rather than the still-proposed PH-169/170/171, because posting only needs the PH-228 cash facts plus core periods; remaining scope stays tracked by later planning.",
+    "Posting is not described as cash-book entry: the canonical event carries posting_event_refs=[] and the spec explicitly says no ledger bridge in this slice.",
+    "Private coverage fields are named as estimates (posted_net_estimate_cents/available_estimate_cents) and the UI must label them as not cash balance or available balance; canonical cash.account_coverage.get is deferred.",
+    "No canonical cash.transaction.record/v1 channel is exposed; the private service posts an already-registered draft by id to avoid a second write path.",
+    "Posted time is derived from audit/event timestamps; no posted_at field is added."
+  ],
+  "unverified": [
+    "No product code, migration, tests, browser, PostgreSQL or CI evidence exists for PH-230 yet.",
+    "Cash classification, ledger bridge, clearing (PH-170), refunds (PH-171), bank-file import and opening balances are not designed here; PH-169 is not complete."
+  ]
+}
