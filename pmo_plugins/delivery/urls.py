@@ -13,13 +13,16 @@ def entry_point():
     from pmo_plugins.costing.plugin import Plugin as CostingPlugin
     from pmo_plugins.management_revenue.domain_metadata import DOMAIN_METADATA as REVENUE_METADATA
     from pmo_plugins.management_revenue.plugin import Plugin as RevenuePlugin
+    from pmo_plugins.settlement.domain_metadata import DOMAIN_METADATA as SETTLEMENT_METADATA
+    from pmo_plugins.settlement.plugin import Plugin as SettlementPlugin
+    from pmo_plugins.settlement import receivable_views
     from pmo_plugins.contracts.domain_metadata import DOMAIN_METADATA as CONTRACTS_METADATA
     from pmo_plugins.contracts.plugin import Plugin as ContractsPlugin
     from pmo_plugins.contracts import party_views, views, approval_views
     installed = {app.label: app.name for app in apps.get_app_configs()}
     descriptors = [{'plugin_id': key, 'metadata': metadata, 'manifest': plugin.manifest,
         'catalog': {'contract_catalog': []}, 'installed_apps': installed}
-        for key, metadata, plugin in [('contracts', CONTRACTS_METADATA, ContractsPlugin), ('costing', COSTING_METADATA, CostingPlugin), ('delivery', DOMAIN_METADATA, Plugin), ('management_revenue', REVENUE_METADATA, RevenuePlugin)]]
+        for key, metadata, plugin in [('contracts', CONTRACTS_METADATA, ContractsPlugin), ('costing', COSTING_METADATA, CostingPlugin), ('delivery', DOMAIN_METADATA, Plugin), ('management_revenue', REVENUE_METADATA, RevenuePlugin), ('settlement', SETTLEMENT_METADATA, SettlementPlugin)]]
     return prepare_plugin_entry_point(descriptors, {
         'contracts': {
             'parties': party_views.party_list, 'party': party_views.party_detail,
@@ -30,6 +33,7 @@ def entry_point():
             'version_submit': approval_views.version_submit, 'version_review': approval_views.version_review,
         },
         'management_revenue': {},
+        'settlement': {name: getattr(receivable_views, name) for name in ('settlement_list', 'settlement_detail', 'settlement_form', 'settlement_save', 'settlement_action', 'aging_list')},
         'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action')} | {name: getattr(service_period_views,name) for name in ('service_confirmation_list','service_confirmation_detail','service_confirmation_form','service_confirmation_save','service_confirmation_action')},
         'costing': {name: getattr(labor_views, name) for name in
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')},
