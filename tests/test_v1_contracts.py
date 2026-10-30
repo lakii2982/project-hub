@@ -235,8 +235,9 @@ class ContractsConcurrencyTests(Fixture, TransactionTestCase):
         super().setUp()
         # Isolate the original contract lifecycle scenarios from newer dependants.
         # PH-226: settlement depends on delivery, so it must be disabled first when installed.
+        # PH-269: time depends on contracts, so disable it before contracts below.
         from core.plugin_runtime import get_registry, set_enabled
-        for plugin_id in ('management_revenue', 'settlement', 'delivery'):
+        for plugin_id in ('management_revenue', 'settlement', 'delivery', 'time'):
             if plugin_id in get_registry().manifests:
                 set_enabled(self.owner, plugin_id, False)
 
