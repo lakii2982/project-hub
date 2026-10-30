@@ -1,6 +1,6 @@
 {
   "task_id": "PH-274",
-  "summary": "onboarding 导入预览实现前置首片：按 ADR 0012 新建 pmo_plugins.onboarding 插件（manifest 8 字段、INSTALLED_APPS/PMO_PLUGIN_MODULES 注册、delivery root 单写路由），实现只读 CSV 模板识别、字段映射与逐行格式/主数据预检（time/expense/plan 三类模板），返回内存态冲突清单投影与 200 行内预览；不写 ImportPreview/ImportConflict 表、不做冲突持久化/normalized_commands/提交/期初，零业务事实、零账本、零来源消费、零规范事件（仅一条 generic audit onboarding.import_previewed）。权限 owner/finance/auditor 可读、pm/member 拒绝、模块停用拒绝；预览无收据、重复预览确定。本片不新增迁移（spec 明确无业务表；app 仅 bootstrap）。",
+  "summary": "onboarding 导入预览实现前置首片：按 ADR 0012 新建 pmo_plugins.onboarding 插件（manifest 8 字段、requires={contracts,settlement,cash}、INSTALLED_APPS/PMO_PLUGIN_MODULES 注册、delivery root 单写路由），实现只读 CSV 模板识别、字段映射与逐行格式/主数据预检（time/expense/plan 三类模板），返回内存态冲突清单投影与 200 行内预览；不写 ImportPreview/ImportConflict 表、不做冲突持久化/normalized_commands/提交/期初，零业务事实、零账本、零来源消费、零规范事件（仅一条 generic audit onboarding.import_previewed）。权限 owner/finance/auditor 可读（auditor 经 history_read GET 只读预览通道，文件上传走 business_write 路由）、pm/member 拒绝、模块/依赖停用拒绝；预览无收据、重复预览确定。按 PH-282 白名单修正恢复 ADR requires/migration_dependencies，并在 7 个既有禁用 loop 测试中先停用 onboarding（最小必要、不改业务断言语义）；服务层依赖门保留为防御纵深。本片不新增迁移/业务表（spec 明确无业务表，无 0001）。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
@@ -10,7 +10,7 @@
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual exit 0: System check identified 73 issues (0 silenced), all pre-existing urls.W003 namespace warnings plus the 2 new onboarding read/write route warnings; 0 errors."
+      "evidence": "Actual exit 0: System check identified 73 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (registry validates the restored ADR requires and migration_dependencies)."
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1: Ran 954 tests, FAILED (failures=5, errors=3, skipped=68) => 878 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE 7d8877f baseline; no new failures. CI Linux is authoritative."
+      "evidence": "Actual local exit 1: Ran 954 tests, FAILED (failures=5, errors=3, skipped=68) => 878 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE e38b9a6 baseline; no new failures. CI Linux is authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -41,10 +41,10 @@
     "evidence": "Awaiting independent S review at this HEAD: ADR 0012 plugin bootstrap (8-field manifest, requires semantics, registration/root single-write route), read-only preview boundary (no tables/no persistence/no ledger/source consumption/canonical event), template detection/mapping/row precheck, permissions/module disable, idempotency-free read-only contract and the disclosed deviations (temporary empty manifest requires/migration_dependencies with service-layer dependency gate; no onboarding 0001; in-memory conflicts; auditor HTTP run 403). projectctl check, check and the scoped tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
   },
   "deviations": [
-    "Dependency guard vs existing test whitelist (Lead decision: option 1, restore ADR contract). PH-274 spec/ADR 0012 freeze manifest requires={contracts,settlement,cash} (and matching migration_dependencies); registering that guard makes 7 existing disable-loop test files fail (tests/test_acceptance_revenue.py, tests/test_v1_cash_http.py, tests/test_v1_clearance_http.py, tests/test_v1_settlement_http.py, tests/test_v1_contract_change.py, tests/test_v1_contract_change_http.py, tests/test_service_period_revenue_http.py), none of which are inside the PH-274 allowed_paths. The Lead ruled option 1: the PH-282 planning slot will add those 7 files to the PH-274 allowed_paths (PH-269 precedent) and supply a corrected BASE. On rebase, this slice will restore manifest requires={contracts,settlement,cash} and the ADR migration_dependencies, keep the service-layer dependency gate as defence in depth, and in each of the 7 loops disable onboarding first with minimal edits that do not change business assertion semantics. Until that corrected BASE lands, this HEAD keeps requires={} and migration_dependencies=[] as a disclosed temporary fallback.",
+    "Dependency guard vs existing test whitelist (Lead decision option 1, executed): PH-274 spec/ADR 0012 freeze manifest requires={contracts,settlement,cash} (and migration_dependencies ['core','contracts','settlement','cash']); the PH-282 planning slot added the 7 affected disable-loop test files (tests/test_acceptance_revenue.py, tests/test_v1_cash_http.py, tests/test_v1_clearance_http.py, tests/test_v1_settlement_http.py, tests/test_v1_contract_change.py, tests/test_v1_contract_change_http.py, tests/test_service_period_revenue_http.py) to the PH-274 allowed_paths and supplied BASE e38b9a6. This slice rebased onto that BASE, restored the ADR requires/migration_dependencies (registry validates), kept the service-layer dependency gate as defence in depth, and in each of the 7 loops disables onboarding first with minimal edits that do not change business assertion semantics. The earlier temporary requires={} fallback is gone.",
     "No onboarding 0001 migration: the main PH-274 spec freezes no business tables, no ImportPreview/ImportConflict persistence and no migrations/0001_initial.py. The Lead's task message mentioned an own 0001 migration and canonical conflict persistence; the spec was followed (bootstrap app only, in-memory ephemeral conflict projection), and the conflict is disclosed rather than silently changing the contract.",
     "Conflict list is an in-memory ephemeral projection with canonical-like fields (kind=import_conflict, ephemeral=true, row_number/code/field/message/severity) returned per response; nothing is persisted and no ImportPreview/ImportConflict table exists. This satisfies the spec's '不做冲突持久化' while still giving PH-271 a canonical-shaped preview payload.",
-    "Auditor HTTP preview run returns 403: the plugin runtime binds POST routes to business_write and calls require_write, which excludes auditor. The service layer allows auditor (tested) and the templates page is readable by auditor; if an HTTP read-only preview channel for auditor is required, it needs a runtime access extension/planning decision. The list page remains available to auditor.",
+    "Auditor HTTP preview: the read-only preview entry import_preview_run is registered as history_read (GET; renders the upload page and can preview a small text content query), while the multipart file upload is a separate business_write route import_preview_upload (owner/finance); the list page remains business_read. This keeps auditor read-only HTTP access (GET run returns 200 and the service layer allows auditor) without granting auditor a write channel. The route split is disclosed because the frozen plugin runtime maps business_write to POST/require_write and history_read to GET.",
     "Preview header mapping is intentionally lenient (required columns must be present; extra columns become unmapped_columns) per the spec's mapped_fields/unmapped requirement, while core.imports.parse_csv remains strict and unchanged; preview does not call the strict parser and performs its own read-only row validation.",
     "Preview performs one generic audit write (onboarding.import_previewed) as the spec allows; it is the only durable write. The generic audit helper also emits its ordinary non-canonical outbox DomainEvent for the action name; no canonical topic/command/schema is added.",
     "Single worker owns the whole write set (onboarding plugin files, settings/delivery wiring, tests, governance); no parallel slice writes these files; independent review is pending."
@@ -54,7 +54,7 @@
     "Independent S review is still pending; verify-change is review-gated at this HEAD.",
     "PostgreSQL-specific behaviour (concurrency/vendor triggers) is not exercised here; this slice adds no tables/triggers/migrations and CI remains authoritative.",
     "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
-    "Lead ruled option 1: PH-282 planning slot expands the PH-274 whitelist with the 7 existing disable-loop test files and supplies a corrected BASE; after rebase the manifest requires/migration_dependencies will be restored per ADR 0012 and the 7 loops will disable onboarding first, then the full suite/scoped/verify/check/makemigrations will be rerun. The current HEAD keeps the temporary empty-manifest fallback until that BASE lands.",
+    "Lead decision option 1 is executed: PH-282 expanded the whitelist and supplied BASE e38b9a6; this HEAD restored the ADR requires/migration_dependencies and patched the 7 disable loops. Remaining unverified items are browser 1440/390, independent S review, PG/concurrency (this slice adds no tables/triggers/migrations), production/UAT and legacy database upgrades.",
     "Import submission/opening batches/normalized_commands/conflict persistence, template management, batch/concurrency and cross-company imports remain unimplemented (PH-271/PH-256/PH-187-191 proposed)."
   ]
 }

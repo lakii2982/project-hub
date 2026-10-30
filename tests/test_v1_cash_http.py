@@ -232,6 +232,7 @@ class CashHTTPTests(CashHTTPFixture, TestCase):
         row = self.transaction(account=account)
         self.assertEqual(self.client.get(TX_DETAIL, {'id': row.pk}).status_code, 200)
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'onboarding', False)
         set_enabled(self.owner, 'cash', False)
         self.login(self.auditor)
         self.assertEqual(self.client.get(ACCOUNTS).status_code, 403)
@@ -406,6 +407,7 @@ class CashHTTPTests(CashHTTPFixture, TestCase):
         second.refresh_from_db()
         self.assertEqual(second.status, 'posted')
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'onboarding', False)
         set_enabled(self.owner, 'cash', False)
         self.login(self.auditor)
         self.assertEqual(self.client.get(TX_LIST).status_code, 403)

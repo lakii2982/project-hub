@@ -1,5 +1,5 @@
 {% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-<form method="post" enctype="multipart/form-data" action="/modules/onboarding/import-preview-run/">{% csrf_token %}
+<form method="post" enctype="multipart/form-data" action="/modules/onboarding/import-preview-upload/">{% csrf_token %}
 {% include 'partials/form_fields.html' with form=form %}
 <p class="help-text">预览只读：识别 CSV 模板、字段映射与逐行格式/主数据预检，不写任何业务事实、账本或规范事件；提交与冲突裁决留给后续切片。</p>
 <div class="actions"><button type="submit" class="button primary">预览 CSV</button></div>

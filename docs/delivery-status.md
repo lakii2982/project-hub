@@ -38,4 +38,4 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 
 ## PH-274 onboarding 导入预览实现前置首片（2026-10-31）
 
-新建 pmo_plugins.onboarding 插件（ADR 0012）并落地只读导入预览：CSV 模板识别（time/expense/plan）、字段映射与未映射列、200 行内预览、逐行格式/主数据预检与内存态 ephemeral 冲突投影；零业务事实/账本/来源消费/规范事件（仅一条 generic audit），无表无迁移、无提交/期初/冲突持久化。权限 owner/finance/auditor 可读、pm/member 拒绝、模块与依赖停用拒绝。偏差：manifest requires 暂空（7 个既有禁用 loop 测试文件不在白名单，服务层等价依赖门）、无 0001 迁移（按 spec）、auditor HTTP 预览运行 403。未验证：浏览器 1440/390、独立复核、PG、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-274.json`。
+新建 pmo_plugins.onboarding 插件（ADR 0012，manifest requires={contracts,settlement,cash}）并落地只读导入预览：CSV 模板识别（time/expense/plan）、字段映射与未映射列、200 行内预览、逐行格式/主数据预检与内存态 ephemeral 冲突投影；零业务事实/账本/来源消费/规范事件（仅一条 generic audit），无表无迁移、无提交/期初/冲突持久化。权限 owner/finance/auditor 可读（auditor 经 history_read GET 只读预览，文件上传走 business_write），pm/member 拒绝、模块与依赖停用拒绝；7 个既有禁用 loop 测试按 PH-282 白名单先停用 onboarding。未验证：浏览器 1440/390、独立复核、PG、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-274.json`。

@@ -3,7 +3,8 @@
 <div class="settings-overview">
 <section class="panel"><div class="panel-heading"><h2>上传与预览</h2></div><div class="panel-body">
 {% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-<form method="post" enctype="multipart/form-data" action="/modules/onboarding/import-preview-run/">{% csrf_token %}
+{% if error_message %}<div class="message error" role="alert">{{ error_message }}</div>{% endif %}
+<form method="post" enctype="multipart/form-data" action="/modules/onboarding/import-preview-upload/">{% csrf_token %}
 <div class="form-field"><label for="import-kind">导入类型</label>{{ form.kind }}</div>
 <div class="form-field"><label for="import-file">CSV 文件</label>{{ form.file }}</div>
 <p class="help-text">支持 UTF-8（含 BOM）CSV，最大 1MB、最多 500 行；预览仅展示前 200 行。未知列进入未映射清单，缺失必填列/非法日期金额等进入行级错误。</p>

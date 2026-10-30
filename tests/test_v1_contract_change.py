@@ -239,6 +239,6 @@ class ContractChangeServiceTests(ContractChangeFixture, TestCase):
         self.assertEqual(replay.pk, decided.pk)
         self.denied(lambda: self.decide(change, member=member))
         from core.plugin_runtime import set_enabled
-        for key in ('management_revenue', 'settlement', 'delivery', 'time', 'contracts'):
+        for key in ('onboarding', 'management_revenue', 'settlement', 'delivery', 'time', 'contracts'):
             set_enabled(self.owner, key, False)
         self.denied(lambda: self.draft_change())

@@ -28,6 +28,34 @@ def import_preview_list(context, payload):
 
 
 def import_preview_run(context, payload):
+    """Read-only preview entry (history_read, GET): renders the upload page.
+
+    A small text payload can be previewed directly via the content query parameter so
+    read-only roles (including auditor) have an HTTP preview channel; file uploads use
+    the business_write upload route.
+    """
+    member = _member(context)
+    request = context.request
+    form = ImportPreviewForm()
+    result = None
+    error_message = None
+    if payload.get('content'):
+        try:
+            result = previews.preview_import(
+                member, kind=payload.get('kind') or None,
+                file_name=payload.get('file_name') or 'pasted.csv',
+                content=payload.get('content'))
+        except ValidationError as exc:
+            error_message = '；'.join(exc.messages)
+        else:
+            messages.success(request, '导入预览完成（只读，未写入任何业务事实）')
+    return render(request, 'onboarding/import_preview_list.html', _base(
+        member, form=form, templates=previews.import_template_list(member),
+        result=result, error_message=error_message),
+        status=200 if result or not payload.get('content') else 400)
+
+
+def import_preview_upload(context, payload):
     member = _member(context)
     request = context.request
     form = ImportPreviewForm(request.POST or None, request.FILES or None)

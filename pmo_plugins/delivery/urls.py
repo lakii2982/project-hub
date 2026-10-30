@@ -47,7 +47,7 @@ def entry_point():
         },
         'management_revenue': {},
         'onboarding': {name: getattr(onboarding_views, name) for name in
-                       ('import_preview_list', 'import_preview_run')},
+                       ('import_preview_list', 'import_preview_run', 'import_preview_upload')},
         'settlement': {name: getattr(receivable_views, name) for name in ('settlement_list', 'settlement_detail', 'settlement_form', 'settlement_save', 'settlement_action', 'aging_list', 'clearance_create', 'clearance_reverse', 'clearance_list', 'offset_list', 'offset_save')},
         'cash': {name: getattr(cash_views, name) for name in ('funding_account_list', 'funding_account_form', 'funding_account_save', 'funding_account_activate', 'cash_transaction_list', 'cash_transaction_form', 'cash_transaction_save', 'cash_transaction_detail', 'cash_party_match', 'cash_transaction_record', 'cash_refund_list',
                               'cash_refund_form', 'cash_refund_save', 'cash_bank_return_form',
