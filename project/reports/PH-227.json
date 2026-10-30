@@ -1,0 +1,37 @@
+{
+  "task_id": "PH-227",
+  "summary": "Register PH-228 (cash-facts first slice: funding accounts, bank transactions with stable external-key dedupe, and party matching; explicitly no ledger posting/classification/clearing/refund/import/opening balance) and PH-229 next planning slot. No product code changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "After review pass: ok=true, task_count=151 (PH-227 done, PH-228/PH-229 ready, dependencies done)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base f484a2e --task PH-227",
+      "result": "pass",
+      "evidence": "Post-review actual rerun: ok=true, all changed files inside BASE allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-227 planning reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Review in progress."
+  },
+  "deviations": [
+    "PH-228 is a deliberately narrow first slice of PH-169: it records real bank facts and party matches but performs no ledger posting, classification, allocation, clearing, refund, correction, transfer, file import or opening balance. Those remain for later slices and are listed as unverified/non-goals.",
+    "PH-228 dependencies are the done AR slices (PH-214/PH-219/PH-222/PH-224), not the still-proposed PH-169/PH-156/PH-157 entries, because the slice only needs contract/payment/AR facts and core periods; the remaining PH-169 scope is tracked by later planning.",
+    "No canonical AccountingEvent/LedgerPosting is written in this slice; cash book bridging must be planned separately to avoid inventing a second cash balance."
+  ],
+  "unverified": [
+    "No product code, migration, tests, browser, PostgreSQL or CI evidence exists for PH-228 yet.",
+    "Cash posting, classification, clearing (PH-170), refunds (PH-171), bank-file import and opening balances are not designed here; PH-169 is not complete."
+  ]
+}

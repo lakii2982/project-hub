@@ -6319,7 +6319,7 @@
       "title": "后续业务交付独立规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -6337,6 +6337,85 @@
         "docs/verification.md",
         "project/reports/PH-227.json",
         "project/handoffs/PH-227.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "root",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-227.md"
+    },
+    {
+      "id": "PH-228",
+      "title": "现金事实首片：银行账户、银行流水与往来方匹配",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-214",
+        "PH-219",
+        "PH-222",
+        "PH-224"
+      ],
+      "spec": "project/specs/PH-228.md",
+      "allowed_paths": [
+        "pmo_plugins/cash/*",
+        "tests/test_v1_cash.py",
+        "tests/test_v1_cash_http.py",
+        "tests/test_v1_cash_concurrency.py",
+        "pmo/settings.py",
+        "pmo/urls.py",
+        "pmo_plugins/delivery/urls.py",
+        "templates/base.html",
+        "templates/finance.html",
+        "core/management/commands/verify_integrity.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/reports/PH-228.json",
+        "project/handoffs/PH-228.md",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_cash tests.test_v1_cash_concurrency tests.test_v1_cash_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-229",
+      "title": "后续业务交付独立规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-227"
+      ],
+      "spec": "project/specs/PH-229.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-229.json",
+        "project/handoffs/PH-229.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
