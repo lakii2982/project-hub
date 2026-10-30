@@ -12,7 +12,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q, Sum
 from django.utils import timezone
 
-from core.cash_accounting import cash_book_totals
+from core.models import LedgerPosting
 from core.models import AccountingPeriod, Membership
 from core.access import require_member
 
@@ -79,6 +79,21 @@ def _derived_cash_ids(organization_id):
     return refund_ids | return_ids
 
 
+def _ledger_window(organization_id, account, *, start, day):
+    rows = LedgerPosting.objects.filter(
+        organization_id=organization_id, scope_kind='funding_account',
+        scope_id=str(account.pk), accounting_event__occurred_on__lte=day)
+    if start is not None:
+        rows = rows.filter(accounting_event__occurred_on__gte=start)
+    cash_in = rows.filter(book='cash_in').aggregate(total=Sum('amount_cents'))['total'] or 0
+    cash_out = rows.filter(book='cash_out').aggregate(total=Sum('amount_cents'))['total'] or 0
+    return cash_in, cash_out
+
+
+def _in_window(day_value, start, day):
+    return day_value <= day and (start is None or day_value >= start)
+
+
 def _account_bundle(account, *, start, end, day, period, organization_id):
     transactions = list(CashTransaction.objects.filter(
         organization_id=organization_id, funding_account=account, status='posted',
@@ -92,25 +107,35 @@ def _account_bundle(account, *, start, end, day, period, organization_id):
     posted_in = sum(row.gross_cents for row in window_rows if row.direction == 'in')
     posted_out = sum(row.gross_cents for row in window_rows if row.direction == 'out')
     posted_net = posted_in - posted_out
-    refunds = list(Refund.objects.filter(
+    refund_rows = Refund.objects.filter(
         organization_id=organization_id,
         original_cash_transaction__funding_account=account,
-        refund_date__lte=end))
-    returns = list(BankReturn.objects.filter(
+        refund_date__lte=day)
+    if start is not None:
+        refund_rows = refund_rows.filter(refund_date__gte=start)
+    refunds = list(refund_rows)
+    return_rows = BankReturn.objects.filter(
         organization_id=organization_id,
         original_cash_transaction__funding_account=account,
-        return_date__lte=end))
-    transfers = list(InternalTransfer.objects.filter(
-        organization_id=organization_id).filter(
+        return_date__lte=day)
+    if start is not None:
+        return_rows = return_rows.filter(return_date__gte=start)
+    returns = list(return_rows)
+    transfer_rows = InternalTransfer.objects.filter(
+        organization_id=organization_id, transfer_date__lte=day).filter(
         Q(out_cash_transaction__funding_account=account)
-        | Q(in_cash_transaction__funding_account=account)).select_related(
+        | Q(in_cash_transaction__funding_account=account))
+    if start is not None:
+        transfer_rows = transfer_rows.filter(transfer_date__gte=start)
+    transfers = list(transfer_rows.select_related(
         'out_cash_transaction', 'in_cash_transaction').order_by('created_at', 'id'))
     transfer_in = sum(row.gross_cents for row in transfers
                       if row.in_cash_transaction.funding_account_id == account.pk)
     transfer_out = sum(row.gross_cents for row in transfers
                        if row.out_cash_transaction.funding_account_id == account.pk)
     transfer_net = transfer_in - transfer_out
-    ledger_in, ledger_out = cash_book_totals(organization_id, account.pk, through=end)
+    ledger_in, ledger_out = _ledger_window(
+        organization_id, account, start=start, day=day)
     ledger_net = ledger_in - ledger_out
     derived_ids = _derived_cash_ids(organization_id)
     bridge_rows = [row for row in window_rows if row.pk not in derived_ids]
@@ -219,6 +244,7 @@ def _account_projection(account, bundle):
         'internal_transfer_in_cents': bundle['transfer_in'],
         'internal_transfer_out_cents': bundle['transfer_out'],
         'internal_transfer_offset_cents': bundle['transfer_net'],
+        'internal_transfer_count': len(bundle['transfers']),
         'ledger_cash_in_cents': bundle['ledger_in'],
         'ledger_cash_out_cents': bundle['ledger_out'],
         'ledger_net_cents': bundle['ledger_net'],
@@ -262,6 +288,10 @@ def bank_account_balance_snapshot(member, *, funding_account_id=None, as_of=None
         issues.extend(_account_issues(
             account, bundle, period=period, organization_id=member.organization_id))
         rows.append(_account_projection(account, bundle))
+    transfer_query = InternalTransfer.objects.filter(
+        organization_id=member.organization_id, transfer_date__lte=day)
+    if start is not None:
+        transfer_query = transfer_query.filter(transfer_date__gte=start)
     return {
         'as_of': day.isoformat(), 'period': period,
         'scope': 'company',
@@ -275,6 +305,7 @@ def bank_account_balance_snapshot(member, *, funding_account_id=None, as_of=None
             'returned_cents': sum(row['returned_cents'] for row in rows),
             'internal_transfer_offset_cents': sum(
                 row['internal_transfer_offset_cents'] for row in rows),
+            'internal_transfer_count': transfer_query.count(),
             'ledger_net_cents': sum(row['ledger_net_cents'] for row in rows),
             'closing_balance_cents': sum(row['closing_balance_cents'] for row in rows),
             'issue_count': len(issues),

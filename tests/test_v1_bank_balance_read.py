@@ -11,7 +11,8 @@ from core.models import (AccountingEvent, AccountingPeriod, AuditEvent, DomainEv
 from pmo_plugins.cash import bank_balance_services as bank
 from pmo_plugins.cash import internal_transfer_services as internal
 from pmo_plugins.cash import refund_services as refunds
-from pmo_plugins.cash.models import CashClassification, CashTransaction, FundingAccount, Refund
+from pmo_plugins.cash.models import (CashClassification, CashTransaction, FundingAccount,
+                                     InternalTransfer, Refund)
 from tests.test_v1_cash_classification import ClassificationFixture
 
 
@@ -34,9 +35,10 @@ class BankBalanceFixture(ClassificationFixture):
         return next(row for row in result['accounts']
                     if row['account_ref']['id'] == target)
 
-    def refund(self, cash_row, amount=2000):
+    def refund(self, cash_row, amount=2000, *, day=None):
         return refunds.record_refund(
-            self.owner, original_cash_transaction_id=cash_row.pk, refund_date=self.today,
+            self.owner, original_cash_transaction_id=cash_row.pk,
+            refund_date=day or self.today,
             gross_cents=amount, reason='客户退款', request_token=uuid.uuid4(), dry_run=False)
 
     def transfer(self, out_row, in_row):
@@ -110,17 +112,53 @@ class BankBalanceServiceTests(BankBalanceFixture, TestCase):
         prior_day = self.today.replace(day=1) - timedelta(days=1)
         prior = self.posted(gross_cents=7000, direction='in', transaction_date=prior_day)
         self.classify(prior, classification='receipt')
-        self.posted(gross_cents=3000, direction='in')
+        current = self.posted(gross_cents=3000, direction='in')
+        self.classify(current, classification='receipt')
         period = self.today.strftime('%Y-%m')
         result = self.snapshot(period=period)
         row = self.account_row(result)
         self.assertEqual(row['opening_balance_cents'], 7000)
         self.assertEqual(row['posted_in_cents'], 3000)
         self.assertEqual(row['closing_balance_cents'], 10000)
+        # clean period with prior history must not raise a false ledger_net_mismatch
+        self.assertEqual(self.issues(period=period)['issue_count'], 0)
         AccountingPeriod.objects.create(
             organization=self.org, period=period, status='posted',
             closed_through=yesterday)
         self.assertIn('future_fact_after_closed_period', self.codes(period=period))
+
+    def test_prior_refund_excluded_from_period_window(self):
+        prior_day = self.today.replace(day=1) - timedelta(days=1)
+        prior = self.posted(gross_cents=7000, direction='in', transaction_date=prior_day)
+        self.classify(prior, classification='receipt')
+        self.refund(prior, amount=1000, day=prior_day)
+        current = self.posted(gross_cents=3000, direction='in')
+        self.classify(current, classification='receipt')
+        period = self.today.strftime('%Y-%m')
+        result = self.snapshot(period=period)
+        row = self.account_row(result)
+        self.assertEqual(row['opening_balance_cents'], 6000)  # 7000 in - 1000 prior refund out
+        self.assertEqual(row['posted_in_cents'], 3000)
+        self.assertEqual(row['refunded_cents'], 0)  # prior refund excluded from the window
+        self.assertEqual(row['closing_balance_cents'], 9000)
+        self.assertEqual(self.issues(period=period)['issue_count'], 0)
+
+    def test_future_transfer_excluded_by_as_of(self):
+        second = self.second_account()
+        out_leg = self.posted(gross_cents=1000, direction='out')
+        in_leg = self.posted(gross_cents=1000, direction='in', account=second)
+        tomorrow = self.today + timedelta(days=1)
+        InternalTransfer.objects.create(
+            organization=self.org, out_cash_transaction=out_leg,
+            in_cash_transaction=in_leg, out_cash_ref=out_leg.transaction_ref,
+            in_cash_ref=in_leg.transaction_ref, transfer_date=tomorrow,
+            gross_cents=1000, out_transaction_date=out_leg.transaction_date,
+            in_transaction_date=in_leg.transaction_date, status='active', version=1,
+            created_by=self.owner)
+        self.assertEqual(self.snapshot(as_of=self.today.isoformat())['summary'][
+            'internal_transfer_count'], 0)
+        self.assertEqual(self.snapshot(as_of=tomorrow.isoformat())['summary'][
+            'internal_transfer_count'], 1)
 
     def test_as_of_filters(self):
         row = self.posted(gross_cents=1000, direction='in')
