@@ -33,6 +33,26 @@
       "evidence": "Actual ok=true on the real-settlement browser database and on a freshly migrated seeded database; settlement partitions, open items and claims validated."
     },
     {
+      "command": "python manage.py test tests.test_v1_settlement tests.test_v1_settlement_concurrency tests.test_v1_settlement_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual 35 tests pass (6 PostgreSQL-only settlement concurrency tests skipped on SQLite; the PR PostgreSQL CI must execute them)."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
+      "result": "pass",
+      "evidence": "Actual pass: 9 schemas, 2977 resolved refs, 71 commands, 47 events; no contract drift."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/check_contract_cases.py",
+      "result": "pass",
+      "evidence": "Actual pass: 19 positive and 37 rejected examples."
+    },
+    {
+      "command": "python -B docs/v1.0-development/fixtures/check_fixture.py",
+      "result": "pass",
+      "evidence": "Actual pass: fixture errors=[] and hashes unchanged."
+    },
+    {
       "command": "python scripts/projectctl.py verify-change --base 83a2577 --task PH-224",
       "result": "pass",
       "evidence": "Post-commit, post-review rerun declared after actual execution (see handoff)."
@@ -41,9 +61,15 @@
   "review": {
     "required": true,
     "reviewer": "independent PH-224 implementation reviewer (fresh context, read-only; multi-round)",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Final review in progress against rebased HEAD; verdict recorded after fixes."
+    "status": "pass",
+    "findings": [
+      "Blocking plugin-dependency regression (two SQLite tests + two PostgreSQL concurrency setUps) was fixed first by the PH-226 pre-task; PH-224 was rebased onto that BASE and the full suite is green (680 OK, 40 environment skips).",
+      "MAJOR replay: save_settlement queries the receipt before period/derive checks and normalizes the default settled_on digest, so same-token replay after lock or across midnight returns the original settlement; regression tests and browser probe both pass.",
+      "MAJOR evidence: refs are canonical three-key objects; free-text basis stays in the private terms_snapshot/evidence_note and is displayed via evidence_display.",
+      "Browser defects found by real-browser evidence were fixed and re-verified on final HEAD: aging due/release date rendering, readable source refs (detail and form), draft edit pre-check of already selected terms.",
+      "Retained minor limitations (documented in unverified): verify_integrity does not check item tax total/occurred_on/approved digest/claim source/one event per item; no canonical Settlement/OpenItem projection; string vs dict term_refs produce different receipt digests; review return/reject still requires an open period; 32 pre-existing urls.W003 warnings; browser Chromium-only; PostgreSQL races and production/UAT unverified."
+    ],
+    "evidence": "Reviewer reran the full suite (680 OK), the 35 targeted tests (6 PG skip), check/makemigrations, the three contract scripts, verify_integrity on the fresh/populated/legacy and real-settlement browser databases (all ok:true), parsed the browser evidence (57/57, HEAD matches), and audited the diff against PH-224 allowed paths. Formal PASS is conditional on the PR PostgreSQL CI executing the 6 settlement concurrency tests successfully."
   },
   "deviations": [
     "PH-226 (test prerequisite) was merged first so the settlement plugin's contracts/delivery dependency edge does not break two existing SQLite tests and two PostgreSQL concurrency setUp blocks; PH-224 was rebased onto that BASE.",
@@ -55,6 +81,11 @@
   "unverified": [
     "PostgreSQL concurrency/lock/period-race execution is provided by the PR's PostgreSQL CI job; local SQLite skips are not evidence.",
     "Production/customer UAT, cash clearing, credit/bad debt, AP, invoices, disputes, active-settlement reversal, opening items and AgingCase writes are out of this slice.",
-    "Browser evidence covers Chromium 320/390/768/1024/1440 only; printing, dark mode, touch and non-Chromium browsers untested."
+    "Browser evidence covers Chromium 320/390/768/1024/1440 only; printing, dark mode, touch and non-Chromium browsers untested.",
+    "verify_integrity does not yet check per-item tax total, occurred_on equality, draft/submitted emptiness, approved_input digest, claim source/event_ref, or exactly one canonical event per item.",
+    "No canonical Settlement/OpenItem projection exists yet; snapshots are private view dicts.",
+    "String vs dict term_refs are both accepted and yield different receipt digests for the same semantics (same token across representations conflicts, low risk).",
+    "Review return/reject also requires an open accounting period (consistent with acceptance precedent, a policy choice rather than a defect).",
+    "PostgreSQL concurrency, production/customer UAT, cash clearing, credit/bad debt, AP, invoices, disputes, reversal and opening items remain unverified."
   ]
 }
