@@ -8,10 +8,11 @@ from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
-from core.models import (AuditEvent, DomainEvent, LedgerEntry, LedgerPosting, Project,
-                         SourceConsumption)
+from core.models import (AuditEvent, DomainEvent, Employee, LedgerEntry, LedgerPosting,
+                         Project, SourceConsumption, Timesheet)
 from pmo_plugins.delivery.models import Acceptance
-from pmo_plugins.cash.models import (CashClassification, CashTransaction, FundingAccount)
+from pmo_plugins.cash.models import (CashClassification, CashTransaction, FundingAccount,
+                                     Refund)
 from pmo_plugins.contracts.models import Contract, ContractChange
 from pmo_plugins.delivery.operations_read_services import ops_reconciliation_overview
 from pmo_plugins.management_revenue.models import RevenueRecognition
@@ -84,12 +85,42 @@ class OpsOverviewFixture(TermsSnapshotFixture):
                 created_by=self.owner)
         return transaction
 
-    def billable(self, *, status='draft', minutes=120, date=None):
+    def refund(self, original, amount=1000):
+        account = self._account
+        refund_cash = CashTransaction.objects.create(
+            organization=self.org, funding_account=account,
+            transaction_date=self.today, direction='out', gross_cents=amount,
+            external_source_key=uuid.uuid4().hex,
+            payee={'kind': 'counterparty', 'id': str(self.contract.party_id)},
+            status='posted', created_by=self.owner)
+        return Refund.objects.create(
+            organization=self.org, original_cash_transaction=original,
+            refund_cash_transaction=refund_cash,
+            original_cash_ref={'namespace': 'cash', 'kind': 'cash_transaction',
+                               'id': str(original.pk), 'version': 1},
+            refund_date=self.today, gross_cents=amount, reason='测试退款',
+            status='active', created_by=self.owner)
+
+    def timesheet(self, project=None, *, employee=None):
+        employee = employee or Employee.objects.create(
+            organization=self.org, name='员工' + uuid.uuid4().hex[:6], active=True)
+        return Timesheet.objects.create(
+            organization=self.org, accounting_mode='monthly_pool',
+            project=project or self.project, employee=employee,
+            work_date=self.today, minutes=480, note='测试工时',
+            submitted_by=self.owner.user)
+
+    def canonical_timesheet_id(self, timesheet):
+        # Canonical time-owner derivation: uuid5(NAMESPACE_URL, 'pmo:timesheet:<int pk>').
+        return uuid.uuid5(uuid.NAMESPACE_URL, f'pmo:timesheet:{int(timesheet.pk)}')
+
+    def billable(self, *, status='draft', minutes=120, date=None, timesheet=None):
         confirmation = BillableConfirmation.objects.create(
             organization=self.org, status='draft',
             timesheet_ref={'namespace': 'core', 'kind': 'timesheet',
                            'id': str(uuid.uuid4()), 'version': 1},
-            timesheet_id=uuid.uuid4(),
+            timesheet_id=(self.canonical_timesheet_id(timesheet) if timesheet is not None
+                          else uuid.uuid4()),
             contract_line_ref={'namespace': 'contracts', 'kind': 'contract_line',
                                'id': str(self.approved_line.pk), 'version': 1},
             contract_line_id=self.approved_line.pk, confirmed_minutes=minutes,
@@ -268,6 +299,43 @@ class OpsOverviewServiceTests(OpsOverviewFixture, TestCase):
             'contracts']['counts']
         self.assertEqual(pm_counts['pending_changes'], 1)
         self.assertEqual(owner_counts["pending_changes"], 2)
+
+    def test_pm_settlement_refunds_scoped_to_managed_projects(self):
+        # pm project: settlement + clearance on its cash, then a refund of that cash.
+        settlement = self.settlement_with_item(30000, project=self.project)
+        item = settlement.items.get()
+        pm_cash = self.cash(amount=30000)
+        self.clearance(item, pm_cash.pk, 30000)
+        self.refund(pm_cash, 1000)
+        # finance-managed project: same shape, must not leak into the pm view.
+        finance_settlement = self.settlement_with_item(40000, project=self.project2)
+        finance_item = finance_settlement.items.get()
+        finance_cash = self.cash(amount=40000)
+        self.clearance(finance_item, finance_cash.pk, 40000)
+        self.refund(finance_cash, 5000)
+        pm_section = {row['key']: row for row in self.overview(self.pm)['sections']}['settlement']
+        owner_section = {row['key']: row for row in self.overview(self.owner)['sections']}['settlement']
+        self.assertEqual(pm_section['counts']['refunds'], 1)
+        self.assertEqual(pm_section['totals_cents']['refund_cents'], 1000)
+        self.assertEqual(owner_section['counts']['refunds'], 2)
+        self.assertEqual(owner_section['totals_cents']['refund_cents'], 6000)
+
+    def test_pm_time_scope_uses_canonical_timesheet_uuid5(self):
+        pm_sheet = self.timesheet(self.project)
+        finance_sheet = self.timesheet(self.project2)
+        self.billable(timesheet=pm_sheet)
+        self.billable(timesheet=finance_sheet)
+        self.billable(timesheet=finance_sheet, status='confirmed', minutes=60)
+        pm_section = {row['key']: row for row in self.overview(self.pm)['sections']}['time']
+        owner_section = {row['key']: row for row in self.overview(self.owner)['sections']}['time']
+        self.assertEqual(pm_section['counts']['pending_confirmations'], 1)
+        self.assertEqual(pm_section['counts']['confirmed_confirmations'], 0)
+        self.assertEqual(owner_section['counts']['pending_confirmations'], 2)
+        self.assertEqual(owner_section['counts']['confirmed_confirmations'], 1)
+        stored = BillableConfirmation.objects.order_by('created_at').first()
+        self.assertEqual(str(stored.timesheet_id),
+                         str(uuid.uuid5(uuid.NAMESPACE_URL,
+                                        f'pmo:timesheet:{int(pm_sheet.pk)}')))
 
     def test_read_only_purity_no_write_sql(self):
         self.pending_change()

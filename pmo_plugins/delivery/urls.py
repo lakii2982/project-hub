@@ -2,11 +2,6 @@
 from django.apps import apps
 from core.plugin_sdk.migrations import prepare_plugin_entry_point
 from .domain_metadata import DOMAIN_METADATA
-
-DELIVERY_METADATA = {**DOMAIN_METADATA,
-    'routes': [*DOMAIN_METADATA['routes'],
-               {'name': 'ops_reconciliation_overview',
-                'path': 'ops-reconciliation-overview/', 'access': 'history_read'}]}
 from .plugin import Plugin
 
 
@@ -36,7 +31,7 @@ def entry_point():
     installed = {app.label: app.name for app in apps.get_app_configs()}
     descriptors = [{'plugin_id': key, 'metadata': metadata, 'manifest': plugin.manifest,
         'catalog': {'contract_catalog': []}, 'installed_apps': installed}
-        for key, metadata, plugin in [('contracts', CONTRACTS_METADATA, ContractsPlugin), ('costing', COSTING_METADATA, CostingPlugin), ('delivery', DELIVERY_METADATA, Plugin), ('management_revenue', REVENUE_METADATA, RevenuePlugin), ('settlement', SETTLEMENT_METADATA, SettlementPlugin), ('cash', CASH_METADATA, CashPlugin), ('time', TIME_METADATA, TimePlugin), ('onboarding', ONBOARDING_METADATA, OnboardingPlugin)]]
+        for key, metadata, plugin in [('contracts', CONTRACTS_METADATA, ContractsPlugin), ('costing', COSTING_METADATA, CostingPlugin), ('delivery', DOMAIN_METADATA, Plugin), ('management_revenue', REVENUE_METADATA, RevenuePlugin), ('settlement', SETTLEMENT_METADATA, SettlementPlugin), ('cash', CASH_METADATA, CashPlugin), ('time', TIME_METADATA, TimePlugin), ('onboarding', ONBOARDING_METADATA, OnboardingPlugin)]]
     return prepare_plugin_entry_point(descriptors, {
         'contracts': {
             'parties': party_views.party_list, 'party': party_views.party_detail,

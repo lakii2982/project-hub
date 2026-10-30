@@ -7,6 +7,7 @@ insights owner: every value is derived on request through owner models/queries.
 Missing or not-yet-implemented upstream data is reported as ``None`` plus a
 ``missing`` code, never as a zero.
 """
+import uuid
 from datetime import date, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -97,6 +98,11 @@ def _in_window(field, as_of, period):
     if start is not None:
         query &= Q(**{f'{field}__gte': start, f'{field}__lte': end})
     return query
+
+
+def timesheet_key(pk):
+    """Canonical time-owner UUID5 derivation for one integer Timesheet pk."""
+    return uuid.uuid5(uuid.NAMESPACE_URL, f'pmo:timesheet:{int(pk)}')
 
 
 def _ref(namespace, kind, instance, version=1):
@@ -198,11 +204,14 @@ def _settlement_section(member, as_of, period):
         if covered < 0:
             negative += 1
         remaining_total += max(0, item.gross_cents - covered)
+    # Refund/bank-return facts have no project FK; scope them to the cash facts that
+    # actually cleared the visible open items so pm never sees other projects' amounts.
+    visible_cash_ids = set(active.values_list('cash_transaction_id', flat=True))
     refunds = Refund.objects.filter(organization=member.organization,
-                                    original_cash_transaction__funding_account__organization=member.organization)
+                                    original_cash_transaction_id__in=visible_cash_ids)
     refunds = refunds.filter(_in_window('refund_date', as_of, period))
     returns = BankReturn.objects.filter(organization=member.organization,
-                                        original_cash_transaction__funding_account__organization=member.organization)
+                                        original_cash_transaction_id__in=visible_cash_ids)
     returns = returns.filter(_in_window('return_date', as_of, period))
     refund_total = refunds.aggregate(value=Sum('gross_cents'))['value'] or 0
     return_total = returns.aggregate(value=Sum('gross_cents'))['value'] or 0
@@ -292,9 +301,12 @@ def _time_section(member, as_of, period):
     projects = _scoped_projects(member)
     confirmations = BillableConfirmation.objects.filter(organization=member.organization)
     if member.role == 'pm':
-        line_ids = ContractLine.objects.filter(
-            contract_version__contract__project__in=projects).values_list('pk', flat=True)
-        confirmations = confirmations.filter(contract_line_id__in=list(line_ids))
+        # The time owner persists timesheet_id as the canonical UUID5 of the integer
+        # Timesheet pk (`uuid5(NAMESPACE_URL, 'pmo:timesheet:<pk>')`, time.services
+        # canonical derivation). Scope via the visible timesheets, not raw contract-line ids.
+        timesheet_ids = [timesheet_key(pk) for pk in Timesheet.objects.filter(
+            organization=member.organization, project__in=projects).values_list('pk', flat=True)]
+        confirmations = confirmations.filter(timesheet_id__in=timesheet_ids)
     confirmations = confirmations.filter(_in_window('confirmed_on', as_of, period))
     draft = confirmations.filter(status='draft')
     confirmed = confirmations.filter(status='confirmed')
