@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at the candidate revision (BASE 6ddb951, PH-290 in_review per slot convention): {\"command\":\"check\",\"ok\":true,\"task_count\":216}, exit 0 (check allows in_review with owner+handoff); final post-review entry recorded at the review-pass HEAD."
+      "result": "pass",
+      "evidence": "Post-independent-review actual rerun with the recorded pass (reviewed HEAD 95bb998, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":216}, exit 0; PH-290 done with handoff and PH-294 ready on PH-290 done."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,14 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (planning registration plus PH-276 promotion/dependency facts); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-290 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PROMOTIONS VERIFIED: PH-276 is correctly promoted to ready because all dependencies PH-269/PH-266/PH-219/PH-222 are done; its spec keeps the owned time 0002_time_billable_reversal_guards contract and its 17-path allowed_paths include pmo_plugins/time/migrations/*.py, so the reversal receipt/trigger change has a writable home. PH-280 (PH-244/250/224/232/230), PH-281 (PH-264/024), PH-283 (PH-224/232/240/230), PH-284 (PH-219/222/224/232/265), PH-287 (PH-214/265/224/232/219/222), PH-288 (PH-228/230/239/240/245) remain ready only on done dependencies. PH-291 is correctly promoted to ready on PH-219/222/224/232/265/269/274 (all done). No proposed task was promoted: PH-292 waits on PH-289/PH-181/PH-185; PH-293 waits on PH-150/PH-155/PH-252; PH-294 waits on PH-290. No false promotion.",
+      "NEW TASKS/DoR: task_count 216 unique continuous PH-291..PH-294 (BASE max 290; no remote/local branch or spec >=291). PH-291 is a delivery-layer read-only operations overview (contracts/settlement/revenue/time/onboarding/cash partitions, integer cents, missing[]/null, owner/finance/auditor full, pm project-scoped, member deny, no write path/migration/insights second owner); PH-292 is proposed onboarding commit orchestration with dry_run/request_token/single-transaction/owner-service calls and waits on PH-289/181/185; PH-293 is a docs-only ADR 0015 invoice/tax/red-offset contract freeze with its own allowed_paths and waits on PH-150/155/252; PH-294 is the next planning slot. Specs freeze fields/state/permissions/idempotency/money/migration/whitelist/counterexamples/executable acceptance/risk; no placeholder strings; no scaffold/contract-schema/code changes; all 10 changed files are inside PH-290 allowed_paths.",
+      "SLOT CONVENTION/GATES: PH-290 is in_review with owner/handoff and PH-294 is proposed with the done-transition blocker; after this pass the final evidence commit must set PH-290 done/PH-294 ready and clear the blocker, then rerun check/verify-change. At HEAD 95bb998 (BASE 6ddb951): projectctl check ok=true/task_count=216; governance 23 tests OK; verify-change --base 6ddb951 --task PH-290 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; report entries are pre-review and will be replaced. PH-276's ready transition and the PH-291 ready slice are consistent with their dependency facts."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 95bb998 (BASE 6ddb951) in /tmp/ph290-planning, worktree clean; 10 changed files all inside PH-290 allowed_paths; task_count 216 unique continuous PH-291..PH-294; manifest=PH-290. PH-276 promoted to ready only after PH-269/266/219/222 done, with its time 0002 migration contract and migrations whitelist intact; PH-280/281/283/284/287/288 remain ready on done deps; PH-291 ready on PH-219/222/224/232/265/269/274 done; PH-292 proposed on PH-289/181/185; PH-293 proposed on PH-150/155/252; PH-294 proposed on PH-290 in_review. New specs freeze read-only/permissions/money/idempotency/migration/whitelist/counterexamples/acceptance/risk; PH-291 stays delivery-layer, no insights second owner/migration/write entry; no placeholders; no scaffold/schema/code changes. PH-290 remains in_review and PH-294 proposed for the final evidence transition. Gates: check ok=true/216; governance 23 OK; verify-change --base 6ddb951 --task PH-290 only review/acceptance gates, no path_out_of_scope."
   },
   "deviations": [
     "Planning-slot state convention: PH-290 is kept in_review with handoff and PH-294 is proposed with blocker 'PH-290 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-290 done and PH-294 ready and clear the blocker (same convention as prior planning slots).",
