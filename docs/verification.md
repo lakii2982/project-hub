@@ -608,3 +608,13 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 ## PH-279 现金分类/账本桥接与退款/互转只读核对快照首片（2026-10-31）
 
 基线6ddb951（PH-275合入后的main）。新增pmo_plugins/cash/reconciliation_services.py只读聚合：posted现金→有效CashClassification→AccountingEvent/LedgerPosting/bank_effect claim→Refund/BankReturn→InternalTransfer成对；cash_bridge_snapshot（逐流水投影+账户现金账净额复用classification_services.cash_book_coverage+汇总）与cash_bridge_issues（issue_code/refs/期望/实际，覆盖分类缺失/重复、事件缺失/重复、posting数量/金额/账户范围、claim缺失/净额不符、退款+退回超gross、互转跨org/缺腿/金额日期不一致）；退款/退回反向现金derived_cash覆盖不误报未分类；offset_implemented=false占位（PH-241未合入不伪造）。权限owner/finance/auditor只读、pm/member拒绝；浏览器只读快照/异常清单页+as_of/账户筛选；无迁移/无表/无写入口/无审计写，不写账本/事实。偏差披露：pm因现金事实无项目归属而拒绝（无法安全派生项目摘要）；两条路由以history_read注册，cash停用后GET历史快照/异常清单仍200可读（无写入口、POST 405），服务层历史读保持；offset占位；无审计写；未改verify_integrity断言。实际执行（最终HEAD）：projectctl check ok=true/task_count=212；manage.py check exit0（80条既有W003、0错误）；makemigrations无变更；全量989项=912 pass+69 skip+8项既有macOS失败（BASE 976/5F+3E/69+13新测试，无新增）；verify_integrity全新迁移库ok=true；scoped 13项全通过；verify-change --base 6ddb951 --task PH-279在review pending时仅high_risk_review_required（预期）。未验证：浏览器1440/390、独立S复核、PG/并发、生产/UAT、旧库升级；Offset/自动更正/导出/持久化快照/pm项目归属摘要未实现。
+
+
+## PH-294 后续交付独立规划入口（接续 PH-290）+ PH-276 白名单修正（2026-10-31）
+
+基线 cfa185f（PH-279 合入后，count 216）。纯规划/契约文字片：
+1. **PH-276 allowed_paths + spec 精确白名单加 `core/management/commands/verify_integrity.py`**（用途：扩展 PH-269 既有 time 分支校验 confirmed→reversed 的 status/envelope/audit/receipt、禁止 canonical reversed topic；不新增业务不变式、不加全局禁令）；程序化比对 spec/tasks 去重后逐项一致（18 路径，spec-only=[]、tasks-only=[]）。
+2. **核号**：BASE 最大 PH-294；远端分支/PR（EXP #143/#144 等）无 ≥295 占用 → PH-295 起连续。
+3. **新登记**：PH-295 工资现金命令层首片（proposed，缺 PH-171/172）、PH-296 费用报销/支出首片（proposed，缺 PH-150/155）、PH-297 服务期预收/递延首片（proposed，缺 PH-163/170）、PH-298 下一规划槽（proposed，待 PH-294 done 后置 ready）。count 216→220，编号 295-298 连续。
+4. **晋级**：无新增（PH-280/281/283/284/288/291 等已 ready 保持；依赖未 done 的 proposed 均未虚假晋级）。
+5. blockers 刷新：PH-292/293/295/296/297 保持 proposed 并写清缺口；无占位符；acceptance 全可执行。独立 S 复核两轮 PASS（首轮阻断：PH-291 domain_metadata 白名单与 PH-110 ready-未-done 依赖事实，已修；次轮 0 阻断）；最终证据 HEAD 873a530 置 PH-294 done / PH-298 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=220；23 项治理 OK；verify-change --base cfa185f --task PH-294 ok=true、11 文件全白名单、无 errors。未验证：PH-295/296/297 未实现；PH-276 白名单由其实现 PR/CI 验证。

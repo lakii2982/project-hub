@@ -8471,6 +8471,7 @@
         "pmo_plugins/time/templates/time/billable_confirmation_list.html",
         "pmo_plugins/time/templates/time/billable_confirmation_detail.html",
         "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
         "tests/test_v1_billable_reversal.py",
         "tests/test_v1_billable_reversal_http.py",
         "docs/delivery-status.md",
@@ -9091,6 +9092,7 @@
         "pmo_plugins/delivery/views.py",
         "pmo_plugins/delivery/forms.py",
         "pmo_plugins/delivery/templates/delivery/ops_reconciliation_overview.html",
+        "pmo_plugins/delivery/domain_metadata.py",
         "pmo_plugins/delivery/urls.py",
         "tests/test_v1_ops_reconciliation_overview.py",
         "tests/test_v1_ops_reconciliation_overview_http.py",
@@ -9201,7 +9203,7 @@
       "title": "后续交付独立规划入口（接续 PH-290）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -9220,6 +9222,176 @@
         "docs/verification.md",
         "project/reports/PH-294.json",
         "project/handoffs/PH-294.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-294.md"
+    },
+    {
+      "id": "PH-295",
+      "title": "工资现金命令层首片：工资批次发放/代扣/社保与个税的现金命令边界（先前置后写）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-171",
+        "PH-172",
+        "PH-110"
+      ],
+      "spec": "project/specs/PH-295.md",
+      "allowed_paths": [
+        "pmo_plugins/cash/payroll_services.py",
+        "pmo_plugins/cash/views.py",
+        "pmo_plugins/cash/forms.py",
+        "pmo_plugins/cash/domain_metadata.py",
+        "pmo_plugins/cash/templates/cash/payroll_payment.html",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_payroll_cash.py",
+        "tests/test_v1_payroll_cash_http.py",
+        "project/reports/PH-295.json",
+        "project/handoffs/PH-295.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_payroll_cash tests.test_v1_payroll_cash_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-171（工资现金命令前置）与 PH-172（工资批次/代扣/社保个税）done（均 proposed），以及 PH-110（前端规范）done（BASE 事实为 ready 未 done）；依赖完成后由 PH-298 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-296",
+      "title": "费用报销/支出（WP-EXPENSE/SPEND）首片：费用申请-审批-现金/成本链路前置冻结",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-150",
+        "PH-155",
+        "PH-110"
+      ],
+      "spec": "project/specs/PH-296.md",
+      "allowed_paths": [
+        "pmo_plugins/costing/expense_services.py",
+        "pmo_plugins/costing/views.py",
+        "pmo_plugins/costing/forms.py",
+        "pmo_plugins/costing/domain_metadata.py",
+        "pmo_plugins/costing/templates/costing/expense_claim.html",
+        "pmo_plugins/cash/views.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_expense_claim.py",
+        "tests/test_v1_expense_claim_http.py",
+        "project/reports/PH-296.json",
+        "project/handoffs/PH-296.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_expense_claim tests.test_v1_expense_claim_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-150（合同行/收费模板）与 PH-155（结算实现）done（均 proposed），以及 PH-110（前端规范）done（BASE 事实为 ready 未 done）；依赖完成后由 PH-298 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-297",
+      "title": "服务期预收/递延（WP-PREPAID-SERVICE）首片：预收批次与月度递延确认前置冻结",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-163",
+        "PH-170",
+        "PH-110"
+      ],
+      "spec": "project/specs/PH-297.md",
+      "allowed_paths": [
+        "pmo_plugins/management_revenue/prepaid_services.py",
+        "pmo_plugins/management_revenue/views.py",
+        "pmo_plugins/management_revenue/forms.py",
+        "pmo_plugins/management_revenue/domain_metadata.py",
+        "pmo_plugins/management_revenue/templates/management_revenue/prepaid_batch.html",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_prepaid_service.py",
+        "tests/test_v1_prepaid_service_http.py",
+        "project/reports/PH-297.json",
+        "project/handoffs/PH-297.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_prepaid_service tests.test_v1_prepaid_service_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-163（服务期确认）与 PH-170（预收/递延确认前置）done（均 proposed），以及 PH-110（前端规范）done（BASE 事实为 ready 未 done）；依赖完成后由 PH-298 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-298",
+      "title": "后续交付独立规划入口（接续 PH-294）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-294"
+      ],
+      "spec": "project/specs/PH-298.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-298.json",
+        "project/handoffs/PH-298.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
