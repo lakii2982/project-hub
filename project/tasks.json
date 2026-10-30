@@ -6189,8 +6189,7 @@
         "PH-214",
         "PH-219",
         "PH-222",
-        "PH-223",
-        "PH-226"
+        "PH-223"
       ],
       "spec": "project/specs/PH-224.md",
       "allowed_paths": [
