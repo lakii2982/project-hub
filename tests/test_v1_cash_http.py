@@ -6,8 +6,8 @@ from django.test import Client, TestCase
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.utils import timezone
 
-from core.models import (AccountingEvent, Employee, LedgerEntry, LedgerPosting,
-                         Organization, SourceConsumption)
+from core.models import (AccountingEvent, AccountingPeriod, AuditEvent, DomainEvent, Employee,
+                         LedgerEntry, LedgerPosting, Organization, SourceConsumption)
 from pmo_plugins.cash import funding_services as funding
 from pmo_plugins.cash import transaction_services as tx
 from pmo_plugins.cash.models import CashPartyMatch, CashReceipt, CashTransaction, FundingAccount
@@ -25,6 +25,7 @@ TX_FORM = '/modules/cash/cash-transaction-form/'
 TX_SAVE = '/modules/cash/cash-transaction-save/'
 TX_DETAIL = '/modules/cash/cash-transaction-detail/'
 MATCH = '/modules/cash/cash-party-match/'
+RECORD = '/modules/cash/cash-transaction-record/'
 
 
 class CashHTTPFixture(Fixture):
@@ -315,3 +316,97 @@ class CashHTTPTests(CashHTTPFixture, TestCase):
             payee_kind='own_account', own_account=str(account.pk), counterparty=''))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(CashPartyMatch.objects.filter(action='identify').count(), 2)
+
+    def _record(self, member, row, **extra):
+        self.login(member)
+        data = {'transaction_id': str(row.pk), 'expected_version': row.version,
+                'request_token': str(uuid.uuid4())}
+        data.update(extra)
+        return self.client.post(f'{RECORD}?id={row.pk}', data)
+
+    def test_posting_flow_status_event_coverage_and_no_ledger(self):
+        account = self.account()
+        row = self.transaction(account=account)
+        before = self.side_effect_counts()
+        self.login(self.owner)
+        detail = self.client.get(TX_DETAIL, {'id': row.pk})
+        self.assertContains(detail, '确认过账')
+        self.assertContains(detail, '草稿')
+        response = self._record(self.owner, row)
+        self.assertEqual(response.status_code, 302)
+        row.refresh_from_db()
+        self.assertEqual((row.status, row.version), ('posted', 2))
+        events = DomainEvent.objects.filter(topic='cash.transaction_recorded.v1')
+        self.assertEqual(events.count(), 1)
+        event = events.get()
+        self.assertEqual(event.data['source']['id'], str(row.pk))
+        self.assertEqual(event.data['source']['version'], 2)
+        self.assertEqual(event.data['payload'], {'changed_refs': [event.data['source']],
+                                                 'posting_event_refs': []})
+        self.assertTrue(AuditEvent.objects.filter(action='cash.cash_transaction.posted').exists())
+        detail = self.client.get(TX_DETAIL, {'id': row.pk})
+        self.assertContains(detail, '已过账')
+        self.assertContains(detail, '不可再修改')
+        self.assertNotContains(detail, '确认过账')
+        repeated = self._record(self.owner, row)
+        self.assertEqual(repeated.status_code, 400)
+        self.assertEqual(DomainEvent.objects.filter(
+            topic='cash.transaction_recorded.v1').count(), 1)
+        stale = self.client.post(f'{RECORD}?id={row.pk}', {
+            'transaction_id': str(row.pk), 'expected_version': 1,
+            'request_token': str(uuid.uuid4())})
+        self.assertEqual(stale.status_code, 400)
+        accounts = self.client.get(ACCOUNTS)
+        self.assertContains(accounts, '已过账净额估算，非现金余额/可用余额')
+        self.assertContains(accounts, '123.45')
+        posted_list = self.client.get(TX_LIST, {'status': 'posted'})
+        self.assertContains(posted_list, '已过账')
+        self.assertContains(posted_list, 'BANK-001')
+        draft_list = self.client.get(TX_LIST, {'status': 'draft'})
+        self.assertNotContains(draft_list, 'BANK-001')
+        self.assertEqual(before, self.side_effect_counts())
+        self.assertEqual(AccountingEvent.objects.count(), 0)
+
+    def test_posting_roles_locked_closed_period_and_disabled_module(self):
+        account = self.account()
+        draft = self.transaction(account=account, external_source_key='BANK-P1')
+        self.login(self.auditor)
+        self.assertEqual(self.client.get(TX_LIST).status_code, 200)
+        self.assertEqual(self.client.get(TX_DETAIL, {'id': draft.pk}).status_code, 200)
+        self.assertEqual(self._record(self.auditor, draft).status_code, 403)
+        self.login(self.pm)
+        self.assertEqual(self.client.get(TX_LIST).status_code, 403)
+        self.login(self.employee_member)
+        self.assertEqual(self.client.get(TX_DETAIL, {'id': draft.pk}).status_code, 403)
+        stale = self._record(self.owner, draft, expected_version=99)
+        self.assertEqual(stale.status_code, 400)
+        Organization.objects.filter(pk=self.org.pk).update(locked_through=draft.transaction_date)
+        locked = self._record(self.owner, draft)
+        self.assertEqual(locked.status_code, 400)
+        self.assertContains(locked, '锁账', status_code=400)
+        Organization.objects.filter(pk=self.org.pk).update(locked_through=None)
+        period = AccountingPeriod.objects.create(
+            organization=self.org, period=draft.transaction_date.strftime('%Y-%m'),
+            status='posted', closed_through=draft.transaction_date)
+        closed = self._record(self.owner, draft)
+        self.assertEqual(closed.status_code, 400)
+        self.assertContains(closed, '会计期间', status_code=400)
+        period.delete()
+        CashTransaction.objects.filter(pk=draft.pk).update(
+            transaction_date=self.today + timedelta(days=1))
+        future = self._record(self.owner, draft)
+        self.assertEqual(future.status_code, 400)
+        self.assertContains(future, '未来', status_code=400)
+        CashTransaction.objects.filter(pk=draft.pk).update(transaction_date=self.today)
+        self.assertFalse(DomainEvent.objects.filter(
+            topic='cash.transaction_recorded.v1').exists())
+        second = self.transaction(account=account, external_source_key='BANK-P2')
+        response = self._record(self.finance, second)
+        self.assertEqual(response.status_code, 302)
+        second.refresh_from_db()
+        self.assertEqual(second.status, 'posted')
+        from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'cash', False)
+        self.login(self.auditor)
+        self.assertEqual(self.client.get(TX_LIST).status_code, 403)
+        self.assertEqual(len(tx.cash_transaction_list(self.owner)), 2)

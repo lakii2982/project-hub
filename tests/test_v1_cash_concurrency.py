@@ -8,7 +8,7 @@ from django.db import connection, close_old_connections
 from django.test import TransactionTestCase
 from unittest import skipUnless
 
-from core.models import Membership
+from core.models import DomainEvent, Membership
 from pmo_plugins.cash import funding_services as funding
 from pmo_plugins.cash import transaction_services as cash
 from pmo_plugins.cash.models import CashReceipt, CashTransaction
@@ -107,3 +107,22 @@ class CashConcurrencyTests(CashFixture, TransactionTestCase):
         self.assertEqual((snapshot['version'], snapshot['name']), (2, '并发编辑户'))
         self.assertEqual(CashReceipt.objects.filter(action='funding_account.save').count(),
                          baseline + 1)
+
+    def test_same_transaction_double_posting_records_once(self):
+        row = self.tx(external_source_key='RACE-POST')
+        baseline_events = DomainEvent.objects.filter(
+            topic='cash.transaction_recorded.v1').count()
+        baseline_receipts = CashReceipt.objects.filter(action='cash_transaction.post').count()
+
+        def record(_unused=None):
+            return cash.record_cash_transaction(self.owner_member(), row.pk,
+                expected_version=row.version, request_token=uuid.uuid4(),
+                dry_run=False).pk
+        results = self.run_race(record, record)
+        self.assertEqual(sum(item[0] == 'ok' for item in results), 1, results)
+        posted = CashTransaction.objects.get(pk=row.pk)
+        self.assertEqual((posted.status, posted.version), ('posted', 2))
+        self.assertEqual(DomainEvent.objects.filter(
+            topic='cash.transaction_recorded.v1').count(), baseline_events + 1)
+        self.assertEqual(CashReceipt.objects.filter(
+            action='cash_transaction.post').count(), baseline_receipts + 1)

@@ -125,6 +125,12 @@ class ReversePartyForm(StrictForm):
         self.fields['original_match_ref'].choices = [('', '请选择原匹配记录')] + list(matches or [])
 
 
+class PostCashTransactionForm(StrictForm):
+    transaction_id = forms.UUIDField(widget=forms.HiddenInput)
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
 class FundingAccountListFilterForm(forms.Form):
     status = forms.ChoiceField(label='状态', required=False, choices=(
         ('', '全部状态'), ('draft', '草稿'), ('active', '已激活')))
@@ -139,6 +145,8 @@ class CashTransactionListFilterForm(forms.Form):
     funding_account = forms.ChoiceField(label='银行账户', required=False, choices=())
     direction = forms.ChoiceField(label='方向', required=False, choices=(
         ('', '全部方向'), ('in', '收入'), ('out', '支出')))
+    status = forms.ChoiceField(label='过账状态', required=False, choices=(
+        ('', '全部状态'), ('draft', '草稿'), ('posted', '已过账')))
     as_of = forms.DateField(label='基准日', required=False,
                             widget=forms.DateInput(attrs={'type': 'date'}))
 

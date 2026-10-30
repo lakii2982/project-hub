@@ -328,14 +328,16 @@ class CashTransactionTests(CashFixture, TestCase):
 
     def test_non_draft_rows_are_guarded(self):
         row = self.tx()
+        CashTransaction.objects.filter(pk=row.pk).update(status='posted')
+        stale = CashTransaction.objects.get(pk=row.pk)
+        stale.gross_cents = 999
+        with self.assertRaises(ValidationError):
+            stale.save()
+        with self.assertRaises(ValidationError):
+            stale.delete()
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                CashTransaction.objects.filter(pk=row.pk).update(status='posted')
-        row.gross_cents = 999
-        row.status = 'posted'
-        with self.assertRaises((ValidationError, IntegrityError)):
-            with transaction.atomic():
-                row.save()
+                CashTransaction.objects.filter(pk=row.pk).update(gross_cents=1)
 
     def test_roles_revocation_and_module_disable(self):
         row = self.tx()

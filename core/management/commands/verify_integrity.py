@@ -1,5 +1,6 @@
 import json
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 from core.models import Organization, Project, LedgerEntry, Document, Timesheet
 from core.services import verify_audit, plan_remaining
 
@@ -105,6 +106,24 @@ class Command(BaseCommand):
             if payee.get('kind') == 'own_account' and not FundingAccount.objects.filter(
                     pk=payee.get('id'), organization_id=transaction.organization_id).exists():
                 errors.append(f"cash_transaction:{transaction.pk}:own_account_missing")
+        from core.models import AccountingEvent as _CashAccountingEvent, DomainEvent as _CashDomainEvent
+        from core.models import SourceConsumption as _CashConsumption
+        if _CashAccountingEvent.objects.filter(source__namespace='cash').exists():
+            errors.append('cash_transaction:unexpected_accounting_event')
+        if _CashConsumption.objects.filter(consumer='cash').exists():
+            errors.append('cash_transaction:unexpected_source_consumption')
+        for transaction in CashTransaction.objects.all():
+            canonical = _CashDomainEvent.objects.filter(
+                organization_id=transaction.organization_id,
+                topic='cash.transaction_recorded.v1',
+                source__id=str(transaction.pk))
+            if transaction.status == 'posted':
+                if canonical.count() != 1:
+                    errors.append(f"cash_transaction:{transaction.pk}:posted_event_count")
+                if transaction.transaction_date > timezone.localdate():
+                    errors.append(f"cash_transaction:{transaction.pk}:future_posted")
+            elif canonical.exists():
+                errors.append(f"cash_transaction:{transaction.pk}:draft_has_event")
         for match in CashPartyMatch.objects.select_related('cash_transaction', 'original_match'):
             if match.cash_transaction.organization_id != match.organization_id:
                 errors.append(f"cash_party_match:{match.pk}:transaction_org")

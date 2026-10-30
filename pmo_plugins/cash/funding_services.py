@@ -9,6 +9,7 @@ import uuid
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Sum
 from django.utils import timezone
 
 from core.access import require_member
@@ -16,7 +17,7 @@ from core.models import Membership
 from core.plugin_runtime import is_enabled
 from core.services import audit, lock_company
 
-from .models import MAX_CENTS, CashReceipt, FundingAccount
+from .models import MAX_CENTS, CashReceipt, CashTransaction, FundingAccount
 
 WRITE_ROLES = {'owner', 'finance'}
 READ_ROLES = {'owner', 'finance', 'auditor'}
@@ -313,3 +314,27 @@ def funding_account_list(member):
     rows = FundingAccount.objects.filter(organization=member.organization).select_related(
         'organization').order_by('name', 'id')
     return [_account_projection(row) for row in rows]
+
+
+def cash_account_coverage(member, funding_account_id, *, as_of=None):
+    """Read-only posted-flow estimate per account; never a cash balance or available balance."""
+    member = _fresh(member, check_module=False)
+    account = _get_account(member, funding_account_id)
+    day = timezone.localdate() if as_of is None else _business_date(as_of)
+    posted = CashTransaction.objects.filter(organization=member.organization,
+                                            funding_account=account, status='posted',
+                                            transaction_date__lte=day)
+    drafts = CashTransaction.objects.filter(organization=member.organization,
+                                            funding_account=account, status='draft',
+                                            transaction_date__lte=day)
+    posted_in = posted.filter(direction='in').aggregate(total=Sum('gross_cents'))['total'] or 0
+    posted_out = posted.filter(direction='out').aggregate(total=Sum('gross_cents'))['total'] or 0
+    net = posted_in - posted_out
+    return {
+        'funding_account_id': str(account.pk), 'account_ref': account.account_ref,
+        'account_name': account.name, 'status': account.status, 'as_of': day.isoformat(),
+        'posted_in_cents': posted_in, 'posted_out_cents': posted_out,
+        'posted_net_estimate_cents': net, 'available_estimate_cents': net,
+        'cleared_cents': 0, 'posted_count': posted.count(), 'draft_count': drafts.count(),
+        'estimate_label': '已过账净额估算，非现金余额/可用余额',
+    }

@@ -17,7 +17,7 @@ from . import transaction_services as tx
 from . import funding_services as funding
 from .forms import (CashTransactionForm, CashTransactionListFilterForm,
                     FundingAccountForm, FundingAccountListFilterForm, IdentifyPartyForm,
-                    ReversePartyForm, amount_cents)
+                    PostCashTransactionForm, ReversePartyForm, amount_cents)
 
 WRITE_ROLES = {'owner', 'finance'}
 READ_ROLES = {'owner', 'finance', 'auditor'}
@@ -86,9 +86,17 @@ def funding_account_list(context, payload):
     for row in rows:
         if status and row['status'] != status:
             continue
+        coverage = None
+        try:
+            coverage = funding.cash_account_coverage(member, row['id'])
+        except (ValidationError, PermissionDenied):
+            coverage = None
         result.append({**row,
                        'opening_display': format(Decimal(row['opening_cents']) / 100, '.2f'),
                        'account_owner_display': '本公司',
+                       'coverage': coverage,
+                       'coverage_net_display': format(Decimal(
+                           coverage['posted_net_estimate_cents']) / 100, '.2f') if coverage else '0.00',
                        'edit_url': _url('funding_account_form', id=row['id']),
                        'activate_url': _url('funding_account_activate', id=row['id']),
                        'activate_token': uuid.uuid4(),
@@ -164,13 +172,17 @@ def cash_transaction_list(context, payload):
     member = _fresh(context.member)
     account_options = _account_options(member)
     filter_form = CashTransactionListFilterForm(payload or None, accounts=account_options)
-    account_id = direction = ''
+    account_id = direction = status = ''
     as_of = None
     if filter_form.is_valid():
         account_id = filter_form.cleaned_data.get('funding_account') or ''
         direction = filter_form.cleaned_data.get('direction') or ''
+        status = filter_form.cleaned_data.get('status') or ''
         as_of = filter_form.cleaned_data.get('as_of')
-    rows = tx.cash_transaction_list(member, as_of=as_of)
+    try:
+        rows = tx.cash_transaction_list(member, as_of=as_of, status=status or None)
+    except (ValidationError, TypeError):
+        rows = tx.cash_transaction_list(member, as_of=as_of)
     result = []
     for row in rows:
         if account_id and row['funding_account_id'] != account_id:
@@ -184,6 +196,7 @@ def cash_transaction_list(context, payload):
         result.append({**row, 'account_name': row['funding_account_name'],
                        'amount_display': row['gross_display'],
                        'match_display': active[-1]['identified_payee_display'] if active else '未匹配',
+                       'can_post': bool(row.get('can_post', row.get('status') == 'draft')),
                        'detail_url': _url('cash_transaction_detail', id=row['id'])})
     return render(context.request, 'cash/cash_transaction_list.html', _base(
         member, 'transactions', rows=result, filter_form=filter_form,
@@ -267,7 +280,7 @@ def _reverse_choices(snapshot):
             for item in snapshot['matches'] if item['action'] == 'identify']
 
 
-def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None):
+def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None, post_form=None):
     matches = []
     for item in snapshot['matches']:
         original = item.get('original_match_ref') or {}
@@ -287,8 +300,13 @@ def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None):
     reverse_form = reverse_form or ReversePartyForm(
         initial={'transaction_id': snapshot['id'], 'expected_version': snapshot['version']},
         matches=choices)
+    post_form = post_form or PostCashTransactionForm(
+        initial={'transaction_id': snapshot['id'], 'expected_version': snapshot['version']})
+    can_post = bool(snapshot.get('can_post', snapshot.get('status') == 'draft'))
     return _base(
-        member, 'transactions', transaction=snapshot,
+        member, 'transactions', transaction=snapshot, can_post=can_post,
+        posted_display=(snapshot.get('posted_at') or '')[:16].replace('T', ' '),
+        post_form=post_form, post_url=_url('cash_transaction_record', id=snapshot['id']),
         transaction_account=snapshot['funding_account_name'],
         direction_display=snapshot['direction_display'],
         transaction_date=snapshot['transaction_date'],
@@ -306,6 +324,31 @@ def cash_transaction_detail(context, payload):
     snapshot = tx.cash_transaction_snapshot(member, payload.get('id'))
     return render(context.request, 'cash/cash_transaction_detail.html',
                   _detail_context(member, snapshot))
+
+
+def cash_transaction_record(context, payload):
+    member = _fresh(context.member, write=True)
+    transaction_id = context.request.GET.get('id')
+    if not transaction_id:
+        raise PermissionDenied('银行流水不存在或无权访问')
+    allowed = set(PostCashTransactionForm.base_fields)
+    bound = {key: value for key, value in payload.items() if key in allowed}
+    bound['transaction_id'] = transaction_id
+    form = PostCashTransactionForm(bound)
+    if form.is_valid():
+        data = form.cleaned_data
+        try:
+            tx.record_cash_transaction(
+                member, data['transaction_id'], request_token=data['request_token'],
+                expected_version=data['expected_version'], dry_run=False)
+        except ValidationError as exc:
+            form.add_error(None, '；'.join(exc.messages))
+        else:
+            messages.success(context.request, '银行流水已过账，现金事实不可再修改')
+            return redirect(_url('cash_transaction_detail', id=data['transaction_id']))
+    snapshot = tx.cash_transaction_snapshot(member, transaction_id)
+    return render(context.request, 'cash/cash_transaction_detail.html',
+                  _detail_context(member, snapshot, post_form=form), status=400)
 
 
 def cash_party_match(context, payload):
