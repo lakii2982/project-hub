@@ -11,10 +11,10 @@ def install(apps, schema_editor):
             changed = ' OR '.join(f'OLD.{field} IS DISTINCT FROM NEW.{field}' for field in full_fields)
             cursor.execute(f"""CREATE FUNCTION delivery_service_confirmation_protect() RETURNS trigger LANGUAGE plpgsql AS $$
                 BEGIN
-                  IF TG_OP = 'DELETE' THEN RAISE EXCEPTION 'Service confirmation history cannot be deleted'; END IF;
+                  IF TG_OP = 'DELETE' THEN RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Service confirmation history cannot be deleted'; END IF;
                   IF OLD.status IN ('confirmed','reversed') THEN
                     IF NOT (OLD.status='confirmed' AND NEW.status='reversed' AND NEW.version=OLD.version AND NOT ({changed}))
-                    THEN RAISE EXCEPTION 'Confirmed service confirmation is immutable'; END IF;
+                    THEN RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Confirmed service confirmation is immutable'; END IF;
                   END IF;
                   RETURN NEW; END; $$""")
             cursor.execute('CREATE TRIGGER delivery_service_confirmation_protect BEFORE UPDATE ON delivery_serviceconfirmation FOR EACH ROW EXECUTE FUNCTION delivery_service_confirmation_protect()')
@@ -23,15 +23,15 @@ def install(apps, schema_editor):
                 BEGIN
                   IF TG_OP = 'INSERT' THEN
                     IF EXISTS(SELECT 1 FROM delivery_serviceconfirmation WHERE id=NEW.service_confirmation_id AND status IN ('confirmed','reversed'))
-                    THEN RAISE EXCEPTION 'Confirmed service month rows are immutable'; END IF;
+                    THEN RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Confirmed service month rows are immutable'; END IF;
                     IF NOT EXISTS(SELECT 1 FROM delivery_serviceconfirmation p WHERE p.id=NEW.service_confirmation_id
                         AND NEW.coverage_start >= p.coverage_start AND NEW.coverage_end <= p.coverage_end)
-                    THEN RAISE EXCEPTION 'Service month outside confirmation coverage'; END IF;
+                    THEN RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Service month outside confirmation coverage'; END IF;
                     IF NEW.service_month <> to_char(NEW.coverage_start, 'YYYY-MM') OR NEW.service_month <> to_char(NEW.coverage_end, 'YYYY-MM')
-                    THEN RAISE EXCEPTION 'Service month must match its coverage month'; END IF;
+                    THEN RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Service month must match its coverage month'; END IF;
                     RETURN NEW;
                   END IF;
-                  RAISE EXCEPTION 'Service month rows are immutable and cannot be deleted';
+                  RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Service month rows are immutable and cannot be deleted';
                 END; $$""")
             cursor.execute('CREATE TRIGGER delivery_service_month_protect BEFORE INSERT OR UPDATE OR DELETE ON delivery_serviceconfirmationmonth FOR EACH ROW EXECUTE FUNCTION delivery_service_month_protect()')
         elif vendor == 'sqlite':

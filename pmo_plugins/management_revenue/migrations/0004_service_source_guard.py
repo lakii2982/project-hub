@@ -10,17 +10,17 @@ def install(apps, schema_editor):
                   IF TG_OP = 'UPDATE' AND (OLD.acceptance_id IS DISTINCT FROM NEW.acceptance_id
                       OR OLD.service_confirmation_id IS DISTINCT FROM NEW.service_confirmation_id
                       OR OLD.service_confirmation_month_id IS DISTINCT FROM NEW.service_confirmation_month_id)
-                  THEN RAISE EXCEPTION 'Revenue source identity is immutable'; END IF;
+                  THEN RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Revenue source identity is immutable'; END IF;
                   IF NEW.service_confirmation_month_id IS NOT NULL THEN
                     IF NEW.acceptance_id IS NOT NULL OR NEW.service_confirmation_id IS NULL
-                    THEN RAISE EXCEPTION 'Service revenue requires a real month and no acceptance'; END IF;
+                    THEN RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Service revenue requires a real month and no acceptance'; END IF;
                     IF NOT EXISTS(SELECT 1 FROM delivery_serviceconfirmationmonth m
                         JOIN delivery_serviceconfirmation p ON p.id = m.service_confirmation_id
                         WHERE m.id = NEW.service_confirmation_month_id AND m.service_confirmation_id = NEW.service_confirmation_id
                           AND p.organization_id = NEW.organization_id AND p.project_id = NEW.project_id
                           AND m.allocated_net_cents = NEW.recognized_net_cents
                           AND m.coverage_end = NEW.occurred_on AND m.service_month = NEW.posting_period)
-                    THEN RAISE EXCEPTION 'Service month does not match its confirmation or amount'; END IF;
+                    THEN RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Service month does not match its confirmation or amount'; END IF;
                   END IF;
                   RETURN NEW; END; $$""")
             cursor.execute('CREATE TRIGGER management_revenue_service_source_guard BEFORE INSERT OR UPDATE ON management_revenue_revenuerecognition FOR EACH ROW EXECUTE FUNCTION management_revenue_service_source_guard()')

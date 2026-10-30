@@ -1,6 +1,6 @@
 """PostgreSQL multi-connection races for service-period income; SQLite is explicitly not evidence."""
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date
+from datetime import date, timedelta
 from threading import Barrier
 from unittest import skipUnless
 import uuid
@@ -73,12 +73,14 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
 
     def test_same_month_two_disjoint_parents_post_concurrently(self):
         """One natural month, two disjoint confirmed sub-ranges, concurrent income keeps the total."""
-        start, end = date(2026, 10, 1), date(2026, 10, 31)
+        end = self.today.replace(day=1) - timedelta(days=1)
+        start, mid = end.replace(day=1), end.replace(day=1) + timedelta(days=14)
+        month = start.strftime('%Y-%m')
         self.approved_service_line(net=101, start=start, end=end,
             schedule=[{'coverage_start': start.isoformat(), 'coverage_end': end.isoformat(),
                        'allocated_net_cents': 101}])
-        first = self.confirmation(start=start, end=date(2026, 10, 15))
-        second = self.confirmation(start=date(2026, 10, 16), end=end)
+        first = self.confirmation(start=start, end=mid)
+        second = self.confirmation(start=mid + timedelta(days=1), end=end)
         barrier, results = Barrier(2), []
 
         def call(row):
@@ -88,7 +90,7 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
                 barrier.wait(timeout=15)
                 try:
                     results.append(('ok', revenue.recognize_service_month(member, row.pk,
-                        service_month='2026-10', expected_version=row.confirmed_version,
+                        service_month=month, expected_version=row.confirmed_version,
                         request_token=uuid.uuid4(), dry_run=False).pk))
                 except (ValidationError, PermissionDenied) as error:
                     results.append(('rejected', type(error).__name__))
@@ -100,9 +102,9 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
         rows = RevenueRecognition.objects.order_by('recognized_net_cents')
         self.assertEqual(rows.count(), 2)
         self.assertEqual(sum(rows.values_list('recognized_net_cents', flat=True)), 101)
-        self.assertEqual(set(rows.values_list('posting_period', flat=True)), {'2026-10'})
+        self.assertEqual(set(rows.values_list('posting_period', flat=True)), {month})
         claims = SourceConsumption.objects.filter(consumer='management_revenue',
-            coverage_key='service_month:2026-10')
+            coverage_key='service_month:' + month)
         self.assertEqual(claims.count(), 2)
         self.assertEqual(claims.values('source_id').distinct().count(), 2)
         self.assertEqual(LedgerPosting.objects.count(), 0)
@@ -150,16 +152,16 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
         self.assertEqual(RevenueRecognition.objects.count(), 1)
         self.assertEqual(LedgerPosting.objects.count(), 0)
 
-    def test_same_real_coverage_across_approved_contracts_confirms_only_once(self):
-        start, end = self.today.replace(day=1), self.today.replace(day=28 if self.today.month == 2 else 28)
-        first = self.confirmation(start=start, end=end, confirmed=False,
+    def test_same_real_coverage_across_two_drafts_confirms_only_once(self):
+        # Approved service schedules in one project must stay disjoint, so the real race is two
+        # submitted drafts on the same approved line with the same real coverage.
+        start, end = self.today.replace(day=1), self.today
+        self.approved_service_line(net=101, start=start, end=end,
             schedule=[{'coverage_start': start.isoformat(), 'coverage_end': end.isoformat(),
                        'allocated_net_cents': 101}])
+        first = self.confirmation(start=start, end=end, confirmed=False)
         first = service_period.submit_service_confirmation(self.owner, first.pk,
             expected_version=first.version, request_token=uuid.uuid4(), dry_run=False)
-        self.contract = self.make_contract(contract_code='C2-same-service-coverage')
-        self.line = None
-        self.approved_service_line(net=101, start=start, end=end)
         second = self.confirmation(start=start, end=end, confirmed=False)
         second = service_period.submit_service_confirmation(self.owner, second.pk,
             expected_version=second.version, request_token=uuid.uuid4(), dry_run=False)
