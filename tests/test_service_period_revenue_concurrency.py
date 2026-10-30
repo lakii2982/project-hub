@@ -34,6 +34,7 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
                     return ('rejected', type(error).__name__)
             finally:
                 close_old_connections()
+                connection.close()
         with ThreadPoolExecutor(max_workers=len(actions)) as pool:
             results = list(pool.map(call, actions))
         self.assertEqual(sum(result[0] == 'ok' for result in results), 1, results)
@@ -96,6 +97,7 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
                     results.append(('rejected', type(error).__name__))
             finally:
                 close_old_connections()
+                connection.close()
         with ThreadPoolExecutor(max_workers=2) as pool:
             list(pool.map(call, [first, second]))
         self.assertEqual([item[0] for item in results], ['ok', 'ok'], results)
@@ -146,6 +148,7 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
                     return ('rejected', None)
             finally:
                 close_old_connections()
+                connection.close()
         with ThreadPoolExecutor(max_workers=2) as pool:
             results = list(pool.map(call, [recognize, close]))
         self.assertEqual(results[0][0], 'ok', results)
