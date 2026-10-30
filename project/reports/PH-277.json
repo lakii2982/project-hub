@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE 71d5665): exit 1, {\"command\":\"check\",\"errors\":[{\"code\":\"high_risk_review_required\",\"message\":\"risk S reports require a named reviewer with status pass\",\"path\":\"report.review\"}],\"ok\":false} — single review-pending error, no path/schema errors."
+      "result": "pass",
+      "evidence": "Post-independent-review actual rerun with the recorded pass (reviewed HEAD ce6e92d, then pass-record commit): {\"command\":\"check\",\"ok\":true,\"task_count\":212}, exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (read-model contract freeze plus PH-257/PH-262/PH-272 contract sync); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-277 insights read-model contract reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ADR 0014 CANONICAL ALIGNMENT VERIFIED against docs/v1.0-development/contracts/entities.schema.json: ReconciliationCase required id/organization_id/version/status/source_refs/difference_cents/owner_member_id/resolution_note, status enum draft/pending/approved/rejected/superseded/closed, readOnly case_key/rule_code/coverage_key/snapshot_watermark; MetricDefinition required fields/status enum draft/active/posted/reversed/superseded and scope organization/project/counterparty; MetricSnapshot is explicitly documented as a non-canonical insights-internal read model. The ADR freezes only these fields/statuses, rejects non-canonical period/scope/category/assignee/due_date/note/open/assigned/resolved/dismissed forms, and keeps the three read-only interfaces (period precheck, reconciliation case list/snapshot, project workbench) with owner/finance/auditor full, pm only managed projects/summary, member deny, integer cents/ROUND_HALF_UP, null+missing for unimplemented metrics, no lock/ledger/business-fact writes, and export deferred.",
+      "SCOPE/TASKS/SYNC: the change is docs-only (ADR 0014, PH-257/PH-262 decision/risk pointers, tasks blockers/deps, verification, report/handoff); it does not add contract schema/commands/topics or code/scaffold. PH-257/PH-262 remain proposed with only their PH-180/181 and PH-182/183 blockers; PH-272 now depends on PH-277 and its blocker correctly says only PH-180/181/182/183 remain, with ADR 0013/0014 satisfied. ADR 0014 is free (0001-0013 occupied; 0010 invoicing, 0011 time, 0012 importing, 0013 insights ownership) and there are no <PH-/{tid} placeholders. 9 changed files are all inside PH-277 allowed_paths; tasks mark PH-277 done with handoff and manifest=PH-277.",
+      "PH-272 SPEC DEVIATION ACCEPTED (Lead-aligned): PH-277's BASE allowed_paths contain project/specs/PH-257.md and PH-262.md but not project/specs/PH-272.md, so the worker correctly did not expand scope; PH-272 was synced through tasks (depends_on + blocker) and the deviation is disclosed. Updating PH-272's spec belongs to PH-272's own planning/implementation PR; this is not a blocker.",
+      "GATES/PROCESS NOTE: at HEAD ce6e92d (BASE 71d5665), projectctl check reports only high_risk_review_required (ok would need this pass), governance 23 tests OK, and verify-change --base 71d5665 --task PH-277 reports only the review/acceptance gates with no path_out_of_scope. The task is already marked done in the candidate while the review was pending; since this is a docs-only task and the Lead's checklist expects PH-277 done, I treat this as a non-blocking process note (if strict convention is preferred, set it back to in_review and let the final pass commit set done). After this pass, check/verify-change are review-clean."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD ce6e92d (BASE 71d5665) in /Users/lakii2982/项目/pmo-277, worktree clean; 9 changed files all inside PH-277 allowed_paths; manifest=PH-277, task done+handoff. ADR 0014 checked line-by-line against canonical entities.schema.json: ReconciliationCase required/status/readOnly fields match; MetricDefinition required/status/scope match; MetricSnapshot explicitly non-canonical; three read-only interfaces, role matrix, integer cents/ROUND_HALF_UP, null+missing semantics, no lock/ledger/business-fact writes, export deferred. PH-257/PH-262 remain proposed with accurate blockers and point to ADR 0014; PH-272 depends on PH-277 with only PH-180/181/182/183 outstanding; ADR 0014 number free; no placeholders. PH-272 spec is not in PH-277 BASE allowed_paths, so tasks-only sync is an acceptable disclosed deviation for PH-272's own PR. Gates: check high_risk only, governance 23 OK, verify-change only review/acceptance gates, no path_out_of_scope. Non-blocking: task was marked done before this review pass; content is docs-only and Lead explicitly expects done, so no rejection - if strict convention is desired, reset to in_review and set done in the final pass commit."
   },
   "deviations": [
     "The Lead asked to sync PH-272's spec and tasks, but the frozen PH-277 spec/allowed_paths only permit project/specs/PH-257.md and project/specs/PH-262.md (PH-272's spec is not in the BASE whitelist). I synced PH-272 through tasks.json only (added PH-277 to its dependencies and refreshed its blockers) and updated PH-257/PH-262 specs as the frozen contract requires; PH-272's spec text must be updated by its own implementation/planning PR. Disclosed here rather than expanding the whitelist.",
