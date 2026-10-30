@@ -6650,7 +6650,7 @@
       "title": "会话上下文减负文档改造（AGENTS开场、delivery-status拆分、过程文档归档）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -6684,7 +6684,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-234.md"
     },
     {
       "id": "PH-236",
