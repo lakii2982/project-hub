@@ -1,0 +1,40 @@
+{
+  "task_id": "PH-223",
+  "summary": "AR planning: register PH-224 (customer settlement, due/retention open items and read-only aging) and PH-225 next planning slot as ready, freeze the term-row-combination settlement design in spec/ADR-0009, and explicitly revise two named read-only interfaces plus a concurrency test file missing from the old PH-155/156 whitelists; no product code.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual 147 tasks validated after registration; PH-223 done with handoff, PH-224/PH-225 ready, dependencies done."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base aec8f67 --task PH-223",
+      "result": "pass",
+      "evidence": "Post-review rerun after review pass: actual ok=true, changed files all inside BASE allowed_paths (aec8f67..HEAD); see handoff/verification for the recorded command output."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-223 planning reviewer (fresh context, read-only; two review rounds)",
+    "status": "pass",
+    "findings": [
+      "Round 1 blockers closed: (1) approval must re-derive net/tax/gross from the current line cumulative and reject stale drafts (previously a stale draft could break one-cent conservation); (2) OpenItem/Settlement due_date are required and terms without due_date/release_on are rejected; (3) term coverage now means all approved terms including already consumed ones, so the second UAT-10 retention settlement is not rejected.",
+      "Adopted non-blocking clarifications: no external settlement.draft.save command channel and caller amounts are echo-only; canonical settlement projection emits only draft/active (submitted/withdrawn stay private); aging query returns unallocated_receipt_refs=[]; confirmed_line_performance excludes reversed/superseded sources; SourceConsumption is reused read-only without touching core; ADR tail rounding described as cumulative-difference conservation.",
+      "Round 2 confirmed the spec/ADR fixes and required only evidence corrections (review status, task count 147, typo), all of which are applied before this verdict."
+    ],
+    "evidence": "Reviewer independently recomputed the term-combination formula (50% -> net50000/tax3000, 40% -> 40000/2400, retention 10% -> 10000/600, totals 100000/106000) and random telescoping conservation; checked contract command/query/entity invariants, whitelist equality with tasks.json, DoR/dependencies, and ran the 19 governance tests plus validate_contracts/check_contract_cases/check_fixture (all pass). check/verify-change were blocked only by the pending review before this verdict; both are rerun after it."
+  },
+  "deviations": [
+    "PH-224 whitelist extends the old PH-155/156 whitelists with two named read-only interfaces (contracts.approved_terms_snapshot, delivery.confirmed_line_performance), delivery/urls.py plugin wiring and a concurrency test file; reasons are frozen in ADR-0009 because the old whitelists would force the implementer to read other owners' tables directly or omit PG evidence.",
+    "Thin slice deliberately excludes active-settlement reversal, cash clearing, credit/bad debt, AP, invoice, disputes/extensions and opening open items; these stay with their original proposed tasks or a later planning slot."
+  ],
+  "unverified": [
+    "No PH-224 product code, settlement app, models, migrations, PostgreSQL concurrency, browser, legacy upgrade, customer UAT or production evidence; none claimed.",
+    "PH-224 implementation is not authorized until this planning PR merges into a trusted BASE and the task is ready there."
+  ]
+}
