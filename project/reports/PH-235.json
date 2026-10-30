@@ -1,0 +1,44 @@
+{
+  "task_id": "PH-235",
+  "summary": "Add three read-only session-efficiency commands to scripts/projectctl.py without changing any existing command semantics, validation logic or governance gates: `orient` (one-shot session context: manifest summary, active handoff content, compact ready list, acceptance commands parsed from the AGENTS.md 验收与交付 sh block; structured errors on any missing source), `next --compact` (seven-field task summaries; default output byte-identical to BASE, verified by diff) and `draft-report <id>` (report skeleton to stdout only, tests pre-declared not_run, S review required/pending; never writes files or pre-declares pass).",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run after final report written (worktree /Users/lakii2982/项目/pmo-opt-235): ok=true, task_count=158, PH-235 done with handoff and report."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: 23 tests OK (~2.4s) = 19 projectctl (15 existing untouched + 4 new: compact field set, orient facts, orient missing-source errors, draft skeleton never-pass) + 4 governance. Verified independently by the S reviewer."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 7ca6004 --task PH-235",
+      "result": "pass",
+      "evidence": "Actual rerun after commit on feat/PH-235-orient-compact-draft against BASE 7ca6004: ok=true, 7 changed files all inside BASE allowed_paths, report validated."
+    },
+    {
+      "command": "diff <(BASE projectctl.py next) <(HEAD projectctl.py next)",
+      "result": "pass",
+      "evidence": "Actual run on the real repo: next and brief default outputs byte-identical between BASE 7ca6004 version and HEAD version (diff -q clean, both commands)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-235 reviewer (fresh context, read-only; single round)",
+    "status": "pass",
+    "findings": [
+      "No code blockers. Reviewer confirmed line-by-line: compact does not touch ready-detection; orient is purely read-only with structured errors and no partial-success path; draft-report writes nothing and cannot pre-declare pass; git diff -U0 shows zero modification to existing function bodies (check/_validate_report/verify-change/CRITICAL_PATHS untouched); _ready_tasks extraction is logic-identical to BASE command_next; existing 16 tests untouched.",
+      "Process blocker raised and closed before commit: tasks.json had been flipped to done while the report was still the not_run skeleton, failing check. Closed by writing this final report with actual run evidence and the S review pass; status done now consistent."
+    ],
+    "evidence": "Reviewer independently ran the 23-test suite, BASE-vs-HEAD byte-identity diffs on clean and live copies, draft-report no-write check, skeleton through _validate_report (only expected summary/tests_no_pass/review-pending issues, zero structural issues), and verified whitelist coverage of all 7 changed files."
+  },
+  "deviations": [
+    "PH-235 status was set to done in tasks.json during the review window (before this report was final), which temporarily made check fail in the live tree; the reviewer flagged it and it was closed by finalizing this report before commit. No contract field other than status/handoff changed.",
+    "draft-report restricts drafting to ready/in_progress/in_review tasks (task_not_executable otherwise); the spec did not state this explicitly but it follows the verify-change executable-status rule."
+  ],
+  "unverified": [
+    "Full product test suite was not run locally for this slice (no product code touched); the CI required checks run the full suite on this PR.",
+    "Real token/time savings are goals tracked at the PH-233 baseline; they will be re-measured after PH-234 lands and are not claimed here."
+  ]
+}

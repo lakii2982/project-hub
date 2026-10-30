@@ -502,3 +502,8 @@ PH222 PR117 合入 aec8f67 后完成应收规划：登记 PH-224「客户结算�
 ## PH-233 交付效率规划与规划链续接（2026-10-30）
 
 按用户2026-10-30授权的“token降40%、时间降50%”工程改造，登记PH-235（projectctl只读`orient`/`next --compact`/`draft-report`）与PH-234（AGENTS.md开场改orient/brief、delivery-status拆现状头+归档、ai-delivery-*四篇归档、work-packages.json裸读护栏），并保留PH-236规划槽。量化基线：新会话必读约125KB（冷启动约40K token）、全量套件94s/次、每任务本地全量2-3次。PH-233原业务候选顺延至PH-236，本片未冻结任何业务契约。见`docs/verification.md`与`project/reports/PH-233.json`。
+
+
+## PH-235 projectctl会话效率命令（2026-10-30）
+
+新增只读`orient`（单次输出manifest摘要+活动handoff正文+compact ready+AGENTS.md验收命令，缺失来源结构化报错）、`next --compact`（仅id/title/kind/risk/status/milestone/depends_on，默认输出与BASE逐字节一致）与`draft-report <id>`（报告骨架到stdout，result一律not_run、S级review pending，只读不写文件）。不改变既有命令语义、校验逻辑与CRITICAL_PATHS。见`docs/verification.md`与`project/reports/PH-235.json`。

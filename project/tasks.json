@@ -6619,7 +6619,7 @@
       "title": "projectctl会话效率命令（orient、next --compact、draft-report）",
       "kind": "infra",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -6643,7 +6643,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-235.md"
     },
     {
       "id": "PH-234",

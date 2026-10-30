@@ -367,3 +367,8 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 ## PH-233 交付效率规划（2026-10-30）
 
 基线c4348ac（PH-231规划合入）。纯规划片：登记PH-234/PH-235实现契约（ready，依赖PH-233）与PH-236规划槽，PH-233置done。无产品代码、无迁移、无测试改动。实际执行check与治理测试；verify-change在独立S复核落pass后重跑。量化基线与优化目标记录见delivery-status同名条目；PH-235/234完成后按同口径复测。未验证：无产品/浏览器/PG/CI证据；优化收益本身待PH-235/234交付后实测，不预先宣称达成。
+
+
+## PH-235 projectctl会话效率命令（2026-10-30）
+
+基线7ca6004（PH-233规划合入前头）。scripts/projectctl.py新增command_orient/_acceptance_commands/_ready_tasks/_compact_task/command_draft_report与next --compact参数；command_next判定逻辑原样提取为_ready_tasks。tests/test_projectctl.py末尾追加4个测试（compact字段集、orient事实与缺源报错、draft骨架禁pass），既有16个测试未动。实际执行：23项治理测试通过（19项projectctl含4个新增+4项governance）；BASE版vs HEAD版next/brief输出diff逐字节一致；真实repo上orient/draft-report冒烟通过。未验证：全量产品测试套件（本片不触产品代码，CI全量覆盖）；实际token/时间收益待PH-234合入后按PH-233基线复测。
