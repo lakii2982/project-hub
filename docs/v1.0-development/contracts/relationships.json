@@ -17,7 +17,16 @@
       "owner": "core",
       "canonical_record": "AccountingEvent",
       "kind": "embedded_reference",
-      "schema_ref": "./entities.schema.json#/$defs/AccountingEvent"
+      "schema_ref": "./entities.schema.json#/$defs/AccountingEvent",
+      "x-projection": {
+        "left_ref": "original_event",
+        "right_ref": "reversal_event",
+        "id": "reversal_event.id",
+        "version": "reversal_event.version",
+        "created_at": "reversal_event.created_at",
+        "read_only": true,
+        "write_owner": null
+      }
     },
     "source-event": {
       "owner": "core",

@@ -47,3 +47,11 @@ ManualCashPlan由cash唯一维护，与旧core.CashPlan是切写适配关系；�
 发票分配与结算单、费用及银行费共享原始经济来源的额度，改变引用入口不能重复使用额度。票面税额与可抵扣税额分别检查，未知票面税保持未知；不可抵扣不等于票面税为0。核对查询只读，刷新与状态变更使用独立写命令；水位变化保留同一问题与历史差额，不能靠换来源版本删除未解决差异。
 
 新增服务仍须通过公司锁、业务来源唯一键、期间/权限检查、幂等、追加冲销、审计与事件原子事务。结构正反例通过仅证明设计输入可校验，数据库并发、浏览器办理、真实目标环境与客户验收另行取证。正式开发的许可仅来自已合入可信BASE的tasks，而非本README或补丁文件。
+
+## PH-210 单一冲销引用与原现金消费
+
+AccountingEvent.reverses_event_ref是服务生成的单一可空原事件引用，非空只允许namespace=core/kind=accounting_event的不可变SourceRef；该字段server-only、readOnly，客户端命令与写DTO不接受。原事件不更新，只有新的完整冲销事件持有该引用。relationships.event-reversal仍归core/AccountingEvent/embedded_reference，其只读投影left=原事件、right=冲销事件，桥id/version/created_at从冲销事件派生，不新增第二个可编辑关系。同企业/授权/原版本/期间/依赖/完整冲销唯一性由后续服务与持久约束检查，readOnly与schema通过不等于服务已强制。旧账无AccountingEvent时走legacy adapter与原冲销服务，不合成历史事件。
+
+SourceConsumption.consumer新增cash内部用途，原七用途保留。稳定来源是cash owner的原始CashTransaction：organization+consumer=cash+source.namespace/kind/id+coverage_key=bank_effect唯一，source.version只读快照，不含请求键/渠道/分类ID；该用途不是clearance核销，项目分配不能重记银行流。原bank_effect claim永久保留，分类/分配及其撤销不释放它、也不产生银行流或会计事件。真实现金更正遵守bank-entry-extension.plan.json#/service_semantics/correction：先拒绝有效依赖、由各owner先撤销且不级联，反向全部当前有效posting并保留book/account/source，再追加完整正额replacement（两个零成本/收入事件）；原CashTransaction ID/原行/external_source_key/银行provenance不变且更正链不分支，按批准请求与有效predecessor唯一消费，不提供仅写差额或释放原防重再普通过账。
+
+以上仅为设计与严格schema反例；没有来源resolver、批准/期间/模型事务或真实服务拒绝，不改变现金/成本/收入口径，也不是客户或生产验收。旧99正8负夹具、原19正37负契约案例与137需求保持，PH210新增边界案例单列。

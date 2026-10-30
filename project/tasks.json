@@ -5527,7 +5527,7 @@
       "title": "补全单一冲销引用与原现金消费契约",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -5563,7 +5563,7 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/91",
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-210.md"
     },
     {
       "id": "PH-211",

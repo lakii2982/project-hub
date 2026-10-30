@@ -1,0 +1,74 @@
+{
+  "task_id": "PH-210",
+  "summary": "Design-contract slice for the single reversal reference and the original-cash consumption claim: AccountingEvent.reverses_event_ref becomes optional, server-only and read-only with a non-null value restricted to the core/accounting_event immutable SourceRef (additionalProperties stays false, original event never updated); SourceConsumption.consumer appends the cash internal use while retaining all seven prior consumers, with permanent bank_effect claim and strict full-reversal+full-replacement correction semantics; relationships.event-reversal keeps core/AccountingEvent/embedded_reference and gains a read-only bridge projection (left=original event, right=reversal event, id/version/created_at from the reversal event); command schemas stay closed to the field and carry annotations; source-registry adds only the internal-use mapping; fixture/freeze refresh only the five affected canonical digests plus a PH-210 validation record; tests add strict positive/negative cases. No validator/workflow change, no product code, migration, service or financial-policy change, and no claim that a real service enforces the schema.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun (HEAD f1f1a37, BASE b931be0 after PH-237 merge): {\"command\":\"check\",\"ok\":true,\"task_count\":160} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 2.798s, OK (19 projectctl + 4 governance); no test files touched."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
+      "result": "pass",
+      "evidence": "Pinned jsonschema 4.26.0 offline env (.agent-venv): result=pass, schemas=9, resolved_refs=2977, requirements=137, old_positive=19, old_rejected=37, old_fixture_positive=99, old_fixture_rejected=8, runtime_business_verified=false; extension-freeze supplemental compile passed with updated hashes."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/check_contract_cases.py",
+      "result": "pass",
+      "evidence": "Pinned environment: result=pass, positive_examples=19, rejected_examples=37 (all original cases retained), business_commands_executed=false."
+    },
+    {
+      "command": "python -B docs/v1.0-development/fixtures/check_fixture.py",
+      "result": "pass",
+      "evidence": "Pinned environment: result=pass, positive_schema_samples=99, negative_schema_samples=8, sources=92, uat_sequences=18, requirements=137, errors=[]; only the five affected contract_artifact_sha256 entries changed."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_preparation --verbosity 1",
+      "result": "pass",
+      "evidence": "Product .venv run: Ran 7 tests, OK (skipped=4) in 0.005s. The four skips are exactly the jsonschema-dependent cases by PH135 design; the strict execution is recorded separately below and no skip is counted as a pass."
+    },
+    {
+      "command": ".agent-venv/bin/python -B -m unittest tests.test_v1_preparation -v",
+      "result": "pass",
+      "evidence": "Pinned jsonschema/referencing env: Ran 7 tests in 5.262s, OK, 0 skipped; markers PH210_STRICT_CONTRACT_BOUNDARIES_EXECUTED positive=6 rejected=10 no_runtime_business_claim, PH135_CONTRACT_SCHEMAS_EXECUTED validator=strict_jsonschema, PH135_FIXTURE_SCHEMA_EXECUTED positive=99 negative=8. New cases: legal absent/null/reference accepted; wrong namespace, wrong kind, missing version, SourceRef extra field, AccountingEvent extra field, unknown consumer and client append/reverse DTO injection rejected. The .agent-venv is the pinned preparation tool environment created from integrations/mcp/requirements.txt (jsonschema 4.26.0, referencing) exactly as .github/workflows/preparation.yml does, not a product dependency."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base b931be0 --task PH-210",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun (HEAD f1f1a37, BASE b931be0): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 15 changed files all inside BASE PH-210 allowed_paths; declaration_only."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-210 reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "CONTRACT CONFORMANCE VERIFIED (item-by-item against project/specs/PH-210.md): catalog-completeness.schema.json#/$defs/AccountingEvent keeps additionalProperties=false and an unchanged required list; reverses_event_ref is optional, readOnly=true, x-server-only=true, non-null values restricted by allOf[SourceRef, const namespace=core, const kind=accounting_event] plus null, and extra-field/absent-version probes are rejected by SourceRef's closed shape. entities.schema.json#/$defs/SourceConsumption keeps additionalProperties=false, appends the single consumer 'cash' and retains all seven previous consumers, with invariants for permanent bank_effect, original CashTransaction identity, exclusion of version/request/channel/classification and no-cascade full-reverse+full-replacement correction consistent with bank-entry-extension.plan.json#/service_semantics/correction. relationships.json event-reversal stays core/AccountingEvent/embedded_reference with unchanged schema_ref and gains the read-only projection (left=original_event, right=reversal_event, id/version/created_at from reversal_event, read_only=true, write_owner=null); it is the only AccountingEvent-canonical relation. commands.schema.json core.posting.append/v1 and core.posting.reverse/v1 keep additionalProperties=false at command and payload level with the field absent, and injected reverses_event_ref is rejected in both locations. source-registry.json keeps objects/read_projections byte-identical and only appends posting_consumption.cash. fixture.json changes only the five affected contract_artifact_sha256 digests (recomputed and matching HEAD; BASE values matching 'before'); extension-freeze.json keeps state/base_sha/patch_entries=201/input_sha256/independent_static_reviews unchanged, updates only the same five canonical digests and appends the PH210 record. No validator, workflow, product code, migration or dependency change; every changed path is inside the BASE PH-210 allowed_paths (verify-change path scope clean).",
+      "EVIDENCE VERIFIED BY INDEPENDENT RERUN (not the implementer's narrative): `scripts/projectctl.py check` -> ok=true, task_count=158, exit 0; `python -m unittest tests.test_projectctl tests.test_governance -v` -> Ran 23 tests, OK; `validate_contracts.py` -> pass, 9 schemas / 2977 refs / 137 requirements, old 19 positive / 37 rejected and fixture 99/8 preserved, runtime_business_verified=false; `check_contract_cases.py` -> pass, 19/37; `check_fixture.py` -> pass, 99/8, 92 sources, 18 UAT, 137 requirements, errors=[]; product-venv `manage.py test tests.test_v1_preparation` -> 7 tests OK (skipped=4 by PH135 design, not counted as pass); strict pinned env `.agent-venv` (jsonschema 4.26.0, Python 3.12.14) `-m unittest tests.test_v1_preparation -v` -> 7 tests OK, 0 skipped, markers PH210_STRICT_CONTRACT_BOUNDARIES_EXECUTED positive=6 rejected=10, PH135_CONTRACT_SCHEMAS_EXECUTED, PH135_FIXTURE_SCHEMA_EXECUTED. Test diff only appends 2 tests (1 structural, 1 strict-schema) and preserves all 5 original tests plus the skip detection/environment contract. A throwaway-worktree simulation with this review committed pass yields check ok=true and verify-change ok=true with all 15 changed files inside the BASE whitelist; temp worktree removed, reviewed worktree untouched except this report.",
+      "DEVIATIONS AND RESIDUALS: the report's five deviations are acceptable - (1) one worker wrote the four canonical JSON plus root annotation/digest files, but the Lead's task assignment covers that exact whitelist and no validator/workflow/scope rule was changed; (2) in_review instead of done is the correct S-gate behavior before an independent pass; (3) delivery-status.md unchanged is acceptable because capability did not change and the record went to both verification.md files; (4) fixture/freeze history preservation was verified (only five digests changed; base_sha/201 patches/input/reviews kept; old hashes remain only as documented 'before' values); (5) all design-only disclaimers verified, no text claims the service enforces the schema (grep found only explicit negations). Non-blocking follow-up for the done/append commit: extension-freeze follow_up_updates[0].validation.independent still reads 'pending independent S review'; update it to this named reviewer + pass so the frozen record is not left pending. Note: BASE already contained an optional readOnly reverses_event_ref as SourceRef|null, so the spec wording 'new field' is inaccurate; this slice tightens it to core/accounting_event plus x-server-only and annotations, satisfying the intent with no weakening. Residual unverified, as declared: no source resolver, authorization/approval, period adapter, model transaction, real service rejection, database/PG concurrency, ledger/accounting-event production, browser/customer/production evidence; readOnly remains an annotation."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 79338a2 (BASE 7a2cc17) in /tmp/ph210-contract, working tree clean. Independent actual reruns on 2026-10-30 with /Users/lakii2982/项目/pmo项目管理/.venv/bin/python and .agent-venv/bin/python: all six BASE acceptance commands pass (check ok=true task_count=158; governance 23 OK; validate_contracts pass 9/2977/137 with 19/37 and 99/8 preserved; check_contract_cases pass 19/37; check_fixture pass 99/8/92/18/137 errors=[]; manage.py test 7 OK skipped=4), plus strict-env unittest 7 OK 0 skipped with PH210 marker positive=6 rejected=10. verify-change before this review failed only on the pending review; simulation after pass: check ok=true and verify-change ok=true, 15/15 files inside BASE allowed_paths. Recomputed SHA-256 of the five canonical files matches fixture.json and extension-freeze.json 'after' digests, and BASE file digests match the recorded 'before' values; freeze history (base_sha f1115cf, 201 patches, input_sha256, 4 independent reviews) is unchanged. No runtime/business/service/database claim is made anywhere in the delivered artifacts."
+  },
+  "deviations": [
+    "PH-209 规划把 4 个 canonical JSON 冻结给独立执行者、root 单写来源映射/摘要/反例；本轮由同一 worker 在独立 worktree /tmp/ph210-contract 完成全部 4 JSON + root 文件，写集与 spec 白名单完全一致，未越界、未改校验器或工作流。",
+    "tasks.json 本提交置为 in_review（owner=worker-contract）而非 done：projectctl check 与 verify-change 对 risk S 要求 report.review.status=pass 且有具名 reviewer，而独立复核尚未出具；done 只能在其 pass 后置位，避免自写 pass 或用失败门禁冒充通过。",
+    "docs/delivery-status.md 未改：PH-234 重构后该文件仅为能力现状头且明确新条目只进 archive（不在本任务白名单）；本次能力未变，验证记录写入 docs/verification.md 与 docs/v1.0-development/verification.md。",
+    "fixture.json/extension-freeze.json 只刷新 5 个受影响 canonical 摘要（另 commands 摘要），未改旧 base_sha/201 补丁/input_sha256/旧审阅历史；不把历史 pass 改写为新 SHA 通过。",
+    "所有新字段/注解只作设计与严格结构断言，未声称真实服务已强制 readOnly、唯一性或期间/授权检查；这些仍属 PH-141/后续实现。",
+    "独立复核 follow-up 已处理：extension-freeze.follow_up_updates[0].validation.independent 由 pending 更新为具名 reviewer + PASS，并记录 BASE 本已存在可选 readOnly reverses_event_ref(SourceRef|null)、PH-210 实际是收紧为 core/accounting_event + x-server-only 的措辞说明（spec 用词'新增'不精确，未改契约语义、无 weakening）。",
+    "Lead integration rebase (7a2cc17 -> 5ee8af1): conflicts in docs/verification.md (PH-236 entry added upstream) and project/manifest.json resolved by keeping both PH-236 and PH-210 verification sections and pointing active_handoff at PH-210; project/tasks.json auto-merged (PH-210 done retained alongside PH-237/238 registration). Post-rebase acceptance rerun by Lead: check ok=true (task_count=160), verify-change --base 5ee8af1 ok=true, governance 23 OK, contract scripts pass under pinned jsonschema 4.26 (.agent-venv), test_v1_preparation 7 OK/4 designed skips (0 skips in strict env).",
+    "Second Lead rebase (5ee8af1 -> b931be0) after the concurrent PH-237 delivery landed on main: clean rebase (no conflicts), gates rerun green with the new BASE. No scope or content change."
+  ],
+  "unverified": [
+    "No source resolver, authorization/approval, posting-period adapter, model transaction, persistence constraint or real service rejection was executed; readOnly/schema pass is not service enforcement.",
+    "No accounting event, ledger posting, cash correction or bank flow was produced; no cost/revenue/cash policy meaning was changed or verified.",
+    "No database, PostgreSQL concurrency, browser/UI, import/API client, customer acceptance, deployment or production verification.",
+    "Current exact-head CI (11 required checks) and normal PR merge remain for the Lead; repository state of other parallel tasks (PH-232/PH-236) is not part of this slice.",
+    "Independent S review is pending (this report's review block); done status is deferred until that verdict."
+  ]
+}
