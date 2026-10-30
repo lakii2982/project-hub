@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE ceded2e): exit 1, {\"command\":\"check\",\"errors\":[{\"code\":\"high_risk_review_required\",\"message\":\"risk S reports require a named reviewer with status pass\",\"path\":\"report.review\"}],\"ok\":false} — single review-pending error, no path/schema errors. Never declared pass before the reviewer landed."
+      "result": "pass",
+      "evidence": "Post-independent-review actual rerun with the recorded reviewer pass: {\"command\":\"check\",\"ok\":true,\"task_count\":169}, exit 0. The pre-review run (single high_risk_review_required while review was pending) is recorded in deviations and was never declared as pass."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,7 +20,7 @@
     {
       "command": "grep -n \"94.4%\" project/reports/PH-237.json docs/delivery-status-archive.md docs/verification.md; ! grep -n \"94.5%|94.6%|281349|15360\" <same three files>",
       "result": "pass",
-      "evidence": "Actual grep: all three files contain 94.4% (PH-237 report 1x, archive 1x, verification 2x incl. the PH-242 planned-slice mention) and none contains 94.5%, 94.6%, 281349 or 15360. The PH-237 review block is preserved verbatim (it mentions the 281KB→15KB figure but no banned stale percentage)."
+      "evidence": "Actual grep: all three files contain 94.4% (PH-237 report 1x, archive 1x, verification 3x incl. the PH-237 calibration, the PH-242 planned-slice mention and the PH-246 entry) and none contains 94.5%, 94.6%, 281349 or 15360. The PH-237 review block is preserved verbatim (it mentions the 281KB→15KB figure but no banned stale percentage)."
     },
     {
       "command": "python scripts/projectctl.py verify-change --base ceded2e --task PH-246",
@@ -30,10 +30,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (historical evidence correction and CRITICAL_PATHS governance files); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-246 evidence-correction reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "FIXED-SHA REPRODUCTION VERIFIED EXACTLY: independently reran the frozen commands in this worktree - `git show 7605fa9:project/manifest.json | wc -c` = 663; `git show 7605fa9:project/tasks.json | wc -c` = 217565; `git show 7605fa9:project/handoffs/PH-233.md | wc -c` = 1510; `git show 7605fa9:docs/delivery-status.md | wc -c` = 61218 => 280956. Extracted `git archive b931be0` into a fresh /tmp/ph237-measure and ran in that tree: `projectctl.py orient | wc -c` = 3423; `brief PH-232 | wc -c` = 1893; `wc -c < docs/delivery-status.md` = 1996; `wc -c < project/specs/PH-232.md` = 8448 => 15760. `round((1-15760/280956)*100,2)` = 94.39, so 94.39% ≈ 94.4%. Every number in the PH-237 report entry, the archive PH-237 entry and the verification calibration matches these actual outputs.",
+      "THREE-PLACE CONSISTENCY AND HISTORY BOUNDARIES VERIFIED: the corrected caliber appears in exactly the three authorized places - project/reports/PH-237.json's single byte-measure tests entry (the rest of that report, including its review block/status pass and summary, is unchanged), docs/delivery-status-archive.md's PH-237 entry (only that one line changed; no other archive entry touched), and docs/verification.md (PH-237 entry appended with the same calibration sentence plus a new PH-246 entry). grep confirms 94.4% in all three files (verification.md has three legitimate occurrences: the PH-237 calibration, the earlier PH-242 planned-slice mention and the new PH-246 entry) and no residual 94.5%, 94.6%, 281349 or 15360 in any of them. ROADMAP.md, docs/v1.0-development/execution-protocol.md, CONTRIBUTING.md and docs/delivery-status.md are not in the diff; PH-237's three historical document edits are untouched; no other task report/handoff changed. The historical archive correction is the single explicitly authorized numeric fix in the frozen PH-246 spec, and the PH-237 review pass is not rewritten as a new-SHA pass.",
+      "ACCEPTANCE EVIDENCE VERIFIED BY INDEPENDENT RERUN: projectctl check -> exit 1 with the single high_risk_review_required error (expected pre-review; the report's not_run entry records exactly this); `python -m unittest tests.test_projectctl tests.test_governance -v` -> Ran 23 tests, OK; verify-change --base ceded2e --task PH-246 -> exit 1 with only high_risk_review_required + acceptance_not_passed (both review-derived; check entry not_run), no path_out_of_scope - all 7 changed files (PH-237 report, archive PH-237 line, PH-237 calibration + PH-246 verification entry, tasks.json, manifest.json, PH-246 report/handoff) are inside BASE PH-246 allowed_paths; task facts: task_count 169 unique, PH-246 done with handoff, manifest.active_handoff=PH-246, PH-236/237/238/242/243 done and PH-239/240/244/247 ready states intact. Report evidence entries for the reproduction/grep match the actual commands and outputs.",
+      "NOTE (non-blocking): the report's grep-evidence entry says verification.md contains 94.4% '2x'; the actual count is 3 (PH-237 calibration sentence, the earlier PH-242 planned-slice line, and the new PH-246 entry). The substantive grep claim (all three files contain 94.4%, no banned stale values) is true; correct the count wording when replacing the pre-review not_run entries with the final post-review evidence. After this pass the worker should set tests[0]/tests[4] to the actual post-review outputs (check exit 1 high_risk-only pre-review is expected to become ok=true after the pass + done/evidence commit, or record the post-review actual), commit the evidence, and rerun check/verify-change at the final HEAD as usual."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 621dd7a (BASE ceded2e) in /Users/lakii2982/项目/pmo-246, worktree clean; diff is exactly 7 files (+90/-7) all inside BASE PH-246 allowed_paths, docs-only, no product code/migrations/contracts/tests touched, ROADMAP/execution-protocol/CONTRIBUTING/delivery-status untouched. Independent actual runs: fixed-SHA baseline components 663+217565+1510+61218=280956 and b931be0 final path orient 3423 + brief PH-232 1893 + delivery-status 1996 + PH-232 spec 8448=15760 via `git archive` extraction, round((1-15760/280956)*100,2)=94.39; grep found 94.4% in all three authorized places and none of 94.5%/94.6%/281349/15360; projectctl check exit 1 with only high_risk_review_required; governance 23 tests OK; verify-change --base ceded2e --task PH-246 exit 1 with only review-derived high_risk_review_required + acceptance_not_passed and no path_out_of_scope; task_count 169, PH-246 done/handoff, manifest correct, prior done states intact. PH-237 report changed only its byte-measure tests entry (review block/summary/other entries preserved), archive changed only the authorized PH-237 entry line, verification appended the PH-237 calibration and a new PH-246 entry; history append-only semantics and the prior review pass are preserved. Minor wording note: verification.md 94.4% occurrence count is 3x, not 2x, in the report's grep evidence; correct during the final evidence commit. No blockers."
   },
   "deviations": [
     "Only the PH-237 report's byte-measure test entry was rewritten; its review block, summary and other test entries are preserved verbatim (the review block's '281KB→15KB' phrasing is historical and contains no banned stale percentage).",
