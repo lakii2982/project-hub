@@ -27,6 +27,8 @@ def install(apps, schema_editor):
                     IF NOT EXISTS(SELECT 1 FROM delivery_serviceconfirmation p WHERE p.id=NEW.service_confirmation_id
                         AND NEW.coverage_start >= p.coverage_start AND NEW.coverage_end <= p.coverage_end)
                     THEN RAISE EXCEPTION 'Service month outside confirmation coverage'; END IF;
+                    IF NEW.service_month <> to_char(NEW.coverage_start, 'YYYY-MM') OR NEW.service_month <> to_char(NEW.coverage_end, 'YYYY-MM')
+                    THEN RAISE EXCEPTION 'Service month must match its coverage month'; END IF;
                     RETURN NEW;
                   END IF;
                   RAISE EXCEPTION 'Service month rows are immutable and cannot be deleted';
@@ -48,6 +50,9 @@ def install(apps, schema_editor):
                 WHEN NOT EXISTS(SELECT 1 FROM delivery_serviceconfirmation p WHERE p.id=NEW.service_confirmation_id
                     AND NEW.coverage_start >= p.coverage_start AND NEW.coverage_end <= p.coverage_end)
                 BEGIN SELECT RAISE(ABORT, 'Service month outside confirmation coverage'); END""")
+            cursor.execute("""CREATE TRIGGER delivery_service_month_label BEFORE INSERT ON delivery_serviceconfirmationmonth
+                WHEN NEW.service_month <> strftime('%Y-%m', NEW.coverage_start) OR NEW.service_month <> strftime('%Y-%m', NEW.coverage_end)
+                BEGIN SELECT RAISE(ABORT, 'Service month must match its coverage month'); END""")
             for action in ['UPDATE', 'DELETE']:
                 cursor.execute(f"CREATE TRIGGER delivery_service_month_no_{action.lower()} BEFORE {action} ON delivery_serviceconfirmationmonth BEGIN SELECT RAISE(ABORT, 'Service month rows are immutable'); END")
 
@@ -65,7 +70,7 @@ def uninstall(apps, schema_editor):
         elif vendor == 'sqlite':
             for name in ['delivery_serviceconfirmationreversal_no_update', 'delivery_serviceconfirmationreversal_no_delete',
                          'delivery_service_confirmation_protect', 'delivery_service_confirmation_no_delete',
-                         'delivery_service_month_no_insert', 'delivery_service_month_coverage',
+                         'delivery_service_month_no_insert', 'delivery_service_month_coverage', 'delivery_service_month_label',
                          'delivery_service_month_no_update', 'delivery_service_month_no_delete']:
                 cursor.execute(f'DROP TRIGGER IF EXISTS {name}')
 

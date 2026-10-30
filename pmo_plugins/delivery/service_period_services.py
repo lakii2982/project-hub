@@ -428,6 +428,8 @@ def save_service_confirmation(member, *, contract_line_ref, coverage_start, cove
     _evidence(member, evidence, line, confirmed_on)
     old = _replacement(member, replaces_confirmation_ref, project, line.pk, coverage_start, coverage_end)
     _coverage_conflict(member, project, coverage_start, coverage_end, exclude=confirmation_id)
+    # Saving a draft already refuses covered months that are locked or closed, like submit/approve.
+    _check_periods(member, coverage_start, derived['months'])
     payload = {'contract_line_ref': contract_line_ref,
                'coverage_start': coverage_start.isoformat(), 'coverage_end': coverage_end.isoformat(),
                'confirmed_on': confirmed_on.isoformat(), 'evidence': evidence,

@@ -1,5 +1,6 @@
 """PostgreSQL multi-connection races for service-period income; SQLite is explicitly not evidence."""
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 from threading import Barrier
 from unittest import skipUnless
 import uuid
@@ -8,7 +9,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection, close_old_connections, transaction
 from django.test import TransactionTestCase
 
-from core.models import AccountingEvent, AccountingPeriod, LedgerPosting, Membership
+from core.models import AccountingEvent, AccountingPeriod, LedgerPosting, Membership, SourceConsumption
 from core.services import lock_company
 from pmo_plugins.delivery import service_period_services as service_period
 from pmo_plugins.delivery.models import ServiceConfirmation, ServiceConfirmationReversal
@@ -70,43 +71,41 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
         self.assertEqual(sum(AccountingEvent.objects.filter(source__namespace='management_revenue')
                              .values_list('claim_effect_cents', flat=True)), 0)
 
-    def test_two_months_post_concurrently_and_keep_exact_total(self):
-        start, end = self.today.replace(day=1), self.today.replace(day=28 if self.today.month == 2 else 28)
-        row = self.confirmation(start=start, end=end, schedule=[
-            {'coverage_start': start.isoformat(), 'coverage_end': end.isoformat(),
-             'allocated_net_cents': 101}])
-        month = start.strftime('%Y-%m')
-        first = self.recognize(row, month)
-        # A second service month is a separate frozen row on a second approved period.
-        next_start = end.replace(day=1)
-        later = self.confirmation(start=next_start, end=next_start.replace(day=28),
-            schedule=[{'coverage_start': next_start.isoformat(),
-                       'coverage_end': next_start.replace(day=28).isoformat(),
-                       'allocated_net_cents': 202}])
-        later_month = later.coverage_start.strftime('%Y-%m')
+    def test_same_month_two_disjoint_parents_post_concurrently(self):
+        """One natural month, two disjoint confirmed sub-ranges, concurrent income keeps the total."""
+        start, end = date(2026, 10, 1), date(2026, 10, 31)
+        self.approved_service_line(net=101, start=start, end=end,
+            schedule=[{'coverage_start': start.isoformat(), 'coverage_end': end.isoformat(),
+                       'allocated_net_cents': 101}])
+        first = self.confirmation(start=start, end=date(2026, 10, 15))
+        second = self.confirmation(start=date(2026, 10, 16), end=end)
+        barrier, results = Barrier(2), []
 
-        def action(member):
-            return revenue.recognize_service_month(member, later.pk, service_month=later_month,
-                expected_version=later.confirmed_version, request_token=uuid.uuid4(), dry_run=False).pk
-        barrier = Barrier(2)
-        results = []
-
-        def call():
+        def call(row):
             close_old_connections()
             try:
                 member = Membership.objects.get(pk=self.owner.pk)
                 barrier.wait(timeout=15)
                 try:
-                    results.append(('ok', action(member)))
+                    results.append(('ok', revenue.recognize_service_month(member, row.pk,
+                        service_month='2026-10', expected_version=row.confirmed_version,
+                        request_token=uuid.uuid4(), dry_run=False).pk))
                 except (ValidationError, PermissionDenied) as error:
                     results.append(('rejected', type(error).__name__))
             finally:
                 close_old_connections()
         with ThreadPoolExecutor(max_workers=2) as pool:
-            list(pool.map(lambda _: call(), range(2)))
-        # The same later month may only post once; the first recognition stays.
-        self.assertEqual(RevenueRecognition.objects.count(), 2)
-        self.assertEqual(sum(RevenueRecognition.objects.values_list('recognized_net_cents', flat=True)), 303)
+            list(pool.map(call, [first, second]))
+        self.assertEqual([item[0] for item in results], ['ok', 'ok'], results)
+        rows = RevenueRecognition.objects.order_by('recognized_net_cents')
+        self.assertEqual(rows.count(), 2)
+        self.assertEqual(sum(rows.values_list('recognized_net_cents', flat=True)), 101)
+        self.assertEqual(set(rows.values_list('posting_period', flat=True)), {'2026-10'})
+        claims = SourceConsumption.objects.filter(consumer='management_revenue',
+            coverage_key='service_month:2026-10')
+        self.assertEqual(claims.count(), 2)
+        self.assertEqual(claims.values('source_id').distinct().count(), 2)
+        self.assertEqual(LedgerPosting.objects.count(), 0)
         self.assertEqual(AccountingEvent.objects.filter(source__namespace='management_revenue').count(), 2)
         self.assertEqual(LedgerPosting.objects.count(), 0)
 

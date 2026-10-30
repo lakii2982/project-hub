@@ -470,3 +470,32 @@ class ServiceConfirmationEventTests(ServiceRevenueFixture, TestCase):
         self.assertIn('delivery.service_confirmation.withdrawn.v1',
                       set(DomainEvent.objects.values_list('topic', flat=True)))
 
+
+class ServiceConfirmationLockTests(ServiceRevenueFixture, TestCase):
+    """Draft save already refuses locked/closed covered months, not only submit/approve."""
+
+    def locked_draft(self):
+        self.approved_service_line(net=101, start=date(2026, 1, 1), end=date(2026, 1, 31))
+        return dict(contract_line_ref=self.line_ref(), contact_id=self.contact.pk,
+            coverage_start=date(2026, 1, 10), coverage_end=date(2026, 1, 20),
+            confirmed_on=date(2026, 1, 25), channel='邮件', reference='锁月草稿依据',
+            statement='锁期内草稿登记应被拒绝', request_token=uuid.uuid4(), dry_run=False)
+
+    def test_draft_save_rejects_locked_coverage(self):
+        from core.models import Organization
+        fields = self.locked_draft()
+        Organization.objects.filter(pk=self.org.pk).update(locked_through=date(2026, 1, 15))
+        before = self.facts()
+        with self.assertRaises(ValidationError):
+            service_period.save_service_confirmation_with_evidence(self.owner, **fields)
+        self.assertEqual(before, self.facts())
+
+    def test_draft_save_rejects_closed_covered_month(self):
+        fields = self.locked_draft()
+        AccountingPeriod.objects.update_or_create(organization=self.org, period='2026-01',
+            defaults={'status': 'posted', 'closed_through': date(2026, 1, 20)})
+        before = self.facts()
+        with self.assertRaises(ValidationError):
+            service_period.save_service_confirmation_with_evidence(self.owner, **fields)
+        self.assertEqual(before, self.facts())
+

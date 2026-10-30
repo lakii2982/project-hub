@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual exit 0, OK (skipped=34), 34 environment/PG skips; run with fixed Python3.12 + DRF3.18.2 and TMPDIR=/private/tmp (default local venv has older DRF 3.16.1 and /private symlink effects; CI installs pinned requirements)."
+      "evidence": "Actual exit 0: Ran 643 tests, OK (skipped=34). Run with fixed Python3.12 + DRF3.18.2 and TMPDIR=/private/tmp (default local venv has older DRF 3.16.1 and /private symlink effects; CI installs pinned requirements)."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -30,7 +30,7 @@
     {
       "command": "python manage.py test tests.test_service_period_revenue tests.test_service_period_revenue_concurrency tests.test_service_period_revenue_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual 34 tests OK, skipped=8 (7 PG-only concurrency plus one env skip); 20 service-layer + 6 HTTP tests executed on SQLite; PG races execute in the PostgreSQL CI job."
+      "evidence": "Actual Ran 38 tests, OK (skipped=8): 23 service-layer (incl. 3 canonical event/audit cases) + 7 HTTP + 8 PG-only concurrency; the 8 concurrency cases execute in the PostgreSQL CI job."
     },
     {
       "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
@@ -46,14 +46,25 @@
       "command": "python -B docs/v1.0-development/fixtures/check_fixture.py",
       "result": "pass",
       "evidence": "Actual pass with errors=[] after syncing entities/write-dtos SHA-256 into fixture.json contract_artifact_sha256 and extension-freeze.json canonical_sha256."
+    },
+    {
+      "command": "node runtime/ph222-browser/browser.cjs (real Chromium, dev server)",
+      "result": "pass",
+      "evidence": "38/38 checks pass after fixes (HEAD 64a0704): customer-confirmation date vs service month split, month rows state, UI recognize/reverse/repeat-400/locked-400 with no half-write, CSV service columns, five roles (member 403), widths 320/390/768/1024/1440 no overflow, keyboard focus ring, module-disabled history readable/write 403; 0 server 500s; before-fix failures recorded in evidence.json phases and fixed by 304d2b1/64a0704."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": "independent S reviewer (fresh context)",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Independent review in progress; not claimed pass before verdict."
+    "reviewer": "independent S reviewer (fresh context, read-only; no repo writes)",
+    "status": "pass",
+    "findings": [
+      "Blocker 1 closed: the PG concurrency test built two overlapping confirmations in one month and could never pass; replaced with two disjoint confirmed sub-ranges of one approved month posting concurrently, asserting two recognitions, total 101, same posting_period and distinct claim source ids with a shared service_month key.",
+      "Blocker 2 closed: report review recorded as pass and projectctl check rerun after the verdict (no pending status left).",
+      "Blocker 3 closed: draft save now checks locked/closed covered months like submit/approve, with two new rejection tests; verification.md numbers synced to 643 full / 38 targeted.",
+      "Non-blocking adopted: delivery month INSERT trigger now also rejects a service_month that does not match its coverage month; month-sum equals parent net stays asserted by service derivation, read-side frozen verification and integration tests rather than a DB aggregate trigger.",
+      "Non-blocking deferred with disclosure: PH-219 acceptance_list.html has the same tablet overflow and is outside this task whitelist; the management_revenue source guard does not re-check parent status/contract line beyond the bridge; the replacement helper does not require the new coverage to match the replaced parent coverage."
+    ],
+    "evidence": "Reviewer independently ran full 643/38 suites, check/makemigrations, populated+legacy upgrade and downgrade/replay, contract scripts, 20 extra ORM/DB counterexamples (double source, no source, fake month parent, amount/date/period mismatch, parent and month immutability, reversal not releasing the claim, forged snapshot rejected, closed-period branches, HALF_UP properties, same-month two parents, reject/return, self-review, zero-amount parent reversal, bool bounds); recomputed HALF_UP splits and conservation. Browser evidence was produced by a separate browser agent and not independently re-run by the reviewer."
   },
   "deviations": [
     "Network-installed dependencies were not changed: the local default venv still has DRF 3.16.1; product acceptance ran with the pinned environment at runtime/ph139-validation/venv (DRF 3.18.2) and TMPDIR=/private/tmp to reproduce CI conditions.",
@@ -62,6 +73,7 @@
   "unverified": [
     "PostgreSQL multi-connection races, period-close races and legacy/populated upgrades were not executed on a local PostgreSQL server (none installed); SQLite runs are not PG evidence.",
     "No production deployment, TLS, backup restore, customer UAT or full 1.0 acceptance; this slice does not complete 1.0.",
-    "Browser evidence and independent S verdict are recorded separately once complete."
+    "Browser evidence and independent S verdict are recorded separately once complete.",
+    "Browser evidence is local SQLite + Django dev server only; empty state and mobile drawer focus order not separately verified; PH-219 acceptance_list.html has the same tablet overflow and is outside this task whitelist (recorded as follow-up)."
   ]
 }
