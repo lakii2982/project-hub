@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final rebased HEAD (BASE 1f02520, PH-240/244/246/247 merged): ok=true, task_count=175; PH-239 recorded done with owner/handoff and the independent reviewer round-2 review block is pass."
+      "evidence": "Final Lead integration rerun after rebase onto 32edbac: {\"command\":\"check\",\"ok\":true,\"task_count\":175} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1 at the final rebased HEAD: Ran 822 tests, FAILED (failures=5, errors=3, skipped=62) => 752 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility Accept/codec/large-JSON cases and tests.test_delivery_execution* symlink cases); no new failures. CI Linux is authoritative. The 3 PostgreSQL-only classification bridge races are among the skips and are executed by the PR CI job."
+      "evidence": "Final Lead rerun on the rebased HEAD: Ran 833 tests, 8 failures/errors — exactly the known macOS environment-limited cases of the current main baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink), 62 environment skips, no new failures. Linux CI is authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -33,9 +33,9 @@
       "evidence": "Actual exit 0 at the final rebased HEAD: Ran 29 tests, OK (skipped=3) => 26 passed. Includes the reviewer-blocker regressions (mid-month posting_period filtering, internal-only transfer enum, forged bridge amount/duplicate bridge group counterexamples) and the verify query-count constant-query assertion. The 3 skips are the PostgreSQL-only concurrency races; PR CI must run them."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 1f02520 --task PH-239",
+      "command": "python scripts/projectctl.py verify-change --base 32edbac --task PH-239",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final rebased HEAD: ok=true, base=1f02520, 23 changed files all inside the PH-239 allowed_paths (no path_out_of_scope, no report-shape errors); assertion_scope=declaration_only. The report review block is the independent reviewer's round-2 PASS."
+      "evidence": "Final Lead integration rerun after rebasing onto 32edbac (PH-253 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 25 changed files inside BASE PH-239 allowed_paths."
     }
   ],
   "review": {
@@ -62,7 +62,8 @@
     "verify_integrity deletes the old blanket 'cash must have no AccountingEvent / no SourceConsumption' assertions and instead validates the cash namespace explicitly: classification reference org, single effective classification, canonical event counts+envelopes with exactly one posting ref, bridge event/posting pairing and mirror reversal, per-classification and per-transaction book net, unique bank_effect claim with matching net, and no cost/revenue/unsettled/cash-invalid rows. All new checks use batch values()/annotate() queries (about ten queries total) rather than per-row lookups. The rebase onto PH-240 merged this with PH-240's refund/return provenance guard: the merged verifier keeps that narrowed refund guard, keeps the removal of the two legacy blanket cash assertions, lets the generic event loop skip the cash namespace (validated by the dedicated block), and keeps the seven classification bridge invariants. It never restores a global cash ban and never rejects source kind=cash_classification bridge rows.",
     "CashReceipt is reused for classification idempotency with action=cash_classification.record / cash_classification.reverse as the spec permits; no new receipt table was added.",
     "cash_book_coverage derives from LedgerPosting by event occurred_on through the as-of date: from_ledger_cash_in/out and book_net = cash_in - cash_out (reversal negatives included), classified_count active classifications, unclassified_posted_count, last_event_at; it is labelled as a cash book net, never a bank or available balance. offset coverage is not implemented and is not fabricated.",
-    "No public canonical cash.classification.record/v1 or reverse/v1 channel is exposed; only private services implement the commands (x-exposure authenticated_application_service), and caller-supplied balances/proofs/accounting events are rejected by the strict signature."
+    "No public canonical cash.classification.record/v1 or reverse/v1 channel is exposed; only private services implement the commands (x-exposure authenticated_application_service), and caller-supplied balances/proofs/accounting events are rejected by the strict signature.",
+    "Lead integration rebase (1f02520 -> 32edbac) after PH-253 merged: conflicts only in core/management/commands/verify_integrity.py (kept BOTH the PH-253 bank-fee per-version saved-event checks and the PH-239 cash-bridge block + the cash/fee skips in the labor loop) and docs/verification.md (kept main entries, appended the PH-239 entry); migrations unchanged (cash 0005, core 0009). Post-rebase: check ok=true/175, verify-change --base 32edbac ok=true, scoped 48 tests (3 PG skips) OK, verify_integrity on a fresh migrated DB ok=true, full suite 833 tests with the same 8 known environment failures."
   ],
   "unverified": [
     "verify-change --base 1f02520 --task PH-239 is rerun at the final evidence HEAD; with the reviewer round-2 pass recorded the gate is expected to be ok=true and the actual output is recorded in the report tests after the run.",
