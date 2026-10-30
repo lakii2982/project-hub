@@ -20,10 +20,13 @@
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-231 planning reviewer (fresh context, read-only)",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Review in progress."
+    "reviewer": "independent PH-231 planning reviewer (fresh context, read-only; two rounds)",
+    "status": "pass",
+    "findings": [
+      "Round 1 blockers closed: UAT wording limited to UAT-14-S01; settlement next migration fixed to the actual leaf 0003; receivable_forms.py added for clearance forms; the cross-owner cash read moved to root-only; reversal representation frozen as a single status active->reversed update with balances as sum(active); effective counterparty derived from the latest unreversed CashPartyMatch; caller-supplied balances/proofs and canonical clearance channels explicitly not exposed.",
+      "Round 2 confirmed the design and required only two one-line spec consistency fixes (remove reverses FK/reason from the model paragraph; align the create-clearance counterparty wording with the effective counterparty read) plus report evidence from actual reruns; both are applied before merge."
+    ],
+    "evidence": "Reviewer inspected PH-232/PH-233 specs, tasks/manifest/handoff/report and the canonical clearance.create/reverse, Clearance entity, cleared/clearance_reversed events; verified settlement migration leaf is 0002 (next 0003), dependency legality, and that the reversal representation is self-consistent with the frozen entity. Ran projectctl check/verify-change (blocked only by pending review) and 19 governance tests."
   },
   "deviations": [
     "PH-232 is the first slice of PH-170: it clears posted cash against receivable open items and supports reversal, but excludes offset/prepayment, refunds, fees, internal transfers, batch clearing, import, opening balances and any ledger/accounting/revenue/cost writes; PH-170/171 remain proposed.",
