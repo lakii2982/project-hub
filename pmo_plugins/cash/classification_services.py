@@ -46,8 +46,10 @@ def _classification_kind(value, *, allow_transfer=False):
         _fail('工资分类本片未支持；工资现金链接与成本账留后续薄片')
     if value == 'transfer' and not allow_transfer:
         _fail('内部互转分类仅由内部互转编排使用，客户端不支持')
-    if value not in CLASSIFICATION_KINDS:
+    if not allow_transfer and value not in CLIENT_CLASSIFICATION_KINDS:
         _fail('不支持的现金分类；客户端仅支持收款、付款、预收/预付与税费')
+    if value not in CLASSIFICATION_KINDS:
+        _fail('不支持的现金分类')
     return value
 
 
