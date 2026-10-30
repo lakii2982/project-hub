@@ -6791,7 +6791,7 @@
       "title": "现金分类与账本桥接首片：分类事实、撤分类与现金账入账",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -6821,7 +6821,10 @@
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "core/models.py",
+        "core/migrations/*.py",
+        "docs/v1.0-development/verification.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -6833,9 +6836,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-243 done（分类事件现金账 posting_event_refs、SourceConsumption 注解与 core LedgerPosting DB 约束修正）；PH-210/PH-230 已 done。PH-243 合入后由 PH-247 规划槽复核 DoR 并晋级 ready。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -6981,7 +6982,7 @@
       "title": "PH-239 契约修正与白名单扩权：分类事件现金账 posting 口径与核心账本约束",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -7015,7 +7016,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-243.md"
     },
     {
       "id": "PH-244",

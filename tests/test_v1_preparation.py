@@ -392,5 +392,216 @@ class KernelContractPreparationTests(unittest.TestCase):
         )
 
 
+    @unittest.skipUnless(SCHEMA_VALIDATION_AVAILABLE, SCHEMA_SKIP_REASON)
+    def test_cash_classification_posting_events_and_bank_effect_invariant(self):
+        from copy import deepcopy
+        from jsonschema import ValidationError
+
+        path = PREPARATION / "contracts/validate_contracts.py"
+        spec = importlib.util.spec_from_file_location("ph243_contract_validation", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        schemas, registry = module.load()
+
+        def validate(file, definition, value):
+            pointer = definition.replace("~", "~0").replace("/", "~1")
+            module.validator(
+                {"$ref": schemas[file]["$id"] + "#/$defs/" + pointer}, registry
+            ).validate(value)
+
+        accepted = rejected = 0
+
+        def accept(file, definition, value):
+            nonlocal accepted
+            validate(file, definition, value)
+            accepted += 1
+
+        def reject(file, definition, value):
+            nonlocal rejected
+            with self.assertRaises(ValidationError):
+                validate(file, definition, value)
+            rejected += 1
+
+        accounting_event_ref = {"namespace": "core", "kind": "accounting_event", "id": 7, "version": 1}
+        classification_ref = {"namespace": "cash", "kind": "cash_classification", "id": 3, "version": 1}
+        reversal_ref = {
+            "namespace": "cash",
+            "kind": "cash_classification_reversal",
+            "id": 4,
+            "version": 1,
+        }
+
+        recorded = {
+            "event_id": 11,
+            "topic": "cash.classification_recorded.v1",
+            "schema_version": 1,
+            "organization_id": 1,
+            "source": classification_ref,
+            "occurred_at": "2026-10-30T12:00:00+00:00",
+            "payload": {
+                "changed_refs": [classification_ref],
+                "posting_event_refs": [accounting_event_ref],
+            },
+        }
+        accept("events.schema.json", "cash.classification_recorded.v1", recorded)
+        for bad_refs in ([], [accounting_event_ref, accounting_event_ref]):
+            reject(
+                "events.schema.json",
+                "cash.classification_recorded.v1",
+                dict(recorded, payload=dict(recorded["payload"], posting_event_refs=bad_refs)),
+            )
+        reject(
+            "events.schema.json",
+            "cash.classification_recorded.v1",
+            dict(
+                recorded,
+                payload=dict(
+                    recorded["payload"],
+                    posting_event_refs=[dict(accounting_event_ref, namespace="cash")],
+                ),
+            ),
+        )
+        reject(
+            "events.schema.json",
+            "cash.classification_recorded.v1",
+            dict(
+                recorded,
+                payload=dict(
+                    recorded["payload"],
+                    posting_event_refs=[dict(accounting_event_ref, kind="ledger_posting")],
+                ),
+            ),
+        )
+        reject(
+            "events.schema.json",
+            "cash.classification_recorded.v1",
+            dict(
+                recorded,
+                payload=dict(
+                    recorded["payload"],
+                    posting_event_refs=[dict(accounting_event_ref, client_approved=True)],
+                ),
+            ),
+        )
+
+        reversed_event = {
+            "event_id": 12,
+            "topic": "cash.classification_reversed.v1",
+            "schema_version": 1,
+            "organization_id": 1,
+            "source": reversal_ref,
+            "occurred_at": "2026-10-30T12:30:00+00:00",
+            "payload": {
+                "changed_refs": [reversal_ref],
+                "posting_event_refs": [accounting_event_ref],
+                "original_classification_ref": classification_ref,
+                "reversed_payroll_link_refs": [],
+            },
+        }
+        accept("events.schema.json", "cash.classification_reversed.v1", reversed_event)
+        for bad_refs in ([], [accounting_event_ref, accounting_event_ref]):
+            reject(
+                "events.schema.json",
+                "cash.classification_reversed.v1",
+                dict(reversed_event, payload=dict(reversed_event["payload"], posting_event_refs=bad_refs)),
+            )
+        reject(
+            "events.schema.json",
+            "cash.classification_reversed.v1",
+            dict(
+                reversed_event,
+                payload=dict(
+                    reversed_event["payload"],
+                    posting_event_refs=[dict(accounting_event_ref, namespace="cash")],
+                ),
+            ),
+        )
+        reject(
+            "events.schema.json",
+            "cash.classification_reversed.v1",
+            dict(
+                reversed_event,
+                payload=dict(
+                    reversed_event["payload"],
+                    posting_event_refs=[dict(accounting_event_ref, kind="ledger_posting")],
+                ),
+            ),
+        )
+
+        # Only the two classification events may carry exactly one posting ref;
+        # the other five 0/0 cash events stay unchanged.
+        for name in (
+            "cash.internal_transfer_linked.v1",
+            "cash.internal_transfer_reversed.v1",
+            "cash.transaction_draft_saved.v1",
+            "cash.party_matched.v1",
+            "cash.correction_draft_saved.v1",
+        ):
+            posting = schemas["events.schema.json"]["$defs"][name]["properties"]["payload"][
+                "properties"
+            ]["posting_event_refs"]
+            self.assertEqual((posting["minItems"], posting["maxItems"]), (0, 0), name)
+
+        frozen_invariant = (
+            "The original bank_effect claim is permanent. Each effective classified bank fact has "
+            "exactly one effective original cash-book posting group: one AccountingEvent and one "
+            "LedgerPosting with book=cash_in for an incoming cash transaction or cash_out for an "
+            "outgoing one, origin=current, and scope.kind=funding_account pointing at the original "
+            "FundingAccount; at any time a bank fact has at most one effective original posting "
+            "group and no second effective group may represent the same bank cash. Classification "
+            "reversal appends a mirror reversal AccountingEvent (reverses_event_ref pointing at the "
+            "original event) and an equal negative LedgerPosting (reverses_posting_id pointing at "
+            "the original posting) with book/scope identical to the original; it never creates a "
+            "second positive bank flow. After a complete classification reversal, reclassification "
+            "may append a new original posting group and must reuse the same bank_effect claim; it "
+            "cannot create two concurrently effective original groups, cannot release the claim and "
+            "cannot create or copy a second bank_effect claim. Cash allocation and its release "
+            "create no AccountingEvent and no LedgerPosting. The bank_effect claim is permanent and "
+            "classification, allocation, reversal and release never release bank_effect. Project "
+            "allocation never reposts bank cash, and cash consumption is not clearance consumption. "
+            "The consumer enum retains cost, management_revenue, obligation, clearance, "
+            "invoice_allocation, forecast, opening and cash."
+        )
+        consumption = schemas["entities.schema.json"]["$defs"]["SourceConsumption"]
+        invariants = consumption["x-service-invariants"]
+        self.assertEqual(len(invariants), 8)
+        self.assertEqual(invariants[5], frozen_invariant)
+        joined = " ".join(invariants)
+        for phrase in (
+            "bank_effect",
+            "never release bank_effect",
+            "cash consumption is not clearance consumption",
+            "does not branch",
+            "at most one effective original posting group",
+            "reuse the same bank_effect claim",
+        ):
+            self.assertIn(phrase, joined)
+        self.assertNotIn("create no bank flow, AccountingEvent or LedgerPosting", joined)
+        self.assertEqual(
+            consumption["properties"]["consumer"]["enum"],
+            [
+                "cost",
+                "management_revenue",
+                "obligation",
+                "clearance",
+                "invoice_allocation",
+                "forecast",
+                "opening",
+                "cash",
+            ],
+        )
+        accepted += 1  # the exact frozen invariant assertion above
+
+        ledger = schemas["catalog-completeness.schema.json"]["$defs"]["LedgerPosting"]
+        self.assertIn(
+            "Cash classification bridge ownership",
+            " ".join(ledger["x-service-invariants"]),
+        )
+        print(
+            "PH243_CLASSIFICATION_EVENT_AND_BANK_EFFECT_BOUNDARIES_EXECUTED "
+            f"positive={accepted} rejected={rejected} no_runtime_business_claim"
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

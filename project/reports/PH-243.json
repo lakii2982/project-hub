@@ -1,0 +1,64 @@
+{
+  "task_id": "PH-243",
+  "summary": "Applied the PH-242-frozen PH-239 contract correction on top of main e91346a, without business code: the two cash classification events (cash.classification_recorded.v1 / cash.classification_reversed.v1) now require exactly one core/accounting_event posting ref (minItems=maxItems=1, items namespace.const=core + kind.const=accounting_event; the reversed event's erroneous namespace=cash was corrected) while the other five 0/0 cash events and every other cash event are untouched; SourceConsumption x-service-invariants[5] is replaced verbatim by the frozen effective-group/mirror-reversal/permanent-bank_effect sentence (other seven invariants and the eight-value consumer enum unchanged); catalog-completeness LedgerPosting gained an annotation-only sentence naming the cash-owner classification bridge and core named-interface posting, with no enum/structure change; tests/test_v1_preparation.py gained strict positive/negative cases (valid 1 ref, 0/2 refs, namespace=cash, kind=ledger_posting, extra field, exact invariants[5] assertion, old contradictory clause removal, other five 0/0 events unchanged) while keeping the original 19-positive/37-rejected and 99-positive/8-negative counts; extension-freeze explicitly records the PH-243 supersede of cash-extension.plan.json#/service_semantics/classification_reverse/4 and updates only the three affected canonical digests plus fixture contract_artifact_sha256, preserving base_sha/patch_entries(201)/input_sha256/independent_static_reviews history; PH-239's allowed_paths now add core/models.py, core/migrations/*.py and docs/v1.0-development/verification.md, its spec freezes the LedgerPosting constraint relaxation (cost<->project/nonproject, cash_in/out<->funding_account/legacy_project, origin/current and amount bounds kept; core leaf 0008 -> PH-239 adds 0009), the transfer enum is internal-orchestration-only (client command keeps four values) and PH-239 is promoted ready because its prerequisites PH-210/PH-230/PH-243 are done. No product service, view, template or migration was written.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE e91346a): exit 1, {\"command\":\"check\",\"errors\":[{\"code\":\"high_risk_review_required\",\"message\":\"risk S reports require a named reviewer with status pass\",\"path\":\"report.review\"}],\"ok\":false} — single review-pending error, no path/schema errors. Never declared pass before the reviewer landed."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-243-draft with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
+      "result": "pass",
+      "evidence": "Actual strict run with the pinned .agent-venv (jsonschema 4.26.0/referencing): {\"result\":\"pass\",\"kind\":\"offline_preparation_schema_only\",\"schemas\":9,\"resolved_refs\":2977,\"requirements\":137,\"commands\":71,\"queries\":25,\"events\":47,\"strict_python_integer\":true,...}; the materialized freeze compiles 201 patch entries and reports old_positive 19/old_rejected 37/old_fixture_positive 99/old_fixture_rejected 8, canonical_files_written=false."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/check_contract_cases.py",
+      "result": "pass",
+      "evidence": "Actual strict run with .agent-venv: {\"result\":\"pass\",\"positive_examples\":19,\"rejected_examples\":37,...}; existing positive/negative counts unchanged, no skipped case."
+    },
+    {
+      "command": "python -B docs/v1.0-development/fixtures/check_fixture.py",
+      "result": "pass",
+      "evidence": "Actual strict run with .agent-venv after updating only the three affected contract_artifact_sha256 digests in fixture.json: {\"result\":\"pass\",\"positive_schema_samples\":99,\"negative_schema_samples\":8,\"sources\":92,\"errors\":[]}; the three frozen contract hashes (events/entities/catalog-completeness) validate."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_preparation --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run with the product venv: Ran 8 tests, OK (skipped=5) — the five schema/fixture-validation cases skip in the product venv by design; the strict .agent-venv run below executes them with 0 skips."
+    },
+    {
+      "command": "PH135_REQUIRE_SCHEMAS=1 .agent-venv/bin/python -m unittest tests.test_v1_preparation -v",
+      "result": "pass",
+      "evidence": "Actual strict run with the pinned .agent-venv: Ran 8 tests, OK, 0 skipped. Prints PH243_CLASSIFICATION_EVENT_AND_BANK_EFFECT_BOUNDARIES_EXECUTED positive=3 rejected=9 no_runtime_business_claim; PH210_STRICT_CONTRACT_BOUNDARIES_EXECUTED positive=6 rejected=10; PH135_CONTRACT_SCHEMAS_EXECUTED validator=strict_jsonschema; PH135_FIXTURE_SCHEMA_EXECUTED positive=99 negative=8."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base e91346a --task PH-243",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE e91346a): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope (all 13 changed files inside BASE PH-243 allowed_paths). Replaced after the reviewer lands."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (canonical contract schemas and project/tasks.json are governed paths); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "fixture.json's contract_artifact_sha256 had to be updated for the three changed canonical files (events/entities/catalog-completeness) in addition to extension-freeze; this is the 'only affected canonical digests' scope frozen in the spec, and no other fixture content changed.",
+    "The product-venv preparation run reports skipped=5 because the product environment intentionally lacks the pinned jsonschema/referencing wheels; per spec the authoritative evidence is the strict .agent-venv + PH135_REQUIRE_SCHEMAS=1 run (8 tests, 0 skipped), not the skip result.",
+    "extension-freeze follow_up_updates received exactly one PH-243 entry with governance_base=e91346a and before/after digests for the three changed canonical files plus an explicit supersede record for cash-extension.plan.json#/service_semantics/classification_reverse/4; base_sha, 201 patch_entries, input_sha256 and independent_static_reviews were left untouched and the PH-210 record is preserved verbatim.",
+    "PH-239 is promoted to ready in this delivery because PH-210/PH-230/PH-243 are all done at this BASE; its allowed_paths expansion and constraint/enum wording are contracts only — no worker code was implemented here, and verify_integrity adaptation remains PH-239 implementation work as noted in its spec."
+  ],
+  "unverified": [
+    "No product service, view, template, migration or runtime behavior changed; the cash classification bridge itself remains unimplemented (PH-239).",
+    "core LedgerPosting constraint relaxation and core migration 0009 are frozen only; PH-239 must implement and verify them.",
+    "PostgreSQL concurrency, browser, production and real customer verification are out of scope for this contract slice; required CI checks cover the PR."
+  ]
+}
