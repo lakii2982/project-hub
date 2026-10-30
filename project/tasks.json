@@ -7023,7 +7023,7 @@
       "title": "手续费与净额到账拆分首片：银行手续费草稿事实、规范事件与净额对账（批准/成本过账延后）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -7065,7 +7065,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-244.md"
     },
     {
       "id": "PH-245",

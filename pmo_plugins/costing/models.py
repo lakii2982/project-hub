@@ -185,3 +185,106 @@ class LaborReceipt(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['organization', 'action', 'request_token'], name='costing_receipt_unique')]
+
+
+BANK_CHARGE_MAX_CENTS = 10**12
+BANK_CHARGE_STATUSES = ('draft', 'pending', 'approved', 'rejected', 'superseded')
+BANK_CHARGE_BEARERS = ('company', 'counterparty', 'unconfirmed')
+BANK_CHARGE_SCOPE_KINDS = ('project', 'nonproject')
+BANK_CHARGE_RECEIPT_ACTION = 'bank_charge.draft.save'
+
+
+class BankCharge(models.Model):
+    """Draft bank-fee fact for one posted incoming bank transaction (costing owner).
+
+    The slice only produces draft rows; the canonical five-state enum is kept so later
+    approval slices extend behavior without rewriting the frozen field domain. No cost,
+    ledger posting, accounting event, settlement or open item is created here.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='bank_charges')
+    # Deliberately no cross-owner FK: same-company/status/version are verified through
+    # the cash owner named read (posted_cash_for_fee) in the service layer.
+    cash_transaction_id = models.UUIDField()
+    cash_transaction_ref = models.JSONField()
+    gross_cents = models.PositiveBigIntegerField()
+    tax_cents = models.PositiveBigIntegerField(null=True)
+    existing_cost_ref = models.JSONField(null=True, blank=True)
+    counterparty_id = models.UUIDField(null=True, blank=True)
+    occurred_on = models.DateField()
+    posting_period = models.CharField(max_length=7)
+    scope_kind = models.CharField(max_length=16, default='project')
+    scope_id = models.CharField(max_length=64)
+    fee_bearer = models.CharField(max_length=16, default='company')
+    evidence = models.JSONField(default=list)
+    status = models.CharField(max_length=16, default='draft')
+    version = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['organization', 'cash_transaction_id'],
+                                    name='costing_bank_charge_cash_unique'),
+            models.CheckConstraint(condition=Q(gross_cents__gt=0, gross_cents__lte=BANK_CHARGE_MAX_CENTS),
+                                   name='costing_bank_charge_gross_bound'),
+            models.CheckConstraint(condition=Q(tax_cents__isnull=True) | Q(
+                tax_cents__gte=0, tax_cents__lte=BANK_CHARGE_MAX_CENTS),
+                                   name='costing_bank_charge_tax_bound'),
+            models.CheckConstraint(condition=Q(status__in=list(BANK_CHARGE_STATUSES)),
+                                   name='costing_bank_charge_status'),
+            models.CheckConstraint(condition=Q(fee_bearer__in=list(BANK_CHARGE_BEARERS)),
+                                   name='costing_bank_charge_bearer'),
+            models.CheckConstraint(condition=Q(scope_kind__in=list(BANK_CHARGE_SCOPE_KINDS)),
+                                   name='costing_bank_charge_scope_kind'),
+        ]
+
+    @property
+    def source_ref(self):
+        return {'namespace': 'costing', 'kind': 'bank_charge', 'id': str(self.pk),
+                'version': self.version}
+
+    @property
+    def cash_ref(self):
+        return dict(self.cash_transaction_ref)
+
+    @property
+    def scope(self):
+        return {'kind': self.scope_kind, 'id': self.scope_id}
+
+    def get_status_display(self):
+        return {'draft': '未批准草稿', 'pending': '待批准', 'approved': '已批准',
+                'rejected': '已驳回', 'superseded': '已取代'}.get(self.status, self.status)
+
+    def get_fee_bearer_display(self):
+        return {'company': '公司承担', 'counterparty': '交易对手承担',
+                'unconfirmed': '承担方未确认'}.get(self.fee_bearer, self.fee_bearer)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('银行手续费草稿不可删除')
+
+
+class BankChargeReceipt(models.Model):
+    """Idempotency receipt for one draft save/revision; append-only, never returns another charge."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='bank_charge_receipts')
+    action = models.CharField(max_length=32, default=BANK_CHARGE_RECEIPT_ACTION)
+    request_token = models.UUIDField()
+    input_digest = models.CharField(max_length=64)
+    result_ref = models.JSONField()
+    result_snapshot = models.JSONField(default=dict)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at', 'id']
+        constraints = [models.UniqueConstraint(fields=['organization', 'action', 'request_token'],
+                                               name='costing_bank_charge_receipt_unique')]
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('银行手续费草稿收据不可删除')

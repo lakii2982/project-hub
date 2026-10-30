@@ -254,6 +254,60 @@ class Command(BaseCommand):
                 partition_key=parts[1] + ':' + parts[2]).first()
             if found is None or found.gross_cents != claim.amount_cents:
                 errors.append(f"settlement_claim:{claim.pk}:no_matching_partition")
+        # ----- PH-244 bank-fee drafts: one draft fact per posted incoming cash, zero financial effect.
+        from pmo_plugins.costing.models import (BankCharge as _BankCharge,
+                                                BankChargeReceipt as _BankChargeReceipt)
+        from core.models import DomainEvent as _FeeEvent
+        from django.db.models import Count as _Count
+        fee_topic = 'costing.bank_charge_saved.v1'
+        for duplicate in _BankCharge.objects.values('organization_id', 'cash_transaction_id').annotate(
+                total=_Count('id')).filter(total__gt=1):
+            errors.append(f"bank_charge:{duplicate['organization_id']}:{duplicate['cash_transaction_id']}:duplicate_cash")
+        for charge in _BankCharge.objects.all():
+            transaction = CashTransaction.objects.filter(
+                pk=charge.cash_transaction_id, organization_id=charge.organization_id).first()
+            if transaction is None:
+                errors.append(f"bank_charge:{charge.pk}:missing_cash")
+                continue
+            if transaction.status != 'posted' or transaction.direction != 'in':
+                errors.append(f"bank_charge:{charge.pk}:cash_state")
+            if not 0 < charge.gross_cents <= transaction.gross_cents:
+                errors.append(f"bank_charge:{charge.pk}:amount_over_net")
+            if charge.status != 'draft':
+                errors.append(f"bank_charge:{charge.pk}:unexpected_status")
+            if (charge.fee_bearer != 'company' or charge.scope_kind != 'project'
+                    or charge.existing_cost_ref is not None):
+                errors.append(f"bank_charge:{charge.pk}:unsupported_slice_fields")
+            cash_month = transaction.transaction_date.strftime('%Y-%m')
+            if charge.occurred_on.strftime('%Y-%m') != cash_month or charge.posting_period != cash_month:
+                errors.append(f"bank_charge:{charge.pk}:period")
+            ref = {'namespace': 'costing', 'kind': 'bank_charge', 'id': str(charge.pk),
+                   'version': charge.version}
+            events = _FeeEvent.objects.filter(
+                organization_id=charge.organization_id, topic=fee_topic,
+                data__source__id=str(charge.pk))
+            if not events.exists():
+                errors.append(f"bank_charge:{charge.pk}:saved_event_count")
+            else:
+                data = events.order_by('-created_at', '-id').first().data or {}
+                payload = data.get('payload') or {}
+                if (data.get('topic') != fee_topic or data.get('schema_version') != 1
+                        or data.get('source') != ref
+                        or data.get('organization_id') != str(charge.organization_id)
+                        or payload.get('changed_refs') != [ref]
+                        or payload.get('posting_event_refs') != []):
+                    errors.append(f"bank_charge:{charge.pk}:saved_event_envelope")
+        if AccountingEvent.objects.filter(
+                source__namespace='costing', source__kind='bank_charge').exists():
+            errors.append('bank_charge:unexpected_accounting_event')
+        for claim in SourceConsumption.objects.all():
+            if (claim.source or {}).get('kind') == 'bank_charge':
+                errors.append(f"bank_charge_claim:{claim.pk}:unexpected_source_consumption")
+        for receipt in _BankChargeReceipt.objects.all():
+            result_ref = receipt.result_ref or {}
+            if result_ref.get('kind') != 'bank_charge' or not _BankCharge.objects.filter(
+                    organization_id=receipt.organization_id, pk=result_ref.get('id')).exists():
+                errors.append(f"bank_charge_receipt:{receipt.pk}:result_ref")
         result = {"ok": not errors, "errors": errors, "organizations": Organization.objects.count(), "entries": LedgerEntry.objects.count()}
         self.stdout.write(json.dumps(result, ensure_ascii=False) if options["json"] else ("完整性检查通过" if not errors else "\n".join(errors)))
         if errors: raise CommandError("项目账完整性检查未通过")

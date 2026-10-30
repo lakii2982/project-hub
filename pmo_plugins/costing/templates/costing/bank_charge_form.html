@@ -1,0 +1,14 @@
+{% extends 'costing/bank_charge_list.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block fee_content %}
+<section class="page-header"><div><h1 tabindex="-1">{{ title }}</h1>{% if charge %}<p>草稿 {{ charge.id }} · 版本 {{ charge.version }} · {{ charge.status_display }}</p>{% endif %}</div><a class="button" href="{{ back_url }}">返回手续费列表</a></section>
+<section class="panel"><div class="body">
+<p class="notice">{{ notice }}</p>
+<form method="post" action="{{ submit_url }}">{% csrf_token %}
+{% if form.non_field_errors %}<div role="alert">{{ form.non_field_errors }}</div>{% endif %}
+{% include 'partials/form_fields.html' with form=form %}
+<div class="actions"><button type="submit" class="button primary">{{ title }}</button><a class="button" href="{{ back_url }}">取消</a></div>
+</form>
+<p>保存草稿只记录手续费事实与依据；不会提交审批、不会生成成本/账本/会计事件/未清核销，也不会修改原始现金流水。</p>
+</div></section>
+{% endblock %}
