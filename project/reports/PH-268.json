@@ -1,0 +1,30 @@
+{
+  "task_id": "PH-268",
+  "summary": "PH-268 next planning slot (docs-only) at BASE 69c0bb4. Re-evaluated the registered follow-up tasks and registered five new tasks numbered PH-269..PH-273 contiguously after confirming BASE max is PH-268 and no remote/local branch or spec occupies >=269: PH-269 time billable-confirmation implementation first slice (ready; deps PH-025/PH-214/PH-217/PH-224/PH-266 all done; ADR 0011 option A creates pmo_plugins.time with its own migration 0001, canonical time.billable.confirm/v1 and time.billable_confirmed.v1, read-only core Timesheet/contract line, draft->confirmed state, no revenue/ledger/cash/open-item write); PH-270 insights plugin ownership and period-reconciliation/read-model contract decision (ready docs-only; deps PH-002/PH-024/PH-235 done; ADR 0013); PH-271 import preview implementation first slice (proposed; blockers PH-267 done + PH-181/PH-185 done; preview-only zero-ledger conflict list, idempotency and whitelist frozen); PH-272 period reconciliation and project/workbench read-model implementation first slice (proposed; blockers PH-270 done + PH-180/PH-181/PH-182/PH-183 done; read-only precheck, reconciliation cases and read model frozen); PH-273 next planning slot (depends PH-268, becomes ready when PH-268 is done). PH-252 was re-evaluated for promotion: PH-259 ADR 0010 is done and froze the new pmo_plugins.invoicing app/bootstrap whitelist, but PH-252's frozen DoR still lists PH-150/PH-155 done (both still proposed; their capabilities are delivered by PH-212/PH-214/PH-224/PH-232). Per the no-false-promotion rule PH-252 stays proposed with a precise blocker (needs PH-150/PH-155 done or a future planning slot formally retargeting dependencies after capability review). PH-256/PH-257/PH-260/PH-262 blockers were refreshed against the new decisions/slices. No product code, migration or scaffold was added, no contract schema/gate changed, and every new spec freezes fields/state machine/permissions/idempotency/money/migration/exact whitelist/counterexamples/executable acceptance/risk without placeholders.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":195} (BASE 190 + 5 new tasks); all new specs exist and executable tasks have non-empty whitelist/acceptance."},
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests, OK."},
+    {"command": "python scripts/projectctl.py verify-change --base 69c0bb4 --task PH-268", "result": "pass", "evidence": "Actual invocation with the task BASE: python scripts/projectctl.py verify-change --base 69c0bb4 --task PH-268. Before the independent review it fails only on high_risk_review_required (no path_out_of_scope; changed files are inside the BASE PH-268 allowed_paths). After the reviewer records status=pass the identical command is rerun at the final evidence HEAD and returns ok=true; the final run is recorded in the handoff/task evidence before done."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级复核由 fresh-context reviewer 实际重跑 check/治理/verify-change，并核对编号连续性、依赖事实（只把依赖全 done 者置 ready）、PH-269/270 的 DoR 完整度、PH-252 未虚假晋级、PH-271/272 精确 blockers、无占位符/可执行验收、既有 blockers 精确性后写入 pass/rejected；实现者不自写 pass。复核对象为 /tmp/ph268-planning 的 PH-268 提交（BASE 69c0bb4）。"
+  },
+  "deviations": [
+    "编号核号：BASE 最大 PH-268；git ls-remote --heads origin、本机分支与 project/specs 均无 >=269 占用，故从 PH-269 起连续登记 269–273（PH-273 为下一规划槽）。",
+    "PH-273 在本片 in_review 提交中暂为 proposed（blockers 写明依赖 PH-268 done），以让 projectctl check 在 pre-review 阶段通过（ready 任务依赖未 done 会被 dependency_not_done 拒绝）；reviewer pass 后的最终证据 commit 将 PH-268 置 done、PH-273 置 ready 并清空 blockers。",
+    "PH-252 未晋级：ADR 0010 已决定新 invoicing 插件与 bootstrap 白名单，但 PH-252 冻结 DoR 的 PH-150/PH-155 仍 proposed；按“只把依赖全 done 的置 ready/不得虚假晋级”保持 proposed，并在 blockers 写明需依赖 done 或后续规划槽正式改依赖（能力覆盖已由 PH-212/214/224/232 交付，不在本槽自行改冻结依赖）。",
+    "只新增规划 spec/tasks/verification/report/handoff，不建 scaffold（未创建 pmo_plugins.time/insights/importing）、不改 contract schema、不实施 PH-269+ 业务；不改其它 done 任务 report/review 块；不改既有门禁/验收命令/报告 schema。",
+    "依赖事实仅以 BASE tasks.json 的 done 状态与既有 spec/ADR 为据，未运行 PH-269+ 的实现测试（未实现）；PH-270 为 docs-only 决策片，本片只冻结其交付与验收。"
+  ],
+  "unverified": [
+    "PH-269/PH-270 为 ready 但尚未实现：无产品代码/迁移/浏览器/PG/CI 证据；PH-271/PH-272 依赖未满足仍 proposed；PH-273 下一槽依赖 PH-268 done。",
+    "本片为规划槽，按 BASE PH-268 spec 与 task-23 验收只要求 check、23 项治理、verify-change；未跑全量产品测试（未改产品代码）。",
+    "PH-252 的晋级被明确推迟：需 PH-150/PH-155 done 或后续规划槽正式能力替代/改依赖；本槽不虚假晋级，也不自改其冻结依赖。",
+    "PH-260/PH-261/PH-262 等既有 proposed 的 blockers 已按 BASE 事实刷新，但其 spec 其余内容未改。",
+    "独立 S 复核 pending：review 块由 reviewer 填写；通过后置 PH-268 done、PH-273 ready，重跑 check+verify-change 并报最终 SHA。"
+  ]
+}

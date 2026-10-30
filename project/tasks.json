@@ -6633,37 +6633,6 @@
       "handoff": "project/handoffs/PH-233.md"
     },
     {
-      "id": "PH-235",
-      "title": "projectctl会话效率命令（orient、next --compact、draft-report）",
-      "kind": "infra",
-      "risk": "S",
-      "status": "done",
-      "priority": 1,
-      "milestone": "v1.0-preparation",
-      "depends_on": [
-        "PH-233"
-      ],
-      "spec": "project/specs/PH-235.md",
-      "allowed_paths": [
-        "scripts/projectctl.py",
-        "tests/test_projectctl.py",
-        "project/tasks.json",
-        "project/manifest.json",
-        "docs/delivery-status.md",
-        "docs/verification.md",
-        "project/reports/PH-235.json",
-        "project/handoffs/PH-235.md"
-      ],
-      "acceptance": [
-        "python scripts/projectctl.py check",
-        "python -m unittest tests.test_projectctl tests.test_governance -v"
-      ],
-      "github_issue": null,
-      "owner": null,
-      "blockers": [],
-      "handoff": "project/handoffs/PH-235.md"
-    },
-    {
       "id": "PH-234",
       "title": "会话上下文减负文档改造（AGENTS开场、delivery-status拆分、过程文档归档）",
       "kind": "docs",
@@ -6703,6 +6672,37 @@
       "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-234.md"
+    },
+    {
+      "id": "PH-235",
+      "title": "projectctl会话效率命令（orient、next --compact、draft-report）",
+      "kind": "infra",
+      "risk": "S",
+      "status": "done",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-233"
+      ],
+      "spec": "project/specs/PH-235.md",
+      "allowed_paths": [
+        "scripts/projectctl.py",
+        "tests/test_projectctl.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-235.json",
+        "project/handoffs/PH-235.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-235.md"
     },
     {
       "id": "PH-236",
@@ -7421,7 +7421,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-150（合同收费明细/生效方法）与 PH-155（结算/未清）done；PH-224/PH-232 已 done。invoicing app 归属已由 PH-259 ADR 0010 决定（方案 A：新建 pmo_plugins.invoicing；PH-252 实现 PR 按 ADR 创建 scaffold 与迁移 0001，root 单写 settings/PMO_PLUGIN_MODULES/delivery urls），PH-252 白名单已含 bootstrap 文件；PH-150/PH-155 done 后由后续规划槽复核 DoR 再晋级 ready。"
+        "PH-259（ADR 0010）已 done 并决定新建 pmo_plugins.invoicing、白名单含 bootstrap；PH-150/PH-155 legacy 仍 proposed（合同收费明细/结算能力已由 PH-212/PH-214/PH-224/PH-232 交付，但 PH-252 DoR 仍列其 done）。按冻结 DoR 不虚假晋级；需 PH-150/PH-155 done，或后续规划槽在 ADR 0010/契约不漂移前提下列明能力替代并正式改依赖后再晋级。"
       ],
       "handoff": null
     },
@@ -7550,29 +7550,24 @@
       ],
       "spec": "project/specs/PH-256.md",
       "allowed_paths": [
-        "pmo_plugins/onboarding/__init__.py",
-        "pmo_plugins/onboarding/apps.py",
-        "pmo_plugins/onboarding/plugin.py",
-        "pmo_plugins/onboarding/models.py",
-        "pmo_plugins/onboarding/preview_services.py",
-        "pmo_plugins/onboarding/views.py",
-        "pmo_plugins/onboarding/forms.py",
-        "pmo_plugins/onboarding/domain_metadata.py",
-        "pmo_plugins/onboarding/urls.py",
-        "pmo_plugins/onboarding/templates/onboarding/preview_form.html",
-        "pmo_plugins/onboarding/templates/onboarding/preview_list.html",
-        "pmo_plugins/onboarding/migrations/*.py",
-        "pmo/settings.py",
-        "pmo/urls.py",
+        "pmo_plugins/importing/models.py",
+        "pmo_plugins/importing/preview_services.py",
+        "pmo_plugins/importing/views.py",
+        "pmo_plugins/importing/forms.py",
+        "pmo_plugins/importing/domain_metadata.py",
+        "pmo_plugins/importing/urls.py",
+        "pmo_plugins/importing/templates/importing/preview_form.html",
+        "pmo_plugins/importing/templates/importing/preview_list.html",
+        "pmo_plugins/importing/migrations/*.py",
         "pmo_plugins/delivery/urls.py",
         "tests/test_v1_import_preview.py",
         "tests/test_v1_import_preview_http.py",
+        "project/reports/PH-256.json",
+        "project/handoffs/PH-256.md",
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md",
-        "project/reports/PH-256.json",
-        "project/handoffs/PH-256.md"
+        "docs/verification.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -7585,7 +7580,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-181（四类核对/差额）与 PH-185（项目聚合/结项）done；归属已由 PH-267 ADR 0012 决定（新建 pmo_plugins.onboarding，白名单已同步为 onboarding bootstrap/文件）；依赖 done 后由后续规划槽复核 DoR 再晋级。"
+        "缺 PH-181（四类核对/差额）与 PH-185（项目聚合/结项）done；importing app 归属决策 PH-267（ready）未 done；导入预览实现首片已登记 PH-271（proposed，blockers 同上）。"
       ],
       "handoff": null
     },
@@ -7633,7 +7628,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-180（期间预检/锁定）与 PH-181（四类核对/差额）done；insights 归属按 PH-267 ADR 0012 单列独立决策片（不并入 onboarding），待该决策完成；依赖/决策完成后由后续规划槽复核 DoR 再晋级。"
+        "insights app 归属/门控决策已登记 PH-270（ready）；缺 PH-180（期间预检/锁定）与 PH-181（四类核对/差额）done；期间核对实现首片已登记 PH-272（proposed）。决策与依赖完成后由 PH-273 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -7751,7 +7746,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-162（报销费用/发生确认）与 PH-161（人工分配/差额）done；PH-167/PH-156 legacy 任务仍 proposed，但固定价/服务期管理收入与客户结算能力已由 PH-219/PH-222/PH-224 交付。依赖完成后由后续规划槽复核 DoR 再晋级。"
+        "缺 PH-162（报销费用/发生确认）与 PH-161（人工分配/差额）done；PH-167/PH-156 legacy 任务仍 proposed，但固定价/服务期管理收入与客户结算能力已由 PH-219/PH-222/PH-224 交付；PH-269 确认可计费分钟后可再评估配对前置。依赖完成后由后续规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -7852,7 +7847,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-182（经营指标/缺口/复盘）与 PH-183（到期扫描/待办）done；insights app 归属待决策（与 PH-257 同批）。依赖/决策完成后由后续规划槽复核 DoR 再晋级。"
+        "insights 归属/门控决策已登记 PH-270（ready）；缺 PH-182（经营指标/缺口/复盘）与 PH-183（到期扫描/待办）done；读模型实现首片已登记 PH-272（proposed）。决策与依赖完成后由 PH-273 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -8064,7 +8059,7 @@
       "title": "后续交付独立规划入口（接续 PH-263）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -8089,8 +8084,228 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
+      "owner": "worker-contract",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-268.md"
+    },
+    {
+      "id": "PH-269",
+      "title": "time 可计费确认实现首片：BillableConfirmation 客户确认分钟（新建 time 插件）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-025",
+        "PH-214",
+        "PH-217",
+        "PH-224",
+        "PH-266"
+      ],
+      "spec": "project/specs/PH-269.md",
+      "allowed_paths": [
+        "pmo_plugins/time/__init__.py",
+        "pmo_plugins/time/apps.py",
+        "pmo_plugins/time/plugin.py",
+        "pmo_plugins/time/domain_metadata.py",
+        "pmo_plugins/time/models.py",
+        "pmo_plugins/time/services.py",
+        "pmo_plugins/time/views.py",
+        "pmo_plugins/time/forms.py",
+        "pmo_plugins/time/templates/time/billable_confirmation_form.html",
+        "pmo_plugins/time/templates/time/billable_confirmation_list.html",
+        "pmo_plugins/time/migrations/*.py",
+        "pmo_plugins/delivery/urls.py",
+        "pmo/settings.py",
+        "pmo/urls.py",
+        "core/services.py",
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_billable_confirmation.py",
+        "tests/test_v1_billable_confirmation_http.py",
+        "tests/test_v1_billable_confirmation_concurrency.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-269.json",
+        "project/handoffs/PH-269.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_billable_confirmation tests.test_v1_billable_confirmation_http tests.test_v1_billable_confirmation_concurrency --verbosity 1"
+      ],
+      "github_issue": null,
       "owner": null,
       "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-270",
+      "title": "insights 插件归属与期间核对/读模型契约决策前置",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-002",
+        "PH-024",
+        "PH-235"
+      ],
+      "spec": "project/specs/PH-270.md",
+      "allowed_paths": [
+        "docs/adr/*",
+        "project/specs/PH-270.md",
+        "project/specs/PH-257.md",
+        "project/specs/PH-262.md",
+        "project/specs/PH-272.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-270.json",
+        "project/handoffs/PH-270.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "grep -q \"insights\" docs/adr/0013-insights-plugin-ownership.md"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-271",
+      "title": "导入预览实现首片：CSV 模板识别、映射与逐行冲突（预览零账本）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-267",
+        "PH-181",
+        "PH-185"
+      ],
+      "spec": "project/specs/PH-271.md",
+      "allowed_paths": [
+        "pmo_plugins/importing/*",
+        "pmo/settings.py",
+        "pmo/urls.py",
+        "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_import_preview.py",
+        "tests/test_v1_import_preview_http.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-271.json",
+        "project/handoffs/PH-271.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_import_preview tests.test_v1_import_preview_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-267（importing/insights 归属决策，ready）done：owner/迁移号/入口门控未定前不得建 scaffold；缺 PH-181（四类核对/差额）与 PH-185（项目聚合/结项）done。依赖/决策完成后由 PH-273 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-272",
+      "title": "期间核对与工作台读模型实现首片：只读预检、差异单与项目汇总",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-270",
+        "PH-180",
+        "PH-181",
+        "PH-182",
+        "PH-183"
+      ],
+      "spec": "project/specs/PH-272.md",
+      "allowed_paths": [
+        "pmo_plugins/insights/*",
+        "pmo/settings.py",
+        "pmo/urls.py",
+        "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_reconciliation.py",
+        "tests/test_v1_reconciliation_http.py",
+        "tests/test_v1_dashboard_read_model.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-272.json",
+        "project/handoffs/PH-272.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_reconciliation tests.test_v1_reconciliation_http tests.test_v1_dashboard_read_model --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-270（insights 归属/门控决策，ready）done；缺 PH-180（期间预检/锁定）、PH-181（四类核对/差额）、PH-182（经营指标/缺口）、PH-183（到期扫描/待办）done。依赖/决策完成后由 PH-273 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-273",
+      "title": "后续交付独立规划入口（接续 PH-268）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-268"
+      ],
+      "spec": "project/specs/PH-273.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-273.json",
+        "project/handoffs/PH-273.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "依赖 PH-268（本规划槽）done；PH-268 完成后即置 ready 成为下一规划槽。"
+      ],
       "handoff": null
     }
   ]
