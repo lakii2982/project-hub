@@ -266,12 +266,23 @@ class BankChargeVerifyIntegrityTests(BankChargeFixture, TestCase):
                                    source=source, topic=TOPIC, data=template)
 
     def force_status(self, charge, status):
-        """Test-only status transition; rollback restores the migration triggers."""
+        """Test-only status transition; rollback restores the migration triggers.
+
+        PostgreSQL installs a single combined guard trigger on the table, SQLite
+        installs three separate triggers; drop whichever shape the vendor uses so
+        the test can simulate an approved/rejected row without weakening the
+        migrations themselves (the test transaction rolls back afterwards).
+        """
         from django.db import connection
         with connection.cursor() as cursor:
-            for trigger in ('costing_bankcharge_update_guard', 'costing_bankcharge_insert_guard',
-                            'costing_bankcharge_no_delete'):
-                cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
+            if connection.vendor == 'postgresql':
+                cursor.execute(
+                    'DROP TRIGGER IF EXISTS costing_bankcharge_guard ON costing_bankcharge')
+            else:
+                for trigger in ('costing_bankcharge_update_guard',
+                                'costing_bankcharge_insert_guard',
+                                'costing_bankcharge_no_delete'):
+                    cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
         BankCharge.objects.filter(pk=charge.pk).update(status=status)
         charge.refresh_from_db()
 

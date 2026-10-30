@@ -62,7 +62,8 @@
     "损坏探测测试为临时 SQLite 探针库与 ORM 事实篡改；approved 状态在 PH-244 触发器仍限 draft 的情况下由测试内临时 DROP TRIGGER + 事务回滚恢复构造（仅测试代码，不改迁移）。",
     "本分支提交为 in_review + review pending：S 级 done 需独立复核 pass 后才置位，避免自写 pass；预复核 verify-change 仅会因该门禁失败，路径白名单/报告结构已清。",
     "docs/delivery-status.md 未改（纯加固、无能力变化，且不在本任务白名单）；验证记录写入 docs/verification.md。",
-    "独立复核 PASS 0 阻断（review 块保留 reviewer 原文及 4 条 NOTE）；NOTE ①（approved 过渡态与 PH-250 兼容，PH-250 须产成本事实且不 bump version）已交由 PH-250 实现遵循——PH-250 设计保持 BankCharge.version 仅随草稿改稿递增，submit/decide 不改 version，避免与 saved-event count==version 冲突；其余 NOTE 记入 unverified，不在本片追加修改（复核后不改码）。"
+    "独立复核 PASS 0 阻断（review 块保留 reviewer 原文及 4 条 NOTE）；NOTE ①（approved 过渡态与 PH-250 兼容，PH-250 须产成本事实且不 bump version）已交由 PH-250 实现遵循——PH-250 设计保持 BankCharge.version 仅随草稿改稿递增，submit/decide 不改 version，避免与 saved-event count==version 冲突；其余 NOTE 记入 unverified，不在本片追加修改（复核后不改码）。",
+    "CI fix after the first PR run: the PostgreSQL domain job failed with 'syntax error at end of input' because the test-only force_status helper dropped SQLite-shaped per-operation triggers; PostgreSQL installs one combined guard trigger and needs ON TABLE. The helper now branches on connection.vendor and the change is test-only (migrations untouched; the test transaction rolls the drop back). Local SQLite scoped tests pass; PostgreSQL evidence comes from the rerun CI job."
   ],
   "unverified": [
     "PH-250 的真实 submit/approve/reject 流程与成本过账服务尚未实现；approved 成本事实边界仅以合成的 core AccountingEvent/LedgerPosting/SourceConsumption 验证，不是 PH-250 服务证据。",
