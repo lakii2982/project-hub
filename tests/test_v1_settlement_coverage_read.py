@@ -2,6 +2,8 @@
 import uuid
 
 from django.core.exceptions import PermissionDenied
+from datetime import timedelta
+
 from django.test import TestCase
 
 from core.models import (AccountingEvent, AuditEvent, DomainEvent, LedgerEntry, LedgerPosting,
@@ -53,7 +55,8 @@ class SettlementCoverageServiceTests(CoverageFixture, TestCase):
         self.assertEqual(item['returned_coverage_cents'], 0)
         self.assertEqual(item['offset_cents'], 0)
         self.assertFalse(item['offset_implemented'])
-        self.assertEqual(item['remaining_cents'], item['gross_cents'] - 30000)
+        self.assertEqual(item['remaining_cents'],
+                         item['gross_cents'] - 30000 - 5000)
         self.assertEqual(len(item['clearances']), 1)
         self.assertEqual(self.issues()['issue_count'], 0)
         self.assertEqual(self.issues()['issues'], [])
@@ -87,6 +90,18 @@ class SettlementCoverageServiceTests(CoverageFixture, TestCase):
             cash_transaction_id=first.cash_transaction_id,
             cash_transaction_ref=first.cash_transaction_ref,
             cleared_cents=first.cleared_cents, occurred_on=first.occurred_on,
+            status='active', version=1, created_by=self.owner)
+        self.assertIn('clearance_duplicate_active', self.codes())
+
+    def test_duplicate_active_same_cash_with_different_amount_or_date_is_issue(self):
+        first = self.clear(amount=10000)
+        # append-only INSERT with a different amount/date but the same canonical
+        # (open item, cash fact) identity: still a duplicate active clearance.
+        Clearance.objects.create(
+            organization=self.org, open_item=self.item,
+            cash_transaction_id=first.cash_transaction_id,
+            cash_transaction_ref=first.cash_transaction_ref,
+            cleared_cents=4000, occurred_on=first.occurred_on - timedelta(days=1),
             status='active', version=1, created_by=self.owner)
         self.assertIn('clearance_duplicate_active', self.codes())
 

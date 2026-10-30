@@ -103,9 +103,10 @@ def _item_bundle(item):
     cleared = sum(row.cleared_cents for row in active)
     # PH-241 Offset is in_review: never read the Offset table, display 0 / not implemented.
     offset = 0
-    remaining = item.gross_cents - cleared - offset
     refunded_total = sum(refunded.get(row.cash_transaction_id, 0) for row in active)
     returned_total = sum(returned.get(row.cash_transaction_id, 0) for row in active)
+    # Coverage remaining deducts refund/return coverage as well as clearances (spec/Lead).
+    remaining = item.gross_cents - cleared - offset - refunded_total - returned_total
     return {'clearances': clearances, 'active': active, 'cash': cash,
             'cleared': cleared, 'offset': offset, 'remaining': remaining,
             'refunded': refunded_total, 'returned': returned_total}
@@ -121,14 +122,20 @@ def _item_issues(item, bundle):
     if remaining < 0:
         _issue(issues, 'remaining_negative', item,
                expected={'min_cents': 0}, actual=remaining)
-    if item.remaining_cents != max(0, remaining):
+    # The model property ignores refund/return coverage; adjust it before comparing with the
+    # new coverage口径 so a refund does not create a false mismatch.
+    adjusted_model_remaining = max(
+        0, item.remaining_cents - bundle['refunded'] - bundle['returned'])
+    if adjusted_model_remaining != max(0, remaining):
         _issue(issues, 'remaining_mismatch', item,
                expected={'remaining_cents': max(0, remaining)},
-               actual=item.remaining_cents)
+               actual=adjusted_model_remaining)
     seen = {}
     for row in bundle['active']:
-        key = (row.open_item_id, row.cash_transaction_id, row.cleared_cents,
-               row.occurred_on)
+        # Canonical identity of an active clearance is the (open item, cash fact) pair:
+        # a second active clearance for the same pair is a duplicate even when its amount
+        # or occurred_on differs.
+        key = (row.open_item_id, row.cash_transaction_id)
         seen[key] = seen.get(key, 0) + 1
         if row.organization_id != item.organization_id:
             _issue(issues, 'clearance_cross_org', item,
