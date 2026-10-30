@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":190} (BASE 185 + 5 new tasks); all new specs exist and executable tasks have non-empty whitelist/acceptance."
+      "evidence": "Final Lead integration rerun after rebase onto 862c064: {\"command\":\"check\",\"ok\":true,\"task_count\":190} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -13,9 +13,9 @@
       "evidence": "Actual run: Ran 23 tests in 2.504s, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base e8183ff --task PH-263",
+      "command": "python scripts/projectctl.py verify-change --base 862c064 --task PH-263",
       "result": "pass",
-      "evidence": "Actual post-review rerun at the final evidence HEAD: python scripts/projectctl.py verify-change --base e8183ff --task PH-263 -> {\"command\":\"verify-change\",\"ok\":true}; all 10 changed files inside the BASE PH-263 allowed_paths and the committed report carries the named independent reviewer status=pass. The pre-review run of the same invocation failed only on high_risk_review_required, confirming path scope was already clean."
+      "evidence": "Final Lead integration rerun after rebase onto 862c064 (PH-259 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 10 changed files inside BASE PH-263 allowed_paths."
     }
   ],
   "review": {
@@ -34,7 +34,8 @@
     "PH-268 在本片 in_review 提交中暂为 proposed（blockers 写明依赖 PH-263 done），以让 projectctl check 在 pre-review 阶段通过（ready 任务依赖未 done 会被 dependency_not_done 拒绝）；reviewer pass 后的最终证据 commit 将 PH-263 置 done、PH-268 置 ready 并清空 blockers。",
     "只新增规划 spec/tasks/verification/report/handoff，不建 scaffold、不改 contract schema、不实施 PH-264+ 业务；不改其它 done 任务的 report/review 块；不改既有门禁/验收命令/报告 schema。",
     "依赖事实复核仅以 BASE tasks.json 的 done 状态与既有代码/报告为据，未运行 PH-264+ 的实现测试（未实现）；PH-266/PH-267 为 docs-only 决策片，本片只冻结其交付与验收。",
-    "复核打回 1 阻断已修：PH-266 的 ADR 从 0010-time-plugin-ownership 改为 0011-time-plugin-ownership、PH-267 从 0011-importing-opening-ownership 改为 0012-importing-plugin-ownership（避开 PH-259 已冻结的 0010-invoicing-plugin-ownership），同步 spec/acceptance/tasks/report/handoff/verification；另按非阻断 NOTE 恢复 tasks.json 的 BASE 任务顺序（回退 PH-235 无关重排噪声），仅追加 PH-264–268 与状态/blockers 变更。"
+    "复核打回 1 阻断已修：PH-266 的 ADR 从 0010-time-plugin-ownership 改为 0011-time-plugin-ownership、PH-267 从 0011-importing-opening-ownership 改为 0012-importing-plugin-ownership（避开 PH-259 已冻结的 0010-invoicing-plugin-ownership），同步 spec/acceptance/tasks/report/handoff/verification；另按非阻断 NOTE 恢复 tasks.json 的 BASE 任务顺序（回退 PH-235 无关重排噪声），仅追加 PH-264–268 与状态/blockers 变更。",
+    "Lead integration rebase (e8183ff -> 862c064) after PH-259 merged: tasks.json conflict resolved by keeping the PH-263 planning blocker rewrite (PH-252 now references ADR 0010) while retaining PH-259 done+bootstrap whitelist; verification kept main entries plus the PH-263 entry; manifest.active_handoff -> PH-263. Gates rerun green (check ok=true/190, verify-change --base 862c064 ok=true)."
   ],
   "unverified": [
     "PH-264/PH-265 为实现片但尚未实现：无产品代码/迁移/浏览器/PG/CI 证据；其验收命令为规划冻结，需实现片按正常流程重跑。PH-266/PH-267 的 ADR 与 PH-268 的下一槽登记均未产出。",
