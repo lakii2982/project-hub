@@ -1,0 +1,48 @@
+{
+  "task_id": "PH-294",
+  "summary": "Consumed the PH-294 planning slot on main cfa185f (PH-279 merged; task_count 216) and completed the Lead-authorized PH-276 whitelist correction: PH-276's tasks allowed_paths and exact spec whitelist now include core/management/commands/verify_integrity.py (purpose frozen: extend the existing PH-269 time branch to validate confirmed->reversed status/envelope/audit/receipt consistency and forbid a canonical reversed topic, without adding business invariants or global bans). A programmatic spec-vs-tasks comparison after de-duplication is clean (18 paths, no spec-only/tasks-only). Numbering was checked (BASE max PH-294; no remote branch/PR occupies >=PH-295) and four tasks were registered continuously: PH-295 payroll-cash command layer first slice (proposed; needs PH-171/PH-172), PH-296 expense claim/spend first slice (proposed; needs PH-150/PH-155), PH-297 prepaid-service deferral first slice (proposed; needs PH-163/PH-170) and PH-298 as the next planning slot (proposed until PH-294's review pass closes the slot). No ready task was upgraded or demoted: PH-280/281/283/284/288/291 stay ready and every proposed task remains blocked on its upstream with an explicit blocker; no false promotion. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD c1de746 (BASE cfa185f, PH-294 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":220}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /tmp/ph294-planning on main cfa185f with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base cfa185f --task PH-294",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD c1de746: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 10 changed files (PH-276 spec, 4 new specs PH-295..298, tasks.json, manifest.json, docs/verification.md, PH-294 report/handoff) are inside BASE PH-294 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-294 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [
+      "BLOCKER - PH-295/296/297 dependency facts are stated incorrectly: all three tasks list PH-110 in depends_on, but PH-110 is **ready, not done** (BASE cfa185f), while their blockers only name the proposed deps (PH-171/172, PH-150/155, PH-163/170) and the specs say the deps are '均 proposed'. This hides a still-open dependency and would let a future planning slot mis-read readiness. Fix: include PH-110 as a ready-not-done remaining dependency in each of PH-295/296/297 blockers and correct the spec dependency wording (or, if PH-110 is genuinely not required for these backend command slices, remove it from depends_on with a plan justification and keep blockers accurate); keep all three proposed until every dependency is done.",
+      "REST VERIFIED: PH-276's authorized whitelist expansion is exact - tasks and spec both have 18 paths and both add only `core/management/commands/verify_integrity.py`, with the purpose note (extend the existing PH-269 time branch for confirmed->reversed status/envelope/audit/receipt, no new business invariant/global ban); PH-276 remains ready with its time 0002 migration contract intact. New PH-295/296/297 are proposed finance/operations slices with frozen DoR/whitelists/counterexamples/acceptance and correct blockers for their other proposed deps; PH-298 is the next planning slot proposed on PH-294 in_review with the done-transition blocker (correct convention). Numbering is continuous PH-295..PH-298 (BASE max 294, no remote/local >=295); task_count 220 unique; no placeholders; no scaffold/contract-schema/code changes; 10 changed files all inside PH-294 allowed_paths; PH-294 in_review/manifest=PH-294.",
+      "EVIDENCE AT d920cb3 (BASE cfa185f): projectctl check ok=true/task_count=220; governance 23 tests OK; verify-change --base cfa185f --task PH-294 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; PH-276 spec/tasks exact 18/18. After the dependency-wording fix, the content is otherwise PASS-ready; the final evidence commit should set PH-294 done/PH-298 ready and clear the blocker."
+    ],
+    "evidence": "VERDICT: REJECTED - 1 blocker (PH-295/296/297 list PH-110 in depends_on but their blockers/specs omit that it is ready-not-done, so dependency facts are inaccurate). Reviewed HEAD d920cb3 (BASE cfa185f) in /tmp/ph294-planning, worktree clean; 10 changed files all inside PH-294 allowed_paths; task_count 220 unique continuous PH-295..PH-298; manifest=PH-294. PH-276 authorized verify_integrity path added exact 18/18 with purpose note; new finance/ops slices have frozen DoR/whitelists/counterexamples/acceptance; PH-298 proposed on PH-294 in_review. Gates: check ok=true/220; governance 23 OK; verify-change only high_risk_review_required + acceptance_not_passed, no path_out_of_scope; no placeholders; no scaffold/schema/code changes. Fix: add PH-110 ready-not-done to PH-295/296/297 blockers and correct the spec wording (or remove the dependency with justification); keep all proposed until all deps are done, then final evidence sets PH-294 done/PH-298 ready."
+  },
+  "deviations": [
+    "Review blocker fix 1 (PH-291 whitelist): the reviewer required the PH-291 ops-overview route to be declared in the canonical `pmo_plugins/delivery/domain_metadata.py` instead of copying the metadata inside delivery/urls.py. This planning slot therefore adds `pmo_plugins/delivery/domain_metadata.py` to PH-291's tasks allowed_paths and exact spec whitelist (route-only declaration, access=history_read, no other route/gate change); old->new impact: PH-291 implementation can no longer be blocked for touching the canonical metadata and delivery/urls.py must only import/use it. Programmatic comparison after the change: PH-291 spec unique paths = tasks = 14, spec-only=[], tasks-only=[].",
+    "Review blocker fix 2 (dependency facts): PH-295/PH-296/PH-297 depend on PH-110, which the BASE facts show as ready-not-done, while their blockers/spec only listed the legacy proposed upstreams. Fixed by keeping PH-110 in depends_on (it is genuinely needed for the frontend-standard work in those slices) and adding 'PH-110 (前端规范) done（BASE 事实为 ready 未 done）' to each blocker plus an explicit dependency-fact note in each spec, so a later planning slot cannot misread them as all-proposed/all-done. They stay proposed; no dependency was removed.",
+    "Planning-slot state convention: PH-294 is kept in_review with handoff and PH-298 is proposed with blocker 'PH-294 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-294 done and PH-298 ready and clear the blocker (same convention as prior planning slots).",
+    "The PH-276 correction is exactly as Lead-authorized: only core/management/commands/verify_integrity.py was added to both the tasks allowed_paths and the spec whitelist, with the purpose note (time confirmed->reversed status/envelope/audit/receipt checks; no canonical reversed topic; no new business invariant/global ban). No other task's whitelist was expanded.",
+    "Programmatic comparison: the spec whitelist mentions tests/test_v1_billable_reversal.py also inside the purpose note's context, so the raw backtick count is 19 while the de-duplicated path set is 18 and exactly equals the 18 tasks allowed_paths (spec-only=[] tasks-only=[]).",
+    "Numbering basis: BASE max PH-294; checked remote branches and open PRs (EXP-line #143/#144 etc.) - no >=PH-295 ids exist, so PH-295..PH-298 are continuous and free.",
+    "PH-295/PH-296/PH-297 are registered proposed with explicit blockers referencing their still-proposed legacy upstreams (PH-171/172, PH-150/155, PH-163/170); no ready task was falsely promoted or demoted.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-295/PH-296/PH-297 are implementation slices only registered as proposed; no product code, tests, migration, browser, PostgreSQL or CI evidence exists yet.",
+    "PH-276 is ready but not implemented; its expanded verify_integrity scope will be verified by its own implementation PR/CI.",
+    "PH-251/252/255/256/257/260/261/262/271/272/285/289/292/293/295/296/297 remain blocked on upstream proposed tasks; no promotion or scope change was made.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
