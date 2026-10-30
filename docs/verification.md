@@ -633,3 +633,13 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 范围与口径：合同（待审变更/已终止合同/终止后仍生效条款）、结算与未清（活动未清项/超额核销/退款/退回/退款未覆盖；pm 按管理项目 OpenItem→active Clearance 可见现金严格过滤退款/退回，不泄漏他人项目金额）、管理收入（已过账/已冲销/终止后确认/确认-结算差额）、工时与可计费（待确认/已确认分钟/待审工时；pm 按可见 Timesheet 的 canonical UUID5 `uuid5(NAMESPACE_URL,'pmo:timesheet:<pk>')` 派生范围）、导入预览（PH-274 无持久化 → null+`import_preview_persistence_not_implemented`）、现金（已过账/缺分类/流入流出净额；pm 为 null+`cash_not_scoped_to_project`）；金额整数分、期间 YYYY-MM 与 as_of 只读过滤；缺失 null+missing 不显示 0。纯度：无写、无审计、无收据、无迁移、无 session；测试断言零 INSERT/UPDATE/DELETE 查询与零事实/审计/事件计数变化。反例覆盖 member 拒绝、跨 org/项目隔离、pm 退款/工时范围、非法 as_of/period/未知参数 400、POST 405、模块停用历史可读。
 
 独立 S 复核两轮 PASS（首轮 3 阻断：canonical domain_metadata 路由、pm 结算退款泄漏、pm time UUID5，已修；次轮 0 阻断）。最终证据 HEAD fc244d7：projectctl check ok=true/task_count=220；manage.py check 83 条既有 warning/0 error；makemigrations --check 无变更；全量 1016 tests=5F+3E+69 skips（既有 macOS/DRF 环境失败，与基线一致、无新增）；verify_integrity 新库 {"ok": true, "errors": []}；scoped 17 tests OK（含 pm 退款/pm UUID5 回归）；verify-change --base a4584d1 --task PH-291 ok=true、14 文件全白名单、无 errors。未验证：PG 并发/浏览器 1440-390 交 CI/后续；生产/UAT 未验证。
+
+
+## PH-298 后续交付独立规划入口（接续 PH-294）+ PH-281 canonical 路由白名单（2026-10-31）
+
+基线 e43c2c2（PH-291 合入后，count 220）。纯规划/契约文字片：
+1. **PH-281 allowed_paths + spec 精确白名单加 `pmo_plugins/delivery/domain_metadata.py`**（用途：identity-access 运营视图路由 canonical 声明，path identity-access/，access=history_read；delivery/urls.py 仅导入使用，不复制元数据）；程序化比对去重后逐项一致（14 路径，spec-only=[]、tasks-only=[]）。
+2. **核号**：BASE 最大 PH-298；远端分支/PR（EXP #143/#144 等）无 ≥299 占用 → PH-299 起连续。
+3. **新登记**：PH-299 期间关期/预测覆盖契约冻结（proposed，缺 PH-180/181/182）、PH-300 项目关账/结项前置冻结（proposed，缺 PH-180/181/185）、PH-301 到期扫描/通知中心首片（proposed，缺 PH-179/183/151）、PH-302 下一规划槽（proposed，待 PH-298 done 后置 ready）。count 220→224，编号 299-302 连续。
+4. **晋级**：无新增（PH-280/281/284/288 等 ready 保持；依赖未 done 的 proposed 均未虚假晋级）。
+5. blockers 刷新：PH-292/293/295/296/297/299/300/301 保持 proposed 并写清缺口；无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-299/300/301 未实现；review由独立S复核。

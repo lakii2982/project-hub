@@ -1,0 +1,47 @@
+{
+  "task_id": "PH-298",
+  "summary": "Consumed the PH-298 planning slot on main e43c2c2 (PH-291 merged; task_count 220) and completed the Lead-authorized PH-281 whitelist correction: PH-281's tasks allowed_paths and exact spec whitelist now include pmo_plugins/delivery/domain_metadata.py (purpose frozen: declare the identity-access read-only route canonically with access=history_read; delivery/urls.py imports it and must not copy metadata). A programmatic spec-vs-tasks comparison after de-duplication is clean (14 paths, no spec-only/tasks-only). Numbering was checked (BASE max PH-298; no remote branch/PR occupies >=PH-299) and four tasks were registered continuously: PH-299 forecast/close contract freeze (proposed; needs PH-180/181/182), PH-300 project-close prerequisite freeze (proposed; needs PH-180/181/185), PH-301 due-scan/notification-center first slice (proposed; needs PH-179/183/151) and PH-302 as the next planning slot (proposed until PH-298's review pass closes the slot). No ready task was up/downgraded: PH-280/281/284/288 stay ready and all proposed tasks remain blocked with explicit blockers; no false promotion. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final HEAD: {\"command\":\"check\",\"ok\":true,\"task_count\":224} exit 0 (PH-298 done, PH-302 ready)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /tmp/ph298-planning on main e43c2c2 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base e43c2c2 --task PH-298",
+      "result": "pass",
+      "evidence": "Final HEAD: {\"command\":\"verify-change\",\"ok\":true} exit 0 — 11 changed files all inside BASE PH-298 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-298 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PH-281 WHITELIST FIX VERIFIED EXACT: tasks/spec both have 14 paths and add only `pmo_plugins/delivery/domain_metadata.py` with the purpose note (append the read-only identity-access route as canonical single metadata, access=history_read; urls imports it and must not copy metadata or change other gates); PH-281 remains ready with its other fields unchanged; programmatic spec-vs-tasks comparison is empty.",
+      "NEW TASKS/NUMBERING/BLOCKERS: task_count 224 unique continuous PH-299..PH-302 (BASE max 298; no remote/local branch/spec >=299). PH-299 (period close/forecast coverage ADR 0016) is proposed on proposed PH-180/181/182; PH-300 (project close ADR 0017) proposed on proposed PH-180/181/185; PH-301 (due-scan/notification inbox, read-only inbox + dedupe/read state, no external push/auto action) proposed on proposed PH-179/183/151; PH-302 next planning slot proposed on PH-298 in_review with the done-transition blocker. No proposed task was promoted; no false readiness. ADR numbers 0016/0017 are free (existing ADRs up to 0014; 0015 is not yet created by proposed PH-293) and no remote branch occupies the ids.",
+      "DoR/NUMBERING/ACCEPTANCE/SLOT: PH-299/300 are docs-only ADR freezes with explicit no-code/no-migration/no-schema boundaries; PH-301 freezes derived reminders, inbox permissions/dedupe/read-state, no external push or automatic business action, with exact implementation whitelist (core notification service/views/forms/template, delivery domain_metadata/urls, tests, governance) and executable acceptance; PH-302 is the next slot. All acceptance commands are executable; no `<PH-`/`{tid}` placeholders; no code/scaffold/schema/contract changes; 10 changed files all inside PH-298 allowed_paths; PH-298 in_review with owner/handoff, PH-302 proposed.",
+      "SLOT CONVENTION/GATES: PH-298 remains in_review and PH-302 proposed; after this pass the final evidence commit must set PH-298 done/PH-302 ready and clear the blocker, then rerun check/verify-change. At HEAD d744faf (BASE e43c2c2): projectctl check ok=true/task_count=224; governance 23 tests OK; verify-change --base e43c2c2 --task PH-298 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; manifest=PH-298."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD d744faf (BASE e43c2c2) in /tmp/ph298-planning, worktree clean; 10 changed files all inside PH-298 allowed_paths; task_count 224 unique continuous PH-299..PH-302; manifest=PH-298. PH-281 whitelist exact 14/14 with domain_metadata.py added for the canonical history_read identity-access route; PH-281 remains ready. PH-299/300 docs-only ADR 0016/0017 proposed on proposed deps; PH-301 read-only notification inbox proposed on proposed PH-179/183/151 (no external push/auto action); PH-302 proposed on PH-298 in_review. DoR/whitelists/counterexamples/executable acceptance complete; ADR 0016/0017 free; no placeholders; no code/schema/scaffold/done-report changes; no false promotion. Gates: check ok=true/224; governance 23 OK; verify-change --base e43c2c2 --task PH-298 only review/acceptance gates, no path_out_of_scope. Final evidence sets PH-298 done/PH-302 ready."
+  },
+  "deviations": [
+    "Planning-slot state convention: PH-298 is kept in_review with handoff and PH-302 is proposed with blocker 'PH-298 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-298 done and PH-302 ready and clear the blocker (same convention as prior planning slots).",
+    "The PH-281 correction is exactly as Lead-authorized: only pmo_plugins/delivery/domain_metadata.py was added to both tasks allowed_paths and the spec exact whitelist, with the purpose note (canonical identity-access route declaration, access=history_read; urls.py imports only, no metadata copy). No other task's whitelist was expanded.",
+    "Programmatic comparison: PH-281 spec unique path set 14 = tasks allowed_paths 14, spec-only=[], tasks-only=[] after removing the bare non-file token from the purpose note.",
+    "Numbering basis: BASE max PH-298; checked remote branches and open PRs (EXP-line #143/#144 etc.) - no >=PH-299 ids exist, so PH-299..PH-302 are continuous and free.",
+    "PH-299/PH-300/PH-301 are registered proposed with explicit blockers referencing their still-proposed legacy upstreams (PH-180/181/182, PH-180/181/185, PH-179/183/151); no ready task was falsely promoted or demoted.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-299/PH-300/PH-301 are contract/implementation slices only registered as proposed; no product code, tests, migration, browser, PostgreSQL or CI evidence exists yet.",
+    "PH-281 is ready but not implemented; the canonical domain_metadata route wiring will be exercised by its implementation after this slot merges.",
+    "PH-251/252/255/256/257/260/261/262/271/272/285/289/292/293/295/296/297/299/300/301 remain blocked on upstream proposed tasks; no promotion or scope change was made.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
