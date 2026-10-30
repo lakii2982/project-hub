@@ -3,9 +3,9 @@
   "summary": "自我改进三回路 EXP-1 合入：projectctl 新增只读 lessons/metrics 子命令与 brief --precedents（默认关闭，有界注入、自排除、两级通用性过滤），附 9 项测试、严格时间序回测脚本与预注册判据评估报告；契约层（AGENTS.md/manifest/schema/core）零改动，默认 brief 与 origin/main 逐字节一致。回测（基线 df01896：94.4%/1259.7B/1810B；合并后 HEAD 复跑：94.8%/1300.7B/1820B）证明机制层优于现状（教训 0% 触达 → 94%+ 可及）；前瞻效果未证，已登记为遗留交下一规划槽。",
   "tests": [
     {
-      "command": "python -m unittest tests.test_projectctl tests.test_projectctl_lessons tests.test_governance",
+      "command": "python -m unittest tests.test_projectctl tests.test_projectctl_lessons tests.test_governance -v",
       "result": "pass",
-      "evidence": "Ran 32 tests in 3.652s — OK（合入 origin/main 1f02520 后实际输出）。覆盖提取/过滤/上界/自排除/两级通用性/零写入/计数/无旗标输出形状。"
+      "evidence": "Ran 32 tests in 2.745s — OK（最终 HEAD 带 -v 实跑，与 BASE 验收命令逐字一致；复核人两轮独立复跑同值）。覆盖提取/过滤/上界/自排除/两级通用性/零写入/计数/无旗标输出形状。"
     },
     {
       "command": "diff <(git show origin/main:scripts/projectctl.py … brief PH-238) <(worktree scripts/projectctl.py … brief PH-238)",
@@ -28,9 +28,9 @@
       "evidence": "独立复核两轮 PASS 落定后实跑：{\"command\":\"check\",\"ok\":true,\"task_count\":176}。此前 pending 期实跑被 high_risk_review_required 正确拦截（复核人亦独立复现该门禁形态），属 D03 顺序而非回归。"
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base <planning-base> --task PH-254",
+      "command": "python scripts/projectctl.py verify-change --base feat/PH-254-planning --task PH-254",
       "result": "not_run",
-      "evidence": "首次实跑 --base 1f02520 被门禁正确拦截（task_not_in_baseline：单 PR 无法自我授权，PH-254 须先经规划 PR 入 BASE）。已按仓库规约拆分规划 PR + 交付 PR；本条待规划分支存在后以 --base feat/PH-254-planning 实跑回填。"
+      "evidence": "首跑暴露两处门禁拦截并如实处置:(1) --base 1f02520 task_not_in_baseline——单PR自我授权的机械拦截,已拆分规划PR(feat/PH-254-planning,PH-254以ready入BASE);(2) 验收命令逐字匹配要求带 -v,已按原命令实跑回填。规划分支就绪后本条以 --base feat/PH-254-planning 实跑回填。"
     }
   ],
   "review": {
