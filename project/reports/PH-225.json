@@ -15,7 +15,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 5ea4369 --task PH-225",
       "result": "pass",
-      "evidence": "Post-commit, post-review rerun after review pass: actual ok=true, changed files all inside BASE allowed_paths (5ea4369..HEAD); see handoff for recorded command output."
+      "evidence": "Post-review actual rerun at HEAD bb7632e against base 5ea4369: ok=true, 7 changed files all inside BASE allowed_paths, no errors."
     }
   ],
   "review": {
