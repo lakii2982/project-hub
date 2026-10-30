@@ -6413,7 +6413,7 @@
       "title": "后续业务交付独立规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -6431,6 +6431,90 @@
         "docs/verification.md",
         "project/reports/PH-229.json",
         "project/handoffs/PH-229.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "root",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-229.md"
+    },
+    {
+      "id": "PH-230",
+      "title": "现金过账与账户覆盖（草稿→posted、规范事件、只读覆盖）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-214",
+        "PH-219",
+        "PH-222",
+        "PH-224",
+        "PH-228"
+      ],
+      "spec": "project/specs/PH-230.md",
+      "allowed_paths": [
+        "pmo_plugins/cash/transaction_services.py",
+        "pmo_plugins/cash/funding_services.py",
+        "pmo_plugins/cash/views.py",
+        "pmo_plugins/cash/forms.py",
+        "pmo_plugins/cash/domain_metadata.py",
+        "pmo_plugins/cash/templates/cash/cash_transaction_detail.html",
+        "pmo_plugins/cash/templates/cash/cash_transaction_list.html",
+        "pmo_plugins/cash/templates/cash/funding_account_list.html",
+        "pmo_plugins/cash/migrations/*.py",
+        "tests/test_v1_cash.py",
+        "tests/test_v1_cash_posting.py",
+        "tests/test_v1_cash_http.py",
+        "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/reports/PH-230.json",
+        "project/handoffs/PH-230.md",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_cash tests.test_v1_cash_posting tests.test_v1_cash_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-231",
+      "title": "后续业务交付独立规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-229"
+      ],
+      "spec": "project/specs/PH-231.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-231.json",
+        "project/handoffs/PH-231.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

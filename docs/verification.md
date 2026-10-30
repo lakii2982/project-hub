@@ -346,3 +346,8 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 基线200a507（PH-227规划合入）。新增cash插件：FundingAccount（草稿/激活，active不可变）、CashTransaction（org+账户+external_source_key唯一、payee三类、evidence≥1、未来日/锁账/关期拒绝、仅draft可改）、CashPartyMatch（identify/reverse、reverse需match_ref+reason、部分唯一防重复反向）、CashReceipt（幂等）；9条路由/5模板/导航与财务入口；迁移0001/0002双实现守卫；verify_integrity分支。明确不写会计事件/账本/收入/成本/应收/应付/未清/消费，不做现金过账/分类/核销/退款/更正/转账/导入/期初。
 实际执行：cash 23项通过（18+5），PG并发3项本机skip由CI实跑；全量706项通过、43项环境跳过；check/makemigrations/verify_integrity通过；旧库与非空库升级后完整性ok；浏览器证据见runtime/ph228-browser。未验证：PG并发、生产/UAT、过账/分类/核销/退款/导入/期初；PH-169未完成。
 
+
+## PH-229 现金过账与账户覆盖规划（2026-10-30）
+
+基线35e0a25（PH-228现金事实首片合入）。登记PH-230“现金过账与账户覆盖”（ready，依赖PH-214/219/222/224/228）与PH-231规划槽；PH-229完成。本片只做draft→posted、恰一条cash.transaction_recorded.v1规范事件、只读账户覆盖（available=posted net、cleared=0）与过账守卫；明确不写AccountingEvent/LedgerPosting/LedgerEntry，不做分类/分配/核销/退款/更正/转账/导入/期初，不解除PH-169/170/171 proposed。实际执行check与19项治理测试；verify-change在review落pass后重跑。未验证：无产品代码/迁移/测试/浏览器/PG/CI；PH-169未完成。
+

@@ -1,0 +1,37 @@
+{
+  "task_id": "PH-229",
+  "summary": "Register PH-230 (cash posting slice: draft cash transactions become immutable posted facts with one canonical cash.transaction_recorded event and read-only account coverage; no ledger/classification/clearing/refund) and PH-231 next planning slot. No product code changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "After review pass: ok=true, task_count=153 (PH-229 done, PH-230/PH-231 ready, dependencies done)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 35e0a25 --task PH-229",
+      "result": "pass",
+      "evidence": "Post-review actual rerun: ok=true, all changed files inside BASE allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-229 planning reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Review in progress."
+  },
+  "deviations": [
+    "PH-230 is a deliberately narrow slice of PH-169: it posts bank facts (status/event/coverage) but writes no AccountingEvent/LedgerPosting/LedgerEntry and performs no classification/allocation/clearing/refund/correction/transfer/import/opening balance; those remain later slices.",
+    "PH-230 dependencies are the done cash/AR slices rather than the still-proposed PH-169/170/171, because posting only needs the PH-228 cash facts plus core periods; remaining scope stays tracked by later planning.",
+    "Posting is not described as cash-book entry: the canonical event carries posting_event_refs=[] and the spec explicitly says no ledger bridge in this slice."
+  ],
+  "unverified": [
+    "No product code, migration, tests, browser, PostgreSQL or CI evidence exists for PH-230 yet.",
+    "Cash classification, ledger bridge, clearing (PH-170), refunds (PH-171), bank-file import and opening balances are not designed here; PH-169 is not complete."
+  ]
+}
