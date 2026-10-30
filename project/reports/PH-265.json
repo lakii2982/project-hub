@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":190}."
+      "evidence": "Final Lead integration rerun after rebase onto 8101b28: {\"command\":\"check\",\"ok\":true,\"task_count\":190} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -33,9 +33,9 @@
       "evidence": "Actual post-fix scoped run: Ran 17 tests, OK (service 8 incl. draft-edit/deltas/no version or canonical event, replay/duplicate/conflict, self-review + independent approval new version + two canonical envelopes + approved-line snapshot, reject/withdraw terminal, termination date/event/settlement guard, roles/module disable; HTTP 3; termination 6 incl. history preservation, DB-trigger self-decision/new-change rejection, forged self-decided/created-after-termination change verification and forged version_approved changed_refs)."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 1e4c480 --task PH-265",
+      "command": "python scripts/projectctl.py verify-change --base 8101b28 --task PH-265",
       "result": "pass",
-      "evidence": "Actual post-review rerun at the final evidence HEAD: python scripts/projectctl.py verify-change --base 1e4c480 --task PH-265 -> {\"command\":\"verify-change\",\"ok\":true}; all changed files inside the BASE 1e4c480 PH-265 allowed_paths and the committed report carries the named independent reviewer status=pass. The pre-review run of the same invocation failed only on high_risk_review_required, confirming path scope was clean."
+      "evidence": "Final Lead integration rerun after rebase onto 8101b28 (PH-264 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 23 changed files all inside BASE PH-265 allowed_paths."
     }
   ],
   "review": {
@@ -57,7 +57,8 @@
     "`ContractTrigger` 仅强化终止后合同不可再改、禁止删除与终止日期/状态一致性，保留既有草稿编辑/首次批准/版本递增行为（未引入新的合同全字段不可变触发器，避免破坏 PH-212/214 既有路径）。",
     "变更类型/生效日期/合同/创建人创建后不可修改（触发器冻结）；draft 更新允许修改 draft_content/evidence/deltas 并使 version+1，决策时这些事实被冻结（触发器校验不变）；本片不产生 canonical pending_customer 状态（spec 排除），客户确认流转留后续片。",
     "UI 结构复用既有 panel/form 模式，但 1440/390、键盘焦点与空/错/加载态未实测；作为未验证项披露。",
-    "复核 round 1 三阻断已修：① SQLite/PostgreSQL update 触发器与 verify_integrity 增加 creator≠decider（含直改 DB 自批的 forged 回归）；② 触发器允许 draft 内容/证据/差额更新、决策时冻结，并补草稿编辑回归；③ 插入触发器要求合同 active，verify 增加 terminated 合同新变更/新版本与 version_approved changed_refs=[version, change] 断言及 forged 反例。修复后 scoped 17 tests OK、全量 922（基线 918 + 4 新回归，8 项 macOS 基线失败不变）、verify_integrity 探针仍 ok/损坏可报。"
+    "复核 round 1 三阻断已修：① SQLite/PostgreSQL update 触发器与 verify_integrity 增加 creator≠decider（含直改 DB 自批的 forged 回归）；② 触发器允许 draft 内容/证据/差额更新、决策时冻结，并补草稿编辑回归；③ 插入触发器要求合同 active，verify 增加 terminated 合同新变更/新版本与 version_approved changed_refs=[version, change] 断言及 forged 反例。修复后 scoped 17 tests OK、全量 922（基线 918 + 4 新回归，8 项 macOS 基线失败不变）、verify_integrity 探针仍 ok/损坏可报。",
+    "Lead integration rebase (1e4c480 -> 8101b28) after PH-266/PH-264 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-265 entry; manifest.active_handoff -> PH-265; tasks.json auto-merged retaining PH-264/PH-266 facts. Gates rerun green."
   ],
   "unverified": [
     "本机无 PostgreSQL：同一合同并发 draft 只一胜、重复批准只一胜由公司锁+行锁+唯一约束与 SQLite 路径测试覆盖，真实 PG 双连接并发交 Linux CI。",
