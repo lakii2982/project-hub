@@ -632,4 +632,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 
 范围与口径：合同（待审变更/已终止合同/终止后仍生效条款）、结算与未清（活动未清项/超额核销/退款/退回/退款未覆盖；pm 按管理项目 OpenItem→active Clearance 可见现金严格过滤退款/退回，不泄漏他人项目金额）、管理收入（已过账/已冲销/终止后确认/确认-结算差额）、工时与可计费（待确认/已确认分钟/待审工时；pm 按可见 Timesheet 的 canonical UUID5 `uuid5(NAMESPACE_URL,'pmo:timesheet:<pk>')` 派生范围）、导入预览（PH-274 无持久化 → null+`import_preview_persistence_not_implemented`）、现金（已过账/缺分类/流入流出净额；pm 为 null+`cash_not_scoped_to_project`）；金额整数分、期间 YYYY-MM 与 as_of 只读过滤；缺失 null+missing 不显示 0。纯度：无写、无审计、无收据、无迁移、无 session；测试断言零 INSERT/UPDATE/DELETE 查询与零事实/审计/事件计数变化。反例覆盖 member 拒绝、跨 org/项目隔离、pm 退款/工时范围、非法 as_of/period/未知参数 400、POST 405、模块停用历史可读。
 
-实跑（最终证据 HEAD 待补）：manage.py check 81 条既有 warning/0 error；makemigrations --check 无变更；全量/scoped/verify_integrity 新库；verify-change 待 review 后记录。未验证：PG 并发/浏览器 1440-390 交 CI；独立 S 复核待做。review pending。
+实跑（HEAD ed62e6a，BASE a4584d1）：projectctl check ok=true/task_count=220；manage.py check 83 条既有 warning/0 error；makemigrations --check 无变更；全量 1016 tests=5F+3E+69 skips（既有环境失败，无新增）；verify_integrity 新库 {"ok": true, "errors": []}；scoped 17 tests OK；verify-change 待独立 S 复核后记录。未验证：PG 并发/浏览器 1440-390 交 CI；独立 S 复核待做。review pending。
