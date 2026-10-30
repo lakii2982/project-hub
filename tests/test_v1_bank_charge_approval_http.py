@@ -54,6 +54,13 @@ class BankChargeApprovalHTTPTests(BankChargeApprovalHTTPFixture, TestCase):
     def test_self_approval_and_second_decision_have_no_effect(self):
         charge = self.approved_draft(member=self.finance)
         self.action(charge, 'submit', member=self.finance)
+        # NOTE② regression: the creator/submitter must not be offered the approve action.
+        own_view = self.client.get(LIST, {'id': charge.pk}).content.decode()
+        self.assertNotIn('独立批准（另一负责人）', own_view)
+        self.login(self.owner)
+        self.assertIn('独立批准（另一负责人）',
+                      self.client.get(LIST, {'id': charge.pk}).content.decode())
+        self.login(self.finance)
         response = self.action(charge, 'approve', member=self.finance, decision='approve')
         self.assertEqual(response.status_code, 302)
         charge.refresh_from_db()

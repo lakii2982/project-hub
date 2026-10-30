@@ -57,7 +57,8 @@ def bank_charge_list(context, payload):
             approval = services.bank_charge_cost_snapshot(member, selected['id'])
             approval['amount_display'] = money(approval['cost_amount_cents']) if approval['cost_amount_cents'] is not None else ''
             can_decide = (member.role in WRITE_ROLES
-                          and member.pk not in {selected['created_by'], approval['submitted_by']})
+                          and str(member.pk) not in {str(selected['created_by']),
+                                                     str(approval['submitted_by'])})
             approval.update(can_decide=can_decide,
                             submit_url=url('bank_charge_action', id=selected['id'], action='submit'),
                             approve_url=url('bank_charge_action', id=selected['id'], action='approve'),
