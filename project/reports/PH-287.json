@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run: Ran 986 tests in 119.110s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
+      "evidence": "Actual run: Ran 986 tests in 127.876s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
