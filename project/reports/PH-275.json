@@ -1,0 +1,31 @@
+{
+  "task_id": "PH-275",
+  "summary": "合同变更后续只读片 on BASE 71d5665. Added contracts.approval_services.contract_change_impact(member, change_id) and contract_change_impact_list(member, *, contract_id=None): a read-only projection over the existing Contract/ContractVersion/ContractChange/Settlement/OpenItem/Clearance/RevenueRecognition facts, returning the change ref/type/status/requested date/version, contract ref/status/termination marker, the approved version before the change (the version with version_no-1 for an effective price/other change; the still-approved version for a termination) and the new approved version after it (None for termination), affected contract-line refs (before and after lines unioned), active Settlement count/gross, active OpenItem count/gross, active Clearance count/cleared amount, posted RevenueRecognition count/net amount, and the change deltas. The service is append-only read behaviour: no audit, receipt, event or fact write; permissions are owner/finance/auditor, PM only for managed projects with summary_only=true, member denied, cross-company/unknown change denied. Termination depth: the existing PH-265 guards (change draft requires an active contract; approved_terms_snapshot rejects as_of >= terminated_on) were kept without duplicating settlement write code, and the read snapshots now expose terminated/terminated_on/contract_status markers so downstream pairing is never silent; regressions assert new change and settlement attempts after termination are refused with zero half-writes. Browser: contract detail gained a read-only 变更影响（只读） section (before/after versions, affected lines, settlement/open-item/clearance/revenue counts and amounts, termination badge, link to per-change impact) and a new read-only change_detail.html page; a history_read route contract-change-impact keeps the historical impact readable after the contracts module is disabled, with no new write entry. No model/migration/canonical topic/command/schema change and no revenue/ledger/cash/open-item write.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":212}."},
+    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (76 issues, 0 silenced), no errors."},
+    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual run exit 0: 'No changes detected' (PH-275 adds no model or migration)."},
+    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 975 tests in 115.636s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."},
+    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No new business invariant was added because the slice only reads existing facts; existing contracts/audit checks are unchanged."},
+    {"command": "python manage.py test tests.test_v1_contract_change_impact tests.test_v1_contract_change_impact_http --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 9 tests, OK. Service 5: draft impact is before-version-only and read-only; approved price change lists before/after versions plus unioned affected lines and exact settlement/open-item/clearance/revenue totals; termination marks terminated, blocks new change and new settlement with zero half-writes and exposes terminated markers on historical pairing reads; role/module-disable/no-audit checks; cross-tenant/unknown denial. HTTP 4: contract-detail section and per-change impact page render totals; auditor/PM read, member denied, missing/unknown id denied; disabled-module history_read still renders; extra query parameters (recalculate/amount/status) do not change facts or settlement state."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级复核由 fresh-context reviewer 按 BASE PH-275 spec 实跑 check/manage check/makemigrations/verify_integrity/scoped/full 并核对只读影响聚合正确性（前后版本、受影响行、结算/未清/核销/收入计数金额）、终止阻断（变更/结算拒绝、零半笔、snapshot terminated 标记）、权限（owner/finance/auditor、pm summary_only、member 拒绝、跨公司/未知拒绝）、模块停用 history_read、无 audit/事件/事实写、无迁移/无新写入口、精确白名单与 UI 只读性。实现者不自写 pass。"
+  },
+  "deviations": [
+    "②终止后结算创建显式守卫：未在 settlement 服务重复加检查（settlement 文件不在 PH-275 白名单，且 PH-265 approved_terms_snapshot 在 as_of >= terminated_on 已拒绝）；按 spec“若 PH-265 已覆盖则只补测试与错误文案”处理，补反例测试与零半笔断言，不改 settlement 写语义。",
+    "④管理收入/结算配对只读标记：在既有 approved_line_snapshot 结果新增 terminated/terminated_on/contract_status 字段（approved_terms_snapshot 继承），不改任何写语义；影响页与历史 pairing 读取可显式看到终止。",
+    "PM 权限按 spec 实现为“仅其管理项目且只读摘要”：影响 service 对 pm 返回 summary_only=true 并去除决策说明，contract 范围经 require_project 校验；owner/finance/auditor 获取完整只读投影。",
+    "无模型/迁移/canonical topic/command/schema 变更；无新写入口；影响聚合只读，不写 generic audit/receipt/domain event，不重算历史事实。"
+  ],
+  "unverified": [
+    "PostgreSQL 运行证据以 CI 为准（本机 SQLite 仅验证服务/模板/反例；无 PG 实例）。",
+    "浏览器 1440/390、键盘/焦点、空态/错误态/停用态未实机检查；HTTP 测试仅断言页面渲染、权限与只读事实不变。",
+    "真实客户/生产/UAT 未验证；跨域影响聚合未覆盖未来新事实类型（当前 Settlement/OpenItem/Clearance/RevenueRecognition 既有模型）。",
+    "独立 S 复核 pending；通过后置 done、重跑 check+verify-change 并报最终 SHA。"
+  ]
+}

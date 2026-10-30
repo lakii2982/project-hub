@@ -42,7 +42,7 @@ class ContractChangeImpactHTTPTests(ImpactFixture, TestCase):
 
     def test_disabled_module_history_read_keeps_impact_available(self):
         from core.plugin_runtime import get_registry, is_enabled, set_enabled
-        for plugin_id in ('time', 'management_revenue', 'settlement', 'delivery', 'contracts'):
+        for plugin_id in ('onboarding', 'time', 'management_revenue', 'settlement', 'delivery', 'contracts'):
             if plugin_id in get_registry().manifests:
                 set_enabled(self.owner, plugin_id, False)
         self.assertFalse(is_enabled(self.org, 'contracts'))
