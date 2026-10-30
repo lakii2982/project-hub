@@ -52,7 +52,8 @@
     "确认未另写 generic audit `time.billable.confirmed`：core.audit 会为非 plugin 前缀动作自动生成同名 topic `time.billable.confirmed.v1` 的非 canonical outbox 事件，与 canonical topic 冲突；改用 suppressed `plugin.time.billable.confirmed` audit 作为 canonical DomainEvent.source，审计链完整，披露。",
     "timesheet_id 按 spec 冻结为 UUID 列，由 timesheet pk 确定性派生（uuid5）；业务引用仍使用 canonical timesheet_ref（namespace=time/kind=timesheet/id=str(pk)/version），不复制工时事实。",
     "root 单写：pmo/settings.py、pmo_plugins/delivery/urls.py、core/services.py（仅新增 approved_timesheet_for_billable 只读）、core/management/commands/verify_integrity.py；pmo/urls.py 无需改动（business_v1 已有插件分支）。未改其它 app 迁移/契约/canonical schema。",
-    "最终集成：PH-273 白名单修正（PH-269 allowed_paths 25→29）合入后 rebase 到 7d8877f，最小同步 4 个跨片测试文件（test_v1_contract_change / _http 的依赖禁用 loop 加 time；test_acceptance_revenue 收尾顺序加 time；test_v1_cash_book_bridge verify query 上限 80→84 并注释，保留“随分类历史常量”断言），未改任何业务断言语义；全量 951 tests/121.692s 回到基线 5F+3E（同一 8 项 macOS）、69 skips。"
+    "最终集成：PH-273 白名单修正（PH-269 allowed_paths 25→29）合入后 rebase 到 7d8877f，最小同步 4 个跨片测试文件（test_v1_contract_change / _http 的依赖禁用 loop 加 time；test_acceptance_revenue 收尾顺序加 time；test_v1_cash_book_bridge verify query 上限 80→84 并注释，保留“随分类历史常量”断言），未改任何业务断言语义；全量 951 tests/121.692s 回到基线 5F+3E（同一 8 项 macOS）、69 skips。",
+    "CI fix after the first PostgreSQL run: confirm_billable locked with select_for_update().select_related('created_by_member__user','confirmed_by_member__user'); the nullable confirmed_by_member turns that into an outer join, which PostgreSQL refuses to lock (psycopg FeatureNotSupported). It now uses select_for_update(of=('self',)) so only the confirmation row is locked; scoped tests re-ran OK and the PostgreSQL rerun is the authoritative evidence."
   ],
   "unverified": [
     "PG 双连接并发确认只一胜：本机 SQLite 无法证明锁，concurrency 测试为 PG-only skip（CI 覆盖）；同 timesheet+条款唯一约束与公司锁/行锁已由 SQLite 顺序路径与代码覆盖。",

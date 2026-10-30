@@ -278,7 +278,9 @@ def confirm_billable(member, confirmation_id, *, expected_version, request_token
     member = _fresh(member, write=True)
     lock_company(member)
     try:
-        row = BillableConfirmation.objects.select_for_update().select_related(
+        # confirmed_by_member is nullable, so a plain select_related() builds an
+        # outer join that PostgreSQL refuses to lock; lock only the row itself.
+        row = BillableConfirmation.objects.select_for_update(of=('self',)).select_related(
             'created_by_member__user', 'confirmed_by_member__user').get(
             pk=confirmation_id, organization=member.organization)
     except (BillableConfirmation.DoesNotExist, ValueError, ValidationError):
