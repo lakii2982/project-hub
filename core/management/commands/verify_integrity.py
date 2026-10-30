@@ -1,5 +1,6 @@
 import json
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 from core.models import Organization, Project, LedgerEntry, Document, Timesheet
 from core.services import verify_audit, plan_remaining
 
@@ -105,6 +106,41 @@ class Command(BaseCommand):
             if payee.get('kind') == 'own_account' and not FundingAccount.objects.filter(
                     pk=payee.get('id'), organization_id=transaction.organization_id).exists():
                 errors.append(f"cash_transaction:{transaction.pk}:own_account_missing")
+        from core.models import AccountingEvent as _CashAccountingEvent, DomainEvent as _CashDomainEvent
+        from core.models import SourceConsumption as _CashConsumption
+        if _CashAccountingEvent.objects.filter(source__namespace='cash').exists():
+            errors.append('cash_transaction:unexpected_accounting_event')
+        if _CashConsumption.objects.filter(consumer='cash').exists():
+            errors.append('cash_transaction:unexpected_source_consumption')
+        from pmo_plugins.cash.models import CashReceipt as _CashReceipt
+        for transaction in CashTransaction.objects.all():
+            canonical = _CashDomainEvent.objects.filter(
+                organization_id=transaction.organization_id,
+                topic='cash.transaction_recorded.v1',
+                data__source__id=str(transaction.pk))
+            reference = transaction.transaction_ref
+            if transaction.status == 'posted':
+                if canonical.count() != 1:
+                    errors.append(f"cash_transaction:{transaction.pk}:posted_event_count")
+                else:
+                    data = canonical.get().data or {}
+                    payload = data.get('payload') or {}
+                    if (data.get('schema_version') != 1
+                            or data.get('topic') != 'cash.transaction_recorded.v1'
+                            or data.get('organization_id') != str(transaction.organization_id)
+                            or data.get('source') != reference
+                            or data.get('event_id') != str(canonical.get().event_id)
+                            or payload.get('changed_refs') != [reference]
+                            or payload.get('posting_event_refs') != []):
+                        errors.append(f"cash_transaction:{transaction.pk}:posted_event_envelope")
+                if transaction.transaction_date > timezone.localdate():
+                    errors.append(f"cash_transaction:{transaction.pk}:future_posted")
+                if not _CashReceipt.objects.filter(
+                        organization_id=transaction.organization_id, action='cash_transaction.post',
+                        result__id=str(transaction.pk)).exists():
+                    errors.append(f"cash_transaction:{transaction.pk}:posting_receipt")
+            elif canonical.exists():
+                errors.append(f"cash_transaction:{transaction.pk}:draft_has_event")
         for match in CashPartyMatch.objects.select_related('cash_transaction', 'original_match'):
             if match.cash_transaction.organization_id != match.organization_id:
                 errors.append(f"cash_party_match:{match.pk}:transaction_org")

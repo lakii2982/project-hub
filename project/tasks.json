@@ -6446,7 +6446,7 @@
       "title": "现金过账与账户覆盖（草稿→posted、规范事件、只读覆盖）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -6490,9 +6490,9 @@
         "python manage.py test tests.test_v1_cash tests.test_v1_cash_posting tests.test_v1_cash_concurrency tests.test_v1_cash_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-230.md"
     },
     {
       "id": "PH-231",

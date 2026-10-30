@@ -96,8 +96,8 @@ class CashTransaction(models.Model):
                                    name='cash_transaction_direction'),
             models.CheckConstraint(condition=Q(gross_cents__gt=0, gross_cents__lte=MAX_CENTS),
                                    name='cash_transaction_gross_bound'),
-            models.CheckConstraint(condition=Q(status='draft'),
-                                   name='cash_transaction_draft_status'),
+            models.CheckConstraint(condition=Q(status__in=['draft', 'posted']),
+                                   name='cash_transaction_status'),
         ]
 
     @property
@@ -106,7 +106,7 @@ class CashTransaction(models.Model):
                 'version': self.version}
 
     def get_status_display(self):
-        return {'draft': '草稿'}.get(self.status, self.status)
+        return {'draft': '草稿', 'posted': '已过账'}.get(self.status, self.status)
 
     def save(self, *args, **kwargs):
         if self.pk and type(self).objects.filter(pk=self.pk).exclude(status='draft').exists():

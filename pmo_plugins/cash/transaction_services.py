@@ -6,24 +6,28 @@ events are produced.
 """
 from datetime import date
 from decimal import Decimal
+import re
 import uuid
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from core.models import AccountingPeriod, Employee
+from core.models import AccountingPeriod, AuditEvent, DomainEvent, Employee
 from core.services import audit
 
 from .funding_services import (_amount, _business_date, _dry, _evidence, _fail, _fresh,
                                _get_account, _identifier, _locked, _optional_identifier,
-                               _receipt, _receipt_row, _record, _text, _version)
+                               _receipt, _receipt_row, _record, _text, _version, WRITE_ROLES)
 from .models import CashPartyMatch, CashTransaction, FundingAccount
 
 PAYEE_KINDS = {'unidentified', 'counterparty', 'own_account'}
 MATCH_PAYEE_KINDS = {'counterparty', 'employee', 'own_account'}
 MATCH_ACTIONS = {'identify', 'reverse'}
 IDENTIFIED_LABELS = {'counterparty': '往来方', 'employee': '员工', 'own_account': '自有账户'}
+POSTING_PERIOD = re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])$')
+POSTED_TOPIC = 'cash.transaction_recorded.v1'
+POSTED_ACTION = 'cash.cash_transaction.posted'
 
 
 def _party(member, party_id):
@@ -61,6 +65,12 @@ def _period(member, day):
 
 def _external_key(value):
     return _text(value, 200, '外部流水编号须为1至200个字符')
+
+
+def _posting_period(value):
+    if not isinstance(value, str) or not POSTING_PERIOD.fullmatch(value):
+        _fail('过账期间须为YYYY-MM')
+    return value
 
 
 def _payee_shape(value):
@@ -253,6 +263,59 @@ def save_cash_transaction(member, *, funding_account_id, transaction_date, direc
 
 
 @transaction.atomic
+def record_cash_transaction(member, transaction_id, *, request_token, occurred_on=None,
+                            posting_period=None, expected_version, dry_run=True):
+    """Private draft->posted transition with exactly one canonical cash event."""
+    _dry(dry_run)
+    member = _locked(member)
+    transaction_id = _identifier(transaction_id, '银行流水不存在或无权访问')
+    version = _version(expected_version)
+    occurred = None if occurred_on is None else _business_date(occurred_on)
+    period = None if posting_period is None else _posting_period(posting_period)
+    payload = {'transaction_id': str(transaction_id), 'expected_version': version,
+               'occurred_on': occurred.isoformat() if occurred else None,
+               'posting_period': period}
+    token, digest, receipt = _receipt(member, 'cash_transaction.post', request_token, payload,
+                                      dry_run)
+    if receipt is not None:
+        return _receipt_row(member, receipt, CashTransaction)
+    row = _get_transaction(member, transaction_id, lock=True)
+    if row.version != version:
+        _fail('银行流水版本已变化，请刷新后重试')
+    if row.status != 'draft':
+        _fail('仅可过账草稿银行流水；已过账流水不可重复过账')
+    if occurred is not None and occurred != row.transaction_date:
+        _fail('过账日期必须与银行流水日期一致')
+    if period is not None and period != row.transaction_date.strftime('%Y-%m'):
+        _fail('过账期间必须与银行流水日期所属月份一致')
+    _period(member, row.transaction_date)
+    if dry_run:
+        row.status, row.version = 'posted', row.version + 1
+        return row
+    # Conditional update: exactly one worker flips draft->posted and writes facts/events.
+    updated = CashTransaction.objects.filter(pk=row.pk, organization=member.organization,
+                                             version=version, status='draft').update(
+        status='posted', version=version + 1)
+    if updated != 1:
+        _fail('银行流水版本已变化，请刷新后重试')
+    row.refresh_from_db()
+    ref = row.transaction_ref
+    audit(member, POSTED_ACTION, row, {'transaction_ref': ref})
+    event_source = audit(member, 'plugin.cash.cash_transaction.recorded', row,
+                         {'transaction_ref': ref})
+    event_id = uuid.uuid4()
+    DomainEvent.objects.create(
+        event_id=event_id, organization=member.organization, source=event_source,
+        topic=POSTED_TOPIC,
+        data={'event_id': str(event_id), 'topic': POSTED_TOPIC, 'schema_version': 1,
+              'organization_id': str(member.organization_id), 'source': ref,
+              'occurred_at': timezone.now().isoformat(),
+              'payload': {'changed_refs': [ref], 'posting_event_refs': []}})
+    _record(member, 'cash_transaction.post', token, digest, ref)
+    return row
+
+
+@transaction.atomic
 def match_party(member, transaction_id, *, action, identified_payee=None, match_ref=None,
                 reason=None, evidence=None, request_token, expected_version, dry_run=True):
     _dry(dry_run)
@@ -334,7 +397,15 @@ def _match_projection(row):
     }
 
 
-def _transaction_projection(row):
+def _posted_at(row):
+    entry = AuditEvent.objects.filter(organization_id=row.organization_id,
+                                      entity='CashTransaction', entity_id=str(row.pk),
+                                      action=POSTED_ACTION).order_by('-created_at').first()
+    return entry.created_at.isoformat() if entry else None
+
+
+def _transaction_projection(row, member=None):
+    writable = member is not None and getattr(member, 'role', None) in WRITE_ROLES
     return {
         'id': str(row.pk), 'transaction_ref': row.transaction_ref,
         'organization_id': str(row.organization_id),
@@ -351,6 +422,8 @@ def _transaction_projection(row):
         'counterparty_id': str(row.counterparty_id) if row.counterparty_id else None,
         'evidence': row.evidence, 'status': row.status,
         'status_display': row.get_status_display(), 'version': row.version,
+        'can_post': bool(writable and row.status == 'draft'),
+        'posted_at': _posted_at(row),
         'created_by_member_id': str(row.created_by_id),
         'created_at': row.created_at.isoformat(),
         'matches': [_match_projection(match) for match in row.matches.order_by(
@@ -361,7 +434,7 @@ def _transaction_projection(row):
 def cash_transaction_snapshot(member, transaction_id):
     """Private read projection only: no canonical allocated_cents/available_cents."""
     member = _fresh(member, check_module=False)
-    return _transaction_projection(_get_transaction(member, transaction_id))
+    return _transaction_projection(_get_transaction(member, transaction_id), member)
 
 
 def cash_transaction_list(member, *, as_of=None, status=None):
@@ -371,8 +444,8 @@ def cash_transaction_list(member, *, as_of=None, status=None):
     if as_of is not None:
         rows = rows.filter(transaction_date__lte=_business_date(as_of))
     if status is not None:
-        if not isinstance(status, str) or status not in {'draft'}:
+        if not isinstance(status, str) or status not in {'draft', 'posted'}:
             _fail('银行流水状态筛选无效')
         rows = rows.filter(status=status)
     rows = rows.prefetch_related('matches').order_by('-transaction_date', '-created_at', 'id')
-    return [_transaction_projection(row) for row in rows]
+    return [_transaction_projection(row, member) for row in rows]
