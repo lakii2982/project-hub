@@ -1,0 +1,61 @@
+{
+  "task_id": "PH-291",
+  "summary": "Delivered the PH-291 cross-domain read-only operations reconciliation overview in the delivery layer. The new `pmo_plugins/delivery/operations_read_services.py` exposes `ops_reconciliation_overview(member, *, as_of=None, period=None)` which aggregates already-delivered owner facts into six sections: contracts (pending changes / terminated contracts / approved lines still active under terminated contracts), settlement (active open items, over-cleared items, refunds, bank returns, refunds without matching clearance, derived remaining balance), management revenue (posted recognitions, reversed recognitions, terminated-still-recognized, recognized vs active-settled net difference), time (pending/confirmed billable confirmations, confirmed minutes, unapproved timesheets), onboarding (PH-274 preview is stateless, so counts/totals are null plus the `import_preview_persistence_not_implemented` missing code instead of 0) and cash (posted transactions, missing classifications, posted in/out/net; for pm the cash section is null plus `cash_not_scoped_to_project`). Role matrix: owner/finance/auditor full, pm limited to managed/visible projects, member denied; history reads survive module disable because the new `modules/delivery/ops-reconciliation-overview/` route is declared `history_read` (appended to an in-memory metadata copy in delivery/urls.py since domain_metadata.py is outside the exact whitelist, so no gate weakening). Everything is deliberately read-only: no writes, no audit, no receipts, no session persistence, no migration, no second insights owner. Tests assert derived (not echoed) values, null-plus-missing semantics, ref cap/truncation, period and as_of filtering, role/scope isolation, invalid-input rejections, module-disabled history, and zero INSERT/UPDATE/DELETE SQL plus unchanged fact/audit/event counts. View/form/template/URL wiring and 15 scoped tests are included; no contract schema or business write path was changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD cc8a398 (BASE fa1ca8d, PH-291 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":216}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph291-cross-domain with the main checkout venv: System check identified 81 issues (0 silenced) — all pre-existing warnings (urls.W003 plugin-colon names, cash.W342), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: No changes detected (no migration for this slice)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1001 tests in ~126s, FAILED (failures=5, errors=3, skipped=69). The 8 non-passing tests are exactly the known macOS/DRF environment set (tests.test_drf_security_compatibility 3E+3F, tests.test_delivery_execution 1F, tests.test_delivery_execution_sandbox 1F), matching the 5F+3E baseline; the new PH-291 tests all pass and no new failure/error was introduced."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Fresh DB run: rm -f /tmp/ph291-verify.sqlite3; PMO_DB=/tmp/ph291-verify.sqlite3 python manage.py migrate --noinput (settlement.0005/time.0001 applied ... OK); then PMO_DB=/tmp/ph291-verify.sqlite3 python manage.py verify_integrity --json -> {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_reconciliation_overview tests.test_v1_ops_reconciliation_overview_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 15 tests ... OK (8 service + 7 HTTP)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fa1ca8d --task PH-291",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD cc8a398: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 13 changed files (new service/template/2 tests, modified delivery views/forms/urls, tasks/manifest, docs/delivery-status, docs/verification, report/handoff) are inside BASE PH-291 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (read-only purity, derived-value semantics, role/scope matrix and route wiring); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Route wiring: the frozen PH-291 whitelist does not include `pmo_plugins/delivery/domain_metadata.py`, but the SDK requires a declared route for access/dispatch. I appended the `ops_reconciliation_overview` route (`history_read`) to an in-memory copy of DOMAIN_METADATA inside `pmo_plugins/delivery/urls.py` (whitelisted) and bound the handler there; domain_metadata.py and all other files stayed untouched. This keeps the read-only/history semantics without expanding the read/write gate.",
+    "The spec's frozen service signature is `ops_reconciliation_overview(member, *, as_of=None)`; per the Lead's explicit requirement I added an optional `period` (YYYY-MM) filter to the service and page. It is additive, read-only and covered by validation/tests; no existing interface was changed.",
+    "Onboarding preview section: PH-274's preview is deliberately stateless at this BASE and PH-289 (persistence) is still proposed, so the section reports counts/totals as null plus `import_preview_persistence_not_implemented` rather than fabricating zero; pm cash is likewise null plus `cash_not_scoped_to_project` because cash facts have no project FK.",
+    "No audit is written (spec allowed an optional generic audit; the Lead required zero audit), no receipt/session persistence is used, and no migration or contract-schema change was made. The module-disabled page relies on the new history_read route instead of weakening enablement checks.",
+    "Refs are capped at 50 per section with an explicit `truncated` flag; the cap is tested with 55 pending changes (refs length 50, truncated true)."
+  ],
+  "unverified": [
+    "PostgreSQL-specific behavior (CI): the slice is read-only with no locks/transactions, but the PG CI run is delegated to CI; SQLite tests only.",
+    "Browser 1440/390 visual/keyboard checks were not run locally; the template follows existing base/visual patterns but needs the browser pass or CI/UX review.",
+    "Independent S review is pending; report.review is deliberately not self-passed.",
+    "No production/UAT verification; the page is a read-only overview, no data migration or backfill is involved."
+  ]
+}
