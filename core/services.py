@@ -508,3 +508,38 @@ def edit_task(member, pk, data, version, reason):
     task.full_clean(); task.save()
     audit(member, "task.plan_changed", task, {"before": before, "reason": reason})
     return task
+
+
+def approved_timesheet_for_billable(member, timesheet_ref):
+    """Named read-only timesheet fact for the time owner; no timesheet copy or mutation."""
+    from .models import Timesheet
+    from .access import require_project
+    if not isinstance(timesheet_ref, dict) or set(timesheet_ref) != {'namespace', 'kind', 'id', 'version'}:
+        raise ValidationError('工时来源无效')
+    if timesheet_ref['namespace'] != 'time' or timesheet_ref['kind'] != 'timesheet':
+        raise ValidationError('工时来源无效')
+    try:
+        version = int(timesheet_ref['version'])
+        pk = int(timesheet_ref['id'])
+    except (TypeError, ValueError):
+        raise ValidationError('工时来源无效')
+    if version < 1 or pk < 1:
+        raise ValidationError('工时来源无效')
+    timesheet = Timesheet.objects.select_related('project', 'employee', 'organization').filter(pk=pk).first()
+    if timesheet is None or timesheet.organization_id != member.organization_id:
+        raise PermissionDenied('工时不存在或无权访问')
+    if member.role == 'pm':
+        require_project(member, timesheet.project)
+    if timesheet.project_id is None:
+        raise ValidationError('公司非项目投入不能作为客户可计费确认')
+    if timesheet.status != 'approved':
+        raise ValidationError('只有已审批工时可以确认可计费分钟')
+    if timesheet.version != version:
+        raise ValidationError('工时版本已变化，请刷新后重试')
+    return {'timesheet_id': str(timesheet.pk), 'version': timesheet.version,
+            'organization_id': timesheet.organization_id, 'project_id': timesheet.project_id,
+            'employee_id': timesheet.employee_id, 'work_date': timesheet.work_date,
+            'minutes': timesheet.minutes, 'status': timesheet.status,
+            'accounting_mode': timesheet.accounting_mode,
+            'ref': {'namespace': 'time', 'kind': 'timesheet', 'id': str(timesheet.pk),
+                    'version': timesheet.version}}

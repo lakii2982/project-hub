@@ -1219,6 +1219,83 @@ class Command(BaseCommand):
                             expected.append(_contract_ref(change, 'contract_change'))
                         if payload.get('changed_refs') != expected:
                             errors.append(f"contract_version:{version.pk}:approved_changed_refs")
+        # ----- PH-269 time: customer-confirmed billable minutes are append-only owned
+        # facts with exactly one canonical event and no financial write.
+        from pmo_plugins.time.models import (BillableConfirmation as _Billable,
+                                             BillableConfirmationReceipt as _BillableReceipt)
+        from pmo_plugins.contracts.models import ContractLine as _ContractLine
+        from core.models import Timesheet as _Timesheet
+        billable_statuses = {'draft', 'confirmed'}
+        billable_seen = set()
+        for row in _Billable.objects.all():
+            if row.status not in billable_statuses | {'reversed'}:
+                errors.append(f"billable_confirmation:{row.pk}:status")
+            if not 1 <= row.confirmed_minutes <= 1440:
+                errors.append(f"billable_confirmation:{row.pk}:minutes")
+            timesheet = _Timesheet.objects.filter(
+                pk=row.timesheet_ref.get('id')).first()
+            if timesheet is None or timesheet.organization_id != row.organization_id:
+                errors.append(f"billable_confirmation:{row.pk}:timesheet_ref")
+            elif (timesheet.status != 'approved' or timesheet.project_id is None
+                  or timesheet.version != row.timesheet_ref.get('version')):
+                errors.append(f"billable_confirmation:{row.pk}:timesheet_state")
+            elif row.confirmed_minutes > timesheet.minutes:
+                errors.append(f"billable_confirmation:{row.pk}:minutes_over_timesheet")
+            line = _ContractLine.objects.select_related('contract_version__contract').filter(
+                pk=row.contract_line_id, organization_id=row.organization_id).first()
+            if line is None or line.version != 1:
+                errors.append(f"billable_confirmation:{row.pk}:contract_line_ref")
+            else:
+                version, contract = line.contract_version, line.contract
+                if (version.status != 'approved' or line.status != 'approved'
+                        or contract.status != 'active'
+                        or contract.project_id != (timesheet.project_id if timesheet else None)
+                        or row.contract_line_ref.get('version') != line.version):
+                    errors.append(f"billable_confirmation:{row.pk}:contract_line_state")
+            if row.status == 'confirmed':
+                if row.confirmed_by_member_id is None or row.confirmed_at is None:
+                    errors.append(f"billable_confirmation:{row.pk}:missing_confirmer")
+                if row.confirmed_by_member_id == row.created_by_member_id:
+                    errors.append(f"billable_confirmation:{row.pk}:self_confirmed")
+                key = (row.organization_id, row.timesheet_id, row.contract_line_id)
+                if key in billable_seen:
+                    errors.append(f"billable_confirmation:{row.pk}:duplicate_confirmed")
+                billable_seen.add(key)
+                events = _ContractEvent.objects.filter(
+                    organization_id=row.organization_id, topic='time.billable_confirmed.v1',
+                    data__source__id=str(row.pk))
+                if events.count() != 1:
+                    errors.append(f"billable_confirmation:{row.pk}:confirmed_event_count")
+                else:
+                    data = events.get().data or {}
+                    payload = data.get('payload') or {}
+                    expected_refs = [row.source_ref, row.timesheet_ref, row.contract_line_ref]
+                    if (data.get('schema_version') != 1
+                            or data.get('organization_id') != str(row.organization_id)
+                            or data.get('source') != row.source_ref
+                            or payload.get('changed_refs') != expected_refs
+                            or payload.get('posting_event_refs') != []):
+                        errors.append(f"billable_confirmation:{row.pk}:confirmed_event_envelope")
+            else:
+                if row.confirmed_by_member_id is not None or row.confirmed_at is not None:
+                    errors.append(f"billable_confirmation:{row.pk}:draft_decision_fields")
+                if _ContractEvent.objects.filter(
+                        organization_id=row.organization_id, topic='time.billable_confirmed.v1',
+                        data__source__id=str(row.pk)).exists():
+                    errors.append(f"billable_confirmation:{row.pk}:draft_event")
+            if AccountingEvent.objects.filter(
+                    organization_id=row.organization_id,
+                    source__namespace='time', source__kind='billable_confirmation').exists():
+                errors.append(f"billable_confirmation:{row.pk}:financial_event")
+            if SourceConsumption.objects.filter(
+                    organization_id=row.organization_id,
+                    source__kind='billable_confirmation').exists():
+                errors.append(f"billable_confirmation:{row.pk}:source_consumption")
+        for receipt in _BillableReceipt.objects.all():
+            ref = receipt.result_ref or {}
+            if ref.get('kind') != 'billable_confirmation' or not _Billable.objects.filter(
+                    pk=ref.get('id'), organization_id=receipt.organization_id).exists():
+                errors.append(f"billable_receipt:{receipt.pk}:result_ref")
         result = {"ok": not errors, "errors": errors, "organizations": Organization.objects.count(), "entries": LedgerEntry.objects.count()}
         self.stdout.write(json.dumps(result, ensure_ascii=False) if options["json"] else ("完整性检查通过" if not errors else "\n".join(errors)))
         if errors: raise CommandError("项目账完整性检查未通过")

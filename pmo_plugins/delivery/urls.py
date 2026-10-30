@@ -22,10 +22,13 @@ def entry_point():
     from pmo_plugins.contracts.domain_metadata import DOMAIN_METADATA as CONTRACTS_METADATA
     from pmo_plugins.contracts.plugin import Plugin as ContractsPlugin
     from pmo_plugins.contracts import party_views, views, approval_views
+    from pmo_plugins.time.domain_metadata import DOMAIN_METADATA as TIME_METADATA
+    from pmo_plugins.time.plugin import Plugin as TimePlugin
+    from pmo_plugins.time import views as time_views
     installed = {app.label: app.name for app in apps.get_app_configs()}
     descriptors = [{'plugin_id': key, 'metadata': metadata, 'manifest': plugin.manifest,
         'catalog': {'contract_catalog': []}, 'installed_apps': installed}
-        for key, metadata, plugin in [('contracts', CONTRACTS_METADATA, ContractsPlugin), ('costing', COSTING_METADATA, CostingPlugin), ('delivery', DOMAIN_METADATA, Plugin), ('management_revenue', REVENUE_METADATA, RevenuePlugin), ('settlement', SETTLEMENT_METADATA, SettlementPlugin), ('cash', CASH_METADATA, CashPlugin)]]
+        for key, metadata, plugin in [('contracts', CONTRACTS_METADATA, ContractsPlugin), ('costing', COSTING_METADATA, CostingPlugin), ('delivery', DOMAIN_METADATA, Plugin), ('management_revenue', REVENUE_METADATA, RevenuePlugin), ('settlement', SETTLEMENT_METADATA, SettlementPlugin), ('cash', CASH_METADATA, CashPlugin), ('time', TIME_METADATA, TimePlugin)]]
     return prepare_plugin_entry_point(descriptors, {
         'contracts': {
             'parties': party_views.party_list, 'party': party_views.party_detail,
@@ -56,4 +59,7 @@ def entry_point():
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}
                    | {name: getattr(bank_charge_views, name) for name in
                       ('bank_charge_list', 'bank_charge_form', 'bank_charge_save', 'bank_charge_action')},
+        'time': {name: getattr(time_views, name) for name in
+                 ('billable_confirmation_list', 'billable_confirmation_form',
+                  'billable_confirmation_save', 'billable_confirmation_confirm')},
     })

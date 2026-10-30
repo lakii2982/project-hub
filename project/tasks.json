@@ -8099,7 +8099,7 @@
       "title": "time 可计费确认实现首片：BillableConfirmation 客户确认分钟（新建 time 插件）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8152,9 +8152,9 @@
         "python manage.py test tests.test_v1_billable_confirmation tests.test_v1_billable_confirmation_http tests.test_v1_billable_confirmation_concurrency --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-269.md"
     },
     {
       "id": "PH-270",
