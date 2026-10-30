@@ -25,12 +25,12 @@
     {
       "command": "python manage.py verify_integrity --json",
       "result": "pass",
-      "evidence": "Fresh DB: rm -f /tmp/ph281-verify.sqlite3; PMO_DB=... migrate --noinput; then PMO_DB=... verify_integrity --json -> {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+      "evidence": "Actual run after the pm-audit fix: Ran 1056 tests in ~120s, FAILED (failures=5, errors=3, skipped=69) — the same known macOS/DRF environment set as the 5F+3E baseline; no PH-281 failure (one new regression test included)."
     },
     {
       "command": "python manage.py test tests.test_v1_identity_access_read tests.test_v1_identity_access_read_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run: Ran 14 tests ... OK (7 service + 7 HTTP)."
+      "evidence": "Actual run after the pm-audit fix: Ran 15 tests ... OK (8 service + 7 HTTP; includes the new pm audit-scope regression)."
     },
     {
       "command": "python scripts/projectctl.py verify-change --base e5aa0fb --task PH-281",
@@ -40,12 +40,17 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (read-only identity aggregation, role/scope matrix, canonical history_read route wiring and append-only purity); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-281 identity-access-view reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "BLOCKER RESOLVED AT 84897c6: `member_access_audit` now always scopes the event stream for scope='project' (pm) to the managed-project member set, even without member_id: entity_id in visible_ids, payload membership_id/target in visible_ids, or AgentToken entities belonging to visible members; a new pm regression asserts a finance-managed-project membership event and its token event are absent from pm's audit, while the owner still sees them, and pm's explicit request for the finance member is denied. Scoped tests now 15 OK.",
+      "RE-VERIFIED: read-only purity (no INSERT/UPDATE/DELETE and membership/project/token/audit/event counts unchanged); owner/finance/auditor full; pm snapshot scope/self/no token details/last-change hidden; token stats active/revoked/expired/last_activity; issue codes inactive_member_active_token, expired_token_not_revoked, role_scope_mismatch, cross_org_project_scope, audit_gap, duplicate binding; audit payload sanitized (no token_hash/auth_snapshot/prefix); pagination<=200/validation/as_of; canonical delivery/domain_metadata identity-access history_read declaration with urls importing it (no metadata copy); delivery-disabled history readable; member denied; no migration/verify_integrity change; 14 changed files all inside PH-281 allowed_paths; task in_review, manifest=PH-281.",
+      "EVIDENCE AT 84897c6 (BASE e5aa0fb): check ok=true/task_count=224; manage.py check exit 0; makemigrations --check No changes; scoped identity tests 15 OK; full suite Ran 1056 tests, 5 failures/3 errors/69 skips (exactly the known 8 macOS baseline, no fifth class); verify_integrity fresh DB ok=true/errors=[]; verify-change --base e5aa0fb --task PH-281 only high_risk_review_required + acceptance_not_passed (pre-review), no path_out_of_scope; report review now pass. After the worker's final evidence/done transition, verify-change should be clean."
+    ],
+    "evidence": "VERDICT: PASS (round 2; pm audit scoping fixed). Reviewed HEAD 84897c6 (BASE e5aa0fb) in /tmp/ph281-membership-read, worktree clean; 14 changed files all inside PH-281 allowed_paths; task in_review, manifest=PH-281. `member_access_audit` now filters pm events to visible member/entity/token ids even without member_id, with a finance-project exclusion regression; scoped 15 OK. Read-only purity, snapshot/token/issue derivations, secret sanitization, pagination/validation, canonical history_read route, permissions/history_read, no migration/verify_integrity change verified. Independent runs: check ok=224; manage check exit 0; makemigrations clean; full suite 1056/5F+3E/69 = known 8 macOS baseline; verify_integrity fresh DB ok; verify-change only review/acceptance gates, no path_out_of_scope."
   },
   "deviations": [
+    "Post-review blocker fix (pm audit leak): member_access_audit restricted events only by organization/action when member_id was None, so pm could see other projects' identity.membership.changed / agent_token.* events. Fixed: when scope='project' the event stream is always restricted to visible member ids (entity_id, payload membership/target) and visible members' AgentToken entity ids, even without member_id; added a pm regression proving finance-project member identity/token audit is invisible to pm while owner sees it, and pm requesting that member still raises PermissionDenied. All other passing items were left unchanged.",
     "Route wiring: the canonical `identity-access/` route was declared in `pmo_plugins/delivery/domain_metadata.py` (access=history_read) as authorized by the PH-298 planning slot; `pmo_plugins/delivery/urls.py` only imports and binds the handler, with no metadata copy.",
     "AgentToken audit events (`agent_token.created/revoked`) are mapped to a member through the token rows because their AuditEvent entity is the token, not the membership; the audit summary still exposes only safe payload keys and never the token hash/auth snapshot.",
     "`duplicate_active_binding` is only constructible in this BASE as duplicate same-name active tokens (org+user and project+member uniqueness are enforced by the schema), so that is the issue the service detects and documents.",

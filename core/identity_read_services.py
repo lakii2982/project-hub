@@ -223,6 +223,16 @@ def member_access_audit(member, *, member_id=None, since=None, as_of=None, limit
     events = AuditEvent.objects.filter(
         organization=fresh.organization, action__in=AUDIT_ACTIONS)
     events = events.filter(created_at__lte=_cutoff(as_of_date))
+    if scope == 'project':
+        # pm must never see other projects' identity/token audit: always scope the
+        # event stream to the managed-project member set, even without member_id.
+        visible_token_ids = [str(pk) for pk in AgentToken.objects.filter(
+            member_id__in=[int(pk) for pk in visible_ids]).values_list('pk', flat=True)]
+        events = events.filter(
+            Q(entity_id__in=visible_ids)
+            | Q(payload__membership_id__in=visible_ids)
+            | Q(payload__target__in=visible_ids)
+            | Q(entity='AgentToken', entity_id__in=visible_token_ids))
     if since_date is not None:
         events = events.filter(created_at__gte=timezone.make_aware(datetime.combine(since_date, time.min)))
     if member_id:

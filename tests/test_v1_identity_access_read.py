@@ -137,6 +137,23 @@ class IdentityReadServiceTests(IdentityFixture, TestCase):
         with self.assertRaises(PermissionDenied):
             identity.member_access_audit(self.plain, member_id=self.pm.pk)
 
+    def test_pm_audit_excludes_other_project_member_events(self):
+        self.change_audit(self.plain)
+        self.change_audit(self.finance)
+        finance_token = self.token(self.finance, 'finance-token')
+        audit(self.owner, 'agent_token.created', finance_token, {'name': finance_token.name})
+        pm_result = identity.member_access_audit(self.pm)
+        actions_entities = [(event['action'], event['entity_id']) for event in pm_result['events']]
+        self.assertIn(('identity.membership.changed', str(self.plain.pk)), actions_entities)
+        self.assertNotIn(('identity.membership.changed', str(self.finance.pk)), actions_entities)
+        self.assertFalse([event for event in pm_result['events']
+                          if event['entity_id'] == str(finance_token.pk)])
+        owner_actions = {(event['action'], event['entity_id'])
+                         for event in identity.member_access_audit(self.owner)['events']}
+        self.assertIn(('identity.membership.changed', str(self.finance.pk)), owner_actions)
+        with self.assertRaises(PermissionDenied):
+            identity.member_access_audit(self.pm, member_id=self.finance.pk)
+
     def test_pagination_and_validation(self):
         page = identity.member_access_snapshot(self.owner, page=1, page_size=2)
         self.assertEqual(len(page['members']), 2)
