@@ -1,6 +1,8 @@
 """HTTP browser boundaries for PH-222 service-period confirmation and monthly revenue."""
 import csv
+import html
 import io
+import re
 import uuid
 from datetime import timedelta
 
@@ -361,3 +363,60 @@ class ServicePeriodHTTPTests(ServicePeriodHTTPFixture, TestCase):
         snapshot = services.confirmed_service_snapshot(self.owner, services._source_ref(row),
                                                        for_recognition=False)
         self.assertEqual(snapshot['version'], row.confirmed_version)
+
+    @staticmethod
+    def _action_form(page_html):
+        match = re.search(
+            r'<form method="post" action="([^"]*service-confirmation-action[^"]*)">(.*?)</form>',
+            page_html, re.S)
+        assert match, 'rendered service confirmation action form missing'
+        action, body = html.unescape(match.group(1)), match.group(2)
+        values = {}
+        for tag in re.findall(r'<input[^>]*>', body):
+            if 'type="hidden"' not in tag:
+                continue
+            name = re.search(r'name="([^"]*)"', tag)
+            value = re.search(r'value="([^"]*)"', tag)
+            if name:
+                values[html.unescape(name.group(1))] = html.unescape(value.group(1)) if value else ''
+        return action, values
+
+    def test_detail_page_click_submits_month_and_expected_version(self):
+        row = self.confirmation()
+        month = self.months(row)[0].service_month
+        self.login(self.owner)
+        detail = self.client.get(DETAIL, {'id': row.pk})
+        detail_html = detail.content.decode()
+        # The detail page must link a month-bearing recognize action, not id/action only.
+        self.assertIn(f'action=recognize&amp;month={month}', detail_html)
+        form_url = html.unescape(re.search(r'href="([^"]*action=recognize[^"]*)"', detail_html).group(1))
+        page = self.client.get(form_url)
+        self.assertEqual(page.status_code, 200)
+        action, fields = self._action_form(page.content.decode())
+        self.assertIn(f'month={month}', action)
+        self.assertIn('expected_version', fields)
+        self.assertEqual(fields['service_month'], month)
+        self.assertEqual(int(fields['expected_version']), row.confirmed_version)
+        # Browser-equivalent submit of the rendered form succeeds.
+        self.assertEqual(self.client.post(action, fields).status_code, 302)
+        recognition = RevenueRecognition.objects.get(service_confirmation_month__service_month=month)
+        # The same detail page now exposes the month-bearing reversal form with expected_version.
+        detail = self.client.get(DETAIL, {'id': row.pk})
+        detail_html = detail.content.decode()
+        self.assertIn(f'action=reverse_income&amp;month={month}', detail_html)
+        form_url = html.unescape(re.search(r'href="([^"]*action=reverse_income[^"]*)"', detail_html).group(1))
+        page = self.client.get(form_url)
+        self.assertEqual(page.status_code, 200)
+        action, fields = self._action_form(page.content.decode())
+        self.assertIn(f'month={month}', action)
+        self.assertIn('recognition_id', fields)
+        self.assertIn('expected_version', fields)
+        fields['reason'] = '原额完整冲销该月管理收入'
+        self.assertEqual(self.client.post(action, fields).status_code, 302)
+        self.assertTrue(RevenueAdjustment.objects.filter(recognition=recognition, status='posted').exists())
+        # Repeating the same month income action is a business 400 with a readable reason.
+        repeated = self.client.post(action.replace('action=reverse_income', 'action=recognize'), {
+            'expected_version': row.confirmed_version, 'service_month': month,
+            'request_token': str(uuid.uuid4())})
+        self.assertEqual(repeated.status_code, 400)
+        self.assertContains(repeated, '已产生管理收入', status_code=400)

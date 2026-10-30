@@ -205,7 +205,9 @@ def _action_initial(member, row, action, month):
                      if value['service_month'] == month and value['recognition_id']), None)
         if item is None:
             raise ValidationError('该服务月尚无可反冲管理收入')
-        return {'recognition_id': item['recognition_id']}
+        # ReasonForm keeps expected_version as a required hidden field even though the
+        # income reversal itself only needs the original recognition id.
+        return {'recognition_id': item['recognition_id'], 'expected_version': row.confirmed_version}
     return {'expected_version': row.version}
 
 
@@ -220,7 +222,8 @@ def service_confirmation_form(context, payload):
     title, cls = ACTIONS[action]
     month = payload.get('month')
     initial = _action_initial(member, row, action, month)
-    submit_url = url('service_confirmation_action', id=row.pk, action=action)
+    submit_url = url('service_confirmation_action', id=row.pk, action=action, month=month) \
+        if month else url('service_confirmation_action', id=row.pk, action=action)
     return render(context.request, 'delivery/service_confirmation_form.html', base(
         member, title=title, form=cls(initial=initial), submit_url=submit_url,
         back_url=url('service_confirmation_detail', id=row.pk),
@@ -240,9 +243,12 @@ def service_confirmation_action(context, payload):
     if action not in ACTIONS:
         raise PermissionDenied('未知服务期办理动作')
     title, cls = ACTIONS[action]
-    month = context.request.GET.get('month')
+    # GET month comes from the detail/form links; the posted branch additionally accepts
+    # the form's hidden service_month so a browser submit of the rendered form stays valid.
+    month = context.request.GET.get('month') or payload.get('service_month', '')
     initial = _action_initial(member, row, action, month)
-    bound = {key: value for key, value in payload.items()}
+    allowed = set(cls.base_fields)
+    bound = {key: value for key, value in payload.items() if key in allowed}
     for key, value in initial.items():
         bound.setdefault(key, value)
     form = cls(bound, initial=initial)
