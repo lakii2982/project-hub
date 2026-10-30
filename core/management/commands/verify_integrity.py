@@ -39,12 +39,16 @@ class Command(BaseCommand):
         from pmo_plugins.costing.models import SalaryPool, AllocationRun
         from django.db.models import Count, Sum
         for event in AccountingEvent.objects.select_related('claim', 'reverses_event'):
-            if event.source.get('namespace') == 'management_revenue':
+            namespace = event.source.get('namespace')
+            if namespace == 'management_revenue':
                 continue
-            if event.source.get('namespace') == 'costing' and event.source.get('kind') == 'bank_charge':
-                # PH-250 fee cost facts are validated in the dedicated bank-fee branch below.
+            if namespace == 'cash':
+                # Cash classification bridge events are validated in the dedicated cash block.
                 continue
-            if event.source.get('namespace') != 'costing' or not isinstance(event.labor_origin_ref, dict):
+            if namespace == 'costing' and event.source.get('kind') == 'bank_charge':
+                # Bank-fee cost facts are validated in the dedicated bank-fee branch below.
+                continue
+            if namespace != 'costing' or not isinstance(event.labor_origin_ref, dict):
                 errors.append(f'accounting_event:{event.pk}:unknown_source')
                 continue
             postings = list(event.postings.all())
@@ -93,8 +97,6 @@ class Command(BaseCommand):
         for account in FundingAccount.objects.all():
             if account.opening_on is None or account.opening_cents != 0:
                 errors.append(f"funding_account:{account.pk}:opening")
-        if AccountingEvent.objects.filter(source__namespace='cash').exists():
-            errors.append('cash_transaction:unexpected_accounting_event')
         for transaction in CashTransaction.objects.all():
             if transaction.direction not in {'in', 'out'} or not 0 < transaction.gross_cents <= 10**12:
                 errors.append(f"cash_transaction:{transaction.pk}:amount_or_direction")
@@ -109,12 +111,7 @@ class Command(BaseCommand):
             if payee.get('kind') == 'own_account' and not FundingAccount.objects.filter(
                     pk=payee.get('id'), organization_id=transaction.organization_id).exists():
                 errors.append(f"cash_transaction:{transaction.pk}:own_account_missing")
-        from core.models import AccountingEvent as _CashAccountingEvent, DomainEvent as _CashDomainEvent
-        from core.models import SourceConsumption as _CashConsumption
-        if _CashAccountingEvent.objects.filter(source__namespace='cash').exists():
-            errors.append('cash_transaction:unexpected_accounting_event')
-        if _CashConsumption.objects.filter(consumer='cash').exists():
-            errors.append('cash_transaction:unexpected_source_consumption')
+        from core.models import DomainEvent as _CashDomainEvent
         from pmo_plugins.cash.models import CashReceipt as _CashReceipt
         for transaction in CashTransaction.objects.all():
             canonical = _CashDomainEvent.objects.filter(
@@ -277,6 +274,237 @@ class Command(BaseCommand):
             errors.append('cash_transaction:unexpected_refund_accounting_event')
         if LedgerPosting.objects.filter(accounting_event__in=refund_ledger_events).exists():
             errors.append('cash_transaction:unexpected_refund_cash_posting')
+        # PH-239 cash classification facts + cash book bridge (batch queries only).
+        from core.models import DomainEvent as _ClassificationEvent
+        from pmo_plugins.cash.models import (CashClassification, CashClassificationReversal)
+        recorded_topic = 'cash.classification_recorded.v1'
+        reversed_topic = 'cash.classification_reversed.v1'
+        for row in CashClassification.objects.filter(status='active').values(
+                'cash_transaction_id').annotate(count=Count('id')).filter(count__gt=1):
+            errors.append(
+                f"cash_transaction:{row['cash_transaction_id']}:multiple_active_classification")
+        recorded_events = {}
+        for row in _ClassificationEvent.objects.filter(topic=recorded_topic).values('data'):
+            data = row['data'] or {}
+            source_id = str((data.get('source') or {}).get('id'))
+            recorded_events.setdefault(source_id, []).append(data)
+        reversed_events = {}
+        for row in _ClassificationEvent.objects.filter(topic=reversed_topic).values('data'):
+            data = row['data'] or {}
+            source_id = str((data.get('source') or {}).get('id'))
+            reversed_events.setdefault(source_id, []).append(data)
+        cash_events = {}
+        for event in AccountingEvent.objects.filter(source__namespace='cash').values(
+                'id', 'version', 'organization_id', 'source', 'event_type', 'claim_id',
+                'claim_effect_cents', 'reverses_event_id', 'occurred_on', 'posting_period'):
+            cash_events[str(event['id'])] = event
+        postings_by_event = {}
+        for posting in LedgerPosting.objects.filter(
+                accounting_event__source__namespace='cash').values(
+                'id', 'accounting_event_id', 'book', 'amount_cents', 'scope_kind', 'scope_id',
+                'reverses_posting_id'):
+            postings_by_event.setdefault(str(posting['accounting_event_id']), []).append(posting)
+        classification_event_map = {}
+        reversal_event_map = {}
+        for event in cash_events.values():
+            source = event['source'] or {}
+            if source.get('kind') == 'cash_classification' and source.get('id'):
+                classification_event_map.setdefault(str(source['id']), []).append(event)
+            if source.get('kind') == 'cash_classification_reversal' and source.get('id'):
+                reversal_event_map.setdefault(str(source['id']), []).append(event)
+        # Mirror reversals hang their negative posting on a separate accounting event whose
+        # source is the reversal; attribute both sides to the original classification.
+        event_to_classification = {}
+        for event in cash_events.values():
+            source = event['source'] or {}
+            if source.get('kind') == 'cash_classification' and source.get('id'):
+                event_to_classification[str(event['id'])] = str(source['id'])
+        for event in cash_events.values():
+            source = event['source'] or {}
+            if (source.get('kind') == 'cash_classification_reversal'
+                    and event['reverses_event_id'] is not None):
+                original_id = event_to_classification.get(str(event['reverses_event_id']))
+                if original_id is not None:
+                    event_to_classification[str(event['id'])] = original_id
+        net_by_classification = {}
+        for posting in LedgerPosting.objects.filter(
+                accounting_event__source__namespace='cash').values(
+                'accounting_event_id', 'amount_cents'):
+            classification_id = event_to_classification.get(
+                str(posting['accounting_event_id']))
+            if classification_id is not None:
+                net_by_classification[classification_id] = (
+                    net_by_classification.get(classification_id, 0)
+                    + posting['amount_cents'])
+        active_by_tx = {
+            str(row['cash_transaction_id']): row['count'] for row in
+            CashClassification.objects.filter(status='active').values(
+                'cash_transaction_id').annotate(count=Count('id'))}
+        classification_tx = {
+            str(row['pk']): str(row['cash_transaction_id']) for row in
+            CashClassification.objects.values('pk', 'cash_transaction_id')}
+        net_by_tx = {}
+        for classification_id, net in net_by_classification.items():
+            tx_id = classification_tx.get(classification_id)
+            if tx_id is not None:
+                net_by_tx[tx_id] = net_by_tx.get(tx_id, 0) + net
+        # Prefetch reversal links once so the classification/reversal loops stay constant-query.
+        reversals_by_classification = {}
+        for row in CashClassificationReversal.objects.values('pk', 'classification_id'):
+            reversals_by_classification.setdefault(
+                str(row['classification_id']), []).append(row['pk'])
+        classification_by_id = {}
+        for classification in CashClassification.objects.select_related('cash_transaction'):
+            classification_by_id[str(classification.pk)] = classification
+            transaction = classification.cash_transaction
+            label = f"cash_classification:{classification.pk}"
+            reference = classification.classification_ref
+            if classification.organization_id != transaction.organization_id:
+                errors.append(f"{label}:transaction_org")
+            events = classification_event_map.get(str(classification.pk), [])
+            if len(events) != 1:
+                errors.append(f"{label}:bridge_event_count")
+                bridge_event = None
+            else:
+                bridge_event = events[0]
+                postings = postings_by_event.get(str(bridge_event['id']), [])
+                expected_book = 'cash_in' if transaction.direction == 'in' else 'cash_out'
+                if (bridge_event['organization_id'] != classification.organization_id
+                        or bridge_event['event_type'] != 'cash.classification'
+                        or bridge_event['claim_effect_cents'] != transaction.gross_cents
+                        or bridge_event['occurred_on'] != transaction.transaction_date
+                        or bridge_event['posting_period']
+                        != transaction.transaction_date.strftime('%Y-%m')
+                        or bridge_event['reverses_event_id'] is not None):
+                    errors.append(f"{label}:bridge_event")
+                if len(postings) != 1:
+                    errors.append(f"{label}:posting_count")
+                elif (postings[0]['book'] != expected_book
+                      or postings[0]['amount_cents'] != transaction.gross_cents
+                      or postings[0]['scope_kind'] != 'funding_account'
+                      or postings[0]['scope_id'] != str(transaction.funding_account_id)
+                      or postings[0]['reverses_posting_id'] is not None):
+                    errors.append(f"{label}:posting")
+            recorded = recorded_events.get(str(classification.pk), [])
+            if len(recorded) != 1:
+                errors.append(f"{label}:recorded_event_count")
+            else:
+                data = recorded[0]
+                payload = data.get('payload') or {}
+                refs = payload.get('posting_event_refs') or []
+                expected_ref = None if bridge_event is None else {
+                    'namespace': 'core', 'kind': 'accounting_event',
+                    'id': str(bridge_event['id']), 'version': bridge_event['version']}
+                if (data.get('schema_version') != 1 or data.get('topic') != recorded_topic
+                        or data.get('organization_id') != str(classification.organization_id)
+                        or data.get('source') != reference
+                        or payload.get('changed_refs') != [reference]
+                        or len(refs) != 1 or expected_ref is None or refs[0] != expected_ref):
+                    errors.append(f"{label}:recorded_event_envelope")
+            expected_net = (transaction.gross_cents
+                            if classification.status == 'active' else 0)
+            if net_by_classification.get(str(classification.pk), 0) != expected_net:
+                errors.append(f"{label}:net")
+            reversals = reversals_by_classification.get(str(classification.pk), [])
+            if classification.status == 'active' and reversals:
+                errors.append(f"{label}:active_has_reversal")
+            if classification.status == 'reversed' and len(reversals) != 1:
+                errors.append(f"{label}:reversal_count")
+        for reversal in CashClassificationReversal.objects.all():
+            classification = classification_by_id.get(str(reversal.classification_id))
+            if classification is None:
+                errors.append(f"cash_classification_reversal:{reversal.pk}:missing_classification")
+                continue
+            label = f"cash_classification_reversal:{reversal.pk}"
+            if (reversal.organization_id != classification.organization_id
+                    or reversal.cash_transaction_id != classification.cash_transaction_id):
+                errors.append(f"{label}:scope")
+            events = reversal_event_map.get(str(reversal.pk), [])
+            original_events = classification_event_map.get(str(classification.pk), [])
+            original = original_events[0] if len(original_events) == 1 else None
+            if len(events) != 1:
+                errors.append(f"{label}:bridge_event_count")
+                bridge_event = None
+            else:
+                bridge_event = events[0]
+                postings = postings_by_event.get(str(bridge_event['id']), [])
+                original_postings = (postings_by_event.get(str(original['id']), [])
+                                     if original is not None else [])
+                if (bridge_event['organization_id'] != reversal.organization_id
+                        or bridge_event['event_type'] != 'cash.classification.reversed'
+                        or bridge_event['claim_effect_cents']
+                        != -classification.cash_transaction.gross_cents
+                        or bridge_event['reverses_event_id']
+                        != (original['id'] if original is not None else None)):
+                    errors.append(f"{label}:bridge_event")
+                if len(postings) != 1:
+                    errors.append(f"{label}:posting_count")
+                elif len(original_postings) != 1:
+                    errors.append(f"{label}:posting")
+                elif (postings[0]['book'] != original_postings[0]['book']
+                      or postings[0]['amount_cents'] != -original_postings[0]['amount_cents']
+                      or postings[0]['scope_kind'] != original_postings[0]['scope_kind']
+                      or postings[0]['scope_id'] != original_postings[0]['scope_id']
+                      or postings[0]['reverses_posting_id'] != original_postings[0]['id']):
+                    errors.append(f"{label}:posting")
+            reversed_canonical = reversed_events.get(str(reversal.pk), [])
+            if len(reversed_canonical) != 1:
+                errors.append(f"{label}:reversed_event_count")
+            else:
+                data = reversed_canonical[0]
+                payload = data.get('payload') or {}
+                refs = payload.get('posting_event_refs') or []
+                expected_ref = None if bridge_event is None else {
+                    'namespace': 'core', 'kind': 'accounting_event',
+                    'id': str(bridge_event['id']), 'version': bridge_event['version']}
+                if (data.get('schema_version') != 1 or data.get('topic') != reversed_topic
+                        or data.get('organization_id') != str(reversal.organization_id)
+                        or data.get('source') != reversal.reversal_ref
+                        or payload.get('changed_refs') != [reversal.reversal_ref]
+                        or len(refs) != 1 or expected_ref is None or refs[0] != expected_ref
+                        or payload.get('original_classification_ref')
+                        != classification.classification_ref
+                        or payload.get('reversed_payroll_link_refs') != []):
+                    errors.append(f"{label}:reversed_event_envelope")
+        cash_claims = list(SourceConsumption.objects.filter(consumer='cash').values(
+            'id', 'organization_id', 'source_id', 'coverage_key', 'event_ref', 'source'))
+        claims_by_tx = {}
+        for claim in cash_claims:
+            claims_by_tx.setdefault(str(claim['source_id']), []).append(claim)
+        claim_net = {
+            str(row['id']): row['total'] for row in
+            SourceConsumption.objects.filter(consumer='cash').values('id').annotate(
+                total=Sum('events__claim_effect_cents'))}
+        for transaction in CashTransaction.objects.all():
+            label = f"cash_transaction:{transaction.pk}"
+            expected_net = (transaction.gross_cents if active_by_tx.get(
+                str(transaction.pk), 0) == 1 else 0)
+            if net_by_tx.get(str(transaction.pk), 0) != expected_net:
+                errors.append(f"{label}:classification_book_net")
+            claims = claims_by_tx.get(str(transaction.pk), [])
+            if len(claims) > 1:
+                errors.append(f"{label}:duplicate_bank_effect_claim")
+            if active_by_tx.get(str(transaction.pk), 0) and not claims:
+                errors.append(f"{label}:missing_bank_effect_claim")
+            if claims:
+                claim = claims[0]
+                if (claim['coverage_key'] != 'bank_effect'
+                        or claim['organization_id'] != transaction.organization_id
+                        or str((claim['source'] or {}).get('id')) != str(transaction.pk)):
+                    errors.append(f"cash_claim:{claim['id']}:shape")
+                if claim_net.get(str(claim['id']), 0) != expected_net:
+                    errors.append(f"cash_claim:{claim['id']}:net")
+                if str((claim['event_ref'] or {}).get('id')) not in cash_events:
+                    errors.append(f"cash_claim:{claim['id']}:original_event")
+        if AccountingEvent.objects.filter(source__namespace='cash').exclude(
+                event_type__in=['cash.classification', 'cash.classification.reversed']).exists():
+            errors.append('cash_transaction:unexpected_cash_event_type')
+        if LedgerPosting.objects.filter(accounting_event__source__namespace='cash').exclude(
+                book__in=['cash_in', 'cash_out']).exists():
+            errors.append('cash_transaction:unexpected_cash_posting_book')
+        if SourceConsumption.objects.filter(consumer='cash').exclude(
+                coverage_key='bank_effect').exists():
+            errors.append('cash_transaction:unexpected_source_consumption')
         from pmo_plugins.settlement.models import OpenItem, Settlement
         for settlement in Settlement.objects.filter(status='active'):
             items = list(settlement.items.all())

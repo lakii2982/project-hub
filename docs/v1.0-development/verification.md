@@ -57,3 +57,7 @@
 ### PH-243 独立复核与最终证据（补记）
 
 独立 S 复核（fresh context）PASS，0 阻断；复核以 6209321 为审查对象，逐项验证 events 仅两处改动、entities invariants[5] 与 spec 冻结句逐字相等、catalog 仅注解、fixture 仅 3 个摘要、extension-freeze 保留 base_sha/201/input_sha256/历史并含 supersede 记录、原 19/37 与 99/8 计数不变。最终证据 HEAD 复跑：`projectctl.py check` ok=true/task_count=169；`verify-change --base e91346a --task PH-243` ok=true、13 文件全在白名单；严格环境 `.agent-venv` + `PH135_REQUIRE_SCHEMAS=1` 的 tests.test_v1_preparation 仍为 8 tests OK 0 skipped（PH243 positive=3/rejected=9），validate_contracts/check_contract_cases/check_fixture 计数与上文一致。residual（非阻断）：PH-243 spec 正文“PH-247 晋级 PH-239”措辞与实际（PH-239 已 ready）不一致，由 PH-247 规划槽消解；handoff 已记录。
+
+## PH-239 分类桥接运行时验证（2026-10-30）
+
+基线 a760cf7（main 含 PH-240/244/246；PH-243 冻结契约）。实现落账：每个有效分类恰一 AccountingEvent（cash.classification，source=分类 ref，occurred_on=流水日期）+ 恰一 LedgerPosting（cash_in/out、funding_account scope、+gross）；撤分类追加镜像事件（reverses_event_ref）+ 负值 posting（reverses_posting_id），原记录不变；bank_effect claim 每流水唯一永久、净额归零后复用；canonical recorded/reversed posting_event_refs 恰 1 个 core/accounting_event；core 0009 以原名放宽 labor_posting_cost_scope（cost↔project/nonproject、cash_in/out↔funding_account/legacy_project，origin/current+金额边界保留）；cash 迁移因 PH-240 先合入顺延为 0005_cash_classification_guards。实际执行（最终 HEAD）：scoped 29 项（26 pass+3 PG-only skip，含复核阻断修复回归）；全量 822 项（752 pass+62 skip+8 项既有 macOS 环境失败，无新增）；manage.py check/makemigrations/verify_integrity 通过；projectctl check ok=true/task_count=175。独立S复核round 2 PASS（3阻断消除）；未验证：PG 并发（CI）、浏览器、生产/UAT。

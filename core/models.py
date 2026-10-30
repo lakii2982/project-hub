@@ -136,7 +136,13 @@ class LedgerPosting(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['accounting_event', 'line_index'], name='labor_event_line_unique'),
-            models.CheckConstraint(condition=Q(book='cost', origin='current', scope_kind__in=['project', 'nonproject']), name='labor_posting_cost_scope'),
+            # PH-243/PH-239: cost postings stay project/nonproject scoped; the cash book
+            # bridge owns the single funding_account/legacy_project cash posting of a bank fact.
+            models.CheckConstraint(condition=(
+                Q(book='cost', origin='current', scope_kind__in=['project', 'nonproject'])
+                | Q(book__in=['cash_in', 'cash_out'], origin='current',
+                    scope_kind__in=['funding_account', 'legacy_project'])),
+                name='labor_posting_cost_scope'),
             models.CheckConstraint(condition=Q(amount_cents__gte=-10**12, amount_cents__lte=10**12), name='labor_posting_amount_bound')]
 
 

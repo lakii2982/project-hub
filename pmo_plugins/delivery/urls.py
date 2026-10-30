@@ -39,7 +39,10 @@ def entry_point():
         'settlement': {name: getattr(receivable_views, name) for name in ('settlement_list', 'settlement_detail', 'settlement_form', 'settlement_save', 'settlement_action', 'aging_list', 'clearance_create', 'clearance_reverse', 'clearance_list')},
         'cash': {name: getattr(cash_views, name) for name in ('funding_account_list', 'funding_account_form', 'funding_account_save', 'funding_account_activate', 'cash_transaction_list', 'cash_transaction_form', 'cash_transaction_save', 'cash_transaction_detail', 'cash_party_match', 'cash_transaction_record', 'cash_refund_list',
                               'cash_refund_form', 'cash_refund_save', 'cash_bank_return_form',
-                              'cash_bank_return_save')},
+                              'cash_bank_return_save', 'cash_classification_list',
+                              'cash_classification_form', 'cash_classification_save',
+                              'cash_classification_reverse',
+                              'cash_classification_reverse_save')},
         'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action')} | {name: getattr(service_period_views,name) for name in ('service_confirmation_list','service_confirmation_detail','service_confirmation_form','service_confirmation_save','service_confirmation_action')},
         'costing': {name: getattr(labor_views, name) for name in
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}
