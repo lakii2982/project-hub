@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Final Lead integration rerun after rebase onto 897a352: {\"command\":\"check\",\"ok\":true,\"task_count\":185} exit 0."
+      "evidence": "Final Lead integration rerun after rebase onto f0462a3: {\"command\":\"check\",\"ok\":true,\"task_count\":185} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -56,7 +56,8 @@
     "The settlement migration number is 0005 on BASE 26d0408 (settlement leaf 0004_clearance_guards); cash leaf remains 0005 and core leaf 0009, so no cash/core migration is added.",
     "project/manifest.json active_handoff is left at main's value (PH-248) per the integration convention; tasks.json records PH-241 in_review with owner/handoff.",
     "No public canonical offset channel is exposed; only private services and browser routes. Browser 1440/390 checks were not run in this round (HTTP tests only).",
-    "Lead integration rebase (26d0408 -> 897a352) after PH-258 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-241 entry; PH-258's planning correction added pmo_plugins/cash/classification_services.py to PH-241's BASE allowed_paths, so verify-change is now green with no path_out_of_scope. Migrations unchanged: settlement 0005_offset_guards only; no cash/core migration in this slice."
+    "Lead integration rebase (26d0408 -> 897a352) after PH-258 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-241 entry; PH-258's planning correction added pmo_plugins/cash/classification_services.py to PH-241's BASE allowed_paths, so verify-change is now green with no path_out_of_scope. Migrations unchanged: settlement 0005_offset_guards only; no cash/core migration in this slice.",
+    "Second Lead rebase (897a352 -> f0462a3) after PH-254 merged: clean rebase, no conflicts; gates rerun green with the new BASE."
   ],
   "unverified": [
     "verify-change --base 26d0408 --task PH-241 at this HEAD exits 1 with the single high_risk_review_required error because report.review.status is pending by design (round-1 blockers fixed, round-2 pending); there are no path_out_of_scope or report-shape errors (projectctl check is ok=true/task_count=180). After the reviewer records pass it is rerun and must be ok=true.",
