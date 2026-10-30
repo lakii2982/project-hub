@@ -195,6 +195,15 @@ def _record_classification(member, *, cash_transaction_id, classification, evide
     if CashClassification.objects.filter(organization=member.organization,
                                          cash_transaction=row, status='active').exists():
         _fail('该银行流水已有有效分类，请先撤分类')
+    if kind == 'advance':
+        # PH-241 scheme a (Lead-authorized cross-owner small change): an advance-classified cash
+        # fact is reserved for Offset and must never also carry an active clearance. Lazy import
+        # avoids a cash<->settlement module import cycle.
+        from pmo_plugins.settlement.models import Clearance
+        if Clearance.objects.filter(organization=member.organization,
+                                    cash_transaction_id=row.pk,
+                                    status='active').exists():
+            _fail('该现金流水已有有效核销，不能再分类为预收/预付')
     row_id = row.pk
     classification_row = CashClassification(
         organization=member.organization, cash_transaction=row, classification=kind,

@@ -6894,7 +6894,7 @@
       "title": "预收/预付抵扣 Offset 首片：客户预收对未清项的部分抵扣",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -6941,9 +6941,9 @@
         "python manage.py test tests.test_v1_offset tests.test_v1_offset_http tests.test_v1_offset_concurrency --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-241.md"
     },
     {
       "id": "PH-242",

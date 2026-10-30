@@ -20,9 +20,10 @@ from core.services import cents
 from . import receivable_services as services
 from .models import OpenItem, Settlement
 from .receivable_forms import (ActionForm, AgingFilterForm, ClearanceForm,
-                               ClearanceListFilterForm, ReasonForm, ReverseClearanceForm,
-                               ReviewForm, SettlementForm, SettlementListFilterForm,
-                               settlement_line_choices, term_choices, term_key, yuan)
+                               ClearanceListFilterForm, OffsetForm, OffsetListFilterForm,
+                               ReasonForm, ReverseClearanceForm, ReviewForm, SettlementForm,
+                               SettlementListFilterForm, settlement_line_choices, term_choices,
+                               term_key, yuan)
 
 WRITE_ROLES = {'owner', 'finance'}
 READ_ROLES = {'owner', 'finance', 'pm', 'auditor'}
@@ -72,7 +73,8 @@ def _base(member, nav_page='settlement', **values):
     return dict(nav='settlement', nav_page=nav_page,
                 can_write=member.role in WRITE_ROLES,
                 list_url=_url('settlement_list'), new_url=_url('settlement_form'),
-                aging_url=_url('aging_list'), clearance_url=_url('clearance_list'), **values)
+                aging_url=_url('aging_list'), clearance_url=_url('clearance_list'),
+                offset_url=_url('offset_list'), **values)
 
 
 def _item_balances(member, open_item_id):
@@ -311,6 +313,7 @@ def settlement_detail(context, payload):
                       'gross_display': _money(item['gross_cents']),
                       'tax_display': _money(item['tax_cents']),
                       'cleared_display': balances['cleared_display'] if balances else '0.00',
+                      'offset_display': balances['offset_display'] if balances else '0.00',
                       'remaining_display': balances['remaining_display'] if balances else _money(
                           item['gross_cents']),
                       'clearance_url': _url('clearance_list', open_item=item['id']),
@@ -422,6 +425,7 @@ def aging_list(context, payload):
             'release_condition': item['release_condition'],
             'gross_display': item['gross_display'],
             'cleared_display': balances['cleared_display'] if balances else '0.00',
+            'offset_display': balances['offset_display'] if balances else '0.00',
             'remaining_display': balances['remaining_display'] if balances else item['gross_display'],
             'clearance_url': _url('clearance_list', open_item=item['id']),
             'bucket_label': item['bucket_label'],
@@ -484,6 +488,10 @@ def _clearance_rows(member, project_id, open_item_id):
     items = {str(item.pk): item for item in OpenItem.objects.filter(
         organization=member.organization, pk__in=ids).select_related(
         'project', 'counterparty')}
+    from .models import Offset
+    offsets = {str(entry['open_item_id']): entry['total'] for entry in Offset.objects.filter(
+        organization=member.organization, open_item_id__in=ids, status='active').values(
+        'open_item_id').annotate(total=Sum('offset_cents'))}
     rows = []
     for row in projections:
         item = items.get(row['open_item_id'])
@@ -496,6 +504,7 @@ def _clearance_rows(member, project_id, open_item_id):
                      if item else row['open_item_id'],
                      'cash_label': f"{cash_ref.get('kind', 'cash_transaction')} · "
                                    f"{str(cash_ref.get('id', ''))[:8]} · v{cash_ref.get('version')}",
+                     'offset_display': _money(offsets.get(row['open_item_id'], 0)),
                      'created_by_display': str(row.get('created_by_member_id', ''))[:8],
                      'reverse_url': _url('clearance_reverse', id=row['id']),
                      'reverse_token': uuid.uuid4()})
@@ -531,6 +540,7 @@ def _clearance_page(context, member, payload, *, cash_form=None, clearance_error
              'counterparty': item.counterparty.display_name,
              'gross_display': _money(balances['gross_cents']),
              'cleared_display': balances['cleared_display'],
+             'offset_display': balances['offset_display'],
              'remaining_display': balances['remaining_display']} if item else None),
         balances=balances, clearance_form=form, create_url=_url('clearance_create'),
         clearance_error=clearance_error, reverse_error=reverse_error,
@@ -615,3 +625,146 @@ def clearance_reverse(context, payload):
     values = _clearance_page(context, member, payload, reverse_error='撤核输入无效，请核对原因',
                              open_item_id=open_item_id or None)
     return render(context.request, 'settlement/clearance_list.html', values, status=400)
+
+
+# ---------- PH-241 advance offset ----------
+def _offset_read_member(member):
+    """History stays readable after the settlement/cash module is disabled."""
+    try:
+        return _fresh(member)
+    except PermissionDenied:
+        try:
+            member = Membership.objects.select_related('organization', 'user').get(pk=member.pk)
+        except (AttributeError, Membership.DoesNotExist):
+            raise PermissionDenied('公司成员上下文无效')
+        require_member(member)
+        if member.role not in READ_ROLES:
+            raise PermissionDenied('无权读取预收抵扣')
+        return member
+
+
+
+def _advance_candidates(member, open_item_id):
+    from . import offset_services
+    from pmo_plugins.cash.transaction_services import posted_advance_candidates
+    item = _selected_open_item(member, open_item_id)
+    choices, mapping = [], {}
+    for candidate in posted_advance_candidates(
+            member, counterparty_id=item.counterparty_id, as_of=timezone.localdate()):
+        snapshot = offset_services.advance_offset_snapshot(member, candidate['transaction_ref'])
+        key = f"{candidate['transaction_ref']['id']}:{candidate['transaction_ref']['version']}"
+        choices.append((key, f"{candidate['transaction_date']} · 预收 "
+                             f"{_money(candidate['gross_cents'])} 元 · 可用 "
+                             f"{snapshot['available_display']} 元 · 流水 "
+                             f"{str(candidate['id'])[:8]}"))
+        mapping[key] = snapshot
+    return choices, mapping
+
+
+def _offset_rows(member, project_id, open_item_id):
+    from . import offset_services
+    projections = offset_services.offset_list(member, project_id=project_id or None,
+                                              open_item_id=open_item_id or None)
+    ids = {row['open_item_id'] for row in projections}
+    items = {str(item.pk): item for item in OpenItem.objects.filter(
+        organization=member.organization, pk__in=ids).select_related(
+        'project', 'counterparty')}
+    from .models import Offset
+    offsets = {str(entry['open_item_id']): entry['total'] for entry in Offset.objects.filter(
+        organization=member.organization, open_item_id__in=ids, status='active').values(
+        'open_item_id').annotate(total=Sum('offset_cents'))}
+    rows = []
+    for row in projections:
+        item = items.get(row['open_item_id'])
+        advance = row.get('advance_ref') or {}
+        rows.append({**row,
+                     'project': item.project.name if item else '—',
+                     'counterparty': item.counterparty.display_name if item else '—',
+                     'open_item_label': (f"{item.project.code} · {item.counterparty.display_name} · "
+                                         f"{'质保' if item.partition_kind == 'retention' else '到期'}")
+                     if item else row['open_item_id'],
+                     'advance_label': f"预收流水 {str(advance.get('id', ''))[:8]} · "
+                                      f"v{advance.get('version')}",
+                     'created_by_display': str(row.get('created_by_member_id', ''))[:8]})
+    return rows
+
+
+def _offset_page(context, member, payload, *, offset_form=None, offset_error='',
+                 open_item_id=None):
+    from . import offset_services
+    filter_form = OffsetListFilterForm(payload or None, member=member)
+    project_id = ''
+    if filter_form.is_valid():
+        project_id = filter_form.cleaned_data.get('project') or ''
+    _explicit_project(member, payload, project_id)
+    selected_id = open_item_id or payload.get('open_item') or ''
+    options = _open_item_options(member)
+    item = balances = None
+    candidates, candidate_map = [], {}
+    if selected_id:
+        item = _selected_open_item(member, selected_id)
+        balances = offset_services.open_item_offset_snapshot(member, selected_id)
+        try:
+            candidates, candidate_map = _advance_candidates(member, selected_id)
+        except (ValidationError, PermissionDenied):
+            candidates, candidate_map = [], {}
+    form = offset_form
+    if form is None and item is not None:
+        form = OffsetForm(initial={'open_item': str(item.pk)},
+                          open_items=options, advance_candidates=candidates)
+    return _base(
+        member, nav_page='offset', filter_form=filter_form,
+        rows=_offset_rows(member, project_id, selected_id),
+        open_item_options=options, selected_item=(
+            {'label': f"{item.project.code} · {item.counterparty.display_name} · "
+                      f"{'质保未清' if item.partition_kind == 'retention' else '到期未清'}",
+             'counterparty': item.counterparty.display_name,
+             'gross_display': balances['gross_display'],
+             'cleared_display': balances['cleared_display'],
+             'offset_display': balances['offset_display'],
+             'remaining_display': balances['remaining_display']} if item else None),
+        balances=balances, offset_form=form, create_url=_url('offset_save'),
+        offset_error=offset_error, selected_open_item_id=str(item.pk) if item else '')
+
+
+def offset_list(context, payload):
+    member = _offset_read_member(context.member)
+    return render(context.request, 'settlement/offset_list.html',
+                  _offset_page(context, member, payload))
+
+
+def offset_save(context, payload):
+    member = _fresh(context.member, write=True)
+    if not is_enabled(member.organization, 'cash'):
+        raise PermissionDenied('现金事实模块已停用，不能办理预收抵扣')
+    if not is_enabled(member.organization, 'settlement'):
+        raise PermissionDenied('结算模块已停用，不能办理预收抵扣')
+    open_item_id = payload.get('open_item')
+    options = _open_item_options(member)
+    candidates = []
+    if open_item_id:
+        try:
+            candidates, _mapping = _advance_candidates(member, open_item_id)
+        except (ValidationError, PermissionDenied):
+            candidates = []
+    form = OffsetForm(payload, open_items=options, advance_candidates=candidates)
+    if form.is_valid():
+        data = form.cleaned_data
+        advance_key = data['advance_ref']
+        advance_id, version = advance_key.split(':', 1)
+        try:
+            from . import offset_services
+            offset_services.create_offset(
+                member, open_item_id=data['open_item'],
+                advance_ref={'namespace': 'cash', 'kind': 'cash_transaction',
+                             'id': advance_id, 'version': int(version)},
+                offset_cents=cents(data['amount']),
+                request_token=data['request_token'], dry_run=False)
+        except ValidationError as exc:
+            form.add_error(None, '；'.join(exc.messages))
+        else:
+            messages.success(context.request, '预收抵扣已登记')
+            return redirect(_url('offset_list', open_item=data['open_item']))
+    values = _offset_page(context, member, payload, offset_form=form,
+                          open_item_id=open_item_id or None)
+    return render(context.request, 'settlement/offset_list.html', values, status=400)

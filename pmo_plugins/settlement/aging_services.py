@@ -14,7 +14,7 @@ from django.utils import timezone
 from core.access import require_member, require_project, visible_projects
 from core.models import Membership, Project
 
-from .models import OpenItem
+from .models import Offset, OpenItem
 
 READ_ROLES = {'owner', 'finance', 'pm', 'auditor'}
 BUCKETS = ('not_due', '1_30', '31_60', '61_90', '90_plus')
@@ -87,9 +87,9 @@ def _projects(member, project_id):
     return projects.filter(pk=project.pk), project
 
 
-def _item_projection(item, as_of, cleared_cents=0):
+def _item_projection(item, as_of, cleared_cents=0, offset_cents=0):
     overdue_days, bucket = _aged(item.due_date, as_of)
-    remaining = max(0, item.gross_cents - cleared_cents)
+    remaining = max(0, item.gross_cents - cleared_cents - offset_cents)
     settlement = item.settlement
     line_ref = settlement.contract_line_ref or {}
     return {
@@ -106,8 +106,10 @@ def _item_projection(item, as_of, cleared_cents=0):
         'payee': item.payee_ref, 'scope': item.scope, 'source': item.source,
         'direction': item.direction, 'status': item.status, 'status_display': '有效',
         'gross_cents': item.gross_cents, 'cleared_cents': cleared_cents,
-        'remaining_cents': remaining, 'tax_cents': item.tax_cents,
+        'offset_cents': offset_cents, 'remaining_cents': remaining,
+        'tax_cents': item.tax_cents,
         'gross_display': _yuan(item.gross_cents), 'cleared_display': _yuan(cleared_cents),
+        'offset_display': _yuan(offset_cents),
         'remaining_display': _yuan(remaining), 'tax_display': _yuan(item.tax_cents),
         'due_date': item.due_date.isoformat(), 'due_display': item.due_date.isoformat(),
         'release_display': item.due_date.isoformat(),
@@ -124,11 +126,14 @@ def open_item_aging(member, *, project_id=None, as_of=None):
     projects, project = _projects(member, project_id)
     rows = OpenItem.objects.filter(organization=member.organization, project__in=projects,
                                    status='active').select_related('project', 'settlement')
+    offsets = {str(entry['open_item_id']): entry['total'] for entry in Offset.objects.filter(
+        organization=member.organization, open_item__in=rows, status='active').values(
+        'open_item_id').annotate(total=Sum('offset_cents'))}
     items = []
     for row in rows.order_by('due_date', 'id'):
         cleared = row.clearances.filter(status='active').aggregate(
             total=Sum('cleared_cents'))['total'] or 0
-        items.append(_item_projection(row, basis, cleared))
+        items.append(_item_projection(row, basis, cleared, offsets.get(str(row.pk), 0)))
     buckets = {key: 0 for key in BUCKETS}
     for item in items:
         buckets[item['bucket']] += item['remaining_cents']
