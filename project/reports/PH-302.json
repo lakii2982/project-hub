@@ -1,0 +1,42 @@
+{
+  "task_id": "PH-302",
+  "summary": "Consumed the PH-302 planning slot on main c640a1c (PH-281 merged; task_count 224) and registered the Lead-authorized flaky-test fix as PH-303 (risk A, ready, dependency PH-291 done): the merged PH-291 HTTP test `test_pm_page_scope_and_cash_missing` asserted `assertNotContains(response, 'C8')`, a 2-character string that randomly collides with CSRF/hex tokens (first CI run of the PH-281 PR failed and the retry passed). PH-303's frozen whitelist is only that HTTP test file plus tasks/manifest/docs-verification/report/handoff, and its DoR requires a long unique contract code or context-scoped assertion while keeping the pm-scope/missing-cash business assertions and proving stability across repeated runs. Numbering was checked (BASE max PH-302; no remote branch/PR occupies >=PH-303) and four more tasks were registered continuously: PH-304 authorized read-only reconciliation worksheet CSV export (ready; deps PH-291/283/288/280/281 all done), PH-305 shared-cost allocation contract freeze (proposed; needs PH-162/PH-255), PH-306 budget/ETC contract freeze (proposed; needs PH-177/PH-261) and PH-307 as the next planning slot (proposed until PH-302's review pass). No proposed task was falsely promoted (PH-284 and other ready slices stay ready; blocked legacy slices stay proposed with explicit blockers). No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD efeb6fd (BASE c640a1c, PH-302 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":229}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph302-planning on main c640a1c with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base c640a1c --task PH-302",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD efeb6fd: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 10 changed files (5 new specs PH-303..307, tasks.json, manifest.json, docs/verification.md, PH-302 report/handoff) are inside BASE PH-302 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (flaky-test task registration plus planning registration); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Planning-slot state convention: PH-302 is kept in_review with handoff and PH-307 is proposed with blocker 'PH-302 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-302 done and PH-307 ready and clear the blocker.",
+    "PH-303 is registered specifically because the merged PH-291 HTTP test's `assertNotContains(response, 'C8')` can randomly match CSRF/hex text, causing flaky CI (observed on the PH-281 PR first run, green on retry). Its whitelist is restricted to that one test file plus governance/report/handoff, and it keeps the original pm-scope business assertions; no product change is authorized.",
+    "PH-303 risk was set to A (test-only stability fix, no product behavior change) because the governance schema accepts A/B/S and the task is a pure test correction; it is still a distinct reviewed task with explicit acceptance commands.",
+    "PH-304 is registered ready because all its dependencies (PH-291/283/288/280/281) are done; its spec includes the canonical pmo_plugins/delivery/domain_metadata.py route declaration up front to avoid the earlier metadata-copy defect. PH-305/PH-306 are proposed with explicit still-proposed upstream blockers.",
+    "Numbering basis: BASE max PH-302; checked remote branches and open PRs (EXP-line #143/#144 etc.) - no >=PH-303 ids exist, so PH-303..PH-307 are continuous and free.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-303/PH-304 are registered only; the flaky-test fix and the export slice have no code/tests/CI evidence yet.",
+    "PH-305/PH-306 are contract-freeze slices registered proposed; no ADR/implementation exists yet.",
+    "PH-251/252/255/256/257/260/261/262/271/272/285/289/292/293/295/296/297/299/300/301/305/306 remain blocked on upstream proposed tasks; no promotion or scope change was made.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}

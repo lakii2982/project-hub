@@ -9524,7 +9524,7 @@
       "title": "后续交付独立规划入口（接续 PH-298）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -9549,8 +9549,183 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
+      "owner": "worker-docs",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-302.md"
+    },
+    {
+      "id": "PH-303",
+      "title": "修复 PH-291 运营核对总览 HTTP 测试的随机 CSRF 误匹配（test-only）",
+      "kind": "fix",
+      "risk": "A",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-291"
+      ],
+      "spec": "project/specs/PH-303.md",
+      "allowed_paths": [
+        "tests/test_v1_ops_reconciliation_overview_http.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-303.json",
+        "project/handoffs/PH-303.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py test tests.test_v1_ops_reconciliation_overview_http --verbosity 1",
+        "python manage.py test tests.test_v1_ops_reconciliation_overview --verbosity 1"
+      ],
+      "github_issue": null,
       "owner": null,
       "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-304",
+      "title": "运营核对底稿授权只读导出首片：核对总览/结算/现金/手续费清单 CSV（无写入口）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-291",
+        "PH-283",
+        "PH-288",
+        "PH-280",
+        "PH-281"
+      ],
+      "spec": "project/specs/PH-304.md",
+      "allowed_paths": [
+        "pmo_plugins/delivery/operations_export_services.py",
+        "pmo_plugins/delivery/views.py",
+        "pmo_plugins/delivery/forms.py",
+        "pmo_plugins/delivery/domain_metadata.py",
+        "pmo_plugins/delivery/urls.py",
+        "pmo_plugins/delivery/templates/delivery/ops_export.html",
+        "tests/test_v1_ops_export.py",
+        "tests/test_v1_ops_export_http.py",
+        "project/reports/PH-304.json",
+        "project/handoffs/PH-304.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_ops_export tests.test_v1_ops_export_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-305",
+      "title": "共享费用分摊（WP-SHARED-COST）首片：跨项目分摊规则与只读摊回核对冻结",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-162",
+        "PH-255"
+      ],
+      "spec": "project/specs/PH-305.md",
+      "allowed_paths": [
+        "project/specs/PH-305.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-305.json",
+        "project/handoffs/PH-305.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-162（成本归集/项目成本）与 PH-255（共享费用分摊）done（均 proposed）；依赖/契约就绪后由 PH-307 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-306",
+      "title": "预算/ETC（WP-BUDGET/ETC）首片：项目预算基线、ETC 派生与只读缺口核对冻结",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-177",
+        "PH-261"
+      ],
+      "spec": "project/specs/PH-306.md",
+      "allowed_paths": [
+        "project/specs/PH-306.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-306.json",
+        "project/handoffs/PH-306.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-177（合同行/收费模板）与 PH-261（预算/ETC）done（均 proposed）；依赖/契约就绪后由 PH-307 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-307",
+      "title": "后续交付独立规划入口（接续 PH-302）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-302"
+      ],
+      "spec": "project/specs/PH-307.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-307.json",
+        "project/handoffs/PH-307.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "PH-302 done 后置 ready（当前 PH-302 为 in_review，待独立 S 复核 pass 的最终证据 commit 再置 done/ready）。"
+      ],
       "handoff": null
     }
   ]
