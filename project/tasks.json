@@ -6918,6 +6918,7 @@
         "pmo_plugins/settlement/aging_services.py",
         "pmo_plugins/settlement/templates/settlement/clearance_list.html",
         "pmo_plugins/settlement/migrations/*.py",
+        "pmo_plugins/cash/classification_services.py",
         "pmo_plugins/cash/transaction_services.py",
         "pmo_plugins/delivery/urls.py",
         "tests/test_v1_offset.py",
