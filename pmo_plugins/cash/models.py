@@ -273,3 +273,97 @@ class BankReturn(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError('银行退回事实不可删除')
+
+
+CLASSIFICATION_KINDS = ('receipt', 'payment', 'advance', 'tax')
+CLASSIFICATION_STATUSES = ('active', 'reversed')
+CLASSIFICATION_LABELS = {'receipt': '收款', 'payment': '付款', 'advance': '预收/预付',
+                         'tax': '税费'}
+
+
+class CashClassification(models.Model):
+    """One effective classification of a posted bank fact; reversed by an append-only row."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='cash_classifications')
+    cash_transaction = models.ForeignKey(CashTransaction, on_delete=models.PROTECT,
+                                         related_name='classifications')
+    classification = models.CharField(max_length=16)
+    status = models.CharField(max_length=16, default='active')
+    version = models.PositiveIntegerField(default=1)
+    evidence = models.JSONField(default=list)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(classification__in=list(CLASSIFICATION_KINDS)),
+                                   name='cash_classification_kind'),
+            models.CheckConstraint(condition=Q(status__in=list(CLASSIFICATION_STATUSES)),
+                                   name='cash_classification_status'),
+            # At most one effective classification per bank fact; reversed rows stay as history.
+            models.UniqueConstraint(fields=['organization', 'cash_transaction'],
+                                    condition=Q(status='active'),
+                                    name='cash_classification_single_active'),
+        ]
+
+    @property
+    def classification_ref(self):
+        return {'namespace': 'cash', 'kind': 'cash_classification', 'id': str(self.pk),
+                'version': self.version}
+
+    def get_classification_display(self):
+        return CLASSIFICATION_LABELS.get(self.classification, self.classification)
+
+    def get_status_display(self):
+        return {'active': '有效', 'reversed': '已撤分类'}.get(self.status, self.status)
+
+    def save(self, *args, **kwargs):
+        # Creation only; reversal is a conditional status update in the owner service.
+        if not self._state.adding:
+            raise ValidationError('现金分类创建后不可修改；撤分类请使用撤分类服务')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('现金分类历史不可删除')
+
+
+class CashClassificationReversal(models.Model):
+    """Append-only full reversal of one classification; the original row is never rewritten."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='+')
+    classification = models.ForeignKey(CashClassification, on_delete=models.PROTECT,
+                                       related_name='reversals')
+    cash_transaction = models.ForeignKey(CashTransaction, on_delete=models.PROTECT,
+                                         related_name='classification_reversals')
+    status = models.CharField(max_length=16, default='posted')
+    reason = models.TextField()
+    evidence = models.JSONField(default=list)
+    occurred_on = models.DateField()
+    posting_period = models.CharField(max_length=7)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['classification'],
+                                    name='cash_classification_reversal_unique'),
+            models.CheckConstraint(condition=Q(status='posted'),
+                                   name='cash_classification_reversal_status'),
+        ]
+
+    @property
+    def reversal_ref(self):
+        return {'namespace': 'cash', 'kind': 'cash_classification_reversal', 'id': str(self.pk),
+                'version': 1}
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise ValidationError('撤分类记录不可修改')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('撤分类记录不可删除')

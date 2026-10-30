@@ -19,3 +19,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## PH-240 退款与银行退回（2026-10-30）
 
 在PH-230已过账现金与PH-232核销覆盖之上实现“原现金覆盖内真实退款/银行退回”：可退额=posted gross−active核销−active退款−active退回（服务端派生、非负），退款生成反方向posted支出与Refund事实+`cash.refunded.v1`，银行退回按原方向取反生成新现金与BankReturn+`cash.returned.v1`，幂等收据与期间/锁期校验；新现金沿用PH-230过账事件/收据不变式。覆盖对称化：settlement新增只读clearance_coverage_for_cash，核销剩余与现金候选可用额扣除退款/退回，保证cleared+refunded+returned≤gross（Lead裁定A；PH-232 spec文字未同步，PH-247登记小修）。明确不写账本/收入/成本/应收应付/未清，不做Offset/手续费/转账/更正/导入/期初；PH-171不解除。见`docs/verification.md`与`project/reports/PH-240.json`。
+
+## PH-239 现金分类与账本桥接首片（2026-10-30）
+
+在PH-230已过账现金之上实现分类到现金账的闭环：posted现金分类为receipt/payment/advance/tax（payroll命令层拒绝），每流水至多一条有效分类、撤分类append-only且可重分类；每条有效分类经core具名桥接恰写一个`cash.classification` AccountingEvent与一条cash_in/cash_out、funding_account scope的LedgerPosting，撤分类追加镜像事件/负值posting（原记录不改不删），bank_effect claim每流水唯一永久、撤后重分类净额复用；canonical recorded/reversed事件posting_event_refs恰1个core/accounting_event（PH-243冻结）；core放宽`labor_posting_cost_scope`（core 0009）。cash迁移因PH-240先合入顺延为0005。verify_integrity七项现金账不变式（与PH-240退款provenance守卫合并保留）。明确不做工资分类/项目分配/Offset/退款/手续费/互转/更正/导入/期初，不解除PH-169/170/171 proposed。见`docs/verification.md`与`project/reports/PH-239.json`。

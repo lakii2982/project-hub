@@ -211,3 +211,34 @@ class RefundListFilterForm(forms.Form):
         self.fields['funding_account'].choices = [('', '全部账户')] + list(accounts or [])
         for field in self.fields.values():
             field.widget.attrs.setdefault('class', 'form-control')
+
+
+class CashClassificationForm(StrictForm):
+    transaction_id = forms.UUIDField(widget=forms.HiddenInput)
+    classification = forms.ChoiceField(label='分类', choices=(
+        ('', '请选择分类'), ('receipt', '收款'), ('payment', '付款'),
+        ('advance', '预收/预付'), ('tax', '税费')))
+    evidence = forms.CharField(label='分类依据/证据编号', max_length=2000, widget=forms.Textarea,
+                               help_text='登记真实分类依据编号或说明，至少一条')
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
+class ReverseClassificationForm(StrictForm):
+    classification_id = forms.UUIDField(widget=forms.HiddenInput)
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    reason = forms.CharField(label='撤分类原因', max_length=1000, widget=forms.Textarea)
+    evidence = forms.CharField(label='撤分类依据/证据编号', max_length=2000,
+                               widget=forms.Textarea)
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
+class CashClassificationListFilterForm(forms.Form):
+    funding_account = forms.ChoiceField(label='银行账户', required=False, choices=())
+    status = forms.ChoiceField(label='分类状态', required=False, choices=(
+        ('', '全部状态'), ('active', '有效'), ('reversed', '已撤分类')))
+
+    def __init__(self, *args, accounts=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['funding_account'].choices = [('', '全部账户')] + list(accounts or [])
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', 'form-control')

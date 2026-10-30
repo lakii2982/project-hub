@@ -15,11 +15,13 @@ from core.plugin_runtime import is_enabled
 
 from . import transaction_services as tx
 from . import refund_services as refunds
+from . import classification_services as cls
 from . import funding_services as funding
-from .forms import (BankReturnForm, CashTransactionForm, CashTransactionListFilterForm,
+from .forms import (BankReturnForm, CashClassificationForm, CashClassificationListFilterForm,
+                    CashTransactionForm, CashTransactionListFilterForm,
                     FundingAccountForm, FundingAccountListFilterForm, IdentifyPartyForm,
                     PostCashTransactionForm, RefundForm, RefundListFilterForm,
-                    ReversePartyForm, amount_cents)
+                    ReverseClassificationForm, ReversePartyForm, amount_cents)
 
 WRITE_ROLES = {'owner', 'finance'}
 READ_ROLES = {'owner', 'finance', 'auditor'}
@@ -282,7 +284,8 @@ def _reverse_choices(snapshot):
             for item in snapshot['matches'] if item['action'] == 'identify']
 
 
-def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None, post_form=None):
+def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None, post_form=None,
+                    classification_form=None, reversal_form=None):
     matches = []
     for item in snapshot['matches']:
         original = item.get('original_match_ref') or {}
@@ -322,6 +325,51 @@ def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None, 
                       and coverage and coverage['refundable_cents'] > 0)
     refund_form = RefundForm(initial={'original_cash_transaction_id': snapshot['id']})
     return_form = BankReturnForm(initial={'original_cash_transaction_id': snapshot['id']})
+    classifications = cls.classification_list(member, cash_transaction_id=snapshot['id'])
+    active_classification = next(
+        (row for row in classifications if row['status'] == 'active'), None)
+    can_classify = (member.role in WRITE_ROLES and snapshot['status'] == 'posted'
+                    and active_classification is None)
+    classification_form = classification_form or CashClassificationForm(
+        initial={'transaction_id': snapshot['id']})
+    reversal_form = reversal_form or (
+        ReverseClassificationForm(initial={'classification_id': active_classification['id'],
+                                           'expected_version': active_classification['version']})
+        if active_classification else None)
+    classification_rows = []
+    for item in classifications:
+        reversal = item.get('reversal_ref') or {}
+        classification_rows.append({
+            **item,
+            'created_display': str(item.get('created_at', ''))[:16].replace('T', ' '),
+            'reversal_display': (str(reversal.get('id', ''))[:8] if reversal
+                                 else '—'),
+            'bridge_display': ('已桥接 · ' + str(item['posting_event_ref']['id'])[:8]
+                               if item.get('posting_event_ref') else '待桥接（PH-243）'),
+            'can_reverse': member.role in WRITE_ROLES and item['status'] == 'active',
+        })
+    matches = []
+    for item in snapshot['matches']:
+        original = item.get('original_match_ref') or {}
+        matches.append({**item,
+                        'identified_display': item.get('identified_payee_display', '—'),
+                        'original_match_display': (str(original.get('kind', '')) + ' · '
+                                                   + str(original.get('id', ''))[:8])
+                        if original else '—',
+                        'evidence_display': '；'.join(_evidence_text(item.get('evidence'))) or '—',
+                        'actor_display': str(item.get('created_by_member_id', ''))[:8],
+                        'created_display': str(item.get('created_at', ''))[:16].replace('T', ' ')})
+    choices = _reverse_choices(snapshot)
+    identify_form = identify_form or IdentifyPartyForm(
+        initial={'transaction_id': snapshot['id'], 'expected_version': snapshot['version']},
+        counterparties=_counterparty_options(member), employees=_employee_options(member),
+        accounts=_account_options(member, active_only=True))
+    reverse_form = reverse_form or ReversePartyForm(
+        initial={'transaction_id': snapshot['id'], 'expected_version': snapshot['version']},
+        matches=choices)
+    post_form = post_form or PostCashTransactionForm(
+        initial={'transaction_id': snapshot['id'], 'expected_version': snapshot['version']})
+    can_post = bool(snapshot.get('can_post', snapshot.get('status') == 'draft'))
     return _base(
         member, 'transactions', transaction=snapshot, can_post=can_post,
         posted_display=(snapshot.get('posted_at') or '')[:16].replace('T', ' '),
@@ -342,6 +390,14 @@ def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None, 
         refund_form_url=_url('cash_refund_form', id=snapshot['id']),
         return_form_url=_url('cash_bank_return_form', id=snapshot['id']),
         refunds_url=_url('cash_refund_list'),
+        classifications=classification_rows, active_classification=active_classification,
+        can_classify=can_classify, classification_form=classification_form,
+        reversal_form=reversal_form,
+        classify_url=_url('cash_classification_form', id=snapshot['id']),
+        classify_reverse_url=(_url('cash_classification_reverse',
+                                   id=active_classification['id'])
+                              if active_classification else None),
+        classification_list_url=_url('cash_classification_list'),
         back_url=_url('cash_transaction_list'))
 
 
@@ -580,3 +636,154 @@ def cash_bank_return_save(context, payload):
         refunds_url=_url('cash_refund_list'),
         explanation='银行退回按原方向取反生成新的已过账现金流水；可退回额与退款共用服务端派生覆盖。'),
         status=400)
+
+
+# ---------- PH-239 classification ----------
+def _classification_row_view(member, row):
+    reversal = row.get('reversal_ref') or {}
+    return {
+        **row,
+        'created_display': str(row.get('created_at', ''))[:16].replace('T', ' '),
+        'reversal_display': str(reversal.get('id', ''))[:8] if reversal else '—',
+        'bridge_display': ('已桥接 · ' + str(row['posting_event_ref']['id'])[:8]
+                           if row.get('posting_event_ref') else '待桥接（PH-243）'),
+        'transaction_url': _url('cash_transaction_detail', id=row['cash_transaction_id']),
+        'reverse_url': _url('cash_classification_reverse', id=row['id']),
+    }
+
+
+def cash_classification_list(context, payload):
+    member = _fresh(context.member)
+    account_options = _account_options(member)
+    filter_form = CashClassificationListFilterForm(payload or None, accounts=account_options)
+    account_id = status = ''
+    if filter_form.is_valid():
+        account_id = filter_form.cleaned_data.get('funding_account') or ''
+        status = filter_form.cleaned_data.get('status') or ''
+    result = []
+    for row in cls.classification_list(member):
+        if account_id and row['funding_account_id'] != account_id:
+            continue
+        if status and row['status'] != status:
+            continue
+        item = _classification_row_view(member, row)
+        item['can_reverse'] = member.role in WRITE_ROLES and row['status'] == 'active'
+        result.append(item)
+    coverage_rows = []
+    for value, label in account_options:
+        try:
+            coverage = cls.cash_book_coverage(member, value)
+        except (ValidationError, PermissionDenied):
+            continue
+        coverage_rows.append({
+            'label': label, **coverage,
+            'cash_in_display': format(Decimal(coverage['from_ledger_cash_in_cents']) / 100, '.2f'),
+            'cash_out_display': format(Decimal(coverage['from_ledger_cash_out_cents']) / 100, '.2f'),
+            'book_net_display': format(Decimal(coverage['book_net_cents']) / 100, '.2f')})
+    return render(context.request, 'cash/cash_classification_list.html', _base(
+        member, 'classifications', rows=result, coverage_rows=coverage_rows,
+        filter_form=filter_form,
+        classification_list_url=_url('cash_classification_list')))
+
+
+def cash_classification_form(context, payload):
+    member = _fresh(context.member, write=True)
+    transaction_id = context.request.GET.get('id') or payload.get('transaction_id')
+    if not transaction_id:
+        raise PermissionDenied('银行流水不存在或无权访问')
+    snapshot = tx.cash_transaction_snapshot(member, transaction_id)
+    if snapshot['status'] != 'posted':
+        raise PermissionDenied('仅已过账银行流水可以办理现金分类')
+    if [row for row in cls.classification_list(
+            member, cash_transaction_id=snapshot['id']) if row['status'] == 'active']:
+        raise PermissionDenied('该银行流水已有有效分类；如需重新分类请先撤分类')
+    form = CashClassificationForm(initial={'transaction_id': snapshot['id']})
+    return render(context.request, 'cash/cash_classification_form.html', _base(
+        member, 'classifications', transaction=snapshot, form=form,
+        submit_url=_url('cash_classification_save'),
+        back_url=_url('cash_transaction_detail', id=snapshot['id']),
+        classification_list_url=_url('cash_classification_list'),
+        explanation='分类只记录归属，不改金额/日期/方向/账户/往来方；每条流水同时只能有一条有效分类。'))
+
+
+def cash_classification_save(context, payload):
+    member = _fresh(context.member, write=True)
+    form = CashClassificationForm(payload)
+    snapshot = None
+    if form.is_valid():
+        data = form.cleaned_data
+        snapshot = tx.cash_transaction_snapshot(member, data['transaction_id'])
+        try:
+            cls.record_classification(
+                member, cash_transaction_id=data['transaction_id'],
+                classification=data['classification'],
+                evidence=_evidence_refs(data['evidence']),
+                request_token=data['request_token'], dry_run=False)
+        except ValidationError as exc:
+            form.add_error(None, '；'.join(exc.messages))
+        else:
+            messages.success(context.request, '现金分类已登记')
+            return redirect(_url('cash_transaction_detail', id=data['transaction_id']))
+    if snapshot is None:
+        transaction_id = payload.get('transaction_id')
+        if transaction_id:
+            snapshot = tx.cash_transaction_snapshot(member, transaction_id)
+        else:
+            raise PermissionDenied('银行流水不存在或无权访问')
+    return render(context.request, 'cash/cash_classification_form.html', _base(
+        member, 'classifications', transaction=snapshot, form=form,
+        submit_url=_url('cash_classification_save'),
+        back_url=_url('cash_transaction_detail', id=snapshot['id']),
+        classification_list_url=_url('cash_classification_list'),
+        explanation='分类只记录归属，不改金额/日期/方向/账户/往来方；每条流水同时只能有一条有效分类。'),
+        status=400)
+
+
+def _reverse_classification_page(context, member, snapshot, form, status=200):
+    return render(context.request, 'cash/cash_classification_form.html', _base(
+        member, 'classifications', transaction=snapshot, form=form, reverse_mode=True,
+        submit_url=_url('cash_classification_reverse_save'),
+        back_url=_url('cash_transaction_detail', id=snapshot['cash_transaction_id']),
+        classification_list_url=_url('cash_classification_list'),
+        explanation='撤分类采用追加撤分类记录，不改原分类；撤后可用同一流水重新分类。'),
+        status=status)
+
+
+def cash_classification_reverse(context, payload):
+    member = _fresh(context.member, write=True)
+    classification_id = context.request.GET.get('id')
+    if not classification_id:
+        raise PermissionDenied('现金分类不存在或无权访问')
+    snapshot = cls.classification_snapshot(member, classification_id)
+    if snapshot['status'] != 'active':
+        raise PermissionDenied('仅有效现金分类可以撤分类')
+    form = ReverseClassificationForm(initial={
+        'classification_id': snapshot['id'], 'expected_version': snapshot['version']})
+    return _reverse_classification_page(context, member, snapshot, form)
+
+
+def cash_classification_reverse_save(context, payload):
+    member = _fresh(context.member, write=True)
+    form = ReverseClassificationForm(payload)
+    snapshot = None
+    if form.is_valid():
+        data = form.cleaned_data
+        snapshot = cls.classification_snapshot(member, data['classification_id'])
+        try:
+            cls.reverse_classification(
+                member, classification_id=data['classification_id'], reason=data['reason'],
+                evidence=_evidence_refs(data['evidence']),
+                request_token=data['request_token'],
+                expected_version=data['expected_version'], dry_run=False)
+        except ValidationError as exc:
+            form.add_error(None, '；'.join(exc.messages))
+        else:
+            messages.success(context.request, '现金分类已撤分类')
+            return redirect(_url('cash_transaction_detail',
+                                 id=snapshot['cash_transaction_id']))
+    if snapshot is None:
+        classification_id = payload.get('classification_id')
+        if not classification_id:
+            raise PermissionDenied('现金分类不存在或无权访问')
+        snapshot = cls.classification_snapshot(member, classification_id)
+    return _reverse_classification_page(context, member, snapshot, form, status=400)
