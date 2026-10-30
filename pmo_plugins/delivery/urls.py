@@ -19,6 +19,7 @@ def entry_point():
     from pmo_plugins.cash.domain_metadata import DOMAIN_METADATA as CASH_METADATA
     from pmo_plugins.cash.plugin import Plugin as CashPlugin
     from pmo_plugins.cash import views as cash_views
+    from pmo_plugins.cash import funding_views as bank_views
     from pmo_plugins.contracts.domain_metadata import DOMAIN_METADATA as CONTRACTS_METADATA
     from pmo_plugins.contracts.plugin import Plugin as ContractsPlugin
     from pmo_plugins.contracts import party_views, views, approval_views
@@ -60,7 +61,7 @@ def entry_point():
                               'cash_internal_transfer_list', 'cash_internal_transfer_form',
                               'cash_internal_transfer_save',
                               'cash_internal_transfer_reverse',
-                              'cash_internal_transfer_reverse_save', 'cash_bridge_snapshot', 'cash_bridge_issues')},
+                              'cash_internal_transfer_reverse_save', 'cash_bridge_snapshot', 'cash_bridge_issues')} | {name: getattr(bank_views, name) for name in ('bank_balance_snapshot', 'bank_balance_issues')},
         'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action','ops_reconciliation_overview')} | {name: getattr(service_period_views,name) for name in ('service_confirmation_list','service_confirmation_detail','service_confirmation_form','service_confirmation_save','service_confirmation_action')},
         'costing': {name: getattr(labor_views, name) for name in
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}
