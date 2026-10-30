@@ -37,7 +37,10 @@ def main() -> int:
     parser.add_argument(
         "--samples",
         default="",
-        help="comma-separated task ids: print the exact prior-only injection each would receive",
+        help=(
+            "comma-separated task ids: print the injection each would receive "
+            "from all reports on disk (production semantics, no per-task time cutoff)"
+        ),
     )
     arguments = parser.parse_args()
     root = Path(arguments.root).resolve()

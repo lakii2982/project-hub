@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -183,22 +184,40 @@ class LessonsCliTests(unittest.TestCase):
             },
         )
         self.write_json(
+            "project/reports/PH-005.json",
+            {
+                "task_id": "PH-005",
+                "summary": "Slice.",
+                "tests": [],
+                "review": {"required": False, "reviewer": None, "status": "pass", "findings": ["newest lesson"]},
+                "deviations": [],
+                "unverified": [],
+            },
+        )
+        self.write_json(
             "project/tasks.json",
             {
                 "schema_version": 1,
                 "tasks": [
-                    make_task("PH-000", ["docs/old.md"], status="done"),
-                    make_task("PH-001", ["docs/standards.md"], status="done"),
-                    make_task("PH-002", ["docs/brief-target.md"]),
+                    make_task("PH-000", ["docs/engineering/old.md"], status="done"),
+                    make_task("PH-001", ["docs/engineering/standards.md"], status="done"),
+                    make_task("PH-002", ["docs/engineering/brief-target.md"]),
                     make_task("PH-003", ["app/models.py"], status="done"),
                     make_task("PH-004", ["app/views.py"], status="done"),
+                    make_task("PH-005", ["docs/engineering/newer.md"], status="done"),
+                    # Filler holders: keep the shared docs/engineering key at 4/8 = 50%,
+                    # below the strict->50% universality threshold, so it stays a signal.
+                    make_task("PH-006", ["app/serializers.py"]),
+                    make_task("PH-007", ["app/urls.py"]),
                 ],
             },
         )
         code, payload = self.run_cli("brief", "PH-002", "--precedents")
         self.assertEqual(0, code)
         entries = payload["precedents"]["entries"]
-        self.assertLessEqual(len(entries), 5)
+        # 3 source tasks × ≤2 each, global cap 5, newest task id first.
+        self.assertEqual(5, len(entries))
+        self.assertEqual("PH-005", entries[0]["task_id"])
         for entry in entries:
             self.assertLessEqual(len(entry["text"]), 280)
             self.assertLessEqual(
@@ -337,12 +356,19 @@ class LessonsCliTests(unittest.TestCase):
 
     def test_commands_never_write_files(self) -> None:
         self.write_standard_fixtures()
-        snapshot = sorted(str(path.relative_to(self.root)) for path in self.root.rglob("*"))
+
+        def snapshot() -> dict[str, str]:
+            return {
+                str(path.relative_to(self.root)): hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in sorted(self.root.rglob("*"))
+                if path.is_file()
+            }
+
+        before = snapshot()
         for arguments in (["lessons"], ["metrics"], ["brief", "PH-002", "--precedents"]):
             code, _payload = self.run_cli(*arguments)
             self.assertEqual(0, code)
-        after = sorted(str(path.relative_to(self.root)) for path in self.root.rglob("*"))
-        self.assertEqual(snapshot, after)
+        self.assertEqual(before, snapshot())
 
 
 if __name__ == "__main__":

@@ -1099,7 +1099,6 @@ def _precedent_entries(
         overlap = modules & _task_modules(past, universal, universal_modules)
         if not overlap:
             continue
-        matched.update(overlap)
         module_label = sorted(overlap)[0]
         taken = 0
         for lesson in _report_lessons(task_id, payload):
@@ -1113,6 +1112,7 @@ def _precedent_entries(
                     "text": lesson["text"],
                 }
             )
+            matched.update(overlap)
             taken += 1
     serialized = "".join(
         json.dumps(entry, ensure_ascii=False, sort_keys=True) for entry in entries
