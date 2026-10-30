@@ -1,0 +1,64 @@
+{
+  "task_id": "PH-280",
+  "summary": "手续费批准/成本与净额只读配对首片 on BASE e43c2c2. Added pmo_plugins/costing/bank_charge_pairing_services.py with two read-only interfaces. bank_charge_pairing(member, *, status=None, cash_transaction_id=None, as_of=None) returns visible BankCharge pairing projections: charge ref/status/version, posted incoming cash ref/status/direction/gross, fee gross/tax with tax_split_implemented=false, submitted/approved chain, the one-time cost claim coverage_key/amount, AccountingEvent refs and claim effects, LedgerPosting refs/amounts/book, derived net+approved-fee implied gross, refund/return coverage plus offset_implemented=false, PH-251 placeholders (receipt fee settlement, existing_cost_ref reuse, counterparty-borne, tax split all not_implemented), per-charge issues and pairing_state (draft/approved_unposted/posted/partial/paired/异常 with issues taking precedence). bank_charge_pairing_issues expands issue_code/charge_ref/refs/expected/actual for approved_without_cost, cost_event/cost_posting/cost_claim duplicates and amount mismatches, fee_exceeds_cash_gross, cash_not_posted_in, cross_org/cross_project references, unapproved_cost_posted and coverage_unavailable. Permissions are owner/finance/auditor full, PM only managed projects, member denied; the new history_read route bank-charge-pairing stays readable when costing is disabled and has no POST/write entry. The service writes nothing (no audit, receipt, event or fact) and adds no migration, canonical schema or costing write-path change; PH-251 fields are explicit placeholders rather than fabricated values. Gold: posted net cash 9800 + fee 200 draft->submit->independent approve->cost claim/event/posting 200 yields pairing_state posted, implied gross 10000, refund total 0 and issues=[]; anomaly fixtures use legal service transitions where possible and, for half-writes impossible through services (approved without cost, duplicate event, wrong posting amount, unapproved cost), a vendor-aware temporary trigger drop followed by INSERT only (no UPDATE/DELETE of history) so the append-only rule is preserved and PostgreSQL exercises the same test path.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto e5aa0fb: {\"command\":\"check\",\"ok\":true,\"task_count\":224} exit 0."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (88 issues, 0 silenced), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: 'No changes detected' (PH-280 adds no model or migration; costing leaf stays 0004)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1049 tests in 129.292s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No new business invariant was added because this slice only reads existing facts; existing costing/ledger/audit checks are unchanged."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_bank_charge_pairing tests.test_v1_bank_charge_pairing_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 8 tests, OK. Service 5: gold posted charge with cost claim/event/posting 200 yields pairing_state posted, implied gross 10000, zero issues, PH-251 placeholders and no audit/event/posting/claim changes; filters/permissions (owner/finance/auditor, PM managed project, member denied, disabled-module history read) and invalid status/as_of; approved-without-cost + duplicate cost event; cost posting amount mismatch + fee over cash; unapproved cost, draft cash and cross-project posting anomalies. HTTP 3: page renders pairing/PH-251 placeholders and issue table; invalid/future/unknown filters rejected 400; member 403; disabled-module history read 200 while POST writes no audit/event/posting/claim and costs stay unchanged."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-280 bank-charge-pairing reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "READ-ONLY PAIRING VERIFIED: `bank_charge_pairing`/`_issues` only read BankCharge, the existing cash snapshot, refund coverage, and SourceConsumption/AccountingEvent/LedgerPosting cost rows; no write/audit/receipt/migration/table, no change to costing/cash write semantics; zero-write and audit/event/posting/claim counts are asserted in the gold test; append-only half-write counterexamples use vendor-aware temporary trigger drops + INSERT only (never UPDATE/DELETE history).",
+      "DERIVED FIELDS/ISSUES: gold approved charge with net cash 9800 + fee 200 returns posted_net=9800, fee=200, implied gross=10000, one cost claim/event/posting, cost_amount=200, refund/return total=0, pairing_status=posted and issues=[]; PH-251 fields are explicit not_implemented placeholders and tax_split_implemented=false; issue codes cover approved_without_cost, duplicate claim/event/posting, claim/posting amount mismatch, fee_exceeds_cash_gross, cash_not_posted_in, cross_org/cross_project, unapproved_cost_posted and coverage_unavailable with refs/expected/actual; filters are status/cash_transaction_id/as_of and invalid values raise ValidationError.",
+      "PERMISSIONS/HISTORY: owner/finance/auditor full, pm scoped to visible project charges (another project's charge is not visible), member denied; costing-disabled history read remains available (the route is history_read); UI is read-only; no POST/write entry and unknown query parameters are rejected; 14-path whitelist includes costing service/forms/views/domain_metadata/template, delivery urls, tests, governance; 13 changed files all inside the whitelist; task in_review, manifest=PH-280.",
+      "EVIDENCE AT e210188 (BASE e43c2c2): check ok=true/task_count=220; manage.py check exit0; makemigrations --check No changes; scoped pairing/http tests 8 OK; full suite Ran 1049 tests, 5 failures/3 errors/69 skips (exactly the known 8 macOS baseline, no fifth class); verify_integrity fresh DB ok=true/errors=[]; verify-change --base e43c2c2 --task PH-280 only high_risk_review_required, no path_out_of_scope; report review now pass. After the final evidence/done transition, verify-change should be clean."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD e210188 (BASE e43c2c2) in /tmp/ph280-fee-read, worktree clean; 13 changed files all inside PH-280 allowed_paths; task in_review, manifest=PH-280. Read-only pairing over BankCharge/cash/refund/cost claims-events-postings with no write/audit/migration, gold implied gross 10000/posting 200/issues=[]; 12 issue codes with refs/expected/actual, filters/validation, PH-251 not_implemented placeholders, owner/finance/auditor full + pm project scope + member deny, history_read costing-disabled reads, read-only UI/no POST, append-only-INSERT counterexamples. Independent runs: check ok=220; manage check exit 0; makemigrations clean; scoped 8 OK; full suite 1049/5F+3E/69 = known 8 macOS baseline; verify_integrity fresh DB ok; verify-change only high_risk_review_required, no path_out_of_scope."
+  },
+  "deviations": [
+    "bank_charge_pairing 按 spec 的 status/cash_transaction_id/as_of 筛选返回**列表**（同一现金唯一时最多一条）；UI 与测试按列表消费。",
+    "成本 rows 若仅调用既有 bank_charge_cost_snapshot 无法发现重复 event/claim/posting，故在服务内以同权限范围直接只读查询 SourceConsumption/AccountingEvent/LedgerPosting（不写、不建接口）用于重复/金额异常检测；正常单笔投影仍以既有 owner 读口径为准。",
+    "cross_org_reference 在同 org cash 快照不可用时用只读 CashTransaction 的 organization_id 判定（cash owner 快照按会员 org 过滤，无法直接读外 org 快照），仅只读字段。",
+    "PH-251 的 ReceiptFeeSettlement/existing_cost_ref 复用/counterparty-borne/税额抵扣拆分一律显式 not_implemented 占位，不伪造金额或配对；tax_split_implemented=false。",
+    "可选 generic audit `costing.bank_charge_pairing.viewed` 未写：保持只读接口零审计副作用，report/handoff 披露。",
+    "反例测试兼容 append-only：approved 无成本、重复成本事件、成本金额不符、未批准成本等无法经服务产生的半笔，用 vendor-aware 临时 drop costing 触发器后仅 INSERT 合成（不 UPDATE/DELETE 历史事实），TestCase 回滚恢复触发器；PG CI 走同一分支。",
+    "无模型/迁移/canonical topic/command/schema 变更；无手续费/成本/现金/账本写；不改 PH-244/PH-250 已交付服务语义。",
+    "Lead integration rebase (e43c2c2 -> e5aa0fb) after PH-298 merged: docs/verification.md conflict resolved keeping main entries plus the PH-280 entry; manifest.active_handoff -> PH-280. Gates rerun green."
+  ],
+  "unverified": [
+    "PostgreSQL 运行证据以 CI 为准（本机 SQLite 仅验证服务/模板/反例与 vendor-aware 路径审阅）。",
+    "浏览器 1440/390、键盘/焦点、空错停用态未实机检查；HTTP 测试仅断言页面渲染、权限、400 拒绝与只读事实不变。",
+    "真实客户/生产/UAT 未验证；配对覆盖当前 BankCharge/成本/退款退回既有事实，PH-251 范围未实现。",
+    "独立 S 复核 pending；通过后置 done、重跑 check+verify-change 并报最终 SHA。"
+  ]
+}

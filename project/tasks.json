@@ -8617,7 +8617,7 @@
       "title": "手续费批准/成本与净额只读配对首片（无写入口、无迁移）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8655,7 +8655,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-280.md"
     },
     {
       "id": "PH-281",

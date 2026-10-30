@@ -11,8 +11,9 @@ from django.urls import get_script_prefix
 from core.plugin_runtime import is_enabled
 from pmo_plugins.cash.transaction_services import cash_transaction_snapshot
 
+from . import bank_charge_pairing_services as pairing_services
 from . import bank_charge_services as services
-from .bank_charge_forms import (BankChargeDecisionForm, BankChargeForm, BankChargeSubmitForm)
+from .bank_charge_forms import (BankChargeDecisionForm, BankChargeForm, BankChargePairingFilterForm, BankChargeSubmitForm)
 
 WRITE_ROLES = {'owner', 'finance'}
 
@@ -169,3 +170,43 @@ def bank_charge_action(context, payload):
         messages.error(context.request, '；'.join(exc.messages))
         return redirect(url('bank_charge_list', id=charge_id))
     return redirect(url('bank_charge_list', id=charge_id))
+
+
+def bank_charge_pairing(context, payload):
+    """Read-only fee approval/cost/net pairing page; no write route or side effect."""
+    member = pairing_services._reader(context.member)
+    allowed = {'status', 'as_of', 'cash_transaction_id'}
+    form = BankChargePairingFilterForm(payload or None)
+    error = ''
+    if set(payload) - allowed:
+        error = '包含不允许的查询参数，请刷新后重试'
+        rows, issues = [], []
+    else:
+        try:
+            rows = pairing_services.bank_charge_pairing(
+                member, status=payload.get('status') or None,
+                cash_transaction_id=payload.get('cash_transaction_id') or None,
+                as_of=payload.get('as_of') or None)
+            all_issues = pairing_services.bank_charge_pairing_issues(
+                member, as_of=payload.get('as_of') or None)
+            visible = {row['charge_ref']['id'] for row in rows}
+            issues = (all_issues if (payload.get('status') or payload.get('cash_transaction_id')
+                                     or payload.get('as_of'))
+                      else all_issues)
+            issues = [issue for issue in issues
+                      if not visible or issue['charge_ref']['id'] in visible]
+        except (PermissionDenied, ValidationError) as exc:
+            rows, issues = [], []
+            error = '；'.join(getattr(exc, 'messages', [str(exc)]))
+    for row in rows:
+        row['fee_display'] = money(row['fee_gross_cents'])
+        row['net_display'] = (money(row['posted_net_cents'])
+                              if row['posted_net_cents'] is not None else '缺失')
+        row['cost_display'] = (money(row['cost']['cost_amount_cents'])
+                               if row['cost']['cost_amount_cents'] is not None else '缺失')
+        row['refund_display'] = (money(row['refund_return']['total_cents'])
+                                 if row['refund_return']['total_cents'] is not None else '缺失')
+    return render(context.request, 'costing/bank_charge_pairing.html', base(
+        member, rows=rows, issues=issues, filter_form=form, error=error,
+        pairing_url=url('bank_charge_pairing'),
+        enabled=is_enabled(member.organization, 'costing')), status=400 if error else 200)
