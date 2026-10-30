@@ -83,6 +83,28 @@ class Command(BaseCommand):
                 errors.append(f"allocation:{run.pk}:company_net_zero")
         from core.revenue_accounting import revenue_integrity_errors
         errors.extend(revenue_integrity_errors())
+        from pmo_plugins.cash.models import CashPartyMatch, CashTransaction, FundingAccount
+        for account in FundingAccount.objects.filter(status='active'):
+            if account.opening_on is None or account.opening_cents != 0:
+                errors.append(f"funding_account:{account.pk}:opening")
+        for transaction in CashTransaction.objects.all():
+            if transaction.direction not in {'in', 'out'} or not 0 < transaction.gross_cents <= 10**12:
+                errors.append(f"cash_transaction:{transaction.pk}:amount_or_direction")
+            payee = transaction.payee or {}
+            if payee.get('kind') == 'counterparty' and str(transaction.counterparty_id or '') != str(payee.get('id')):
+                errors.append(f"cash_transaction:{transaction.pk}:counterparty")
+            if payee.get('kind') not in {'unidentified', 'counterparty', 'own_account'}:
+                errors.append(f"cash_transaction:{transaction.pk}:payee")
+        for match in CashPartyMatch.objects.select_related('cash_transaction', 'original_match'):
+            if match.cash_transaction.organization_id != match.organization_id:
+                errors.append(f"cash_party_match:{match.pk}:transaction_org")
+            if match.action == 'reverse' and match.original_match is None:
+                errors.append(f"cash_party_match:{match.pk}:missing_original")
+            if match.original_match is not None and (
+                    match.original_match.organization_id != match.organization_id
+                    or match.original_match.cash_transaction_id != match.cash_transaction_id
+                    or match.original_match.action != 'identify'):
+                errors.append(f"cash_party_match:{match.pk}:original")
         from pmo_plugins.settlement.models import OpenItem, Settlement
         for settlement in Settlement.objects.filter(status='active'):
             items = list(settlement.items.all())

@@ -1,0 +1,5 @@
+{% extends 'cash/funding_account_list.html' %}{% block title %}{{ title }}{% endblock %}{% block cash_content %}
+<nav class="section-nav" aria-label="现金事实"><a href="{{ accounts_url }}">银行账户</a><a href="{{ transactions_url }}">银行流水</a></nav>
+<section class="page-header"><h1 tabindex="-1">{{ title }}</h1><a class="button" href="{{ back_url }}">返回</a></section>
+<section class="panel"><div class="body"><p class="notice">{{ explanation }}</p>{% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}<form method="post" action="{{ submit_url }}">{% csrf_token %}{% include 'partials/form_fields.html' %}<dl class="detail-grid"><div><dt>期初余额（元）</dt><dd class="amount">0.00</dd></div><div><dt>期初日期</dt><dd>{{ opening_on }}（草稿创建时固定，不可修改）</dd></div><div><dt>账户归属</dt><dd>本公司（account_owner=organization）</dd></div></dl><p class="help-text">期初余额与期初日期由系统固定为 0 / 业务日；本片不登记期初和现金账。激活只允许公司负责人办理。</p><div class="actions"><button type="submit" class="button primary">{{ title }}</button><a class="button" href="{{ back_url }}">取消</a></div></form></div></section>
+{% endblock %}
