@@ -8311,7 +8311,7 @@
       "title": "后续交付独立规划入口（接续 PH-268）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -8526,7 +8526,7 @@
       "title": "后续交付独立规划入口（接续 PH-273）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -8552,9 +8552,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-273（当前规划槽）done：PH-273 合入后本槽由后续规划动作晋级 ready。"
-      ],
+      "blockers": [],
       "handoff": null
     }
   ]
