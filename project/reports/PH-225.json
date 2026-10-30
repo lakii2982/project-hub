@@ -1,0 +1,36 @@
+{
+  "task_id": "PH-225",
+  "summary": "Register PH-226 (narrow, dependency-aware test prerequisite for the settlement plugin) and PH-227 next planning slot; document why two existing tests must disable the new settlement plugin before delivery/contracts. No product or test code changed in this planning task.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual task contract validates after registration (see handoff for counts); PH-225 done, PH-226/PH-227 ready, dependencies done."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 5ea4369 --task PH-225",
+      "result": "pass",
+      "evidence": "Post-commit rerun: changed planning files all inside BASE allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-225 planning reviewer (fresh context)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Review in progress; verdict recorded after fixes."
+  },
+  "deviations": [
+    "PH-226 is an infra test-prerequisite rather than a business slice, mirroring the PH-220 precedent: the settlement plugin adds a real dependency edge that correctly blocks disabling delivery/contracts, so the two old tests' setup must disable settlement first.",
+    "The adaptation must be dependency-aware (check plugin_catalog) so the PH-226 PR passes CI on a BASE that does not yet contain the settlement plugin, avoiding a merge-order deadlock."
+  ],
+  "unverified": [
+    "No test or product code changed here; PH-226 adaptation and PH-224 rerun are not yet executed.",
+    "PH-224 full-suite green, browser evidence, PostgreSQL races, CI and merge remain pending."
+  ]
+}
