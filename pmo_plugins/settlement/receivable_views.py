@@ -1,6 +1,7 @@
 """PH-224 customer settlement browser handlers; every write goes through receivable_services."""
 import csv
 import io
+import uuid
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -14,12 +15,14 @@ from django.utils import timezone
 from core.access import require_member, require_project, visible_projects
 from core.models import Membership, Project, SourceConsumption
 from core.plugin_runtime import is_enabled
+from core.services import cents
 
 from . import receivable_services as services
-from .models import Settlement
-from .receivable_forms import (ActionForm, AgingFilterForm, ReasonForm, ReviewForm,
-                               SettlementForm, SettlementListFilterForm, settlement_line_choices,
-                               term_choices, term_key, yuan)
+from .models import OpenItem, Settlement
+from .receivable_forms import (ActionForm, AgingFilterForm, ClearanceForm,
+                               ClearanceListFilterForm, ReasonForm, ReverseClearanceForm,
+                               ReviewForm, SettlementForm, SettlementListFilterForm,
+                               settlement_line_choices, term_choices, term_key, yuan)
 
 WRITE_ROLES = {'owner', 'finance'}
 READ_ROLES = {'owner', 'finance', 'pm', 'auditor'}
@@ -69,7 +72,15 @@ def _base(member, nav_page='settlement', **values):
     return dict(nav='settlement', nav_page=nav_page,
                 can_write=member.role in WRITE_ROLES,
                 list_url=_url('settlement_list'), new_url=_url('settlement_form'),
-                aging_url=_url('aging_list'), **values)
+                aging_url=_url('aging_list'), clearance_url=_url('clearance_list'), **values)
+
+
+def _item_balances(member, open_item_id):
+    from . import clearance_services
+    try:
+        return clearance_services.open_item_balances(member, open_item_id)
+    except (ValidationError, PermissionDenied):
+        return None
 
 
 def _snapshot(member, settlement_id):
@@ -293,11 +304,16 @@ def settlement_detail(context, payload):
     items = []
     for item in snapshot['items']:
         partition_kind = item['partition_kind']
+        balances = _item_balances(member, item['id'])
         items.append({**item,
                       'partition_label': '质保未清' if partition_kind == 'retention' else '到期未清',
                       'term_label': f"{item['term_ref']['kind']} · {item['term_ref']['id']}",
                       'gross_display': _money(item['gross_cents']),
                       'tax_display': _money(item['tax_cents']),
+                      'cleared_display': balances['cleared_display'] if balances else '0.00',
+                      'remaining_display': balances['remaining_display'] if balances else _money(
+                          item['gross_cents']),
+                      'clearance_url': _url('clearance_list', open_item=item['id']),
                       'status_display': {'active': '有效'}.get(item['status'], item['status'])})
     sources = [{'kind': item['kind'], 'ref': item['ref'],
                 'net_display': _money(item['net_cents'])} for item in snapshot['source_performance']]
@@ -396,6 +412,7 @@ def aging_list(context, payload):
     for item in data['items']:
         settlement = settlements.get(item['settlement_id'])
         counts[item['bucket']] += 1
+        balances = _item_balances(member, item['id'])
         rows.append({
             'project': item['project_name'],
             'counterparty': settlement.counterparty.display_name if settlement else '—',
@@ -404,6 +421,9 @@ def aging_list(context, payload):
             'term_label': item['term_label'], 'due_date': item['due_date'],
             'release_condition': item['release_condition'],
             'gross_display': item['gross_display'],
+            'cleared_display': balances['cleared_display'] if balances else '0.00',
+            'remaining_display': balances['remaining_display'] if balances else item['gross_display'],
+            'clearance_url': _url('clearance_list', open_item=item['id']),
             'bucket_label': item['bucket_label'],
             'retention_not_due': (item['partition_kind'] == 'retention'
                                   and item['bucket'] == 'not_due'),
@@ -417,3 +437,181 @@ def aging_list(context, payload):
         retention=data['retention'],
         csv_url=_url('aging_list', format='csv', as_of=as_of.isoformat(),
                      project=project_id or None)))
+
+# ---------- PH-232 clearance ----------
+def _open_item_options(member):
+    projects = visible_projects(member)
+    if member.role == 'pm':
+        projects = projects.filter(manager=member)
+    rows = OpenItem.objects.filter(organization=member.organization, project__in=projects,
+                                   status='active', direction='receivable').select_related(
+        'project', 'counterparty').order_by('due_date', 'id')
+    return [(str(item.pk),
+             f"{item.project.code} · {item.counterparty.display_name} · "
+             f"{'质保' if item.partition_kind == 'retention' else '到期'} · "
+             f"含税 {_money(item.gross_cents)} 元 · 到期 {item.due_date.isoformat()}")
+            for item in rows]
+
+
+def _selected_open_item(member, open_item_id):
+    from . import clearance_services
+    try:
+        return clearance_services._get_open_item(member, open_item_id)
+    except ValidationError:
+        raise PermissionDenied('未清项不存在或无权访问')
+
+
+def _cash_candidates(member, open_item_id):
+    from . import clearance_services
+    choices, mapping = [], {}
+    for candidate in clearance_services.cash_candidates_for_open_item(member, open_item_id):
+        ref = candidate['transaction_ref']
+        key = f"{ref['id']}:{ref['version']}"
+        day = candidate['transaction_date']
+        day = day if isinstance(day, str) else day.isoformat()
+        choices.append((key, f"{day} · 收入 {_money(candidate['gross_cents'])} 元 · "
+                             f"未核销 {candidate['available_display']} 元 · "
+                             f"流水 {str(ref['id'])[:8]}"))
+        mapping[key] = candidate
+    return choices, mapping
+
+
+def _clearance_rows(member, project_id, open_item_id):
+    from . import clearance_services
+    projections = clearance_services.clearance_list(member, project_id=project_id or None,
+                                                    open_item_id=open_item_id or None)
+    ids = {row['open_item_id'] for row in projections}
+    items = {str(item.pk): item for item in OpenItem.objects.filter(
+        organization=member.organization, pk__in=ids).select_related(
+        'project', 'counterparty')}
+    rows = []
+    for row in projections:
+        item = items.get(row['open_item_id'])
+        cash_ref = row.get('cash_transaction_ref') or {}
+        rows.append({**row,
+                     'project': item.project.name if item else '—',
+                     'counterparty': item.counterparty.display_name if item else '—',
+                     'open_item_label': (f"{item.project.code} · {item.counterparty.display_name} · "
+                                         f"{'质保' if item.partition_kind == 'retention' else '到期'}")
+                     if item else row['open_item_id'],
+                     'cash_label': f"{cash_ref.get('kind', 'cash_transaction')} · "
+                                   f"{str(cash_ref.get('id', ''))[:8]} · v{cash_ref.get('version')}",
+                     'created_by_display': str(row.get('created_by_member_id', ''))[:8],
+                     'reverse_url': _url('clearance_reverse', id=row['id']),
+                     'reverse_token': uuid.uuid4()})
+    return rows
+
+
+def _clearance_page(context, member, payload, *, cash_form=None, clearance_error='',
+                    reverse_error='', open_item_id=None):
+    from . import clearance_services
+    filter_form = ClearanceListFilterForm(payload or None, member=member)
+    project_id = ''
+    if filter_form.is_valid():
+        project_id = filter_form.cleaned_data.get('project') or ''
+    _explicit_project(member, payload, project_id)
+    selected_id = open_item_id or payload.get('open_item') or ''
+    options = _open_item_options(member)
+    item = balances = None
+    candidates, candidate_map = [], {}
+    if selected_id:
+        item = _selected_open_item(member, selected_id)
+        balances = clearance_services.open_item_balances(member, selected_id)
+        candidates, candidate_map = _cash_candidates(member, selected_id)
+    form = cash_form
+    if form is None and item is not None:
+        form = ClearanceForm(initial={'open_item': str(item.pk)},
+                             open_items=options, cash_candidates=candidates)
+    return _base(
+        member, nav_page='clearance', filter_form=filter_form, rows=_clearance_rows(
+            member, project_id, selected_id),
+        open_item_options=options, selected_item=(
+            {'label': f"{item.project.code} · {item.counterparty.display_name} · "
+                      f"{'质保未清' if item.partition_kind == 'retention' else '到期未清'}",
+             'counterparty': item.counterparty.display_name,
+             'gross_display': _money(balances['gross_cents']),
+             'cleared_display': balances['cleared_display'],
+             'remaining_display': balances['remaining_display']} if item else None),
+        balances=balances, clearance_form=form, create_url=_url('clearance_create'),
+        clearance_error=clearance_error, reverse_error=reverse_error,
+        selected_open_item_id=str(item.pk) if item else '')
+
+
+def clearance_list(context, payload):
+    member = _fresh(context.member)
+    return render(context.request, 'settlement/clearance_list.html',
+                  _clearance_page(context, member, payload))
+
+
+def clearance_create(context, payload):
+    member = _fresh(context.member, write=True)
+    open_item_id = payload.get('open_item')
+    options = _open_item_options(member)
+    candidates = []
+    mapping = {}
+    if open_item_id:
+        try:
+            candidates, mapping = _cash_candidates(member, open_item_id)
+        except (ValidationError, PermissionDenied):
+            candidates, mapping = [], {}
+    form = ClearanceForm(payload, open_items=options, cash_candidates=candidates)
+    if form.is_valid():
+        data = form.cleaned_data
+        cash_key = data['cash_ref']
+        cash_id, version = cash_key.split(':', 1)
+        try:
+            from . import clearance_services
+            clearance_services.create_clearance(
+                member, open_item_id=data['open_item'],
+                cash_transaction_ref={'namespace': 'cash', 'kind': 'cash_transaction',
+                                      'id': cash_id, 'version': int(version)},
+                cleared_cents=cents(data['amount']),
+                request_token=data['request_token'], dry_run=False)
+        except ValidationError as exc:
+            form.add_error(None, '；'.join(exc.messages))
+        else:
+            messages.success(context.request, '核销已登记')
+            return redirect(_url('clearance_list', open_item=data['open_item']))
+    values = _clearance_page(context, member, payload, cash_form=form,
+                             open_item_id=open_item_id or None)
+    return render(context.request, 'settlement/clearance_list.html', values, status=400)
+
+
+def clearance_reverse(context, payload):
+    member = _fresh(context.member, write=True)
+    clearance_id = context.request.GET.get('id') or payload.get('clearance_id')
+    if not clearance_id:
+        raise PermissionDenied('核销记录不存在或无权访问')
+    allowed = set(ReverseClearanceForm.base_fields)
+    bound = {key: value for key, value in payload.items() if key in allowed}
+    bound['clearance_id'] = clearance_id
+    form = ReverseClearanceForm(bound)
+    try:
+        version = int(form.data.get('expected_version'))
+    except (TypeError, ValueError):
+        version = None
+    if version is not None:
+        form.fields['expected_version'].initial = version
+    open_item_id = ''
+    from . import clearance_services
+    try:
+        snapshot = clearance_services.clearance_snapshot(member, clearance_id)
+        open_item_id = snapshot['open_item_id']
+    except (ValidationError, PermissionDenied):
+        open_item_id = ''
+    if form.is_valid():
+        data = form.cleaned_data
+        try:
+            clearance_services.reverse_clearance(
+                member, data['clearance_id'], reason=data['reason'],
+                request_token=data['request_token'],
+                expected_version=data['expected_version'], dry_run=False)
+        except ValidationError as exc:
+            values = _clearance_page(context, member, payload, reverse_error='；'.join(
+                exc.messages), open_item_id=open_item_id or None)
+            return render(context.request, 'settlement/clearance_list.html', values, status=400)
+        messages.success(context.request, '核销已撤核')
+        return redirect(_url('clearance_list', open_item=open_item_id or None))
+    values = _clearance_page(context, member, payload, reverse_error='撤核输入无效，请核对原因',
+                             open_item_id=open_item_id or None)
+    return render(context.request, 'settlement/clearance_list.html', values, status=400)

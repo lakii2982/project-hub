@@ -185,6 +185,64 @@ class Command(BaseCommand):
                 errors.append(f"open_item:{item.pk}:amount_or_status")
             if not item.due_date:
                 errors.append(f"open_item:{item.pk}:missing_due_date")
+
+        from pmo_plugins.settlement.models import Clearance
+        from pmo_plugins.cash.models import CashTransaction as _ClearanceCash
+        for clearance in Clearance.objects.select_related('open_item'):
+            item = clearance.open_item
+            if item.organization_id != clearance.organization_id:
+                errors.append(f"clearance:{clearance.pk}:open_item_org")
+            cash = _ClearanceCash.objects.filter(pk=clearance.cash_transaction_id,
+                organization_id=clearance.organization_id).first()
+            if cash is None or cash.status != 'posted' or cash.direction != 'in':
+                errors.append(f"clearance:{clearance.pk}:cash")
+            if clearance.status not in {'active', 'reversed'} or clearance.cleared_cents <= 0:
+                errors.append(f"clearance:{clearance.pk}:status_or_amount")
+        for item in OpenItem.objects.all():
+            active = item.clearances.filter(status='active')
+            total = sum(row.cleared_cents for row in active)
+            if total > item.gross_cents:
+                errors.append(f"open_item:{item.pk}:over_cleared")
+        for cash in _ClearanceCash.objects.filter(status='posted'):
+            total = sum(row.cleared_cents for row in Clearance.objects.filter(
+                cash_transaction_id=cash.pk, status='active'))
+            if total > cash.gross_cents:
+                errors.append(f"cash_transaction:{cash.pk}:over_cleared")
+        from core.models import DomainEvent as _ClearanceEvent
+        def _clearance_envelope(event, reference, label, errors, clearance):
+            data = event.data or {}
+            payload = data.get('payload') or {}
+            if (data.get('schema_version') != 1 or data.get('source') != reference
+                    or data.get('organization_id') != str(clearance.organization_id)
+                    or payload.get('changed_refs') != [reference]
+                    or payload.get('posting_event_refs') != []):
+                errors.append(f"clearance:{clearance.pk}:{label}_envelope")
+        for clearance in Clearance.objects.all():
+            reference = {'namespace': 'settlement', 'kind': 'clearance',
+                         'id': str(clearance.pk), 'version': clearance.version}
+            cleared = _ClearanceEvent.objects.filter(organization_id=clearance.organization_id,
+                topic='settlement.cleared.v1', data__source__id=str(clearance.pk))
+            if cleared.count() != 1:
+                errors.append(f"clearance:{clearance.pk}:cleared_event_count")
+            else:
+                _clearance_envelope(cleared.first(), reference, 'cleared', errors, clearance)
+            reversed_events = _ClearanceEvent.objects.filter(
+                organization_id=clearance.organization_id,
+                topic='settlement.clearance_reversed.v1',
+                data__source__id=str(clearance.pk))
+            if clearance.status == 'reversed':
+                if reversed_events.count() != 1:
+                    errors.append(f"clearance:{clearance.pk}:reversed_event_count")
+                else:
+                    _clearance_envelope(reversed_events.first(), reference, 'reversed', errors,
+                                        clearance)
+            elif reversed_events.exists():
+                errors.append(f"clearance:{clearance.pk}:active_has_reversed_event")
+        # Clearance is a derived settlement fact: it must never post to the ledger or write an
+        # accounting event (LedgerPosting scopes are already constrained to project/nonproject).
+        if AccountingEvent.objects.filter(
+                source__namespace__in=['settlement', 'clearance']).exists():
+            errors.append('clearance:unexpected_accounting_event')
         for claim in SourceConsumption.objects.filter(consumer='settlement'):
             parts = claim.coverage_key.split(':')
             if len(parts) != 3 or parts[0] != 'term' or parts[1] not in {'due', 'retention'}:
