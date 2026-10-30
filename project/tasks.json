@@ -6499,7 +6499,7 @@
       "title": "后续业务交付独立规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -6517,6 +6517,92 @@
         "docs/verification.md",
         "project/reports/PH-231.json",
         "project/handoffs/PH-231.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "root",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-231.md"
+    },
+    {
+      "id": "PH-232",
+      "title": "核销首片：已过账现金对未清项的部分核销与撤核",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-214",
+        "PH-219",
+        "PH-222",
+        "PH-224",
+        "PH-228",
+        "PH-230"
+      ],
+      "spec": "project/specs/PH-232.md",
+      "allowed_paths": [
+        "pmo_plugins/settlement/models.py",
+        "pmo_plugins/settlement/clearance_services.py",
+        "pmo_plugins/settlement/aging_services.py",
+        "pmo_plugins/settlement/receivable_views.py",
+        "pmo_plugins/settlement/domain_metadata.py",
+        "pmo_plugins/settlement/templates/settlement/receivable_detail.html",
+        "pmo_plugins/settlement/templates/settlement/aging_list.html",
+        "pmo_plugins/settlement/templates/settlement/clearance_list.html",
+        "pmo_plugins/settlement/migrations/*.py",
+        "pmo_plugins/cash/transaction_services.py",
+        "tests/test_v1_clearance.py",
+        "tests/test_v1_clearance_concurrency.py",
+        "tests/test_v1_clearance_http.py",
+        "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/reports/PH-232.json",
+        "project/handoffs/PH-232.md",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_clearance tests.test_v1_clearance_concurrency tests.test_v1_clearance_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-233",
+      "title": "后续业务交付独立规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-231"
+      ],
+      "spec": "project/specs/PH-233.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-233.json",
+        "project/handoffs/PH-233.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
