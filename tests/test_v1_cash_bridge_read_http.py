@@ -36,17 +36,19 @@ class CashBridgeHTTPTests(CashBridgeHTTPFixture, TestCase):
             self.assertEqual(self.client.get(SNAPSHOT_URL).status_code, 403)
             self.assertEqual(self.client.get(ISSUES_URL).status_code, 403)
 
-    def test_module_disabled_http_routes_refuse_but_service_history_readable(self):
+    def test_module_disabled_history_readable_via_history_read(self):
+        row = self.posted(gross_cents=1000)
+        self.classify(row, classification='receipt')
         PluginState.objects.update_or_create(
             organization=self.org, plugin_id="cash",
             defaults={"enabled": False, "changed_by": self.owner.user})
         self.login(self.owner)
-        # The plugin runtime gates disabled modules at the HTTP entry; the named read
-        # services stay readable for history (service test covers that path).
-        self.assertEqual(self.client.get(SNAPSHOT_URL).status_code, 403)
-        self.assertEqual(self.client.get(ISSUES_URL).status_code, 403)
+        # history_read routes stay readable after module disable (spec); writes do not exist.
+        self.assertEqual(self.client.get(SNAPSHOT_URL).status_code, 200)
+        self.assertEqual(self.client.get(ISSUES_URL).status_code, 200)
+        self.assertEqual(self.client.post(SNAPSHOT_URL, {}).status_code, 405)
         from pmo_plugins.cash import reconciliation_services as recon
-        self.assertEqual(recon.cash_bridge_snapshot(self.owner)['summary']['posted_cash_count'], 0)
+        self.assertEqual(recon.cash_bridge_snapshot(self.owner)['summary']['posted_cash_count'], 1)
 
     def test_filters_and_read_only_methods(self):
         row = self.posted(gross_cents=1000)

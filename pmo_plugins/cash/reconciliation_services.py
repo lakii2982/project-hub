@@ -142,6 +142,8 @@ def _transaction_issues(transaction, bundle, postings, refunds, returns, transfe
             _issue(issues, 'reversal_event_missing', transaction,
                    classification_ref=bundle['reversal'].classification_ref)
     else:
+        # The single-active unique constraint makes >1 active rows unreachable through the
+        # owner services; keep the branch as defence in depth for raw/legacy rows.
         if len(bundle['active']) > 1:
             _issue(issues, 'classification_duplicate_active', transaction,
                    actual=len(bundle['active']), expected=1)
