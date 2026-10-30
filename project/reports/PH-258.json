@@ -15,7 +15,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 79ee448 --task PH-258",
       "result": "pass",
-      "evidence": "Post-final-review actual run at reviewed HEAD 92d59ed: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"79ee448\",\"head\":\"92d59ed15d08a1de570f3753f879a41618383c12\",\"report_path\":\"project/reports/PH-258.json\",\"changes\":13}, exit 0; all 13 changed files inside BASE PH-258 allowed_paths and review.status=pass with the reviewer's name (includes the authorized PH-241 whitelist correction)."
+      "evidence": "Post-final-review actual run at the review-pass HEAD 64ca16e: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"79ee448\",\"head\":\"64ca16eb5d49c1667b8cd6d0bf7afa0e121a46cb\",\"report_path\":\"project/reports/PH-258.json\"}, exit 0; all 13 changed files inside BASE PH-258 allowed_paths and review.status=pass with the reviewer's final block (reviewed HEAD 92d59ed incl. PH-241 whitelist correction)."
     }
   ],
   "review": {
