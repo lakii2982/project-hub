@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at the candidate revision (BASE 8748c1a, PH-282 in_review per slot convention): {\"command\":\"check\",\"ok\":true,\"task_count\":208}, exit 0 (check allows in_review with owner+handoff and does not yet require the report pass); the final post-review entry will be recorded at the review-pass HEAD."
+      "result": "pass",
+      "evidence": "Post-independent-review actual rerun with the recorded pass (reviewed HEAD 46c8bff, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":208}, exit 0; PH-282 done with handoff and PH-286 ready on PH-282 done."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (planning registration plus the two authorized whitelist corrections); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-282 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "TWO AUTHORIZED WHITELIST FIXES VERIFIED EXACTLY: PH-269 tasks/spec now both have 30 paths and add only tests/test_contract_approval.py with the purpose note (time requires={contracts}; the PG concurrent-approval test needs to disable/restore time in the contracts-disable loop); PH-274 tasks/spec both have 26 paths and add the seven named cross-slice test files (acceptance_revenue, cash_http, clearance_http, settlement_http, contract_change, contract_change_http, service_period_revenue_http) with the onboarding requires={contracts,settlement,cash} purpose note and the 'minimum necessary edit, no business assertion change' restriction. Programmatic spec-vs-tasks comparison shows no diff for either task, so the PH-259 exact-whitelist lesson is respected; both tasks remain ready and no other fields/status changed.",
+      "NEW TASKS/DEPENDENCIES: task_count 208 unique continuous PH-283..PH-286 (BASE max 282; no remote/local branch or spec >=283). PH-283 settlement OpenItem/clearance/refund coverage read-only is ready on done PH-224/PH-232/PH-240/PH-230 and correctly does not depend on in_review PH-241 (offset shown as not implemented); PH-284 management-revenue/settlement/contract pairing read-only is ready on done PH-219/PH-222/PH-224/PH-232/PH-265; PH-285 authorized CSV export of reconciliation worksheets is proposed on not-done PH-181/PH-182 and proposed PH-272/ready-not-done PH-277, with an accurate blocker; PH-286 next planning slot is proposed on PH-282 in_review with the done-transition blocker (correct convention). Existing blockers were refreshed (PH-276 now waits PH-269 done; PH-251/252/255/256/257/260/261/262/271/272 accurate); no false promotion and no other task promoted.",
+      "DoR/NUMBERING/ACCEPTANCE: PH-283/284 freeze read-only services/views/permissions/pagination/issue codes/counterexamples/executable acceptance/risk with no write path and no business migration (they only touch their owner service/view/templates/tests/delivery urls/governance files); PH-285 is a read-only authorized CSV export with receipt/generic-audit handling and no canonical export command connection; PH-286 is the next planning slot. Task/spec numbering is continuous, all acceptance commands are executable, no <PH-/{tid} placeholders remain, all 11 changed files are inside PH-282 allowed_paths, and no scaffold/contract-schema/code/done-report/review changes were made.",
+      "SLOT CONVENTION/GATES: PH-282 remains in_review with owner/handoff and PH-286 remains proposed; after this pass the final evidence commit must set PH-282 done/PH-286 ready and clear the blocker, then rerun check/verify-change. At HEAD 46c8bff (BASE 8748c1a): projectctl check ok=true/task_count=208; governance 23 tests OK; verify-change --base 8748c1a --task PH-282 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; report test entries are the pre-review state and will be replaced. PH-269/PH-274 whitelist expansions are ready for their final rebase/review."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 46c8bff (BASE 8748c1a) in /Users/lakii2982/项目/pmo-282, worktree clean; 11 changed files all inside PH-282 allowed_paths; task_count 208 unique continuous PH-283..PH-286; manifest=PH-282. Authorized whitelist fixes verified programmatically: PH-269 spec/tasks both 30 paths (only test_contract_approval.py added) and PH-274 both 26 paths (the seven cross-slice tests added), with purpose notes and no other contract changes; both remain ready. New tasks: PH-283 read-only settlement coverage ready on done PH-224/232/240/230 (PH-241 in_review excluded); PH-284 read-only revenue pairing ready on done PH-219/222/224/232/265; PH-285 CSV export proposed on not-done PH-181/182 and proposed PH-272/ready-not-done PH-277 with accurate blocker; PH-286 proposed on PH-282 in_review with the convention blocker. Specs freeze read-only services/permissions/pagination/issue codes/counterexamples/executable acceptance/risk, no migration/write path; numbering 283-286 free/continuous; no placeholders; no scaffold/schema/code/done-report edits. PH-282 remains in_review and PH-286 proposed for the final evidence transition. Gates: check ok=true/208; governance 23 OK; verify-change --base 8748c1a --task PH-282 only review/acceptance gates, no path_out_of_scope. Final evidence commit must replace pre-review tests and set PH-282 done/PH-286 ready."
   },
   "deviations": [
     "Planning-slot state convention: PH-282 is kept in_review with handoff and PH-286 is proposed with blocker 'PH-282 done 后置 ready'; after the independent review PASS, the final evidence commit will set PH-282 done and PH-286 ready and clear the blocker (same convention as PH-263/268/273/278).",
