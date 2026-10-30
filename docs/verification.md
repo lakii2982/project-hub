@@ -401,3 +401,8 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 ## PH-238 后续交付独立规划入口（2026-10-30）
 
 基线3c21a29（PH-237 PR#131、PH-210 PR#132、PH-232 PR#133已合入，本分支只含PH-238）。纯规划片：登记PH-239（现金分类与账本桥接首片，ready——依赖PH-210/PH-230均done）、PH-240（退款与银行退回，proposed——依赖PH-230/PH-232均已done，按Lead分工晋级动作留给PH-242复核）、PH-241（预收/预付抵扣Offset首片，proposed——缺PH-239 done），各冻结字段/状态机/权限/幂等/金额/迁移/白名单/反例/验收命令/risk S；登记PH-242下一规划槽（ready，依赖PH-238 done）。PH-157/PH-158按spec判断不重复登记（PH-110 ready未done、其余上游proposed）。实际执行（最终HEAD）：check ok=true/task_count=164；治理测试23项OK；verify-change --base 3c21a29 --task PH-238 ok=true、9个变更文件全在白名单；作用域测试19项OK。独立S复核首轮打回2条（PH-241迁移号、PH-157/158依赖事实），08671ab二次复核PASS；随后rebase到3c21a29仅带入main的PH-232合入并同步PH-240/241晋级理由文字。未验证：PH-239/240/241均未实现，无产品代码/迁移/浏览器/PG/CI证据；PH-240/PH-241晋级由PH-242复核。
+
+
+## PH-242 后续交付独立规划入口（2026-10-30）
+
+基线df01896（PH-228/230/232/237/238已合入）。纯规划片：登记PH-243（PH-239契约修正与白名单扩权，ready）、PH-244（手续费与净额到账草稿事实/规范事件/对账，ready；批准与成本过账延后）、PH-245（内部账户互转，proposed）、PH-246（PH-237量化证据统一94.4%，ready）、PH-247（下一规划槽，ready）；PH-240按已done依赖（PH-230/PH-232）晋级ready；PH-239因硬前置PH-243未done保持proposed并写blocker；PH-241保持proposed。各spec冻结字段/状态机/权限/幂等/金额/迁移/白名单/反例/验收命令/risk S。实际执行（证据 HEAD 0c2103d）：check ok=true/task_count=169；治理测试23项OK；verify-change --base df01896 --task PH-242 ok=true、13个变更文件（含本文件）全在白名单。abfc9d9 为证据 commit 前的计数（12 文件、当时本条目尚未加入）；其后的 provenance 更正 commit 不改变已验证的规划内容（任务状态/白名单/spec 均未变），仅修正本报告/本条目的证据表述。独立S复核共三轮：首轮3阻断+4NOTE、二轮1阻断（冻结句与重分类冲突），修复后三轮PASS（HEAD c342659）。未验证：PH-243/244/245/246均未实现，无产品代码/迁移/运行时/浏览器/PG/CI证据；PH-246三处数字一致性grep待其执行时实跑。

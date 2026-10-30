@@ -6791,12 +6791,13 @@
       "title": "现金分类与账本桥接首片：分类事实、撤分类与现金账入账",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "proposed",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-210",
-        "PH-230"
+        "PH-230",
+        "PH-243"
       ],
       "spec": "project/specs/PH-239.md",
       "allowed_paths": [
@@ -6832,7 +6833,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "缺 PH-243 done（分类事件现金账 posting_event_refs、SourceConsumption 注解与 core LedgerPosting DB 约束修正）；PH-210/PH-230 已 done。PH-243 合入后由 PH-247 规划槽复核 DoR 并晋级 ready。"
+      ],
       "handoff": null
     },
     {
@@ -6840,7 +6843,7 @@
       "title": "退款与银行退回：原现金覆盖内的真实退款/退回",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -6882,9 +6885,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-232 已在最终 BASE（3c21a29，PR #133）done，依赖已满足；按 Lead 分工，晋级 ready 的动作留给 PH-242 规划槽复核（本片不自我授权），故保持 proposed。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -6937,7 +6938,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-239 done（advance 分类与现金事实）；PH-210/PH-224/PH-230/PH-232 已 done。依赖完成后由 PH-242 规划槽复核 DoR 与契约缺口（offset 无 canonical 事件、无撤销命令）再晋级。"
+        "缺 PH-239 done（advance 分类与现金事实）；PH-210/PH-224/PH-230/PH-232 已 done。PH-239 由 PH-243 修正后经 PH-247 晋级，依赖完成后由后续规划槽复核 DoR 与契约缺口（offset 无 canonical 事件、无撤销命令）再晋级。"
       ],
       "handoff": null
     },
@@ -6946,7 +6947,7 @@
       "title": "后续交付独立规划入口（接续 PH-238）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -6965,6 +6966,212 @@
         "docs/verification.md",
         "project/reports/PH-242.json",
         "project/handoffs/PH-242.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-242.md"
+    },
+    {
+      "id": "PH-243",
+      "title": "PH-239 契约修正与白名单扩权：分类事件现金账 posting 口径与核心账本约束",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-210",
+        "PH-237"
+      ],
+      "spec": "project/specs/PH-243.md",
+      "allowed_paths": [
+        "docs/v1.0-development/contracts/events.schema.json",
+        "docs/v1.0-development/contracts/entities.schema.json",
+        "docs/v1.0-development/contracts/catalog-completeness.schema.json",
+        "docs/v1.0-development/fixtures/fixture.json",
+        "docs/v1.0-development/promotion-draft/extension-freeze.json",
+        "tests/test_v1_preparation.py",
+        "project/specs/PH-239.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/v1.0-development/verification.md",
+        "docs/verification.md",
+        "project/reports/PH-243.json",
+        "project/handoffs/PH-243.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "python -B docs/v1.0-development/contracts/validate_contracts.py",
+        "python -B docs/v1.0-development/contracts/check_contract_cases.py",
+        "python -B docs/v1.0-development/fixtures/check_fixture.py",
+        "python manage.py test tests.test_v1_preparation --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-244",
+      "title": "手续费与净额到账拆分首片：银行手续费草稿事实、规范事件与净额对账（批准/成本过账延后）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-228",
+        "PH-230"
+      ],
+      "spec": "project/specs/PH-244.md",
+      "allowed_paths": [
+        "pmo_plugins/costing/models.py",
+        "pmo_plugins/costing/bank_charge_services.py",
+        "pmo_plugins/costing/bank_charge_views.py",
+        "pmo_plugins/costing/bank_charge_forms.py",
+        "pmo_plugins/costing/domain_metadata.py",
+        "pmo_plugins/costing/urls.py",
+        "pmo_plugins/costing/templates/costing/bank_charge_list.html",
+        "pmo_plugins/costing/templates/costing/bank_charge_form.html",
+        "pmo_plugins/costing/templates/costing/labor_detail.html",
+        "pmo_plugins/costing/migrations/*.py",
+        "pmo_plugins/cash/transaction_services.py",
+        "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_bank_charge.py",
+        "tests/test_v1_bank_charge_http.py",
+        "project/reports/PH-244.json",
+        "project/handoffs/PH-244.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_bank_charge tests.test_v1_bank_charge_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-245",
+      "title": "内部账户互转首片：成对现金关联、公司范围抵销与撤转",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-239",
+        "PH-244"
+      ],
+      "spec": "project/specs/PH-245.md",
+      "allowed_paths": [
+        "pmo_plugins/cash/models.py",
+        "pmo_plugins/cash/internal_transfer_services.py",
+        "pmo_plugins/cash/classification_services.py",
+        "pmo_plugins/cash/domain_metadata.py",
+        "pmo_plugins/cash/forms.py",
+        "pmo_plugins/cash/views.py",
+        "pmo_plugins/cash/templates/cash/internal_transfer_form.html",
+        "pmo_plugins/cash/templates/cash/internal_transfer_list.html",
+        "pmo_plugins/cash/templates/cash/cash_transaction_detail.html",
+        "pmo_plugins/cash/migrations/*.py",
+        "core/cash_accounting.py",
+        "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_internal_transfer.py",
+        "tests/test_v1_internal_transfer_http.py",
+        "tests/test_v1_internal_transfer_concurrency.py",
+        "project/reports/PH-245.json",
+        "project/handoffs/PH-245.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_internal_transfer tests.test_v1_internal_transfer_http tests.test_v1_internal_transfer_concurrency --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-239/PH-244 done（现金分类与账本桥接、手续费与净额到账首片）；PH-228/PH-230 已 done。依赖完成后由下一规划槽复核 DoR 与 PH-243 契约修正再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-246",
+      "title": "PH-237 量化证据修正：会话阅读量降幅统一 94.4% 与固定 SHA 复现口径",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-237"
+      ],
+      "spec": "project/specs/PH-246.md",
+      "allowed_paths": [
+        "project/reports/PH-237.json",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/reports/PH-246.json",
+        "project/handoffs/PH-246.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-247",
+      "title": "后续交付独立规划入口（接续 PH-242）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-242"
+      ],
+      "spec": "project/specs/PH-247.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-247.json",
+        "project/handoffs/PH-247.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
