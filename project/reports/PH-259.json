@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base e8183ff --task PH-259",
-      "result": "not_run",
-      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE e8183ff): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope — all 7 changed files (ADR 0010, PH-252 decision-point sync, tasks.json, manifest.json, docs/verification.md, PH-259 report/handoff) are inside BASE PH-259 allowed_paths."
+      "result": "pass",
+      "evidence": "Post-final-review actual run at the review-pass HEAD 90e8913: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"e8183ff\",\"head\":\"90e89130056adeb92fe0803ef1347fc1e885a6aa\",\"report_path\":\"project/reports/PH-259.json\"}, exit 0; all 7 changed files inside BASE PH-259 allowed_paths and review.status=pass with the reviewer's final block."
     }
   ],
   "review": {
