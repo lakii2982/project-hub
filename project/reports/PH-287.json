@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Final Lead integration rerun after rebase onto d6a6f6a: {\"command\":\"check\",\"ok\":true,\"task_count\":216} exit 0."
+      "evidence": "Actual final run on BASE d6a6f6a: {\"command\":\"check\",\"ok\":true,\"task_count\":216}."
     },
     {
       "command": "python manage.py check",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run: Ran 986 tests in 127.876s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
+      "evidence": "Actual final run on BASE d6a6f6a (PH-290 integrated): Ran 986 tests in 123.490s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
