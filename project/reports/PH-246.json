@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Post-independent-review actual rerun with the recorded reviewer pass: {\"command\":\"check\",\"ok\":true,\"task_count\":169}, exit 0. The pre-review run (single high_risk_review_required while review was pending) is recorded in deviations and was never declared as pass."
+      "evidence": "Final Lead integration rerun after rebase onto 37b5fdf: {\"command\":\"check\",\"ok\":true,\"task_count\":169} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -23,9 +23,9 @@
       "evidence": "Actual grep: all three files contain 94.4% (PH-237 report 1x, archive 1x, verification 3x incl. the PH-237 calibration, the PH-242 planned-slice mention and the PH-246 entry) and none contains 94.5%, 94.6%, 281349 or 15360. The PH-237 review block is preserved verbatim (it mentions the 281KB→15KB figure but no banned stale percentage)."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base ceded2e --task PH-246",
+      "command": "python scripts/projectctl.py verify-change --base 37b5fdf --task PH-246",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at the review-pass HEAD b1e172c: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"ceded2e85caa7886226cfdf1e89eadaf475e42c8\",\"head\":\"b1e172cfcfdcdfba78cac4552b9694cae40d5e94\",\"report_path\":\"project/reports/PH-246.json\"}, exit 0; all 7 changed files inside BASE PH-246 allowed_paths (PH-237 report, archive PH-237 entry, PH-237 calibration + PH-246 verification entry, tasks.json, manifest.json, PH-246 report/handoff) and the report carries review.status=pass with the reviewer's name. The pre-review failure (high_risk_review_required + acceptance_not_passed) is recorded in deviations."
+      "evidence": "Final Lead integration rerun after rebase onto 37b5fdf (PH-244 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 changed files inside BASE PH-246 allowed_paths."
     }
   ],
   "review": {
@@ -45,7 +45,8 @@
     "Only the PH-237 report's byte-measure test entry was rewritten; its review block, summary and other test entries are preserved verbatim (the review block's '281KB→15KB' phrasing is historical and contains no banned stale percentage).",
     "docs/delivery-status-archive.md is append-only history, so this slice makes the single explicitly authorized PH-237-entry numeric correction mandated by the PH-242 planning slot and spec, and touches no other archive entry; a note that the correction was authorized is kept in this report and the PH-246 verification entry.",
     "The final-path measurement uses orient/brief output at the fixed commit b931be0 via `git archive` extraction (not the live tree), so it is reproducible and not tied to current repository state; per-component bytes and the exact command list are in the report and PH-237 entry.",
-    "The old numbers were removed from the report evidence so the spec's forbidden-string grep passes; the supersede statement now says 'earlier non-reproducible byte-measure numbers' without repeating them."
+    "The old numbers were removed from the report evidence so the spec's forbidden-string grep passes; the supersede statement now says 'earlier non-reproducible byte-measure numbers' without repeating them.",
+    "Lead integration rebase (ceded2e -> 37b5fdf) after PH-244 merged: only project/manifest.json conflicted (active_handoff -> PH-246); gates rerun green with the new BASE. No content change."
   ],
   "unverified": [
     "No product code, migration, tests, browser or PostgreSQL behavior changed; this is an evidence/doc-only slice.",
