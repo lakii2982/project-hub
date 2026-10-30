@@ -28,7 +28,10 @@ class Membership(models.Model):
     role = models.CharField(max_length=16, choices=Role.choices, default=Role.MEMBER)
     active = models.BooleanField(default=True)
     # Canonical Membership optimistic version (PH-264); no cloned account.
-    version = models.PositiveIntegerField(default=1)
+    # db_default keeps the database-level default the preparation contract's raw
+    # INSERT probes rely on (module-level default=1 alone only fills rows at the
+    # ORM/migration layer).
+    version = models.PositiveIntegerField(default=1, db_default=1)
     class Meta:
         constraints = [models.UniqueConstraint(fields=["organization", "user"], name="unique_org_user")]
     def __str__(self): return self.user.get_full_name() or self.user.username

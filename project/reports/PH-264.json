@@ -58,7 +58,9 @@
     "Single worker owns the whole write set for this task (core/models.py Membership.version, core/masterdata.py service, core/forms.py form, core/views.py settings handler, core/migrations/0010, templates/settings.html, tests, governance); no parallel slice writes these files; independent review is pending.",
     "project/manifest.json active_handoff is left at main's value per the integration convention; tasks.json records PH-264 in_review with owner/handoff.",
     "No browser 1440/390 check was run in this round (HTTP tests only); no new canonical event topic, ledger/amount/period write or AgentToken capability was added.",
-    "Lead integration rebase (1e4c480 -> 6155e2d) after PH-266 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-264 entry; manifest.active_handoff -> PH-264. Gates rerun green."
+    "Lead integration rebase (1e4c480 -> 6155e2d) after PH-266 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-264 entry; manifest.active_handoff -> PH-264. Gates rerun green.",
+    "CI fix after the first PostgreSQL run: the preparation multi-connection probe inserts core_membership rows with raw SQL (no version column), so the module-level default=1 alone left PostgreSQL with no column default and the insert failed with NotNullViolation. Membership.version now also declares db_default=1 (migration 0010 emits DEFAULT 1), which keeps the preparation contract valid; SQLite scoped tests re-ran OK (17 tests) and the PostgreSQL rerun is the authoritative evidence.",
+    "Cleanup: a local .venv convenience symlink had been accidentally committed (the .gitignore pattern is directory-only, so a symlink escaped it); it was untracked and removed, keeping the tree publishable (public-hygiene rule: no runtime paths / symlinks)."
   ],
   "unverified": [
     "No browser 1440/390 check was run in this round; the settings membership UI was exercised through HTTP tests only. Visual/keyboard/overflow verification remains for the reviewer/browser round.",

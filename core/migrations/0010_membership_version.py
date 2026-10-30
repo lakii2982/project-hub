@@ -8,6 +8,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='membership',
             name='version',
-            field=models.PositiveIntegerField(default=1),
+            field=models.PositiveIntegerField(db_default=1, default=1),
         ),
     ]
