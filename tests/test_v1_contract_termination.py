@@ -101,9 +101,15 @@ class ContractTerminationTests(ContractChangeFixture, TestCase):
         change = self.draft_change(change_type='termination', lines=[])
         self.decide(change, note='终止')
         with connection.cursor() as cursor:
-            for trigger in ('contracts_contractchange_update_guard',
-                            'contracts_contractchange_insert_guard'):
-                cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
+            if connection.vendor == 'postgresql':
+                # PostgreSQL installs one combined guard trigger per table and
+                # needs ON TABLE when dropping it.
+                cursor.execute(
+                    'DROP TRIGGER IF EXISTS contracts_change_guard ON contracts_contractchange')
+            else:
+                for trigger in ('contracts_contractchange_update_guard',
+                                'contracts_contractchange_insert_guard'):
+                    cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
         ContractChange.objects.filter(pk=change.pk).update(
             decided_by_member=self.owner, version=3)
         errors = self.verify_errors()

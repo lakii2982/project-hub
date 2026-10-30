@@ -58,7 +58,8 @@
     "变更类型/生效日期/合同/创建人创建后不可修改（触发器冻结）；draft 更新允许修改 draft_content/evidence/deltas 并使 version+1，决策时这些事实被冻结（触发器校验不变）；本片不产生 canonical pending_customer 状态（spec 排除），客户确认流转留后续片。",
     "UI 结构复用既有 panel/form 模式，但 1440/390、键盘焦点与空/错/加载态未实测；作为未验证项披露。",
     "复核 round 1 三阻断已修：① SQLite/PostgreSQL update 触发器与 verify_integrity 增加 creator≠decider（含直改 DB 自批的 forged 回归）；② 触发器允许 draft 内容/证据/差额更新、决策时冻结，并补草稿编辑回归；③ 插入触发器要求合同 active，verify 增加 terminated 合同新变更/新版本与 version_approved changed_refs=[version, change] 断言及 forged 反例。修复后 scoped 17 tests OK、全量 922（基线 918 + 4 新回归，8 项 macOS 基线失败不变）、verify_integrity 探针仍 ok/损坏可报。",
-    "Lead integration rebase (1e4c480 -> 8101b28) after PH-266/PH-264 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-265 entry; manifest.active_handoff -> PH-265; tasks.json auto-merged retaining PH-264/PH-266 facts. Gates rerun green."
+    "Lead integration rebase (1e4c480 -> 8101b28) after PH-266/PH-264 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-265 entry; manifest.active_handoff -> PH-265; tasks.json auto-merged retaining PH-264/PH-266 facts. Gates rerun green.",
+    "CI fix after the first PostgreSQL run: the corruption probe in tests/test_v1_contract_termination.py dropped SQLite-shaped per-operation triggers with SQLite syntax; PostgreSQL installs one combined contracts_change_guard trigger and needs ON TABLE when dropping it, so the probe now branches on the connection vendor and drops the correct trigger name. Scoped termination tests re-ran OK and the PostgreSQL rerun is the authoritative evidence."
   ],
   "unverified": [
     "本机无 PostgreSQL：同一合同并发 draft 只一胜、重复批准只一胜由公司锁+行锁+唯一约束与 SQLite 路径测试覆盖，真实 PG 双连接并发交 Linux CI。",
