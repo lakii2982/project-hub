@@ -474,8 +474,11 @@ def _charge_ref_shape(source_ref):
 
 
 def _locked_charge(member, charge_id):
+    # The approval-chain FKs are nullable, so select_related() would build an
+    # outer join and PostgreSQL rejects FOR UPDATE on the nullable side. Lock only
+    # the BankCharge row itself and fetch the related members afterwards.
     try:
-        return BankCharge.objects.select_for_update().select_related(
+        return BankCharge.objects.select_for_update(of=('self',)).select_related(
             'created_by', 'submitted_by', 'approved_by').get(
             organization=member.organization,
             pk=_identifier(charge_id, '手续费草稿不存在或无权访问'))
