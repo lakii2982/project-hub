@@ -49,11 +49,12 @@
     "PH-226 (test prerequisite) was merged first so the settlement plugin's contracts/delivery dependency edge does not break two existing SQLite tests and two PostgreSQL concurrency setUp blocks; PH-224 was rebased onto that BASE.",
     "Module-disabled HTTP routes return 403 while settlement history remains readable through the service layer; this matches other plugins and is the intended 'history readable' reading (spec service-layer read, not public route).",
     "Term keys are frozen as coverage_key='term:<due|retention>:<term_id>' and partition_key='<due|retention>:<term_id>' with source_id=contract_line_id, matching the frozen spec semantics despite the earlier 'kind' wording ambiguity.",
-    "Settlement evidence refs are restricted to canonical {evidence_id, sha256, kind}; the free-text basis stays in the private terms_snapshot/evidence_note and the UI displays evidence_display."
+    "Settlement evidence refs are restricted to canonical {evidence_id, sha256, kind}; the free-text basis stays in the private terms_snapshot/evidence_note and the UI displays evidence_display.",
+    "Browser evidence on final HEAD 9566481: 57/57 checks pass, 0 failures; three defects found and fixed (aging due/release date rendering, source ref readability, draft edit pre-check of selected terms)."
   ],
   "unverified": [
     "PostgreSQL concurrency/lock/period-race execution is provided by the PR's PostgreSQL CI job; local SQLite skips are not evidence.",
     "Production/customer UAT, cash clearing, credit/bad debt, AP, invoices, disputes, active-settlement reversal, opening items and AgingCase writes are out of this slice.",
-    "Browser evidence covers Chromium 1440/390 only; printing/dark mode/touch/non-Chromium untested."
+    "Browser evidence covers Chromium 320/390/768/1024/1440 only; printing, dark mode, touch and non-Chromium browsers untested."
   ]
 }
