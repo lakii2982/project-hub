@@ -9374,7 +9374,7 @@
       "title": "后续交付独立规划入口（接续 PH-294）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -9524,7 +9524,7 @@
       "title": "后续交付独立规划入口（接续 PH-298）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -9550,9 +9550,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-298 done 后置 ready（当前 PH-298 为 in_review，待独立 S 复核 pass 的最终证据 commit 再置 done/ready）。"
-      ],
+      "blockers": [],
       "handoff": null
     }
   ]

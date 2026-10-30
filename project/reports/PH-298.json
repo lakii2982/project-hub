@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD a57e3e6 (BASE e43c2c2, PH-298 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":224}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Final HEAD: {\"command\":\"check\",\"ok\":true,\"task_count\":224} exit 0 (PH-298 done, PH-302 ready)."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -14,16 +14,21 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base e43c2c2 --task PH-298",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD a57e3e6: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 10 changed files (PH-281 spec, 4 new specs PH-299..302, tasks.json, manifest.json, docs/verification.md, PH-298 report/handoff) are inside BASE PH-298 allowed_paths."
+      "result": "pass",
+      "evidence": "Final HEAD: {\"command\":\"verify-change\",\"ok\":true} exit 0 — 11 changed files all inside BASE PH-298 allowed_paths."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (PH-281 canonical-route whitelist correction plus planning registration); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-298 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PH-281 WHITELIST FIX VERIFIED EXACT: tasks/spec both have 14 paths and add only `pmo_plugins/delivery/domain_metadata.py` with the purpose note (append the read-only identity-access route as canonical single metadata, access=history_read; urls imports it and must not copy metadata or change other gates); PH-281 remains ready with its other fields unchanged; programmatic spec-vs-tasks comparison is empty.",
+      "NEW TASKS/NUMBERING/BLOCKERS: task_count 224 unique continuous PH-299..PH-302 (BASE max 298; no remote/local branch/spec >=299). PH-299 (period close/forecast coverage ADR 0016) is proposed on proposed PH-180/181/182; PH-300 (project close ADR 0017) proposed on proposed PH-180/181/185; PH-301 (due-scan/notification inbox, read-only inbox + dedupe/read state, no external push/auto action) proposed on proposed PH-179/183/151; PH-302 next planning slot proposed on PH-298 in_review with the done-transition blocker. No proposed task was promoted; no false readiness. ADR numbers 0016/0017 are free (existing ADRs up to 0014; 0015 is not yet created by proposed PH-293) and no remote branch occupies the ids.",
+      "DoR/NUMBERING/ACCEPTANCE/SLOT: PH-299/300 are docs-only ADR freezes with explicit no-code/no-migration/no-schema boundaries; PH-301 freezes derived reminders, inbox permissions/dedupe/read-state, no external push or automatic business action, with exact implementation whitelist (core notification service/views/forms/template, delivery domain_metadata/urls, tests, governance) and executable acceptance; PH-302 is the next slot. All acceptance commands are executable; no `<PH-`/`{tid}` placeholders; no code/scaffold/schema/contract changes; 10 changed files all inside PH-298 allowed_paths; PH-298 in_review with owner/handoff, PH-302 proposed.",
+      "SLOT CONVENTION/GATES: PH-298 remains in_review and PH-302 proposed; after this pass the final evidence commit must set PH-298 done/PH-302 ready and clear the blocker, then rerun check/verify-change. At HEAD d744faf (BASE e43c2c2): projectctl check ok=true/task_count=224; governance 23 tests OK; verify-change --base e43c2c2 --task PH-298 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; manifest=PH-298."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD d744faf (BASE e43c2c2) in /tmp/ph298-planning, worktree clean; 10 changed files all inside PH-298 allowed_paths; task_count 224 unique continuous PH-299..PH-302; manifest=PH-298. PH-281 whitelist exact 14/14 with domain_metadata.py added for the canonical history_read identity-access route; PH-281 remains ready. PH-299/300 docs-only ADR 0016/0017 proposed on proposed deps; PH-301 read-only notification inbox proposed on proposed PH-179/183/151 (no external push/auto action); PH-302 proposed on PH-298 in_review. DoR/whitelists/counterexamples/executable acceptance complete; ADR 0016/0017 free; no placeholders; no code/schema/scaffold/done-report changes; no false promotion. Gates: check ok=true/224; governance 23 OK; verify-change --base e43c2c2 --task PH-298 only review/acceptance gates, no path_out_of_scope. Final evidence sets PH-298 done/PH-302 ready."
   },
   "deviations": [
     "Planning-slot state convention: PH-298 is kept in_review with handoff and PH-302 is proposed with blocker 'PH-298 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-298 done and PH-302 ready and clear the blocker (same convention as prior planning slots).",
