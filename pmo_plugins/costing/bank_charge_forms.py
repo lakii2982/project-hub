@@ -63,3 +63,21 @@ class BankChargeForm(BankChargeStrictForm):
     @staticmethod
     def amount_cents(value):
         return int(value * 100)
+
+
+class BankChargeSubmitForm(BankChargeStrictForm):
+    charge_id = forms.UUIDField(widget=forms.HiddenInput)
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    action = forms.ChoiceField(choices=[('submit', 'submit')], initial='submit',
+                               required=False, widget=forms.HiddenInput)
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
+class BankChargeDecisionForm(BankChargeStrictForm):
+    charge_id = forms.UUIDField(widget=forms.HiddenInput)
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    decision = forms.ChoiceField(choices=[('approve', '批准'), ('reject', '驳回')],
+                                 widget=forms.HiddenInput)
+    note = forms.CharField(label='审批意见 / 驳回原因', max_length=1000, required=False,
+                           widget=forms.Textarea(attrs={'rows': 3}))
+    request_token = forms.UUIDField(widget=forms.HiddenInput)

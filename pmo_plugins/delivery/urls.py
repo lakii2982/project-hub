@@ -47,5 +47,5 @@ def entry_point():
         'costing': {name: getattr(labor_views, name) for name in
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}
                    | {name: getattr(bank_charge_views, name) for name in
-                      ('bank_charge_list', 'bank_charge_form', 'bank_charge_save')},
+                      ('bank_charge_list', 'bank_charge_form', 'bank_charge_save', 'bank_charge_action')},
     })

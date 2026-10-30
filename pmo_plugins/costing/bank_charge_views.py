@@ -1,5 +1,6 @@
 """PH-244 bank-fee draft browser workflow; writes go through the costing owner service."""
 from decimal import Decimal
+import uuid
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -11,7 +12,7 @@ from core.plugin_runtime import is_enabled
 from pmo_plugins.cash.transaction_services import cash_transaction_snapshot
 
 from . import bank_charge_services as services
-from .bank_charge_forms import BankChargeForm
+from .bank_charge_forms import (BankChargeDecisionForm, BankChargeForm, BankChargeSubmitForm)
 
 WRITE_ROLES = {'owner', 'finance'}
 
@@ -38,7 +39,7 @@ def _require_writer(member):
 
 def bank_charge_list(context, payload):
     member = services.bank_charge_reader(context.member)
-    rows, selected, reconciliation, error = [], None, None, ''
+    rows, selected, reconciliation, approval, error = [], None, None, None, ''
     try:
         rows = services.list_bank_charges(member)
         for row in rows:
@@ -53,11 +54,21 @@ def bank_charge_list(context, payload):
             reconciliation = services.net_fee_reconciliation(member, selected['cash_transaction_id'])
             for key in ('posted_net_cents', 'approved_fee_cents', 'implied_gross_cents', 'draft_fee_cents'):
                 reconciliation[key + '_display'] = money(reconciliation[key])
+            approval = services.bank_charge_cost_snapshot(member, selected['id'])
+            approval['amount_display'] = money(approval['cost_amount_cents']) if approval['cost_amount_cents'] is not None else ''
+            can_decide = (member.role in WRITE_ROLES
+                          and member.pk not in {selected['created_by'], approval['submitted_by']})
+            approval.update(can_decide=can_decide,
+                            submit_url=url('bank_charge_action', id=selected['id'], action='submit'),
+                            approve_url=url('bank_charge_action', id=selected['id'], action='approve'),
+                            reject_url=url('bank_charge_action', id=selected['id'], action='reject'),
+                            submit_token=uuid.uuid4(), decide_token=uuid.uuid4())
     except ValidationError as exc:
-        rows, selected, reconciliation = [], None, None
+        rows, selected, reconciliation, approval = [], None, None, None
         error = '；'.join(exc.messages)
     return render(context.request, 'costing/bank_charge_list.html', base(
-        member, rows=rows, selected=selected, reconciliation=reconciliation, error=error,
+        member, rows=rows, selected=selected, reconciliation=reconciliation,
+        approval=approval, error=error,
         enabled=is_enabled(member.organization, 'costing')), status=400 if error else 200)
 
 
@@ -121,3 +132,39 @@ def bank_charge_save(context, payload):
         submit_url=url('bank_charge_save'),
         back_url=url('bank_charge_list', id=existing['id']) if existing else url('bank_charge_list')),
         status=400)
+
+
+def bank_charge_action(context, payload):
+    """Browser submission of a draft, or an independent approve/reject of a pending charge."""
+    member = services.bank_charge_reader(context.member)
+    _require_writer(member)
+    action = context.request.GET.get('action', '')
+    charge_id = context.request.GET.get('id') or payload.get('charge_id')
+    if action not in {'submit', 'approve', 'reject'}:
+        raise PermissionDenied('未知手续费办理动作')
+    charge = services.get_bank_charge(member, charge_id)
+    from core.services import decide_document
+    try:
+        if action == 'submit':
+            form = BankChargeSubmitForm(payload)
+            if not form.is_valid():
+                raise ValidationError('；'.join(sum(form.errors.values(), [])))
+            decide_document(member, source_ref=charge['source_ref'],
+                            expected_version=form.cleaned_data['expected_version'],
+                            decision='submit',
+                            request_token=form.cleaned_data['request_token'], dry_run=False)
+            messages.success(context.request, '手续费已提交独立审批；尚未批准、未过账成本、未核销未清。')
+        else:
+            form = BankChargeDecisionForm(payload)
+            if not form.is_valid():
+                raise ValidationError('；'.join(sum(form.errors.values(), [])))
+            decide_document(member, source_ref=charge['source_ref'],
+                            expected_version=form.cleaned_data['expected_version'],
+                            decision=form.cleaned_data['decision'],
+                            note=form.cleaned_data.get('note') or '',
+                            request_token=form.cleaned_data['request_token'], dry_run=False)
+            messages.success(context.request, '手续费审批已办理；批准时一次性公司成本已过账。')
+    except ValidationError as exc:
+        messages.error(context.request, '；'.join(exc.messages))
+        return redirect(url('bank_charge_list', id=charge_id))
+    return redirect(url('bank_charge_list', id=charge_id))

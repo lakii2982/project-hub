@@ -1,0 +1,60 @@
+{
+  "task_id": "PH-250",
+  "summary": "Bank-fee approval slice: BankCharge gains the approval chain (submitted_by/at, approved_by/at, reject_reason) through a costing migration 0004 whose trigger replaces the PH-244 draft-only guard with draft-edit/submit/decide transitions that freeze published facts and keep BankCharge.version unchanged except for draft revisions. The costing service adds submit (draft->pending, records submitter) and independent decide (pending->approved/rejected, records approver and mandatory rejection reason; creator/submitter cannot decide), with company lock, period/lock/future checks, per-action BankChargeReceipt idempotency (same token replay without new writes, changed input conflict) and one-winner semantics. Approval posts exactly one company cost fact set in the same transaction: one SourceConsumption claim (consumer=cost, coverage_key=bank_charge:<id>, amount=gross, source=bank_charge ref), one core AccountingEvent (event_type=costing.bank_charge.cost, frozen occurred_on/posting_period, effect=gross) and one LedgerPosting (book=cost, origin=current, scope=project, amount=gross), with generic audits submitted/approved/rejected/cost_posted and no new canonical topic (per spec; saved event stays only on the save path). core.services.decide_document implements the core.document.decide bank_charge handler (private service/browser workflow, command channel not exposed). Views/forms/templates add submit, independent approve and reject plus approval-chain/cost display. verify_integrity now accepts the five statuses, validates the approval chain, requires no cost facts for unapproved states and validates exactly one complete cost fact set when present for approved charges (PH-253-compatible transitional allowance when absent), with orphan cost-event/stray-claim detection and labor-loop allowlisting of the fee cost event. No cash fact, ledger cash/bank posting, settlement/open-item or ReceiptFeeSettlement write is made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":175}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (54 issues, 0 silenced), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: 'No changes detected'; the new costing migration 0004 (approval fields + replaced SQLite/PostgreSQL transition triggers) matches the model."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual one full run: Ran 809 tests in 142.014s, 5 failures/3 errors/59 environment skips; the 8 failures are exactly the known macOS environment-limited baseline names (6 DRF Accept/codec/large-JSON, 2 delivery symlink), no new names. Baseline at 1f02520 is 793 tests; this branch adds 16 tests. Linux CI authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Separate probe DB after draft->submit->independent approve: approved/version=1/claims=1/cost events=1 and verify_integrity ok=true; after inserting a duplicate cost AccountingEvent the command exits 1 with errors [\"bank_charge:<id>:cost_event_count\"]."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_bank_charge_approval tests.test_v1_bank_charge_approval_http tests.test_v1_bank_charge_cost --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual: Ran 16 tests in 0.780s, OK (service state machine/self-approval/reject-reason/replay/period/roles; HTTP submit/approve/reject/roles/CSRF/disabled/unknown action; cost: exactly one claim/event/posting with cost book/project scope/amount=gross, no cash/open-item effect, duplicate decision no second cost, verify_integrity approved/duplicate/missing-posting/amount-mismatch/self-approval/unapproved probes). Combined with the existing PH-244 suite: 24 tests OK."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级最终差异复核由 fresh-context reviewer 实际重跑上述命令并核对状态机/自审/成本唯一性/verify 口径后写入 pass/rejected；实现者不自写 pass。复核对象为 /tmp/ph250-fee-approval 的 PH-250 提交（BASE 1f02520）。"
+  },
+  "deviations": [
+    "按 Lead 授权单 worker 承担 root_only 写集：core/services.py（新增 decide_document bank_charge handler）、core/management/commands/verify_integrity.py 手续费分支、pmo_plugins/delivery/urls.py 动作路由绑定；无并行片同写这些文件，交付经 Lead 与独立复核。",
+    "审批链字段命名按 spec：submitted_by/submitted_at/approved_by/approved_at/reject_reason（approved_by/approved_at 同时记录驳回决定人，避免再加重叠字段），由 costing 迁移 0004 补齐并替换 PH-244 draft-only 触发器；未改 core 模型/迁移、未改 canonical 契约。",
+    "状态转换（submit/decide）不 bump BankCharge.version：PH-253 已冻结“saved 事件数==version”口径，version 仅随草稿改稿递增，避免合并后误报；新增 saved 事件仍只由 PH-244 保存路径产生，审批只写通用审计（spec 明确不新增/伪造 canonical topic）。",
+    "verify_integrity 与 PH-253 兼容口径：五状态均接受；draft/pending/rejected/superseded 携带成本事实报错；approved 校审批人/驳回口径与（存在时）恰一成本事实集，**approved 无成本事实按 PH-253 过渡口径不报错**（PH-250 服务保证新批准必产事实）；labor 事件循环放行 fee 成本事件。若集成顺序为先253后本片，合并时需保留253的逐版本 saved 计数并采用本片更严的 approved 成本校验（冲突由 Lead 集成）。",
+    "没有新增 canonical topic/command：按 spec 审批与成本过账仅写通用审计+core AccountingEvent；core.document.decide 通道仅为具名服务/浏览器工作流承载（未接 PAT/MCP/公开 API），报告披露。",
+    "本分支提交为 in_review + review pending：S 级 done 需独立复核 pass 后置位；预复核 verify-change 仅会因该门禁失败。",
+    "docs/delivery-status.md 仅更新能力现状头（新增本片能力）；docs/verification.md 追加真实执行条目。"
+  ],
+  "unverified": [
+    "ReceiptFeeSettlement net settlement/reversal, existing_cost_ref reuse, counterparty/unconfirmed bearer and tax deductibility/deeper tax handling are not implemented (deferred to PH-251); invoices (PH-252) untouched.",
+    "No local PostgreSQL run: concurrent decide/one-winner is enforced by company lock + row lock + unique claim, and the SQLite path is tested; real double-connection PG concurrency is left to Linux CI.",
+    "No browser 1440/390 run: approval-chain/cost UI and submit/approve/reject forms are covered only by HTTP status/content assertions; keyboard/focus/empty/error/loading/disabled visual states not executed.",
+    "No real attachments/customer/production evidence; the approval uses synthetic browser/HTTP fixtures only.",
+    "Independent S review is pending (this report's review block); tasks stay in_review until the reviewer records pass, then done + verify-change are rerun.",
+    "Exact-head CI required checks and normal PR merge remain for the Lead."
+  ]
+}

@@ -7254,7 +7254,7 @@
       "title": "手续费提交/批准与成本过账首片：core.document.decide bank_charge handler 与一次性费用成本",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -7294,9 +7294,9 @@
         "python manage.py test tests.test_v1_bank_charge_approval tests.test_v1_bank_charge_approval_http tests.test_v1_bank_charge_cost --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-250.md"
     },
     {
       "id": "PH-251",
