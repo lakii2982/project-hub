@@ -44,6 +44,7 @@ def entry_point():
             'contract_change': approval_views.contract_change_detail,
             'contract_change_save': approval_views.contract_change_save,
             'contract_change_review': approval_views.contract_change_review,
+            'contract_change_impact': views.contract_change_impact_detail,
         },
         'management_revenue': {},
         'onboarding': {name: getattr(onboarding_views, name) for name in

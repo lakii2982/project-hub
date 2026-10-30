@@ -1,5 +1,13 @@
 {% extends 'contracts/party_list.html' %}
-{% block title %}{{ contract.contract_code }}{% endblock %}
+{% load money %}
+{% block title %}{{ contract.contract_code }}
+<section class="panel"><div class="panel-heading"><h2>变更影响（只读）</h2></div><div class="panel-body">
+<p class="notice">影响为只读聚合：变更前后批准版本、受影响合同行、已生效结算/未清/核销与管理收入计数；不重算、不调整已过账事实。</p>
+{% if change_impacts %}<div class="table-scroll"><table aria-label="合同变更影响清单"><thead><tr><th>变更</th><th>状态</th><th>前后版本</th><th>受影响行</th><th>结算（笔/含税）</th><th>未清（笔/含税）</th><th>核销（笔/已核）</th><th>管理收入（笔/净额）</th><th>终止</th><th>操作</th></tr></thead><tbody>
+{% for impact in change_impacts %}<tr><td>{{ impact.change_type_display }} · {{ impact.requested_on }}</td><td>{{ impact.status_display }}</td><td>{% if impact.before_version_ref %}v{{ impact.before_version_ref.version_no }}{% else %}—{% endif %} → {% if impact.after_version_ref %}v{{ impact.after_version_ref.version_no }}{% else %}无新版本{% endif %}</td><td>{{ impact.contract_line_refs|length }}</td><td>{{ impact.settlements.count }} / {{ impact.settlements.gross_cents|money }} 元</td><td>{{ impact.open_items.count }} / {{ impact.open_items.gross_cents|money }} 元</td><td>{{ impact.clearances.count }} / {{ impact.clearances.cleared_cents|money }} 元</td><td>{{ impact.revenue_recognitions.count }} / {{ impact.revenue_recognitions.net_cents|money }} 元</td><td>{% if impact.terminated %}<span class="badge warning">已终止 {{ impact.terminated_on }}</span>{% else %}否{% endif %}</td><td><a href="{{ change_impact_url }}?id={{ impact.change_ref.id }}">查看影响</a></td></tr>
+{% endfor %}</tbody></table></div>{% else %}<p>该合同尚无变更，无影响可追溯。</p>{% endif %}
+</div></section>
+{% endblock %}
 {% block contracts_content %}
 <section class="page-header"><div><h1 tabindex="-1">{{ contract.contract_code }}</h1><p>项目合同记录 · {{ contract.get_status_display }} · 版本 {{ contract.version }}</p></div><a class="button" href="{{ contracts_url }}">返回合同列表</a></section>
 <section class="panel"><div class="panel-heading"><h2>合同信息</h2>{% if can_write and contract.status == 'draft' and not pending %}<a class="button" href="{{ edit_url }}">编辑草稿</a>{% endif %}</div><div class="panel-body"><dl class="detail-grid"><div><dt>所属项目</dt><dd><a href="{% url 'project-detail' contract.project_id %}">{{ contract.project.code }} · {{ contract.project.name }}</a></dd></div><div><dt>合同客户</dt><dd><a href="{{ party_url }}">{{ contract.party.display_name }}</a></dd></div><div><dt>签署日期</dt><dd>{{ contract.signed_on|date:'Y-m-d'|default:'未设置' }}</dd></div><div><dt>登记时间</dt><dd>{{ contract.created_at|date:'Y-m-d H:i' }}</dd></div></dl><p class="notice">{% if contract.status == 'active' %}本合同配置已批准生效；合同批准本身不会确认履约、收入或现金。{% else %}草稿尚未生效，也未确认履约或收入。结算、开票和收款应各自记录，不因本次登记重复形成收入。{% endif %}</p></div></section>

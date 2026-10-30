@@ -489,7 +489,10 @@ def approved_line_snapshot(member, line_ref, as_of):
             'pricing_configuration': deepcopy(selection.pricing_configuration),
             'net_cents': line.net_cents, 'tax_cents': line.tax_cents, 'gross_cents': line.gross_cents,
             'effective_on': version.effective_on.isoformat(), 'digest': version.submitted_digest,
-            'approval_audit_id': approval.pk, 'approval_audit_hash': approval.event_hash}
+            'approval_audit_id': approval.pk, 'approval_audit_hash': approval.event_hash,
+            # PH-275: downstream read-only pairing sees termination instead of a silent read.
+            'contract_status': contract.status, 'terminated': contract.status == 'terminated',
+            'terminated_on': contract.terminated_on.isoformat() if contract.terminated_on else None}
 
 
 def approved_line_choices(member):
@@ -548,3 +551,155 @@ def approved_terms_snapshot(member, line_ref, as_of):
     result.update({'line': line, 'terms': terms, 'due_cents': due_cents, 'retention_cents': retention_cents})
     return result
 
+
+
+# ----- PH-275 read-only change impact trace (no writes, no recalculations) -----
+
+IMPACT_READ_ROLES = {'owner', 'finance', 'auditor', 'pm'}
+
+
+def _impact_reader(member):
+    """History reads stay available after the contracts module is disabled."""
+    from .party_services import READ_ROLES, _fresh_member
+    fresh = _fresh_member(member)
+    if fresh.role not in READ_ROLES:
+        raise PermissionDenied('无权查看合同变更影响')
+    return fresh
+
+
+def _version_ref(version):
+    return {'namespace': 'contracts', 'kind': 'contract_version', 'id': str(version.pk),
+            'version': version.version, 'version_no': version.version_no}
+
+
+def _line_refs(version):
+    if version is None:
+        return []
+    return [{'namespace': 'contracts', 'kind': 'contract_line', 'id': str(line.pk),
+             'version': 1, 'line_no': line.line_no}
+            for line in version.lines.order_by('line_no', 'id')]
+
+
+def _change_version_refs(change):
+    """Return (before approved version, after effective version) without reopening history."""
+    contract = change.contract
+    after = None
+    if change.status == 'approved' and change.change_type != 'termination':
+        for version in contract.versions.filter(status='approved').select_related('approval_audit'):
+            payload = (version.approval_audit.payload if version.approval_audit_id else {}) or {}
+            if payload.get('change_id') == str(change.pk):
+                after = version
+                break
+    before = None
+    if after is not None:
+        before = contract.versions.filter(version_no=after.version_no - 1).first()
+    if before is None:
+        before = contract.versions.filter(status='approved').order_by('-version_no', '-id').first()
+    return before, after
+
+
+def _impact_amounts(member, line_refs):
+    from django.db.models import Count, Sum
+    from pmo_plugins.management_revenue.models import RevenueRecognition
+    from pmo_plugins.settlement.models import Clearance, OpenItem, Settlement
+    ids = []
+    for row in line_refs:
+        try:
+            ids.append(uuid.UUID(str(row['id'])))
+        except (KeyError, TypeError, ValueError):
+            continue
+    empty = {'count': 0, 'gross_cents': 0, 'net_cents': 0, 'cleared_cents': 0}
+    if not ids:
+        return {'settlements': dict(empty), 'open_items': dict(empty),
+                'clearances': dict(empty), 'revenue_recognitions': dict(empty)}
+    organization = member.organization
+    settlements = Settlement.objects.filter(
+        organization=organization, contract_line_id__in=ids, status='active').aggregate(
+        count=Count('pk'), gross_cents=Sum('gross_cents'))
+    open_items = OpenItem.objects.filter(
+        organization=organization, settlement__contract_line_id__in=ids,
+        status='active').aggregate(count=Count('pk'), gross_cents=Sum('gross_cents'))
+    clearances = Clearance.objects.filter(
+        organization=organization, open_item__settlement__contract_line_id__in=ids,
+        status='active').aggregate(count=Count('pk'), cleared_cents=Sum('cleared_cents'))
+    revenues = RevenueRecognition.objects.filter(
+        organization=organization, contract_line_id__in=ids, status='posted').aggregate(
+        count=Count('pk'), net_cents=Sum('recognized_net_cents'))
+    def filled(row, key):
+        return {'count': row.get('count') or 0, key: row.get(key) or 0}
+    return {'settlements': filled(settlements, 'gross_cents'),
+            'open_items': filled(open_items, 'gross_cents'),
+            'clearances': filled(clearances, 'cleared_cents'),
+            'revenue_recognitions': filled(revenues, 'net_cents')}
+
+
+def _impact_payload(member, change):
+    """One read-only projection; never writes a fact, audit, receipt or event."""
+    contract = change.contract
+    before, after = _change_version_refs(change)
+    lines_before, lines_after = _line_refs(before), _line_refs(after)
+    affected = {row['id']: row for row in lines_before + lines_after}.values()
+    if not lines_after and change.change_type == 'termination':
+        affected = lines_before
+    amounts = _impact_amounts(member, list(affected))
+    payload = {
+        'change_ref': {'namespace': 'contracts', 'kind': 'contract_change',
+                       'id': str(change.pk), 'version': change.version},
+        'change_type': change.change_type,
+        'change_type_display': change.get_change_type_display(),
+        'status': change.status, 'status_display': change.get_status_display(),
+        'requested_on': change.requested_on.isoformat(), 'version': change.version,
+        'decision_note': change.decision_note,
+        'contract_ref': {'namespace': 'contracts', 'kind': 'contract',
+                         'id': str(contract.pk), 'version': contract.version},
+        'contract_code': contract.contract_code,
+        'project_id': str(contract.project_id),
+        'terminated': contract.status == 'terminated',
+        'terminated_on': contract.terminated_on.isoformat() if contract.terminated_on else None,
+        'before_version_ref': _version_ref(before) if before else None,
+        'after_version_ref': _version_ref(after) if after else None,
+        'lines_before': lines_before, 'lines_after': lines_after,
+        'contract_line_refs': list(affected),
+        'deltas': {'net_cents': change.net_delta_cents, 'tax_cents': change.tax_delta_cents,
+                   'gross_cents': change.gross_delta_cents},
+        **amounts,
+    }
+    if member.role == 'pm':
+        # PMs receive the summary for their own managed projects only.
+        payload['summary_only'] = True
+        payload.pop('decision_note', None)
+    else:
+        payload['summary_only'] = False
+    return payload
+
+
+def contract_change_impact(member, change_id):
+    """Read-only impact snapshot for one change; permission/tenant scoped, no side effects."""
+    member = _impact_reader(member)
+    from .models import ContractChange
+    try:
+        change = ContractChange.objects.select_related(
+            'contract__project', 'contract__party', 'created_by_member__user',
+            'decided_by_member__user').get(pk=change_id, organization=member.organization)
+    except (ContractChange.DoesNotExist, ValueError, ValidationError):
+        raise PermissionDenied('变更记录不存在或无权访问')
+    contract = _contract_for_read(member, change.contract_id)
+    payload = _impact_payload(member, change)
+    payload['contract'] = contract
+    return payload
+
+
+def contract_change_impact_list(member, *, contract_id=None):
+    """Read-only list of impact summaries; PM sees only managed projects."""
+    member = _impact_reader(member)
+    from .models import ContractChange
+    from core.access import visible_projects
+    rows = ContractChange.objects.filter(organization=member.organization).select_related(
+        'contract__project', 'contract__party', 'created_by_member__user',
+        'decided_by_member__user')
+    if contract_id:
+        contract = _contract_for_read(member, contract_id)
+        rows = rows.filter(contract=contract)
+    elif member.role == 'pm':
+        rows = rows.filter(contract__project__in=visible_projects(member))
+    return [_impact_payload(member, change) for change in rows.order_by('-created_at', 'id')]
