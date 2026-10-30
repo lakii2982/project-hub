@@ -39,8 +39,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base e91346a --task PH-243",
-      "result": "not_run",
-      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE e91346a): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope (all 13 changed files inside BASE PH-243 allowed_paths). Replaced after the reviewer lands."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at the review-pass HEAD d48f4b0: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"e91346a6426dd2df6817b65e79f3536d314adc74\",\"head\":\"d48f4b0de402f78b054f6758cf4ba549787a740b\",\"report_path\":\"project/reports/PH-243.json\"}, exit 0; all 13 changed files inside BASE PH-243 allowed_paths (three schemas, fixture, extension-freeze, tests/test_v1_preparation.py, PH-239 spec, tasks.json, manifest.json, two verification logs, PH-243 report/handoff) and the report carries review.status=pass with the reviewer's name. The pre-review failure is recorded in deviations. This later evidence-only commit does not change the reviewed tree content."
     }
   ],
   "review": {
