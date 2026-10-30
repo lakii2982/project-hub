@@ -75,3 +75,19 @@ class ContractChangeDecisionForm(StrictForm):
     decision = forms.ChoiceField(label='独立决策', choices=[('approved', '批准变更'), ('rejected', '驳回变更'), ('withdrawn', '撤回变更')])
     note = forms.CharField(label='决策说明（驳回必填）', max_length=500, required=False, widget=forms.Textarea(attrs={'rows': 2}))
     request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
+class TermsSnapshotFilterForm(forms.Form):
+    """Read-only filter for the approved terms snapshot page."""
+
+    contract = forms.ModelChoiceField(label='合同', required=False, queryset=Contract.objects.none())
+    as_of = forms.DateField(label='快照日期', required=False,
+                            widget=forms.DateInput(attrs={'type': 'date'}))
+
+    def __init__(self, *args, member=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        rows = Contract.objects.filter(organization=member.organization) if member else Contract.objects.none()
+        if member is not None and member.role == 'pm':
+            from core.access import visible_projects
+            rows = rows.filter(project__in=visible_projects(member))
+        self.fields['contract'].queryset = rows.select_related('project').order_by('contract_code', 'id')

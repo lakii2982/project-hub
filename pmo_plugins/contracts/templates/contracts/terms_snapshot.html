@@ -1,0 +1,34 @@
+{% extends 'contracts/party_list.html' %}{% load money %}
+{% block title %}合同条款快照{% endblock %}
+{% block contracts_content %}
+<section class="page-header"><div><h1 tabindex="-1">合同条款快照与结算核对</h1><p>只读读取批准版本、收费模板、生效条款与结算/未清引用，列出对账异常；不写合同、结算、收入或账本事实。</p></div><a class="button" href="{{ contracts_url }}">返回合同列表</a></section>
+<div class="notice">只读快照与异常清单；不自动修改条款或结算。金额单位：元（整数分展示）。</div>
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<form class="filter-bar panel body" method="get" action="{{ snapshot_url }}" aria-label="筛选合同条款快照">
+<div class="form-field"><label for="{{ form.contract.id_for_label }}">合同</label>{{ form.contract }}</div>
+<div class="form-field"><label for="{{ form.as_of.id_for_label }}">快照日期</label>{{ form.as_of }}</div>
+<div class="actions"><button type="submit" class="button primary">查看快照</button><a class="button subtle" href="{{ snapshot_url }}">重置</a></div>
+</form>
+{% if snapshot %}
+<section class="panel"><div class="panel-heading"><h2>{{ snapshot.contract_code }} · 批准版本条款</h2></div><div class="panel-body"><dl class="detail-grid">
+<div><dt>合同状态</dt><dd>{{ snapshot.status }}{% if snapshot.terminated %} · 已终止 {{ snapshot.terminated_on }}{% endif %}</dd></div>
+<div><dt>批准版本</dt><dd>第{{ snapshot.version_ref.version_no }}版 · {{ snapshot.version_status }} · 生效 {{ snapshot.effective_on }}</dd></div>
+<div><dt>收费模板</dt><dd>{% for template in snapshot.pricing_templates %}{{ template }}{% if not forloop.last %}、{% endif %}{% empty %}—{% endfor %}</dd></div>
+<div><dt>结算可读</dt><dd>{% if snapshot.settlement_guard.readable %}可读{% else %}受限（终止守卫或历史版本）{% endif %}</dd></div>
+</dl><div class="table-scroll"><table aria-label="批准条款行快照"><thead><tr><th>行</th><th>模板</th><th class="amount">净额</th><th class="amount">税额</th><th class="amount">含税</th><th class="amount">条款合计</th><th>条款数</th><th>只读状态</th></tr></thead><tbody>
+{% for line in snapshot.lines %}<tr><td>第{{ line.line_no }}行</td><td>{{ line.template_label|default:line.template }}</td><td class="amount">{{ line.net_cents|money }}</td><td class="amount">{{ line.tax_cents|money }}</td><td class="amount">{{ line.gross_cents|money }}</td><td class="amount">{{ line.terms_total_cents|money }}</td><td>{{ line.terms|length }}</td><td>{% if line.readable %}<span class="badge success">可读</span>{% else %}<span class="badge warning" title="{{ line.unreadable_reason }}">历史/受限</span>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="8">批准版本没有条款行。</td></tr>{% endfor %}</tbody></table></div>
+{% if snapshot.lines_truncated %}<p class="notice">仅显示前 {{ snapshot.line_limit }} 行；请缩小范围或分页查看。</p>{% endif %}
+</div></section>
+<section class="panel"><div class="panel-heading"><h2>变更历史摘要</h2></div><div class="panel-body"><div class="table-scroll"><table aria-label="变更历史摘要"><thead><tr><th>类型</th><th>状态</th><th>申请日</th><th>生效日</th><th>前后版本</th></tr></thead><tbody>
+{% for change in snapshot.changes %}<tr><td>{{ change.change_type }}</td><td>{{ change.status }}</td><td>{{ change.requested_on }}</td><td>{{ change.effective_on|default:'—' }}</td><td>{% if change.before_version_ref %}v{{ change.before_version_ref.version_no }}{% else %}—{% endif %} → {% if change.after_version_ref %}v{{ change.after_version_ref.version_no }}{% else %}无新版本{% endif %}</td></tr>
+{% empty %}<tr><td colspan="5">尚无变更记录。</td></tr>{% endfor %}</tbody></table></div>
+<p><a class="button" href="{{ contract_url }}">查看合同详情</a></p></div></section>
+{% endif %}
+<section class="panel"><div class="panel-heading"><h2>结算核对异常（只读）</h2></div><div class="panel-body">
+{% if issues %}<div class="table-scroll"><table aria-label="合同条款结算核对异常"><thead><tr><th>异常码</th><th>合同</th><th>引用</th><th>期望</th><th>实际</th></tr></thead><tbody>
+{% for issue in issues %}<tr><td><span class="badge warning">{{ issue.issue_code }}</span></td><td>{{ issue.contract_ref.id }}</td><td class="trace">{% for ref in issue.refs %}{{ ref }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</td><td>{{ issue.expected }}</td><td>{{ issue.actual }}</td></tr>
+{% endfor %}</tbody></table></div>{% else %}<p>未发现条款/结算核对异常。</p>{% endif %}
+<p class="notice">异常为只读对账结果：不自动冲销、不重算、不改历史事实。</p>
+</div></section>
+{% endblock %}

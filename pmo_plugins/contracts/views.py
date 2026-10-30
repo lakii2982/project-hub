@@ -1,10 +1,11 @@
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import render, redirect
 
 from . import services as service
 from . import change_services
 from . import approval_services
+from . import terms_snapshot_services
 from .forms import ContractDraftForm
 from .party_services import _reader, _writer
 from .party_views import _context, url
@@ -75,3 +76,40 @@ def contract_save(context, payload):
     return render(context.request, 'contracts/contract_form.html', _context(member,
         contract=contract, contracts=service.list_contracts(member) if contract is None else None,
         form=form, contract_save_url=url('contract-save')), status=400)
+
+
+def contract_terms_snapshot(context, payload):
+    """Read-only approved terms snapshot and settlement reconciliation page."""
+    from django.shortcuts import render
+    from .forms import TermsSnapshotFilterForm
+    member = terms_snapshot_services._reader(context.member)
+    allowed = {'contract', 'as_of'}
+    if set(payload) - allowed:
+        return render(context.request, 'contracts/terms_snapshot.html',
+                      _context(member, snapshot=None, issues=[],
+                               form=TermsSnapshotFilterForm(member=member),
+                               error='包含不允许的查询参数，请刷新后重试',
+                               contracts_url=url('contracts'),
+                               snapshot_url=url('contract-terms-snapshot')), status=400)
+    form = TermsSnapshotFilterForm(payload, member=member)
+    as_of = payload.get('as_of') or None
+    contract_id = payload.get('contract') or None
+    try:
+        issues = terms_snapshot_services.terms_settlement_issues(member, as_of=as_of)
+        snapshot = (terms_snapshot_services.approved_terms_snapshot(
+            member, contract_id=contract_id, as_of=as_of) if contract_id else None)
+    except (ValidationError, PermissionDenied) as error:
+        return render(context.request, 'contracts/terms_snapshot.html',
+                      _context(member, snapshot=None, issues=[],
+                               form=form,
+                               error='；'.join(getattr(error, 'messages', [str(error)])),
+                               contracts_url=url('contracts'),
+                               snapshot_url=url('contract-terms-snapshot')), status=400)
+    if snapshot is not None:
+        contract_ref = snapshot['contract_ref']['id']
+        issues = [issue for issue in issues if issue['contract_ref']['id'] == contract_ref]
+    return render(context.request, 'contracts/terms_snapshot.html', _context(
+        member, snapshot=snapshot, issues=issues, form=form, error='',
+        contracts_url=url('contracts'), snapshot_url=url('contract-terms-snapshot'),
+        contract_url=url('contract', id=contract_id) if contract_id else '',
+        contract_choices=form.fields['contract'].queryset))
