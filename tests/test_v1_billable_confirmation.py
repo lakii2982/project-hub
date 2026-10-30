@@ -177,8 +177,15 @@ class BillableConfirmationServiceTests(TimeBillableFixture, TestCase):
         self.assertTrue(any('confirmed_event_count' in row for row in errors), errors)
         from django.db import connection
         with connection.cursor() as cursor:
-            for trigger in ('time_billableconfirmation_update_guard', 'time_billableconfirmation_guard'):
-                cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
+            if connection.vendor == 'postgresql':
+                # PostgreSQL uses one merged guard trigger per table.
+                cursor.execute('DROP TRIGGER IF EXISTS time_billableconfirmation_guard '
+                               'ON time_billableconfirmation')
+            else:
+                for trigger in ('time_billableconfirmation_insert_guard',
+                                'time_billableconfirmation_update_guard',
+                                'time_billableconfirmation_no_delete'):
+                    cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
         BillableConfirmation.objects.filter(pk=row['id']).update(
             confirmed_by_member=self.owner, version=3)
         errors = self.verify_errors()

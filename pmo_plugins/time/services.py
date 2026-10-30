@@ -331,12 +331,14 @@ def list_billable_confirmations(member, *, project_id=None):
     if member.role == 'pm':
         from core.access import visible_projects
         visible = visible_projects(member).values_list('pk', flat=True)
-        rows = rows.filter(timesheet_id__in=Timesheet.objects.filter(
-            project_id__in=visible).values_list('pk', flat=True))
+        rows = rows.filter(timesheet_id__in=[
+            _timesheet_key(pk) for pk in Timesheet.objects.filter(
+                project_id__in=visible).values_list('pk', flat=True)])
     if project_id:
         timesheets = Timesheet.objects.filter(project_id=project_id,
                                               organization=member.organization)
-        rows = rows.filter(timesheet_id__in=timesheets.values_list('pk', flat=True))
+        rows = rows.filter(timesheet_id__in=[
+            _timesheet_key(pk) for pk in timesheets.values_list('pk', flat=True)])
     return rows
 
 
@@ -349,7 +351,11 @@ def get_billable_confirmation(member, confirmation_id):
     except (BillableConfirmation.DoesNotExist, ValueError, ValidationError):
         raise PermissionDenied('确认记录不存在或无权访问')
     if member.role == 'pm':
-        timesheet = Timesheet.objects.filter(pk=row.timesheet_id).first()
+        try:
+            timesheet_pk = int(row.timesheet_ref['id'])
+        except (KeyError, TypeError, ValueError):
+            raise PermissionDenied('确认记录不存在或无权访问')
+        timesheet = Timesheet.objects.filter(pk=timesheet_pk).first()
         if timesheet is None or timesheet.project_id is None:
             raise PermissionDenied('确认记录不存在或无权访问')
         from core.access import require_project
