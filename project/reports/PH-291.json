@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run at HEAD ed62e6a on BASE a4584d1: {\"command\":\"check\",\"ok\":true,\"task_count\":220}, exit 0 (PH-291 in_review with owner+handoff)."
+      "evidence": "Final Lead integration rerun after rebase onto 8e7df41: {\"command\":\"check\",\"ok\":true,\"task_count\":220} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -33,9 +33,9 @@
       "evidence": "Actual run: Ran 17 tests ... OK (10 service + 7 HTTP; now includes pm refund scoping and pm canonical-UUID5 time scoping regressions)."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base a4584d1 --task PH-291",
+      "command": "python scripts/projectctl.py verify-change --base 8e7df41 --task PH-291",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD fc244d7: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"fc244d7719698fc4c64b94add4e9b26eecf467f7\",\"count\":14,\"errors\":null}, exit 0; all 14 changed files inside BASE PH-291 allowed_paths (including the canonical domain_metadata.py) and review.status=pass with the reviewer's name."
+      "evidence": "Final Lead integration rerun after rebase onto 8e7df41 (PH-283 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 14 changed files all inside BASE PH-291 allowed_paths."
     }
   ],
   "review": {
@@ -56,7 +56,8 @@
     "BASE moved from fa1ca8d to a4584d1 after PH-294 merged (PH-291 whitelist now includes pmo_plugins/delivery/domain_metadata.py); the branch was rebased and all gate outputs re-run on the new BASE.",
     "No audit is written, no receipt/session persistence, no migration and no contract-schema change; onboarding/pm-cash missing semantics remain null+missing rather than zero.",
     "Route access is history_read so delivery disablement keeps the page readable; no read/write gate was weakened.",
-    "The optional period (YYYY-MM) filter requested by the Lead is additive to the frozen as_of signature."
+    "The optional period (YYYY-MM) filter requested by the Lead is additive to the frozen as_of signature.",
+    "Lead integration rebase (a4584d1 -> 8e7df41) after PH-276/PH-283 merged: docs/verification.md kept main entries plus the PH-291 entry; docs/delivery-status.md took the PH-291 line; manifest.active_handoff -> PH-291. Gates rerun green."
   ],
   "unverified": [
     "PostgreSQL-specific behavior (CI): the slice is read-only with no locks/transactions, but the PG CI run is delegated to CI; SQLite tests only.",
