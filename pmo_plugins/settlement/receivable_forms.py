@@ -141,3 +141,44 @@ class AgingFilterForm(forms.Form):
             self.fields['as_of'].initial = timezone.localdate()
         for field in self.fields.values():
             field.widget.attrs.setdefault('class', 'form-control')
+
+class ClearanceForm(StrictForm):
+    open_item = forms.ChoiceField(label='未清项', choices=())
+    cash_ref = forms.ChoiceField(label='已过账现金', choices=())
+    amount = forms.DecimalField(label='核销金额（元）', max_digits=14, decimal_places=2,
+                                min_value=Decimal('0.01'),
+                                widget=forms.NumberInput(attrs={'step': '0.01',
+                                                                'inputmode': 'decimal'}))
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, open_items=None, cash_candidates=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['open_item'].choices = open_items or []
+        self.fields['cash_ref'].choices = [('', '请选择已过账现金')] + list(cash_candidates or [])
+
+    def clean(self):
+        data = super().clean()
+        if not data.get('open_item'):
+            self.add_error('open_item', '请选择未清项')
+        if not data.get('cash_ref'):
+            self.add_error('cash_ref', '请选择同往来方的已过账现金流水')
+        return data
+
+
+class ReverseClearanceForm(StrictForm):
+    clearance_id = forms.UUIDField(widget=forms.HiddenInput)
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    reason = forms.CharField(label='撤核原因', max_length=1000, widget=forms.Textarea)
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
+class ClearanceListFilterForm(forms.Form):
+    project = forms.ChoiceField(label='项目', required=False, choices=())
+
+    def __init__(self, *args, member, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['project'].choices = [('', '全部项目')] + [
+            (str(project.pk), f'{project.code} · {project.name}')
+            for project in visible_projects(member)]
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', 'form-control')

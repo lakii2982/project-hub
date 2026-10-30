@@ -125,8 +125,15 @@ class OpenItem(models.Model):
         return {'namespace': 'settlement', 'kind': 'open_item', 'id': str(self.pk), 'version': self.version}
 
     @property
+    def cleared_cents(self):
+        from django.db.models import Sum
+        total = self.clearances.filter(status='active').aggregate(
+            total=Sum('cleared_cents'))['total'] or 0
+        return total
+
+    @property
     def remaining_cents(self):
-        return self.gross_cents
+        return max(0, self.gross_cents - self.cleared_cents)
 
     def save(self, *args, **kwargs):
         # Partitions are only ever created in bulk at independent approval.
@@ -151,3 +158,70 @@ class SettlementReceipt(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=['organization', 'request_token'],
                                                name='settlement_receipt_token_unique')]
+
+
+
+class Clearance(models.Model):
+    """Append-only partial clearance of posted cash against one active open item."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='clearances')
+    open_item = models.ForeignKey(OpenItem, on_delete=models.PROTECT, related_name='clearances')
+    # No cross-owner FK: posted cash facts are verified through the cash named read interface.
+    cash_transaction_id = models.UUIDField()
+    cash_transaction_ref = models.JSONField()
+    cleared_cents = models.PositiveBigIntegerField()
+    occurred_on = models.DateField()
+    status = models.CharField(max_length=16, default='active')
+    version = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(status__in=['active', 'reversed']),
+                                   name='settlement_clearance_status'),
+            models.CheckConstraint(condition=Q(cleared_cents__gt=0, cleared_cents__lte=MAX_CENTS),
+                                   name='settlement_clearance_amount_bound'),
+        ]
+
+    @property
+    def clearance_ref(self):
+        return {'namespace': 'settlement', 'kind': 'clearance', 'id': str(self.pk),
+                'version': self.version}
+
+    def get_status_display(self):
+        return {'active': '有效', 'reversed': '已撤核'}.get(self.status, self.status)
+
+    def save(self, *args, **kwargs):
+        # Creation only; the single active->reversed transition runs as a conditional update.
+        if not self._state.adding:
+            raise ValidationError('核销记录创建后不可修改；撤核请使用撤核服务')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('核销记录不可删除')
+
+
+class ClearanceReceipt(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT, related_name='+')
+    request_token = models.UUIDField()
+    action = models.CharField(max_length=40)
+    input_digest = models.CharField(max_length=64)
+    result = models.JSONField()
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['organization', 'request_token'],
+                                               name='settlement_clearance_receipt_token_unique')]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError('核销收据不可修改')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('核销收据不可删除')

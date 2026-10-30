@@ -388,6 +388,11 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 基线7a2cc17（PH-234合入）。纯规划片：登记PH-237（ready，S——由A校正，因其白名单含project/tasks.json属CRITICAL_PATHS）与PH-238规划槽，PH-236置done，active_handoff指向PH-236。无产品代码。实际执行：23项治理测试通过；check与verify-change在独立S复核落pass后按真实输出记录（独立复核首轮打回，指出首版报告的pass声明不可复现且A/S矛盾；已更正证据顺序与风险级后二次复核）。未验证：PH-237未实现；墙钟时间复测需日常使用统计，不预设结论。
 
 
+## PH-232 核销首片（2026-10-30）
+
+基线b931be0（PH-237合入后）。在PH-230已过账现金与PH-224未清项之上实现“核销→部分结清→撤核”闭环：部分核销上限=双方剩余、撤核为原记录单字段active→reversed（余额=Σactive）、规范cleared/clearance_reversed事件、账龄/详情/CSV显示cleared/remaining；verify_integrity补引用同org、双侧余额非负、无账本/会计事件、每clearance恰一条cleared与reversed事件envelope；PM对自己管理项目只读、cash候选接口owner/finance/auditor专属。明确不写账本/会计/收入/成本，不做Offset/退款/手续费/转账/批量/导入/期初，PH-170仍proposed。
+独立S复核（fresh context）PASS，0阻断，实际重跑命令与差异逐条核对。实际执行（Lead rebase后同一HEAD）：全量753项中已知8项macOS环境限制失败（与main同基线一致、无新增）；clearance scoped 30项27过3项PG-only skip；check/makemigrations/verify_integrity通过；verify-change ok。未验证：PG并发3项由PR CI实跑；浏览器视觉复检、生产/UAT未验证；Offset/退款/账本/分类/导入/期初未实现。
+
 ## PH-237 文档收尾（2026-10-30）
 
 基线5ee8af1（PH-236规划#130合入）。三处文档改动：ROADMAP.md与execution-protocol.md的ai-delivery-*旧链接改指archive（grep确认各自唯一改动点、目标文件存在）；CONTRIBUTING.md「环境与验收」段插入作用域测试指引一段（开发中模块级`--parallel`快速反馈、收尾全量一次作报告证据、CI按PR全量兜底；四条验收命令与其余部分diff为空）。独立复核（fresh context，与PH-236同轮双片审）内容PASS。实际执行：check、治理测试23项、`manage.py test tests.test_projectctl --parallel`作用域自证、verify-change均于最终HEAD实跑通过。未验证：全量产品套件本地未跑（CI覆盖）；墙钟时间复测待日常统计。

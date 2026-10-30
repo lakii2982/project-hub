@@ -8,6 +8,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Sum
 from django.utils import timezone
 
 from core.access import require_member, require_project, visible_projects
@@ -86,8 +87,9 @@ def _projects(member, project_id):
     return projects.filter(pk=project.pk), project
 
 
-def _item_projection(item, as_of):
+def _item_projection(item, as_of, cleared_cents=0):
     overdue_days, bucket = _aged(item.due_date, as_of)
+    remaining = max(0, item.gross_cents - cleared_cents)
     settlement = item.settlement
     line_ref = settlement.contract_line_ref or {}
     return {
@@ -103,10 +105,10 @@ def _item_projection(item, as_of):
         'term_label': f"{item.term_ref.get('kind')} · {item.term_ref.get('id')}",
         'payee': item.payee_ref, 'scope': item.scope, 'source': item.source,
         'direction': item.direction, 'status': item.status, 'status_display': '有效',
-        'gross_cents': item.gross_cents, 'remaining_cents': item.gross_cents,
-        'tax_cents': item.tax_cents,
-        'gross_display': _yuan(item.gross_cents), 'remaining_display': _yuan(item.gross_cents),
-        'tax_display': _yuan(item.tax_cents),
+        'gross_cents': item.gross_cents, 'cleared_cents': cleared_cents,
+        'remaining_cents': remaining, 'tax_cents': item.tax_cents,
+        'gross_display': _yuan(item.gross_cents), 'cleared_display': _yuan(cleared_cents),
+        'remaining_display': _yuan(remaining), 'tax_display': _yuan(item.tax_cents),
         'due_date': item.due_date.isoformat(), 'due_display': item.due_date.isoformat(),
         'release_display': item.due_date.isoformat(),
         'occurred_on': item.occurred_on.isoformat(), 'release_condition': item.release_condition,
@@ -122,7 +124,11 @@ def open_item_aging(member, *, project_id=None, as_of=None):
     projects, project = _projects(member, project_id)
     rows = OpenItem.objects.filter(organization=member.organization, project__in=projects,
                                    status='active').select_related('project', 'settlement')
-    items = [_item_projection(row, basis) for row in rows.order_by('due_date', 'id')]
+    items = []
+    for row in rows.order_by('due_date', 'id'):
+        cleared = row.clearances.filter(status='active').aggregate(
+            total=Sum('cleared_cents'))['total'] or 0
+        items.append(_item_projection(row, basis, cleared))
     buckets = {key: 0 for key in BUCKETS}
     for item in items:
         buckets[item['bucket']] += item['remaining_cents']

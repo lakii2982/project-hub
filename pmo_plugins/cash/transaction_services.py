@@ -449,3 +449,72 @@ def cash_transaction_list(member, *, as_of=None, status=None):
         rows = rows.filter(status=status)
     rows = rows.prefetch_related('matches').order_by('-transaction_date', '-created_at', 'id')
     return [_transaction_projection(row, member) for row in rows]
+
+
+def posted_cash_for_clearance(member, transaction_ref, *, for_write=True):
+    """Root-owned cross-owner read: posted cash facts plus the effective counterparty."""
+    member = _fresh(member)
+    if not isinstance(transaction_ref, dict) or set(transaction_ref) != {'namespace', 'kind', 'id', 'version'}:
+        _fail('现金流水来源无效')
+    if transaction_ref['namespace'] != 'cash' or transaction_ref['kind'] != 'cash_transaction':
+        _fail('现金流水来源无效')
+    if type(transaction_ref['version']) is not int:
+        _fail('现金流水来源版本无效')
+    if for_write and member.role not in WRITE_ROLES:
+        raise PermissionDenied('仅公司负责人或财务可以办理核销')
+    try:
+        row = CashTransaction.objects.select_related('funding_account').get(
+            organization=member.organization,
+            pk=_identifier(transaction_ref['id'], '现金流水不存在或无权访问'))
+    except CashTransaction.DoesNotExist:
+        raise PermissionDenied('现金流水不存在或无权访问')
+    if row.status != 'posted':
+        _fail('仅已过账现金事实可用于核销')
+    if row.version != transaction_ref['version']:
+        _fail('现金流水版本已变化，请刷新后重试')
+    effective = None
+    if row.counterparty_id:
+        effective = {'kind': 'counterparty', 'id': str(row.counterparty_id),
+                     'match_ref': None, 'match_version': None}
+    else:
+        reversed_ids = set(row.matches.filter(action='reverse').values_list(
+            'original_match_id', flat=True))
+        for match in row.matches.filter(action='identify').order_by('-created_at', '-id'):
+            if match.pk in reversed_ids:
+                continue
+            payee = match.identified_payee or {}
+            if payee.get('kind') == 'counterparty' and payee.get('id'):
+                effective = {'kind': 'counterparty', 'id': str(payee['id']),
+                             'match_ref': match.match_ref, 'match_version': match.version}
+            break
+    posted_at = None
+    latest = AuditEvent.objects.filter(organization_id=member.organization_id,
+        entity_id=str(row.pk), action=POSTED_ACTION).order_by('-created_at').first()
+    if latest is not None:
+        posted_at = latest.created_at
+    return {'id': str(row.pk), 'transaction_ref': row.transaction_ref, 'version': row.version,
+            'status': row.status, 'gross_cents': row.gross_cents, 'direction': row.direction,
+            'payee': row.payee,
+            'counterparty_id': str(row.counterparty_id) if row.counterparty_id else None,
+            'effective_counterparty': effective, 'transaction_date': row.transaction_date,
+            'posted_at': posted_at, 'funding_account_id': str(row.funding_account_id)}
+
+
+def posted_cash_candidates(member, *, counterparty_id, as_of=None):
+    """Root-owned cross-owner read: posted incoming cash that can clear a counterparty's open items."""
+    member = _fresh(member)
+    if member.role not in WRITE_ROLES | {'auditor'}:
+        raise PermissionDenied('无权读取可核销现金')
+    counterparty = _identifier(counterparty_id, '往来方标识无效')
+    rows = CashTransaction.objects.filter(organization=member.organization, status='posted',
+                                          direction='in').order_by('transaction_date', 'created_at', 'id')
+    if as_of is not None:
+        rows = rows.filter(transaction_date__lte=_business_date(as_of))
+    candidates = []
+    for row in rows:
+        item = posted_cash_for_clearance(member, row.transaction_ref, for_write=False)
+        effective = item['effective_counterparty'] or {}
+        if effective.get('kind') != 'counterparty' or str(effective.get('id')) != str(counterparty):
+            continue
+        candidates.append(item)
+    return candidates
