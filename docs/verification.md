@@ -395,7 +395,7 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 
 ## PH-237 文档收尾（2026-10-30）
 
-基线5ee8af1（PH-236规划#130合入）。三处文档改动：ROADMAP.md与execution-protocol.md的ai-delivery-*旧链接改指archive（grep确认各自唯一改动点、目标文件存在）；CONTRIBUTING.md「环境与验收」段插入作用域测试指引一段（开发中模块级`--parallel`快速反馈、收尾全量一次作报告证据、CI按PR全量兜底；四条验收命令与其余部分diff为空）。独立复核（fresh context，与PH-236同轮双片审）内容PASS。实际执行：check、治理测试23项、`manage.py test tests.test_projectctl --parallel`作用域自证、verify-change均于最终HEAD实跑通过。未验证：全量产品套件本地未跑（CI覆盖）；墙钟时间复测待日常统计。
+基线5ee8af1（PH-236规划#130合入）。三处文档改动：ROADMAP.md与execution-protocol.md的ai-delivery-*旧链接改指archive（grep确认各自唯一改动点、目标文件存在）；CONTRIBUTING.md「环境与验收」段插入作用域测试指引一段（开发中模块级`--parallel`快速反馈、收尾全量一次作报告证据、CI按PR全量兜底；四条验收命令与其余部分diff为空）。独立复核（fresh context，与PH-236同轮双片审）内容PASS。实际执行：check、治理测试23项、`manage.py test tests.test_projectctl --parallel`作用域自证、verify-change均于最终HEAD实跑通过。未验证：全量产品套件本地未跑（CI覆盖）；墙钟时间复测待日常统计。 量化口径校准（PH-246，固定 SHA 复现）：基线 7605fa9 = manifest 663 + tasks.json 217565 + PH-233 handoff 1510 + delivery-status 61218 = 280956 字节；最终路径 b931be0 = orient 3423 + brief PH-232 1893 + delivery-status 1996 + PH-232 spec 8448 = 15760 字节；降幅 1−15760/280956 = 94.39%≈94.4%。复现命令与逐分量输出见 project/reports/PH-246.json。
 
 
 ## PH-238 后续交付独立规划入口（2026-10-30）
@@ -421,3 +421,8 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 基线e91346a（PH-242合入）。纯契约/测试/规划片：events.schema.json 两个classification事件posting_event_refs改1/1且items绑定core/accounting_event（reversed namespace cash→core），5个其它0/0 cash事件未动；entities SourceConsumption invariants[5]逐字替换冻结句；catalog-completeness仅补注解；extension-freeze仅更新3个受影响canonical摘要+显式supersede cash-extension.plan.json#/service_semantics/classification_reverse/4（保base_sha/201/input_sha256/历史）；fixture仅3个contract_artifact_sha256；tests/test_v1_preparation.py新增严格正反例（reserved原19/37、99/8计数）。实际执行：check在独立S复核落pass后按最终HEAD记录；治理测试23项OK；validate_contracts/check_contract_cases/check_fixture严格.agent-venv全pass；PH135_REQUIRE_SCHEMAS=1 prep测试8项OK 0 skip（新增positive=3/rejected=9）。PH-239 allowed_paths扩core/models.py+core/migrations/*.py+docs/v1.0-development/verification.md并晋级ready。未实现PH-239业务；core 0009迁移、verify_integrity改造、PG/浏览器/生产均未验证。
 
 补充（最终证据 HEAD）：独立 S 复核 PASS，0 阻断；check ok=true/task_count=169；verify-change --base e91346a --task PH-243 ok=true、13 文件全在白名单；严格 .agent-venv + PH135_REQUIRE_SCHEMAS=1 的 prep 测试 8 项 OK 0 skip（PH243 positive=3/rejected=9；PH210 6/10；fixture 99/8 计）。residual（非阻断）：PH-243 spec 正文“PH-247 晋级 PH-239”与实际（本次已置 PH-239 ready）不一致，由 PH-247 规划槽消解，handoff 已记。
+
+
+## PH-246 PH-237 量化证据修正（2026-10-30）
+
+基线ceded2e（PH-243合入）。纯证据修正片，仅三处：project/reports/PH-237.json 的量化测量条目、docs/delivery-status-archive.md 的 PH-237 条目数字/公式、docs/verification.md 的 PH-237 校准句；三处统一为固定 SHA 复现口径：基线 7605fa9 = manifest 663 + tasks.json 217565 + PH-233 handoff 1510 + delivery-status 61218 = 280956 字节；最终路径 b931be0 = orient 3423 + brief PH-232 1893 + delivery-status 1996 + PH-232 spec 8448 = 15760 字节；降幅 1−15760/280956 = 94.39%≈94.4%。实际复算：上述四分量与四分量逐条 wc -c 实跑一致（280956/15760），`round((1-15760/280956)*100,2)` = 94.39；grep 确认三文件无 94.5%/94.6%/281349/15360 旧值且均含 94.4%。未改 PH-237 三处正文（ROADMAP/execution-protocol/CONTRIBUTING）、未改写 archive 其它历史条目、未改 PH-237 review 块与历史 pass 语义。未验证：全量产品套件本地未跑（本片 docs-only，CI 覆盖）。独立 S 复核 PASS，0 阻断；NOTE（grep 证据中 verification.md 的 94.4% 出现次数应为 3 次而非 2 次）已在最终证据 commit 修正。

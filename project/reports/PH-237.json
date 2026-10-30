@@ -23,9 +23,9 @@
       "evidence": "Actual scoped run as self-evidence of the new guidance: 19 tests OK standalone (also run independently by the reviewer)."
     },
     {
-      "command": "byte-measure: manifest+tasks.json+handoff+delivery-status (BASE) vs orient+brief+head (final)",
+      "command": "fixed-SHA byte-measure: 7605fa9 baseline vs b931be0 final path (reproduction commands listed in evidence)",
       "result": "pass",
-      "evidence": "Actual rerun at this HEAD with a green check, against the pre-PH-234 opening baseline (7605fa9: manifest 663 + tasks.json 217565 + active handoff 1903 + delivery-status 61218 = 281349 bytes): new path (orient 3035 + brief PH-232 1893 + delivery-status head 1996 + PH-232 spec 8448) = 15360 bytes, a 94.5% reduction; consistent with the 281KB→15KB (-94.6%) figure quoted in the delivery-status-archive PH-237 entry, now backed by reproducible numbers."
+      "evidence": "Actual reproducible measurement (PH-246, fixed SHAs; per-component bytes and the command list below): baseline 7605fa9 = manifest 663 + tasks.json 217565 + active handoff project/handoffs/PH-233.md 1510 + docs/delivery-status.md 61218 = 280956 bytes; final path b931be0 = orient 3423 + brief PH-232 1893 + docs/delivery-status.md 1996 + project/specs/PH-232.md 8448 = 15760 bytes; reduction 1 - 15760/280956 = 94.39% ≈ 94.4%. Reproduction: `git show 7605fa9:project/manifest.json | wc -c` (663); `git show 7605fa9:project/tasks.json | wc -c` (217565); `git show 7605fa9:project/handoffs/PH-233.md | wc -c` (1510); `git show 7605fa9:docs/delivery-status.md | wc -c` (61218); `rm -rf /tmp/ph237-measure && mkdir -p /tmp/ph237-measure && git archive b931be0 | tar -x -C /tmp/ph237-measure` then in that tree `python scripts/projectctl.py orient | wc -c` (3423), `python scripts/projectctl.py brief PH-232 | wc -c` (1893), `wc -c < docs/delivery-status.md` (1996), `wc -c < project/specs/PH-232.md` (8448); `python -c \"print(round((1-15760/280956)*100,2))\"` -> 94.39. The earlier non-reproducible byte-measure numbers are superseded; the archive PH-237 entry and verification calibration now carry the same 280956/15760/94.4% caliber."
     }
   ],
   "review": {
