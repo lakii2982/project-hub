@@ -1,0 +1,30 @@
+{% extends 'base.html' %}{% load money %}{% block title %}运营核对总览{% endblock %}{% block breadcrumb %}项目财务 / 运营核对总览{% endblock %}{% block content %}
+<style>
+.ops{min-width:0;color:var(--color-text);font-size:var(--font-size-sm)}.ops h1,.ops h2,.ops td,.ops dd{overflow-wrap:anywhere}.ops .panel{margin-block:var(--space-6);border:var(--border-default);background:var(--color-surface);border-radius:var(--radius-md)}.ops .body{padding:var(--space-6)}.ops .filter{display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:end}.ops .form-field{margin:0}.ops input{max-width:100%;min-height:var(--control-height);font:inherit}.ops .button{white-space:normal}.ops .amount{font-variant-numeric:tabular-nums;text-align:right}.ops .trace{overflow-wrap:anywhere}.ops :focus-visible{outline:var(--focus-ring);outline-offset:var(--focus-ring-offset)}.ops .table-scroll{max-width:100%;overflow:auto}.ops .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-6)}.ops .issue{color:var(--color-danger)}.ops .muted{color:var(--color-text-secondary)}.ops .badge{display:inline-block;padding:0 var(--space-2);border-radius:var(--radius-sm);border:var(--border-default)}.ops .badge.warning{color:var(--color-warning)}@media(max-width:640px){.ops .body{padding:var(--space-4)}.ops .grid{grid-template-columns:1fr}.ops table,.ops tbody,.ops tr,.ops td{display:block;width:100%}.ops thead{display:none}.ops td{white-space:normal;text-align:left}.ops td:before{content:attr(data-label);display:block;color:var(--color-text-secondary)}.ops .filter{flex-direction:column;align-items:stretch}.ops input,.ops button{min-height:var(--touch-target)}}
+</style>
+<div class="ops">
+<section class="page-header"><div><h1 tabindex="-1">运营核对总览</h1><p>只读聚合合同、结算、管理收入、工时、导入预览与现金分区；各分区经既有 owner 只读接口派生，不写任何业务事实、不记审计、不建第二套账。</p></div><a class="button subtle" href="{{ delivery_url }}">返回验收与收入</a></section>
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<section class="panel"><div class="body"><form class="filter" method="get" action="{{ page_url }}" aria-label="筛选核对总览">
+<div class="form-field"><label for="{{ form.as_of.id_for_label }}">快照日期</label>{{ form.as_of }}</div>
+<div class="form-field"><label for="{{ form.period.id_for_label }}">期间</label>{{ form.period }}</div>
+<div class="actions"><button type="submit" class="button primary">查看总览</button><a class="button subtle" href="{{ page_url }}">重置</a></div>
+</form></div></section>
+{% if overview %}
+<div class="notice">只读快照：截至 {{ overview.as_of }}{% if overview.period %} · 期间 {{ overview.period }}{% endif %} · 异常分区条目 {{ overview.issue_count }} 条。金额单位为元（由整数分展示）。{% if overview.missing %} <span class="badge warning">缺失数据：{{ overview.missing|join:'、' }}</span>{% endif %}</div>
+{% for section in overview.sections %}
+<section class="panel"><div class="panel-heading"><h2>{{ section.label }}</h2></div><div class="body">
+{% if section.counts is None %}<p class="muted">该分区暂无可读数据{% if section.missing %}（{{ section.missing|join:'、' }}）{% endif %}，不显示为 0。</p>{% else %}
+<div class="grid"><div><table aria-label="{{ section.label }}计数"><thead><tr><th>指标</th><th class="amount">值</th></tr></thead><tbody>{% for row in section.count_rows %}<tr><td data-label="指标">{{ row.label }}</td><td data-label="值" class="amount">{{ row.value }}</td></tr>{% endfor %}</tbody></table></div>
+<div><table aria-label="{{ section.label }}合计"><thead><tr><th>合计</th><th class="amount">元</th></tr></thead><tbody>{% for row in section.total_rows %}<tr><td data-label="合计">{{ row.label }}</td><td data-label="元" class="amount">{{ row.value|money }}</td></tr>{% empty %}<tr><td colspan="2">无金额合计。</td></tr>{% endfor %}</tbody></table></div></div>
+{% endif %}
+{% if section.minute_rows %}<p>{% for row in section.minute_rows %}{{ row.label }}：{{ row.value }}{% endfor %}</p>{% endif %}
+{% if section.issues %}<h3>异常</h3><ul>{% for issue in section.issues %}<li class="issue">{{ issue.code }}：{{ issue.summary }}</li>{% endfor %}</ul>{% endif %}
+{% if section.refs %}<h3>引用（最多 {{ section.refs|length }} 条{% if section.truncated %}，已截断{% endif %}）</h3><ul>{% for ref in section.refs %}<li class="trace">{{ ref.namespace }} · {{ ref.kind }} · {{ ref.id }}（版本 {{ ref.version }}）</li>{% endfor %}</ul>{% endif %}
+{% if section.missing %}<p class="muted">缺失/未实现：{{ section.missing|join:'、' }}（显示为空，不记为 0）。</p>{% endif %}
+</div></section>
+{% endfor %}
+{% endif %}
+</div>
+<script>(()=>{const root=document.querySelector('.ops');if(!root)return;const bad=root.querySelector('[aria-invalid="true"]');if(bad)bad.focus();})();</script>
+{% endblock %}

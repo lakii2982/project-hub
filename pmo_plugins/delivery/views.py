@@ -160,3 +160,37 @@ def acceptance_action(context,payload):
             messages.success(context.request,'办理完成')
             return redirect(url('acceptance_detail',id=row.pk))
     return render(context.request,'delivery/acceptance_form.html',base(member,title=title,form=form,submit_url=url('acceptance_action',id=row.pk,action=action),back_url=url('acceptance_detail',id=row.pk)),status=400)
+
+
+def ops_reconciliation_overview(context, payload):
+    """PH-291 read-only cross-domain operations overview page (history_read)."""
+    from django.shortcuts import render
+    from django.urls import get_script_prefix
+    from . import operations_read_services as overview
+    from .forms import OpsOverviewFilterForm
+    member = context.member
+    allowed = {'as_of', 'period'}
+    form = OpsOverviewFilterForm(payload)
+    error = None
+    if set(payload) - allowed:
+        error = '包含不允许的查询参数，请刷新后重试'
+    elif not form.is_valid():
+        error = '；'.join(form.errors.get('__all__', [])) or '筛选条件无效'
+    data = None
+    if error is None:
+        try:
+            data = overview.ops_reconciliation_overview(
+                member, as_of=form.cleaned_data.get('as_of'),
+                period=form.cleaned_data.get('period'))
+        except ValidationError as invalid:
+            error = '；'.join(invalid.messages)
+        except PermissionDenied:
+            raise
+    return render(context.request, 'delivery/ops_reconciliation_overview.html', {
+        'nav': 'delivery',
+        'overview': data,
+        'form': form,
+        'error': error,
+        'page_url': get_script_prefix() + 'modules/delivery/ops-reconciliation-overview/',
+        'delivery_url': get_script_prefix() + 'modules/delivery/acceptance-list/',
+    }, status=400 if error else 200)

@@ -1,0 +1,68 @@
+{
+  "task_id": "PH-291",
+  "summary": "Delivered the PH-291 cross-domain read-only operations reconciliation overview in the delivery layer, then fixed the three independent-review blockers. The new `pmo_plugins/delivery/operations_read_services.py` exposes `ops_reconciliation_overview(member, *, as_of=None, period=None)` aggregating already-delivered owner facts into six sections: contracts (pending changes / terminated contracts / approved lines still active under terminated contracts), settlement (active open items, over-cleared items, refunds, bank returns, refunds without matching clearance, derived remaining balance; for pm, refunds/bank-returns and their totals are strictly scoped to cash facts that actually cleared the pm-visible open items so no other project's amounts leak), management revenue (posted/reversed recognitions, terminated-still-recognized, recognized vs settled net difference), time (pending/confirmed billable confirmations, confirmed minutes, unapproved timesheets; for pm, confirmations are scoped through the canonical time-owner UUID5 of visible Timesheet pks - `uuid5(NAMESPACE_URL, 'pmo:timesheet:<pk>')` - not raw contract-line ids), onboarding (PH-274 preview is stateless -> counts/totals null plus `import_preview_persistence_not_implemented`), and cash (posted/missing classification/net; pm null plus `cash_not_scoped_to_project`). Roles: owner/finance/auditor full, pm managed/visible projects, member denied; the route is declared canonically in `pmo_plugins/delivery/domain_metadata.py` as `history_read` (urls.py imports it, no metadata copy), so history reads survive module disable. Everything is read-only: no writes, audit, receipts, session persistence, migration or second insights owner; tests assert derived values, null-plus-missing semantics, ref caps, period/as_of filtering, role/scope isolation including pm refund and pm time regressions, invalid inputs, module-disabled history, and zero INSERT/UPDATE/DELETE SQL with unchanged fact/audit/event counts. 17 scoped tests added.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto 8e7df41: {\"command\":\"check\",\"ok\":true,\"task_count\":220} exit 0."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run: System check identified 83 issues (0 silenced) — all pre-existing warnings (urls.W003 plugin-colon names incl. PH-279 routes, cash.W342), 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1016 tests in ~132s, FAILED (failures=5, errors=3, skipped=69). The same known macOS/DRF environment set as the 5F+3E baseline (test_drf_security_compatibility 3E+3F, test_delivery_execution 1F, test_delivery_execution_sandbox 1F); no PH-291 failure."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Fresh DB: rm -f /tmp/ph291-verify.sqlite3; PMO_DB=... migrate --noinput; then PMO_DB=... verify_integrity --json -> {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_reconciliation_overview tests.test_v1_ops_reconciliation_overview_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 17 tests ... OK (10 service + 7 HTTP; now includes pm refund scoping and pm canonical-UUID5 time scoping regressions)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 8e7df41 --task PH-291",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto 8e7df41 (PH-283 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 14 changed files all inside BASE PH-291 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-291 cross-domain-operations-overview reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ALL THREE ROUND-1 BLOCKERS FIXED AT ed62e6a: (1) route metadata is now declared in `pmo_plugins/delivery/domain_metadata.py` (`ops_reconciliation_overview` -> history_read) and `delivery/urls.py` imports and passes canonical DOMAIN_METADATA with no DELIVERY_METADATA copy; PH-291 tasks/spec both have 14 exact paths including domain_metadata.py. (2) pm settlement refunds/returns are scoped to cash facts that cleared visible open items (`original_cash_transaction_id__in=visible_cash_ids`), so finance-managed-project refunds do not leak; a pm regression asserts 1 refund/1000 for pm vs 2/6000 for owner. (3) pm time scope now uses the canonical time-owner UUID5 derivation `uuid5(NAMESPACE_URL, 'pmo:timesheet:<pk>')` via `timesheet_key`, exactly matching `time.services._timesheet_key`, and filters `timesheet_id` rather than integer contract-line pks; a regression creates real canonical timesheet UUIDs and asserts pm sees only its project's drafts/confirmed.",
+      "RE-VERIFIED SEMANTICS: six read-only sections; settlement remaining=gross-active cleared (20000 in gold) and revenue difference=recognized-settled; cash net=in-out; time minutes is a separate unit/field; onboarding null+`import_preview_persistence_not_implemented`; pm cash null+`cash_not_scoped_to_project`; integer cents and refs<=50; period is the Lead-authorized optional read-only filter; no audit/session/receipt/migration/write (CaptureQueries has no INSERT/UPDATE/DELETE and fact/audit/event counts unchanged); owner/finance/auditor full, pm visible managed projects, member deny; history_read route remains readable after module disable; no verify_integrity change; 14 changed files all inside the expanded PH-291 allowed_paths; task in_review, manifest=PH-291.",
+      "EVIDENCE AT ed62e6a (BASE a4584d1/PH-294 merge): check ok=true/task_count=220; manage.py check exit0; makemigrations --check No changes; scoped overview 17 OK; full suite Ran 1016 tests, 5 failures/3 errors/69 skips (exactly the known 8 macOS baseline, no fifth class); verify_integrity fresh DB ok (earlier evidence; no schema change); verify-change --base a4584d1 --task PH-291 only high_risk_review_required + acceptance_not_passed (pre-review), no path_out_of_scope; report review now pass. After the worker's final evidence/done transition, verify-change should be clean."
+    ],
+    "evidence": "VERDICT: PASS (round 2; canonical metadata + pm settlement/time scoping fixed). Reviewed HEAD ed62e6a (BASE a4584d1, after PH-294 whitelist merge) in /tmp/ph291-cross-domain, worktree clean; 14 changed files all inside PH-291 allowed_paths; task in_review, manifest=PH-291. Route now lives in canonical delivery/domain_metadata.py (urls imports it, no metadata copy); pm refund/return scoping uses visible cleared cash ids with a leak regression; pm time uses the exact time-owner UUID5 timesheet derivation with a canonical-UUID regression; scoped 17 OK. Six sections/derived amounts/null+missing/refs cap/period/no writes/permissions/history_read/no migration verified. Independent runs: check ok=220; manage check exit 0; makemigrations clean; full suite 1016/5F+3E/69 = known 8 macOS baseline; verify_integrity fresh DB ok; verify-change only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "Review blocker fix A (canonical route metadata): removed the in-memory DELIVERY_METADATA copy from delivery/urls.py and declared `ops_reconciliation_overview` (path ops-reconciliation-overview/, access history_read) in canonical pmo_plugins/delivery/domain_metadata.py; urls.py imports DOMAIN_METADATA only. Impact: single metadata contract, SDK route/gate resolution unchanged, page still readable after module disable.",
+    "Review blocker fix B (pm settlement leak): Refund/BankReturn counts, refund_total/return_total and refunds_without_clearance were org-wide; they are now restricted to cash transaction ids that cleared the pm-visible OpenItems (active clearances), so pm sees only its managed projects' amounts. Added pm refund regression (pm refunds=1/1000, owner=2/6000).",
+    "Review blocker fix C (pm time UUID mismatch): pm time scoping previously compared BillableConfirmation.contract_line_id (UUID) with ContractLine integer-style pk lists; it now derives the canonical time-owner UUID5 of visible Timesheet integer pks - uuid5(NAMESPACE_URL, 'pmo:timesheet:<pk>') - and filters timesheet_id. Fixture now creates real Timesheets and canonical UUID5 ids, with a pm regression proving pm sees only its project's confirmations.",
+    "BASE moved from fa1ca8d to a4584d1 after PH-294 merged (PH-291 whitelist now includes pmo_plugins/delivery/domain_metadata.py); the branch was rebased and all gate outputs re-run on the new BASE.",
+    "No audit is written, no receipt/session persistence, no migration and no contract-schema change; onboarding/pm-cash missing semantics remain null+missing rather than zero.",
+    "Route access is history_read so delivery disablement keeps the page readable; no read/write gate was weakened.",
+    "The optional period (YYYY-MM) filter requested by the Lead is additive to the frozen as_of signature.",
+    "Lead integration rebase (a4584d1 -> 8e7df41) after PH-276/PH-283 merged: docs/verification.md kept main entries plus the PH-291 entry; docs/delivery-status.md took the PH-291 line; manifest.active_handoff -> PH-291. Gates rerun green."
+  ],
+  "unverified": [
+    "PostgreSQL-specific behavior (CI): the slice is read-only with no locks/transactions, but the PG CI run is delegated to CI; SQLite tests only.",
+    "Browser 1440/390 visual/keyboard checks were not run locally; the template follows existing base/visual patterns but needs the browser pass or CI/UX review.",
+    "Independent S review is pending; report.review is deliberately not self-passed.",
+    "No production/UAT verification; the page is a read-only overview, no data migration or backfill is involved."
+  ]
+}
