@@ -28,7 +28,10 @@
   "deviations": [
     "PH-232 is the first slice of PH-170: it clears posted cash against receivable open items and supports reversal, but excludes offset/prepayment, refunds, fees, internal transfers, batch clearing, import, opening balances and any ledger/accounting/revenue/cost writes; PH-170/171 remain proposed.",
     "Clearance reversal uses an append-only reversal record (status='reversed', reverses original) rather than mutating the original; balances are derived from clearance aggregates and no editable balance is introduced.",
-    "Cash facts are read through a new named read-only cash interface (posted_cash_for_clearance); the clearance model stores the cash UUID/ref without a cross-owner FK."
+    "Cash facts are read through a new named read-only cash interface (posted_cash_for_clearance); the clearance model stores the cash UUID/ref without a cross-owner FK.",
+    "Clearance reversal mutates only the status field (active->reversed) on the original record; amounts/refs stay immutable and balances are derived as sum(active), so the canonical entity stays self-consistent without a private reverses field.",
+    "The cash named read returns the effective counterparty from the latest unreversed CashPartyMatch when the transaction counterparty is empty; a reversed match counts as unidentified and is rejected.",
+    "The canonical clearance.create/reverse channels (internal_cash_orchestration_only) are not exposed; only private services implement them, and caller-supplied balances/proofs are rejected."
   ],
   "unverified": [
     "No product code, migration, tests, browser, PostgreSQL or CI evidence exists for PH-232 yet.",

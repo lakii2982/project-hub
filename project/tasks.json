@@ -6565,7 +6565,8 @@
         "project/reports/PH-232.json",
         "project/handoffs/PH-232.md",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "pmo_plugins/settlement/receivable_forms.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
