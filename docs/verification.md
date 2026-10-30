@@ -617,4 +617,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 2. **核号**：BASE 最大 PH-294；远端分支/PR（EXP #143/#144 等）无 ≥295 占用 → PH-295 起连续。
 3. **新登记**：PH-295 工资现金命令层首片（proposed，缺 PH-171/172）、PH-296 费用报销/支出首片（proposed，缺 PH-150/155）、PH-297 服务期预收/递延首片（proposed，缺 PH-163/170）、PH-298 下一规划槽（proposed，待 PH-294 done 后置 ready）。count 216→220，编号 295-298 连续。
 4. **晋级**：无新增（PH-280/281/283/284/288/291 等已 ready 保持；依赖未 done 的 proposed 均未虚假晋级）。
-5. blockers 刷新：PH-292/293/295/296/297 保持 proposed 并写清缺口；无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-295/296/297 未实现；review由独立S复核。
+5. blockers 刷新：PH-292/293/295/296/297 保持 proposed 并写清缺口；无占位符；acceptance 全可执行。独立 S 复核两轮 PASS（首轮阻断：PH-291 domain_metadata 白名单与 PH-110 ready-未-done 依赖事实，已修；次轮 0 阻断）；最终证据 HEAD 873a530 置 PH-294 done / PH-298 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=220；23 项治理 OK；verify-change --base cfa185f --task PH-294 ok=true、11 文件全白名单、无 errors。未验证：PH-295/296/297 未实现；PH-276 白名单由其实现 PR/CI 验证。
