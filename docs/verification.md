@@ -377,3 +377,8 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 ## PH-234 会话上下文减负文档改造（2026-10-30）
 
 基线7605fa9（PH-235命令合入前头）。纯文档片：delivery-status新现状头1996字节（≤2KB，wc -c实测），原60KB全文逐字进delivery-status-archive.md（diff核对无改写）；AGENTS.md仅改开场两段，四条验收命令与财务/插件/双层AI条款原样；四篇ai-delivery-*经git mv入archive/（内容零改动，git diff确认rename 100%）；engineering/README与v1.0-development/README各加归档标注/查询护栏。实际执行check与23项治理测试。未验证：全量产品套件（CI覆盖）；实际收益复测按PH-233基线待做；ROADMAP/execution-protocol旧链接修复不在本片白名单，留PH-236。
+
+
+## PH-236 交付效率收尾规划（2026-10-30）
+
+基线7a2cc17（PH-234合入）。纯规划片：登记PH-237（ready，S——由A校正，因其白名单含project/tasks.json属CRITICAL_PATHS）与PH-238规划槽，PH-236置done，active_handoff指向PH-236。无产品代码。实际执行：23项治理测试通过；check与verify-change在独立S复核落pass后按真实输出记录（独立复核首轮打回，指出首版报告的pass声明不可复现且A/S矛盾；已更正证据顺序与风险级后二次复核）。未验证：PH-237未实现；墙钟时间复测需日常使用统计，不预设结论。
