@@ -24,7 +24,8 @@ def install(apps, schema_editor):
                       OR NEW.external_source_key <> OLD.external_source_key
                       OR NEW.payee <> OLD.payee OR NEW.evidence <> OLD.evidence
                       OR NEW.counterparty_id IS DISTINCT FROM OLD.counterparty_id
-                      OR NEW.created_by_id <> OLD.created_by_id OR NEW.created_at <> OLD.created_at) THEN
+                      OR NEW.created_by_id <> OLD.created_by_id OR NEW.created_at <> OLD.created_at
+                      OR NEW.version <> OLD.version + 1) THEN
                     RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Posting may only change status and version';
                   END IF;
                   RETURN NEW;
@@ -40,7 +41,9 @@ def install(apps, schema_editor):
                     NEW.gross_cents <> OLD.gross_cents OR NEW.transaction_date <> OLD.transaction_date
                     OR NEW.direction <> OLD.direction OR NEW.funding_account_id <> OLD.funding_account_id
                     OR NEW.external_source_key <> OLD.external_source_key OR NEW.payee <> OLD.payee
-                    OR NEW.evidence <> OLD.evidence OR coalesce(NEW.counterparty_id, '') <> coalesce(OLD.counterparty_id, '')))
+                    OR NEW.evidence <> OLD.evidence OR coalesce(NEW.counterparty_id, '') <> coalesce(OLD.counterparty_id, '')
+                    OR NEW.created_by_id <> OLD.created_by_id OR NEW.created_at <> OLD.created_at
+                    OR NEW.version <> OLD.version + 1))
                 BEGIN SELECT RAISE(ABORT, 'Posted cash transaction is immutable or posting changed more than status/version'); END""")
 
 

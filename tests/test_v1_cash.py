@@ -328,7 +328,8 @@ class CashTransactionTests(CashFixture, TestCase):
 
     def test_non_draft_rows_are_guarded(self):
         row = self.tx()
-        CashTransaction.objects.filter(pk=row.pk).update(status='posted')
+        CashTransaction.objects.filter(pk=row.pk).update(
+            status='posted', version=row.version + 1)
         stale = CashTransaction.objects.get(pk=row.pk)
         stale.gross_cents = 999
         with self.assertRaises(ValidationError):

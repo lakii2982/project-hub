@@ -225,3 +225,18 @@ class CashPostingTests(CashPostingFixture, TestCase):
                 CashTransaction.objects.filter(pk=posted.pk).update(status='draft')
         self.assertEqual(DomainEvent.objects.filter(topic=POSTED_TOPIC).count(),
                          canonical_before)
+
+    def test_posting_transition_freezes_every_field_but_status_and_version(self):
+        draft = self.tx()
+        for changes in ({'created_by': self.finance}, {'created_at': timezone.now()},
+                        {'gross_cents': draft.gross_cents + 1},
+                        {'version': draft.version + 2}):
+            with self.assertRaises(IntegrityError):
+                with transaction.atomic():
+                    CashTransaction.objects.filter(pk=draft.pk).update(
+                        status='posted', **changes)
+        draft.refresh_from_db()
+        self.assertEqual(draft.status, 'draft')
+        posted = self.post(draft)
+        self.assertEqual(posted.status, 'posted')
+        self.assertEqual(posted.version, draft.version + 1)
