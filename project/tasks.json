@@ -7634,7 +7634,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-180（期间预检/锁定）与 PH-181（四类核对/差额）done；insights app 归属决策 PH-270（ready 未 done，ADR 0013 未合入）完成后由 PH-277 冻结读模型契约；期间核对实现首片 PH-272 仍 proposed。依赖完成后由后续规划槽复核 DoR 再晋级。"
+        "缺 PH-180（期间预检/锁定）与 PH-181（四类核对/差额）done；归属（ADR 0013）与实现契约（ADR 0014，PH-277 done）已冻结，白名单已补 bootstrap/settings/urls；依赖 done 后由后续规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -7853,7 +7853,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-182（经营指标/缺口/复盘）与 PH-183（到期扫描/待办）done；insights app 归属决策 PH-270（ready 未 done，ADR 0013 未合入）完成后由 PH-277 冻结读模型契约；读模型实现首片 PH-272 仍 proposed。依赖完成后由后续规划槽复核 DoR 再晋级。"
+        "缺 PH-182（经营指标/缺口/复盘）与 PH-183（到期扫描/待办）done；归属（ADR 0013）与读模型契约（ADR 0014，PH-277 done）已冻结，白名单已同步；依赖 done 后由后续规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -8258,6 +8258,7 @@
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-270",
+        "PH-277",
         "PH-180",
         "PH-181",
         "PH-182",
@@ -8304,7 +8305,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-270（insights 归属/门控决策，ready 未 done；ADR 0013 未合入）与 PH-180（期间预检/锁定）、PH-181（四类核对/差额）、PH-182（经营指标/缺口）、PH-183（到期扫描/待办）done；读模型实现前置契约片已登记 PH-277（proposed）。决策与依赖完成后由后续规划槽复核 DoR 再晋级。"
+        "缺 PH-277（insights 读模型契约冻结，ADR 0014）done 之外的 PH-180（期间预检/锁定）、PH-181（四类核对/差额）、PH-182（经营指标/缺口）、PH-183（到期扫描/待办）done；PH-270/ADR 0013 与 PH-277/ADR 0014 已满足；依赖完成后由后续规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -8500,7 +8501,7 @@
       "title": "insights 读模型实现前置：期间核对/工作台读模型契约与只读口径冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8528,7 +8529,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-277.md"
     },
     {
       "id": "PH-278",

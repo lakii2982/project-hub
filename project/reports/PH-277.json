@@ -1,0 +1,41 @@
+{
+  "task_id": "PH-277",
+  "summary": "Froze the insights read-model contract as ADR 0014 (docs/adr/0014-insights-read-model-contract.md), the docs-only precondition for the PH-272 implementation slice. After verifying the actual contracts (ReconciliationCase x-owner=insights owned_fact with status draft/pending/approved/rejected/superseded/closed, required source_refs/difference_cents/owner_member_id/resolution_note and readOnly case_key/rule_code/coverage_key/snapshot_watermark; MetricDefinition x-owner=insights read_projection with metric_id/name/formula_version/as_of_date/scope; commands insights.reconciliation.refresh/v1, insights.reconciliation.case.update/v1, insights.export.create/v1 and their canonical events; ADR 0013 owner/migration/bootstrap decisions), the ADR freezes three first-slice read-only interfaces: period_precheck_snapshot (contracts/time/cash/settlement/costing/core read-only blockers/warnings, zero writes, no lock/period action), reconciliation_case_list/snapshot (strict canonical ReconciliationCase fields/status transitions, refresh creates draft/pending, case.update only draft->pending->approved/rejected->closed, superseded on refresh replacement, request_token idempotency, concurrent single winner, pagination 200) and project_workbench_summary (contract value/recognized revenue/cost/cash/open-item/budget-ETC, missing values null+missing rather than 0, MetricDefinition references), plus the role matrix (owner/finance/auditor full, pm own projects, member denied), integer-cent/ROUND_HALF_UP caliber, the no-business-write boundary (no SourceConsumption/AccountingEvent/LedgerPosting/business facts; MetricSnapshot is a non-canonical internal read model), the deferred export, the exact future implementation whitelist for PH-272 and the rejection list. The ADR number 0014 was verified free (0010-0013 occupied). PH-257/PH-262 spec decision/risk text now references ADR 0014; tasks.json marks PH-277 done with handoff, refreshes PH-257/PH-262 blockers and adds PH-277 to PH-272's dependencies with updated blockers (PH-272 spec is outside this task's allowed_paths, so only its task contract was synced - disclosed). No scaffold, product code, migration, contract-schema change or runtime behavior was written.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE 71d5665): exit 1, {\"command\":\"check\",\"errors\":[{\"code\":\"high_risk_review_required\",\"message\":\"risk S reports require a named reviewer with status pass\",\"path\":\"report.review\"}],\"ok\":false} — single review-pending error, no path/schema errors."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-277 on main 71d5665 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 71d5665 --task PH-277",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE 71d5665): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope — all 9 changed files (ADR 0014, PH-257/PH-262 spec syncs, tasks.json, manifest.json, docs/v1.0-development/verification.md, docs/verification.md, PH-277 report/handoff) are inside BASE PH-277 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (read-model contract freeze plus PH-257/PH-262/PH-272 contract sync); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "The Lead asked to sync PH-272's spec and tasks, but the frozen PH-277 spec/allowed_paths only permit project/specs/PH-257.md and project/specs/PH-262.md (PH-272's spec is not in the BASE whitelist). I synced PH-272 through tasks.json only (added PH-277 to its dependencies and refreshed its blockers) and updated PH-257/PH-262 specs as the frozen contract requires; PH-272's spec text must be updated by its own implementation/planning PR. Disclosed here rather than expanding the whitelist.",
+    "ADR 0014 number was verified free before use (docs/adr already had 0001-0013; 0010 invoicing, 0011 time, 0012 importing, 0013 insights ownership), so no number conflict.",
+    "MetricSnapshot is explicitly documented as a non-canonical insights-internal read model (PH-262's internal snapshot), not a contract entity; only MetricDefinition/ReconciliationCase are canonical. No contract schema/topic/command was added or changed.",
+    "The contract freezes ReconciliationCase strictly to the canonical fields/status enum (draft/pending/approved/rejected/superseded/closed, source_refs/difference_cents/owner_member_id/resolution_note + readOnly keys) and lists the non-canonical period/scope/category/assignee/due_date/note/open/assigned/resolved/dismissed forms as rejection cases, preventing a repeat of the earlier canonical-mismatch defect.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed ADR/specs/tasks."
+  ],
+  "unverified": [
+    "No insights implementation, model/table, migration, route, page, test logic or runtime behavior was written; the contract is documentation only and PH-272/PH-257/PH-262 remain proposed.",
+    "The frozen interfaces/role matrix/whitelist will only be exercised by the PH-272 implementation slice after PH-180/PH-181/PH-182/PH-183 are done.",
+    "PH-272's spec text is not yet updated to ADR 0014 (outside this task's whitelist); only its task dependencies/blockers were synced.",
+    "Full product test suite not run locally (docs-only slice); required CI checks cover the PR."
+  ]
+}
