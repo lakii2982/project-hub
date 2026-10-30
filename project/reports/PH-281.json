@@ -33,9 +33,9 @@
       "evidence": "Actual run at BASE 328e119: Ran 15 tests ... OK (8 service + 7 HTTP, includes pm audit-scope regression)."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base e5aa0fb --task PH-281",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD fdb0682: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 14 changed files (5 new core identity files incl. template, canonical domain_metadata + delivery urls, 2 tests, tasks/manifest, docs status/verification, report/handoff) are inside BASE PH-281 allowed_paths."
+      "command": "python scripts/projectctl.py verify-change --base 328e119 --task PH-281",
+      "result": "pass",
+      "evidence": "Post-review (review.status=pass) actual run at HEAD 2cb858d: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"328e119\",\"head\":\"2cb858dacc6ca0713003cf0b1273c86ad5149bc2\",\"count\":14,\"errors\":null}, exit 0; all 14 changed files inside BASE PH-281 allowed_paths and review.status=pass with the reviewer's name."
     }
   ],
   "review": {
