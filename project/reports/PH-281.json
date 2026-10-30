@@ -4,33 +4,33 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD fdb0682 (BASE e5aa0fb): {\"command\":\"check\",\"ok\":true,\"task_count\":224}, exit 0 (PH-281 in_review with owner+handoff); final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Final rebased run at BASE 328e119 (HEAD with review pass): {\"command\":\"check\",\"ok\":true,\"task_count\":224}, exit 0."
     },
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual run: System check identified 88 issues (0 silenced) — all pre-existing warnings (urls.W003 plugin-colon names, cash.W342 etc.), 0 errors."
+      "evidence": "Actual run at BASE 328e119: System check identified 91 issues (0 silenced) — all pre-existing warnings (urls.W003 plugin-colon names incl. PH-280/PH-288 routes, cash.W342), 0 errors."
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
       "result": "pass",
-      "evidence": "Actual run: No changes detected (no migration for this slice)."
+      "evidence": "Actual run: No changes detected."
     },
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run: Ran 1055 tests in ~135s, FAILED (failures=5, errors=3, skipped=69). The same known macOS/DRF environment set as the 5F+3E baseline; no PH-281 failure."
+      "evidence": "Actual run at BASE 328e119: Ran 1079 tests in ~121s, FAILED (failures=5, errors=3, skipped=69) — the same known macOS/DRF environment set as the 5F+3E baseline; no PH-281 failure (15 new tests included)."
     },
     {
       "command": "python manage.py verify_integrity --json",
       "result": "pass",
-      "evidence": "Actual run after the pm-audit fix: Ran 1056 tests in ~120s, FAILED (failures=5, errors=3, skipped=69) — the same known macOS/DRF environment set as the 5F+3E baseline; no PH-281 failure (one new regression test included)."
+      "evidence": "Fresh DB at BASE 328e119: rm -f /tmp/ph281-verify.sqlite3; PMO_DB=... migrate --noinput; then PMO_DB=... verify_integrity --json -> {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
     },
     {
       "command": "python manage.py test tests.test_v1_identity_access_read tests.test_v1_identity_access_read_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run after the pm-audit fix: Ran 15 tests ... OK (8 service + 7 HTTP; includes the new pm audit-scope regression)."
+      "evidence": "Actual run at BASE 328e119: Ran 15 tests ... OK (8 service + 7 HTTP, includes pm audit-scope regression)."
     },
     {
       "command": "python scripts/projectctl.py verify-change --base e5aa0fb --task PH-281",

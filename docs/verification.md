@@ -658,4 +658,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 
 范围与口径：成员/角色/停用状态/项目范围 refs/AgentToken 计数（有效/撤销/过期，as_of 派生）/最近身份审计；审计摘要只返回安全字段（changed_fields/role/active/project_scope_ids/name），不含 token_hash/auth_snapshot/密码/费率；pm 审计始终限制到管理项目可见成员（含 AgentToken entity 映射），无 member_id 也不泄漏全公司；issues 覆盖停用成员持有效令牌、过期未撤销、公司角色带项目范围、跨公司范围、审计缺口、同名重复有效令牌；owner/finance/auditor 全量、pm 仅管理项目摘要（令牌明细/最近变更隐藏）、member 拒绝；分页≤200；as_of 不得未来；无写/审计/收据/session/迁移；测试断言零 INSERT/UPDATE/DELETE 与事实计数不变。
 
-实跑（HEAD 待补）：manage.py check 条既有 warning/0 error；makemigrations 无变更；全量（预期 1064）/5F+3E/69；verify_integrity 新库 ok；scoped 15 tests OK；verify-change 待记录。未验证：PG/浏览器/生产/UAT；独立复核已 PASS 内容（audit scoping 修复后终审）。
+实跑（HEAD 328e119）：projectctl check ok=true/task_count=224；manage.py check 91 条既有 warning/0 error；makemigrations --check 无变更；全量 1079 tests=5F+3E+69 skips（既有 macOS/DRF 环境失败，无新增）；verify_integrity 新库 {"ok": true, "errors": []}；scoped 15 tests OK（含 pm 审计范围回归）；verify-change --base 328e119 --task PH-281 ok=true、14 文件全白名单、无 errors。未验证：PG/浏览器 1440-390/生产/UAT。
