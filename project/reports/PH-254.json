@@ -1,0 +1,63 @@
+{
+  "task_id": "PH-254",
+  "summary": "PH-244 evidence-caliber correction (docs-only). The merged PH-244 report's full-suite line still carried the pre-rebase BASE e91346a measurement (Ran 772 tests/111.552s, 55 environment skips); PH-254 re-ran the exact acceptance command at its own BASE 26d0408 (main after PH-239/PH-243/PH-248/PH-250/PH-253) and records the real output: Ran 849 tests in 118.423s, 5 failures/3 errors, 62 environment skips, with the failure/error name set identical to the known macOS environment baseline (6 DRF Accept/codec/large-JSON + 2 delivery symlink) and the 13 PH-244 tests passing. The PH-244 final-main calibration (ceded2e, 773 tests/56 environment skips per the PH-254 contract) is recorded as the historical merged-main caliber, and 772/55 as the pre-rebase measurement; all three calibers are disclosed together with the reason the current BASE count is higher (intervening slices expanded the test set). docs/verification.md appends the matching calibration sentence to the PH-244 entry. Only the PH-244 full-suite tests entry evidence and that verification sentence changed: the PH-244 review block, summary, other tests rows, deviations/unverified, service/model/contract/test code and other task reports are untouched, and the historical pass is not rewritten as a new-SHA pass. Independent fresh-context S review returned PASS with 0 blockers (HEAD bf7c1db, BASE 26d0408; 6 changed files all inside the PH-254 allowed_paths); its two non-blocking notes (verify-change evidence must record the post-review ok=true rerun; ceded2e is the merge base while the merged main is 37b5fdf) were both addressed in the final evidence commit.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto 897a352: {\"command\":\"check\",\"ok\":true,\"task_count\":185} exit 0."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0: only the repository's known urls.W003 plugin-route-name warnings (59 issues, 0 silenced), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: 'No changes detected'; docs-only slice, no code/model/migration change."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run at BASE 26d0408 (main after PH-239/PH-243/PH-248/PH-250/PH-253): Ran 849 tests in 118.423s, FAILED (failures=5, errors=3, skipped=62); the 8 failures/errors are exactly the known macOS environment-limited baseline names (6 DRF Accept/codec/large-JSON in tests.test_drf_security_compatibility, 2 delivery symlink cases in tests.test_delivery_execution / tests.test_delivery_execution_sandbox), no new names; the 13 PH-244 tests passed. The PH-244 report line is corrected to this real run while retaining the historical 772/55 (pre-rebase e91346a) and 773/56 (PH-244 merged main ceded2e) calibers; the higher current BASE count is explained by intervening slices. Linux CI authoritative."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 2.492s, OK (2.492s)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 897a352 --task PH-254",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto 897a352 (PH-258 acceptance fix merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-254 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-254 evidence-caliber reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "FULL-SUITE RE-RUN VERIFIED: my independent `manage.py test tests --verbosity 1` at BASE 26d0408 ran 849 tests in 114.495s with failures=5, errors=3, skipped=62, and the failure/error name set is identical to the known macOS environment baseline (6 DRF Accept/codec/large-JSON + 2 delivery symlink cases); every PH-244 test passed. The report's 849 tests / 5 failures / 3 errors / 62 skips matches my run exactly (the 118.423s wall time differs only by machine timing). The higher count versus the PH-254 contract's historical 773/56 is correctly explained by the BASE containing later slices (PH-239/243/248/250/253), as the spec requires: actual BASE output recorded, not the spec's expected number copied.",
+      "PH-244 REPORT SCOPE VERIFIED: a programmatic base-vs-head comparison of project/reports/PH-244.json shows only `tests[3]` (the full-suite entry) changed; task_id, summary, review block (status pass, reviewer and findings), deviations, unverified and all other six test entries are byte-identical, and the historical reviewer pass was not rewritten as a new-SHA pass. The changed evidence text itself is transparent: it records 772/55 as the pre-rebase e91346a measurement, 773/56 as the PH-244 merged-main caliber (ceded2e base plus PH-244) and 849/62 as the PH-254 BASE 26d0408 re-run, explains the count difference comes from intervening slices rather than PH-244, and keeps the 8-failure-name invariant and Linux-CI-authoritative statement.",
+      "VERIFICATION-DOC SCOPE VERIFIED: docs/verification.md adds exactly the PH-254 calibration paragraph under the PH-244 entry (772/55 pre-rebase, 773/56 merged-main, 849/62 actual BASE re-run with the same 8 failure names and the intervening-slice explanation) and touches no other verification entry; no PH-244 service/model/contract/test code changed (the whole diff is 6 docs/planning files: PH-244 report row, verification, tasks, manifest, PH-254 report/handoff).",
+      "TASK FACTS AND GATES AT HEAD bf7c1db (BASE 26d0408): projectctl check -> ok=true/task_count=180 (task in_review, so check is green pre-review); governance projectctl+governance -> 23 tests OK; verify-change --base 26d0408 --task PH-254 -> only high_risk_review_required, no path_out_of_scope; task_count 180 unique, only PH-254 changed among existing tasks (in_review + handoff), all other done/ready/proposed states intact, manifest=PH-254; 6 changed files all inside PH-254 allowed_paths. Report evidence for check/governance/full-suite matches these actual runs.",
+      "NOTES (non-blocking): (a) tests[5] (verify-change) is declared result=pass while its evidence describes the pre-review run failing only on the review gate; when the worker replaces the pre-review evidence it should record the actual post-review verify-change output (ok=true) at the final HEAD, so the entry is not a forward declaration; (b) the verification/report wording 'after PH-244 merged onto main ceded2e' is slightly loose (ceded2e was the merge base; the merged main commit is 37b5fdf) though the 773/56 number is correct - a wording cleanup is optional; (c) 118.423s vs my 114.495s is timing-only. No substantive gap: the correction records the actual BASE caliber, keeps the historical pass intact and changes no code."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD bf7c1db (BASE 26d0408) in /tmp/ph254-evidence, worktree clean; 6 changed files all inside PH-254 allowed_paths and docs/planning-only. Independent reruns: full suite -> Ran 849 tests in 114.495s, 5 failures/3 errors/62 skips with the failure name set identical to the known macOS baseline (matches report counts; timing only differs); governance -> 23 tests OK; projectctl check -> ok=true/task_count=180 (task in_review); verify-change --base 26d0408 --task PH-254 -> only high_risk_review_required, no path_out_of_scope. PH-244 report scope: programmatic comparison shows only the full-suite tests entry changed - summary, review pass block, deviations, unverified and all other test entries are identical, and the historical pass was not rewritten; the changed row transparently keeps 772/55 (pre-rebase e91346a), 773/56 (PH-244 merged-main caliber) and 849/62 (actual PH-254 BASE re-run), explains the intervening-slice expansion and preserves the 8-failure-name invariant. docs/verification adds only the matching PH-244 calibration paragraph; no PH-244 service/model/contract/test/migration changed. Task facts: 180 unique, only PH-254 changed, manifest=PH-254, other done states intact. Non-blocking notes: replace the pre-review verify-change entry with the final post-review output, optional wording cleanup for 'ceded2e base vs merged main 37b5fdf', timing-only difference."
+  },
+  "deviations": [
+    "实际重跑口径与 PH-254 spec 预期数字不一致已披露：spec/PH-248 记录的“773 tests/56 skips”是 PH-244 合入时 main（ceded2e）的口径；本任务 BASE 26d0408 已包含 PH-239/PH-243/PH-248/PH-250/PH-253 等后续切片，实际为 849 tests/118.423s/62 skips，失败集仍为同一 8 项 macOS 基线。按 spec“若重跑结果与 773/56 不一致，以实际 BASE 输出为准并在报告披露，不虚构”，PH-244 report 行同时保留三个口径并解释差异来源。",
+    "只改 PH-244 report 的全量测试 tests 条目 command/evidence 与 docs/verification.md PH-244 段落的校准句；PH-244 review 块、summary、其它 tests 行、deviations/unverified 原样保留，未把历史 reviewer pass 改写成新 SHA 通过。",
+    "未改 PH-244 服务/模型/契约/测试代码，未改其它任务 report/handoff，未改 docs/delivery-status*；review 保持 pending，S 级 done 待独立复核 pass 后置位。",
+    "Lead integration rebase (26d0408 -> 79ee448) after PH-249 merged: only project/manifest.json conflicted (active_handoff -> PH-254); the full-suite evidence (849 tests / 5F+3E / 62 skips at BASE 26d0408) remains valid because PH-249 was docs-only, and gates were rerun green with the new BASE.",
+    "Lead integration rebase (79ee448 -> 897a352) after PH-258 merged: only project/manifest.json conflicted; the PH-254 acceptance placeholder defect is fixed in BASE, so governance/verify-change now pass. Full-suite evidence unchanged by the docs-only PH-258 slice."
+  ],
+  "unverified": [
+    "PH-244 final-main ceded2e 的 773/56 采用 PH-254 契约（来自 PH-248 记录）作为历史口径，未在本工作树直接复跑 ceded2e（该提交不在当前 BASE 历史的可直接工作树中）；本任务实际重跑的是自身 BASE 26d0408（849/62），二者失败集均为同一 8 项 macOS 基线。",
+    "全量 849 项中的 5F+3E 为本机 macOS 环境限制基线（6 DRF Accept/codec/large-JSON、2 delivery symlink），Linux CI 仍为权威；本机未跑 PG 多连接并发/浏览器/生产。",
+    "未运行 verify_integrity 探针（本任务 docs-only，验收命令不含；产品代码与测试未改）。",
+    "独立 S 复核 pending：本报告 review 块由 reviewer 填写；通过后置 done、重跑 check+verify-change 并报最终 SHA。",
+    "Independent S review is no longer pending: reviewer PASS 0 blockers at bf7c1db, recorded in review; final verify-change rerun after the evidence commit returned ok=true."
+  ]
+}

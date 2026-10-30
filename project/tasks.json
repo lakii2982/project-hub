@@ -7443,7 +7443,7 @@
       "title": "PH-244 全量测试证据口径修正：772/55 → 773/56（rebase 前后口径）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -7466,7 +7466,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-254.md"
     },
     {
       "id": "PH-255",
