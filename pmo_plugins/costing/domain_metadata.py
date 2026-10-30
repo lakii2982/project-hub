@@ -5,5 +5,7 @@ DOMAIN_METADATA = {
     'migration_dependencies': ['core'],
     'routes': [{'name': name.replace('-', '_'), 'path': name + '/', 'access': access}
                for name, access in [('labor-list', 'business_read'), ('labor-detail', 'business_read'),
-                   ('labor-form', 'business_read'), ('labor-save', 'business_write'), ('labor-action', 'business_write')]],
+                   ('labor-form', 'business_read'), ('labor-save', 'business_write'), ('labor-action', 'business_write'),
+                   ('bank-charge-list', 'business_read'), ('bank-charge-form', 'business_read'),
+                   ('bank-charge-save', 'business_write')]],
 }

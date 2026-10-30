@@ -6,7 +6,7 @@ from .plugin import Plugin
 
 
 def entry_point():
-    from pmo_plugins.costing import labor_views
+    from pmo_plugins.costing import bank_charge_views, labor_views
     from . import service_period_views
     from . import views as delivery_views
     from pmo_plugins.costing.domain_metadata import DOMAIN_METADATA as COSTING_METADATA
@@ -40,5 +40,7 @@ def entry_point():
         'cash': {name: getattr(cash_views, name) for name in ('funding_account_list', 'funding_account_form', 'funding_account_save', 'funding_account_activate', 'cash_transaction_list', 'cash_transaction_form', 'cash_transaction_save', 'cash_transaction_detail', 'cash_party_match', 'cash_transaction_record')},
         'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action')} | {name: getattr(service_period_views,name) for name in ('service_confirmation_list','service_confirmation_detail','service_confirmation_form','service_confirmation_save','service_confirmation_action')},
         'costing': {name: getattr(labor_views, name) for name in
-                    ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')},
+                    ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}
+                   | {name: getattr(bank_charge_views, name) for name in
+                      ('bank_charge_list', 'bank_charge_form', 'bank_charge_save')},
     })

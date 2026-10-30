@@ -6,7 +6,7 @@ from .plugin import Plugin
 
 
 def entry_point():
-    from . import labor_views
+    from . import bank_charge_views, labor_views
     from pmo_plugins.contracts.domain_metadata import DOMAIN_METADATA as CONTRACTS_METADATA
     from pmo_plugins.contracts.plugin import Plugin as ContractsPlugin
     from pmo_plugins.contracts import party_views, views, approval_views
@@ -24,5 +24,7 @@ def entry_point():
             'version_submit': approval_views.version_submit, 'version_review': approval_views.version_review,
         },
         'costing': {name: getattr(labor_views, name) for name in
-                    ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')},
+                    ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}
+                   | {name: getattr(bank_charge_views, name) for name in
+                      ('bank_charge_list', 'bank_charge_form', 'bank_charge_save')},
     })

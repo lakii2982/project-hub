@@ -18,7 +18,7 @@ from core.services import audit
 
 from .funding_services import (_amount, _business_date, _dry, _evidence, _fail, _fresh,
                                _get_account, _identifier, _locked, _optional_identifier,
-                               _receipt, _receipt_row, _record, _text, _version, WRITE_ROLES)
+                               _receipt, _receipt_row, _record, _text, _version, READ_ROLES, WRITE_ROLES)
 from .models import CashPartyMatch, CashTransaction, FundingAccount
 
 PAYEE_KINDS = {'unidentified', 'counterparty', 'own_account'}
@@ -498,6 +498,44 @@ def posted_cash_for_clearance(member, transaction_ref, *, for_write=True):
             'counterparty_id': str(row.counterparty_id) if row.counterparty_id else None,
             'effective_counterparty': effective, 'transaction_date': row.transaction_date,
             'posted_at': posted_at, 'funding_account_id': str(row.funding_account_id)}
+
+
+def posted_cash_for_fee(member, transaction_ref, *, for_write=True):
+    """Root-owned cross-owner read: posted incoming cash facts usable as a bank-fee source."""
+    member = _fresh(member)
+    if not isinstance(transaction_ref, dict) or set(transaction_ref) != {
+            'namespace', 'kind', 'id', 'version'}:
+        _fail('现金流水来源无效')
+    if transaction_ref['namespace'] != 'cash' or transaction_ref['kind'] != 'cash_transaction':
+        _fail('现金流水来源无效')
+    if type(transaction_ref['version']) is not int:
+        _fail('现金流水来源版本无效')
+    if for_write and member.role not in WRITE_ROLES:
+        raise PermissionDenied('仅公司负责人或财务可以登记银行手续费草稿')
+    if not for_write and member.role not in READ_ROLES:
+        raise PermissionDenied('无权读取可登记手续费的现金事实')
+    try:
+        row = CashTransaction.objects.select_related('funding_account').get(
+            organization=member.organization,
+            pk=_identifier(transaction_ref['id'], '现金流水不存在或无权访问'))
+    except CashTransaction.DoesNotExist:
+        raise PermissionDenied('现金流水不存在或无权访问')
+    if row.status != 'posted':
+        _fail('仅已过账现金事实可登记银行手续费草稿')
+    if row.version != transaction_ref['version']:
+        _fail('现金流水版本已变化，请刷新后重试')
+    if row.direction != 'in':
+        _fail('银行手续费草稿只支持收款流水；付款手续费留后续薄片')
+    posted_at = None
+    latest = AuditEvent.objects.filter(organization_id=member.organization_id,
+        entity_id=str(row.pk), action=POSTED_ACTION).order_by('-created_at').first()
+    if latest is not None:
+        posted_at = latest.created_at
+    return {'id': str(row.pk), 'transaction_ref': row.transaction_ref, 'version': row.version,
+            'status': row.status, 'gross_cents': row.gross_cents, 'direction': row.direction,
+            'transaction_date': row.transaction_date, 'posted_at': posted_at,
+            'funding_account_id': str(row.funding_account_id),
+            'counterparty_id': str(row.counterparty_id) if row.counterparty_id else None}
 
 
 def posted_cash_candidates(member, *, counterparty_id, as_of=None):
