@@ -2,12 +2,36 @@
   "task_id": "PH-276",
   "summary": "time confirmed reversal and read-only revenue/settlement pairing on BASE fa1ca8d. Added time-owned migration 0002_time_billable_reversal_guards without touching 0001: the BillableConfirmationReceipt action CheckConstraint now allows draft.save/confirm/reverse, and the dual-vendor guards were replaced so exactly one confirmed->reversed transition is allowed (version+1, confirmer/at and all business fields unchanged) while preserving draft edits, draft->confirmed, identity freezing, receipt immutability and no deletes. The PG guard is a single function with branches; SQLite keeps a single _update_guard trigger name (compatible with the existing PH-269 corruption probe) whose WHEN clause permits only the valid draft or reverse transitions. Added reverse_billable_confirmation(member, confirmation_id, *, reason, request_token, expected_version, dry_run=True): company lock, select_for_update(of=('self',)) because confirmed_by_member is nullable, only confirmed, creator cannot reverse their own confirmation (another owner/finance must), reason 1..500, expected_version, idempotent receipt action=reverse with replay/changed-input conflict and dry_run; the state changes status->reversed and version+1 in one transaction, writes generic audit time.billable_confirmation.reversed (reason/refs) and no canonical event/topic (the frozen spec explicitly has no reversed event), and writes no revenue, ledger, cash, cost or open-item fact. Added read-only billable_confirmation_pairing()/billable_confirmation_pairing_list(): confirmation ref/status/minutes, timesheet/contract-line refs, estimated confirmed value from the approved unit price, posted revenue count/net, active settlement count/gross, differences and paired/unpaired/partial state, with no writes or audit. Permissions: write owner/finance; read owner/finance/auditor; PM only managed projects; member denied; time module disabled still refuses writes while the list/detail routes are history_read and remain readable. UI: detail page with facts, read-only pairing and reverse form, plus list detail/reverse state. verify_integrity time branch extended: reversed rows require exactly one frozen confirmation-time canonical event (source version event=version-1), one reversal generic audit with matching refs/reason payload and one reverse receipt; confirmed rows must not carry a reversal audit; drafts must not carry reversal audit/event; the whole DB must not contain a time.billable_reversed.v1 canonical topic; receipt actions are limited to draft.save/confirm/reverse and reverse receipts must point at a reversed row. No global prohibition was added.",
   "tests": [
-    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":216}."},
-    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (82 issues, 0 silenced), no errors."},
-    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual run exit 0: 'No changes detected'; time/0002_time_billable_reversal_guards is the time leaf and matches the model state (receipt action includes reverse)."},
-    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 997 tests in 127.008s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."},
-    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Reversal probe: draft->confirm by finance then reverse by another finance => reversed/version 3 and verify ok; a forged direct UPDATE to reversed without audit/receipt makes verify exit 1 with reversal_audit_count + reversal_receipt_count. no global prohibition added."},
-    {"command": "python manage.py test tests.test_v1_billable_reversal tests.test_v1_billable_reversal_http --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 11 tests, OK. Service 6: gold reversal is append-only (status reversed/version 3, exactly one reversal audit + one reverse receipt, confirmation-time canonical event count still 1, no time.billable_reversed.v1 topic, no financial writes, verify ok); boundaries (non-confirmed, creator self-reverse, expected_version, reason, dry_run, token replay/changed input, repeat reverse); DB triggers allow only the single reverse transition and reject invalid/deleted/unknown receipt action; verify detects reversed half-writes and forbidden topic; pairing is read-only and reports unpaired->paired with expected/value/revenue/settlement differences; roles/module disable/cross-tenant with history read retained. HTTP 5: detail render facts+pairing, owner/finance/auditor/pm read, member 403, unknown 403; independent reverse POST redirects and list shows 已撤销; creator/invalid requests leave state; CSRF 403, disabled module GET history read 200 and POST write 403 with no audit/event/status change; extra client fields cannot override status/minutes/income."}
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":216}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (82 issues, 0 silenced), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: 'No changes detected'; time/0002_time_billable_reversal_guards is the time leaf and matches the model state (receipt action includes reverse)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 997 tests in 127.008s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Reversal probe: draft->confirm by finance then reverse by another finance => reversed/version 3 and verify ok; a forged direct UPDATE to reversed without audit/receipt makes verify exit 1 with reversal_audit_count + reversal_receipt_count. no global prohibition added."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_billable_reversal tests.test_v1_billable_reversal_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 11 tests, OK. Service 6: gold reversal is append-only (status reversed/version 3, exactly one reversal audit + one reverse receipt, confirmation-time canonical event count still 1, no time.billable_reversed.v1 topic, no financial writes, verify ok); boundaries (non-confirmed, creator self-reverse, expected_version, reason, dry_run, token replay/changed input, repeat reverse); DB triggers allow only the single reverse transition and reject invalid/deleted/unknown receipt action; verify detects reversed half-writes and forbidden topic; pairing is read-only and reports unpaired->paired with expected/value/revenue/settlement differences; roles/module disable/cross-tenant with history read retained. HTTP 5: detail render facts+pairing, owner/finance/auditor/pm read, member 403, unknown 403; independent reverse POST redirects and list shows 已撤销; creator/invalid requests leave state; CSRF 403, disabled module GET history read 200 and POST write 403 with no audit/event/status change; extra client fields cannot override status/minutes/income."
+    }
   ],
   "review": {
     "required": true,
@@ -22,7 +46,8 @@
     "SQLite 守卫保留单 `_update_guard` 触发器名（WHEN 内区分 draft/reverse/reversed 分支），以兼容 PH-269 既有 corruption 探针按旧名 drop；PG 保持单 `_guard`，语义一致。",
     "只读配对收入优先走 management_revenue owner `revenue_export_rows`；该接口按项目级且要求已生成 accounting_event，遇到无 accounting_event 的历史/测试事实时回退为同权限范围的只读行级投影（不写、不建接口），披露。",
     "time 列表/详情路由 access 改为 history_read（原列表 business_read），以满足“模块停用写拒绝、历史只读”；form/save/confirm/reverse 仍 business_write。",
-    "无新表/无新字段/不改 0001/core/contracts 迁移；无收入/账本/现金/成本/未清写；无重新确认/批量/导入/费率。"
+    "无新表/无新字段/不改 0001/core/contracts 迁移；无收入/账本/现金/成本/未清写；无重新确认/批量/导入/费率。",
+    "白名单授权披露：冻结 BASE 的 PH-276 allowed_paths 未含 `core/management/commands/verify_integrity.py`，但任务行为要求扩展 time 分支（PH-269 旧分支会把 reversed 行误判为 draft 半笔）；Lead 裁决先授权本分支最小修改该文件（同 PH-241/PH-210 先例），并安排 PH-294 规划槽把该文件加入 PH-276 allowed_paths（18 路径），合并前必须先有白名单修正 BASE。该扩展只让 time 分支识别 reversed 状态、校验 reversal audit/receipt/envelope 与禁止 canonical reversed topic，不新增业务不变式、不加全局禁令。"
   ],
   "unverified": [
     "PostgreSQL 双连接并发撤销只一胜、PG 触发器/锁行为以 CI 为准（本机 SQLite 仅验证顺序路径与 vendor-aware 代码审阅）。",
