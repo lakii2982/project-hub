@@ -1,0 +1,47 @@
+{
+  "task_id": "PH-286",
+  "summary": "Consumed the PH-286 planning slot on main e38b9a6 (PH-282 merged; task_count 208) and completed the Lead-authorized final whitelist corrections for the PH-269/PH-274 PG-CI blockers: PH-269's tasks and spec whitelist now additionally include tests/test_v1_contracts.py (the PG concurrency test disables contracts, and time's requires={contracts} forces stopping/restoring time first) with the minimal-change/no-business-assertion note; PH-274's tasks and spec whitelist now additionally include tests/test_v1_contracts.py and tests/test_contract_approval.py (both disable contracts, and onboarding's requires={contracts,settlement,cash} forces stopping/restoring onboarding first), again with the minimal-change note. A programmatic comparison of the two specs' exact whitelists against their tasks allowed_paths now reports no spec-only/tasks-only paths. Numbering was checked (BASE max PH-286; no remote branch/PR occupies >=PH-287) and four tasks were registered continuously: PH-287 approved contract terms/templates read-only snapshot and settlement reconciliation (ready; deps PH-214/265/224/232/219/222 done), PH-288 bank-account/cash-balance read-only reconciliation summary (ready; deps PH-228/230/239/240/245 done), PH-289 onboarding import commit/conflict persistence prerequisite (proposed; needs PH-274/PH-181/PH-185) and PH-290 as the next planning slot (proposed until PH-286's review pass closes the slot). PH-276's blocker was refreshed to wait for PH-269 done; no other proposed task was promoted. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual rerun with the recorded pass (reviewed HEAD caf03ea, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":212}, exit 0; PH-286 done with handoff and PH-290 ready on PH-286 done."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-286 on main e38b9a6 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base e38b9a6 --task PH-286",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at the review-pass HEAD ce3dc3f: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"e38b9a6\",\"head\":\"ce3dc3f22741f79c32335804575d8cb481405ec8\",\"report_path\":\"project/reports/PH-286.json\"}, exit 0; all 11 changed files inside BASE PH-286 allowed_paths and review.status=pass with the reviewer's name; PH-286 done/PH-290 ready per convention."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-286 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "AUTHORIZED WHITELIST FIXES VERIFIED EXACTLY: PH-269 tasks/spec now both have 31 paths, adding only tests/test_v1_contracts.py with the time requires={contracts} purpose note; PH-274 tasks/spec now both have 28 paths, adding tests/test_v1_contracts.py and tests/test_contract_approval.py with the onboarding requires={contracts} purpose note and 'minimum necessary edit/no business assertion change' restriction. Programmatic spec-vs-tasks comparison returns empty diffs for both tasks; no other fields/status changed and both remain ready. This closes the PH-269/PH-274 pre-rebase gaps.",
+      "NEW TASKS/DEPENDENCIES: task_count 212 unique continuous PH-287..PH-290 (BASE max 286; no remote/local branch or spec >=287). PH-287 contract terms/template read-only snapshot plus settlement reconciliation is ready on done PH-214/PH-265/PH-224/PH-232/PH-219/PH-222; PH-288 bank-account/cash-balance read-only reconciliation is ready on done PH-228/PH-230/PH-239/PH-240/PH-245; PH-289 onboarding import commit/conflict-persistence prerequisite is proposed on ready-not-done PH-274 and proposed PH-181/PH-185 with an accurate blocker; PH-290 next planning slot is proposed on PH-286 in_review with the done-transition blocker. Existing blockers were refreshed (PH-276 now waits PH-269 done; PH-251/252/255/256/257/260/261/262/271/272/283/284/285 accurate); no false promotion and no other task promoted.",
+      "DoR/NUMBERING/ACCEPTANCE: PH-287/288 freeze read-only services/views/permissions/pagination/issue codes/counterexamples/executable acceptance/risk with no write path and no business migration (they only touch their owner service/view/templates/tests/delivery urls/governance files); PH-289 is a proposed onboarding persistence/commit prerequisite with onboarding-owned models/migrations/tests and no canonical topic invention; PH-290 is the next planning slot. Task/spec numbering is continuous, all acceptance commands are executable, no <PH-/{tid} placeholders remain, all changed files are inside PH-286 allowed_paths, and no scaffold/contract-schema/code/done-report/review changes were made.",
+      "SLOT CONVENTION/GATES: PH-286 remains in_review with owner/handoff and PH-290 remains proposed; after this pass the final evidence commit must set PH-286 done/PH-290 ready and clear the blocker, then rerun check/verify-change. At HEAD caf03ea (BASE e38b9a6): projectctl check ok=true/task_count=212; governance 23 tests OK; verify-change --base e38b9a6 --task PH-286 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; report test entries are pre-review and will be replaced. PH-269/PH-274 whitelists are now ready for their final rebase review."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD caf03ea (BASE e38b9a6) in /Users/lakii2982/项目/pmo-286, worktree clean; all changed files inside PH-286 allowed_paths; task_count 212 unique continuous PH-287..PH-290; manifest=PH-286. Authorized whitelists verified programmatically: PH-269 spec/tasks both 31 paths (only test_v1_contracts.py added) and PH-274 both 28 paths (test_v1_contracts.py + test_contract_approval.py added), with purpose notes and no other contract changes; both remain ready. PH-287/288 are ready only on done dependencies; PH-289 proposed on ready-not-done PH-274 plus proposed PH-181/PH-185; PH-290 proposed on PH-286 in_review with the convention blocker. New specs freeze read-only services/permissions/pagination/issue codes/counterexamples/executable acceptance/risk with no migration/write path; PH-289 is a persistence prerequisite (onboarding models/migrations/tests) and PH-290 is the next slot. Numbering 287-290 free/continuous; no placeholders; no scaffold/schema/code/done-report edits. Gates: check ok=true/212; governance 23 OK; verify-change --base e38b9a6 --task PH-286 only review/acceptance gates, no path_out_of_scope. PH-286 remains in_review and PH-290 proposed for the final evidence transition."
+  },
+  "deviations": [
+    "Planning-slot state convention: PH-286 is kept in_review with handoff and PH-290 is proposed with blocker 'PH-286 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-286 done and PH-290 ready and clear the blocker (same convention as prior planning slots).",
+    "The whitelist corrections were made exactly as Lead-authorized: PH-269 adds tests/test_v1_contracts.py; PH-274 adds tests/test_v1_contracts.py and tests/test_contract_approval.py. Both specs' notes explain the contracts-disable loops and require minimal changes without altering business assertion semantics. No other task's allowed_paths were expanded.",
+    "Programmatic consistency check: extracting backtick paths from the PH-269 and PH-274 spec whitelist sections and comparing with their tasks allowed_paths yields empty spec-only and tasks-only sets for both tasks (recorded in the verification entry).",
+    "PH-287/PH-288 are registered ready with no migration/write path (read-only snapshots/reconciliation over already-done owner facts); PH-289 is proposed with explicit blockers; no existing proposed task was falsely promoted.",
+    "Numbering basis: BASE max PH-286; checked remote branches incl. the open EXP-line PR branches, PH-269 PR #161 and open PRs - no >=PH-287 ids exist, so PH-287..PH-290 are continuous and free.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-287/PH-288/PH-289 are implementation slices only registered (287/288 ready, 289 proposed); no product code, tests, migration, browser, PostgreSQL or CI evidence exists yet.",
+    "The PH-269/PH-274 whitelist additions unblock their PG-CI paths but those implementations are not part of this slice; their actual minimal test edits remain to be verified in their own PRs/CI.",
+    "PH-251/252/255/256/257/260/261/262/271/272/285/289 remain blocked on upstream proposed tasks; no promotion or scope change was made.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
