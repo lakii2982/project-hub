@@ -12,11 +12,12 @@ import re
 import uuid
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from core.access import require_member
-from core.models import AccountingPeriod, DomainEvent, Membership, Project
+from core.models import (AccountingEvent, AccountingPeriod, DomainEvent, LedgerPosting,
+                         Membership, Project, SourceConsumption)
 from core.plugin_runtime import is_enabled
 from core.services import audit, lock_company
 from pmo_plugins.cash.transaction_services import cash_transaction_snapshot, posted_cash_for_fee
@@ -29,6 +30,14 @@ TOPIC = 'costing.bank_charge_saved.v1'
 SAVED_ACTION = 'costing.bank_charge.saved'
 PLUGIN_SAVED_ACTION = 'plugin.costing.bank_charge.saved'
 RECEIPT_ACTION = 'bank_charge.draft.save'
+SUBMIT_RECEIPT_ACTION = 'bank_charge.submit'
+DECIDE_RECEIPT_ACTION = 'bank_charge.decide'
+SUBMIT_ACTION = 'costing.bank_charge.submitted'
+APPROVED_ACTION = 'costing.bank_charge.approved'
+REJECTED_ACTION = 'costing.bank_charge.rejected'
+COST_POSTED_ACTION = 'costing.bank_charge.cost_posted'
+COST_EVENT_TYPE = 'costing.bank_charge.cost'
+COST_ALGORITHM = 'bank_fee_cost_v1'
 WRITE_ROLES = {'owner', 'finance'}
 READ_ROLES = {'owner', 'finance', 'auditor'}
 PERIOD_RE = re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])$')
@@ -238,12 +247,12 @@ def _fee_period(member, cash_day, occurred_on, posting_period):
     return occurred, period
 
 
-def _receipt(member, request_token, payload, dry_run):
+def _receipt(member, action, request_token, payload, dry_run):
     _dry(dry_run)
     token = _token(request_token)
-    digest = _digest({'action': RECEIPT_ACTION, 'actor': str(member.pk), **payload})
+    digest = _digest({'action': action, 'actor': str(member.pk), **payload})
     row = BankChargeReceipt.objects.filter(organization=member.organization,
-                                           action=RECEIPT_ACTION, request_token=token).first()
+                                           action=action, request_token=token).first()
     if row:
         if row.input_digest != digest:
             _fail('同一请求标识已用于不同输入')
@@ -256,8 +265,8 @@ def _receipt(member, request_token, payload, dry_run):
     return token, digest, None
 
 
-def _record(member, token, digest, charge):
-    BankChargeReceipt.objects.create(organization=member.organization, action=RECEIPT_ACTION,
+def _record(member, action, token, digest, charge):
+    BankChargeReceipt.objects.create(organization=member.organization, action=action,
                                      request_token=token, input_digest=digest,
                                      result_ref=charge.source_ref,
                                      result_snapshot={'source': charge.source_ref,
@@ -389,7 +398,7 @@ def save_bank_charge_draft(member, *, cash_transaction_ref, gross_cents, tax_cen
                'scope': [scope_kind, str(project.pk)], 'occurred': occurred.isoformat(),
                'period': period, 'evidence': evidence_refs, 'expected': expected_version,
                'bearer': 'company', 'existing_cost': None}
-    token, digest, replay = _receipt(member, request_token, payload, dry_run)
+    token, digest, replay = _receipt(member, RECEIPT_ACTION, request_token, payload, dry_run)
     if replay is not None:
         if dry_run:
             return _preview(RECEIPT_ACTION, replay, persisted=True,
@@ -434,5 +443,166 @@ def save_bank_charge_draft(member, *, cash_transaction_ref, gross_cents, tax_cen
                                          'scope': charge.scope})
     event_source = audit(member, PLUGIN_SAVED_ACTION, charge, {'charge_ref': saved_ref})
     _event(member, event_source, charge)
-    _record(member, token, digest, charge)
+    _record(member, RECEIPT_ACTION, token, digest, charge)
     return charge
+
+
+# ---------- PH-250 submit / independent decision / one-time cost ----------
+def _check_period_open(member, charge):
+    occurred = charge.occurred_on
+    if occurred > timezone.localdate():
+        _fail('手续费发生日不能在未来，不能提交或审批')
+    if member.organization.locked_through and occurred <= member.organization.locked_through:
+        _fail('手续费发生日所在期间已锁账，不能提交或审批')
+    existing = AccountingPeriod.objects.filter(organization=member.organization,
+                                               period=charge.posting_period).first()
+    if existing and (existing.status != 'active' or existing.closed_through is not None):
+        _fail('手续费过账期间已关闭，不能提交或审批')
+
+
+def _charge_ref_shape(source_ref):
+    if not isinstance(source_ref, dict) or set(source_ref) != {
+            'namespace', 'kind', 'id', 'version'}:
+        _fail('手续费审批来源无效')
+    if source_ref['namespace'] != 'costing' or source_ref['kind'] != 'bank_charge':
+        _fail('手续费审批来源无效')
+    if type(source_ref['version']) is not int or source_ref['version'] < 1:
+        _fail('手续费审批来源版本无效')
+    return {'namespace': 'costing', 'kind': 'bank_charge',
+            'id': str(_identifier(source_ref['id'], '手续费草稿不存在或无权访问')),
+            'version': source_ref['version']}
+
+
+def _locked_charge(member, charge_id):
+    # The approval-chain FKs are nullable, so select_related() would build an
+    # outer join and PostgreSQL rejects FOR UPDATE on the nullable side. Lock only
+    # the BankCharge row itself and fetch the related members afterwards.
+    try:
+        return BankCharge.objects.select_for_update(of=('self',)).select_related(
+            'created_by', 'submitted_by', 'approved_by').get(
+            organization=member.organization,
+            pk=_identifier(charge_id, '手续费草稿不存在或无权访问'))
+    except BankCharge.DoesNotExist:
+        raise PermissionDenied('手续费草稿不存在或无权访问')
+
+
+def _post_fee_cost(member, charge):
+    """Exactly one company cost fact set per approved BankCharge; caller holds the row lock."""
+    coverage_key = f'bank_charge:{charge.pk}'
+    event_id = uuid.uuid4()
+    claim = SourceConsumption(
+        organization=member.organization, source=charge.source_ref, source_id=charge.pk,
+        consumer='cost', coverage_key=coverage_key, amount_cents=charge.gross_cents,
+        event_ref={'namespace': 'core', 'kind': 'accounting_event', 'id': str(event_id),
+                   'version': 1})
+    try:
+        claim.save()
+    except IntegrityError:
+        _fail('该手续费成本事实已存在；批准后不可重复过账')
+    event = AccountingEvent(
+        id=event_id, organization=member.organization, source=charge.source_ref,
+        event_type=COST_EVENT_TYPE, occurred_on=charge.occurred_on,
+        posting_period=charge.posting_period, algorithm_version=COST_ALGORITHM,
+        claim=claim, claim_effect_cents=charge.gross_cents)
+    event.save()
+    posting = LedgerPosting.objects.create(
+        organization=member.organization, accounting_event=event, book='cost',
+        amount_cents=charge.gross_cents, scope_kind='project', scope_id=charge.scope_id,
+        origin='current', line_index=1)
+    audit(member, COST_POSTED_ACTION, charge, {
+        'charge_ref': charge.source_ref, 'accounting_event_id': str(event.pk),
+        'ledger_posting_id': str(posting.pk), 'amount_cents': charge.gross_cents})
+    return claim, event, posting
+
+
+@transaction.atomic
+def submit_bank_charge(member, charge_id, *, request_token, dry_run=True, expected_version=None):
+    """draft -> pending; the submitter is recorded and facts become immutable."""
+    _dry(dry_run)
+    member = _locked(member)
+    charge = _locked_charge(member, charge_id)
+    _check_period_open(member, charge)
+    if expected_version is not None and (type(expected_version) is not int
+                                         or expected_version != charge.version):
+        _fail('手续费草稿版本已变化，请刷新后重试')
+    payload = {'charge': str(charge.pk), 'version': charge.version, 'decision': 'submit'}
+    token, digest, replay = _receipt(member, SUBMIT_RECEIPT_ACTION, request_token, payload, dry_run)
+    if replay is not None:
+        return replay
+    if charge.status != 'draft':
+        _fail('仅未提交草稿可以提交审批')
+    if dry_run:
+        return _preview('bank_charge.submit', charge, persisted=True)
+    charge.status = 'pending'
+    charge.submitted_by, charge.submitted_at = member, timezone.now()
+    charge.save(update_fields=['status', 'submitted_by', 'submitted_at'])
+    audit(member, SUBMIT_ACTION, charge, {'charge_ref': charge.source_ref})
+    _record(member, SUBMIT_RECEIPT_ACTION, token, digest, charge)
+    return charge
+
+
+@transaction.atomic
+def decide_bank_charge(member, charge_id, *, decision, note='', request_token, dry_run=True,
+                       expected_version=None):
+    """Independent approve/reject of a pending charge; approval posts the one-time cost."""
+    _dry(dry_run)
+    member = _locked(member)
+    if decision not in {'approve', 'reject', 'return'}:
+        _fail('手续费审批结论无效；本片支持提交、批准与驳回')
+    note = '' if note is None else _text(note, 1000) if str(note).strip() else ''
+    if decision in {'reject', 'return'} and not note:
+        _fail('驳回手续费必须填写原因')
+    charge = _locked_charge(member, charge_id)
+    _check_period_open(member, charge)
+    if expected_version is not None and (type(expected_version) is not int
+                                         or expected_version != charge.version):
+        _fail('手续费草稿版本已变化，请刷新后重试')
+    payload = {'charge': str(charge.pk), 'version': charge.version, 'decision': decision,
+               'note': note}
+    token, digest, replay = _receipt(member, DECIDE_RECEIPT_ACTION, request_token, payload, dry_run)
+    if replay is not None:
+        return replay
+    if charge.status != 'pending':
+        _fail('仅待批准手续费可以审批；草稿需先提交')
+    if member.pk in {charge.created_by_id, charge.submitted_by_id}:
+        _fail('创建人或提交人不能审批自己的手续费记录，请由另一位负责人处理')
+    if dry_run:
+        return _preview('bank_charge.decide', charge, persisted=True, decision=decision)
+    approved = decision == 'approve'
+    charge.status = 'approved' if approved else 'rejected'
+    charge.approved_by, charge.approved_at = member, timezone.now()
+    charge.reject_reason = '' if approved else note
+    charge.save(update_fields=['status', 'approved_by', 'approved_at', 'reject_reason'])
+    if approved:
+        _post_fee_cost(member, charge)
+        audit(member, APPROVED_ACTION, charge, {'charge_ref': charge.source_ref,
+                                                'approved_by': str(member.pk)})
+    else:
+        audit(member, REJECTED_ACTION, charge, {'charge_ref': charge.source_ref,
+                                                'approved_by': str(member.pk), 'reason': note})
+    _record(member, DECIDE_RECEIPT_ACTION, token, digest, charge)
+    return charge
+
+
+def bank_charge_cost_snapshot(member, charge_id):
+    """Read-only approval/cost projection for one charge."""
+    member = _reader(member)
+    charge = _get_charge(member, charge_id)
+    claim = SourceConsumption.objects.filter(
+        organization_id=charge.organization_id,
+        coverage_key=f'bank_charge:{charge.pk}').first()
+    event = AccountingEvent.objects.filter(claim=claim).first() if claim is not None else None
+    posting = LedgerPosting.objects.filter(accounting_event=event).first() if event is not None else None
+    return {'charge': _projection(charge),
+            'submitted_by': str(charge.submitted_by_id) if charge.submitted_by_id else None,
+            'submitted_at': charge.submitted_at,
+            'approved_by': str(charge.approved_by_id) if charge.approved_by_id else None,
+            'approved_at': charge.approved_at,
+            'reject_reason': charge.reject_reason,
+            'cost_claim_ref': claim.event_ref if claim is not None else None,
+            'cost_event_ref': ({'namespace': 'core', 'kind': 'accounting_event',
+                                'id': str(event.pk), 'version': 1} if event is not None else None),
+            'cost_posting_ref': ({'namespace': 'core', 'kind': 'ledger_posting',
+                                  'id': str(posting.pk), 'version': posting.version}
+                                 if posting is not None else None),
+            'cost_amount_cents': posting.amount_cents if posting is not None else None}

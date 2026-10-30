@@ -211,6 +211,26 @@ def submit_document(member, data, token):
     return row
 
 
+@transaction.atomic
+def decide_document(member, *, source_ref, expected_version, decision, note="", request_token,
+                    dry_run=True):
+    """Named core.document.decide service; the bank_charge handler is the only one wired in PH-250."""
+    if not isinstance(source_ref, dict):
+        raise ValidationError("审批来源无效")
+    if source_ref.get("namespace") != "costing" or source_ref.get("kind") != "bank_charge":
+        raise ValidationError("本片仅实现 bank_charge 审批通道；其它单据类型尚未接入 core.document.decide")
+    if decision not in {"submit", "approve", "reject", "return"}:
+        raise ValidationError("审批结论无效")
+    from pmo_plugins.costing.bank_charge_services import decide_bank_charge, submit_bank_charge
+    charge_id = source_ref.get("id")
+    if decision == "submit":
+        return submit_bank_charge(member, charge_id, request_token=request_token,
+                                  expected_version=expected_version, dry_run=dry_run)
+    return decide_bank_charge(member, charge_id, decision=decision, note=note,
+                              request_token=request_token, expected_version=expected_version,
+                              dry_run=dry_run)
+
+
 def plan_remaining(plan):
     expected_book = "cash_in" if plan.direction == "in" else "cash_out"
     settled = LedgerEntry.objects.filter(document__plan=plan, book=expected_book).aggregate(n=Sum("amount_cents"))["n"] or 0

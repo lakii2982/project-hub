@@ -223,6 +223,15 @@ class BankCharge(models.Model):
     version = models.PositiveIntegerField(default=1)
     created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
+    # PH-250 approval chain: submit records the submitting member; decide records the independent
+    # approver and an optional rejection reason. Version keeps tracking saved draft revisions only.
+    submitted_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, null=True,
+                                     blank=True, related_name='+')
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, null=True,
+                                    blank=True, related_name='+')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    reject_reason = models.CharField(max_length=1000, blank=True, default='')
 
     class Meta:
         ordering = ['-created_at', 'id']

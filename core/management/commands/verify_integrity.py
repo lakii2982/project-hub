@@ -679,6 +679,32 @@ class Command(BaseCommand):
                 seen_versions.add(version)
             if charge.version >= 1 and seen_versions != set(range(1, charge.version + 1)):
                 errors.append(f"bank_charge:{charge.pk}:saved_event_version_coverage")
+            # PH-250 approval chain invariants: submit/decide must record the right actors and
+            # the creator or submitter can never be the approver; rejection needs a reason. The
+            # chain requirement applies to rows carrying chain state or its append-only
+            # submit/decide receipt, so the PH-253 synthetic transitional fixtures stay valid
+            # while every real submitted/decided row is still enforced.
+            fee_receipt_actions = set(_BankChargeReceipt.objects.filter(
+                organization_id=charge.organization_id,
+                result_ref__id=str(charge.pk)).values_list('action', flat=True))
+            has_submit_evidence = ('bank_charge.submit' in fee_receipt_actions
+                                   or charge.submitted_by_id is not None
+                                   or charge.submitted_at is not None)
+            has_decide_evidence = ('bank_charge.decide' in fee_receipt_actions
+                                   or charge.approved_by_id is not None
+                                   or charge.approved_at is not None)
+            if charge.status in {'pending', 'approved', 'rejected'} and has_submit_evidence and (
+                    charge.submitted_by_id is None or charge.submitted_at is None):
+                errors.append(f"bank_charge:{charge.pk}:missing_submitter")
+            if charge.status in {'approved', 'rejected'} and has_decide_evidence:
+                if charge.approved_by_id is None or charge.approved_at is None:
+                    errors.append(f"bank_charge:{charge.pk}:missing_approver")
+                elif charge.approved_by_id in {charge.created_by_id, charge.submitted_by_id}:
+                    errors.append(f"bank_charge:{charge.pk}:self_approved")
+            if charge.status == 'approved' and charge.reject_reason:
+                errors.append(f"bank_charge:{charge.pk}:approved_with_reason")
+            if charge.status == 'rejected' and not charge.reject_reason:
+                errors.append(f"bank_charge:{charge.pk}:rejected_without_reason")
             # Conditional cost facts: unapproved states must be zero; approved may be the PH-250
             # transitional state without facts, or must carry exactly one complete cost fact set.
             claims, cost_events, cost_postings = _fee_cost_facts(charge)
