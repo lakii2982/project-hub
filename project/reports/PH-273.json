@@ -1,0 +1,55 @@
+{
+  "task_id": "PH-273",
+  "summary": "PH-273 规划槽：解除 PH-269 交付阻塞的白名单修正 + 常规规划登记。①按 Lead 授权把 4 个既有测试文件加入 PH-269 allowed_paths 与 spec 精确白名单并写明用途（time 插件 requires={contracts} 使 contracts 模块停用被正确阻塞，故 3 个禁用/顺序 loop 测试需一并停用/恢复 time；verify_integrity 新增 time 分支使 cash bridge query-count 上限 80→84，保留第二段常量断言、不改断言语义）。②按 BASE 事实核号后登记 PH-274–PH-278：PH-274 onboarding 导入预览前置（插件 bootstrap + CSV 模板识别/字段映射只读预检，ready）、PH-275 合同变更影响只读追溯与终止阻断深化（ready）、PH-276 time confirmed 撤销与收入/结算只读配对（proposed，缺 PH-269 done）、PH-277 insights 读模型契约冻结（proposed，缺 PH-270 done）、PH-278 下一规划槽（proposed，缺 PH-273 done）；刷新 PH-251/252/256/257/262/271/272 blockers 到当前事实。③本片只做规划/登记，不实现业务、不建 scaffold、不改 contract schema，除 PH-269 白名单授权外不自扩白名单。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto 8da269a: {\"command\":\"check\",\"ok\":true,\"task_count\":200} exit 0 (PH-270/PH-273 done, PH-274/275/278 ready)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Post-review final HEAD: Ran 23 tests, OK (exit 0)."
+    },
+    {
+      "command": "grep -rn '<PH-\\|{tid}' project/specs/PH-27*.md project/tasks.json",
+      "result": "pass",
+      "evidence": "Post-review final HEAD: no placeholder matches (exit 1 from grep = no matches, recorded as pass)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 8da269a --task PH-273",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto 8da269a (PH-270 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 changed files all inside BASE PH-273 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-273 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-3 BLOCKER RESOLVED AT 08df27a: PH-276 tasks allowed_paths now include `pmo_plugins/time/migrations/*.py` (16->17), matching the spec's migration whitelist and the frozen `0002_time_billable_reversal_guards` contract (receipt action reverse + confirmed->reversed dual-vendor guards; no new tables, no rewrite of applied 0001, no core/contracts migration). PH-276 remains proposed on not-done PH-269. The spec migration line was rewritten as a non-path annotation while the exact whitelist still carries the migration path, so spec/tasks are aligned with no remaining wildcard/placeholder mismatch.",
+      "OTHER FIXES HELD: PH-269 spec now says draft create/revise with append-only no-delete, matching the implementation and report deviations; PH-269's exact whitelist remains 25->29 including the four known cross-slice test files (contract_change/_http, acceptance_revenue, cash_book_bridge) with the purpose note; PH-274/275 remain ready only on done deps; PH-276/277 proposed on not-done PH-269/PH-270; PH-278 proposed on PH-273 in_review and becomes ready after this slot's done transition; existing blockers remain accurate (PH-251 needs PH-157; PH-252 needs PH-150/PH-155; PH-256/271 need PH-181/185 with PH-267 done; PH-257/262/272 need PH-180/181/182/183 with PH-270 done; no false promotion). New specs PH-274/275/276/277/278 freeze fields/state/permissions/idempotency/money/migration/whitelist/counterexamples/executable acceptance/risk; PH-277 is docs-only ADR 0014; no scaffold, contract-schema, code or done-report/review changes; no placeholders.",
+      "ACCEPTANCE EVIDENCE AT 08df27a (BASE 61950e1): projectctl check ok=true/task_count=200; governance 23 tests OK; verify-change --base 61950e1 --task PH-273 only high_risk_review_required, no path_out_of_scope; the fix changes only docs/verification, PH-273 report, PH-276 spec and tasks.json; the original 12 files are all inside PH-273 allowed_paths; task_count 200 unique continuous PH-274..PH-278, manifest=PH-273; PH-269 ready and PH-276 proposed; no <PH-/{tid} placeholders. The final evidence commit must replace the pre-review entries and set PH-273 done/PH-278 ready."
+    ],
+    "evidence": "VERDICT: PASS (round 3; PH-276 whitelist blocker fixed). Reviewed final HEAD 08df27a (BASE 61950e1) in /tmp/ph273-planning, worktree clean; the fix commit changes only docs/verification, PH-273 report, PH-276 spec and tasks.json (4 files) after the already-reviewed content; all 12 changed files are inside PH-273 allowed_paths; task_count 200 unique continuous PH-274..PH-278, manifest=PH-273. PH-276 tasks allowed_paths now includes `pmo_plugins/time/migrations/*.py` (17 paths) and matches its spec exact whitelist, with the frozen 0002_time_billable_reversal_guards contract (receipt action reverse + confirmed->reversed dual-vendor guards, no new tables/applied-0001 rewrite); PH-276 stays proposed on PH-269. PH-269's 29-path whitelist including the four known cross-slice test files and its corrected create/revise/no-delete wording remain; PH-274/275 ready only on done deps; PH-276/277 proposed on not-done PH-269/PH-270; PH-278 proposed on PH-273 in_review and becomes ready after done; existing blockers accurate with no false promotion; new specs DoR complete; no scaffold/schema/code/done-report changes; no placeholders. Gates: check ok=true/200; governance 23 OK; verify-change --base 61950e1 --task PH-273 only high_risk_review_required, no path_out_of_scope. Final evidence commit must replace the pre-review test entries, set PH-273 done and PH-278 ready, and rerun check/verify-change."
+  },
+  "deviations": [
+    "Reviewer round-2 fix: PH-276 tasks.json allowed_paths was missing the time migration path while the spec whitelist listed it. PH-276 allowed_paths now includes pmo_plugins/time/migrations/*.py (17 paths, exactly matching the PH-276 spec 精确白名单 item-by-item after making the '仅新增 time 0002 迁移' annotation non-path text); PH-276 remains proposed.",
+    "Reviewer round-1 blocker fixed: PH-276 (time confirmed reversal follow-up) previously claimed to reuse the PH-269 receipt action=reverse and confirmed→reversed status without a migration, which the PH-269 schema forbids (receipt CheckConstraint only allows draft.save/confirm; the update trigger only allows OLD.status=draft and NEW.status∈draft/confirmed). PH-276 now freezes its own time migration 0002_time_billable_reversal_guards (does not edit the applied 0001): expand the receipt action CheckConstraint to allow reverse and add SQLite/PostgreSQL triggers allowing the confirmed→reversed single-field status update, no new tables; pmo_plugins/time/migrations/*.py was added to the PH-276 whitelist. PH-276 stays proposed (missing PH-269 done).",
+    "Non-blocking reviewer note fixed: PH-269 spec draft-save behaviour now reads 创建/修改草稿（仅 draft），草稿禁删（append-only；实现已按禁删） instead of the earlier 可修改/删除草稿 wording.",
+    "PH-269 whitelist expansion (Lead-authorized, source PH-269 implementation finding): allowed_paths 25→29 by adding tests/test_v1_contract_change.py, tests/test_v1_contract_change_http.py, tests/test_acceptance_revenue.py and tests/test_v1_cash_book_bridge.py; PH-269 spec 精确白名单 line updated with the same four files plus a 白名单扩容说明 paragraph stating each file's minimal-purpose edit (three disabled/ordering loop tests must also toggle time because time requires={contracts}; cash bridge query-count cap 80→84 while keeping the second constant-assertion segment and not changing assertion semantics). No other PH-269 contract field changed; PH-269 stays ready for implementation.",
+    "PH-273 spec risk line was aligned with the actual registration: instead of naming only PH-274 as the next planning slot, it now records PH-274–PH-277 executable slices plus PH-278 as the next planning slot (PH-274/PH-275 ready; PH-276/PH-277/PH-278 proposed with blockers).",
+    "PH-278 (next planning slot) is registered proposed rather than ready because its dependency PH-273 is in_review at this BASE; projectctl rejects a ready task whose dependency is not done. It becomes promotable once PH-273 is merged/done.",
+    "Numbering basis: BASE tasks.json max id is PH-273; there are no EXP-* task ids or remote EXP branches in this checkout, so PH-274–PH-278 are free and consecutive; no collision.",
+    "Only planning/registry files changed (specs, tasks, manifest, docs/verification, report/handoff); no business code, migration, scaffold, contract schema or route changed; no other task report/review block edited.",
+    "PH-274 is a deliberately narrowed prerequisite of PH-271 (onboarding bootstrap + read-only CSV template/mapping preview, no ImportConflict persistence, no normalized_commands, no submit/opening); PH-271 remains proposed for the full conflict/submission slice and is not promoted.",
+    "Lead integration rebase (61950e1 -> 8da269a) after PH-270 merged: tasks.json conflict resolved by keeping the PH-273 registrations while restoring PH-270 done+handoff; verification kept main entries plus the PH-273 entry; manifest.active_handoff -> PH-273. Gates rerun green (check ok=true/200, verify-change --base 8da269a ok=true)."
+  ],
+  "unverified": [
+    "PH-274/PH-275 are registered ready but not implemented; no runtime/browser/PG verification exists for them in this planning slice.",
+    "PH-276/PH-277/PH-278 remain proposed with blockers (PH-269/PH-270/PH-273 not done at this BASE); they must be re-checked by the next planning slot after those dependencies land.",
+    "No business code, migration, runtime test or browser check was executed in this docs-only planning slice beyond check/governance/placeholder verification.",
+    "Independent S review round-1 returned REJECTED with 1 blocker (PH-276 reversal DoR vs PH-269 receipt/trigger constraints); the blocker was fixed (PH-276 own time 0002 migration, whitelist updated) and round-2 then requested one precise-whitelist sync (PH-276 tasks allowed_paths missing the time migration glob), which is now fixed so spec and tasks match item-by-item. The reviewer block is kept verbatim pending final pass; verify-change --base 61950e1 --task PH-273 remains review-gated until the pass, and the post-review actual verify-change output will be added to report.tests after it."
+  ]
+}
