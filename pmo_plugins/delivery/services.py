@@ -25,6 +25,42 @@ def approved_line_snapshot(member, ref, day):
             'selection':MethodPolicySelection.objects.get(pk=value['selection_id'])}
 
 
+def confirmed_line_performance(member, line_ref, as_of):
+    """Named read-only sum of real confirmed performance for one approved contract line."""
+    from .models import ServiceConfirmation
+    member = _fresh_member(member)
+    if member.role not in {'owner', 'finance', 'pm', 'auditor'}:
+        raise PermissionDenied('无权读取履约来源')
+    snapshot = approved_line_snapshot(member, line_ref, as_of)
+    line, project = snapshot['line'], snapshot['project']
+    require_project(member, project)
+    template = (snapshot['pricing_configuration'] or {}).get('template')
+    sources = []
+    if template == 'fixed_milestone':
+        for row in Acceptance.objects.filter(organization=member.organization, contract_line=line,
+                                             status='confirmed').order_by('confirmed_on', 'id'):
+            checked = confirmed_acceptance_snapshot(member, row.pk, for_recognition=False)
+            sources.append({'kind': 'acceptance', 'ref': checked['source'], 'version': checked['version'],
+                            'net_cents': checked['accepted_net_cents'],
+                            'confirmed_on': checked['confirmed_on'].isoformat()})
+    elif template == 'fixed_service_period':
+        from .service_period_services import confirmed_service_snapshot
+        for row in ServiceConfirmation.objects.filter(organization=member.organization, contract_line=line,
+                                                       status='confirmed').order_by('confirmed_on', 'id'):
+            confirmed = confirmed_service_snapshot(member, row.pk, for_recognition=False)
+            for month in confirmed['months']:
+                sources.append({'kind': 'service_confirmation_month',
+                                'ref': {**confirmed['source_ref'], 'version': confirmed['version']},
+                                'month_id': str(month['id']), 'service_month': month['service_month'],
+                                'net_cents': month['allocated_net_cents'],
+                                'confirmed_on': confirmed['confirmed_on'].isoformat()})
+    else:
+        raise ValidationError('该收费模板暂不支持客户结算')
+    return {'method': template, 'project': project, 'contract_line': line,
+            'line_ref': snapshot['line_ref'], 'as_of': as_of.isoformat() if isinstance(as_of, date) else as_of,
+            'confirmed_net_cents': sum(item['net_cents'] for item in sources), 'sources': sources}
+
+
 def _dry(value):
     if type(value) is not bool:
         raise ValidationError('dry_run必须为布尔值')

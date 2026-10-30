@@ -1,0 +1,92 @@
+{
+  "task_id": "PH-224",
+  "summary": "Customer settlement first slice: settlement of 1..n complete unconsumed approved term rows with term-derived integer amounts and cumulative HALF_UP conservation, active open items split into due/retention partitions, read-only aging pools, six routes/templates, two named read-only cross-owner interfaces, settlement integrity branch and SQLite/PostgreSQL guards. Cash clearing, credit/bad debt, AP, invoices, disputes, reversal and opening items remain future tasks.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Review-passed rerun: ok=true, task_count=149 at HEAD."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0; only pre-existing urls.W003 namespace warnings (32), 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (migrations 0001/0002 committed)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual 680 tests pass, 40 environment skips (SQLite; includes 6 PostgreSQL-only settlement concurrency tests that CI must run)."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual ok=true on the real-settlement browser database and on a freshly migrated seeded database; settlement partitions, open items and claims validated."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_settlement tests.test_v1_settlement_concurrency tests.test_v1_settlement_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual 35 tests pass (6 PostgreSQL-only settlement concurrency tests skipped on SQLite; the PR PostgreSQL CI must execute them)."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/validate_contracts.py",
+      "result": "pass",
+      "evidence": "Actual pass: 9 schemas, 2977 resolved refs, 71 commands, 47 events; no contract drift."
+    },
+    {
+      "command": "python -B docs/v1.0-development/contracts/check_contract_cases.py",
+      "result": "pass",
+      "evidence": "Actual pass: 19 positive and 37 rejected examples."
+    },
+    {
+      "command": "python -B docs/v1.0-development/fixtures/check_fixture.py",
+      "result": "pass",
+      "evidence": "Actual pass: fixture errors=[] and hashes unchanged."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 83a2577 --task PH-224",
+      "result": "pass",
+      "evidence": "Post-review actual rerun against base 83a2577: ok=true, all changed files inside PH-224 allowed_paths, no errors (final HEAD captured by the PR; later commits are documentation-only after the PostgreSQL guard fix)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-224 implementation reviewer (fresh context, read-only; multi-round)",
+    "status": "pass",
+    "findings": [
+      "Blocking plugin-dependency regression (two SQLite tests + two PostgreSQL concurrency setUps) was fixed first by the PH-226 pre-task; PH-224 was rebased onto that BASE and the full suite is green (680 OK, 40 environment skips).",
+      "MAJOR replay: save_settlement queries the receipt before period/derive checks and normalizes the default settled_on digest, so same-token replay after lock or across midnight returns the original settlement; regression tests and browser probe both pass.",
+      "MAJOR evidence: refs are canonical three-key objects; free-text basis stays in the private terms_snapshot/evidence_note and is displayed via evidence_display.",
+      "Browser defects found by real-browser evidence were fixed and re-verified on final HEAD: aging due/release date rendering, readable source refs (detail and form), draft edit pre-check of already selected terms.",
+      "Retained minor limitations (documented in unverified): verify_integrity does not check item tax total/occurred_on/approved digest/claim source/one event per item; no canonical Settlement/OpenItem projection; string vs dict term_refs produce different receipt digests; review return/reject still requires an open period; 32 pre-existing urls.W003 warnings; browser Chromium-only; PostgreSQL races and production/UAT unverified."
+    ],
+    "evidence": "Reviewer reran the full suite (680 OK), the 35 targeted tests (6 PG skip), check/makemigrations, the three contract scripts, verify_integrity on the fresh/populated/legacy and real-settlement browser databases (all ok:true), parsed the browser evidence (57/57, HEAD matches), and audited the diff against PH-224 allowed paths. Formal PASS is conditional on the PR PostgreSQL CI executing the 6 settlement concurrency tests successfully. Final condition satisfied: PR #121 PostgreSQL domain check passed with all 12 required checks SUCCESS at HEAD 7c65bcc, covering the 6 settlement concurrency tests."
+  },
+  "deviations": [
+    "PH-226 (test prerequisite) was merged first so the settlement plugin's contracts/delivery dependency edge does not break two existing SQLite tests and two PostgreSQL concurrency setUp blocks; PH-224 was rebased onto that BASE.",
+    "Module-disabled HTTP routes return 403 while settlement history remains readable through the service layer; this matches other plugins and is the intended 'history readable' reading (spec service-layer read, not public route).",
+    "Term keys are frozen as coverage_key='term:<due|retention>:<term_id>' and partition_key='<due|retention>:<term_id>' with source_id=contract_line_id, matching the frozen spec semantics despite the earlier 'kind' wording ambiguity.",
+    "Settlement evidence refs are restricted to canonical {evidence_id, sha256, kind}; the free-text basis stays in the private terms_snapshot/evidence_note and the UI displays evidence_display.",
+    "Browser evidence on final HEAD 9566481: 57/57 checks pass, 0 failures; three defects found and fixed (aging due/release date rendering, source ref readability, draft edit pre-check of selected terms).",
+    "PostgreSQL CI (PR #121, HEAD 7c65bcc): all 12 required checks pass, including the PostgreSQL domain job actually executing the 6 settlement concurrency tests; the earlier PG-only failure was the receipt immutability trigger raising a generic ProgrammingError instead of an integrity-class error, fixed by a dedicated 23514 trigger function in migration 0002."
+  ],
+  "unverified": [
+    "PostgreSQL concurrency/lock/period-race execution is provided by the PR's PostgreSQL CI job; local SQLite skips are not evidence.",
+    "Production/customer UAT, cash clearing, credit/bad debt, AP, invoices, disputes, active-settlement reversal, opening items and AgingCase writes are out of this slice.",
+    "Browser evidence covers Chromium 320/390/768/1024/1440 only; printing, dark mode, touch and non-Chromium browsers untested.",
+    "verify_integrity does not yet check per-item tax total, occurred_on equality, draft/submitted emptiness, approved_input digest, claim source/event_ref, or exactly one canonical event per item.",
+    "No canonical Settlement/OpenItem projection exists yet; snapshots are private view dicts.",
+    "String vs dict term_refs are both accepted and yield different receipt digests for the same semantics (same token across representations conflicts, low risk).",
+    "Review return/reject also requires an open accounting period (consistent with acceptance precedent, a policy choice rather than a defect).",
+    "PostgreSQL concurrency, production/customer UAT, cash clearing, credit/bad debt, AP, invoices, disputes, reversal and opening items remain unverified."
+  ]
+}

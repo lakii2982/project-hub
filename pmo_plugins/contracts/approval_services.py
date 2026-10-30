@@ -496,3 +496,40 @@ def approved_line_choices(member):
     rows = rows.filter(contract_version__contract__project__in=visible_projects(member))
     return [approved_line_snapshot(member, _ref(line, 'contract_line'), timezone.localdate())
             for line in rows.order_by('contract_version__contract__contract_code', 'line_no')]
+
+
+
+def approved_terms_snapshot(member, line_ref, as_of):
+    """Named read-only payment/warranty terms for one approved line; settlement never reads raw tables."""
+    snapshot = approved_line_snapshot(member, line_ref, as_of)
+    line = ContractLine.objects.select_related('contract_version__contract').get(pk=snapshot['line_id'])
+    payments = list(PaymentTerm.objects.filter(organization=member.organization, contract_line=line,
+                                                status='active').order_by('created_at', 'id'))
+    warranties = list(WarrantyTerm.objects.filter(organization=member.organization, contract_line=line,
+                                                  status='active').order_by('created_at', 'id'))
+    terms, due_cents = [], 0
+    for term in payments:
+        if term.condition_type == 'warranty':
+            continue
+        terms.append({'kind': 'due', 'id': str(term.pk), 'condition_type': term.condition_type,
+                      'gross_cents': term.gross_cents,
+                      'due_date': term.due_date.isoformat() if term.due_date else None,
+                      'release_condition': term.release_condition,
+                      'term_ref': {'namespace': 'contracts', 'kind': 'payment_term',
+                                   'id': str(term.pk), 'version': term.version}})
+        due_cents += term.gross_cents
+    retention_cents = 0
+    for term in warranties:
+        terms.append({'kind': 'retention', 'id': str(term.pk), 'condition_type': 'warranty',
+                      'gross_cents': term.gross_cents,
+                      'due_date': term.release_on.isoformat() if term.release_on else None,
+                      'release_condition': term.release_condition,
+                      'term_ref': {'namespace': 'contracts', 'kind': 'warranty_term',
+                                   'id': str(term.pk), 'version': term.version}})
+        retention_cents += term.gross_cents
+    if due_cents + retention_cents != snapshot['gross_cents']:
+        raise ValidationError('批准付款条款未覆盖全部含税额，暂不可结算')
+    result = dict(snapshot)
+    result.update({'line': line, 'terms': terms, 'due_cents': due_cents, 'retention_cents': retention_cents})
+    return result
+

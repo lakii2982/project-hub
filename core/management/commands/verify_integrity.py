@@ -65,7 +65,7 @@ class Command(BaseCommand):
                          if line.scope_kind == 'nonproject' else False)
                 if not valid:
                     errors.append(f"labor_posting:{line.pk}:scope")
-        for claim in SourceConsumption.objects.all():
+        for claim in SourceConsumption.objects.exclude(consumer='settlement'):
             if not claim.events.filter(pk=claim.event_ref.get('id'), organization_id=claim.organization_id).exists():
                 errors.append(f"labor_claim:{claim.pk}:original_event")
         for pool in SalaryPool.objects.exclude(status='draft'):
@@ -83,6 +83,37 @@ class Command(BaseCommand):
                 errors.append(f"allocation:{run.pk}:company_net_zero")
         from core.revenue_accounting import revenue_integrity_errors
         errors.extend(revenue_integrity_errors())
+        from pmo_plugins.settlement.models import OpenItem, Settlement
+        for settlement in Settlement.objects.filter(status='active'):
+            items = list(settlement.items.all())
+            if not items:
+                errors.append(f"settlement:{settlement.pk}:no_partitions")
+            if sum(item.gross_cents for item in items) != settlement.gross_cents:
+                errors.append(f"settlement:{settlement.pk}:partition_total")
+            if settlement.gross_cents != settlement.net_cents + settlement.tax_cents:
+                errors.append(f"settlement:{settlement.pk}:net_tax")
+            if any(item.organization_id != settlement.organization_id
+                   or item.project_id != settlement.project_id or item.direction != 'receivable'
+                   for item in items):
+                errors.append(f"settlement:{settlement.pk}:partition_scope")
+            if not settlement.approved_version or not settlement.approval_audit_id or not settlement.approved_input_snapshot:
+                errors.append(f"settlement:{settlement.pk}:missing_approval")
+        for item in OpenItem.objects.all():
+            if item.tax_cents > item.gross_cents or item.status != 'active':
+                errors.append(f"open_item:{item.pk}:amount_or_status")
+            if not item.due_date:
+                errors.append(f"open_item:{item.pk}:missing_due_date")
+        for claim in SourceConsumption.objects.filter(consumer='settlement'):
+            parts = claim.coverage_key.split(':')
+            if len(parts) != 3 or parts[0] != 'term' or parts[1] not in {'due', 'retention'}:
+                errors.append(f"settlement_claim:{claim.pk}:key")
+                continue
+            found = OpenItem.objects.filter(settlement__contract_line_id=claim.source_id,
+                settlement__organization_id=claim.organization_id,
+                settlement__status='active', partition_kind=parts[1],
+                partition_key=parts[1] + ':' + parts[2]).first()
+            if found is None or found.gross_cents != claim.amount_cents:
+                errors.append(f"settlement_claim:{claim.pk}:no_matching_partition")
         result = {"ok": not errors, "errors": errors, "organizations": Organization.objects.count(), "entries": LedgerEntry.objects.count()}
         self.stdout.write(json.dumps(result, ensure_ascii=False) if options["json"] else ("完整性检查通过" if not errors else "\n".join(errors)))
         if errors: raise CommandError("项目账完整性检查未通过")

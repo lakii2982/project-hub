@@ -1,0 +1,23 @@
+{% extends 'settlement/receivable_list.html' %}{% block title %}{{ title }}{% endblock %}{% block settlement_content %}
+<nav class="section-nav" aria-label="应收与账龄"><a href="{{ list_url }}">客户结算</a><a href="{{ aging_url }}">账龄与质保未清</a></nav>
+<section class="page-header"><h1 tabindex="-1">{{ title }}</h1><a class="button" href="{{ back_url }}">返回</a></section>
+{% if chooser %}
+<section class="panel"><div class="body"><form method="get"><div class="form-field"><label for="line">已批准合同明细</label><select name="line" id="line">{% for value,label in line_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div><p class="help-text">仅显示条款合计恰等于含税额、且收费模板支持履约汇总的已批准明细；条款未覆盖全部含税额的合同不可结算。</p><div class="actions"><button type="submit" class="button primary">选择合同明细</button></div></form></div></section>
+{% elif action_mode %}
+<section class="panel"><div class="body"><p class="notice">{{ explanation }}</p>{% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}<form method="post" action="{{ submit_url }}">{% csrf_token %}{% include 'partials/form_fields.html' %}<div class="actions"><button type="submit" class="button primary">{{ title }}</button><a class="button" href="{{ back_url }}">取消</a></div></form></div></section>
+{% else %}
+<section class="panel"><div class="body"><p class="notice">{{ explanation }}</p>{% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<dl class="detail-grid"><div><dt>项目</dt><dd>{{ line_snapshot.project }}</dd></div><div><dt>合同明细</dt><dd>{{ line_snapshot.contract_line }}</dd></div><div><dt>客户</dt><dd>{{ line_snapshot.counterparty }}</dd></div><div><dt>批准含税 / 净额 / 税额（元）</dt><dd>{{ line_snapshot.gross_display }} / {{ line_snapshot.net_display }} / {{ line_snapshot.tax_display }}</dd></div><div><dt>已确认履约净额（元）</dt><dd>{{ confirmed_net_display }}</dd></div><div><dt>已结算净额 / 本次可结算净额（元）</dt><dd>{{ settled_net_display }} / {{ remaining_net_display }}</dd></div></dl>
+<details class="trace"><summary>履约来源汇总（只读）</summary>{% for source in sources %}<p>{{ source.kind }} · {{ source.ref.namespace }} · {{ source.ref.kind }} · {{ source.ref.id }} · v{{ source.ref.version }} · 净额 {{ source.net_display }} 元 · 确认日 {{ source.confirmed_on }}</p>{% empty %}<p>尚无真实已确认履约；未达实质条件只能保存草稿。</p>{% endfor %}</details>
+<form method="post" action="{{ submit_url }}">{% csrf_token %}
+{{ form.line.as_hidden }}{{ form.settlement_id }}{{ form.expected_version }}{{ form.request_token }}
+{% if form.line.errors %}<div class="message error" role="alert">{{ form.line.errors }}</div>{% endif %}
+<fieldset><legend>本次结算条款行（完整条款，不允许只取条款金额的一部分）</legend>
+{% if form.terms.errors %}<div class="message error" role="alert">{{ form.terms.errors }}</div>{% endif %}
+<div class="table-scroll"><table aria-label="可结算条款行"><thead><tr><th>选择</th><th>类型</th><th>条款</th><th class="amount">含税（元）</th><th>到期 / 释放日</th><th>释放条件</th></tr></thead><tbody>{% for term in term_rows %}<tr><td data-label="选择"><input type="checkbox" id="term-{{ forloop.counter }}" name="terms" value="{{ term.key }}" {% if term.checked %}checked{% endif %}{% if term.used %} disabled{% endif %}><label for="term-{{ forloop.counter }}" class="sr-only">选择{{ term.kind_label }} {{ term.id }}</label>{% if term.used %}<span class="badge neutral">已使用</span>{% endif %}</td><td data-label="类型">{{ term.kind_label }}</td><td data-label="条款">{{ term.condition_type }} · {{ term.id }}</td><td data-label="含税（元）" class="amount">{{ term.gross_display }}</td><td data-label="到期 / 释放日">{{ term.due_display|default:'缺少日期，不可结算' }}</td><td data-label="释放条件">{{ term.release_condition|default:'—' }}</td></tr>{% endfor %}</tbody></table></div>
+<p class="help-text">表单不包含金额、净额、税额、方向、付款对象、到期日或未清分区字段；这些均由服务端按批准条款与已确认履约校验并派生。</p></fieldset>
+<div class="form-field"><label for="{{ form.settled_on.id_for_label }}">{{ form.settled_on.label }}</label>{{ form.settled_on }}{% if form.settled_on.errors %}<div class="field-errors" role="alert">{{ form.settled_on.errors }}</div>{% endif %}</div>
+<div class="form-field"><label for="{{ form.evidence.id_for_label }}">{{ form.evidence.label }}{% if form.evidence.field.required %}<span class="required" aria-hidden="true"> *</span>{% endif %}</label>{{ form.evidence }}{% if form.evidence.help_text %}<div class="help-text">{{ form.evidence.help_text }}</div>{% endif %}{% if form.evidence.errors %}<div class="field-errors" role="alert">{{ form.evidence.errors }}</div>{% endif %}</div>
+<div class="actions"><button type="submit" class="button primary">{{ title }}</button><a class="button" href="{{ back_url }}">取消</a></div></form></div></section>
+{% endif %}
+{% endblock %}
