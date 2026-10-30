@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":212}."
+      "evidence": "Final Lead integration rerun after rebase onto d6a6f6a: {\"command\":\"check\",\"ok\":true,\"task_count\":216} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -51,7 +51,8 @@
     "历史/终止/金额守卫拒绝时，快照行回退为只读投影并 readable=false+unreadable_reason，仍展示历史条款供核对；不修改条款状态或终止守卫。",
     "old_terms_still_active 按 spec 反例“变更后旧条款仍 active”对 superseded 版本仍 active 的条款行报告异常；这是对既有数据结构的只读对账口径，不自动关闭旧条款。",
     "PM 权限实现为“仅其管理项目 + summary_only=true”，仍返回其项目条款摘要；member 拒绝、跨租户/未知拒绝。",
-    "as_of 语义：快照只选择 effective_on <= as_of 的批准/历史版本；若该日期没有任何生效版本则拒绝（ValidationError/页面 400），不回退展示未来版本。"
+    "as_of 语义：快照只选择 effective_on <= as_of 的批准/历史版本；若该日期没有任何生效版本则拒绝（ValidationError/页面 400），不回退展示未来版本。",
+    "Lead integration rebase (6ddb951 -> d6a6f6a) after PH-290 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-287 entry; manifest.active_handoff -> PH-287. Gates rerun green."
   ],
   "unverified": [
     "PostgreSQL 运行证据以 CI 为准（本机 SQLite 仅验证服务/模板/反例；无 PG 实例）。",
