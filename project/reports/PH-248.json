@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base c1cd18d --task PH-248",
-      "result": "not_run",
-      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE c1cd18d): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope — all 13 changed files (PH-241/PH-245/PH-249 spec updates, 5 new specs PH-254..258, tasks.json, manifest.json, docs/verification.md, PH-248 report/handoff) are inside BASE PH-248 allowed_paths. Replaced after the reviewer lands."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at the review-pass HEAD dbe0112: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"c1cd18d\",\"head\":\"dbe0112f61819192a73442708f63093f7ce60b28\",\"report_path\":\"project/reports/PH-248.json\"}, exit 0; all 13 changed files inside BASE PH-248 allowed_paths and review.status=pass with the reviewer's name. The pre-review failure is recorded in deviations."
     }
   ],
   "review": {
