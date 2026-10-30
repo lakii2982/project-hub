@@ -10,7 +10,7 @@
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual exit 0: System check identified 80 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (cash domain metadata validates the two new read routes)."
+      "evidence": "Actual exit 0 on BASE fa1ca8d: System check identified 81 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (cash domain metadata validates the two history_read bridge routes alongside the PH-287 routes)."
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1: Ran 989 tests, FAILED (failures=5, errors=3, skipped=69) => 912 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE 6ddb951 baseline (976/5F+3E/69 plus the 13 new PH-279 tests); no new failures. CI Linux (including the PG domain) is authoritative."
+      "evidence": "Actual local exit 1 on BASE fa1ca8d: Ran 999 tests, FAILED (failures=5, errors=3, skipped=69) => 922 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE fa1ca8d baseline (986/5F+3E/69 plus the 13 new PH-279 tests); no new failures. CI Linux (including the PG domain) is authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -30,7 +30,12 @@
     {
       "command": "python manage.py test tests.test_v1_cash_bridge_read tests.test_v1_cash_bridge_read_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual exit 0: Ran 13 tests, OK => 13 passed (9 service + 4 HTTP). Covers clean receipt snapshot, unclassified posted cash issue, refund coverage without false classification_missing, internal-transfer pair/company net zero, as_of filtering, tampered event/posting issue codes, read-only fact counts, cash-module-disabled GET 200 via history_read plus POST 405, role permissions, offset placeholder, and browser read/filters boundaries."
+      "evidence": "Actual exit 0 on BASE fa1ca8d: Ran 13 tests, OK => 13 passed (9 service + 4 HTTP). Covers clean receipt snapshot, unclassified posted cash issue, refund coverage without false classification_missing, internal-transfer pair/company net zero, as_of filtering, append-only compatible tampered posting/event issue codes (event_duplicate/posting_count/posting_amount_mismatch via INSERT, no UPDATE/DELETE), read-only fact counts, cash-module-disabled GET 200 via history_read plus POST 405, role permissions, offset placeholder, and browser read/filters boundaries."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fa1ca8d --task PH-279",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, base=fa1ca8d, 13 changed files all inside the PH-279 allowed_paths, no path_out_of_scope/report-shape errors; assertion_scope=declaration_only. The report review block is the independent reviewer's round-2 PASS."
     }
   ],
   "review": {
@@ -53,7 +58,8 @@
     "No verify_integrity assertion was changed or added; issue codes are aligned to the existing cash verification vocabulary but the snapshot does not mutate or extend the command.",
     "Single worker owns the whole write set (cash reconciliation service/views/template/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending.",
     "The >1-active-classification issue branch is kept as defence in depth although the single-active unique constraint makes it unreachable through the owner services (comment added); no behaviour change.",
-    "Lead integration rebase (6ddb951 -> fa1ca8d) after PH-287 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-279 entry; manifest.active_handoff -> PH-279; PH-279 flipped to done after the round-2 review pass. Gates rerun green."
+    "Lead integration rebase (6ddb951 -> fa1ca8d) after PH-287 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-279 entry; manifest.active_handoff -> PH-279; PH-279 flipped to done after the round-2 review pass. Gates rerun green.",
+    "PostgreSQL append-only counterexample: the tampered-posting regression inserts an extra wrong-amount LedgerPosting for an existing event (event_duplicate + posting_count + posting_amount_mismatch) instead of UPDATE-ing a historical posting row. core_ledgerposting has PG append-only triggers (migration 0007), so the earlier UPDATE-based test only passed on SQLite and failed the PR #170 PostgreSQL domain; the test is now UPDATE/DELETE-free and semantically identical on both vendors."
   ],
   "unverified": [
     "No browser 1440/390 check was run; the snapshot/issues UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",

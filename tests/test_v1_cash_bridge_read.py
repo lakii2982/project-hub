@@ -114,15 +114,21 @@ class CashBridgeSnapshotTests(BridgeFixture, TestCase):
             event_type='cash.classification', occurred_on=event.occurred_on,
             posting_period=event.posting_period, algorithm_version=event.algorithm_version,
             claim=event.claim, claim_effect_cents=event.claim_effect_cents)
-        # wrong posting amount on a separate transaction
+        # append-only compatible tamper: INSERT an extra wrong-amount posting for the same
+        # event instead of UPDATE-ing the historical row (PG append-only triggers reject
+        # updates/deletes on core_ledgerposting, so the counterexample must be an insert).
         second = self.posted(gross_cents=2000)
         second_classification = self.classify(second, classification='receipt')
         second_event = AccountingEvent.objects.get(
             source=second_classification.classification_ref)
-        posting = second_event.postings.get()
-        LedgerPosting.objects.filter(pk=posting.pk).update(amount_cents=999)
+        LedgerPosting.objects.create(
+            organization=self.org, accounting_event=second_event, version=1,
+            status='posted', book='cash_in', amount_cents=999,
+            scope_kind='funding_account', scope_id=str(second.funding_account_id),
+            line_index=1, origin='current')
         codes = self.codes()
         self.assertIn('event_duplicate', codes)
+        self.assertIn('posting_count', codes)
         self.assertIn('posting_amount_mismatch', codes)
 
     def test_read_only_and_module_disabled_history_readable(self):
