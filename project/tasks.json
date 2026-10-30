@@ -8466,7 +8466,8 @@
         "project/tasks.json",
         "project/manifest.json",
         "project/reports/PH-276.json",
-        "project/handoffs/PH-276.md"
+        "project/handoffs/PH-276.md",
+        "pmo_plugins/time/migrations/*.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
