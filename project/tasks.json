@@ -8737,7 +8737,7 @@
       "title": "结算未清/核销/退款覆盖只读核对首片（无写入口、无迁移）",
       "kind": "feature",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [

@@ -5,12 +5,12 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=216; PH-283 recorded in_review with owner/handoff; no path/acceptance schema issues."
+      "evidence": "Actual exit 0 at this HEAD (BASE a4584d1): ok=true, task_count=220 (PH-294 done, PH-283 done with owner/handoff); no path/acceptance schema issues."
     },
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual exit 0: System check identified 83 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (settlement domain metadata validates the two history_read coverage routes)."
+      "evidence": "Actual exit 0 on BASE a4584d1: System check identified 83 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (settlement domain metadata validates the two history_read coverage routes)."
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1: Ran 1013 tests, FAILED (failures=5, errors=3, skipped=69) => 936 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE cfa185f baseline (999/5F+3E/69 plus the 14 new PH-283 tests); no new failures. CI Linux (including the PG domain) is authoritative."
+      "evidence": "Actual local exit 1 on BASE a4584d1: Ran 1013 tests, FAILED (failures=5, errors=3, skipped=69) => 936 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE a4584d1 baseline (999/5F+3E/69 plus the 14 new PH-283 tests); no new failures. CI Linux (including the PG domain) is authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -31,6 +31,11 @@
       "command": "python manage.py test tests.test_v1_settlement_coverage_read tests.test_v1_settlement_coverage_read_http --verbosity 1",
       "result": "pass",
       "evidence": "Actual exit 0: Ran 14 tests, OK => 14 passed (10 service + 4 HTTP). Covers golden clearance+refund remaining (gross - cleared - refunded/returned), no false issue without clearance, append-only INSERT over-clearance, duplicate active clearance by canonical (open item, cash fact) identity including different amount/date, missing cash reference, as_of filtering, role/managed-project permissions, read-only fact counts, settlement-module-disabled history read and history_read GET 200/POST 405, and derived-field semantics."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base a4584d1 --task PH-283",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=a4584d1, 13 changed files all inside the PH-283 allowed_paths, no path_out_of_scope/report-shape errors; assertion_scope=declaration_only. The report review block is the independent reviewer's round-2 PASS at 3d130bc."
     }
   ],
   "review": {
@@ -57,7 +62,7 @@
   ],
   "unverified": [
     "No browser 1440/390 check was run; the coverage snapshot/issues UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
-    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "Independent S review recorded round-2 PASS at 3d130bc; this HEAD carries the final BASE a4584d1 evidence and the done transition.",
     "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
     "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
     "Offset (PH-241), automatic correction/export, write entries, persisted snapshots and a true cross-project cash attribution contract remain unimplemented."
