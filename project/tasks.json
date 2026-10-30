@@ -8347,7 +8347,7 @@
       "title": "onboarding 导入预览实现前置：插件 bootstrap 与 CSV 模板识别/字段-主数据映射只读预检",
       "kind": "feature",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
