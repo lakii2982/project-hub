@@ -237,7 +237,8 @@ class ContractsConcurrencyTests(Fixture, TransactionTestCase):
         # PH-226: settlement depends on delivery, so it must be disabled first when installed.
         # PH-269: time depends on contracts, so disable it before contracts below.
         from core.plugin_runtime import get_registry, set_enabled
-        for plugin_id in ('management_revenue', 'settlement', 'delivery', 'time'):
+        # PH-286: onboarding requires contracts, so disable it before the contracts guards below.
+        for plugin_id in ('onboarding', 'management_revenue', 'settlement', 'delivery', 'time'):
             if plugin_id in get_registry().manifests:
                 set_enabled(self.owner, plugin_id, False)
 
