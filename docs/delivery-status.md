@@ -43,3 +43,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## PH-279 现金链路只读核对快照首片（2026-10-31）
 
 新增现金只读核对：posted 现金 ↔ 有效分类 ↔ 账本事件/posting/bank_effect claim ↔ 退款/退回 ↔ 内部互转成对，输出逐流水快照、账户现金账净额（含冲销，非银行余额）与 issue_code 异常清单；offset_implemented=false 占位（PH-241 未合入）。owner/finance/auditor 只读，pm/member 拒绝；无迁移/无写入口/无审计写/不写账本事实。偏差：pm 因现金事实无项目归属而拒绝；两条路由 history_read，cash 停用后历史 GET 仍 200 可读；无审计写。未验证：浏览器 1440/390、独立复核、PG、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-279.json`。
+
+## PH-288 银行账户/现金余额只读对账汇总首片（2026-10-31）
+
+新增银行账户只读对账：按账户/期间派生 posted 现金 in/out 与净额、退款/退回、内部互转 in/out 与抵销、分类桥接现金账净额、期初/期末余额（closing=opening+posted_in-posted_out，不建余额表）与 issue_code 异常清单（无 posted 事实/未分类现金/账本净额不符/跨账户跨 org/同账户互转/负余额/关期后 future 事实）；offset_implemented=false 占位（PH-241 未合入）。owner/finance/auditor 只读，pm/member 拒绝（无项目归属）；两条 history_read 路由，cash 停用后历史 GET 仍 200；无迁移/写入口/审计写。偏差：pm 拒绝、Offset 未实现、余额含退款/互转实际现金腿、反例 append-only 兼容。未验证：浏览器 1440/390、独立复核、PG、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-288.json`。

@@ -1,0 +1,59 @@
+{
+  "task_id": "PH-288",
+  "summary": "银行账户/现金余额只读对账汇总首片（无迁移/无写入口）：新增 pmo_plugins/cash/bank_balance_services.py，按银行账户/期间只读派生 posted 现金 in/out 与净额、退款/退回合计、内部互转 in/out 与抵销净额、分类桥接现金账 in/out 净额、期初/期末余额（余额=期初+posted in-posted out，以 posted 现金事实派生，不建余额表），并提供 issue_code 异常清单（account_no_posted_facts、unclassified_posted_cash、ledger_net_mismatch、refund/return/transfer 跨账户或跨 org、transfer_same_account/amount_mismatch、negative_balance、future_fact_after_closed_period）。offset_implemented=false、offset_cents=0（PH-241 未合入，不读 Offset 表、不伪造）。权限 owner/finance/auditor 只读；pm/member 拒绝（银行账户与现金事实无项目归属，pm 项目摘要不可安全派生，已披露）；cash 模块停用后服务层历史可读、两条 history_read 浏览器路由 GET 仍 200。无 audit/写/迁移。浏览器新增只读账户余额汇总/异常清单页与 as_of/期间/账户筛选。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=220; PH-288 recorded in_review with owner/handoff; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 88 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (cash domain metadata validates the two history_read bank-balance routes)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (this slice adds no model, table or migration; cash leaf stays 0006)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1: Ran 1054 tests, FAILED (failures=5, errors=3, skipped=69) => 977 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); the BASE e43c2c2 total grows to 1054 with the 13 new PH-288 tests and no new failure class. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. This slice adds no ledger/amount business invariant and does not change existing verify_integrity semantics."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_bank_balance_read tests.test_v1_bank_balance_read_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 13 tests, OK => 13 passed (9 service + 4 HTTP). Covers golden 3 in/1 out/refund/transfer account balance and issues=[], unclassified cash + ledger mismatch, append-only extra posting ledger mismatch, negative balance, period opening/future-after-closed-period, as_of filtering, role/module-disabled history read, read-only fact counts, derived balance semantics, and browser filters/history_read GET 200/POST 405."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-288 bank-balance reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: read-only boundary (no migration/table/write/audit), account balance derivation (posted in/out, refund/return, internal-transfer legs, ledger net, opening/closing), issue_code/refs/expected/actual fidelity, offset_implemented=false without reading Offset, role gates (owner/finance/auditor; pm/member deny), module-disabled history_read, append-only compatible counterexamples, period/as_of filters, and the precise whitelist. projectctl check, check, makemigrations, verify_integrity and scoped tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "PM access: the spec says pm may read only the bank summary of projects they manage, but FundingAccount/CashTransaction/Refund/BankReturn/InternalTransfer carry no project attribution, so a project-scoped pm summary cannot be derived without exposing company-wide bank data. This slice denies pm (403) together with member and discloses the spec/runtime mismatch for a future contract (same precedent as PH-279).",
+    "Offset: PH-241 is in_review and not a dependency; the snapshot never reads the Offset table, reports offset_cents=0 and offset_implemented=false, and invents no offset fact.",
+    "Balance semantics: closing_balance_cents = opening + posted_in - posted_out over posted cash facts, so actual refund/return and internal-transfer cash legs are included in the balance (they are real posted cash). ledger_net_cents is compared against the non-derived (bridgeable) posted in/out, so the expected closing-vs-ledger difference caused by derived refund/return cash is not reported as ledger_net_mismatch.",
+    "future_fact_after_closed_period uses AccountingPeriod.status='posted' plus closed_through as the closed-period signal; it reports posted cash facts dated after closed_through for the requested period.",
+    "The read path writes no generic audit (optional in the spec) and no receipt/session state, keeping the snapshot side-effect free; no verify_integrity assertion is changed or added.",
+    "Counterexamples are append-only compatible: extra LedgerPosting rows are INSERTed, never UPDATE/DELETE, so SQLite and PostgreSQL append-only triggers behave identically; assertions check derived balance/issue semantics rather than raw input values.",
+    "Single worker owns the whole write set (cash bank-balance service/funding views/template/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run; the bank balance/issues UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "Offset (PH-241), fees (PH-251), bank statement import, automatic correction/export, persisted balance tables and a true project-attributed pm bank summary remain unimplemented."
+  ]
+}
