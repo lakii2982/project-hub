@@ -599,4 +599,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 2. **核号**：BASE 最大 PH-290；远端分支/PR（EXP #143/#144 等）无 ≥291 占用 → PH-291 起连续。
 3. **新登记**：PH-291 跨域只读核对总览（ready，deps PH-219/222/224/232/265/269/274 done；delivery 层只读聚合、无迁移/无写入口、不建 insights 第二 owner）、PH-292 onboarding 导入提交首片（proposed，缺 PH-289/PH-181/PH-185）、PH-293 发票/价税分离/红冲契约冻结 ADR 0015（proposed，缺 PH-150/155/252）、PH-294 下一规划槽（proposed，待 PH-290 done 后置 ready）。count 212→216，编号 291-294 连续。
 4. **blockers 刷新**：PH-276 清空（晋级）；PH-251/252/255/256/257/260/261/262/271/272/285/289/292/293 保持 proposed，无虚假晋级。
-5. 无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-291/292/293 未实现；review由独立S复核。
+5. 无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：PH-276 晋级/编号/新切片依赖事实核对通过）；最终证据 HEAD 83635ee 按槽惯例置 PH-290 done / PH-294 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=216；23 项治理 OK；verify-change --base 6ddb951 --task PH-290 ok=true、10 文件全白名单。未验证：PH-291/292/293 未实现；PH-276 由其实现 PR/CI 验证。
