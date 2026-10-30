@@ -70,10 +70,16 @@ class ContractTerminationTests(ContractChangeFixture, TestCase):
         self.draft_change(change_type='termination', lines=[])
         # a raw approved change without the canonical event/status link is corruption
         with connection.cursor() as cursor:
-            for trigger in ('contracts_contractchange_insert_guard',
-                            'contracts_contractchange_update_guard',
-                            'contracts_contractchange_no_delete'):
-                cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
+            if connection.vendor == 'postgresql':
+                # PostgreSQL installs one combined guard trigger per table and
+                # needs ON TABLE when dropping it.
+                cursor.execute(
+                    'DROP TRIGGER IF EXISTS contracts_change_guard ON contracts_contractchange')
+            else:
+                for trigger in ('contracts_contractchange_insert_guard',
+                                'contracts_contractchange_update_guard',
+                                'contracts_contractchange_no_delete'):
+                    cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
         ContractChange.objects.update(status='approved', version=2)
         errors = self.verify_errors()
         self.assertTrue(any('contract_change' in row for row in errors), errors)
