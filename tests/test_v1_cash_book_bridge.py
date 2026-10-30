@@ -12,6 +12,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection, close_old_connections
 from django.db.models import Sum
 from django.test import TestCase, TransactionTestCase
+from django.test.utils import CaptureQueriesContext
 
 from core.models import AccountingEvent, LedgerPosting, Membership, SourceConsumption
 from pmo_plugins.cash import classification_services as cls
@@ -105,6 +106,80 @@ class CashBookBridgeTests(ClassificationFixture, TestCase):
             self.classify(row)
         self.assertEqual(CashClassification.objects.count(), before_classifications)
         self.assertFalse(CashClassification.objects.filter(cash_transaction=row).exists())
+
+    def test_forged_bridge_amounts_fail_integrity(self):
+        row = self.posted(gross_cents=1000)
+        classification = CashClassification.objects.create(
+            organization=self.org, cash_transaction=row, classification='receipt',
+            status='active', version=1, evidence=[{'reference': '伪造分类'}],
+            created_by=self.owner)
+        claim = SourceConsumption.objects.create(
+            organization=self.org, consumer='cash', source_id=row.pk,
+            coverage_key='bank_effect', source=row.transaction_ref, amount_cents=1000,
+            event_ref={'namespace': 'core', 'kind': 'accounting_event',
+                       'id': str(uuid.uuid4()), 'version': 1})
+        event = AccountingEvent.objects.create(
+            id=uuid.UUID(claim.event_ref['id']), organization=self.org,
+            source=classification.classification_ref, event_type='cash.classification',
+            occurred_on=row.transaction_date,
+            posting_period=row.transaction_date.strftime('%Y-%m'),
+            algorithm_version='forged', claim=claim, claim_effect_cents=1001)
+        LedgerPosting.objects.create(
+            organization=self.org, accounting_event=event, line_index=0,
+            amount_cents=1001, book='cash_in', scope_kind='funding_account',
+            scope_id=str(row.funding_account_id), origin='current')
+        payload = self._verify_payload()
+        self.assertTrue(any(':bridge_event' in error for error in payload['errors']),
+                        payload['errors'])
+        self.assertTrue(any(':posting' in error for error in payload['errors']),
+                        payload['errors'])
+        self.assertTrue(any(':net' in error for error in payload['errors']),
+                        payload['errors'])
+
+    def test_duplicate_bridge_group_fails_integrity(self):
+        row = self.posted(gross_cents=1000)
+        classification = self.classify(row)
+        original = AccountingEvent.objects.get(source=classification.classification_ref)
+        duplicate = AccountingEvent.objects.create(
+            organization=self.org, source=classification.classification_ref,
+            event_type='cash.classification', occurred_on=row.transaction_date,
+            posting_period=row.transaction_date.strftime('%Y-%m'),
+            algorithm_version='forged', claim=original.claim,
+            claim_effect_cents=row.gross_cents)
+        LedgerPosting.objects.create(
+            organization=self.org, accounting_event=duplicate, line_index=0,
+            amount_cents=row.gross_cents, book='cash_in', scope_kind='funding_account',
+            scope_id=str(row.funding_account_id), origin='current')
+        payload = self._verify_payload()
+        self.assertTrue(any(':bridge_event_count' in error for error in payload['errors']),
+                        payload['errors'])
+
+    def test_verify_query_count_stays_constant_with_more_classifications(self):
+        rows = [self.posted(gross_cents=1000) for _ in range(2)]
+        classifications = [self.classify(row) for row in rows]
+        with CaptureQueriesContext(connection) as first:
+            self.assertTrue(self.verify()['ok'])
+        # Grow classification/reversal history on the same bank facts: the cash block must not
+        # add per-row queries, so the total verify query count stays effectively constant.
+        for classification in classifications:
+            self.reverse(classification)
+            self.classify(classification.cash_transaction)
+        with CaptureQueriesContext(connection) as second:
+            self.assertTrue(self.verify()['ok'])
+        self.assertLessEqual(len(second.captured_queries), len(first.captured_queries) + 2)
+        self.assertLessEqual(len(first.captured_queries), 80)
+
+    def _verify_payload(self):
+        from io import StringIO
+        import json
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+        out = StringIO()
+        try:
+            call_command('verify_integrity', '--json', stdout=out)
+        except CommandError:
+            pass
+        return json.loads(out.getvalue())
 
     def test_caller_supplied_balance_or_bridge_fields_are_rejected(self):
         row = self.posted()

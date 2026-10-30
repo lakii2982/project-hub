@@ -6,6 +6,7 @@ AccountingEvent/LedgerPosting pair. Reversal appends CashClassificationReversal 
 mirrored accounting event/posting; the original rows are never edited or deleted, and the
 permanent bank_effect SourceConsumption is re-used only after its events net to zero.
 """
+from datetime import date
 from decimal import Decimal
 import uuid
 
@@ -35,13 +36,18 @@ MAX_CENTS = 10 ** 12
 
 
 # ---------- guards ----------
-def _classification_kind(value):
+CLIENT_CLASSIFICATION_KINDS = ('receipt', 'payment', 'advance', 'tax')
+
+
+def _classification_kind(value, *, allow_transfer=False):
     if not isinstance(value, str) or not value:
         _fail('现金分类无效')
     if value == 'payroll':
         _fail('工资分类本片未支持；工资现金链接与成本账留后续薄片')
+    if value == 'transfer' and not allow_transfer:
+        _fail('内部互转分类仅由内部互转编排使用，客户端不支持')
     if value not in CLASSIFICATION_KINDS:
-        _fail('不支持的现金分类；本片仅支持收款、付款、预收/预付与税费')
+        _fail('不支持的现金分类；客户端仅支持收款、付款、预收/预付与税费')
     return value
 
 
@@ -135,11 +141,30 @@ def _classification_projection(row):
 @transaction.atomic
 def record_classification(member, *, cash_transaction_id, classification, evidence,
                           occurred_on=None, posting_period=None, request_token, dry_run=True):
-    """Record the single effective classification of a posted bank fact and bridge cash book."""
+    """Record the single effective client classification of a posted bank fact."""
+    return _record_classification(
+        member, cash_transaction_id=cash_transaction_id, classification=classification,
+        evidence=evidence, occurred_on=occurred_on, posting_period=posting_period,
+        request_token=request_token, dry_run=dry_run, allow_transfer=False)
+
+
+@transaction.atomic
+def record_internal_classification(member, *, cash_transaction_id, evidence, occurred_on=None,
+                                   posting_period=None, request_token, dry_run=True):
+    """PH-245-only internal transfer classification; never exposed to client channels."""
+    return _record_classification(
+        member, cash_transaction_id=cash_transaction_id, classification='transfer',
+        evidence=evidence, occurred_on=occurred_on, posting_period=posting_period,
+        request_token=request_token, dry_run=dry_run, allow_transfer=True)
+
+
+def _record_classification(member, *, cash_transaction_id, classification, evidence,
+                           occurred_on=None, posting_period=None, request_token, dry_run=True,
+                           allow_transfer=False):
     _dry(dry_run)
     member = _locked(member)
     transaction_id = _identifier(cash_transaction_id, '银行流水不存在或无权访问')
-    kind = _classification_kind(classification)
+    kind = _classification_kind(classification, allow_transfer=allow_transfer)
     occurred = None if occurred_on is None else _business_date(occurred_on)
     period = None if posting_period is None else _posting_period(posting_period)
     evidence_refs = _supporting_evidence(evidence)
@@ -156,7 +181,7 @@ def record_classification(member, *, cash_transaction_id, classification, eviden
         raise PermissionDenied('银行流水不属于本公司')
     if row.status != 'posted':
         _fail('仅已过账银行流水可以分类')
-    if DIRECTION_RULES[kind] != row.direction:
+    if kind != 'transfer' and DIRECTION_RULES[kind] != row.direction:
         _fail('现金分类与银行流水方向不符')
     if occurred is not None and occurred != row.transaction_date:
         _fail('分类日期必须与银行流水日期一致')
@@ -301,7 +326,12 @@ def classification_list(member, *, funding_account_id=None, cash_transaction_id=
         rows = rows.filter(cash_transaction_id=_identifier(
             cash_transaction_id, '银行流水不存在或无权访问'))
     if posting_period is not None:
-        rows = rows.filter(cash_transaction__transaction_date__startswith=posting_period + '-01')
+        period = _posting_period(posting_period)
+        start = date.fromisoformat(period + '-01')
+        next_month = (date(start.year + (1 if start.month == 12 else 0),
+                           1 if start.month == 12 else start.month + 1, 1))
+        rows = rows.filter(cash_transaction__transaction_date__gte=start,
+                           cash_transaction__transaction_date__lt=next_month)
     return [_classification_projection(row) for row in rows.order_by(
         '-created_at', '-id')]
 

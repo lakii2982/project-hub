@@ -348,7 +348,14 @@ class Command(BaseCommand):
             tx_id = classification_tx.get(classification_id)
             if tx_id is not None:
                 net_by_tx[tx_id] = net_by_tx.get(tx_id, 0) + net
+        # Prefetch reversal links once so the classification/reversal loops stay constant-query.
+        reversals_by_classification = {}
+        for row in CashClassificationReversal.objects.values('pk', 'classification_id'):
+            reversals_by_classification.setdefault(
+                str(row['classification_id']), []).append(row['pk'])
+        classification_by_id = {}
         for classification in CashClassification.objects.select_related('cash_transaction'):
+            classification_by_id[str(classification.pk)] = classification
             transaction = classification.cash_transaction
             label = f"cash_classification:{classification.pk}"
             reference = classification.classification_ref
@@ -398,13 +405,16 @@ class Command(BaseCommand):
                             if classification.status == 'active' else 0)
             if net_by_classification.get(str(classification.pk), 0) != expected_net:
                 errors.append(f"{label}:net")
-            reversals = list(classification.reversals.all())
+            reversals = reversals_by_classification.get(str(classification.pk), [])
             if classification.status == 'active' and reversals:
                 errors.append(f"{label}:active_has_reversal")
             if classification.status == 'reversed' and len(reversals) != 1:
                 errors.append(f"{label}:reversal_count")
-        for reversal in CashClassificationReversal.objects.select_related('classification'):
-            classification = reversal.classification
+        for reversal in CashClassificationReversal.objects.all():
+            classification = classification_by_id.get(str(reversal.classification_id))
+            if classification is None:
+                errors.append(f"cash_classification_reversal:{reversal.pk}:missing_classification")
+                continue
             label = f"cash_classification_reversal:{reversal.pk}"
             if (reversal.organization_id != classification.organization_id
                     or reversal.cash_transaction_id != classification.cash_transaction_id):

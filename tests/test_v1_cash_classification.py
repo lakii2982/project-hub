@@ -1,6 +1,6 @@
 """PH-239 cash classification facts: one effective classification, append-only reversal."""
 import uuid
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
@@ -160,6 +160,40 @@ class ClassificationLifecycleTests(ClassificationFixture, TestCase):
         self.assertEqual(sorted((item['classification'], item['status']) for item in rows),
                          [('advance', 'active'), ('receipt', 'reversed')])
         self.assertEqual(DomainEvent.objects.filter(topic=RECORDED_TOPIC).count(), 2)
+
+    def test_posting_period_filter_matches_whole_month(self):
+        first = self.posted(transaction_date=date(2026, 10, 5))
+        second = self.posted(transaction_date=date(2026, 10, 18))
+        previous = self.posted(transaction_date=date(2026, 9, 20))
+        for row in (first, second, previous):
+            self.classify(row)
+        october = cls.classification_list(self.owner, posting_period='2026-10')
+        september = cls.classification_list(self.owner, posting_period='2026-09')
+        self.assertEqual(len(october), 2)
+        self.assertEqual(sorted(item['transaction_date'] for item in october),
+                         ['2026-10-05', '2026-10-18'])
+        self.assertEqual(len(september), 1)
+        self.assertEqual(september[0]['transaction_date'], '2026-09-20')
+
+    def test_transfer_enum_is_internal_only(self):
+        row = self.posted(gross_cents=1000)
+        self.denied(lambda: self.classify(row, classification='transfer'))
+        internal = cls.record_internal_classification(
+            self.owner, cash_transaction_id=row.pk,
+            evidence=[{'reference': '内部互转编排依据'}],
+            request_token=uuid.uuid4(), dry_run=False)
+        self.assertEqual((internal.classification, internal.status), ('transfer', 'active'))
+        bridge = AccountingEvent.objects.get(source=internal.classification_ref)
+        self.assertEqual(bridge.event_type, 'cash.classification')
+        self.assertEqual(bridge.postings.get().amount_cents, 1000)
+        # The DB enum accepts transfer even though the client command layer rejects it.
+        out_row = self.posted(direction='out', gross_cents=500)
+        second = cls.record_internal_classification(
+            self.owner, cash_transaction_id=out_row.pk,
+            evidence=[{'reference': '内部互转另一腿'}],
+            request_token=uuid.uuid4(), dry_run=False)
+        self.assertEqual(second.classification, 'transfer')
+        self.assertEqual(second.get_classification_display(), '内部互转')
 
     def test_idempotent_replay_and_changed_input_conflict(self):
         row = self.posted()

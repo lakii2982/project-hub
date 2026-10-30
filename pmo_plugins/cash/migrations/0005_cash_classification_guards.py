@@ -113,7 +113,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='cashclassification',
-            constraint=models.CheckConstraint(condition=models.Q(('classification__in', ['receipt', 'payment', 'advance', 'tax'])), name='cash_classification_kind'),
+            constraint=models.CheckConstraint(condition=models.Q(('classification__in', ['receipt', 'payment', 'advance', 'tax', 'transfer'])), name='cash_classification_kind'),
         ),
         migrations.AddConstraint(
             model_name='cashclassification',

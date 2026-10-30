@@ -275,10 +275,10 @@ class BankReturn(models.Model):
         raise ValidationError('银行退回事实不可删除')
 
 
-CLASSIFICATION_KINDS = ('receipt', 'payment', 'advance', 'tax')
+CLASSIFICATION_KINDS = ('receipt', 'payment', 'advance', 'tax', 'transfer')
 CLASSIFICATION_STATUSES = ('active', 'reversed')
 CLASSIFICATION_LABELS = {'receipt': '收款', 'payment': '付款', 'advance': '预收/预付',
-                         'tax': '税费'}
+                         'tax': '税费', 'transfer': '内部互转'}
 
 
 class CashClassification(models.Model):
