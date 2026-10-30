@@ -497,3 +497,8 @@ PH222 PR117 合入 aec8f67 后完成应收规划：登记 PH-224「客户结算�
 
 按PH-224未清项与PH-230已过账现金的闭环，登记PH-232“核销首片：已过账现金对未清项的部分核销与撤核”（部分核销、双方余额上限、撤核反向记录、规范事件、派生余额；无Offset/退款/手续费/转账/导入/期初/账本），并保留PH-233规划槽。PH-170/171仍为proposed，本片不冒称完成。见`docs/verification.md`与`project/reports/PH-231.json`。
 
+
+
+## PH-233 交付效率规划与规划链续接（2026-10-30）
+
+按用户2026-10-30授权的“token降40%、时间降50%”工程改造，登记PH-235（projectctl只读`orient`/`next --compact`/`draft-report`）与PH-234（AGENTS.md开场改orient/brief、delivery-status拆现状头+归档、ai-delivery-*四篇归档、work-packages.json裸读护栏），并保留PH-236规划槽。量化基线：新会话必读约125KB（冷启动约40K token）、全量套件94s/次、每任务本地全量2-3次。PH-233原业务候选顺延至PH-236，本片未冻结任何业务契约。见`docs/verification.md`与`project/reports/PH-233.json`。

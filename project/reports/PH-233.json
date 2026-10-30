@@ -1,0 +1,39 @@
+{
+  "task_id": "PH-233",
+  "summary": "Register PH-235 (projectctl read-only orient / next --compact / draft-report), PH-234 (context-lean docs rework: AGENTS.md orient/brief opening, delivery-status current-head+archive split, ai-delivery-* archival, work-packages.json raw-read guard) and PH-236 next planning slot per user authorization of 2026-10-30 (token -40%, time -50%, quality unchanged). PH-233's original business candidates carry over untouched to PH-236; no business contract frozen in this slice.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual rerun after report added (worktree /Users/lakii2982/项目/pmo-opt, HEAD of chore/opt-survey): ok=true, task_count=158 (PH-233 done with handoff; PH-234/PH-235/PH-236 ready, dependency PH-233 done)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: 19 tests OK (~2.0s), including S-review enforcement, dependency-cycle rejection, scope-creep rejection."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base c4348ac9 --task PH-233",
+      "result": "pass",
+      "evidence": "Actual rerun after review pass: ok=true, 8 changed files all inside BASE allowed_paths, no path_out_of_scope, report validated."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-233 planning reviewer (fresh context, read-only; single round)",
+    "status": "pass",
+    "findings": [
+      "No blockers. Six review dimensions (tool-command purity, docs-move purity, authorization chain, tasks.json schema/dependencies, delivery-status/verification truthfulness, whitelist boundary) all pass.",
+      "Non-blocking observation kept for the record: the 2026-10-30 user authorization exists in this slice only as quoted records in handoff/specs (no verbatim transcript in-repo); the consumption of the business-planning slot for an engineering-efficiency plan is accepted because AGENTS.md requires user-raised new problems to be registered into the planning chain, business candidates carry over fully to PH-236, and no business contract was frozen."
+    ],
+    "evidence": "Reviewer independently read PH-233 spec, the worktree diff, PH-234/235/236 specs and handoff, and confirmed against repo facts (ai-delivery-* files exist and are superseded by ai-native-delivery.md; BASE whitelist match). Reviewer ran projectctl check (only expected missing-report error at that time) and 19 governance tests, and checked schema fields, dependency legality and duplicate IDs by script."
+  },
+  "deviations": [
+    "PH-233's spec text scoped it to 1.0 business-delivery planning; this consumption registers engineering-efficiency contracts per the user's explicit 2026-10-30 authorization, recorded in PH-235/PH-234 specs and the handoff. Business candidates are untouched and continue in PH-236.",
+    "PH-234 implementation order depends on PH-235's command names but both are registered ready depending only on PH-233 (ready tasks require done dependencies); execution order 235 then 234 is fixed in both specs instead of a dependency edge."
+  ],
+  "unverified": [
+    "No product code, migration, browser, PostgreSQL or CI evidence exists for PH-234/PH-235 yet; they are frozen contracts only.",
+    "The token/time reduction targets are goals, not results: the baseline (cold start ~125KB reading, 94s full suite, 2-3 full-suite runs per task) is recorded in delivery-status and must be re-measured with the same methodology after PH-235/PH-234 land; no claim of achieved savings is made here."
+  ]
+}
