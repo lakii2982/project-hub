@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Post-independent-review actual rerun with the recorded round-2 pass: {\"command\":\"check\",\"ok\":true,\"task_count\":175}, exit 0. The pre-review run (single high_risk_review_required while review was pending) is recorded in deviations and was never declared as pass."
+      "evidence": "Final Lead integration rerun after rebase onto a760cf7: {\"command\":\"check\",\"ok\":true,\"task_count\":175} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -13,9 +13,9 @@
       "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-247 on main 0721ad4 with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 0721ad4 --task PH-247",
+      "command": "python scripts/projectctl.py verify-change --base a760cf7 --task PH-247",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at the review-pass HEAD 8346d55: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"0721ad431eeac8e71aa3af4e26e055103f88ba8b\",\"head\":\"8346d552cdf5b709d45973ee1bfbe1de29d892cd\",\"report_path\":\"project/reports/PH-247.json\"}, exit 0; all 13 changed files inside BASE PH-247 allowed_paths (PH-243 wording, PH-247 own spec sync, 6 new specs PH-248..253, tasks.json, manifest.json, docs/verification.md, PH-247 report/handoff) and the report carries review.status=pass with the reviewer's round-2 name. The pre-review failure is recorded in deviations."
+      "evidence": "Final Lead integration rerun after rebase onto a760cf7 (PH-240 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 changed files inside BASE PH-247 allowed_paths."
     }
   ],
   "review": {
@@ -36,7 +36,8 @@
     "PH-239 is already ready (promoted when PH-243 merged), so this slice only edits the two stale PH-243 spec sentences to say PH-247 verifies the state instead of performing the promotion; PH-247's own frozen spec scope text is left as the historical contract and the resolution is recorded here and in the handoff.",
     "No existing task was promoted: PH-241 and PH-245 still depend on PH-239 done, so they remain proposed with their frozen blockers; PH-240 (ready) is not done at this BASE, so PH-249 stays proposed waiting for it. PH-250/PH-253 are registered ready because PH-210/PH-244 are done.",
     "PH-252's whitelist is exactly the per-file list (no wildcard prefix): the spec and tasks.json enumerate `pmo_plugins/invoicing/models.py`, `services.py`, `views.py`, `forms.py`, `domain_metadata.py`, `urls.py`, the two templates, the migrations glob and the two tests, because the invoicing app bootstrap ownership must be settled by its upstream planning (PH-150/PH-155); the spec requires the app to already be registered and forbids self-created scaffolding.",
-    "PH-249/PH-251/PH-252 were deliberately not promoted to ready: their frozen specs reference not-yet-done upstream contracts (PH-240, PH-250/PH-157, PH-150/PH-155); promoting them now would violate the ready-requires-done-dependencies rule."
+    "PH-249/PH-251/PH-252 were deliberately not promoted to ready: their frozen specs reference not-yet-done upstream contracts (PH-240, PH-250/PH-157, PH-150/PH-155); promoting them now would violate the ready-requires-done-dependencies rule.",
+    "Lead integration rebase (0721ad4 -> a760cf7) after PH-240 merged: docs/verification.md conflict resolved by keeping all main entries and appending the PH-247 entry; manifest.active_handoff -> PH-247; tasks.json auto-merged with PH-240 done retained. PH-249 dependency note updated in the verification entry (PH-240 done now on main; readiness flip belongs to PH-248)."
   ],
   "unverified": [
     "No product code, migration, runtime service, browser, PostgreSQL or CI evidence exists for PH-249/PH-250/PH-251/PH-252/PH-253; they are frozen planning contracts only.",
