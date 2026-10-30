@@ -34,8 +34,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base a4584d1 --task PH-291",
-      "result": "not_run",
-      "evidence": "Entry will be replaced after the independent review pass. Pre-review run is expected to fail only on high_risk_review_required; all six BASE acceptance commands now have passing declarations. Actual output recorded in deviations after the run."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD fc244d7: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"fc244d7719698fc4c64b94add4e9b26eecf467f7\",\"count\":14,\"errors\":null}, exit 0; all 14 changed files inside BASE PH-291 allowed_paths (including the canonical domain_metadata.py) and review.status=pass with the reviewer's name."
     }
   ],
   "review": {
