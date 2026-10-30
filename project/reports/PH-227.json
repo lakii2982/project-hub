@@ -28,7 +28,11 @@
   "deviations": [
     "PH-228 is a deliberately narrow first slice of PH-169: it records real bank facts and party matches but performs no ledger posting, classification, allocation, clearing, refund, correction, transfer, file import or opening balance. Those remain for later slices and are listed as unverified/non-goals.",
     "PH-228 dependencies are the done AR slices (PH-214/PH-219/PH-222/PH-224), not the still-proposed PH-169/PH-156/PH-157 entries, because the slice only needs contract/payment/AR facts and core periods; the remaining PH-169 scope is tracked by later planning.",
-    "No canonical AccountingEvent/LedgerPosting is written in this slice; cash book bridging must be planned separately to avoid inventing a second cash balance."
+    "No canonical AccountingEvent/LedgerPosting is written in this slice; cash book bridging must be planned separately to avoid inventing a second cash balance.",
+    "cash plugin manifest is frozen with requires={} and default_enabled=True: Counterparty/Employee are read through named contracts interfaces and writes reject when contracts is disabled, so no new plugin dependency edge is added and the existing test disable order (PH-226) stays valid.",
+    "FundingAccount.opening_on is fixed at draft creation with opening_cents=0; drafts are not projected as canonical FundingAccount entities, and canonical projection/opening balance remain for a later slice.",
+    "Generic audit() still produces non-canonical DomainEvents; the spec freezes that no registered canonical cash event (cash.transaction_recorded etc.) is written and no registry entry is added.",
+    "party.match payload is frozen as identify (no reason, reason=null) and reverse (reason + match_ref); locking rule is deterministic: transaction_date <= org.locked_through or a closed period rejects."
   ],
   "unverified": [
     "No product code, migration, tests, browser, PostgreSQL or CI evidence exists for PH-228 yet.",
