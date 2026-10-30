@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "After review pass: ok=true, task_count=153 (PH-229 done, PH-230/PH-231 ready, dependencies done)."
+      "evidence": "Post-review actual rerun at HEAD a1b5b06: ok=true, task_count=153 (PH-229 done, PH-230/PH-231 ready, dependencies done)."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -15,7 +15,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 35e0a25 --task PH-229",
       "result": "pass",
-      "evidence": "Post-review actual rerun: ok=true, all changed files inside BASE allowed_paths."
+      "evidence": "Post-review actual rerun at HEAD a1b5b06 against base 35e0a25: ok=true, 8 changed files all inside BASE allowed_paths, no errors."
     }
   ],
   "review": {
