@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD (BASE a4584d1): ok=true, task_count=220 (PH-294 done, PH-283 done with owner/handoff); no path/acceptance schema issues."
+      "evidence": "Final Lead integration rerun after rebase onto e329727: {\"command\":\"check\",\"ok\":true,\"task_count\":220} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -33,9 +33,9 @@
       "evidence": "Actual exit 0: Ran 14 tests, OK => 14 passed (10 service + 4 HTTP). Covers golden clearance+refund remaining (gross - cleared - refunded/returned), no false issue without clearance, append-only INSERT over-clearance, duplicate active clearance by canonical (open item, cash fact) identity including different amount/date, missing cash reference, as_of filtering, role/managed-project permissions, read-only fact counts, settlement-module-disabled history read and history_read GET 200/POST 405, and derived-field semantics."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base a4584d1 --task PH-283",
+      "command": "python scripts/projectctl.py verify-change --base e329727 --task PH-283",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=a4584d1, 13 changed files all inside the PH-283 allowed_paths, no path_out_of_scope/report-shape errors; assertion_scope=declaration_only. The report review block is the independent reviewer's round-2 PASS at 3d130bc."
+      "evidence": "Final Lead integration rerun after rebase onto e329727 (PH-276 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 changed files all inside BASE PH-283 allowed_paths."
     }
   ],
   "review": {
@@ -58,7 +58,8 @@
     "remaining is server-derived as gross - active cleared - offset(0) - refunded/returned coverage (summary and per-item share the formula); remaining_mismatch adjusts the model's refund-agnostic remaining_cents by subtracting refunded/returned before comparing with the new derived value, so a refund does not create a false mismatch. The duplicate_active branch uses the canonical (open item, cash fact) identity, so a second active clearance with a different amount or occurred_on is still reported; both counterexamples are append-only INSERTs.",
     "The read path writes no generic audit (the spec made it optional), keeping the snapshot side-effect free; no verify_integrity assertion is changed or added.",
     "Single worker owns the whole write set (settlement coverage service/views/template/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending.",
-    "Reviewer round-1 fixes: remaining now deducts refunded/returned coverage (gold test updated to gross - cleared - refunded/returned), and clearance_duplicate_active keys on the canonical (open_item, cash_transaction) identity instead of (amount, occurred_on), with an added different-amount/date append-only counterexample."
+    "Reviewer round-1 fixes: remaining now deducts refunded/returned coverage (gold test updated to gross - cleared - refunded/returned), and clearance_duplicate_active keys on the canonical (open_item, cash_transaction) identity instead of (amount, occurred_on), with an added different-amount/date append-only counterexample.",
+    "Lead integration rebase (a4584d1 -> e329727) after PH-276 merged: docs/verification.md conflict resolved keeping main entries plus the PH-283 entry; manifest.active_handoff -> PH-283. Gates rerun green."
   ],
   "unverified": [
     "No browser 1440/390 check was run; the coverage snapshot/issues UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
