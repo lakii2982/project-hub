@@ -21,6 +21,8 @@ Python 3.12+，依赖固定在 requirements.txt。交付前实际运行并通过
 .venv/bin/python manage.py verify_integrity --json
 ```
 
+开发过程中的快速反馈用作用域测试：`python manage.py test tests.test_<对应模块> --parallel`，只跑本次改动涉及的模块；全量套件在交付收尾实际运行一次、作为报告证据即可，PR 由 CI 对每次提交再跑全量，不需要本地反复跑全量。
+
 涉及 MCP 适配器时另跑 integrations/mcp 的独立测试与 stdio 握手。SQLite 通过不代表生产并发正确；并发与生产口径需要 PostgreSQL 验证。
 
 ## 提交与 PR

@@ -6724,7 +6724,7 @@
       "title": "文档收尾：失效链接修复与作用域测试指引",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -6750,7 +6750,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-237.md"
     },
     {
       "id": "PH-238",

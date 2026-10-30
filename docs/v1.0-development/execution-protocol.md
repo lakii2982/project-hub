@@ -1,6 +1,6 @@
 # 1.0 长程任务执行协议（设计）
 
-依托[生命周期](../engineering/lifecycle.md)、[代理协议](../engineering/agent-protocol.md)、[失败恢复](../engineering/recovery.md)、[现有执行器](../engineering/local-team.md)与[交付门禁](../engineering/ai-delivery-delivery.md)。这些是既有约束，本文件只补1.0的执行安排，不改变其权限或实现。
+依托[生命周期](../engineering/lifecycle.md)、[代理协议](../engineering/agent-protocol.md)、[失败恢复](../engineering/recovery.md)、[现有执行器](../engineering/local-team.md)与[交付门禁](../engineering/archive/ai-delivery-delivery.md)。这些是既有约束，本文件只补1.0的执行安排，不改变其权限或实现。
 
 ## 1. 权威来源与授权范围
 

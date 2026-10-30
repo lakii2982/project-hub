@@ -1,0 +1,50 @@
+{
+  "task_id": "PH-237",
+  "summary": "Docs closeout per PH-236 registration (PR #130): the two stale ai-delivery-* links left by PH-234 now point into docs/engineering/archive/ (ROADMAP.md and docs/v1.0-development/execution-protocol.md, each the only change in its file, target files verified to exist); CONTRIBUTING.md's 环境与验收 section gains one paragraph of scoped-test guidance (module-scoped parallel runs during development, one full-suite run at delivery as report evidence, CI runs the full suite per PR) without touching the four acceptance commands or any delivery requirement. Archive history entries keep their old-path mentions by the append-only rule. Slice rebased onto the corrected PH-236 line after PR #130 landed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run at this HEAD after review pass and evidence finalization: ok=true, task_count=160, PH-237 done with handoff and report."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: 23 tests OK; no test files touched. Independently rerun by the reviewer during the dual-slice review."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 5ee8af1 --task PH-237",
+      "result": "pass",
+      "evidence": "Actual run after the rebase onto merged main (5ee8af1): ok=true, 8 changed files all inside BASE allowed_paths, report validated; rerun green at the final evidence-only amend."
+    },
+    {
+      "command": "python manage.py test tests.test_projectctl --parallel",
+      "result": "pass",
+      "evidence": "Actual scoped run as self-evidence of the new guidance: 19 tests OK standalone (also run independently by the reviewer)."
+    },
+    {
+      "command": "byte-measure: manifest+tasks.json+handoff+delivery-status (BASE) vs orient+brief+head (final)",
+      "result": "pass",
+      "evidence": "Actual rerun at this HEAD with a green check, against the pre-PH-234 opening baseline (7605fa9: manifest 663 + tasks.json 217565 + active handoff 1903 + delivery-status 61218 = 281349 bytes): new path (orient 3035 + brief PH-232 1893 + delivery-status head 1996 + PH-232 spec 8448) = 15360 bytes, a 94.5% reduction; consistent with the 281KB→15KB (-94.6%) figure quoted in the delivery-status-archive PH-237 entry, now backed by reproducible numbers."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-236/PH-237 reviewer (fresh context, read-only; single round)",
+    "status": "pass",
+    "findings": [
+      "Content PASS on all six PH-237 dimensions: each link fix is the single change in its file with archive targets present; CONTRIBUTING adds exactly one paragraph with the acceptance commands and the rest of the section byte-identical; archive history untouched; all changed files inside the BASE whitelist; tasks.json change limited to PH-237 status/handoff (risk S already correct in the base line); governance suite and scoped tests rerun green.",
+      "Integration findings from the review, all closed before this final commit: (1) slice rebased onto the corrected PH-236 line merged via PR #130 so the merged report/handoff of PH-236 are carried, not the pre-correction copies; (2) review section finalized as required=true with this pass; (3) the 281KB→15KB figure now carries reproducible measurement evidence in tests[4]; (4) the verification.md PH-236 entry keeps the risk-S correction from PR #130."
+    ],
+    "evidence": "Reviewer inspected both worktrees, diffed each changed file, reran the governance suite and scoped tests, swept the repo for remaining stale links (only protected history keeps old paths), and verified whitelist coverage; its dual-slice verdict was PASS with mechanical integration items, all applied here."
+  },
+  "deviations": [
+    "PH-237 was originally registered at risk A in this session's first pass and corrected to S (tasks.json is a projectctl CRITICAL_PATHS member) before merge of PH-236; this slice was implemented and reviewed under the corrected S contract, including an independent S review.",
+    "The scoped-test guidance names `--parallel` as the suggested mechanism, which the PH-236 spec did not spell out; it weakens nothing and matches existing Django test options.",
+    "The slice was rebased after PR #130 merged; the verification.md PH-237 entry cites the true baseline 5ee8af1 instead of the pre-merge planning head."
+  ],
+  "unverified": [
+    "Full product suite not run locally (docs-only slice); CI required checks cover it on this PR.",
+    "Wall-clock savings of the efficiency round remain unmeasured by design: they require real-usage statistics and will be recorded with a future task's report when data exists."
+  ]
+}
