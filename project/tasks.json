@@ -7324,6 +7324,7 @@
         "pmo_plugins/costing/models.py",
         "pmo_plugins/costing/bank_charge_services.py",
         "pmo_plugins/costing/domain_metadata.py",
+        "pmo_plugins/costing/migrations/*.py",
         "pmo_plugins/cash/transaction_services.py",
         "core/services.py",
         "core/management/commands/verify_integrity.py",
