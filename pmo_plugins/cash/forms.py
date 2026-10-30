@@ -242,3 +242,48 @@ class CashClassificationListFilterForm(forms.Form):
         self.fields['funding_account'].choices = [('', '全部账户')] + list(accounts or [])
         for field in self.fields.values():
             field.widget.attrs.setdefault('class', 'form-control')
+
+
+class InternalTransferForm(StrictForm):
+    out_cash = forms.ChoiceField(label='转出现金流水（direction=out）', choices=())
+    in_cash = forms.ChoiceField(label='转入现金流水（direction=in）', choices=())
+    evidence = forms.CharField(label='互转依据', max_length=500,
+                               widget=forms.Textarea(attrs={'rows': 2}))
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, out_candidates=None, in_candidates=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['out_cash'].choices = [('', '请选择转出现金')] + list(out_candidates or [])
+        self.fields['in_cash'].choices = [('', '请选择转入现金')] + list(in_candidates or [])
+
+    def clean(self):
+        data = super().clean()
+        if not data.get('out_cash'):
+            self.add_error('out_cash', '请选择转出现金流水')
+        if not data.get('in_cash'):
+            self.add_error('in_cash', '请选择转入现金流水')
+        if data.get('out_cash') and data.get('out_cash') == data.get('in_cash'):
+            self.add_error('in_cash', '转出与转入不能是同一条现金流水')
+        return data
+
+
+class ReverseInternalTransferForm(StrictForm):
+    transfer_id = forms.UUIDField(widget=forms.HiddenInput)
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    reason = forms.CharField(label='撤转原因', max_length=1000, widget=forms.Textarea)
+    evidence = forms.CharField(label='撤转依据', max_length=500,
+                               widget=forms.Textarea(attrs={'rows': 2}))
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
+class InternalTransferListFilterForm(forms.Form):
+    funding_account = forms.ChoiceField(label='银行账户', required=False, choices=())
+    status = forms.ChoiceField(label='状态', required=False,
+                               choices=[('', '全部状态'), ('active', '有效'),
+                                        ('reversed', '已撤转')])
+
+    def __init__(self, *args, accounts=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['funding_account'].choices = [('', '全部账户')] + list(accounts or [])
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', 'form-control')

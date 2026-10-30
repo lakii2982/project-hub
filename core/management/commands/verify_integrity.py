@@ -721,6 +721,214 @@ class Command(BaseCommand):
                 if cash_id in cleared_by_cash:
                     errors.append(f"cash_transaction:{cash_id}:advance_cash_cleared")
 
+        # ----- PH-245 internal transfers: append-only pair of out/in cash legs, both legs carry
+        # exactly one internal transfer classification plus canonical classification events, the
+        # linked event has no posting refs, and reversal appends two classification reversals and
+        # one reversal fact with the canonical reversed event. No ledger/accounting write beyond
+        # the PH-239 bridge, no cost/revenue/open-item rows.
+        from pmo_plugins.cash.models import (InternalTransfer as _Transfer,
+                                             InternalTransferReversal as _TransferReversal)
+        transfer_rows = list(_Transfer.objects.values(
+            'pk', 'organization_id', 'out_cash_transaction_id', 'in_cash_transaction_id',
+            'out_cash_ref', 'in_cash_ref', 'transfer_date', 'gross_cents',
+            'out_transaction_date', 'in_transaction_date', 'status', 'version'))
+        if transfer_rows:
+            from pmo_plugins.cash.models import CashTransaction as _TransferCash
+            transfer_cash_ids = {str(row['out_cash_transaction_id']) for row in transfer_rows}
+            transfer_cash_ids |= {str(row['in_cash_transaction_id']) for row in transfer_rows}
+            transfer_cash = {str(row['pk']): row for row in _TransferCash.objects.filter(
+                pk__in=transfer_cash_ids).values(
+                'pk', 'organization_id', 'status', 'direction', 'gross_cents',
+                'transaction_date', 'funding_account_id')}
+            transfer_org_ids = {row['organization_id'] for row in transfer_rows}
+            transfer_classifications = list(CashClassification.objects.filter(
+                organization_id__in=transfer_org_ids,
+                classification='transfer').values(
+                'pk', 'organization_id', 'cash_transaction_id', 'status', 'version'))
+            transfer_class_by_cash = {}
+            for row in transfer_classifications:
+                transfer_class_by_cash.setdefault(
+                    str(row['cash_transaction_id']), []).append(row)
+            transfer_class_by_pk = {str(row['pk']): row for row in transfer_classifications}
+            classification_reversals = list(CashClassificationReversal.objects.filter(
+                organization_id__in=transfer_org_ids).values(
+                'pk', 'organization_id', 'classification_id', 'cash_transaction_id'))
+            reversal_by_classification = {}
+            for row in classification_reversals:
+                reversal_by_classification.setdefault(
+                    str(row['classification_id']), []).append(row)
+            transfer_reversals = list(_TransferReversal.objects.filter(
+                organization_id__in=transfer_org_ids).values(
+                'pk', 'organization_id', 'internal_transfer_id', 'internal_transfer_ref',
+                'out_classification_reversal_ref', 'in_classification_reversal_ref',
+                'occurred_on', 'posting_period', 'status', 'version'))
+            reversal_by_transfer = {}
+            for row in transfer_reversals:
+                reversal_by_transfer.setdefault(
+                    str(row['internal_transfer_id']), []).append(row)
+            linked_events = {}
+            for event in _CashDomainEvent.objects.filter(
+                    topic='cash.internal_transfer_linked.v1').values('data'):
+                data = event['data'] or {}
+                linked_events.setdefault(str((data.get('source') or {}).get('id')),
+                                         []).append(data)
+            reversed_transfer_events = {}
+            for event in _CashDomainEvent.objects.filter(
+                    topic='cash.internal_transfer_reversed.v1').values('data'):
+                data = event['data'] or {}
+                reversed_transfer_events.setdefault(
+                    str((data.get('source') or {}).get('id')), []).append(data)
+            transfer_class_ids = {str(row['pk']) for row in transfer_classifications}
+            transfer_accounting_events = {}
+            for event in AccountingEvent.objects.filter(
+                    source__namespace='cash', source__kind='cash_classification',
+                    source__id__in=transfer_class_ids).values(
+                    'id', 'source', 'event_type', 'claim_effect_cents', 'posting_period'):
+                transfer_accounting_events.setdefault(
+                    str((event['source'] or {}).get('id')), []).append(event)
+            transfer_postings = {}
+            for posting in LedgerPosting.objects.filter(
+                    accounting_event__source__namespace='cash',
+                    accounting_event__source__kind='cash_classification',
+                    accounting_event__source__id__in=transfer_class_ids).values(
+                    'accounting_event__source__id', 'book', 'amount_cents', 'scope_kind',
+                    'scope_id'):
+                transfer_postings.setdefault(
+                    str(posting['accounting_event__source__id']), []).append(posting)
+            active_cash_ids = set()
+            for row in transfer_rows:
+                label = f"internal_transfer:{row['pk']}"
+                out_cash = transfer_cash.get(str(row['out_cash_transaction_id']))
+                in_cash = transfer_cash.get(str(row['in_cash_transaction_id']))
+                if out_cash is None or in_cash is None:
+                    errors.append(f"{label}:missing_cash")
+                    continue
+                if (out_cash['organization_id'] != row['organization_id']
+                        or in_cash['organization_id'] != row['organization_id']):
+                    errors.append(f"{label}:cash_org")
+                if out_cash['status'] != 'posted' or in_cash['status'] != 'posted':
+                    errors.append(f"{label}:cash_state")
+                if out_cash['direction'] != 'out' or in_cash['direction'] != 'in':
+                    errors.append(f"{label}:cash_direction")
+                if (out_cash['funding_account_id'] == in_cash['funding_account_id']
+                        or out_cash['gross_cents'] != in_cash['gross_cents']
+                        or out_cash['gross_cents'] != row['gross_cents']
+                        or out_cash['transaction_date'] != in_cash['transaction_date']
+                        or out_cash['transaction_date'] != row['transfer_date']
+                        or out_cash['transaction_date'] != row['out_transaction_date']
+                        or in_cash['transaction_date'] != row['in_transaction_date']):
+                    errors.append(f"{label}:pair_mismatch")
+                if row['status'] not in {'active', 'reversed'}:
+                    errors.append(f"{label}:status")
+                if row['status'] == 'active':
+                    if str(row['out_cash_transaction_id']) in active_cash_ids:
+                        errors.append(f"{label}:duplicate_active")
+                    active_cash_ids.add(str(row['out_cash_transaction_id']))
+                    active_cash_ids.add(str(row['in_cash_transaction_id']))
+                    for direction, cash_id in (('out', row['out_cash_transaction_id']),
+                                               ('in', row['in_cash_transaction_id'])):
+                        rows = [item for item in transfer_class_by_cash.get(
+                            str(cash_id), []) if item['status'] == 'active']
+                        if len(rows) != 1:
+                            errors.append(f"{label}:{direction}_classification")
+                    linked = linked_events.get(str(row['pk']), [])
+                    if len(linked) != 1:
+                        errors.append(f"{label}:linked_event_count")
+                    else:
+                        data = linked[0]
+                        payload = data.get('payload') or {}
+                        refs = payload.get('changed_refs') or []
+                        out_classes = [item for item in transfer_class_by_cash.get(
+                            str(row['out_cash_transaction_id']), [])
+                            if item['status'] == 'active']
+                        in_classes = [item for item in transfer_class_by_cash.get(
+                            str(row['in_cash_transaction_id']), [])
+                            if item['status'] == 'active']
+                        expected = [{'namespace': 'cash', 'kind': 'internal_transfer',
+                                     'id': str(row['pk']), 'version': row['version']}]
+                        if out_classes and in_classes:
+                            expected += [
+                                {'namespace': 'cash', 'kind': 'cash_classification',
+                                 'id': str(out_classes[0]['pk']),
+                                 'version': out_classes[0]['version']},
+                                {'namespace': 'cash', 'kind': 'cash_classification',
+                                 'id': str(in_classes[0]['pk']),
+                                 'version': in_classes[0]['version']}]
+                        if (data.get('topic') != 'cash.internal_transfer_linked.v1'
+                                or data.get('schema_version') != 1
+                                or payload.get('posting_event_refs') != []
+                                or refs != expected):
+                            errors.append(f"{label}:linked_event_envelope")
+                    for direction, cash_id, book, amount in (
+                            ('out', row['out_cash_transaction_id'], 'cash_out',
+                             row['gross_cents']),
+                            ('in', row['in_cash_transaction_id'], 'cash_in',
+                             row['gross_cents'])):
+                        rows = [item for item in transfer_class_by_cash.get(
+                            str(cash_id), []) if item['status'] == 'active']
+                        if not rows:
+                            continue
+                        class_id = str(rows[0]['pk'])
+                        events = transfer_accounting_events.get(class_id, [])
+                        if len(events) != 1 or events[0]['event_type'] != 'cash.classification':
+                            errors.append(f"{label}:{direction}_accounting_event")
+                        postings = transfer_postings.get(class_id, [])
+                        if (len(postings) != 1 or postings[0]['book'] != book
+                                or postings[0]['amount_cents'] != amount
+                                or postings[0]['scope_kind'] != 'funding_account'
+                                or postings[0]['scope_id'] != str(
+                                    out_cash['funding_account_id'] if direction == 'out'
+                                    else in_cash['funding_account_id'])):
+                            errors.append(f"{label}:{direction}_posting")
+                    out_classes = [item for item in transfer_class_by_cash.get(
+                        str(row['out_cash_transaction_id']), [])
+                        if item['status'] == 'active']
+                    in_classes = [item for item in transfer_class_by_cash.get(
+                        str(row['in_cash_transaction_id']), [])
+                        if item['status'] == 'active']
+                    if out_classes and in_classes:
+                        out_postings = transfer_postings.get(str(out_classes[0]['pk']), [])
+                        in_postings = transfer_postings.get(str(in_classes[0]['pk']), [])
+                        net = (sum(item['amount_cents'] for item in in_postings)
+                               - sum(item['amount_cents'] for item in out_postings))
+                        if net != 0:
+                            errors.append(f"{label}:company_net")
+                else:
+                    reversals = reversal_by_transfer.get(str(row['pk']), [])
+                    if len(reversals) != 1:
+                        errors.append(f"{label}:reversal_count")
+                        continue
+                    reversal = reversals[0]
+                    if (reversal['organization_id'] != row['organization_id']
+                            or reversal['status'] != 'posted'):
+                        errors.append(f"{label}:reversal_shape")
+                    reversed_events = reversed_transfer_events.get(
+                        str(reversal['pk']), [])
+                    if len(reversed_events) != 1:
+                        errors.append(f"{label}:reversed_event_count")
+                    else:
+                        data = reversed_events[0]
+                        payload = data.get('payload') or {}
+                        refs = payload.get('changed_refs') or []
+                        if (data.get('topic') != 'cash.internal_transfer_reversed.v1'
+                                or data.get('schema_version') != 1
+                                or payload.get('posting_event_refs') != []
+                                or len(refs) != 3
+                                or len(payload.get('classification_reversal_refs') or []) != 2
+                                or (payload.get('original_internal_transfer_ref') or {}).get(
+                                    'id') != str(row['pk'])):
+                            errors.append(f"{label}:reversed_event_envelope")
+                    for direction, cash_id in (('out', row['out_cash_transaction_id']),
+                                               ('in', row['in_cash_transaction_id'])):
+                        classes = transfer_class_by_cash.get(str(cash_id), [])
+                        if any(item['status'] == 'active' for item in classes):
+                            errors.append(f"{label}:{direction}_active_after_reverse")
+                        reversed_classes = [item for item in classes
+                                            if item['status'] == 'reversed']
+                        for item in reversed_classes:
+                            if len(reversal_by_classification.get(
+                                    str(item['pk']), [])) != 1:
+                                errors.append(f"{label}:{direction}_reversal_row")
         # ----- PH-253 bank-fee drafts: one draft fact per posted incoming cash, exact saved-event
         # history per version, and (once PH-250 lands) exactly one conditional cost fact set.
         from pmo_plugins.costing.models import (BankCharge as _BankCharge,

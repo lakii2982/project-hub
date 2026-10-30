@@ -27,3 +27,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## PH-241 预收/预付抵扣 Offset 首片（2026-10-31）
 
 在PH-239 advance分类与PH-232未清核销之上实现预收抵扣闭环：owner/finance选择同企业/同往来方、已过账且有效advance分类的客户预收现金，部分抵扣active应收OpenItem；append-only Offset事实（settlement 0005），支持同一对多次部分抵扣，余额由服务端按advance可用额与OpenItem剩余额派生；无Offset撤销、无canonical事件、无账本/会计事件/收入/成本/应收应付写。按Lead裁决方案a修正PH-232服务行为：advance可用扣active cleared+offsets、核销候选/上限排除advance分类现金、同一现金不可同时clearance+offset；verify_integrity新增offset分支且不加全局禁令。未验证：PG并发（CI）、浏览器1440/390、独立复核、生产/UAT；PH-232 spec文字待PH-249同步。见`docs/verification.md`与`project/reports/PH-241.json`。
+
+## PH-245 内部账户互转首片（2026-10-31）
+
+在PH-239分类桥接之上实现内部账户互转：同企业、反方向、同额、同日的两条已过账现金成对关联为append-only InternalTransfer（cash 0006），经PH-239非路由内部服务为两腿各写一条transfer分类与cash_out/cash_in posting（funding_account scope），公司净现金恒为零；撤转append-only追加两条撤分类+冲销posting、InternalTransferReversal与canonical reversed事件；Unique(out/in_cash_transaction)无条件终身一次；两腿不同request_token；服务层先owner/finance fresh校验；canonical linked/reversed的posting_event_refs为0/0、changed_refs恰3、classification_reversal_refs=2；verify_integrity新增internal_transfer分支（批量、无全局禁令）。无新增canonical topic、无公开transfer通道；不做手续费/Offset/退款/更正/导入/期初，不写成本/收入/应收/应付/未清。未验证：PG并发（CI）、浏览器1440/390、独立复核、生产/UAT。见`docs/verification.md`与`project/reports/PH-245.json`。
