@@ -8,7 +8,7 @@
 {% else %}
 <section class="panel"><div class="body"><p class="notice">{{ explanation }}</p>{% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
 <dl class="detail-grid"><div><dt>项目</dt><dd>{{ line_snapshot.project }}</dd></div><div><dt>合同明细</dt><dd>{{ line_snapshot.contract_line }}</dd></div><div><dt>客户</dt><dd>{{ line_snapshot.counterparty }}</dd></div><div><dt>批准含税 / 净额 / 税额（元）</dt><dd>{{ line_snapshot.gross_display }} / {{ line_snapshot.net_display }} / {{ line_snapshot.tax_display }}</dd></div><div><dt>已确认履约净额（元）</dt><dd>{{ confirmed_net_display }}</dd></div><div><dt>已结算净额 / 本次可结算净额（元）</dt><dd>{{ settled_net_display }} / {{ remaining_net_display }}</dd></div></dl>
-<details class="trace"><summary>履约来源汇总（只读）</summary>{% for source in sources %}<p>{{ source.kind }} · {{ source.ref }} · 版本 {{ source.version }} · 净额 {{ source.net_display }} 元 · 确认日 {{ source.confirmed_on }}</p>{% empty %}<p>尚无真实已确认履约；未达实质条件只能保存草稿。</p>{% endfor %}</details>
+<details class="trace"><summary>履约来源汇总（只读）</summary>{% for source in sources %}<p>{{ source.kind }} · {{ source.ref.namespace }} · {{ source.ref.kind }} · {{ source.ref.id }} · v{{ source.ref.version }} · 净额 {{ source.net_display }} 元 · 确认日 {{ source.confirmed_on }}</p>{% empty %}<p>尚无真实已确认履约；未达实质条件只能保存草稿。</p>{% endfor %}</details>
 <form method="post" action="{{ submit_url }}">{% csrf_token %}
 {{ form.line.as_hidden }}{{ form.settlement_id }}{{ form.expected_version }}{{ form.request_token }}
 {% if form.line.errors %}<div class="message error" role="alert">{{ form.line.errors }}</div>{% endif %}

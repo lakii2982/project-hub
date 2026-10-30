@@ -29,6 +29,16 @@ ACTIONS = {'submit': ('提交独立审核', ActionForm),
 TERM_KIND_LABELS = {'due': '到期款', 'retention': '质保款'}
 
 
+def _partition_kind(term):
+    """Term snapshots use due/retention; raw contract refs use payment_term/warranty_term."""
+    kind = term.get('kind')
+    if kind in ('due', 'retention'):
+        return kind
+    if kind in ('payment_term', 'warranty_term'):
+        return 'due' if kind == 'payment_term' else 'retention'
+    return 'due' if (term.get('term_ref') or {}).get('kind') == 'payment_term' else 'retention'
+
+
 def _url(page, **query):
     return get_script_prefix() + 'modules/settlement/' + page.replace('_', '-') + '/' + (
         '?' + urlencode({key: value for key, value in query.items() if value is not None})
@@ -100,7 +110,7 @@ def _line_context(member, snapshot):
             'gross_display': _money(term['gross_cents']),
             'due_display': term.get('due_date') or '',
             'release_condition': term.get('release_condition') or '',
-            'used': ('term:' + term['term_ref']['kind'] + ':' + term['id']) in used,
+            'used': ('term:' + _partition_kind(term) + ':' + term['id']) in used,
         })
     sources = [{'kind': item['kind'], 'ref': item['ref'], 'version': item['version'],
                 'net_display': _money(item['net_cents']), 'confirmed_on': item['confirmed_on']}
@@ -169,8 +179,9 @@ def settlement_list(context, payload):
                   _base(member, rows=result, filter_form=filter_form))
 
 
-def _render_form(context, member, *, snapshot, form, title, status=200):
-    context_values = _line_context(member, snapshot)
+def _render_form(context, member, *, snapshot, form, title, status=200, context_values=None):
+    # Reuse the caller's computed context so pre-checked terms survive the render.
+    context_values = context_values or _line_context(member, snapshot)
     values = _base(
         member, chooser=False, form=form, title=title,
         explanation=('按批准条款行组合结算：只能选择完整、未使用的条款行；金额与到期日由服务端按批准'
@@ -216,7 +227,7 @@ def settlement_form(context, payload):
     selected = set()
     initial = {}
     if row is not None:
-        selected = {('due' if term['kind'] == 'payment_term' else 'retention') + ':' + term['id']
+        selected = {_partition_kind(term) + ':' + term['id']
                     for term in (row['terms_snapshot'] or {}).get('selected', [])}
         initial = {'settlement_id': row['id'], 'expected_version': row['version'],
                    'settled_on': row['settled_on']}
@@ -229,7 +240,8 @@ def settlement_form(context, payload):
                           term_choices=term_choices(context_values['terms']))
     form.fields['line'].initial = str(line_id)
     return _render_form(context, member, snapshot=snapshot, form=form,
-                        title='修改结算草稿' if row else '登记客户结算')
+                        title='修改结算草稿' if row else '登记客户结算',
+                        context_values=context_values)
 
 
 def settlement_save(context, payload):
@@ -264,7 +276,7 @@ def settlement_save(context, payload):
         term['checked'] = term['key'] in posted
     return _render_form(context, member, snapshot=snapshot, form=form,
                         title='修改结算草稿' if payload.get('settlement_id') else '登记客户结算',
-                        status=400)
+                        status=400, context_values=context_values)
 
 
 def settlement_detail(context, payload):
@@ -273,7 +285,7 @@ def settlement_detail(context, payload):
     row = snapshot['settlement']
     selected = (snapshot['terms_snapshot'] or {}).get('selected') or []
     terms = [{'kind_label': TERM_KIND_LABELS.get(
-                  'due' if term['kind'] == 'payment_term' else 'retention', term['kind']),
+                  _partition_kind(term), term.get('kind')),
               'id': term['id'], 'condition_type': term['condition_type'],
               'release_condition': term.get('release_condition') or '',
               'due_display': term.get('due_date') or '',

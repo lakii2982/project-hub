@@ -220,6 +220,14 @@ class SettlementHTTPTests(SettlementHTTPFixture, TestCase):
         second = Settlement.objects.exclude(pk=row.pk).get()
         self.assertEqual((second.gross_cents, second.net_cents, second.tax_cents),
                          (53000, 50000, 3000))
+        # Editing a draft must pre-check the terms already selected (due/retention vs raw kind regression).
+        edit = self.client.get(FORM, {'id': second.pk})
+        self.assertEqual(edit.status_code, 200)
+        for term in second.terms_snapshot['selected']:
+            kind = term.get('kind') if term.get('kind') in ('due', 'retention') else (
+                'due' if (term.get('term_ref') or {}).get('kind') == 'payment_term' else 'retention')
+            expected = f'value="{kind}:{term["id"]}" checked'
+            self.assertIn(expected, edit.content.decode('utf-8'))
         self.assertEqual(self.action(self.owner, second, 'submit').status_code, 302)
         second.refresh_from_db()
         self.assertEqual(self.action(self.finance, second, 'review', decision='approve',
