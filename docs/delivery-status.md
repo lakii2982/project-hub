@@ -15,3 +15,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## 交付效率改造（2026-10-30 起）
 
 会话开场 `projectctl orient`、任务上下文 `brief <id>`、报告起草 `draft-report <id>`；本文件、`project/tasks.json`、`docs/v1.0-development/work-packages.json` 禁止整文件读入。量化基线与复测口径见归档 PH-233 条目。
+
+## PH-240 退款与银行退回（2026-10-30）
+
+在PH-230已过账现金与PH-232核销覆盖之上实现“原现金覆盖内真实退款/银行退回”：可退额=posted gross−active核销−active退款−active退回（服务端派生、非负），退款生成反方向posted支出与Refund事实+`cash.refunded.v1`，银行退回按原方向取反生成新现金与BankReturn+`cash.returned.v1`，幂等收据与期间/锁期校验；新现金沿用PH-230过账事件/收据不变式。覆盖对称化：settlement新增只读clearance_coverage_for_cash，核销剩余与现金候选可用额扣除退款/退回，保证cleared+refunded+returned≤gross（Lead裁定A；PH-232 spec文字未同步，PH-247登记小修）。明确不写账本/收入/成本/应收应付/未清，不做Offset/手续费/转账/更正/导入/期初；PH-171不解除。见`docs/verification.md`与`project/reports/PH-240.json`。

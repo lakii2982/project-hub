@@ -155,3 +155,59 @@ class CashTransactionListFilterForm(forms.Form):
         self.fields['funding_account'].choices = [('', '全部账户')] + list(accounts or [])
         for field in self.fields.values():
             field.widget.attrs.setdefault('class', 'form-control')
+
+class RefundForm(StrictForm):
+    original_cash_transaction_id = forms.UUIDField(widget=forms.HiddenInput)
+    refund_date = forms.DateField(label='退款日期', widget=forms.DateInput(attrs={'type': 'date'}))
+    amount = forms.DecimalField(label='退款金额（元）', max_digits=14, decimal_places=2,
+                                min_value=Decimal('0.01'),
+                                widget=forms.NumberInput(attrs={'step': '0.01',
+                                                                'inputmode': 'decimal'}))
+    reason = forms.CharField(label='退款原因', max_length=500, widget=forms.Textarea,
+                             help_text='1至500字，写明真实退款依据')
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound:
+            self.fields['refund_date'].initial = timezone.localdate()
+
+    def clean_refund_date(self):
+        value = self.cleaned_data['refund_date']
+        if value and value > timezone.localdate():
+            raise forms.ValidationError('退款日期不能在未来')
+        return value
+
+
+class BankReturnForm(StrictForm):
+    original_cash_transaction_id = forms.UUIDField(widget=forms.HiddenInput)
+    return_date = forms.DateField(label='银行退回日期',
+                                  widget=forms.DateInput(attrs={'type': 'date'}))
+    amount = forms.DecimalField(label='银行退回金额（元）', max_digits=14, decimal_places=2,
+                                min_value=Decimal('0.01'),
+                                widget=forms.NumberInput(attrs={'step': '0.01',
+                                                                'inputmode': 'decimal'}))
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound:
+            self.fields['return_date'].initial = timezone.localdate()
+
+    def clean_return_date(self):
+        value = self.cleaned_data['return_date']
+        if value and value > timezone.localdate():
+            raise forms.ValidationError('银行退回日期不能在未来')
+        return value
+
+
+class RefundListFilterForm(forms.Form):
+    funding_account = forms.ChoiceField(label='银行账户', required=False, choices=())
+    as_of = forms.DateField(label='截至日期', required=False,
+                            widget=forms.DateInput(attrs={'type': 'date'}))
+
+    def __init__(self, *args, accounts=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['funding_account'].choices = [('', '全部账户')] + list(accounts or [])
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', 'form-control')

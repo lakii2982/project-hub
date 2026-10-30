@@ -14,10 +14,12 @@ from core.models import Employee, Membership
 from core.plugin_runtime import is_enabled
 
 from . import transaction_services as tx
+from . import refund_services as refunds
 from . import funding_services as funding
-from .forms import (CashTransactionForm, CashTransactionListFilterForm,
+from .forms import (BankReturnForm, CashTransactionForm, CashTransactionListFilterForm,
                     FundingAccountForm, FundingAccountListFilterForm, IdentifyPartyForm,
-                    PostCashTransactionForm, ReversePartyForm, amount_cents)
+                    PostCashTransactionForm, RefundForm, RefundListFilterForm,
+                    ReversePartyForm, amount_cents)
 
 WRITE_ROLES = {'owner', 'finance'}
 READ_ROLES = {'owner', 'finance', 'auditor'}
@@ -303,6 +305,23 @@ def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None, 
     post_form = post_form or PostCashTransactionForm(
         initial={'transaction_id': snapshot['id'], 'expected_version': snapshot['version']})
     can_post = bool(snapshot.get('can_post', snapshot.get('status') == 'draft'))
+    coverage = None
+    refund_rows = []
+    return_rows = []
+    if snapshot['status'] == 'posted':
+        try:
+            coverage = refunds.cash_refund_coverage(member, snapshot['id'])
+        except (ValidationError, PermissionDenied):
+            coverage = None
+        refund_rows = [_refund_row_view(row) for row in refunds.refund_list(
+            member, original_cash_transaction_id=snapshot['id'])]
+        return_rows = [_return_row_view(row) for row in refunds.bank_return_list(
+            member, original_cash_transaction_id=snapshot['id'])]
+    provenance = refunds.provenance_for_cash(member, snapshot['id'])
+    can_refund = bool(member.role in WRITE_ROLES and snapshot['status'] == 'posted'
+                      and coverage and coverage['refundable_cents'] > 0)
+    refund_form = RefundForm(initial={'original_cash_transaction_id': snapshot['id']})
+    return_form = BankReturnForm(initial={'original_cash_transaction_id': snapshot['id']})
     return _base(
         member, 'transactions', transaction=snapshot, can_post=can_post,
         posted_display=(snapshot.get('posted_at') or '')[:16].replace('T', ' '),
@@ -316,6 +335,13 @@ def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None, 
         matches=matches, identify_form=identify_form, reverse_form=reverse_form,
         identify_url=_url('cash_party_match', id=snapshot['id'], action='identify'),
         reverse_url=_url('cash_party_match', id=snapshot['id'], action='reverse'),
+        coverage=coverage, refund_rows=refund_rows, return_rows=return_rows,
+        provenance=provenance, can_refund=can_refund,
+        refunds=refund_rows, bank_returns=return_rows,
+        refund_form=refund_form, return_form=return_form,
+        refund_form_url=_url('cash_refund_form', id=snapshot['id']),
+        return_form_url=_url('cash_bank_return_form', id=snapshot['id']),
+        refunds_url=_url('cash_refund_list'),
         back_url=_url('cash_transaction_list'))
 
 
@@ -410,3 +436,147 @@ def cash_party_match(context, payload):
                 return redirect(_url('cash_transaction_detail', id=snapshot['id']))
     return render(context.request, 'cash/cash_transaction_detail.html',
                   _detail_context(member, snapshot, reverse_form=form), status=400)
+
+
+# ---------- PH-240 refund / bank return ----------
+def _refund_row_view(row):
+    return {**row,
+            'created_display': str(row.get('created_at', ''))[:16].replace('T', ' '),
+            'original_url': _url('cash_transaction_detail',
+                                 id=row['original_cash_transaction_id']),
+            'cash_url': _url('cash_transaction_detail', id=row['refund_cash_transaction_id'])}
+
+
+def _return_row_view(row):
+    return {**row,
+            'created_display': str(row.get('created_at', ''))[:16].replace('T', ' '),
+            'original_url': _url('cash_transaction_detail',
+                                 id=row['original_cash_transaction_id']),
+            'cash_url': _url('cash_transaction_detail', id=row['return_cash_transaction_id'])}
+
+
+def cash_refund_list(context, payload):
+    member = _fresh(context.member)
+    account_options = _account_options(member)
+    filter_form = RefundListFilterForm(payload or None, accounts=account_options)
+    account_id = ''
+    as_of = None
+    if filter_form.is_valid():
+        account_id = filter_form.cleaned_data.get('funding_account') or ''
+        as_of = filter_form.cleaned_data.get('as_of')
+    refund_rows = refunds.refund_list(member, funding_account_id=account_id or None,
+                                      as_of=as_of)
+    return_rows = refunds.bank_return_list(member, funding_account_id=account_id or None,
+                                            as_of=as_of)
+    return render(context.request, 'cash/refund_list.html', _base(
+        member, 'refunds', refund_rows=[_refund_row_view(row) for row in refund_rows],
+        return_rows=[_return_row_view(row) for row in return_rows], filter_form=filter_form,
+        refunds_url=_url('cash_refund_list')))
+
+
+def cash_refund_form(context, payload):
+    member = _fresh(context.member, write=True)
+    original_id = context.request.GET.get('id')
+    if not original_id:
+        raise PermissionDenied('原现金流水不存在或无权访问')
+    snapshot = tx.cash_transaction_snapshot(member, original_id)
+    if snapshot['status'] != 'posted' or snapshot['direction'] != 'in':
+        raise PermissionDenied('仅已过账收入类现金可以退款')
+    coverage = refunds.cash_refund_coverage(member, snapshot['id'])
+    if coverage['refundable_cents'] <= 0:
+        raise PermissionDenied('该现金已无可退余额')
+    form = RefundForm(initial={'original_cash_transaction_id': snapshot['id']})
+    return render(context.request, 'cash/refund_form.html', _base(
+        member, 'refunds', transaction=snapshot, coverage=coverage, form=form,
+        submit_url=_url('cash_refund_save'),
+        back_url=_url('cash_transaction_detail', id=snapshot['id']),
+        refunds_url=_url('cash_refund_list'),
+        explanation='退款会生成一条真实的反方向已过账现金流水；可退额由服务端从核销/退款/退回派生，不接受调用方余额或证明。'))
+
+
+def cash_refund_save(context, payload):
+    member = _fresh(context.member, write=True)
+    form = RefundForm(payload)
+    snapshot = None
+    if form.is_valid():
+        data = form.cleaned_data
+        snapshot = tx.cash_transaction_snapshot(
+            member, data['original_cash_transaction_id'])
+        try:
+            refunds.record_refund(
+                member, original_cash_transaction_id=data['original_cash_transaction_id'],
+                refund_date=data['refund_date'], gross_cents=amount_cents(data['amount']),
+                reason=data['reason'], request_token=data['request_token'], dry_run=False)
+        except ValidationError as exc:
+            form.add_error(None, '；'.join(exc.messages))
+        else:
+            messages.success(context.request, '退款已登记并生成反方向现金流水')
+            return redirect(_url('cash_transaction_detail',
+                                 id=data['original_cash_transaction_id']))
+    if snapshot is None:
+        original_id = payload.get('original_cash_transaction_id')
+        if not original_id:
+            raise PermissionDenied('原现金流水不存在或无权访问')
+        snapshot = tx.cash_transaction_snapshot(member, original_id)
+    coverage = refunds.cash_refund_coverage(member, snapshot['id'])
+    return render(context.request, 'cash/refund_form.html', _base(
+        member, 'refunds', transaction=snapshot, coverage=coverage, form=form,
+        submit_url=_url('cash_refund_save'),
+        back_url=_url('cash_transaction_detail', id=snapshot['id']),
+        refunds_url=_url('cash_refund_list'),
+        explanation='退款会生成一条真实的反方向已过账现金流水；可退额由服务端从核销/退款/退回派生，不接受调用方余额或证明。'),
+        status=400)
+
+
+def cash_bank_return_form(context, payload):
+    member = _fresh(context.member, write=True)
+    original_id = context.request.GET.get('id')
+    if not original_id:
+        raise PermissionDenied('原现金流水不存在或无权访问')
+    snapshot = tx.cash_transaction_snapshot(member, original_id)
+    if snapshot['status'] != 'posted':
+        raise PermissionDenied('仅已过账现金可以登记银行退回')
+    coverage = refunds.cash_refund_coverage(member, snapshot['id'])
+    if coverage['refundable_cents'] <= 0:
+        raise PermissionDenied('该现金已无可退回余额')
+    form = BankReturnForm(initial={'original_cash_transaction_id': snapshot['id']})
+    return render(context.request, 'cash/bank_return_form.html', _base(
+        member, 'refunds', transaction=snapshot, coverage=coverage, form=form,
+        submit_url=_url('cash_bank_return_save'),
+        back_url=_url('cash_transaction_detail', id=snapshot['id']),
+        refunds_url=_url('cash_refund_list'),
+        explanation='银行退回按原方向取反生成新的已过账现金流水；可退回额与退款共用服务端派生覆盖。'))
+
+
+def cash_bank_return_save(context, payload):
+    member = _fresh(context.member, write=True)
+    form = BankReturnForm(payload)
+    snapshot = None
+    if form.is_valid():
+        data = form.cleaned_data
+        snapshot = tx.cash_transaction_snapshot(
+            member, data['original_cash_transaction_id'])
+        try:
+            refunds.record_bank_return(
+                member, original_cash_transaction_id=data['original_cash_transaction_id'],
+                return_date=data['return_date'], gross_cents=amount_cents(data['amount']),
+                request_token=data['request_token'], dry_run=False)
+        except ValidationError as exc:
+            form.add_error(None, '；'.join(exc.messages))
+        else:
+            messages.success(context.request, '银行退回已登记并生成反方向现金流水')
+            return redirect(_url('cash_transaction_detail',
+                                 id=data['original_cash_transaction_id']))
+    if snapshot is None:
+        original_id = payload.get('original_cash_transaction_id')
+        if not original_id:
+            raise PermissionDenied('原现金流水不存在或无权访问')
+        snapshot = tx.cash_transaction_snapshot(member, original_id)
+    coverage = refunds.cash_refund_coverage(member, snapshot['id'])
+    return render(context.request, 'cash/bank_return_form.html', _base(
+        member, 'refunds', transaction=snapshot, coverage=coverage, form=form,
+        submit_url=_url('cash_bank_return_save'),
+        back_url=_url('cash_transaction_detail', id=snapshot['id']),
+        refunds_url=_url('cash_refund_list'),
+        explanation='银行退回按原方向取反生成新的已过账现金流水；可退回额与退款共用服务端派生覆盖。'),
+        status=400)
