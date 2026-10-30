@@ -1,0 +1,72 @@
+{
+  "task_id": "PH-264",
+  "summary": "成员账号生命周期与项目范围首片：按 canonical identity.membership.change/v1 语义实现具名服务与 settings 浏览器承载——owner 变更成员角色（owner/pm/finance/member/auditor）、以 ProjectMember 差集维护可见项目范围、停用/恢复成员；停用要求先处理在职员工绑定与有效项目经理交接，同事务撤销该成员全部未撤销 AgentToken、清空项目范围并写审计；最后 active owner 不可降级/停用，不可自停用，停用成员不可再改（除恢复）；公司级角色（owner/finance/auditor）不接受项目范围；每次成功变更 Membership.version+1、写 generic audit identity.membership.changed（changed_fields/role/active/project_scope_ids/request_token/input_digest/result，不含敏感字段）；同 request_token 重放原结果、改输入冲突；dry_run 零副作用；finance/auditor 只读全部成员，pm/member 仅读自己。core 迁移 0010 仅新增 Membership.version（回填默认 1）；不新增 business 表/账本/金额/期间写，不新增 canonical 事件 topic，不扩展 AgentToken 能力。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto 6155e2d: {\"command\":\"check\",\"ok\":true,\"task_count\":190} exit 0."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 66 issues (0 silenced), all pre-existing urls.W003 namespace warnings, 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (core 0010_membership_version published; other migration leaves unchanged)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1: Ran 922 tests, FAILED (failures=5, errors=3, skipped=68) => 849 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility Accept/codec/large-JSON cases and tests.test_delivery_execution* symlink cases); no new failures. CI Linux is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. PH-264 adds no ledger/amount business invariant; the existing audit-chain check still passes."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_membership_lifecycle tests.test_v1_membership_lifecycle_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 17 tests, OK => 17 passed (10 service + 7 HTTP). Covers role/scope diff, last-owner/self rules, employee and manager handoff, token revocation, restore without scope/token restore, cross-org/project rejection, idempotent replay/conflict, dry_run zero side effects, read permissions and settings-page boundaries."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 6155e2d --task PH-264",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto 6155e2d (PH-266 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 14 changed files all inside BASE PH-264 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-264 membership-lifecycle reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "SERVICE CORRECTNESS VERIFIED: change_membership takes the company lock, re-reads the operator as an active owner, validates role in {owner,pm,finance,member,auditor}, validates project_scope as a list of unique same-org project ids, enforces expected_version when supplied, rejects writes to an inactive target unless it is a restore, and rejects company-level roles (owner/finance/auditor) carrying a non-empty scope. Project scope is maintained as a ProjectMember diff; deactivation requires no active Employee binding and no active (not closed/cancelled) project manager, cannot self-deactivate, and the last active owner cannot be demoted/deactivated. Deactivation updates role/active/version and, in the same transaction, revokes all unrevoked AgentToken rows, clears all ProjectMember rows and writes one generic audit; restore increments version and does not restore old scope or tokens. Tests cover golden role/scope changes, scope diff/rejections, employee/manager handoff, restore, last-owner/self rules, non-owner denial, expected-version/replay, dry-run zero side effects, cross-org denial and snapshot read permissions.",
+      "IDEMPOTENCY/AUDIT ACCEPTED AS DISCLOSED: the task reuses the append-only AuditEvent payload (action identity.membership.changed with request_token/input_digest/result) rather than adding a new receipt table, because the frozen spec allows only the Membership.version column as a structural change. Same token+same input returns the stored result, changed input conflicts, and dry_run returns a preview without writes/audit. The audit payload contains changed_fields/role/active/project_scope_ids/revoked_token_count/request_token/digest/result and no password/token hash/email; the generic audit helper's ordinary non-canonical outbox DomainEvent is disclosed and no canonical identity event topic is added. This is an acceptable implementation choice for the frozen scope, with the limitation documented in report.deviations.",
+      "MIGRATION/MODEL/BOUNDARY: core 0010 is a single AddField Membership.version (PositiveIntegerField default 1, dependency core 0009), no trigger, no applied-migration rewrite, no PK/account clone, no new business table, no ledger/amount/period writes; Settings UI only extends the existing settings page/form and does not add a route, while the membership service remains owner-write with finance/auditor read and pm/member self-only snapshot (HTTP tests cover owner/finance visibility, pm 403, non-owner write 403 and deactivated-member denial). The disclosed integer-PK and manager 'active project' stage interpretation are reasonable; a browser 1440/390 run is still outstanding (HTTP tests only).",
+      "ACCEPTANCE EVIDENCE AT 04f5336 (BASE 1e4c480): projectctl check ok=true/task_count=190 (task in_review); manage.py check exit 0 (known warnings); makemigrations --check No changes (core 0010 published); full suite Ran 922 tests, 5 failures/3 errors/68 skips with the failure/error name set identical to the known macOS baseline; scoped membership/http Ran 17 tests OK; verify_integrity fresh migrated /tmp DB ok=true/errors=[]; verify-change --base 1e4c480 --task PH-264 only high_risk_review_required, no path_out_of_scope; 13 changed files all inside PH-264 allowed_paths; task_count 190, only PH-264 changed (in_review+handoff), manifest remains main's PH-245 per integration convention. Report evidence matches these runs; final evidence commit must replace any pre-review entries and set done."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 04f5336 (BASE 1e4c480) in /tmp/ph264-membership, worktree clean; 13 changed files all inside PH-264 allowed_paths; task in_review, manifest remains main's PH-245 per disclosed convention. Actual reruns: projectctl check ok=true/190; manage.py check exit 0; makemigrations --check No changes (core 0010); full suite 922 tests / 5 failures / 3 errors / 68 skips with the failure name set identical to the known macOS baseline; scoped membership/http 17 tests OK; verify_integrity fresh migrated DB ok=true/errors=[]; verify-change --base 1e4c480 --task PH-264 only high_risk_review_required, no path_out_of_scope. Code review confirms company-locked/fresh owner-only change_membership with expected-version, role/company-scope rules, ProjectMember diff, last-owner/self-deactivate/employee-binding/manager-handoff guards, same-transaction AgentToken revocation and scope clearing, restore without scope/token revival, version increment, audit-without-sensitive-fields, idempotent audit-payload replay (disclosed receipt-table substitute), single AddField core migration, settings-only UI without new route, and owner-write/finance-auditor-read/pm-member-self service permissions. Non-blocking: no browser run (HTTP only), auditor settings-page visibility is finance-gated while the read service supports auditor, and the disclosed integer-PK/manager-stage/generic-audit interpretations."
+  },
+  "deviations": [
+    "Idempotency reuses the append-only AuditEvent payload (action identity.membership.changed, payload.request_token + input_digest + result) instead of adding a receipt table, because the frozen PH-264 spec forbids new business tables and allows only Membership.version as the structural change. Same token+input replays the stored result; changed input conflicts.",
+    "The generic audit helper also emits its ordinary non-canonical outbox DomainEvent for the action name; no canonical event topic is added to the contract catalog and no canonical event id is claimed by the command result. Report discloses this generic outbox row.",
+    "Active project for the manager-handoff guard means a Project whose stage is not closed/cancelled; the spec says 'active 项目的 manager' without enumerating stages, so this interpretation is disclosed.",
+    "core.Membership and core.Project use integer primary keys; the service accepts integer ids (and numeric strings) and returns ids as strings, while the canonical command payload schema is followed semantically. No cloned account or UUID PK change was made.",
+    "Single worker owns the whole write set for this task (core/models.py Membership.version, core/masterdata.py service, core/forms.py form, core/views.py settings handler, core/migrations/0010, templates/settings.html, tests, governance); no parallel slice writes these files; independent review is pending.",
+    "project/manifest.json active_handoff is left at main's value per the integration convention; tasks.json records PH-264 in_review with owner/handoff.",
+    "No browser 1440/390 check was run in this round (HTTP tests only); no new canonical event topic, ledger/amount/period write or AgentToken capability was added.",
+    "Lead integration rebase (1e4c480 -> 6155e2d) after PH-266 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-264 entry; manifest.active_handoff -> PH-264. Gates rerun green.",
+    "CI fix after the first PostgreSQL run: the preparation multi-connection probe inserts core_membership rows with raw SQL (no version column), so the module-level default=1 alone left PostgreSQL with no column default and the insert failed with NotNullViolation. Membership.version now also declares db_default=1 (migration 0010 emits DEFAULT 1), which keeps the preparation contract valid; SQLite scoped tests re-ran OK (17 tests) and the PostgreSQL rerun is the authoritative evidence.",
+    "Cleanup: a local .venv convenience symlink had been accidentally committed (the .gitignore pattern is directory-only, so a symlink escaped it); it was untracked and removed, keeping the tree publishable (public-hygiene rule: no runtime paths / symlinks)."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run in this round; the settings membership UI was exercised through HTTP tests only. Visual/keyboard/overflow verification remains for the reviewer/browser round.",
+    "Independent S review is PASS at this HEAD; verify-change --base 1e4c480 --task PH-264 is ok=true with 14 changed files (13 original + manifest.active_handoff). Remaining unverified items are browser 1440/390, production/UAT and legacy database upgrades.",
+    "PostgreSQL-specific behaviour is covered by the existing PG suite/CI; this slice adds no new concurrency-only race test (company lock + conditional version update are exercised in service tests; CI remains authoritative).",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "Invitations/registration/email, password/MFA, cross-company migration, account deletion, role-permission matrix expansion and sensitive payroll/rate display remain unimplemented."
+  ]
+}
