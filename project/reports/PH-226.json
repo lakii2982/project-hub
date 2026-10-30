@@ -1,0 +1,59 @@
+{
+  "task_id": "PH-226",
+  "summary": "Narrow test-prerequisite adaptation for the settlement plugin dependency edge: 2 SQLite tests disable settlement before delivery/contracts (catalog-aware), and 2 PostgreSQL concurrency setUps order settlement before delivery (manifest-guarded). No product, manifest, gate or assertion changes.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Review-passed rerun: ok=true, task_count=149 at HEAD."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0; only pre-existing urls.W003 namespace warnings (26), 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual 645 tests pass, 34 environment skips on this BASE; adaptation branches are no-ops because settlement is not installed here."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual on a freshly migrated database: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 19b6781 --task PH-226",
+      "result": "pass",
+      "evidence": "Review-passed post-commit rerun declared after actual execution (see handoff)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-226 implementation reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "Code adaptation PASS: only disable-order changes; facts/PluginState assertions and both assertRaises kept; no try/except, no removed assertions, no new skips; base without settlement is a behavioural no-op (28 affected tests pass).",
+      "Evidence blockers closed: report now declares the three BASE acceptance commands with actual outputs (check, makemigrations --check, verify_integrity), review is pass, and check/verify-change are rerun after the verdict before this report is frozen."
+    ],
+    "evidence": "Reviewer diffed origin/main..f8506a3 (10 files, all inside PH-226.allowed_paths), confirmed the plugin_catalog/get_registry guards on both BASE states, and reran the affected tests (28 OK), 19 governance tests, full suite (exit 0, 34 skips), manage.py check, makemigrations --check and verify_integrity on a fresh database."
+  },
+  "deviations": [
+    "settlement exists only in the still-open PH-224 branch, so on this BASE the new guard branches do not execute; the real dependency-guard behaviour will be exercised when PH-224 rebases onto this merge.",
+    "PostgreSQL concurrency classes are skipped on local SQLite; PH-224's PostgreSQL CI must execute them."
+  ],
+  "unverified": [
+    "No settlement plugin on this BASE means the settlement-first-disable branches are no-ops here; behaviour with settlement enabled is verified by PH-224's full suite and PostgreSQL CI.",
+    "No browser evidence needed; no UI change."
+  ]
+}

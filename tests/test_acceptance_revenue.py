@@ -352,6 +352,10 @@ class AcceptanceRevenueTests(RevenueFixture, TestCase):
         with self.assertRaises(ValidationError):set_enabled(self.owner,'contracts',False)
         self.assertEqual(before,self.facts()+(PluginState.objects.count(),))
         self.assertTrue(is_enabled(self.org,'contracts'))
+        # PH-226: disable the newer settlement dependant before its delivery/contracts dependencies.
+        from core.plugin_runtime import plugin_catalog
+        if any(spec['id'] == 'settlement' for spec in plugin_catalog()):
+            set_enabled(self.owner, 'settlement', False)
         set_enabled(self.owner,'delivery',False)
         set_enabled(self.owner,'contracts',False)
         self.assertFalse(is_enabled(self.org,'contracts'))

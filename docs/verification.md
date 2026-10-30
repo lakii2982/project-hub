@@ -322,3 +322,10 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 ## PH223 应收结算首片规划（2026-10-30）
 
 146 task check、19 项治理测试、verify-change 实际通过；契约 validate_contracts 9 schema/2977 refs/71 commands/47 events、check_contract_cases 19 正 37 拒、check_fixture errors=[]（无 schema/fixture/hash 改动）。独立 S 复核先 PASS-WITH-BLOCKERS，四个阻塞（陈旧草稿需批准重算、due_date 必填与“可为空”冲突、全部条款含已消费口径、报告 review pending）已定点修正后复核落 pass。无 PH-224 产品代码、迁移、PG、浏览器、旧库升级或客户验收；本规划不构成产品通过。
+
+## PH-226 应收结算业务接入测试前置补充（2026-10-30）
+
+基线19b6781（PH-225规划合入）。本任务按冻结白名单只改4处测试前置：`tests/test_acceptance_revenue.py`与`tests/test_service_period_revenue_http.py`在停用delivery/contracts前，若插件目录存在settlement则先停用（`plugin_catalog()`判断）；`tests/test_v1_contracts.py`与`tests/test_contract_approval.py`并发类setUp的停用顺序改为`('management_revenue','settlement','delivery')`，沿用既有`get_registry().manifests`守卫。产品/manifest/门禁/断言均未改。
+
+实际执行：`manage.py test tests.test_acceptance_revenue tests.test_service_period_revenue_http`=28项通过；`manage.py test tests --verbosity 1`=645项通过、34项环境跳过（本BASE不含settlement，适配分支为no-op）；`manage.py check`/`makemigrations --check`/`verify_integrity --json` 通过；独立复核落 pass 后实际重跑 `projectctl check` 与 `verify-change`（ok=true）。含settlement的真实行为与PG并发执行由PH-224在其rebase后的BASE验证。未验证：PH-226改动在含settlement BASE上的行为（待PH-224）。
+
