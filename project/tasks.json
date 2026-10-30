@@ -6373,6 +6373,7 @@
         "pmo_plugins/cash/forms.py",
         "pmo_plugins/cash/views.py",
         "pmo_plugins/cash/urls.py",
+        "pmo_plugins/cash/migrations/*.py",
         "pmo_plugins/cash/templates/cash/funding_account_list.html",
         "pmo_plugins/cash/templates/cash/funding_account_form.html",
         "pmo_plugins/cash/templates/cash/cash_transaction_list.html",

@@ -20,10 +20,13 @@
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-227 planning reviewer (fresh context, read-only)",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Review in progress."
+    "reviewer": "independent PH-227 planning reviewer (fresh context, read-only; two rounds)",
+    "status": "pass",
+    "findings": [
+      "Round 1 blockers closed: cash plugin manifest frozen with requires={} and default_enabled=True (no new dependency edge, so the four existing test disable-order sites stay valid); PH-228 allowed_paths tightened from a directory wildcard to an exact file list; event wording aligned with actual generic audit() DomainEvent behaviour; FundingAccount.opening_on fixed at draft creation with opening_cents=0 and drafts not projected as canonical entities; party.match identify/reverse payload and lock rule frozen deterministically; evidence prefill removed.",
+      "Round 2 confirmed all six items and required two micro-fixes: add pmo_plugins/cash/migrations/*.py to PH-228 allowed_paths (new app needs 0001_initial) and fill report evidence only after review pass with actual reruns; both are applied before this verdict."
+    ],
+    "evidence": "Reviewer inspected PH-228/PH-229 specs, tasks/manifest/handoff/report, and the frozen cash entities/commands (CashTransaction draft enum, cash.transaction.draft.save, cash.party.match, cash.transaction.record); confirmed contract semantics for a draft-only slice, dependency legality (PH-214/219/222/224 all done), and that no new plugin dependency edge is introduced. Ran projectctl check/verify-change (blocked only by pending review) and 19 governance tests."
   },
   "deviations": [
     "PH-228 is a deliberately narrow first slice of PH-169: it records real bank facts and party matches but performs no ledger posting, classification, allocation, clearing, refund, correction, transfer, file import or opening balance. Those remain for later slices and are listed as unverified/non-goals.",
