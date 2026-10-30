@@ -6627,6 +6627,37 @@
       "handoff": "project/handoffs/PH-233.md"
     },
     {
+      "id": "PH-235",
+      "title": "projectctl会话效率命令（orient、next --compact、draft-report）",
+      "kind": "infra",
+      "risk": "S",
+      "status": "done",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-233"
+      ],
+      "spec": "project/specs/PH-235.md",
+      "allowed_paths": [
+        "scripts/projectctl.py",
+        "tests/test_projectctl.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-235.json",
+        "project/handoffs/PH-235.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-235.md"
+    },
+    {
       "id": "PH-234",
       "title": "会话上下文减负文档改造（AGENTS开场、delivery-status拆分、过程文档归档）",
       "kind": "docs",
@@ -6666,37 +6697,6 @@
       "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-234.md"
-    },
-    {
-      "id": "PH-235",
-      "title": "projectctl会话效率命令（orient、next --compact、draft-report）",
-      "kind": "infra",
-      "risk": "S",
-      "status": "done",
-      "priority": 1,
-      "milestone": "v1.0-preparation",
-      "depends_on": [
-        "PH-233"
-      ],
-      "spec": "project/specs/PH-235.md",
-      "allowed_paths": [
-        "scripts/projectctl.py",
-        "tests/test_projectctl.py",
-        "project/tasks.json",
-        "project/manifest.json",
-        "docs/delivery-status.md",
-        "docs/verification.md",
-        "project/reports/PH-235.json",
-        "project/handoffs/PH-235.md"
-      ],
-      "acceptance": [
-        "python scripts/projectctl.py check",
-        "python -m unittest tests.test_projectctl tests.test_governance -v"
-      ],
-      "github_issue": null,
-      "owner": null,
-      "blockers": [],
-      "handoff": "project/handoffs/PH-235.md"
     },
     {
       "id": "PH-236",
@@ -8006,7 +8006,7 @@
       "acceptance": [
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v",
-        "grep -q \"time.billable.confirm/v1\" docs/adr/0010-time-plugin-ownership.md"
+        "grep -q \"time.billable.confirm/v1\" docs/adr/0011-time-plugin-ownership.md"
       ],
       "github_issue": null,
       "owner": null,
@@ -8041,7 +8041,7 @@
       "acceptance": [
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v",
-        "grep -q \"importing\" docs/adr/0011-importing-opening-ownership.md"
+        "grep -q \"importing\" docs/adr/0012-importing-plugin-ownership.md"
       ],
       "github_issue": null,
       "owner": null,
