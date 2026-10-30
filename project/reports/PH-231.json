@@ -1,0 +1,43 @@
+{
+  "task_id": "PH-231",
+  "summary": "Register PH-232 (clearance first slice: partial clearing of posted cash against active receivable open items with reversal-by-record and derived balances) and PH-233 next planning slot. No product code changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-review actual rerun at HEAD b1c4a9b: ok=true, task_count=155 (PH-231 done, PH-232/PH-233 ready, dependencies done)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base a8edb17 --task PH-231",
+      "result": "pass",
+      "evidence": "Post-review actual rerun at HEAD b1c4a9b against base a8edb17: ok=true, 8 changed files all inside BASE allowed_paths, no errors."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-231 planning reviewer (fresh context, read-only; two rounds)",
+    "status": "pass",
+    "findings": [
+      "Round 1 blockers closed: UAT wording limited to UAT-14-S01; settlement next migration fixed to the actual leaf 0003; receivable_forms.py added for clearance forms; the cross-owner cash read moved to root-only; reversal representation frozen as a single status active->reversed update with balances as sum(active); effective counterparty derived from the latest unreversed CashPartyMatch; caller-supplied balances/proofs and canonical clearance channels explicitly not exposed.",
+      "Round 2 confirmed the design and required only two one-line spec consistency fixes (remove reverses FK/reason from the model paragraph; align the create-clearance counterparty wording with the effective counterparty read) plus report evidence from actual reruns; both are applied before merge."
+    ],
+    "evidence": "Reviewer inspected PH-232/PH-233 specs, tasks/manifest/handoff/report and the canonical clearance.create/reverse, Clearance entity, cleared/clearance_reversed events; verified settlement migration leaf is 0002 (next 0003), dependency legality, and that the reversal representation is self-consistent with the frozen entity. Ran projectctl check/verify-change (blocked only by pending review) and 19 governance tests."
+  },
+  "deviations": [
+    "PH-232 is the first slice of PH-170: it clears posted cash against receivable open items and supports reversal, but excludes offset/prepayment, refunds, fees, internal transfers, batch clearing, import, opening balances and any ledger/accounting/revenue/cost writes; PH-170/171 remain proposed.",
+    "Clearance reversal uses an append-only reversal record (status='reversed', reverses original) rather than mutating the original; balances are derived from clearance aggregates and no editable balance is introduced.",
+    "Cash facts are read through a new named read-only cash interface (posted_cash_for_clearance); the clearance model stores the cash UUID/ref without a cross-owner FK.",
+    "Clearance reversal mutates only the status field (active->reversed) on the original record; amounts/refs stay immutable and balances are derived as sum(active), so the canonical entity stays self-consistent without a private reverses field.",
+    "The cash named read returns the effective counterparty from the latest unreversed CashPartyMatch when the transaction counterparty is empty; a reversed match counts as unidentified and is rejected.",
+    "The canonical clearance.create/reverse channels (internal_cash_orchestration_only) are not exposed; only private services implement them, and caller-supplied balances/proofs are rejected."
+  ],
+  "unverified": [
+    "No product code, migration, tests, browser, PostgreSQL or CI evidence exists for PH-232 yet.",
+    "Offset, refunds, cash classification/ledger bridge, AP obligations, credit/bad debt, opening balances and production/UAT remain undesigned or unimplemented."
+  ]
+}
