@@ -7154,7 +7154,7 @@
       "title": "后续交付独立规划入口（接续 PH-242）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -7177,6 +7177,264 @@
       "acceptance": [
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-247.md"
+    },
+    {
+      "id": "PH-248",
+      "title": "后续交付独立规划入口（接续 PH-247）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-247"
+      ],
+      "spec": "project/specs/PH-248.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-248.json",
+        "project/handoffs/PH-248.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-249",
+      "title": "PH-232 覆盖公式口径同步：未核销现金余额纳入退款/银行退回",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-232",
+        "PH-240"
+      ],
+      "spec": "project/specs/PH-249.md",
+      "allowed_paths": [
+        "project/specs/PH-232.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-249.json",
+        "project/handoffs/PH-249.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-240 done（退款/银行退回实现确定覆盖公式）；PH-232 done。PH-240 合入后由 PH-248 规划槽复核 DoR 再晋级 ready。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-250",
+      "title": "手续费提交/批准与成本过账首片：core.document.decide bank_charge handler 与一次性费用成本",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-210",
+        "PH-244"
+      ],
+      "spec": "project/specs/PH-250.md",
+      "allowed_paths": [
+        "pmo_plugins/costing/models.py",
+        "pmo_plugins/costing/bank_charge_services.py",
+        "pmo_plugins/costing/bank_charge_views.py",
+        "pmo_plugins/costing/bank_charge_forms.py",
+        "pmo_plugins/costing/domain_metadata.py",
+        "pmo_plugins/costing/urls.py",
+        "pmo_plugins/costing/templates/costing/bank_charge_list.html",
+        "pmo_plugins/costing/templates/costing/bank_charge_form.html",
+        "pmo_plugins/costing/migrations/*.py",
+        "core/services.py",
+        "core/management/commands/verify_integrity.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_bank_charge_approval.py",
+        "tests/test_v1_bank_charge_approval_http.py",
+        "tests/test_v1_bank_charge_cost.py",
+        "project/reports/PH-250.json",
+        "project/handoffs/PH-250.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_bank_charge_approval tests.test_v1_bank_charge_approval_http tests.test_v1_bank_charge_cost --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-251",
+      "title": "手续费净额结清、既有成本复用与承担方后续片",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-250",
+        "PH-224",
+        "PH-232",
+        "PH-157"
+      ],
+      "spec": "project/specs/PH-251.md",
+      "allowed_paths": [
+        "pmo_plugins/settlement/models.py",
+        "pmo_plugins/settlement/receipt_fee_services.py",
+        "pmo_plugins/settlement/receivable_views.py",
+        "pmo_plugins/settlement/receivable_forms.py",
+        "pmo_plugins/settlement/domain_metadata.py",
+        "pmo_plugins/settlement/templates/settlement/receipt_fee_list.html",
+        "pmo_plugins/settlement/migrations/*.py",
+        "pmo_plugins/costing/models.py",
+        "pmo_plugins/costing/bank_charge_services.py",
+        "pmo_plugins/costing/domain_metadata.py",
+        "pmo_plugins/costing/migrations/*.py",
+        "pmo_plugins/cash/transaction_services.py",
+        "core/services.py",
+        "core/management/commands/verify_integrity.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_receipt_fee.py",
+        "tests/test_v1_receipt_fee_http.py",
+        "tests/test_v1_receipt_fee_concurrency.py",
+        "project/reports/PH-251.json",
+        "project/handoffs/PH-251.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_receipt_fee tests.test_v1_receipt_fee_http tests.test_v1_receipt_fee_concurrency --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-250 done（手续费批准与成本过账）与 PH-157（应付/既有成本来源）；PH-224/PH-232 已 done。依赖完成后由 PH-248 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-252",
+      "title": "发票登记与逐行分配首片：sales/purchase 发票、行项目与业务来源分配",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-150",
+        "PH-155",
+        "PH-224",
+        "PH-232"
+      ],
+      "spec": "project/specs/PH-252.md",
+      "allowed_paths": [
+        "pmo_plugins/invoicing/models.py",
+        "pmo_plugins/invoicing/services.py",
+        "pmo_plugins/invoicing/views.py",
+        "pmo_plugins/invoicing/forms.py",
+        "pmo_plugins/invoicing/domain_metadata.py",
+        "pmo_plugins/invoicing/urls.py",
+        "pmo_plugins/invoicing/templates/invoicing/invoice_form.html",
+        "pmo_plugins/invoicing/templates/invoicing/invoice_list.html",
+        "pmo_plugins/invoicing/migrations/*.py",
+        "tests/test_v1_invoice.py",
+        "tests/test_v1_invoice_http.py",
+        "pmo/settings.py",
+        "pmo/urls.py",
+        "pmo_plugins/delivery/urls.py",
+        "core/management/commands/verify_integrity.py",
+        "project/reports/PH-252.json",
+        "project/handoffs/PH-252.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-150（合同收费明细/生效方法）与 PH-155（结算/未清）done；PH-224/PH-232 已 done。另需前置确认 invoicing app 新建/复用的插件契约与迁移 owner（PH-150/PH-155 规划或独立规划 PR），未确认前不得新建 scaffold；确认并依赖 done 后由后续规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-253",
+      "title": "PH-244 verify_integrity saved-event 计数加固：每版本恰一条 saved 事件",
+      "kind": "fix",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-244"
+      ],
+      "spec": "project/specs/PH-253.md",
+      "allowed_paths": [
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_bank_charge.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-253.json",
+        "project/handoffs/PH-253.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_bank_charge --verbosity 1",
+        "python manage.py test tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
       "owner": null,
