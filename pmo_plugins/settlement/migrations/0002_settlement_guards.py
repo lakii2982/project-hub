@@ -36,7 +36,11 @@ def install(apps, schema_editor):
                   RETURN NEW;
                 END; $$""")
             cursor.execute('CREATE TRIGGER settlement_parent_guard BEFORE UPDATE OR DELETE ON settlement_settlement FOR EACH ROW EXECUTE FUNCTION settlement_parent_guard()')
-            cursor.execute('CREATE TRIGGER settlement_receipt_immutable BEFORE UPDATE OR DELETE ON settlement_settlementreceipt FOR EACH ROW EXECUTE FUNCTION pmo_prevent_mutation()')
+            cursor.execute("""CREATE FUNCTION settlement_receipt_guard() RETURNS trigger LANGUAGE plpgsql AS $$
+                BEGIN
+                  RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Settlement receipt is immutable';
+                END; $$""")
+            cursor.execute('CREATE TRIGGER settlement_receipt_immutable BEFORE UPDATE OR DELETE ON settlement_settlementreceipt FOR EACH ROW EXECUTE FUNCTION settlement_receipt_guard()')
         elif vendor == 'sqlite':
             cursor.execute("""CREATE TRIGGER settlement_open_item_no_update BEFORE UPDATE ON settlement_openitem
                 BEGIN SELECT RAISE(ABORT, 'Open items are immutable'); END""")
@@ -73,6 +77,7 @@ def uninstall(apps, schema_editor):
             cursor.execute('DROP TRIGGER IF EXISTS settlement_receipt_immutable ON settlement_settlementreceipt')
             cursor.execute('DROP FUNCTION IF EXISTS settlement_open_item_guard()')
             cursor.execute('DROP FUNCTION IF EXISTS settlement_parent_guard()')
+            cursor.execute('DROP FUNCTION IF EXISTS settlement_receipt_guard()')
         elif vendor == 'sqlite':
             for name in ['settlement_open_item_no_update', 'settlement_open_item_no_delete',
                          'settlement_open_item_insert_guard', 'settlement_parent_no_delete',
