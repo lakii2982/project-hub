@@ -6182,7 +6182,7 @@
       "title": "客户结算、到期/质保未清与账龄（应收首片）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_progress",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -6240,7 +6240,7 @@
         "python -B docs/v1.0-development/fixtures/check_fixture.py"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
       "handoff": null
     },
