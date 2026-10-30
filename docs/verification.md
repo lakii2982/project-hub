@@ -457,3 +457,7 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 实际执行（最终HEAD）：projectctl check ok=true/task_count=175；manage.py check exit0（仅既有54项 urls.W003警告）；makemigrations --check --dry-run无变更；migrate+verify_integrity全新SQLite ok=true/errors=[]；临时SQLite探针：draft→submit→独立批准后 approved/version=1/claim=1/cost event=1，verify_integrity ok=true；复制一条cost事件后 verify exit1 报 bank_charge:<id>:cost_event_count；scoped PH-244+PH-250 24 tests OK；全量809 tests/142.014s，5F+3E为基线已知8项macOS环境失败（名称一致）、59 skips、无新增（基线793 + 本片16测试）。未验证：ReceiptFeeSettlement/existing_cost_ref/counterparty/税额深化（PH-251）、发票（PH-252）；无本机PG并发（CI双连接覆盖并发decide）；无浏览器1440/390实测；真实客户/生产。
 
 独立S复核（fresh context, HEAD ed3e742）实跑6条验收命令并与基线1f02520核对：PASS 0阻断；5条NOTE记report.unverified（与PH-253的verify_integrity合并顺序/UI can_decide UUID-字符串比较仅显示层/冻结字段防御性复述/approved过渡态/浏览器与PG并发未本地验证），未在复核后改码。
+
+### PH-250 最终集成 rebase（c1cd18d）
+
+rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享手续费分支：保留 PH-253 逐版本 saved_event_count/version_coverage、PH-239 现金账桥接块、PH-240 退款守卫，加入 PH-250 审批链与 approved 成本事实校验（链强制以链状态/append-only submit/decide 收据为条件，兼容 PH-253 合成过渡态）；SQLite 触发器名沿用 `costing_bankcharge_update_guard` 以兼容 PH-253 force_status helper。NOTE② 修复 can_decide 字符串比较 + HTTP 回归。post-rebase 实跑：check ok=true/175；makemigrations 无变更；migrate+verify_integrity 空库 ok=true/errors=[]；批准探针 ok=true、复制成本事件后 exit1 cost_event_count；scoped 35 tests OK；全量 849 tests/116.240s，5F+3E 为基线已知 8 项（名称一致）、62 skips、无新增（基线 833 + 16）。

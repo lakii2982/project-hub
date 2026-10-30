@@ -98,7 +98,7 @@ def install(apps, schema_editor):
                     OR NEW.submitted_at IS NOT NULL OR NEW.approved_by_id IS NOT NULL
                     OR NEW.approved_at IS NOT NULL OR NEW.reject_reason <> ''
                 BEGIN SELECT RAISE(ABORT, 'Bank fee draft must start as draft version 1 without approval chain'); END""")
-            cursor.execute(f"""CREATE TRIGGER {CHARGE}_transition_guard BEFORE UPDATE ON {CHARGE}
+            cursor.execute(f"""CREATE TRIGGER {CHARGE}_update_guard BEFORE UPDATE ON {CHARGE}
                 WHEN (OLD.status = 'draft' AND NEW.status = 'draft' AND (NEW.version <> OLD.version + 1
                         OR NEW.submitted_by_id IS NOT NULL OR NEW.submitted_at IS NOT NULL
                         OR NEW.approved_by_id IS NOT NULL OR NEW.approved_at IS NOT NULL

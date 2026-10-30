@@ -85,8 +85,9 @@ class BankChargeCostTests(BankChargeApprovalFixture, TestCase):
     # ---------- synthetic corruption probes (direct DB states, rollback restores triggers) ----------
     def force_approved(self, charge, *, approved_by=None):
         with connection.cursor() as cursor:
-            for trigger in ('costing_bankcharge_insert_guard', 'costing_bankcharge_transition_guard',
-                            'costing_bankcharge_no_delete'):
+            for trigger in ('costing_bankcharge_insert_guard', 'costing_bankcharge_update_guard',
+                            'costing_bankcharge_transition_guard', 'costing_bankcharge_no_delete',
+                            'costing_bankcharge_guard'):
                 cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
         now = timezone.now()
         BankCharge.objects.filter(pk=charge.pk).update(
