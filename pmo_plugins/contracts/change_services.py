@@ -363,8 +363,8 @@ def decide_contract_change(member, change_id, *, decision, note='', request_toke
     if dry_run:
         return {'change_id': str(change.pk), 'status': decision,
                 'contract_id': str(contract.pk), 'change_type': change.change_type}
-    if contract.status != 'active':
-        _reject('只有已生效合同可以审批变更或终止')
+    if decision == 'approved' and contract.status != 'active':
+        _reject('只有已生效合同可以批准变更或终止；终止后仅可驳回或撤回既有草稿')
     change.decided_by_member, change.decided_on = member, timezone.now()
     change.decision_note = note
     change.version += 1

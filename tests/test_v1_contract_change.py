@@ -156,6 +156,24 @@ class ContractChangeServiceTests(ContractChangeFixture, TestCase):
         self.assertEqual(snapshot['gross_cents'], 116600)
         self.assertEqual(LedgerEntry.objects.count(), 0)
 
+    def test_draft_update_is_allowed_until_decision_then_frozen(self):
+        self.approved_contract()
+        change = self.draft_change()
+        edited = change_services.save_contract_change_draft(
+            self.owner, contract_id=self.contract.pk, change_type='price_change',
+            requested_on=self.today.isoformat(), draft_content={'lines': [self.line(12000)]},
+            evidence=[{'kind': 'customer_email', 'reference': '客户确认涨价'}],
+            request_token=uuid.uuid4(), change_id=change.pk, expected_version=change.version,
+            dry_run=False)
+        self.assertEqual((edited.status, edited.version), ('draft', 2))
+        self.assertEqual((edited.net_delta_cents, edited.tax_delta_cents,
+                          edited.gross_delta_cents), (20000, 1200, 21200))
+        self.assertEqual(edited.draft_content['lines'][0]['net_cents'], 120000)
+        decided = self.decide(edited, note='按更新后的内容批准')
+        self.assertEqual(decided.status, 'approved')
+        new = ContractVersion.objects.get(contract=self.contract, status='approved')
+        self.assertEqual(new.lines.get().net_cents, 120000)
+
     def test_reject_and_withdraw_are_terminal_without_effect(self):
         self.approved_contract()
         change = self.draft_change()

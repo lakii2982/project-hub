@@ -1125,6 +1125,8 @@ class Command(BaseCommand):
             if change.status in {'approved', 'rejected', 'withdrawn'}:
                 if change.decided_by_member_id is None or change.decided_on is None:
                     errors.append(f"contract_change:{change.pk}:missing_decider")
+                if change.decided_by_member_id == change.created_by_member_id:
+                    errors.append(f"contract_change:{change.pk}:self_decided")
                 if change.status == 'rejected' and not change.decision_note:
                     errors.append(f"contract_change:{change.pk}:rejected_without_reason")
             if change.status != 'approved':
@@ -1157,8 +1159,10 @@ class Command(BaseCommand):
                 versions = _ContractVersion.objects.filter(contract=contract, status='approved')
                 if versions.count() != 1 or refs[1].get('kind') != 'contract_version':
                     errors.append(f"contract_change:{change.pk}:effective_version")
-                elif str(versions.get().pk) != str(refs[1].get('id')):
-                    errors.append(f"contract_change:{change.pk}:effective_version_ref")
+                else:
+                    expected = _contract_ref(versions.get(), 'contract_version')
+                    if refs[1] != expected:
+                        errors.append(f"contract_change:{change.pk}:effective_version_ref")
                 if contract.status != 'active':
                     errors.append(f"contract_change:{change.pk}:contract_not_active")
         from django.db.models import Count as _ContractCount
@@ -1176,6 +1180,21 @@ class Command(BaseCommand):
                     errors.append(f"contract:{contract.pk}:terminated_approved_count")
             if contract.status not in {'draft', 'active', 'terminated', 'superseded'}:
                 errors.append(f"contract:{contract.pk}:unexpected_status")
+            if contract.status == 'terminated':
+                termination_changes = contract.changes.filter(status='approved',
+                                                              change_type='termination')
+                if termination_changes.count() != 1:
+                    errors.append(f"contract:{contract.pk}:termination_change_count")
+                if contract.changes.filter(status='draft').exists():
+                    errors.append(f"contract:{contract.pk}:draft_change_after_termination")
+                from django.utils import timezone as _contract_timezone
+                for change in contract.changes.all():
+                    if (change.status != 'approved'
+                            and _contract_timezone.localtime(change.created_at).date()
+                            >= contract.terminated_on):
+                        errors.append(f"contract_change:{change.pk}:created_after_termination")
+                    if change.status == 'approved' and change.change_type != 'termination':
+                        errors.append(f"contract_change:{change.pk}:approved_after_termination")
             for version in _ContractVersion.objects.filter(contract=contract, status='approved'):
                 if (version.approval_audit_id is None or version.approved_by_member_id is None
                         or version.approved_on is None):
@@ -1188,9 +1207,18 @@ class Command(BaseCommand):
                     errors.append(f"contract_version:{version.pk}:approved_event_count")
                 else:
                     data = events.get().data or {}
+                    payload = data.get('payload') or {}
                     if (data.get('source') != _contract_ref(version, 'contract_version')
-                            or (data.get('payload') or {}).get('posting_event_refs') != []):
+                            or payload.get('posting_event_refs') != []):
                         errors.append(f"contract_version:{version.pk}:approved_event_envelope")
+                    change_id = (version.approval_audit.payload or {}).get('change_id') if version.approval_audit else None
+                    if change_id:
+                        change = _ContractChange.objects.filter(pk=change_id).first()
+                        expected = [_contract_ref(version, 'contract_version')]
+                        if change is not None:
+                            expected.append(_contract_ref(change, 'contract_change'))
+                        if payload.get('changed_refs') != expected:
+                            errors.append(f"contract_version:{version.pk}:approved_changed_refs")
         result = {"ok": not errors, "errors": errors, "organizations": Organization.objects.count(), "entries": LedgerEntry.objects.count()}
         self.stdout.write(json.dumps(result, ensure_ascii=False) if options["json"] else ("完整性检查通过" if not errors else "\n".join(errors)))
         if errors: raise CommandError("项目账完整性检查未通过")

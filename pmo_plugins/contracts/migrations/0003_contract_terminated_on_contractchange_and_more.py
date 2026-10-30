@@ -14,14 +14,13 @@ CHANGE_IMMUTABLE = ['contract_id', 'organization_id', 'change_type', 'requested_
 
 
 def install(apps, schema_editor):
-    """Append-only change facts and immutable termination of contracts."""
+    """Append-only change facts, immutable termination, and the frozen state machine."""
     vendor = schema_editor.connection.vendor
-    changed = ' OR '.join(f'OLD.{f} IS DISTINCT FROM NEW.{f}' for f in CHANGE_IMMUTABLE)
     with schema_editor.connection.cursor() as cursor:
         if vendor == 'postgresql':
             cursor.execute('DROP FUNCTION IF EXISTS contracts_contract_guard()')
             cursor.execute('DROP FUNCTION IF EXISTS contracts_change_guard()')
-            cursor.execute(f"""CREATE FUNCTION contracts_contract_guard() RETURNS trigger LANGUAGE plpgsql AS $$
+            cursor.execute("""CREATE FUNCTION contracts_contract_guard() RETURNS trigger LANGUAGE plpgsql AS $$
                 BEGIN
                   IF TG_OP = 'DELETE' THEN
                     RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Contract history cannot be deleted';
@@ -30,8 +29,7 @@ def install(apps, schema_editor):
                     IF OLD.status = 'terminated' THEN
                       RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Terminated contract is immutable';
                     END IF;
-                    IF NEW.status = 'terminated' AND (OLD.status <> 'active' OR NEW.terminated_on IS NULL
-                                                      OR NEW.terminated_on < OLD.created_at::date) THEN
+                    IF NEW.status = 'terminated' AND (OLD.status <> 'active' OR NEW.terminated_on IS NULL) THEN
                       RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Only an active contract can be terminated with a valid date';
                     END IF;
                     IF NEW.terminated_on IS NOT NULL AND NEW.status <> 'terminated' THEN
@@ -40,8 +38,8 @@ def install(apps, schema_editor):
                   END IF;
                   RETURN NEW;
                 END; $$""")
-            cursor.execute(f'CREATE TRIGGER {CONTRACT}_guard BEFORE UPDATE OR DELETE ON {CONTRACT} FOR EACH ROW EXECUTE FUNCTION contracts_contract_guard()')
-            cursor.execute(f"""CREATE FUNCTION contracts_change_guard() RETURNS trigger LANGUAGE plpgsql AS $$
+            cursor.execute('CREATE TRIGGER contracts_contract_guard BEFORE UPDATE OR DELETE ON contracts_contract FOR EACH ROW EXECUTE FUNCTION contracts_contract_guard()')
+            cursor.execute("""CREATE FUNCTION contracts_change_guard() RETURNS trigger LANGUAGE plpgsql AS $$
                 BEGIN
                   IF TG_OP = 'DELETE' THEN
                     RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Contract change history cannot be deleted';
@@ -52,20 +50,21 @@ def install(apps, schema_editor):
                     THEN
                       RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Contract change must start as a draft';
                     END IF;
+                    IF NOT EXISTS (SELECT 1 FROM contracts_contract c
+                                   WHERE c.id = NEW.contract_id AND c.organization_id = NEW.organization_id
+                                     AND c.status = 'active') THEN
+                      RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Contract change requires an active contract';
+                    END IF;
                     RETURN NEW;
                   END IF;
                   IF NEW.id <> OLD.id OR NEW.organization_id <> OLD.organization_id
                      OR NEW.contract_id <> OLD.contract_id OR NEW.change_type <> OLD.change_type
                      OR NEW.requested_on <> OLD.requested_on OR NEW.created_by_member_id <> OLD.created_by_member_id
                      OR NEW.created_at <> OLD.created_at
-                     OR NEW.net_delta_cents <> OLD.net_delta_cents OR NEW.tax_delta_cents <> OLD.tax_delta_cents
-                     OR NEW.gross_delta_cents <> OLD.gross_delta_cents
-                     OR NEW.draft_content::text <> OLD.draft_content::text
-                     OR NEW.evidence::text <> OLD.evidence::text
                      OR NEW.create_token IS DISTINCT FROM OLD.create_token
                      OR NEW.create_digest <> OLD.create_digest
                   THEN
-                    RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Contract change decision facts are immutable';
+                    RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Contract change identity facts are immutable';
                   END IF;
                   IF OLD.status <> 'draft' THEN
                     RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Only a draft contract change can be updated';
@@ -80,49 +79,69 @@ def install(apps, schema_editor):
                   END IF;
                   IF NEW.status NOT IN ('approved', 'rejected', 'withdrawn') OR NEW.version <> OLD.version + 1
                      OR NEW.decided_by_member_id IS NULL OR NEW.decided_on IS NULL
+                     OR NEW.decided_by_member_id = NEW.created_by_member_id
                      OR (NEW.status = 'rejected' AND NEW.decision_note = '')
+                     OR (NEW.status = 'approved' AND NOT EXISTS (
+                         SELECT 1 FROM contracts_contract c WHERE c.id = NEW.contract_id AND c.status = 'active'))
                   THEN
                     RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Contract change decision is invalid';
                   END IF;
+                  IF NEW.net_delta_cents IS DISTINCT FROM OLD.net_delta_cents
+                     OR NEW.tax_delta_cents IS DISTINCT FROM OLD.tax_delta_cents
+                     OR NEW.gross_delta_cents IS DISTINCT FROM OLD.gross_delta_cents
+                     OR NEW.draft_content::text IS DISTINCT FROM OLD.draft_content::text
+                     OR NEW.evidence::text IS DISTINCT FROM OLD.evidence::text
+                  THEN
+                    RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Decision facts are immutable';
+                  END IF;
                   RETURN NEW;
                 END; $$""")
-            cursor.execute(f'CREATE TRIGGER {CHANGE}_guard BEFORE INSERT OR UPDATE OR DELETE ON {CHANGE} FOR EACH ROW EXECUTE FUNCTION contracts_change_guard()')
+            cursor.execute('CREATE TRIGGER contracts_change_guard BEFORE INSERT OR UPDATE OR DELETE ON contracts_contractchange FOR EACH ROW EXECUTE FUNCTION contracts_change_guard()')
         elif vendor == 'sqlite':
-            for suffix in ('guard', 'insert_guard', 'update_guard', 'no_delete'):
-                cursor.execute(f'DROP TRIGGER IF EXISTS {CONTRACT}_{suffix}')
-                cursor.execute(f'DROP TRIGGER IF EXISTS {CHANGE}_{suffix}')
-            cursor.execute(f"""CREATE TRIGGER {CONTRACT}_guard BEFORE DELETE ON {CONTRACT}
+            for suffix in ('guard', 'insert_guard', 'update_guard', 'no_delete', 'transition_guard'):
+                cursor.execute(f'DROP TRIGGER IF EXISTS contracts_contract_{suffix}')
+                cursor.execute(f'DROP TRIGGER IF EXISTS contracts_contractchange_{suffix}')
+            cursor.execute("""CREATE TRIGGER contracts_contract_guard BEFORE DELETE ON contracts_contract
                 BEGIN SELECT RAISE(ABORT, 'Contract history cannot be deleted'); END""")
-            cursor.execute(f"""CREATE TRIGGER {CONTRACT}_update_guard BEFORE UPDATE ON {CONTRACT}
+            cursor.execute("""CREATE TRIGGER contracts_contract_update_guard BEFORE UPDATE ON contracts_contract
                 WHEN OLD.status = 'terminated'
                     OR (NEW.status = 'terminated' AND (OLD.status <> 'active' OR NEW.terminated_on IS NULL))
                     OR (NEW.terminated_on IS NOT NULL AND NEW.status <> 'terminated')
                 BEGIN SELECT RAISE(ABORT, 'Invalid contract termination transition'); END""")
-            cursor.execute(f"""CREATE TRIGGER {CHANGE}_insert_guard BEFORE INSERT ON {CHANGE}
+            cursor.execute("""CREATE TRIGGER contracts_contractchange_insert_guard BEFORE INSERT ON contracts_contractchange
                 WHEN NEW.status <> 'draft' OR NEW.version <> 1 OR NEW.decided_by_member_id IS NOT NULL
                     OR NEW.decided_on IS NOT NULL OR NEW.decision_note <> ''
-                BEGIN SELECT RAISE(ABORT, 'Contract change must start as a draft'); END""")
-            cursor.execute(f"""CREATE TRIGGER {CHANGE}_update_guard BEFORE UPDATE ON {CHANGE}
+                    OR NOT EXISTS (SELECT 1 FROM contracts_contract c
+                                   WHERE c.id = NEW.contract_id AND c.organization_id = NEW.organization_id
+                                     AND c.status = 'active')
+                BEGIN SELECT RAISE(ABORT, 'Contract change must start as a draft of an active contract'); END""")
+            cursor.execute("""CREATE TRIGGER contracts_contractchange_update_guard BEFORE UPDATE ON contracts_contractchange
                 WHEN OLD.status <> 'draft'
                     OR NEW.id <> OLD.id OR NEW.organization_id <> OLD.organization_id
                     OR NEW.contract_id <> OLD.contract_id OR NEW.change_type <> OLD.change_type
                     OR NEW.requested_on IS NOT OLD.requested_on
                     OR NEW.created_by_member_id <> OLD.created_by_member_id
                     OR NEW.created_at IS NOT OLD.created_at
-                    OR NEW.net_delta_cents <> OLD.net_delta_cents
-                    OR NEW.tax_delta_cents <> OLD.tax_delta_cents
-                    OR NEW.gross_delta_cents <> OLD.gross_delta_cents
-                    OR NEW.draft_content IS NOT OLD.draft_content OR NEW.evidence IS NOT OLD.evidence
                     OR NEW.create_token IS NOT OLD.create_token OR NEW.create_digest <> OLD.create_digest
                     OR (NEW.status = 'draft' AND (NEW.version <> OLD.version + 1
                         OR NEW.decided_by_member_id IS NOT NULL OR NEW.decided_on IS NOT NULL
                         OR NEW.decision_note <> ''))
-                    OR (NEW.status IN ('approved', 'rejected', 'withdrawn') AND (NEW.version <> OLD.version + 1
+                    OR (NEW.status IN ('approved', 'rejected', 'withdrawn') AND (
+                        NEW.version <> OLD.version + 1
                         OR NEW.decided_by_member_id IS NULL OR NEW.decided_on IS NULL
-                        OR (NEW.status = 'rejected' AND NEW.decision_note = '')))
+                        OR NEW.decided_by_member_id = NEW.created_by_member_id
+                        OR (NEW.status = 'rejected' AND NEW.decision_note = '')
+                        OR (NEW.status = 'approved' AND NOT EXISTS (
+                            SELECT 1 FROM contracts_contract c WHERE c.id = NEW.contract_id
+                              AND c.status = 'active'))
+                        OR NEW.net_delta_cents <> OLD.net_delta_cents
+                        OR NEW.tax_delta_cents <> OLD.tax_delta_cents
+                        OR NEW.gross_delta_cents <> OLD.gross_delta_cents
+                        OR NEW.draft_content IS NOT OLD.draft_content
+                        OR NEW.evidence IS NOT OLD.evidence))
                     OR (NEW.status NOT IN ('draft', 'approved', 'rejected', 'withdrawn'))
                 BEGIN SELECT RAISE(ABORT, 'Invalid contract change transition'); END""")
-            cursor.execute(f"""CREATE TRIGGER {CHANGE}_no_delete BEFORE DELETE ON {CHANGE}
+            cursor.execute("""CREATE TRIGGER contracts_contractchange_no_delete BEFORE DELETE ON contracts_contractchange
                 BEGIN SELECT RAISE(ABORT, 'Contract change history cannot be deleted'); END""")
 
 
