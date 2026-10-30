@@ -186,3 +186,90 @@ class CashReceipt(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError('现金收据不可删除')
+
+
+class Refund(models.Model):
+    """Append-only refund fact: posted incoming cash actually flowed back out."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='cash_refunds')
+    original_cash_transaction = models.ForeignKey(CashTransaction, on_delete=models.PROTECT,
+                                                  related_name='refunds')
+    refund_cash_transaction = models.ForeignKey(CashTransaction, on_delete=models.PROTECT,
+                                               related_name='refund_source')
+    original_cash_ref = models.JSONField()
+    refund_date = models.DateField()
+    gross_cents = models.PositiveBigIntegerField()
+    reason = models.CharField(max_length=500)
+    status = models.CharField(max_length=16, default='active')
+    version = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['organization', 'refund_cash_transaction'],
+                                    name='cash_refund_cash_unique'),
+            models.CheckConstraint(condition=Q(gross_cents__gt=0, gross_cents__lte=MAX_CENTS),
+                                   name='cash_refund_amount_bound'),
+            models.CheckConstraint(condition=Q(status='active'),
+                                   name='cash_refund_status'),
+        ]
+
+    @property
+    def refund_ref(self):
+        return {'namespace': 'cash', 'kind': 'refund', 'id': str(self.pk),
+                'version': self.version}
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            super().save(*args, **kwargs)
+            return
+        raise ValidationError('退款事实不可修改')
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('退款事实不可删除')
+
+
+class BankReturn(models.Model):
+    """Append-only bank return fact: the original bank flow came back in reverse."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='cash_bank_returns')
+    original_cash_transaction = models.ForeignKey(CashTransaction, on_delete=models.PROTECT,
+                                                  related_name='bank_returns')
+    return_cash_transaction = models.ForeignKey(CashTransaction, on_delete=models.PROTECT,
+                                               related_name='return_source')
+    original_cash_ref = models.JSONField()
+    return_date = models.DateField()
+    gross_cents = models.PositiveBigIntegerField()
+    status = models.CharField(max_length=16, default='active')
+    version = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['organization', 'return_cash_transaction'],
+                                    name='cash_bank_return_cash_unique'),
+            models.CheckConstraint(condition=Q(gross_cents__gt=0, gross_cents__lte=MAX_CENTS),
+                                   name='cash_bank_return_amount_bound'),
+            models.CheckConstraint(condition=Q(status='active'),
+                                   name='cash_bank_return_status'),
+        ]
+
+    @property
+    def bank_return_ref(self):
+        return {'namespace': 'cash', 'kind': 'bank_return', 'id': str(self.pk),
+                'version': self.version}
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            super().save(*args, **kwargs)
+            return
+        raise ValidationError('银行退回事实不可修改')
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('银行退回事实不可删除')

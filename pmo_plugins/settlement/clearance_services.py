@@ -198,7 +198,12 @@ def create_clearance(member, *, open_item_id, cash_transaction_ref, cleared_cent
     _period(member, day)
     remaining_open = item.gross_cents - _open_cleared(item)
     cash_id = _identifier(cash['id'], '现金流水标识无效')
-    remaining_cash = cash['gross_cents'] - _cash_cleared(member, cash_id)
+    # PH-240 joint coverage: a bank fact can be refunded/returned and cleared, but the sum
+    # must never exceed its posted gross. The cash owner exposes the read-only refund
+    # coverage so both write paths use the same derived ceiling.
+    from pmo_plugins.cash.refund_services import refund_coverage_for_cash
+    refund_total = refund_coverage_for_cash(member, cash['transaction_ref'])['total_cents']
+    remaining_cash = cash['gross_cents'] - _cash_cleared(member, cash_id) - refund_total
     if remaining_open <= 0 or remaining_cash <= 0:
         _fail('该未清项或现金流水已无未核销余额')
     if cleared > min(remaining_open, remaining_cash):
@@ -214,7 +219,8 @@ def create_clearance(member, *, open_item_id, cash_transaction_ref, cleared_cent
         with transaction.atomic():
             clearance.save()
         # Recheck under the company lock so no half write can leave a negative balance.
-        if _open_cleared(item) > item.gross_cents or _cash_cleared(member, cash_id) > cash['gross_cents']:
+        if (_open_cleared(item) > item.gross_cents
+                or _cash_cleared(member, cash_id) + refund_total > cash['gross_cents']):
             _fail('核销后余额为负，已拒绝本次核销')
     except IntegrityError:
         _fail('核销记录写入冲突，请刷新后重试')
@@ -342,11 +348,55 @@ def cash_candidates_for_open_item(member, open_item_id):
     candidates = posted_cash_candidates(member, counterparty_id=item.counterparty_id,
                                         as_of=timezone.localdate())
     result = []
+    from pmo_plugins.cash.refund_services import refund_coverage_for_cash
     for candidate in candidates:
         cash_id = _identifier(candidate['id'], '现金流水标识无效')
         cleared = _cash_cleared(member, cash_id)
-        available = max(0, candidate['gross_cents'] - cleared)
+        refund_total = refund_coverage_for_cash(
+            member, candidate['transaction_ref'])['total_cents']
+        available = max(0, candidate['gross_cents'] - cleared - refund_total)
         result.append({**candidate, 'cleared_cents': cleared,
-                       'available_cents': available,
+                       'refunded_cents': refund_total, 'available_cents': available,
                        'available_display': _yuan(available)})
     return result
+
+
+COVERAGE_READ_ROLES = {'owner', 'finance', 'auditor'}
+
+
+def clearance_coverage_for_cash(member, cash_transaction_ref):
+    """Cross-owner read-only clearance coverage of one posted bank fact (PH-240).
+
+    Cash refund/return coverage consumes this named read. Offset coverage is reserved on the
+    same interface but is not implemented in this slice, so offset_cents stays 0 and is
+    explicitly labelled instead of being fabricated.
+    """
+    from pmo_plugins.cash.models import CashTransaction
+    member = _fresh(member, check_module=False)
+    if member.role not in COVERAGE_READ_ROLES:
+        raise PermissionDenied('无权读取现金核销覆盖')
+    if (not isinstance(cash_transaction_ref, dict)
+            or set(cash_transaction_ref) != {'namespace', 'kind', 'id', 'version'}):
+        _fail('现金流水来源无效')
+    if (cash_transaction_ref['namespace'] != 'cash'
+            or cash_transaction_ref['kind'] != 'cash_transaction'
+            or type(cash_transaction_ref['version']) is not int):
+        _fail('现金流水来源无效')
+    try:
+        cash = CashTransaction.objects.get(
+            organization=member.organization,
+            pk=_identifier(cash_transaction_ref['id'], '现金流水不存在或无权访问'))
+    except CashTransaction.DoesNotExist:
+        raise PermissionDenied('现金流水不存在或无权访问')
+    if cash.version != cash_transaction_ref['version']:
+        _fail('现金流水版本已变化，请刷新后重试')
+    if cash.status != 'posted':
+        _fail('仅已过账现金有核销覆盖')
+    cleared = Clearance.objects.filter(organization=member.organization,
+                                       cash_transaction_id=cash.pk,
+                                       status='active').aggregate(
+        total=Sum('cleared_cents'))['total'] or 0
+    return {'cash_transaction_ref': cash.transaction_ref,
+            'posted_gross_cents': cash.gross_cents, 'cleared_cents': cleared,
+            'offset_cents': 0, 'total_cents': cleared,
+            'offset_implemented': False}

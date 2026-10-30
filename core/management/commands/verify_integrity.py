@@ -37,7 +37,7 @@ class Command(BaseCommand):
                 if plan_remaining(plan) < 0: errors.append(f"plan:{plan.pk}:over_settlement")
         from core.models import AccountingEvent, LedgerPosting, SourceConsumption, NonProjectDestination
         from pmo_plugins.costing.models import SalaryPool, AllocationRun
-        from django.db.models import Sum
+        from django.db.models import Count, Sum
         for event in AccountingEvent.objects.select_related('claim', 'reverses_event'):
             if event.source.get('namespace') == 'management_revenue':
                 continue
@@ -165,6 +165,115 @@ class Command(BaseCommand):
         for original in CashPartyMatch.objects.filter(action='identify'):
             if original.reversals.count() > 1:
                 errors.append(f"cash_party_match:{original.pk}:reverse_count")
+        # PH-240 refunds and bank returns: append-only reverse cash facts. Each fact points at
+        # same-org posted cash, carries exactly one canonical event, and the derived coverage of
+        # every original cash fact never goes negative. No ledger/accounting/unsettled rows.
+        from pmo_plugins.cash.models import Refund as _Refund
+        from pmo_plugins.cash.models import BankReturn as _BankReturn
+        from pmo_plugins.settlement.models import Clearance as _RefundClearance
+        refund_topic = 'cash.refunded.v1'
+        return_topic = 'cash.returned.v1'
+
+        def _refund_canonical_errors(topic, ref, changed_refs, object_ref, organization_id,
+                                     label):
+            rows = _CashDomainEvent.objects.filter(
+                organization_id=organization_id, topic=topic,
+                data__source__id=str(object_ref.pk))
+            if rows.count() != 1:
+                return [f"{label}:{object_ref.pk}:{topic}:event_count"]
+            data = rows.get().data or {}
+            payload = data.get('payload') or {}
+            if (data.get('schema_version') != 1 or data.get('topic') != topic
+                    or data.get('organization_id') != str(organization_id)
+                    or data.get('source') != ref
+                    or payload.get('changed_refs') != changed_refs
+                    or payload.get('posting_event_refs') != []):
+                return [f"{label}:{object_ref.pk}:{topic}:event_envelope"]
+            return []
+
+        for refund in _Refund.objects.select_related(
+                'original_cash_transaction', 'refund_cash_transaction'):
+            original = refund.original_cash_transaction
+            new_cash = refund.refund_cash_transaction
+            if (refund.organization_id != original.organization_id
+                    or refund.organization_id != new_cash.organization_id
+                    or refund.original_cash_ref != original.transaction_ref):
+                errors.append(f"refund:{refund.pk}:refs")
+            if original.status != 'posted' or original.direction != 'in':
+                errors.append(f"refund:{refund.pk}:original_cash")
+            if new_cash.status != 'posted' or new_cash.direction != 'out':
+                errors.append(f"refund:{refund.pk}:refund_cash")
+            if (new_cash.transaction_date != refund.refund_date
+                    or new_cash.gross_cents != refund.gross_cents):
+                errors.append(f"refund:{refund.pk}:amount_or_date")
+            errors.extend(_refund_canonical_errors(
+                refund_topic, refund.refund_ref,
+                [refund.refund_ref, new_cash.transaction_ref], refund,
+                refund.organization_id, 'refund'))
+        for bank_return in _BankReturn.objects.select_related(
+                'original_cash_transaction', 'return_cash_transaction'):
+            original = bank_return.original_cash_transaction
+            new_cash = bank_return.return_cash_transaction
+            if (bank_return.organization_id != original.organization_id
+                    or bank_return.organization_id != new_cash.organization_id
+                    or bank_return.original_cash_ref != original.transaction_ref):
+                errors.append(f"bank_return:{bank_return.pk}:refs")
+            if original.status != 'posted':
+                errors.append(f"bank_return:{bank_return.pk}:original_cash")
+            expected_direction = 'in' if original.direction == 'out' else 'out'
+            if new_cash.status != 'posted' or new_cash.direction != expected_direction:
+                errors.append(f"bank_return:{bank_return.pk}:return_cash")
+            if (new_cash.transaction_date != bank_return.return_date
+                    or new_cash.gross_cents != bank_return.gross_cents):
+                errors.append(f"bank_return:{bank_return.pk}:amount_or_date")
+            errors.extend(_refund_canonical_errors(
+                return_topic, bank_return.bank_return_ref,
+                [bank_return.bank_return_ref, new_cash.transaction_ref], bank_return,
+                bank_return.organization_id, 'bank_return'))
+        cleared_by_cash = {
+            str(row['cash_transaction_id']): row['total'] for row in
+            _RefundClearance.objects.filter(status='active').values('cash_transaction_id')
+            .annotate(total=Sum('cleared_cents'))}
+        refunded_by_cash = {
+            str(row['original_cash_transaction_id']): row['total'] for row in
+            _Refund.objects.values('original_cash_transaction_id')
+            .annotate(total=Sum('gross_cents'))}
+        returned_by_cash = {
+            str(row['original_cash_transaction_id']): row['total'] for row in
+            _BankReturn.objects.values('original_cash_transaction_id')
+            .annotate(total=Sum('gross_cents'))}
+        for transaction in CashTransaction.objects.all():
+            refundable = (transaction.gross_cents
+                          - cleared_by_cash.get(str(transaction.pk), 0)
+                          - refunded_by_cash.get(str(transaction.pk), 0)
+                          - returned_by_cash.get(str(transaction.pk), 0))
+            if refundable < 0:
+                errors.append(f"cash_transaction:{transaction.pk}:refund_coverage_negative")
+        for duplicate in CashTransaction.objects.values(
+                'organization_id', 'funding_account_id', 'external_source_key').annotate(
+                count=Count('id')).filter(count__gt=1):
+            errors.append('cash_transaction:duplicate_external_source_key')
+        # PH-240 guard is scoped to refund/bank-return provenance only. PH-243/PH-239 freeze
+        # the legitimate cash classification bridge (one AccountingEvent + one
+        # cash_in/cash_out funding_account posting per effective classification), so a global
+        # 'cash namespace must not post' rule would reject valid PH-239 rows. Reject only
+        # events sourced at a refund/return fact or explicitly tagged refund/bank_return;
+        # classification-bridge events use source kind cash_classification and stay allowed.
+        from django.db.models import Q
+        refund_produced_cash_ids = [
+            str(row['refund_cash_transaction_id'])
+            for row in _Refund.objects.values('refund_cash_transaction_id')]
+        refund_produced_cash_ids += [
+            str(row['return_cash_transaction_id'])
+            for row in _BankReturn.objects.values('return_cash_transaction_id')]
+        refund_ledger_events = AccountingEvent.objects.filter(
+            source__namespace='cash').filter(
+            Q(source__kind__in=['refund', 'bank_return'])
+            | Q(source__kind='cash_transaction', source__id__in=refund_produced_cash_ids))
+        if refund_ledger_events.exists():
+            errors.append('cash_transaction:unexpected_refund_accounting_event')
+        if LedgerPosting.objects.filter(accounting_event__in=refund_ledger_events).exists():
+            errors.append('cash_transaction:unexpected_refund_cash_posting')
         from pmo_plugins.settlement.models import OpenItem, Settlement
         for settlement in Settlement.objects.filter(status='active'):
             items = list(settlement.items.all())
