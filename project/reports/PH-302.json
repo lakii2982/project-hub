@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD efeb6fd (BASE c640a1c, PH-302 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":229}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run (reviewed HEAD 1705393, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":229}, exit 0; PH-302 done with handoff and PH-307 ready on PH-302 done."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (flaky-test task registration plus planning registration); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-302 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "FLAKY FIX/PH-303 VERIFIED: PH-303 is a test-only risk-A slice, ready on done PH-291, whose spec fixes the random CSRF/substring collision by replacing the 2-character `C8` full-page assertNotContains with a sufficiently long unique fixed contract code (or a scoped/structured assertion), preserves the pm-scope and `cash_not_scoped_to_project` business assertions, requires the same HTTP test to pass at least three consecutive runs, and whitelists only the affected test file plus tasks/manifest/docs/report/handoff (6 exact paths, matching the spec). No product/migration/other-test/governance change.",
+      "NEW TASKS/DEPENDENCIES: task_count 229 unique continuous PH-303..PH-307 (BASE max 302; no remote/local branch/spec >=303). PH-303 (flaky test fix) ready on done PH-291; PH-304 (authorized read-only CSV export of reconciliation worksheets over the done PH-291/283/288/280/281 views) ready with a canonical delivery/domain_metadata history_read route requirement and urls import-only, no write/migration; PH-305 (shared-cost allocation contract freeze) proposed on proposed PH-162/255; PH-306 (budget/ETC contract freeze) proposed on proposed PH-177/261; PH-307 next planning slot proposed on PH-302 in_review with the done-transition blocker. No proposed task was promoted; blockers accurately reflect the proposed deps.",
+      "DoR/NUMBERING/ACCEPTANCE: PH-303 has a concrete regression/fix and repeated-run acceptance; PH-304 freezes dataset enum/CSV/UTF-8-BOM/dry_run/permission/desensitization/token receipt/no-audit/no-write and a 14-path whitelist; PH-305/306 are docs-only contract freezes with no code/migration/schema, integer-cent/ROUND_HALF_UP, null+missing and precise whitelists; PH-307 is the next slot. All acceptance commands are executable; no `<PH-`/`{tid}` placeholders; no code/scaffold/schema/contract changes; 10 changed files all inside PH-302 allowed_paths; PH-302 in_review with owner/handoff, PH-307 proposed.",
+      "SLOT CONVENTION/GATES: PH-302 remains in_review and PH-307 proposed; after this pass the final evidence commit must set PH-302 done/PH-307 ready and clear the blocker, then rerun check/verify-change. At HEAD 1705393 (BASE c640a1c): projectctl check ok=true/task_count=229; governance 23 tests OK; verify-change --base c640a1c --task PH-302 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; manifest=PH-302."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 1705393 (BASE c640a1c) in /tmp/ph302-planning, worktree clean; 10 changed files all inside PH-302 allowed_paths; task_count 229 unique continuous PH-303..PH-307; manifest=PH-302. PH-303 test-only flaky fix is ready on done PH-291 with long-unique-code/scoped-assertion fix, retained pm/cash assertions, 3x stability and exactly 6 whitelist paths; PH-304 read-only CSV export is ready on done PH-291/283/288/280/281 with canonical domain_metadata history_read/urls-import-only and no write/migration; PH-305/306 docs-only contract freezes proposed on proposed deps with accurate blockers; PH-307 proposed on PH-302 in_review. DoR/whitelists/counterexamples/acceptance complete; numbering free/continuous; no placeholders/scaffold/schema/code changes; no false promotion. Gates: check ok=true/229; governance 23 OK; verify-change --base c640a1c --task PH-302 only review/acceptance gates, no path_out_of_scope. Final evidence sets PH-302 done/PH-307 ready."
   },
   "deviations": [
     "Planning-slot state convention: PH-302 is kept in_review with handoff and PH-307 is proposed with blocker 'PH-302 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-302 done and PH-307 ready and clear the blocker.",
