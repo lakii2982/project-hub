@@ -49,11 +49,12 @@
     "cash plugin manifest keeps requires={} and default_enabled=True; counterparty/employee reads use named contracts/core interfaces at service entry with module-enabled checks, so no new plugin dependency edge or test disable-order changes are introduced.",
     "Counterparty is stored as a validated UUID field rather than a cross-owner database FK, preserving the owner boundary; cash writes never read contracts tables directly.",
     "Drafts are not projected as canonical FundingAccount/CashTransaction entities and no canonical cash event is written; generic cash.* audits still create non-canonical DomainEvents through the existing audit helper.",
-    "No ledger/Balance integration exists yet: cash facts are recorded but not posted; posting/classification is the next planning slot's priority and PH-169 is not complete."
+    "No ledger/Balance integration exists yet: cash facts are recorded but not posted; posting/classification is the next planning slot's priority and PH-169 is not complete.",
+    "Browser evidence on HEAD 2c71e9c: 32/32 checks pass, 0 failures; owner/finance write, auditor read-only, pm/member 403; payee never rendered as raw JSON; identify/reverse history visible; CSRF 403; 320-1440 no overflow; cash-disabled routes 403 while service history stays readable; 0 server 500s."
   ],
   "unverified": [
     "PostgreSQL concurrency (3 tests) is executed by the PR CI job; local SQLite skips are not evidence.",
     "Cash posting, classification, allocation, clearing (PH-170), refunds (PH-171), bank-file import, opening balances, production/customer UAT remain unverified/not implemented; PH-169 is not complete.",
-    "Browser evidence covers Chromium 320/390/768/1024/1440 only; printing/dark mode/touch/non-Chromium untested."
+    "Browser evidence covers Chromium 320/390/768/1024/1440 only, and the browser run did not click the account-activation button itself (activation was seeded through the real service; HTTP tests cover the UI activation path)."
   ]
 }
