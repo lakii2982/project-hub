@@ -1,0 +1,42 @@
+{
+  "task_id": "PH-221",
+  "summary": "Service-period revenue planning: register PH-222 (service confirmation + service-month management revenue) and PH-223 next planning slot as ready with exact whitelists, and freeze product decisions plus canonical-event/command boundaries in ADR-0008/spec; no product code, schema, migration or business implementation.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual 145 tasks validated after review fixes: PH-221 done with handoff, PH-222/PH-223 ready, dependencies done."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass (run 2.497s)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 289354c --task PH-221",
+      "result": "pass",
+      "evidence": "Post-commit rerun: changed paths inside BASE allowed_paths, report review pass and both BASE acceptance commands declared."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent S reviewer (fresh context, read-only; no writes)",
+    "status": "pass",
+    "findings": [
+      "Blocker 1 closed: PH-222 spec wrongly claimed no registered service-confirmation topic; spec/ADR now freeze one canonical delivery.service_confirmation_changed.v1 on formal confirmation and keep generic audit for drafts/withdraw/reversal, and state that delivery.service_confirmation.draft.save/v1 plus PH-149 core.document.decide handler belong to command/PAT wiring outside this slice.",
+      "Blocker 2 closed: report review status, reviewer and findings recorded; verification claims rerun after commit with actual output.",
+      "Non-blocking adopted: cumulative contract-line revenue cap, month-level aggregation definition, integer-multiply-then-Decimal-divide rule, cross-month judgement by approved schedule segment (schedule_index) rather than line dates, month-row sum equals parent confirmed_net_cents.",
+      "Deferred note recorded in handoff: docs/adr/0008 status flip and plugin.py descriptions, and the PH-149/PH-167 second-owner prohibition, handed to PH-223 so no second ServiceConfirmation or revenue owner is created."
+    ],
+    "evidence": "Independent reviewer read PH-222/ADR-0008/PH-221/PH-223, tasks/manifest, accounting rules, delivery and management_revenue code, contracts schemas and projectctl; independently recomputed the HALF_UP split (34/33/34, 34/67) and ran 3000 randomised property cases with zero violations; reported PASS-WITH-BLOCKERS then both blockers were fixed before this verdict."
+  },
+  "deviations": [
+    "PH-221 status advanced ready -> in_progress -> done inside this planning branch; PH-222/PH-223 become ready only in the same commit where PH-221 is done.",
+    "Cross-month no_partial is rejected instead of guessing month prices; the remaining capability is deferred to a future contract-change task."
+  ],
+  "unverified": [
+    "No PH-222 product code, model, migration, PG concurrency, browser, CSV/close, customer UAT or production evidence; none claimed.",
+    "PH-222 implementation is not authorized until this planning PR merges into a trusted BASE and the task is ready there.",
+    "The independent reviewer did not run manage.py suites, migrations, PostgreSQL or browser checks for this planning slice."
+  ]
+}
