@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run on BASE e43c2c2: {\"command\":\"check\",\"ok\":true,\"task_count\":220}."
+      "evidence": "Final Lead integration rerun after rebase onto e5aa0fb: {\"command\":\"check\",\"ok\":true,\"task_count\":224} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -52,7 +52,8 @@
     "PH-251 的 ReceiptFeeSettlement/existing_cost_ref 复用/counterparty-borne/税额抵扣拆分一律显式 not_implemented 占位，不伪造金额或配对；tax_split_implemented=false。",
     "可选 generic audit `costing.bank_charge_pairing.viewed` 未写：保持只读接口零审计副作用，report/handoff 披露。",
     "反例测试兼容 append-only：approved 无成本、重复成本事件、成本金额不符、未批准成本等无法经服务产生的半笔，用 vendor-aware 临时 drop costing 触发器后仅 INSERT 合成（不 UPDATE/DELETE 历史事实），TestCase 回滚恢复触发器；PG CI 走同一分支。",
-    "无模型/迁移/canonical topic/command/schema 变更；无手续费/成本/现金/账本写；不改 PH-244/PH-250 已交付服务语义。"
+    "无模型/迁移/canonical topic/command/schema 变更；无手续费/成本/现金/账本写；不改 PH-244/PH-250 已交付服务语义。",
+    "Lead integration rebase (e43c2c2 -> e5aa0fb) after PH-298 merged: docs/verification.md conflict resolved keeping main entries plus the PH-280 entry; manifest.active_handoff -> PH-280. Gates rerun green."
   ],
   "unverified": [
     "PostgreSQL 运行证据以 CI 为准（本机 SQLite 仅验证服务/模板/反例与 vendor-aware 路径审阅）。",
