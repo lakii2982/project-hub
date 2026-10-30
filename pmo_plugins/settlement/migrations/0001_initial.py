@@ -126,4 +126,8 @@ class Migration(migrations.Migration):
             model_name='settlementreceipt',
             constraint=models.UniqueConstraint(fields=('organization', 'request_token'), name='settlement_receipt_token_unique'),
         ),
+        migrations.AddConstraint(
+            model_name='settlement',
+            constraint=models.CheckConstraint(condition=models.Q(('status__in', ['draft', 'submitted', 'active', 'withdrawn'])), name='settlement_status_choices'),
+        ),
     ]
