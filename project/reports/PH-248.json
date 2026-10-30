@@ -1,0 +1,43 @@
+{
+  "task_id": "PH-248",
+  "summary": "Consumed the PH-248 planning slot on main c1cd18d (PH-239 and PH-253 merged). Promoted three tasks to ready with evidence: PH-249 (PH-232 coverage formula sync) because PH-240 is done (a760cf7) and the implemented formula was verified as gross - cleared - refund_total where refund_total aggregates active refunds plus active bank returns via refund_coverage_for_cash; PH-241 (Offset) because PH-210/PH-224/PH-230/PH-232/PH-239 are all done and its spec now reuses PH-239's delivered advance classification, classification_recorded event with exactly one core accounting event, bank_effect claim semantics and verify_integrity bridge assertions; PH-245 (internal transfer) because PH-239/PH-244 are done, with its spec frozen to reuse PH-239's non-routed internal service record_internal_classification(member, *, cash_transaction_id, evidence, occurred_on, posting_period, request_token, dry_run), keep transfer internal-only while the client command keeps four values, declare zero coupling with PH-244 fees, and use cash migration 0006 after PH-239's 0005. Registered PH-254 (PH-244 full-suite evidence 772/55 -> 773/56 correction, ready), PH-255 (shared-expense allocation first slice, proposed, blocked on PH-162/PH-153), PH-256 (import preview and conflict list first slice, proposed, blocked on PH-181/PH-185 plus the importing-app ownership decision), PH-257 (period precheck and reconciliation-case read-only first slice, proposed, blocked on PH-180/PH-181 plus the insights-app ownership decision) and PH-258 as the next planning slot (ready). PH-251/PH-252 stay proposed with their frozen blockers. No product code, migration, test or runtime behavior was written; this is planning registration only.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE c1cd18d): exit 1, {\"command\":\"check\",\"errors\":[{\"code\":\"high_risk_review_required\",\"message\":\"risk S reports require a named reviewer with status pass\",\"path\":\"report.review\"}],\"ok\":false} — single review-pending error, no path/schema errors. Never declared pass before the reviewer landed."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-248 on main c1cd18d with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base c1cd18d --task PH-248",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE c1cd18d): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope — all 13 changed files (PH-241/PH-245/PH-249 spec updates, 5 new specs PH-254..258, tasks.json, manifest.json, docs/verification.md, PH-248 report/handoff) are inside BASE PH-248 allowed_paths. Replaced after the reviewer lands."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (planning registration and CRITICAL_PATHS governance files); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Pre-merge planning-gap fixes requested by the Lead after PH-241/PH-245 implementer surveys: (1) PH-241 task/spec whitelists now add pmo_plugins/settlement/clearance_services.py, aging_services.py and clearance_list.html so cleared+offset stays within gross and aging remains correct; (2) PH-241 froze the 方案 a adjudication - advance available = gross - Σactive cleared - Σactive offsets, PH-232's posted_cash_candidates/create_clearance must exclude advance-classified cash via the PH-239 classification read-only, verify_integrity asserts one cash cannot have both active clearance and active offset, and because PH-232's frozen spec text is not synced this cross-slice behavior change is explicitly deferred to PH-249 or a separate small fix and disclosed in deviations; (3) PH-245 spec now models the canonical append-only InternalTransferReversal (internal_transfer_ref, out/in classification_reversal_ref, occurred_on, posting_period, status posted, version; reversed event source must be that ref), states the unconditional lifetime Unique(out_cash_transaction)/Unique(in_cash_transaction) constraints (not released by reversal), and adds implementation notes (two legs use different request tokens, the internal classification function has no role check so the service layer validates owner/finance first, each classification/reversal writes a CashReceipt to be disclosed in the implementation report). No other registered task/spec/status changed.",
+    "PH-241/PH-245/PH-249 were promoted to ready with blockers cleared only because the BASE c1cd18d tasks.json shows all their dependencies done (PH-240, PH-239, PH-244 etc.); no other proposed task was promoted (PH-251/PH-252/PH-255/PH-256/PH-257 keep their frozen blockers).",
+    "PH-245's spec was updated to reference the exact delivered PH-239 internal service record_internal_classification and the current cash migration leaf 0005 -> 0006; PH-241's spec now names the delivered PH-239 classification/bridge interfaces; PH-249's spec cites the actual PH-240 implementation names (`clearance_coverage_for_cash`, `refund_coverage_for_cash(...).total_cents`). No contract schema, whitelist scope or acceptance command of those tasks was weakened.",
+    "PH-254's acceptance intentionally includes a full product-suite rerun (`manage.py test tests --verbosity 1`) because the fix is about a full-suite evidence number; if that run disagrees with 773/56 at implementation BASE, the implementer must record the actual BASE output and disclose it rather than copy 773/56.",
+    "PH-256/PH-257 carry explicit app-ownership pre-decision points (importing / insights) mirroring the PH-252 invoicing pattern: the planning slot does not preset creating a new plugin app or SDK/plugin contract; the tasks stay proposed until the upstream planning confirms ownership.",
+    "PH-254's whitelist deliberately excludes product code/tests and the PH-244 review block; only the single full-suite tests row and a verification calibration sentence may change."
+  ],
+  "unverified": [
+    "No product code, migration, runtime service, browser, PostgreSQL or CI evidence exists for PH-254/PH-255/PH-256/PH-257/PH-258; they are frozen planning contracts only.",
+    "PH-254's 773/56 figure is the reviewer-observed final-main caliber; the implementation must rerun the full suite on its own BASE before editing the evidence row.",
+    "PH-255/PH-256/PH-257 remain proposed: their named upstream tasks (PH-162/PH-153, PH-181/PH-185, PH-180/PH-181) are not done, and the importing/insights app ownership decisions are not made.",
+    "PH-249/PH-241/PH-245 are ready but unimplemented; their runtime/browser/PG/CI evidence will come from their own implementation slices.",
+    "Full product test suite not run locally for this planning-only slice; required CI checks cover the PR."
+  ]
+}
