@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}客户可计费确认草稿{% endblock %}{% block breadcrumb %}项目财务 / 客户可计费确认{% endblock %}{% block content %}
+<section class="page-header"><div><h1 tabindex="-1">{% if row %}修改确认草稿{% else %}新建确认草稿{% endif %}</h1><p>引用已批准工时与客户确认工时合同条款；创建人不能确认自己的草稿。</p></div></section>
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<form method="post" action="{{ save_url }}" class="panel"><div class="body">
+{% csrf_token %}{{ form.as_p }}
+<div class="actions"><button class="button primary" type="submit">保存确认草稿</button><a class="button" href="{{ list_url }}">返回列表</a></div>
+</div></form>
+{% endblock %}
