@@ -314,3 +314,7 @@ PH219 PR111/e592275真实CI发现旧合同PG用例默认依赖前置不再成立
 
 
 PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合入f98755c，才在两个原合同PG class setup隔离新业务依赖；共同Fixture与原测试体保持。新默认依赖拒绝反例、无条件来源event验证保留，仅独立schema工具按实际依赖条件执行。本机605项101.443秒579通过26环境跳过；真实PG17.11当前CI605项95.546秒595通过10跳过，6新收入PG及原合同竞态实际执行，完整性ok=true/errors=[]。源码全部12CI成功/CLEAN/0讨论，独立窄修S35项21通过14跳过。最终元数据head仍须全部CI与正常合入；无生产/客户验收，完整1.0未完成。
+
+## PH222 服务期客户确认与归属月份管理收入（2026-10-30）
+
+固定 Python3.12 + DRF3.18.2 + TMPDIR=/private/tmp 实际执行：全量 639 项 OK（34 环境/PG skip）、专项 34 项 OK（8 skip，其中 20 服务层 + 6 HTTP 执行）、check 与 makemigrations 无问题、verify_integrity ok（47 entries）。迁移：全新库 migrate/seed 通过；旧 0.0.58 备份（36 表/47 LedgerEntry）与 PH219 非空业务库（2 验收/2 收入/合同行）副本实际升级，重复 migrate 无待执行，旧业务列逐表比对 0 变化（仅权限/内容类型/迁移记录/sqlite_sequence 预期增长）。契约 9 schema/2977 refs/137 requirements/71 commands/47 events、19 正 37 拒、fixture errors=[]。浏览器真实登录 1440/390/多宽度、客户确认日期与服务月分列、逐月办理/反冲/锁月拒绝/CSV/五角色/键盘/停用态证据见 runtime/ph222-browser（私有忽略，未装产品）。PG 多连接竞态由 CI PostgreSQL 作业执行，本机无 PG，不以 SQLite 冒充。独立 S 复核与当次 CI 另核；无生产或客户验收。

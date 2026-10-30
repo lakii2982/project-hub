@@ -422,3 +422,51 @@ class ServiceMonthSummaryIntegrityTests(ServiceRevenueFixture, TestCase):
         self.denied(lambda: self.recognize(row, '2026-01', expected_version=row.confirmed_version + 1))
         self.denied(lambda: self.recognize(row, None))
         self.assertEqual(before, self.facts())
+
+
+class ServiceConfirmationEventTests(ServiceRevenueFixture, TestCase):
+    """Formal confirmation emits the one registered canonical event; other steps stay generic."""
+
+    def test_formal_confirmation_emits_single_canonical_event(self):
+        row = self.confirmation(start=date(2026, 1, 31), end=date(2026, 2, 2),
+            confirmed_on=date(2026, 2, 10))
+        canonical = DomainEvent.objects.filter(topic='delivery.service_confirmation_changed.v1')
+        self.assertEqual(canonical.count(), 1)
+        event = canonical.get()
+        ref = {'namespace': 'delivery', 'kind': 'service_confirmation',
+               'id': str(row.pk), 'version': row.confirmed_version}
+        self.assertEqual(event.data['source'], ref)
+        self.assertEqual(event.data['payload'], {'changed_refs': [ref], 'posting_event_refs': []})
+        self.assertEqual(event.data['schema_version'], 1)
+        self.assertEqual(event.source.action, 'plugin.delivery.service_confirmation_confirmed')
+        self.assertEqual(event.source.entity_id, str(row.pk))
+        self.assertFalse(DomainEvent.objects.filter(topic='delivery.service_confirmed.v1').exists())
+        self.assertFalse(DomainEvent.objects.filter(topic='delivery.accepted.v1').exists())
+        topics = set(DomainEvent.objects.values_list('topic', flat=True))
+        self.assertIn('delivery.service_confirmation.saved.v1', topics)
+        self.assertIn('delivery.service_confirmation.submitted.v1', topics)
+
+    def test_reversal_and_withdraw_stay_generic(self):
+        row = self.confirmation(start=date(2026, 1, 31), end=date(2026, 2, 2),
+            confirmed_on=date(2026, 2, 10))
+        jan = self.recognize(row, '2026-01')
+        self.reverse(jan)
+        self.reverse_parent(row)
+        self.assertEqual(DomainEvent.objects.filter(
+            topic='delivery.service_confirmation_changed.v1').count(), 1)
+        topics = set(DomainEvent.objects.values_list('topic', flat=True))
+        self.assertIn('delivery.service_confirmation.reversed.v1', topics)
+        self.assertNotIn('delivery.service_confirmed.v1', topics)
+
+    def test_withdraw_stays_generic(self):
+        row = self.confirmation(start=date(2026, 1, 31), end=date(2026, 2, 2),
+            confirmed_on=date(2026, 2, 10), confirmed=False)
+        row = service_period.submit_service_confirmation(self.owner, row.pk,
+            expected_version=row.version, request_token=uuid.uuid4(), dry_run=False)
+        service_period.withdraw_service_confirmation(self.owner, row.pk,
+            expected_version=row.version, request_token=uuid.uuid4(), reason='客户依据撤回重登', dry_run=False)
+        self.assertFalse(DomainEvent.objects.filter(
+            topic='delivery.service_confirmation_changed.v1').exists())
+        self.assertIn('delivery.service_confirmation.withdrawn.v1',
+                      set(DomainEvent.objects.values_list('topic', flat=True)))
+
