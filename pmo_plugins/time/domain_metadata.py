@@ -6,10 +6,12 @@ DOMAIN_METADATA = {
     'routes': [
         {'name': name, 'path': name.replace('_', '-') + '/', 'access': access}
         for name, access in (
-            ('billable_confirmation_list', 'business_read'),
+            ('billable_confirmation_list', 'history_read'),
             ('billable_confirmation_form', 'business_read'),
             ('billable_confirmation_save', 'business_write'),
             ('billable_confirmation_confirm', 'business_write'),
+            ('billable_confirmation_detail', 'history_read'),
+            ('billable_confirmation_reverse', 'business_write'),
         )
     ],
 }

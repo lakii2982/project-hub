@@ -8452,7 +8452,7 @@
       "title": "time 可计费确认后续片：confirmed 撤销与收入/结算只读配对",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8493,7 +8493,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-276.md"
     },
     {
       "id": "PH-277",

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}客户可计费确认 · {{ row.pk }}{% endblock %}{% block breadcrumb %}项目财务 / 客户可计费确认 / 详情{% endblock %}{% block content %}
+<section class="page-header"><div><h1 tabindex="-1">客户可计费确认</h1><p>确认事实只读展示；撤销为 append-only 状态迁移，不改历史分钟，不重算收入、账本、现金或未清。</p></div><a class="button" href="{{ list_url }}">返回列表</a></section>
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<section class="panel"><div class="panel-heading"><h2>确认事实</h2></div><div class="panel-body"><dl class="detail-grid">
+<div><dt>状态</dt><dd><span class="badge {% if row.status == 'confirmed' %}success{% elif row.status == 'reversed' %}warning{% else %}info{% endif %}">{{ row.get_status_display }}</span></dd></div>
+<div><dt>版本</dt><dd>v{{ row.version }}</dd></div>
+<div><dt>客户确认日期</dt><dd>{{ row.confirmed_on|date:'Y-m-d' }}</dd></div>
+<div><dt>确认分钟</dt><dd>{{ row.confirmed_minutes }}</dd></div>
+<div><dt>工时引用</dt><dd class="trace">#{{ row.timesheet_ref.id }} · v{{ row.timesheet_ref.version }}</dd></div>
+<div><dt>合同条款引用</dt><dd class="trace">#{{ row.contract_line_ref.id }}</dd></div>
+<div><dt>创建人</dt><dd>{{ row.created_by_member.user.get_full_name|default:row.created_by_member.user.username }}</dd></div>
+<div><dt>确认人</dt><dd>{% if row.confirmed_by_member %}{{ row.confirmed_by_member.user.get_full_name|default:row.confirmed_by_member.user.username }}{% else %}—{% endif %}</dd></div>
+</dl><p class="notice">证据：{% for item in row.evidence %}{{ item.kind|default:'证据' }}{% if item.reference %} · {{ item.reference }}{% endif %}{% if not forloop.last %}；{% endif %}{% empty %}—{% endfor %}</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>收入/结算只读配对</h2></div><div class="panel-body"><dl class="detail-grid">
+<div><dt>配对状态</dt><dd><span class="badge {% if pairing.pairing_status == 'paired' %}success{% else %}warning{% endif %}">{{ pairing.pairing_status }}</span></dd></div>
+<div><dt>确认价值（按批准单价估算）</dt><dd>{% if pairing.expected_value_cents is None %}—{% else %}{{ pairing.expected_value_cents }} 分{% endif %}</dd></div>
+<div><dt>管理收入</dt><dd>{{ pairing.revenue.count }} 笔 · {{ pairing.revenue.net_cents }} 分</dd></div>
+<div><dt>已生效结算</dt><dd>{{ pairing.settlements.count }} 笔 · {{ pairing.settlements.gross_cents }} 分</dd></div>
+<div><dt>差额（收入/结算/合计）</dt><dd>{% if pairing.difference_revenue_cents is None %}—{% else %}{{ pairing.difference_revenue_cents }} / {{ pairing.difference_settlement_cents }} / {{ pairing.difference_cents }}{% endif %} 分</dd></div>
+</dl><p class="notice">配对为只读投影，不生成收入/结算，也不调整已过账事实。</p></div></section>
+{% if can_reverse %}<section class="panel"><div class="panel-heading"><h2>撤销确认</h2></div><div class="panel-body"><p class="notice">创建人不能撤销自己的确认；撤销后不可重确认或删除，历史保留。</p><form method="post" action="{{ reverse_url }}">{% csrf_token %}{{ form.as_p }}<div class="actions"><button type="submit" class="button primary">确认撤销</button><a class="button" href="{{ list_url }}">取消</a></div></form></div></section>{% elif row.status == 'reversed' %}<div class="notice">该确认已撤销；历史分钟、事件与配对只读保留。</div>{% endif %}
+{% endblock %}

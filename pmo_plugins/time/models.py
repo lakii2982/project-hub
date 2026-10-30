@@ -70,6 +70,6 @@ class BillableConfirmationReceipt(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['organization', 'request_token'],
                                     name='time_billable_receipt_token'),
-            models.CheckConstraint(condition=models.Q(action__in=['draft.save', 'confirm']),
+            models.CheckConstraint(condition=models.Q(action__in=['draft.save', 'confirm', 'reverse']),
                                    name='time_billable_receipt_action'),
         ]
