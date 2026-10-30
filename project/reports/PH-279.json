@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=212; PH-279 recorded in_review with owner/handoff; no path/acceptance schema issues."
+      "evidence": "Final Lead integration rerun after rebase onto fa1ca8d: {\"command\":\"check\",\"ok\":true,\"task_count\":216} exit 0 (PH-279 done)."
     },
     {
       "command": "python manage.py check",
@@ -52,7 +52,8 @@
     "Refund/return reverse cash facts are intentionally unclassified and covered by the Refund/BankReturn fact; they are marked derived_cash=refund/bank_return and excluded from classification_missing so the gold case stays issues=[].",
     "No verify_integrity assertion was changed or added; issue codes are aligned to the existing cash verification vocabulary but the snapshot does not mutate or extend the command.",
     "Single worker owns the whole write set (cash reconciliation service/views/template/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending.",
-    "The >1-active-classification issue branch is kept as defence in depth although the single-active unique constraint makes it unreachable through the owner services (comment added); no behaviour change."
+    "The >1-active-classification issue branch is kept as defence in depth although the single-active unique constraint makes it unreachable through the owner services (comment added); no behaviour change.",
+    "Lead integration rebase (6ddb951 -> fa1ca8d) after PH-287 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-279 entry; manifest.active_handoff -> PH-279; PH-279 flipped to done after the round-2 review pass. Gates rerun green."
   ],
   "unverified": [
     "No browser 1440/390 check was run; the snapshot/issues UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
