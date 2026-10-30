@@ -671,8 +671,10 @@ def command_check(root: Path) -> dict[str, Any]:
     return {"task_count": len(tasks)}
 
 
-def command_next(root: Path) -> dict[str, Any]:
-    _, tasks = _load_and_validate(root)
+ORIENT_COMPACT_FIELDS = ("id", "title", "kind", "risk", "status", "milestone", "depends_on")
+
+
+def _ready_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     eligible = [
         task
         for task in tasks
@@ -686,7 +688,130 @@ def command_next(root: Path) -> dict[str, Any]:
         )
     ]
     eligible.sort(key=lambda task: (task["priority"], task["id"]))
+    return eligible
+
+
+def _compact_task(task: dict[str, Any]) -> dict[str, Any]:
+    return {field: task.get(field) for field in ORIENT_COMPACT_FIELDS}
+
+
+def command_next(root: Path, compact: bool = False) -> dict[str, Any]:
+    _, tasks = _load_and_validate(root)
+    eligible = _ready_tasks(tasks)
+    if compact:
+        return {"tasks": [_compact_task(task) for task in eligible]}
     return {"tasks": eligible}
+
+
+def _acceptance_commands(root: Path, agents_relative: str = "AGENTS.md") -> list[str]:
+    path = root / agents_relative
+    if not path.is_file():
+        raise CliError("file_not_found", f"{agents_relative} does not exist", path=agents_relative)
+    text = path.read_text(encoding="utf-8")
+    section_index = text.find("## 验收与交付")
+    if section_index < 0:
+        raise CliError(
+            "section_not_found",
+            "no 验收与交付 section in AGENTS.md",
+            path=agents_relative,
+        )
+    match = re.search(r"```sh\n(.*?)```", text[section_index:], re.DOTALL)
+    if match is None:
+        raise CliError(
+            "acceptance_block_not_found",
+            "no sh code block after the 验收与交付 section",
+            path=agents_relative,
+        )
+    commands = [line.strip() for line in match.group(1).splitlines() if line.strip()]
+    if not commands:
+        raise CliError(
+            "acceptance_block_empty",
+            "the acceptance block contains no commands",
+            path=agents_relative,
+        )
+    return commands
+
+
+def command_orient(root: Path) -> dict[str, Any]:
+    manifest, tasks = _load_and_validate(root)
+    context = {
+        field: manifest.get(field)
+        for field in (
+            "schema_version",
+            "name",
+            "repository_url",
+            "version_source",
+            "current_iteration",
+            "tasks_file",
+            "active_handoff",
+        )
+    }
+    context["repository_url"] = _sanitized_repository_url(context["repository_url"])
+
+    handoff_relative = manifest.get("active_handoff")
+    if not isinstance(handoff_relative, str) or not handoff_relative:
+        raise CliError(
+            "active_handoff_missing",
+            "manifest.active_handoff must point to a handoff document",
+            path=MANIFEST_PATH,
+        )
+    handoff_path = root / handoff_relative
+    if not handoff_path.is_file():
+        raise CliError(
+            "file_not_found",
+            "active handoff does not exist",
+            path=handoff_relative,
+        )
+    return {
+        "manifest": context,
+        "active_handoff": {
+            "path": handoff_relative,
+            "content": handoff_path.read_text(encoding="utf-8"),
+        },
+        "ready": [_compact_task(task) for task in _ready_tasks(tasks)],
+        "acceptance_commands": _acceptance_commands(root),
+    }
+
+
+def command_draft_report(root: Path, task_id: str) -> dict[str, Any]:
+    if not root.is_dir():
+        raise CliError("root_not_found", "root is not a directory", path=str(root))
+    if TASK_ID_RE.fullmatch(task_id) is None:
+        raise CliError("task_id", "task id must match PH- followed by 3 to 6 digits")
+    _, tasks = _load_and_validate(root)
+    matches = [task for task in tasks if task.get("id") == task_id]
+    if not matches:
+        raise CliError("task_not_found", f"task {task_id} does not exist", path=TASKS_PATH)
+    task = matches[0]
+    if task.get("status") not in {"ready", "in_progress", "in_review"}:
+        raise CliError(
+            "task_not_executable",
+            "draft-report requires a ready, in_progress or in_review task",
+            path=TASKS_PATH,
+        )
+    risk = task.get("risk")
+    review_required = risk == "S"
+    skeleton = {
+        "task_id": task_id,
+        "summary": "",
+        "tests": [
+            {"command": command, "result": "not_run", "evidence": ""}
+            for command in task.get("acceptance", [])
+        ],
+        "review": {
+            "required": review_required,
+            "reviewer": None,
+            "status": "pending" if review_required else "not_required",
+            "findings": [],
+        },
+        "unverified": [],
+        "deviations": [],
+    }
+    return {
+        "task": {"id": task_id, "risk": risk, "acceptance": task.get("acceptance", [])},
+        "report_path": f"project/reports/{task_id}.json",
+        "report": skeleton,
+    }
 
 
 def _sanitized_repository_url(value: Any) -> Any:
@@ -1126,11 +1251,25 @@ def build_parser() -> argparse.ArgumentParser:
     check_parser.add_argument("--root", default=".")
 
     next_parser = subparsers.add_parser("next", help="list dependency-ready tasks")
+    next_parser.add_argument("--compact", action="store_true", help="emit only id/title/kind/risk/status/milestone/depends_on")
     next_parser.add_argument("--root", default=".")
 
     brief_parser = subparsers.add_parser("brief", help="show minimal task context")
     brief_parser.add_argument("task_id")
     brief_parser.add_argument("--root", default=".")
+
+    orient_parser = subparsers.add_parser(
+        "orient",
+        help="emit one-shot session context: manifest, active handoff, ready tasks, acceptance commands",
+    )
+    orient_parser.add_argument("--root", default=".")
+
+    draft_parser = subparsers.add_parser(
+        "draft-report",
+        help="print a report skeleton (result not_run) for a task; never writes files",
+    )
+    draft_parser.add_argument("task_id")
+    draft_parser.add_argument("--root", default=".")
 
     verify_parser = subparsers.add_parser(
         "verify-change",
@@ -1157,9 +1296,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         if command_name == "check":
             result = command_check(root)
         elif command_name == "next":
-            result = command_next(root)
+            result = command_next(root, compact=arguments.compact)
         elif command_name == "brief":
             result = command_brief(root, arguments.task_id)
+        elif command_name == "orient":
+            result = command_orient(root)
+        elif command_name == "draft-report":
+            result = command_draft_report(root, arguments.task_id)
         elif command_name == "verify-change":
             result = command_verify_change(root, arguments.base, arguments.task)
         else:

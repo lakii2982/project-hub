@@ -521,6 +521,105 @@ class ProjectCtlTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("tests_failed", self.error_codes(payload))
 
+    def test_next_compact_limits_fields_and_keeps_default_shape(self) -> None:
+        ready = make_task("PH-002", priority=1, allowed_paths=["safe.txt", "other.txt"])
+        self.write_fixture([ready, make_task("PH-001", status="proposed")])
+
+        code, payload, _ = self.run_cli("next", "--root", str(self.root))
+        self.assertEqual(code, 0, payload)
+        self.assertIn("allowed_paths", payload["tasks"][0])
+
+        code, payload, _ = self.run_cli("next", "--compact", "--root", str(self.root))
+        self.assertEqual(code, 0, payload)
+        self.assertEqual([task["id"] for task in payload["tasks"]], ["PH-002"])
+        self.assertEqual(
+            sorted(payload["tasks"][0]),
+            sorted(["id", "title", "kind", "risk", "status", "milestone", "depends_on"]),
+        )
+
+    def test_orient_emits_one_shot_session_facts(self) -> None:
+        manifest = make_manifest()
+        manifest["active_handoff"] = "project/handoffs/PH-001.md"
+        self.write_fixture([make_task("PH-001")], manifest=manifest)
+        self.write("project/handoffs/PH-001.md", "# Handoff PH-001\n\n继续薄片实现。\n")
+        self.write(
+            "AGENTS.md",
+            "# 约束\n\n## 验收与交付\n\n"
+            "```sh\n.venv/bin/python manage.py check\n"
+            ".venv/bin/python manage.py test tests --verbosity 1\n```\n",
+        )
+
+        code, payload, _ = self.run_cli("orient", "--root", str(self.root))
+
+        self.assertEqual(code, 0, payload)
+        self.assertEqual(payload["manifest"]["active_handoff"], "project/handoffs/PH-001.md")
+        self.assertIn("继续薄片实现", payload["active_handoff"]["content"])
+        self.assertEqual([task["id"] for task in payload["ready"]], ["PH-001"])
+        self.assertNotIn("allowed_paths", payload["ready"][0])
+        self.assertEqual(
+            payload["acceptance_commands"],
+            [
+                ".venv/bin/python manage.py check",
+                ".venv/bin/python manage.py test tests --verbosity 1",
+            ],
+        )
+
+    def test_orient_rejects_missing_sources_instead_of_guessing(self) -> None:
+        self.write_fixture([make_task("PH-001")])
+
+        code, payload, _ = self.run_cli("orient", "--root", str(self.root))
+        self.assertEqual(code, 1)
+        self.assertFalse(payload["ok"])
+        self.assertIn("active_handoff_missing", self.error_codes(payload))
+
+        manifest = make_manifest()
+        manifest["active_handoff"] = "project/handoffs/PH-001.md"
+        self.write_json("project/manifest.json", manifest)
+        self.write("project/handoffs/PH-001.md", "# Handoff\n")
+
+        code, payload, _ = self.run_cli("orient", "--root", str(self.root))
+        self.assertEqual(code, 1)
+        self.assertFalse(payload["ok"])
+        self.assertIn("file_not_found", self.error_codes(payload))
+
+    def test_draft_report_skeleton_never_predeclares_pass(self) -> None:
+        acceptance = [
+            "python scripts/projectctl.py check",
+            "python manage.py test tests --verbosity 1",
+        ]
+        self.write_fixture(
+            [
+                make_task("PH-002", risk="S", acceptance=list(acceptance)),
+                make_task("PH-003", risk="A", acceptance=list(acceptance), status="proposed"),
+            ]
+        )
+
+        code, payload, _ = self.run_cli("draft-report", "PH-002", "--root", str(self.root))
+        self.assertEqual(code, 0, payload)
+        self.assertEqual(payload["report_path"], "project/reports/PH-002.json")
+        report = payload["report"]
+        self.assertEqual(report["task_id"], "PH-002")
+        self.assertEqual(report["summary"], "")
+        self.assertTrue(report["review"]["required"])
+        self.assertEqual(report["review"]["status"], "pending")
+        self.assertEqual([entry["result"] for entry in report["tests"]], ["not_run"] * 2)
+        self.assertEqual([entry["command"] for entry in report["tests"]], acceptance)
+        self.assertFalse(any(entry["result"] == "pass" for entry in report["tests"]))
+
+        ready_a = make_task("PH-003", risk="A", acceptance=list(acceptance))
+        self.write_json(
+            "project/tasks.json",
+            {"schema_version": 1, "tasks": [ready_a]},
+        )
+        code, payload, _ = self.run_cli("draft-report", "PH-003", "--root", str(self.root))
+        self.assertEqual(code, 0, payload)
+        self.assertFalse(payload["report"]["review"]["required"])
+        self.assertEqual(payload["report"]["review"]["status"], "not_required")
+
+        code, payload, _ = self.run_cli("draft-report", "PH-999", "--root", str(self.root))
+        self.assertEqual(code, 1)
+        self.assertIn("task_not_found", self.error_codes(payload))
+
 
 if __name__ == "__main__":
     unittest.main()
