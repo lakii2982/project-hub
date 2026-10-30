@@ -7935,7 +7935,7 @@
       "title": "合同变更与终止首片：变更草稿、独立决策、生效版本与终止",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -7981,7 +7981,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-265.md"
     },
     {
       "id": "PH-266",

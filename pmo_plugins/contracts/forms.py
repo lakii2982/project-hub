@@ -56,3 +56,22 @@ class ContractDraftForm(StrictForm):
             "signed_on": data.get("signed_on"),
         }
 
+
+
+class ContractChangeForm(StrictForm):
+    contract_id = forms.UUIDField(widget=forms.HiddenInput)
+    change_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
+    change_type = forms.ChoiceField(label='变更类型', choices=[
+        ('add_scope', '新增范围'), ('reduce_scope', '缩减范围'), ('price_change', '价格变更'),
+        ('extension', '延期'), ('termination', '终止')])
+    requested_on = forms.DateField(label='变更生效日期', widget=forms.DateInput(attrs={'type': 'date'}))
+    expected_version = forms.IntegerField(required=False, min_value=1, widget=forms.HiddenInput)
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
+class ContractChangeDecisionForm(StrictForm):
+    change_id = forms.UUIDField(widget=forms.HiddenInput)
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    decision = forms.ChoiceField(label='独立决策', choices=[('approved', '批准变更'), ('rejected', '驳回变更'), ('withdrawn', '撤回变更')])
+    note = forms.CharField(label='决策说明（驳回必填）', max_length=500, required=False, widget=forms.Textarea(attrs={'rows': 2}))
+    request_token = forms.UUIDField(widget=forms.HiddenInput)

@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from . import approval_services as service
+from . import change_services
+from .forms import ContractChangeForm, ContractChangeDecisionForm
 from .approval_forms import VersionForm, ActionForm, ReviewForm, build_formsets, candidate_lines
 from .party_services import _reader, _writer
 from .party_views import _context, url
@@ -114,3 +116,125 @@ def version_submit(context, payload):
 
 def version_review(context, payload):
     return _action(context, payload, True)
+
+
+def _change_form(context, contract, change=None):
+    member = _reader(context.member)
+    kind = context.request.GET.get('type') or (change.change_type if change else 'price_change')
+    sections = None if kind == 'termination' else build_formsets(
+        contract, content=change.draft_content if change else None)
+    initial = {'contract_id': contract.pk, 'change_id': change.pk if change else None,
+               'change_type': kind,
+               'requested_on': change.requested_on if change else timezone.localdate(),
+               'expected_version': change.version if change else None,
+               'request_token': uuid.uuid4()}
+    return render(context.request, 'contracts/contract_change_form.html', _context(member,
+        contract=contract, change=change, form=ContractChangeForm(auto_id='change_%s', initial=initial),
+        sections=sections, change_save_url=url('contract-change-save'),
+        change_list_url=url('contract-changes', contract=contract.pk),
+        contract_url=url('contract', id=contract.pk)))
+
+
+def contract_changes(context, payload):
+    member = _reader(context.member)
+    contract = get_contract(member, payload.get('contract'))
+    changes = list(change_services.list_contract_changes(member, contract.pk))
+    for change in changes:
+        change.review_token = uuid.uuid4()
+        change.edit_url = url('contract-change', contract=contract.pk, id=change.pk)
+    editable = member.role in {'owner', 'finance'} and contract.status == 'active'
+    return render(context.request, 'contracts/contract_change_list.html', _context(member,
+        contract=contract, changes=changes, editable=editable,
+        new_url=url('contract-change', contract=contract.pk),
+        change_review_url=url('contract-change-review'),
+        contract_url=url('contract', id=contract.pk)))
+
+
+def contract_change_detail(context, payload):
+    member = _reader(context.member)
+    contract = get_contract(member, payload.get('contract'))
+    change = change_services.get_contract_change(member, payload.get('id')) if payload.get('id') else None
+    if change is not None and change.status != 'draft':
+        return redirect(url('contract-changes', contract=contract.pk))
+    if member.role not in {'owner', 'finance'} or contract.status != 'active':
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied('只有负责人或财务可以办理生效合同的变更')
+    return _change_form(context, contract, change)
+
+
+def contract_change_save(context, payload):
+    member = _writer(context.member)
+    contract = get_contract(member, payload.get('contract_id'))
+    change = change_services.get_contract_change(member, payload.get('change_id')) if payload.get('change_id') else None
+    if change is not None and change.status != 'draft':
+        return redirect(url('contract-changes', contract=contract.pk))
+    form = ContractChangeForm({k: payload[k] for k in payload
+                               if k in ContractChangeForm.base_fields or k == 'csrfmiddlewaretoken'},
+                              auto_id='change_%s')
+    termination = payload.get('change_type') == 'termination'
+    sections = None if termination else build_formsets(contract, payload,
+                                                       change.draft_content if change else None)
+    error = ''
+    allowed = set(ContractChangeForm.base_fields) | {'csrfmiddlewaretoken'}
+    if sections is not None:
+        for name, _, group in sections:
+            allowed.update(name + '-' + key for key in group.management_form.fields)
+            for index in range(group.total_form_count()):
+                allowed.update(f'{name}-{index}-{key}'
+                               for key in (set(group.form.base_fields) | {'DELETE'}))
+    valid = form.is_valid()
+    if sections is not None:
+        valid = all([group.is_valid() for _, _, group in sections]) and valid
+    if set(payload) - allowed:
+        error, valid = '包含不允许的字段，请刷新后重试', False
+    if valid:
+        try:
+            data = form.cleaned_data
+            content = {} if termination else {'lines': candidate_lines(sections)}
+            change_services.save_contract_change_draft(
+                member, contract_id=contract.pk, change_type=data['change_type'],
+                requested_on=data['requested_on'], draft_content=content,
+                evidence=[], request_token=data['request_token'],
+                change_id=data.get('change_id'), expected_version=data.get('expected_version'),
+                dry_run=False)
+        except ValidationError as exc:
+            error = '；'.join(exc.messages)
+        else:
+            messages.success(context.request, '合同变更草稿已保存；生效前不改变合同版本或金额')
+            return redirect(url('contract-changes', contract=contract.pk))
+    return render(context.request, 'contracts/contract_change_form.html', _context(member,
+        contract=contract, change=change, form=form,
+        sections=None if termination else sections, error=error,
+        change_save_url=url('contract-change-save'),
+        change_list_url=url('contract-changes', contract=contract.pk),
+        contract_url=url('contract', id=contract.pk)), status=400)
+
+
+def contract_change_review(context, payload):
+    member = _writer(context.member)
+    form = ContractChangeDecisionForm(payload, auto_id='change_review_%s')
+    error = ''
+    if form.is_valid():
+        data = form.cleaned_data
+        change = change_services.get_contract_change(member, data['change_id'])
+        try:
+            change_services.decide_contract_change(
+                member, change.pk, decision=data['decision'], note=data.get('note') or '',
+                expected_version=data['expected_version'], request_token=data['request_token'],
+                dry_run=False)
+        except ValidationError as exc:
+            error = '；'.join(exc.messages)
+        else:
+            messages.success(context.request, '合同变更决策已记录；批准仅新版本生效，终止保留历史')
+            return redirect(url('contract-changes', contract=change.contract_id))
+    else:
+        error = '；'.join(str(item) for errors in form.errors.values() for item in errors)
+    contract = get_contract(member, change_services.get_contract_change(
+        member, payload.get('change_id')).contract_id) if payload.get('change_id') else None
+    return render(context.request, 'contracts/contract_change_list.html', _context(member,
+        contract=contract, changes=change_services.list_contract_changes(member, contract.pk) if contract else [],
+        editable=contract is not None and member.role in {'owner', 'finance'},
+        new_url=url('contract-change', contract=contract.pk) if contract else '',
+        change_review_url=url('contract-change-review'),
+        contract_url=url('contract', id=contract.pk) if contract else '',
+        error=error), status=400)

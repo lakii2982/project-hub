@@ -437,7 +437,12 @@ def approved_line_snapshot(member, line_ref, as_of):
         raise PermissionDenied('合同明细不存在或无权读取')
     version, contract = line.contract_version, line.contract
     _contract_for_read(member, contract.pk)
-    if (contract.status != 'active' or version.status != 'approved' or line.status != 'approved'
+    # PH-265: a terminated contract stays readable for business dates before its
+    # termination date; approved_terms_snapshot rejects settlement on/after it.
+    terminated_before = (contract.status == 'terminated' and contract.terminated_on is not None
+                         and when < contract.terminated_on)
+    if ((contract.status != 'active' and not terminated_before)
+            or version.status != 'approved' or line.status != 'approved'
             or line.version != 1 or line.version != line_ref['version'] or when < version.effective_on
             or when > timezone.localdate() or contract.versions.filter(status='approved').count() != 1):
         _reject('只有已生效合同的唯一批准版本可支持本次履约')
@@ -501,6 +506,16 @@ def approved_line_choices(member):
 
 def approved_terms_snapshot(member, line_ref, as_of):
     """Named read-only payment/warranty terms for one approved line; settlement never reads raw tables."""
+    member = _reader(member)
+    _keys(line_ref, {'namespace', 'kind', 'id', 'version'}, {'namespace', 'kind', 'id', 'version'})
+    when = _date(as_of)
+    candidate = ContractLine.objects.select_related('contract_version__contract').filter(
+        pk=line_ref.get('id'), organization=member.organization).first()
+    if candidate is not None:
+        contract = candidate.contract_version.contract
+        if (contract.status == 'terminated' and contract.terminated_on is not None
+                and when >= contract.terminated_on):
+            _reject('合同已终止，不能新建或继续结算')
     snapshot = approved_line_snapshot(member, line_ref, as_of)
     line = ContractLine.objects.select_related('contract_version__contract').get(pk=snapshot['line_id'])
     payments = list(PaymentTerm.objects.filter(organization=member.organization, contract_line=line,

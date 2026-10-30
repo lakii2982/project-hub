@@ -18,4 +18,8 @@ def entry_point():
         'contract_save': views.contract_save,
         'version': approval_views.version_detail, 'version_save': approval_views.version_save,
         'version_submit': approval_views.version_submit, 'version_review': approval_views.version_review,
+        'contract_changes': approval_views.contract_changes,
+        'contract_change': approval_views.contract_change_detail,
+        'contract_change_save': approval_views.contract_change_save,
+        'contract_change_review': approval_views.contract_change_review,
     }})

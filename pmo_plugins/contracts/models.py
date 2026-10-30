@@ -117,6 +117,7 @@ class Contract(models.Model):
     party = models.ForeignKey(Counterparty, on_delete=models.PROTECT, related_name="contracts")
     contract_code = models.CharField("合同编号", max_length=80)
     signed_on = models.DateField("签署日期", null=True, blank=True)
+    terminated_on = models.DateField("终止生效日", null=True, blank=True, editable=False)
     parent_ref = models.JSONField(null=True, blank=True, editable=False)
     create_token = models.UUIDField(null=True, blank=True, editable=False)
     create_digest = models.CharField(max_length=64, blank=True, editable=False)
@@ -277,3 +278,87 @@ def pricing_display(configuration):
         'time_unit_label': {'hour': '小时', 'workday': '人天'}.get(configuration.get('time_unit'), ''),
         'period_unit_label': {'calendar_month': '自然月', 'calendar_day': '自然日'}.get(configuration.get('period_unit'), ''),
         'partial_period_rule_label': {'no_partial': '不允许部分期间', 'calendar_days': '按自然日'}.get(configuration.get('partial_period_rule'), '')}
+
+
+CHANGE_TYPES = ('add_scope', 'reduce_scope', 'price_change', 'extension', 'termination')
+CHANGE_STATUSES = ('draft', 'pending_customer', 'approved', 'rejected', 'withdrawn')
+CHANGE_DECISIONS = ('approved', 'rejected', 'withdrawn')
+
+
+class ContractChange(models.Model):
+    """Append-only contract change request; approval creates or terminates a version."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='contract_changes')
+    contract = models.ForeignKey(Contract, on_delete=models.PROTECT, related_name='changes')
+    version = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=16, default='draft', choices=[(x, x) for x in CHANGE_STATUSES])
+    created_at = models.DateTimeField(auto_now_add=True)
+    change_type = models.CharField(max_length=16, choices=[(x, x) for x in CHANGE_TYPES])
+    requested_on = models.DateField()
+    net_delta_cents = models.BigIntegerField(default=0)
+    tax_delta_cents = models.BigIntegerField(default=0)
+    gross_delta_cents = models.BigIntegerField(default=0)
+    evidence = models.JSONField(default=list)
+    draft_content = models.JSONField(default=dict)
+    created_by_member = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    decided_by_member = models.ForeignKey('core.Membership', on_delete=models.PROTECT, null=True,
+                                          blank=True, related_name='+')
+    decided_on = models.DateTimeField(null=True, blank=True)
+    decision_note = models.CharField(max_length=500, blank=True, default='')
+    create_token = models.UUIDField(null=True, blank=True, editable=False)
+    create_digest = models.CharField(max_length=64, blank=True, editable=False)
+
+    class Meta:
+        ordering = ['-created_at', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['contract'], condition=models.Q(status='draft'),
+                                    name='contracts_change_one_draft'),
+            models.UniqueConstraint(fields=['organization', 'create_token'],
+                                    name='contracts_change_token_unique'),
+            models.CheckConstraint(condition=models.Q(status__in=CHANGE_STATUSES),
+                                   name='contracts_change_status'),
+            models.CheckConstraint(condition=models.Q(change_type__in=CHANGE_TYPES),
+                                   name='contracts_change_type'),
+            models.CheckConstraint(condition=models.Q(net_delta_cents__gte=-(10**12),
+                                                      net_delta_cents__lte=10**12,
+                                                      tax_delta_cents__gte=-(10**12),
+                                                      tax_delta_cents__lte=10**12,
+                                                      gross_delta_cents__gte=-(10**12),
+                                                      gross_delta_cents__lte=10**12),
+                                   name='contracts_change_delta_bound'),
+        ]
+
+    @property
+    def source_ref(self):
+        return {'namespace': 'contracts', 'kind': 'contract_change', 'id': str(self.pk),
+                'version': self.version}
+
+    def get_status_display(self):
+        return {'draft': '变更草稿', 'approved': '变更已生效', 'rejected': '变更已驳回',
+                'withdrawn': '变更已撤回', 'pending_customer': '待客户确认'}.get(self.status, self.status)
+
+    def get_change_type_display(self):
+        return {'add_scope': '新增范围', 'reduce_scope': '缩减范围', 'price_change': '价格变更',
+                'extension': '延期', 'termination': '终止'}.get(self.change_type, self.change_type)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('合同变更历史不可删除')
+
+
+class ContractChangeReceipt(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='+')
+    action = models.CharField(max_length=24)
+    request_token = models.UUIDField()
+    input_digest = models.CharField(max_length=64)
+    result_ref = models.JSONField()
+    result_snapshot = models.JSONField(default=dict)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['organization', 'request_token'],
+                                    name='contracts_change_receipt_token_unique'),
+            models.CheckConstraint(condition=models.Q(action__in=['draft.save', 'decide']),
+                                   name='contracts_change_receipt_action'),
+        ]
