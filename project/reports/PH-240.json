@@ -1,0 +1,73 @@
+{
+  "task_id": "PH-240",
+  "summary": "Refund and bank-return first slice: within a server-derived refundable coverage (posted gross minus active clearance minus active refunds minus active bank returns) the owner/finance records a real reverse cash fact as a new posted CashTransaction (refund: direction=out from incoming cash; bank return: opposite of the original direction), plus an append-only Refund/BankReturn owned fact, generic audit, exactly one cash.refunded.v1 / cash.returned.v1 canonical event, and an idempotency receipt. The produced posted cash still goes through the PH-230 posting owner service, so every posted cash fact keeps its cash.transaction_recorded.v1 event and posting receipt. Coverage is symmetric: the settlement clearance write path and cash candidate availability now also subtract active refunds/returns, so cleared + refunded + returned can never exceed the posted gross. No accounting event, ledger posting, revenue, cost, receivable, payable, open item or clearance write; offset is reserved and explicitly not implemented; PH-239 later owns the cash book bridge for these new cash facts.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final rebased HEAD (BASE 0721ad4): ok=true, task_count=169; PH-240 recorded done with owner/handoff and the independent reviewer review block is pass."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final rebased HEAD: System check identified 53 issues (0 silenced), all pre-existing urls.W003 namespace warnings (main + this slice), 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final rebased HEAD: No changes detected (cash 0004_refund_guards published; cash leaf on main is still 0003 because PH-244/PH-246 add no cash migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 at the final rebased HEAD: Ran 793 tests, FAILED (failures=5, errors=3, skipped=59) => 726 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility Accept/codec/large-JSON cases and tests.test_delivery_execution* symlink cases); no new failures. CI Linux is authoritative. The 3 PostgreSQL-only refund concurrency tests are among the skips and are executed by the PR CI job."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final rebased HEAD on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. The scoped tests also assert ok=true for real refund/return data and exercise the narrowed refund-provenance guard plus the positive classification-bridge boundary regression."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_cash_refund tests.test_v1_cash_refund_http tests.test_v1_cash_refund_concurrency --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final rebased HEAD: Ran 20 tests, OK (skipped=3) => 17 passed. The 3 skips are the PostgreSQL-only concurrency cases; SQLite cannot prove production concurrency and PR CI must run them."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 0721ad4 --task PH-240",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final rebased HEAD: ok=true, base=0721ad4, 21 changed files all inside the PH-240 BASE allowed_paths (no path_out_of_scope, no report-shape errors); assertion_scope=declaration_only. The report review block is the independent reviewer's round-2 PASS."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-240 refund/bank-return reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "FINAL BLOCKER RESOLVED BY LEAD INTEGRATION: the rebase had dropped project/manifest.json's active_handoff hunk (it still pointed at PH-246, and the diff/claims said 21 instead of 22 files). Lead's integration commit 5a21bf6 ('point active_handoff at the PH-240 handoff') restores active_handoff=project/handoffs/PH-240.md; I re-ran at 5a21bf6 and `verify-change --base 0721ad4 --task PH-240` now returns ok=true with exactly 22 changed files, all inside PH-240 allowed_paths. Note (cosmetic only): 5a21bf6 also removes the trailing newline from project/manifest.json; the JSON remains valid and the semantic change is the single active_handoff line, but restore the trailing newline if the repository's formatting convention requires it (non-blocking).",
+      "ROUND-2 FIX REMAINS VERIFIED: core/management/commands/verify_integrity.py only rejects refund/return provenance (AccountingEvent/LedgerPosting whose source kind is refund/bank_return, or source kind cash_transaction pointing at a refund/return-produced cash fact); it explicitly allows PH-239's legal classification bridge (AccountingEvent.source = classification_ref, kind cash_classification, including reclassification of a refund-produced cash), does not use the classification claim pointer for rejection, and leaves PH-230/PH-232 assertions untouched. The positive/negative regressions added in 90ddbdf exercise exactly this boundary and pass in the scoped suite.",
+      "CONTRACT AND EVIDENCE VERIFIED AT FINAL HEAD 5a21bf6 (base 0721ad4): projectctl check with the pre-pass report showed only high_risk_review_required (this pass flips it to ok=true/task_count=169); verify-change --base 0721ad4 --task PH-240 -> ok=true, 22 files, no path_out_of_scope. Previously verified at 8572097 and unchanged by 5a21bf6: coverage symmetry formulas (posted gross - active cleared - refunded - returned) shared by refund_coverage_for_cash/clearance_coverage_for_cash and settlement create_clearance.remaining_cash/cash_candidates_for_open_item.available_cents; append-only Refund/BankReturn + migration 0004 dual SQLite/PostgreSQL guards; exactly one cash.refunded.v1/cash.returned.v1 envelope per fact (source=fact ref, changed_refs=[fact ref, produced cash ref], posting_event_refs=[]); CashReceipt idempotency; refund/in and return/opposite-direction produced posted cash through PH-230; no ledger/accounting/cost/open-item/clearance writes from refund/return; permissions owner/finance write, owner/finance/auditor read, pm/member denied, module-disabled write reject with history read; rejection zero half-write; PH-232 spec wording follow-up disclosed for PH-247; canonical command channels not exposed; final report evidence refreshed to 793 tests/5F+3E/59 skips at the rebased HEAD with no new failure names.",
+      "NON-BLOCKING RESIDUALS: (a) browser 1440/390, keyboard/focus, overflow and empty/error/loading/disabled visual states remain unexecuted and explicitly unverified (HTTP tests only); (b) the 3 PostgreSQL-only concurrency interleavings must be proven by the PR CI job - local SQLite skips are not evidence; (c) this review block must be committed as the final evidence commit (no further code/contract changes), then check/verify-change can be rerun green at the final SHA before merge."
+    ],
+    "evidence": "VERDICT: PASS. Final HEAD 5a21bf6 (base 0721ad4; 8572097 + Lead manifest fix) in /tmp/ph240-refund. 5a21bf6 touches only project/manifest.json: active_handoff PH-246 -> PH-240 (one semantic line; it also drops the file's trailing newline - cosmetic only). Independent reruns: verify-change --base 0721ad4 --task PH-240 -> ok=true with 22 changed files all inside PH-240 allowed_paths; projectctl check before this pass showed only high_risk_review_required (the single remaining gate was the pending review), and after this pass check returns ok=true/task_count=169; task PH-240 done with handoff. The round-1 blocker fix in verify_integrity (refund/return-scoped ledger guard explicitly allowing PH-243/PH-239 cash_classification bridge, no claim-pointer false positive, PH-230/232 assertions untouched) remains verified with positive and negative regressions passing; coverage symmetry, append-only facts, canonical event envelopes, idempotency, unified refund coverage formula, zero financial writes, permissions/module-disable, rejection no-half-write and the PH-232 spec follow-up disclosure all still hold. Final report evidence is refreshed to the rebased HEAD (793 tests, 5F+3E, 59 skips, same 8 known macOS baseline failure names; scoped refund/http/concurrency 20 tests with 3 PG-only skips = 17 pass). Non-blocking residuals: no browser pass, PG concurrency only in CI, and the review block needs to be committed as the final evidence commit with no further code/contract changes."
+  },
+  "deviations": [
+    "Reviewer round-1 blocker fixed: the worker-added 'cash namespace must not have a LedgerPosting' assertion was narrowed to refund/bank-return provenance only. It now rejects only AccountingEvents whose source kind is refund/bank_return or whose source points directly at a refund/return-produced cash fact (plus their postings), and explicitly allows the PH-243-frozen cash classification bridge (source kind cash_classification). A positive boundary regression creates classification-style bridge events (including one on a refund-produced cash fact) and asserts the refund guard does not fire, while a negative regression asserts refund-provenance ledger rows are rejected. Existing PH-230/PH-232 assertions were not touched; PH-239 replaces its own legacy blanket cash assertions.",
+    "Cross-owner write (Lead-approved option A): pmo_plugins/cash/refund_services.py exposes the read-only refund_coverage_for_cash(member, cash_transaction_ref) named read, and pmo_plugins/settlement/clearance_services.py adds clearance_coverage_for_cash plus minimally changes create_clearance.remaining_cash and cash_candidates_for_open_item.available_cents to gross - active cleared - refunded - returned. Reason: PH-232's formula only subtracted active clearances, so refund-then-clearance could jointly exceed the posted gross; the symmetric formula makes both write paths use the same derived ceiling. Clearance semantics, events, amounts and all other PH-232 logic are unchanged.",
+    "Known PH-232 spec/implementation gap disclosed: the PH-232 spec's 'cash un-cleared balance = posted gross - sum(active cleared)' text predates refunds/returns. The implementation now subtracts active refunds/returns for joint coverage. PH-232 is already done, so its spec was not edited here; the Lead will register a small follow-up in the PH-247 planning slot to sync that wording.",
+    "The reverse cash produced by a refund/bank return is created through the PH-230 posting owner service, so it also carries the standard canonical cash.transaction_recorded.v1 event and cash_transaction.post receipt in addition to the refund/return canonical event. This keeps the existing 'every posted cash fact has exactly one recorded event and posting receipt' invariant intact; the refund/return event is additional provenance, not a replacement.",
+    "CashReceipt is reused for idempotency with action=refund / bank_return as the spec permits; the produced cash posting receipt gets a deterministic server-derived token (uuid5 of the produced cash id and label) so both receipts coexist under the org+token uniqueness rule.",
+    "The produced cash fact uses the original effective counterparty (transaction.counterparty_id or latest unreversed counterparty identify match) as payee; when no effective counterparty exists it is stored as unidentified with a refund/return label. The server generates the external_source_key (REFUND-/RETURN- + uuid4 hex); caller-supplied keys are not accepted.",
+    "Refund requires original direction=in; bank return accepts any posted original and reverses its direction. The new cash transaction_date equals refund_date/return_date, which therefore must be non-future, above locked_through and in an active, not-closed AccountingPeriod.",
+    "No public canonical cash.refund.record/v1 or cash.return.record/v1 channel is exposed; only private services implement them, and caller-supplied balances/proofs/posted fields are rejected by the strict argument signature.",
+    "Offset coverage is explicitly reserved on the cross-owner interfaces as offset_cents=0/offset_implemented=false rather than fabricated."
+  ],
+  "unverified": [
+    "verify-change --base e91346a --task PH-240 at this HEAD exits 1 with the single high_risk_review_required error because report.review.status is still pending by design; there are no path_out_of_scope or report-shape errors (projectctl check is ok=true). After the independent reviewer records pass this is rerun.",
+    "PostgreSQL concurrency (two refunds on one cash, refund vs clearance interleave, two bank returns on one cash) is executed by PR CI; the 3 local SQLite skips are not evidence.",
+    "No browser 1440/390 check was run in this round; the UI was exercised through the HTTP tests only. Frontend standards require a real browser pass, so visual/keyboard/overflow verification remains for the reviewer/browser round.",
+    "Independent S review is still pending; verify-change remains review-gated at this HEAD.",
+    "Production/UAT is not verified; no legacy-DB upgrade migration path was exercised beyond a freshly migrated SQLite database.",
+    "The cash book bridge for the produced cash facts belongs to PH-239 and is not part of this slice: cash facts are recorded, the ledger is not posted yet.",
+    "Offset/prepayment (PH-241), fees (PH-244), internal transfers (PH-245), corrections, imports, opening balances and forecasting remain not implemented."
+  ]
+}

@@ -520,4 +520,4 @@ delivery-status拆分落地区：现状头1996字节，原文件全文逐字入a
 
 ## PH-237 文档收尾：失效链接修复与作用域测试指引（2026-10-30）
 
-PH-234遗留的两处ai-delivery-*旧路径链接（ROADMAP、execution-protocol）改指archive；CONTRIBUTING加作用域测试指引（开发中模块级并行快速反馈、收尾全量一次、CI兜底），验收四命令未动。效率改造实测：新会话开场+任务上下文阅读量281KB→15KB（-94.6%）。见`docs/verification.md`与`project/reports/PH-237.json`。
+PH-234遗留的两处ai-delivery-*旧路径链接（ROADMAP、execution-protocol）改指archive；CONTRIBUTING加作用域测试指引（开发中模块级并行快速反馈、收尾全量一次、CI兜底），验收四命令未动。效率改造实测：新会话开场+任务上下文阅读量280,956→15,760 字节（-94.4%，1−15760/280956）。见`docs/verification.md`与`project/reports/PH-237.json`。

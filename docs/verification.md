@@ -395,9 +395,45 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 
 ## PH-237 文档收尾（2026-10-30）
 
-基线5ee8af1（PH-236规划#130合入）。三处文档改动：ROADMAP.md与execution-protocol.md的ai-delivery-*旧链接改指archive（grep确认各自唯一改动点、目标文件存在）；CONTRIBUTING.md「环境与验收」段插入作用域测试指引一段（开发中模块级`--parallel`快速反馈、收尾全量一次作报告证据、CI按PR全量兜底；四条验收命令与其余部分diff为空）。独立复核（fresh context，与PH-236同轮双片审）内容PASS。实际执行：check、治理测试23项、`manage.py test tests.test_projectctl --parallel`作用域自证、verify-change均于最终HEAD实跑通过。未验证：全量产品套件本地未跑（CI覆盖）；墙钟时间复测待日常统计。
+基线5ee8af1（PH-236规划#130合入）。三处文档改动：ROADMAP.md与execution-protocol.md的ai-delivery-*旧链接改指archive（grep确认各自唯一改动点、目标文件存在）；CONTRIBUTING.md「环境与验收」段插入作用域测试指引一段（开发中模块级`--parallel`快速反馈、收尾全量一次作报告证据、CI按PR全量兜底；四条验收命令与其余部分diff为空）。独立复核（fresh context，与PH-236同轮双片审）内容PASS。实际执行：check、治理测试23项、`manage.py test tests.test_projectctl --parallel`作用域自证、verify-change均于最终HEAD实跑通过。未验证：全量产品套件本地未跑（CI覆盖）；墙钟时间复测待日常统计。 量化口径校准（PH-246，固定 SHA 复现）：基线 7605fa9 = manifest 663 + tasks.json 217565 + PH-233 handoff 1510 + delivery-status 61218 = 280956 字节；最终路径 b931be0 = orient 3423 + brief PH-232 1893 + delivery-status 1996 + PH-232 spec 8448 = 15760 字节；降幅 1−15760/280956 = 94.39%≈94.4%。复现命令与逐分量输出见 project/reports/PH-246.json。
 
 
 ## PH-238 后续交付独立规划入口（2026-10-30）
 
 基线3c21a29（PH-237 PR#131、PH-210 PR#132、PH-232 PR#133已合入，本分支只含PH-238）。纯规划片：登记PH-239（现金分类与账本桥接首片，ready——依赖PH-210/PH-230均done）、PH-240（退款与银行退回，proposed——依赖PH-230/PH-232均已done，按Lead分工晋级动作留给PH-242复核）、PH-241（预收/预付抵扣Offset首片，proposed——缺PH-239 done），各冻结字段/状态机/权限/幂等/金额/迁移/白名单/反例/验收命令/risk S；登记PH-242下一规划槽（ready，依赖PH-238 done）。PH-157/PH-158按spec判断不重复登记（PH-110 ready未done、其余上游proposed）。实际执行（最终HEAD）：check ok=true/task_count=164；治理测试23项OK；verify-change --base 3c21a29 --task PH-238 ok=true、9个变更文件全在白名单；作用域测试19项OK。独立S复核首轮打回2条（PH-241迁移号、PH-157/158依赖事实），08671ab二次复核PASS；随后rebase到3c21a29仅带入main的PH-232合入并同步PH-240/241晋级理由文字。未验证：PH-239/240/241均未实现，无产品代码/迁移/浏览器/PG/CI证据；PH-240/PH-241晋级由PH-242复核。
+
+
+## PH-242 后续交付独立规划入口（2026-10-30）
+
+基线df01896（PH-228/230/232/237/238已合入）。纯规划片：登记PH-243（PH-239契约修正与白名单扩权，ready）、PH-244（手续费与净额到账草稿事实/规范事件/对账，ready；批准与成本过账延后）、PH-245（内部账户互转，proposed）、PH-246（PH-237量化证据统一94.4%，ready）、PH-247（下一规划槽，ready）；PH-240按已done依赖（PH-230/PH-232）晋级ready；PH-239因硬前置PH-243未done保持proposed并写blocker；PH-241保持proposed。各spec冻结字段/状态机/权限/幂等/金额/迁移/白名单/反例/验收命令/risk S。实际执行（证据 HEAD 0c2103d）：check ok=true/task_count=169；治理测试23项OK；verify-change --base df01896 --task PH-242 ok=true、13个变更文件（含本文件）全在白名单。abfc9d9 为证据 commit 前的计数（12 文件、当时本条目尚未加入）；其后的 provenance 更正 commit 不改变已验证的规划内容（任务状态/白名单/spec 均未变），仅修正本报告/本条目的证据表述。独立S复核共三轮：首轮3阻断+4NOTE、二轮1阻断（冻结句与重分类冲突），修复后三轮PASS（HEAD c342659）。未验证：PH-243/244/245/246均未实现，无产品代码/迁移/运行时/浏览器/PG/CI证据；PH-246三处数字一致性grep待其执行时实跑。
+
+
+## PH-244 银行手续费草稿与净额对账首片（2026-10-30）
+
+基线e91346a（PH-242合入后）。costing owner新增BankCharge草稿事实（每原始posted收款流水至多一条，gross≤现金gross、公司承担、项目范围、existing_cost_ref固定null、税额可空、期间/锁期/未来日校验）与BankChargeReceipt幂等收据；每次保存/改稿写generic audit、恰一条canonical costing.bank_charge_saved.v1（source=bank_charge ref、payload posting_event_refs=[]）及新版本；提交/批准/驳回、core.document.decide handler、成本过账、ReceiptFeeSettlement、existing_cost_ref、counterparty-borne明确延后PH-247。只读列表/详情/净额对账：approved_fee恒0、implied_gross=posted_net、draft_fee仅展示、reconciled恒false；停用模块写403、历史读仍允许（服务层）。root_only三文件（cash/transaction_services.py新增posted_cash_for_fee只读、verify_integrity手续费分支、delivery/urls绑定）由单worker承担并记report.deviations；无core模型/迁移变更，costing迁移0003双实现触发器（禁删、状态/版本/draft改稿保护）。
+
+实际执行（最终HEAD）：projectctl check ok=true/task_count=169；manage.py check exit0；makemigrations --check --dry-run无变更；全量772 tests 111.552s，5 failures/3 errors均为基线已知macOS环境限制（6 DRF Accept/codec/large-JSON、2 delivery symlink），55环境skips，无新增失败；verify_integrity --json在全新迁移SQLite上ok=true；scoped 13 tests OK。13新增测试含服务层（事件envelope/幂等/dry-run/改稿版本/唯一性/期间/权限/停用/history read/DB触发器/verify反例）与HTTP（角色/CSRF/非法字段/批准越权/草稿流水/改稿）。未验证：无PG并发（本片无并发锁外场景，CI覆盖）、无浏览器1440/390实测（模板按平台规范但未跑截图/键盘）、无真实附件/客户/生产；canonical command通道未接通（私有服务/浏览器适配，报告披露）。
+
+独立S复核（fresh context, HEAD efdfaa7）实际重跑6条验收命令、与当前main基线（ceded2e）逐项核对失败名称一致，PASS 0阻断；非阻断残余为verify_integrity仅验证latest saved事件envelope、未断言每次保存恰一条事件计数，留PH-247/后续加固。
+
+## PH-243 分类桥接 canonical 契约修正（2026-10-30）
+
+基线e91346a（PH-242合入）。纯契约/测试/规划片：events.schema.json 两个classification事件posting_event_refs改1/1且items绑定core/accounting_event（reversed namespace cash→core），5个其它0/0 cash事件未动；entities SourceConsumption invariants[5]逐字替换冻结句；catalog-completeness仅补注解；extension-freeze仅更新3个受影响canonical摘要+显式supersede cash-extension.plan.json#/service_semantics/classification_reverse/4（保base_sha/201/input_sha256/历史）；fixture仅3个contract_artifact_sha256；tests/test_v1_preparation.py新增严格正反例（reserved原19/37、99/8计数）。实际执行：check在独立S复核落pass后按最终HEAD记录；治理测试23项OK；validate_contracts/check_contract_cases/check_fixture严格.agent-venv全pass；PH135_REQUIRE_SCHEMAS=1 prep测试8项OK 0 skip（新增positive=3/rejected=9）。PH-239 allowed_paths扩core/models.py+core/migrations/*.py+docs/v1.0-development/verification.md并晋级ready。未实现PH-239业务；core 0009迁移、verify_integrity改造、PG/浏览器/生产均未验证。
+
+补充（最终证据 HEAD）：独立 S 复核 PASS，0 阻断；check ok=true/task_count=169；verify-change --base e91346a --task PH-243 ok=true、13 文件全在白名单；严格 .agent-venv + PH135_REQUIRE_SCHEMAS=1 的 prep 测试 8 项 OK 0 skip（PH243 positive=3/rejected=9；PH210 6/10；fixture 99/8 计）。residual（非阻断）：PH-243 spec 正文“PH-247 晋级 PH-239”与实际（本次已置 PH-239 ready）不一致，由 PH-247 规划槽消解，handoff 已记。
+
+
+## PH-246 PH-237 量化证据修正（2026-10-30）
+
+基线ceded2e（PH-243合入）。纯证据修正片，仅三处：project/reports/PH-237.json 的量化测量条目、docs/delivery-status-archive.md 的 PH-237 条目数字/公式、docs/verification.md 的 PH-237 校准句；三处统一为固定 SHA 复现口径：基线 7605fa9 = manifest 663 + tasks.json 217565 + PH-233 handoff 1510 + delivery-status 61218 = 280956 字节；最终路径 b931be0 = orient 3423 + brief PH-232 1893 + delivery-status 1996 + PH-232 spec 8448 = 15760 字节；降幅 1−15760/280956 = 94.39%≈94.4%。实际复算：上述四分量与四分量逐条 wc -c 实跑一致（280956/15760），`round((1-15760/280956)*100,2)` = 94.39；grep 确认三文件无 94.5%/94.6%/281349/15360 旧值且均含 94.4%。未改 PH-237 三处正文（ROADMAP/execution-protocol/CONTRIBUTING）、未改写 archive 其它历史条目、未改 PH-237 review 块与历史 pass 语义。未验证：全量产品套件本地未跑（本片 docs-only，CI 覆盖）。独立 S 复核 PASS，0 阻断；NOTE（grep 证据中 verification.md 的 94.4% 出现次数应为 3 次而非 2 次）已在最终证据 commit 修正。
+
+## PH-240 退款与银行退回（2026-10-30）
+
+基线e91346a（PH-242规划合入、含PH-232核销）。新增cash Refund/BankReturn append-only事实与0004_refund_guards迁移（同org插入校验、UPDATE/DELETE拒绝；产生的posted现金沿用PH-230不可变守卫）；refund_services实现原现金覆盖内真实退款（direction=in原现金→新posted out现金，服务器生成来源编号、证据引用原现金、Refund事实、generic audit、恰一条cash.refunded.v1、action=refund收据）与银行退回（方向取反、BankReturn、cash.returned.v1、action=bank_return收据）；可退额=posted gross−active核销−active退款−active退回，服务端派生、不为负。为使退款×核销联合覆盖对称（Lead裁定A），settlement新增只读clearance_coverage_for_cash，create_clearance.remaining_cash与cash_candidates_for_open_item.available_cents改为扣除退款/退回（核销自身语义/事件/金额口径不变；PH-232 spec文字未同步，由PH-247登记口径同步小修）。只读cash_refund_coverage/list/snapshot/provenance；UI退款/退回列表、表单、现金详情区；verify_integrity新增退款/退回引用同org、方向/日期/金额、两类canonical事件计数与envelope、覆盖非负、无重复external_source_key、无cash会计事件/账本。明确不写账本/收入/成本/应收应付/未清/核销（只读），不做Offset/手续费/转账/更正/导入/期初/预测。
+实际执行（最终 rebase 到 0721ad4 后）：scoped退款三模块20项（17通过+3项PG并发本机skip）；全量793项（726通过、59环境skip、8项本机环境限制失败=6项DRF+2项macOS symlink，与基线一致、CI Linux为权威）；manage.py check exit0（53条既有W003警告、0错误）、makemigrations无变更、verify_integrity在全新迁移SQLite上ok=true；projectctl check ok=true/task_count=169；verify-change --base 0721ad4 ok=true、22个变更文件全在白名单。独立S复核第1轮打回1阻断（verify_integrity新增的cash-namespace全局账本禁令会误杀PH-243/PH-239合法现金分类桥接），修复为仅退款/退回provenance守卫（source kind∈{refund,bank_return}或source直接指向退款/退回产生现金），显式允许source kind=cash_classification的桥接，并加正向边界回归（含“对退款产生现金再分类桥接”场景）与负向退款账本反例；第2轮PASS 0阻断。未验证：PG并发、浏览器1440/390、生产/UAT、旧库升级；新现金账本桥接属PH-239。
+
+## PH-247 后续交付独立规划入口（接续 PH-242）（2026-10-30）
+
+基线0721ad4（PH-244/PH-246合入后）。纯规划片：消解PH-243 spec中「PH-247晋级PH-239」措辞（PH-239已在PH-243交付时ready）；登记PH-249（PH-232覆盖公式口径同步，proposed——缺PH-240 done）、PH-250（手续费提交/批准与成本过账首片，ready——依赖PH-210/PH-244 done）、PH-251（手续费净额结清/既有成本/承担方后续片，proposed）、PH-252（发票登记与逐行分配首片，proposed——缺PH-150/PH-155 done）、PH-253（PH-244 verify_integrity saved-event计数加固，ready——依赖PH-244 done）；登记PH-248下一规划槽（ready，依赖PH-247 done）。PH-241/PH-245仍proposed（依赖PH-239 ready未done）。各spec冻结字段/状态机/权限/幂等/金额/迁移/白名单/反例/验收命令/risk S。实际执行：check、23项治理测试；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-249/250/251/252/253均未实现，无产品代码/迁移/浏览器/PG/CI证据；review由独立S复核。
+
+补充（最终证据 HEAD 8346d55）：独立 S 复核两轮——首轮 2 阻断（PH-251 spec/tasks 白名单不一致+残留文本；PH-253 与 PH-250 approved/cost 事实冲突）+4 NOTE，修复后二轮 PASS；最终 check ok=true/task_count=175，verify-change --base 0721ad4 --task PH-247 ok=true、13 个变更文件全在白名单。**PH-249 依赖现状**：PH-240 已在本任务 BASE 之后以 a760cf7（PR #139）合入 main，故“缺 PH-240 done”在最新 main 已解除；但本片按冻结 BASE 0721ad4 保持 PH-249 proposed，晋级 ready 属 PH-248 规划槽动作，本片不改状态、不自我授权 rebase。

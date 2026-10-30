@@ -48,3 +48,12 @@
 边界仅证明设计输入可校验：未运行来源resolver、批准/期间/模型事务、真实服务拒绝、数据库、PG并发、浏览器/客户/生产；现金/成本/收入口径未改，141及后续实现仍待。
 
 独立S复核（fresh context）实际重跑全部6条BASE验收命令与严格环境prep（7 tests 0 skip），PASS 0阻断；按复核跟进更新freeze的independent字段并记录BASE已有可选readOnly字段、本片为收紧的措辞说明。
+
+
+## PH-243 分类桥接 canonical 契约修正（2026-10-30）
+
+基线 e91346a（PH-242 合入）。仅契约/测试/规划，无业务代码/迁移。events.schema.json 两处 classification 事件 posting_event_refs 改 1/1、items 绑定 core/accounting_event（reversed namespace cash→core）；其余 5 个 0/0 cash 事件与全部其它 cash 事件未动；entities SourceConsumption invariants[5] 逐字替换为冻结句（有效组/镜像冲销/重分类复用 claim/allocation-release 零账本/永不释放 claim）；catalog-completeness LedgerPosting 仅补注解；extension-freeze 仅更新 3 个受影响 canonical 摘要并显式 supersede cash-extension.plan.json#/service_semantics/classification_reverse/4，保 base_sha/201/input_sha256/历史；fixture 仅更新 3 个 contract_artifact_sha256。实际执行（严格 .agent-venv，jsonschema 4.26/referencing）：validate_contracts pass（schemas=9 refs=2977 events=47，old positive 19/rejected 37/fixture positive 99/negative 8）；check_contract_cases pass（19/37）；check_fixture pass（99/8，errors=[]，3 个 frozen hash 通过）；PH135_REQUIRE_SCHEMAS=1 unittest tests.test_v1_preparation → 8 tests OK 0 skipped（PH243 positive=3 rejected=9）。产品 venv 同一 prep 测试 8 tests OK skipped=5（schema 用例按设计跳过，不作通过证据）。后续：PH-239 已 ready（依赖 PH-210/PH-230/PH-243 done），其实现须生成 core 0009 并改造 verify_integrity 现金账断言；真实 PG/浏览器/生产未验证。
+
+### PH-243 独立复核与最终证据（补记）
+
+独立 S 复核（fresh context）PASS，0 阻断；复核以 6209321 为审查对象，逐项验证 events 仅两处改动、entities invariants[5] 与 spec 冻结句逐字相等、catalog 仅注解、fixture 仅 3 个摘要、extension-freeze 保留 base_sha/201/input_sha256/历史并含 supersede 记录、原 19/37 与 99/8 计数不变。最终证据 HEAD 复跑：`projectctl.py check` ok=true/task_count=169；`verify-change --base e91346a --task PH-243` ok=true、13 文件全在白名单；严格环境 `.agent-venv` + `PH135_REQUIRE_SCHEMAS=1` 的 tests.test_v1_preparation 仍为 8 tests OK 0 skipped（PH243 positive=3/rejected=9），validate_contracts/check_contract_cases/check_fixture 计数与上文一致。residual（非阻断）：PH-243 spec 正文“PH-247 晋级 PH-239”措辞与实际（PH-239 已 ready）不一致，由 PH-247 规划槽消解；handoff 已记录。

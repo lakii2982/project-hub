@@ -2779,8 +2779,8 @@
             },
             "posting_event_refs": {
               "type": "array",
-              "minItems": 0,
-              "maxItems": 0,
+              "minItems": 1,
+              "maxItems": 1,
               "items": {
                 "allOf": [
                   {
@@ -2788,10 +2788,11 @@
                   },
                   {
                     "properties": {
+                      "namespace": {
+                        "const": "core"
+                      },
                       "kind": {
-                        "enum": [
-                          "accounting_event"
-                        ]
+                        "const": "accounting_event"
                       }
                     }
                   }
@@ -2984,8 +2985,8 @@
             },
             "posting_event_refs": {
               "type": "array",
-              "minItems": 0,
-              "maxItems": 0,
+              "minItems": 1,
+              "maxItems": 1,
               "items": {
                 "allOf": [
                   {
@@ -2994,7 +2995,7 @@
                   {
                     "properties": {
                       "namespace": {
-                        "const": "cash"
+                        "const": "core"
                       },
                       "kind": {
                         "const": "accounting_event"
