@@ -13,6 +13,7 @@ DOMAIN_METADATA = {
             ('version', 'business_read'), ('version-save', 'business_write'),
             ('version-submit', 'business_write'), ('version-review', 'business_write'),
             ('contract-changes', 'business_read'), ('contract-change', 'business_read'),
+            ('contract-change-impact', 'history_read'),
             ('contract-change-save', 'business_write'), ('contract-change-review', 'business_write'),
         )
     ],

@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 
 from . import services as service
 from . import change_services
+from . import approval_services
 from .forms import ContractDraftForm
 from .party_services import _reader, _writer
 from .party_views import _context, url
@@ -37,7 +38,20 @@ def contract_detail(context, payload):
         configuration_versions=contract.versions.all(), pending=contract.versions.filter(status='submitted').exists(),
         changes=change_services.list_contract_changes(member, contract.pk),
         changes_url=url('contract-changes', contract=contract.pk),
+        change_impacts=approval_services.contract_change_impact_list(member, contract_id=contract.pk),
+        change_impact_url=url('contract-change-impact'),
         new_change_url=url('contract-change', contract=contract.pk)))
+
+
+def contract_change_impact_detail(context, payload):
+    """Read-only change impact page; history_read route so it survives module disablement."""
+    member = approval_services._impact_reader(context.member)
+    impact = approval_services.contract_change_impact(context.member, payload.get('id'))
+    contract = impact.pop('contract')
+    return render(context.request, 'contracts/change_detail.html', _context(member,
+        contract=contract, impact=impact,
+        contract_url=url('contract', id=contract.pk),
+        changes_url=url('contract-changes', contract=contract.pk)))
 
 
 def contract_save(context, payload):

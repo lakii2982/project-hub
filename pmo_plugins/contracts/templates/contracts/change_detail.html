@@ -1,0 +1,16 @@
+{% extends 'contracts/party_list.html' %}{% load money %}
+{% block title %}变更影响 · {{ contract.contract_code }}{% endblock %}
+{% block contracts_content %}
+<section class="page-header"><div><h1 tabindex="-1">变更影响（只读）</h1><p>{{ contract.contract_code }} · {{ impact.change_type_display }} · {{ impact.status_display }} · 申请 {{ impact.requested_on }}</p></div><a class="button" href="{{ changes_url }}">返回变更历史</a></section>
+{% if impact.terminated %}<div class="notice warning" role="status">该合同已于 {{ impact.terminated_on }} 终止；终止后不得新建结算或变更，历史事实保留。</div>{% endif %}
+<section class="panel"><div class="panel-heading"><h2>版本影响</h2></div><div class="panel-body"><dl class="detail-grid"><div><dt>变更前批准版本</dt><dd>{% if impact.before_version_ref %}第{{ impact.before_version_ref.version_no }}版 · v{{ impact.before_version_ref.version }}{% else %}—{% endif %}</dd></div><div><dt>生效后版本</dt><dd>{% if impact.after_version_ref %}第{{ impact.after_version_ref.version_no }}版 · v{{ impact.after_version_ref.version }}{% else %}无新版本（终止不创建版本）{% endif %}</dd></div><div><dt>合同状态</dt><dd>{{ contract.get_status_display }}</dd></div><div><dt>合同版本</dt><dd>v{{ contract.version }}</dd></div></dl><p class="notice">变更影响只读展示批准版本与引用差异；不自动重开旧版本、不重算已过账结算/未清/收入。</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>引用事实（只读计数与金额）</h2></div><div class="panel-body"><div class="table-scroll"><table aria-label="变更引用事实"><thead><tr><th>事实</th><th>计数</th><th>金额（元）</th></tr></thead><tbody>
+<tr><td>已生效结算</td><td>{{ impact.settlements.count }}</td><td>{{ impact.settlements.gross_cents|money }}</td></tr>
+<tr><td>未清项（含税）</td><td>{{ impact.open_items.count }}</td><td>{{ impact.open_items.gross_cents|money }}</td></tr>
+<tr><td>核销</td><td>{{ impact.clearances.count }}</td><td>{{ impact.clearances.cleared_cents|money }}</td></tr>
+<tr><td>管理收入确认（净额）</td><td>{{ impact.revenue_recognitions.count }}</td><td>{{ impact.revenue_recognitions.net_cents|money }}</td></tr>
+</tbody></table></div>
+<p class="notice">受影响合同行：{% for line in impact.contract_line_refs %}第{{ line.line_no }}行{% if not forloop.last %}、{% endif %}{% empty %}无{% endfor %}。变更差额 净/税/含税：{{ impact.deltas.net_cents|money }} / {{ impact.deltas.tax_cents|money }} / {{ impact.deltas.gross_cents|money }} 元。</p>
+{% if impact.decision_note %}<p>决策说明：{{ impact.decision_note }}</p>{% endif %}
+</div></section>
+{% endblock %}
