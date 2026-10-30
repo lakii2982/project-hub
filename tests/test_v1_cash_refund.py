@@ -285,6 +285,75 @@ class RefundLifecycleTests(RefundFixture, TestCase):
 
 
 class RefundVerifyIntegrityTests(RefundFixture, TestCase):
+    def _payload(self):
+        from io import StringIO
+        import json
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+        out = StringIO()
+        try:
+            call_command('verify_integrity', '--json', stdout=out)
+        except CommandError:
+            pass
+        return json.loads(out.getvalue())
+
+    def _forge_classification_bridge(self, cash):
+        """Simulate the PH-243/PH-239 legal bridge rows: classification-source event/posting."""
+        claim = SourceConsumption.objects.create(
+            organization=self.org, consumer='cash', source_id=cash.pk,
+            coverage_key='bank_effect', source=cash.transaction_ref,
+            amount_cents=cash.gross_cents,
+            event_ref={'namespace': 'core', 'kind': 'accounting_event',
+                       'id': str(uuid.uuid4()), 'version': 1})
+        event = AccountingEvent.objects.create(
+            id=uuid.UUID(claim.event_ref['id']), organization=self.org,
+            source={'namespace': 'cash', 'kind': 'cash_classification',
+                    'id': str(uuid.uuid4()), 'version': 1},
+            event_type='cash.classification', occurred_on=cash.transaction_date,
+            posting_period=cash.transaction_date.strftime('%Y-%m'),
+            algorithm_version='cash_classification_bank_effect_v1',
+            claim=claim, claim_effect_cents=cash.gross_cents)
+        LedgerPosting.objects.create(
+            organization=self.org, accounting_event=event, line_index=0,
+            amount_cents=cash.gross_cents, book='cost', scope_kind='project',
+            scope_id=str(self.project.pk), origin='current')
+        return event
+
+    def test_classification_style_cash_bridge_is_allowed_by_refund_guard(self):
+        # PH-243 freezes the legal classification bridge; even when the classified cash was
+        # produced by a refund, the refund guard must not reject its AccountingEvent/posting.
+        incoming = self.posted(direction='in', gross_cents=1000)
+        refund = self.refund(amount=1000)
+        self._forge_classification_bridge(incoming)
+        self._forge_classification_bridge(refund.refund_cash_transaction)
+        errors = self._payload()['errors']
+        self.assertFalse([error for error in errors if 'unexpected_refund' in error], errors)
+
+    def test_refund_provenance_ledger_rows_are_rejected(self):
+        refund = self.refund(amount=1000)
+        claim = SourceConsumption.objects.create(
+            organization=self.org, consumer='cash',
+            source_id=refund.refund_cash_transaction_id, coverage_key='refund_ledger',
+            source=refund.refund_cash_transaction.transaction_ref, amount_cents=1000,
+            event_ref={'namespace': 'core', 'kind': 'accounting_event',
+                       'id': str(uuid.uuid4()), 'version': 1})
+        event = AccountingEvent.objects.create(
+            id=uuid.UUID(claim.event_ref['id']), organization=self.org,
+            source={'namespace': 'cash', 'kind': 'refund', 'id': str(refund.pk),
+                    'version': 1},
+            event_type='cash.refund.bridge', occurred_on=self.today,
+            posting_period=self.today.strftime('%Y-%m'), algorithm_version='test',
+            claim=claim, claim_effect_cents=1000)
+        LedgerPosting.objects.create(
+            organization=self.org, accounting_event=event, line_index=0,
+            amount_cents=1000, book='cost', scope_kind='project',
+            scope_id=str(self.project.pk), origin='current')
+        errors = self._payload()['errors']
+        self.assertTrue(any('unexpected_refund_accounting_event' in error for error in errors),
+                        errors)
+        self.assertTrue(any('unexpected_refund_cash_posting' in error for error in errors),
+                        errors)
+
     def verify(self):
         from io import StringIO
         import json

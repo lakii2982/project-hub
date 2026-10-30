@@ -253,8 +253,27 @@ class Command(BaseCommand):
                 'organization_id', 'funding_account_id', 'external_source_key').annotate(
                 count=Count('id')).filter(count__gt=1):
             errors.append('cash_transaction:duplicate_external_source_key')
-        if LedgerPosting.objects.filter(accounting_event__source__namespace='cash').exists():
-            errors.append('cash_transaction:unexpected_cash_book_posting')
+        # PH-240 guard is scoped to refund/bank-return provenance only. PH-243/PH-239 freeze
+        # the legitimate cash classification bridge (one AccountingEvent + one
+        # cash_in/cash_out funding_account posting per effective classification), so a global
+        # 'cash namespace must not post' rule would reject valid PH-239 rows. Reject only
+        # events sourced at a refund/return fact or explicitly tagged refund/bank_return;
+        # classification-bridge events use source kind cash_classification and stay allowed.
+        from django.db.models import Q
+        refund_produced_cash_ids = [
+            str(row['refund_cash_transaction_id'])
+            for row in _Refund.objects.values('refund_cash_transaction_id')]
+        refund_produced_cash_ids += [
+            str(row['return_cash_transaction_id'])
+            for row in _BankReturn.objects.values('return_cash_transaction_id')]
+        refund_ledger_events = AccountingEvent.objects.filter(
+            source__namespace='cash').filter(
+            Q(source__kind__in=['refund', 'bank_return'])
+            | Q(source__kind='cash_transaction', source__id__in=refund_produced_cash_ids))
+        if refund_ledger_events.exists():
+            errors.append('cash_transaction:unexpected_refund_accounting_event')
+        if LedgerPosting.objects.filter(accounting_event__in=refund_ledger_events).exists():
+            errors.append('cash_transaction:unexpected_refund_cash_posting')
         from pmo_plugins.settlement.models import OpenItem, Settlement
         for settlement in Settlement.objects.filter(status='active'):
             items = list(settlement.items.all())
