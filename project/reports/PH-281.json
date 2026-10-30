@@ -1,0 +1,61 @@
+{
+  "task_id": "PH-281",
+  "summary": "Delivered the PH-281 read-only membership / project-scope / authorization-audit operations view. New `core/identity_read_services.py` exposes `member_access_snapshot` (members with masked display name, role, active/version, ProjectMember project-scope refs, derived AgentToken counts by state as of a date, last identity-audit change, pagination up to 200), `member_access_audit` (identity.membership.changed / agent_token.created / agent_token.revoked summaries with only safe payload keys, member filter and since/as_of bounds) and `member_access_issues` (inactive member holding an active token, expired-but-not-revoked token, company-scope role carrying project scope, cross-organization project scope, members with version changes missing identity audit, duplicate same-name active tokens). The page uses a new canonical `identity-access/` route declared in `pmo_plugins/delivery/domain_metadata.py` with access=history_read (delivery/urls.py imports it, no metadata copy), core/identity_views.py + identity_forms.py + core/templates/core/identity_access.html. Roles: owner/finance/auditor full; pm only managed-project member summary without other members' token lifecycle details; member denied; no token hash/auth snapshot/password/rate is exposed. The whole slice is read-only: no audit, receipt, session persistence, migration, canonical event or identity write; tests assert derived token/scope values, pm scoping, pagination/validation, permissions, module-disabled history readability, and zero INSERT/UPDATE/DELETE plus unchanged Membership/ProjectMember/AgentToken/AuditEvent/DomainEvent/Employee counts (append-only compatible). 14 scoped tests were added.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD fdb0682 (BASE e5aa0fb): {\"command\":\"check\",\"ok\":true,\"task_count\":224}, exit 0 (PH-281 in_review with owner+handoff); final entry recorded after the review pass."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run: System check identified 88 issues (0 silenced) — all pre-existing warnings (urls.W003 plugin-colon names, cash.W342 etc.), 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: No changes detected (no migration for this slice)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1055 tests in ~135s, FAILED (failures=5, errors=3, skipped=69). The same known macOS/DRF environment set as the 5F+3E baseline; no PH-281 failure."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Fresh DB: rm -f /tmp/ph281-verify.sqlite3; PMO_DB=... migrate --noinput; then PMO_DB=... verify_integrity --json -> {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_identity_access_read tests.test_v1_identity_access_read_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 14 tests ... OK (7 service + 7 HTTP)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base e5aa0fb --task PH-281",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD fdb0682: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 14 changed files (5 new core identity files incl. template, canonical domain_metadata + delivery urls, 2 tests, tasks/manifest, docs status/verification, report/handoff) are inside BASE PH-281 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (read-only identity aggregation, role/scope matrix, canonical history_read route wiring and append-only purity); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Route wiring: the canonical `identity-access/` route was declared in `pmo_plugins/delivery/domain_metadata.py` (access=history_read) as authorized by the PH-298 planning slot; `pmo_plugins/delivery/urls.py` only imports and binds the handler, with no metadata copy.",
+    "AgentToken audit events (`agent_token.created/revoked`) are mapped to a member through the token rows because their AuditEvent entity is the token, not the membership; the audit summary still exposes only safe payload keys and never the token hash/auth snapshot.",
+    "`duplicate_active_binding` is only constructible in this BASE as duplicate same-name active tokens (org+user and project+member uniqueness are enforced by the schema), so that is the issue the service detects and documents.",
+    "The optional generic audit `core.identity_access.viewed` was not written: the Lead required zero audit for these read-only slices, so the page stays side-effect free.",
+    "pm sees a project-scoped summary only: project scope refs are filtered to managed projects and other members' token lifecycle/last-change fields are null."
+  ],
+  "unverified": [
+    "PostgreSQL-specific behavior and CI delegated to CI; SQLite tests only.",
+    "Browser 1440/390 visual/keyboard checks were not run locally; the template follows existing base/visual patterns.",
+    "Independent S review is pending; report.review is deliberately not self-passed.",
+    "No production/UAT verification; the slice is read-only and has no data migration/backfill."
+  ]
+}
