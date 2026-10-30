@@ -335,3 +335,8 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 基线83a2577（PH-226测试前置合入）。新增settlement插件（结算/未清项/收据、SQLite+PG守卫迁移0001/0002）、条款行组合结算服务、只读账龄、6条路由与4个模板、两个跨owner只读接口、verify_integrity分支。金额按整行累计比例HALF_UP且累计差守恒（53000/50000/3000、42400/40000/2400、10600/10000/600 → 106000/100000/6000）；批准公司锁内按当前累计重算并拒绝陈旧草稿；条款一次性消费；不做现金/核销/会计事件/账本写入。
 实际执行：全量680项通过、40项环境跳过（含6项PG-only并发）；settlement+http+concurrency目标35项通过（本机6项PG skip）；check/makemigrations/verify_integrity通过；真实结算浏览器库与新建种子库完整性ok；旧库与非空库升级后完整性ok且既有列无变化；浏览器1440/390五角色/CSV/停用态/键盘/无横溢/0个500；独立S复核两轮。PostgreSQL并发由PR的PG CI实跑。未验证：生产/UAT、核销/折让/应付/发票/反冲/期初。
 
+
+## PH-227 现金事实首片规划（2026-10-30）
+
+基线f484a2e（PH-224应收首片合入）。登记PH-228“现金事实首片：银行账户、银行流水与往来方匹配（无过账）”（ready，依赖PH-214/PH-219/PH-222/PH-224）与PH-229规划槽；PH-227完成。本片只规划PH-169第1片：FundingAccount/CashTransaction/CashPartyMatch的草稿登记、external_source_key稳定去重、往来方identify/reverse、只读投影与角色边界；明确不写AccountingEvent/LedgerPosting/LedgerEntry/收入/成本/应收/应付/未清，不做过账/分类/核销/退款/更正/转账/文件导入/期初。实际执行check与19项治理测试；verify-change在review落pass后重跑。未验证：无产品代码/迁移/测试/浏览器/PG/CI；PH-169未完成。
+

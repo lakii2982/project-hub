@@ -1,0 +1,44 @@
+{
+  "task_id": "PH-227",
+  "summary": "Register PH-228 (cash-facts first slice: funding accounts, bank transactions with stable external-key dedupe, and party matching; explicitly no ledger posting/classification/clearing/refund/import/opening balance) and PH-229 next planning slot. No product code changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-review actual rerun at HEAD 40a0292: ok=true, task_count=151 (PH-227 done, PH-228/PH-229 ready, dependencies done)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base f484a2e --task PH-227",
+      "result": "pass",
+      "evidence": "Post-review actual rerun at HEAD 40a0292 against base f484a2e: ok=true, 8 changed files all inside BASE allowed_paths, no errors."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-227 planning reviewer (fresh context, read-only; two rounds)",
+    "status": "pass",
+    "findings": [
+      "Round 1 blockers closed: cash plugin manifest frozen with requires={} and default_enabled=True (no new dependency edge, so the four existing test disable-order sites stay valid); PH-228 allowed_paths tightened from a directory wildcard to an exact file list; event wording aligned with actual generic audit() DomainEvent behaviour; FundingAccount.opening_on fixed at draft creation with opening_cents=0 and drafts not projected as canonical entities; party.match identify/reverse payload and lock rule frozen deterministically; evidence prefill removed.",
+      "Round 2 confirmed all six items and required two micro-fixes: add pmo_plugins/cash/migrations/*.py to PH-228 allowed_paths (new app needs 0001_initial) and fill report evidence only after review pass with actual reruns; both are applied before this verdict."
+    ],
+    "evidence": "Reviewer inspected PH-228/PH-229 specs, tasks/manifest/handoff/report, and the frozen cash entities/commands (CashTransaction draft enum, cash.transaction.draft.save, cash.party.match, cash.transaction.record); confirmed contract semantics for a draft-only slice, dependency legality (PH-214/219/222/224 all done), and that no new plugin dependency edge is introduced. Ran projectctl check/verify-change (blocked only by pending review) and 19 governance tests."
+  },
+  "deviations": [
+    "PH-228 is a deliberately narrow first slice of PH-169: it records real bank facts and party matches but performs no ledger posting, classification, allocation, clearing, refund, correction, transfer, file import or opening balance. Those remain for later slices and are listed as unverified/non-goals.",
+    "PH-228 dependencies are the done AR slices (PH-214/PH-219/PH-222/PH-224), not the still-proposed PH-169/PH-156/PH-157 entries, because the slice only needs contract/payment/AR facts and core periods; the remaining PH-169 scope is tracked by later planning.",
+    "No canonical AccountingEvent/LedgerPosting is written in this slice; cash book bridging must be planned separately to avoid inventing a second cash balance.",
+    "cash plugin manifest is frozen with requires={} and default_enabled=True: Counterparty/Employee are read through named contracts interfaces and writes reject when contracts is disabled, so no new plugin dependency edge is added and the existing test disable order (PH-226) stays valid.",
+    "FundingAccount.opening_on is fixed at draft creation with opening_cents=0; drafts are not projected as canonical FundingAccount entities, and canonical projection/opening balance remain for a later slice.",
+    "Generic audit() still produces non-canonical DomainEvents; the spec freezes that no registered canonical cash event (cash.transaction_recorded etc.) is written and no registry entry is added.",
+    "party.match payload is frozen as identify (no reason, reason=null) and reverse (reason + match_ref); locking rule is deterministic: transaction_date <= org.locked_through or a closed period rejects."
+  ],
+  "unverified": [
+    "No product code, migration, tests, browser, PostgreSQL or CI evidence exists for PH-228 yet.",
+    "Cash posting, classification, clearing (PH-170), refunds (PH-171), bank-file import and opening balances are not designed here; PH-169 is not complete."
+  ]
+}
