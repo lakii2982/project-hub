@@ -1,0 +1,32 @@
+{
+  "task_id": "PH-287",
+  "summary": "合同收费模板/生效条款只读快照与结算核对首片 on BASE 6ddb951. Added pmo_plugins/contracts/terms_snapshot_services.py with two read-only interfaces. approved_terms_snapshot(member, *, contract_id, as_of=None) returns the contract ref/status/termination marker, the approved-or-historical version ref selected by as_of (approved version effective on/before as_of, latest approved fallback), its effective date, pricing template codes, up to 200 contract lines with template/amounts/active payment+warranty term breakdown and terms total, a change-history summary (change ref/type/status/requested_on, recorded effective_on, before/after version refs), and PM summary_only/settlement_guard flags; each line prefers the existing approval_services.approved_terms_snapshot named read and falls back to a read-only historical projection (readable=false with a reason) when termination/history/amount guards reject. terms_settlement_issues(member, *, as_of=None) returns read-only reconciliation anomalies with issue_code/contract_ref/refs/expected/actual: terms_amount_mismatch (active term total != line gross), settlement_partition_mismatch (active settlement gross != open-item partition total), settlement_terms_mismatch (frozen selected terms total != settlement gross), terms_unapproved_referenced, stale_version_referenced (settlement references a superseded version), line_repeated_consumption (multiple active settlements on one line), cross_project_reference, cross_org_reference, terminated_still_settled (active settlement on/after termination date), and old_terms_still_active (superseded-version lines still have active terms). Permissions are owner/finance/auditor full, PM only managed projects with summary_only=true, member denied, cross-tenant/unknown denied; the new history_read route contract-terms-snapshot keeps the historical page readable after the contracts module is disabled, rejects unknown query parameters and has no POST/write entry. No model, migration, canonical topic/command/schema, contracts/settlement write path or business fact changed; no audit/receipt/event side effect is written (the optional generic viewed audit was deliberately skipped to keep reads pure). Amounts stay integer cents; template codes follow the PH-214 delivery (fixed_milestone/confirmed_time/fixed_service_period) rather than the legacy wording in the spec.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":212}."},
+    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (80 issues, 0 silenced), no errors."},
+    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual run exit 0: 'No changes detected' (PH-287 adds no model or migration; contracts leaf stays 0003)."},
+    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 986 tests in 119.110s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."},
+    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No new business invariant was added because the slice only reads existing facts; existing contracts/settlement/audit checks are unchanged."},
+    {"command": "python manage.py test tests.test_v1_contract_terms_snapshot tests.test_v1_contract_terms_snapshot_http --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 10 tests, OK. Service 6: gold approved line + clean 50000 settlement yields readable snapshot, expected version/template/terms total and issues=[] with no fact/audit/event change; terms amount mismatch and settlement partition anomalies; repeated consumption + cross-project references; termination marks snapshot terminated/guard unreadable, flags late active settlement and the settlement service still rejects termination; stale version + old terms still active; permissions (auditor full, PM summary_only scoped, member denied, cross-tenant denied) and disabled-module history read with no writes. HTTP 4: snapshot page renders contract/version/template/changes/issues; as_of filter read-only; auditor/PM allowed, member 403, other-project PM 400; future/invalid date, unknown contract and unknown query parameters rejected 400; disabled-module history_read renders; POST/client-supplied terms do not write facts."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级复核由 fresh-context reviewer 按 BASE PH-287 spec 实跑 check/manage check/makemigrations/verify_integrity/scoped/full 并核对快照口径（as_of 版本选择、模板/条款金额、200 行上限、变更历史、终止标记、pm summary_only）、异常清单（issue_code/refs/expected/actual 准确定义、gold issues=[]）、权限/停用历史读、只读零副作用（无 audit/事件/事实写）、无迁移/无写入口、精确白名单与 UI 只读性。实现者不自写 pass。"
+  },
+  "deviations": [
+    "模板代码采用 PH-214 实际交付的 fixed_milestone/confirmed_time/fixed_service_period（spec 文字中的 fixed_price/time_and_material/service_period 为旧命名），快照返回实际代码与中文标签，report 披露。",
+    "可选的 generic audit `contracts.terms_snapshot.viewed` 未写：保持只读接口零审计副作用；由既有 audit 链覆盖合同/结算写路径，report/handoff 披露。",
+    "历史/终止/金额守卫拒绝时，快照行回退为只读投影并 readable=false+unreadable_reason，仍展示历史条款供核对；不修改条款状态或终止守卫。",
+    "old_terms_still_active 按 spec 反例“变更后旧条款仍 active”对 superseded 版本仍 active 的条款行报告异常；这是对既有数据结构的只读对账口径，不自动关闭旧条款。",
+    "PM 权限实现为“仅其管理项目 + summary_only=true”，仍返回其项目条款摘要；member 拒绝、跨租户/未知拒绝。"
+  ],
+  "unverified": [
+    "PostgreSQL 运行证据以 CI 为准（本机 SQLite 仅验证服务/模板/反例；无 PG 实例）。",
+    "浏览器 1440/390、键盘/焦点、空态/错误态/停用态未实机检查；HTTP 测试仅断言页面渲染、权限、400 拒绝与只读事实不变。",
+    "真实客户/生产/UAT 未验证；异常清单覆盖当前 Settlement/OpenItem/RevenueRecognition 既有模型，未来新事实类型未覆盖。",
+    "独立 S 复核 pending；通过后置 done、重跑 check+verify-change 并报最终 SHA。"
+  ]
+}

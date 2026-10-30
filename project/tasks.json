@@ -8905,7 +8905,7 @@
       "title": "合同收费模板/生效条款只读快照与结算核对首片（无写入口、无迁移）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8942,9 +8942,9 @@
         "python manage.py test tests.test_v1_contract_terms_snapshot tests.test_v1_contract_terms_snapshot_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-287.md"
     },
     {
       "id": "PH-288",
