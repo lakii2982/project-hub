@@ -14,14 +14,17 @@ from core.models import Employee, Membership
 from core.plugin_runtime import is_enabled
 
 from . import transaction_services as tx
+from . import internal_transfer_services as internal
 from . import refund_services as refunds
 from . import classification_services as cls
 from . import funding_services as funding
 from .forms import (BankReturnForm, CashClassificationForm, CashClassificationListFilterForm,
                     CashTransactionForm, CashTransactionListFilterForm,
                     FundingAccountForm, FundingAccountListFilterForm, IdentifyPartyForm,
+                    InternalTransferForm, InternalTransferListFilterForm,
                     PostCashTransactionForm, RefundForm, RefundListFilterForm,
-                    ReverseClassificationForm, ReversePartyForm, amount_cents)
+                    ReverseClassificationForm, ReverseInternalTransferForm,
+                    ReversePartyForm, amount_cents)
 
 WRITE_ROLES = {'owner', 'finance'}
 READ_ROLES = {'owner', 'finance', 'auditor'}
@@ -50,7 +53,8 @@ def _base(member, nav_page, **values):
     return dict(nav='cash', nav_page=nav_page, can_write=member.role in WRITE_ROLES,
                 can_activate=member.role == 'owner',
                 accounts_url=_url('funding_account_list'),
-                transactions_url=_url('cash_transaction_list'), **values)
+                transactions_url=_url('cash_transaction_list'),
+                internal_transfer_url=_url('cash_internal_transfer_list'), **values)
 
 
 def _account_options(member, *, active_only=False):
@@ -325,6 +329,7 @@ def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None, 
                       and coverage and coverage['refundable_cents'] > 0)
     refund_form = RefundForm(initial={'original_cash_transaction_id': snapshot['id']})
     return_form = BankReturnForm(initial={'original_cash_transaction_id': snapshot['id']})
+    internal_transfer = internal.internal_transfer_for_cash(member, snapshot['id'])
     classifications = cls.classification_list(member, cash_transaction_id=snapshot['id'])
     active_classification = next(
         (row for row in classifications if row['status'] == 'active'), None)
@@ -390,6 +395,7 @@ def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None, 
         refund_form_url=_url('cash_refund_form', id=snapshot['id']),
         return_form_url=_url('cash_bank_return_form', id=snapshot['id']),
         refunds_url=_url('cash_refund_list'),
+        internal_transfer=internal_transfer,
         classifications=classification_rows, active_classification=active_classification,
         can_classify=can_classify, classification_form=classification_form,
         reversal_form=reversal_form,
@@ -787,3 +793,130 @@ def cash_classification_reverse_save(context, payload):
             raise PermissionDenied('现金分类不存在或无权访问')
         snapshot = cls.classification_snapshot(member, classification_id)
     return _reverse_classification_page(context, member, snapshot, form, status=400)
+
+
+# ---------- PH-245 internal transfer ----------
+def _transfer_row_view(row):
+    return {**row,
+            'created_display': str(row.get('created_at', ''))[:16].replace('T', ' '),
+            'out_url': _url('cash_transaction_detail', id=row['out_cash_transaction_id']),
+            'in_url': _url('cash_transaction_detail', id=row['in_cash_transaction_id']),
+            'reverse_url': _url('cash_internal_transfer_reverse', id=row['id']),
+            'reverse_token': uuid.uuid4()}
+
+
+def _transfer_choices(member, direction):
+    rows = internal.internal_transfer_candidates(member, direction)
+    return [(f"{row['transaction_ref']['id']}:{row['transaction_ref']['version']}",
+             f"{row['transaction_date']} · {row['funding_account_name']} · "
+             f"{row['gross_display']} 元 · 流水 {row['id'][:8]}")
+            for row in rows]
+
+
+def cash_internal_transfer_list(context, payload):
+    member = _fresh(context.member)
+    account_options = _account_options(member)
+    filter_form = InternalTransferListFilterForm(payload or None, accounts=account_options)
+    account_id = status = ''
+    if filter_form.is_valid():
+        account_id = filter_form.cleaned_data.get('funding_account') or ''
+        status = filter_form.cleaned_data.get('status') or ''
+    rows = internal.internal_transfer_list(member, funding_account_id=account_id or None,
+                                           status=status or None)
+    return render(context.request, 'cash/internal_transfer_list.html', _base(
+        member, 'internal_transfers',
+        transfer_rows=[_transfer_row_view(row) for row in rows],
+        filter_form=filter_form,
+        new_url=_url('cash_internal_transfer_form')))
+
+
+def cash_internal_transfer_form(context, payload):
+    member = _fresh(context.member, write=True)
+    form = InternalTransferForm(out_candidates=_transfer_choices(member, 'out'),
+                                in_candidates=_transfer_choices(member, 'in'))
+    return render(context.request, 'cash/internal_transfer_form.html', _base(
+        member, 'internal_transfers', form=form,
+        submit_url=_url('cash_internal_transfer_save'),
+        back_url=_url('cash_internal_transfer_list'),
+        explanation='内部互转把同企业、反方向、同额、同日的两条已过账现金成对关联；'
+                    '两条现金各写一条内部 transfer 分类与现金账 posting，公司净现金为 0，'
+                    '不写成本/收入/应收/应付/未清。'))
+
+
+def cash_internal_transfer_save(context, payload):
+    member = _fresh(context.member, write=True)
+    out_choices = _transfer_choices(member, 'out')
+    in_choices = _transfer_choices(member, 'in')
+    form = InternalTransferForm(payload, out_candidates=out_choices,
+                                in_candidates=in_choices)
+    if form.is_valid():
+        data = form.cleaned_data
+        out_id = data['out_cash'].split(':', 1)[0]
+        in_id = data['in_cash'].split(':', 1)[0]
+        try:
+            internal.link_internal_transfer(
+                member, out_cash_transaction_id=out_id,
+                in_cash_transaction_id=in_id,
+                evidence=_evidence_refs(data['evidence']),
+                request_token=data['request_token'], dry_run=False)
+        except ValidationError as exc:
+            form.add_error(None, '；'.join(exc.messages))
+        else:
+            messages.success(context.request, '内部互转已登记')
+            return redirect(_url('cash_internal_transfer_list'))
+    return render(context.request, 'cash/internal_transfer_form.html', _base(
+        member, 'internal_transfers', form=form,
+        submit_url=_url('cash_internal_transfer_save'),
+        back_url=_url('cash_internal_transfer_list'),
+        explanation='内部互转把同企业、反方向、同额、同日的两条已过账现金成对关联；'
+                    '两条现金各写一条内部 transfer 分类与现金账 posting，公司净现金为 0，'
+                    '不写成本/收入/应收/应付/未清。'), status=400)
+
+
+def cash_internal_transfer_reverse(context, payload):
+    member = _fresh(context.member, write=True)
+    transfer_id = context.request.GET.get('id')
+    if not transfer_id:
+        raise PermissionDenied('内部互转不存在或无权访问')
+    snapshot = internal.internal_transfer_snapshot(member, transfer_id)
+    if snapshot['status'] != 'active':
+        raise PermissionDenied('仅有效内部互转可以撤转')
+    form = ReverseInternalTransferForm(initial={
+        'transfer_id': snapshot['id'], 'expected_version': snapshot['version']})
+    return render(context.request, 'cash/internal_transfer_form.html', _base(
+        member, 'internal_transfers', reverse=True, transfer=snapshot, form=form,
+        submit_url=_url('cash_internal_transfer_reverse_save'),
+        back_url=_url('cash_internal_transfer_list'),
+        explanation='撤转会为两条现金各追加一条撤分类记录与冲销 posting，'
+                    '再把内部互转标记为已撤转；原事实不改不删，公司净现金仍为 0。'))
+
+
+def cash_internal_transfer_reverse_save(context, payload):
+    member = _fresh(context.member, write=True)
+    transfer_id = payload.get('transfer_id')
+    if not transfer_id:
+        raise PermissionDenied('内部互转不存在或无权访问')
+    try:
+        snapshot = internal.internal_transfer_snapshot(member, transfer_id)
+    except (ValidationError, PermissionDenied):
+        raise PermissionDenied('内部互转不存在或无权访问')
+    form = ReverseInternalTransferForm(payload)
+    if form.is_valid():
+        data = form.cleaned_data
+        try:
+            internal.reverse_internal_transfer(
+                member, data['transfer_id'], reason=data['reason'],
+                evidence=_evidence_refs(data['evidence']),
+                expected_version=data['expected_version'],
+                request_token=data['request_token'], dry_run=False)
+        except ValidationError as exc:
+            form.add_error(None, '；'.join(exc.messages))
+        else:
+            messages.success(context.request, '内部互转已撤转')
+            return redirect(_url('cash_internal_transfer_list'))
+    return render(context.request, 'cash/internal_transfer_form.html', _base(
+        member, 'internal_transfers', reverse=True, transfer=snapshot, form=form,
+        submit_url=_url('cash_internal_transfer_reverse_save'),
+        back_url=_url('cash_internal_transfer_list'),
+        explanation='撤转会为两条现金各追加一条撤分类记录与冲销 posting，'
+                    '再把内部互转标记为已撤转；原事实不改不删，公司净现金仍为 0。'), status=400)

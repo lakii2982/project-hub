@@ -367,3 +367,122 @@ class CashClassificationReversal(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError('撤分类记录不可删除')
+
+
+INTERNAL_TRANSFER_STATUSES = ('draft', 'active', 'posted', 'reversed', 'superseded')
+
+
+class InternalTransfer(models.Model):
+    """Append-only pairing of one out leg and one in leg of the same company transfer."""
+
+    STATUSES = INTERNAL_TRANSFER_STATUSES
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='internal_transfers')
+    out_cash_transaction = models.ForeignKey(CashTransaction, on_delete=models.PROTECT,
+                                             related_name='out_transfers')
+    in_cash_transaction = models.ForeignKey(CashTransaction, on_delete=models.PROTECT,
+                                            related_name='in_transfers')
+    out_cash_ref = models.JSONField()
+    in_cash_ref = models.JSONField()
+    transfer_date = models.DateField()
+    gross_cents = models.PositiveBigIntegerField()
+    out_transaction_date = models.DateField()
+    in_transaction_date = models.DateField()
+    status = models.CharField(max_length=16, default='active')
+    version = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            # Unconditional lifetime uniqueness: a cash fact never participates in a second
+            # transfer, not even after the first transfer is reversed.
+            models.UniqueConstraint(fields=['out_cash_transaction'],
+                                    name='cash_internal_transfer_out_unique'),
+            models.UniqueConstraint(fields=['in_cash_transaction'],
+                                    name='cash_internal_transfer_in_unique'),
+            models.CheckConstraint(condition=Q(gross_cents__gt=0, gross_cents__lte=MAX_CENTS),
+                                   name='cash_internal_transfer_gross_bound'),
+            models.CheckConstraint(condition=Q(status__in=list(INTERNAL_TRANSFER_STATUSES)),
+                                   name='cash_internal_transfer_status'),
+        ]
+
+    @property
+    def internal_transfer_ref(self):
+        return {'namespace': 'cash', 'kind': 'internal_transfer', 'id': str(self.pk),
+                'version': self.version}
+
+    def get_status_display(self):
+        return {'draft': '草稿', 'active': '有效', 'posted': '已过账',
+                'reversed': '已撤转', 'superseded': '已替代'}.get(self.status, self.status)
+
+    def save(self, *args, **kwargs):
+        # Creation only; the single active->reversed transition is a conditional update.
+        if not self._state.adding:
+            raise ValidationError('内部互转创建后不可修改；撤转请使用撤转服务')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('内部互转历史不可删除')
+
+
+class InternalTransferReversal(models.Model):
+    """Append-only reversal of one active internal transfer; originals stay untouched."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='+')
+    internal_transfer = models.ForeignKey(InternalTransfer, on_delete=models.PROTECT,
+                                          related_name='reversals', unique=True)
+    internal_transfer_ref = models.JSONField()
+    out_classification_reversal_ref = models.JSONField()
+    in_classification_reversal_ref = models.JSONField()
+    occurred_on = models.DateField()
+    posting_period = models.CharField(max_length=7)
+    status = models.CharField(max_length=16, default='posted')
+    version = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(status='posted'),
+                                   name='cash_internal_transfer_reversal_status'),
+        ]
+
+    @property
+    def reversal_ref(self):
+        return {'namespace': 'cash', 'kind': 'internal_transfer_reversal', 'id': str(self.pk),
+                'version': self.version}
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError('内部撤转记录创建后不可修改')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('内部撤转记录不可删除')
+
+
+class InternalTransferReceipt(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT, related_name='+')
+    request_token = models.UUIDField()
+    action = models.CharField(max_length=40)
+    input_digest = models.CharField(max_length=64)
+    result = models.JSONField()
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['organization', 'request_token'],
+                                               name='cash_internal_transfer_receipt_token_unique')]
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise ValidationError('内部互转收据不可修改')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('内部互转收据不可删除')

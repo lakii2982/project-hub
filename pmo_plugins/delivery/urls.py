@@ -42,7 +42,11 @@ def entry_point():
                               'cash_bank_return_save', 'cash_classification_list',
                               'cash_classification_form', 'cash_classification_save',
                               'cash_classification_reverse',
-                              'cash_classification_reverse_save')},
+                              'cash_classification_reverse_save',
+                              'cash_internal_transfer_list', 'cash_internal_transfer_form',
+                              'cash_internal_transfer_save',
+                              'cash_internal_transfer_reverse',
+                              'cash_internal_transfer_reverse_save')},
         'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action')} | {name: getattr(service_period_views,name) for name in ('service_confirmation_list','service_confirmation_detail','service_confirmation_form','service_confirmation_save','service_confirmation_action')},
         'costing': {name: getattr(labor_views, name) for name in
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}

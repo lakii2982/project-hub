@@ -7086,7 +7086,7 @@
       "title": "内部账户互转首片：成对现金关联、公司范围抵销与撤转",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -7126,9 +7126,9 @@
         "python manage.py test tests.test_v1_internal_transfer tests.test_v1_internal_transfer_http tests.test_v1_internal_transfer_concurrency --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-245.md"
     },
     {
       "id": "PH-246",

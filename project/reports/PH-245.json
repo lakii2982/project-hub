@@ -1,0 +1,59 @@
+{
+  "task_id": "PH-245",
+  "summary": "内部账户互转首片：owner/finance 把同企业、反方向、同额、同日的两条已过账现金成对关联为 InternalTransfer（cash 迁移 0006），经 PH-239 非路由内部服务 record_internal_classification 为两条现金各写一条 transfer 分类与 cash_out/cash_in posting（funding_account scope），公司净现金恒为零；append-only 撤转新增两条 CashClassificationReversal + 冲销 posting、InternalTransfer 状态 active→reversed、InternalTransferReversal 事实与 cash.internal_transfer_reversed.v1（source=reversal ref）；canonical cash.internal_transfer_linked.v1/reversed.v1 的 posting_event_refs 恰为 0/0，linked changed_refs 恰 3（互转 + 两条分类）、reversed changed_refs 恰 3（互转 + 两条撤分类）且 classification_reversal_refs=2；Unique(out/in_cash_transaction) 无条件终身一次；两腿使用不同 request_token；服务层先 owner/finance fresh 校验再调内部函数；期间/锁期/未来/金额/方向/账户/同 org/幂等/拒绝零半笔。不做手续费/Offset/退款/更正/导入/期初，不写成本/收入/应收/应付/未清。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=185; PH-245 recorded in_review with owner/handoff, review pending."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 66 issues (0 silenced), all pre-existing urls.W003 namespace warnings (main slices + this slice's internal-transfer routes), 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (cash 0006_internal_transfer_guards published; core 0009 unchanged)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1: Ran 905 tests, FAILED (failures=5, errors=3, skipped=68) => 832 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility Accept/codec/large-JSON cases and tests.test_delivery_execution* symlink cases); no new failures. CI Linux is authoritative. The 3 PostgreSQL-only internal-transfer races are among the skips and are executed by the PR CI job."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Scoped tests also assert ok=true with a real linked/reversed transfer and exercise forged pair-mismatch and missing-linked-event probes."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_internal_transfer tests.test_v1_internal_transfer_http tests.test_v1_internal_transfer_concurrency --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 24 tests, OK (skipped=3) => 21 passed. The 3 skips are the PostgreSQL-only concurrency races (same out cash concurrent link one winner, duplicate reverse one winner, link/reverse interleave company net zero); SQLite cannot prove production concurrency and PR CI must run them."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-245 internal-transfer reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: append-only InternalTransfer/InternalTransferReversal models and dual triggers, unconditional lifetime unique legs, reuse of the PH-239 internal classification service with two distinct tokens, canonical linked/reversed envelopes (posting_event_refs 0/0, changed_refs 3, classification_reversal_refs 2), company net zero, verify_integrity internal-transfer branch without global bans, and the PostgreSQL races. projectctl check passes; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "Single worker owns the root-only write set for this task: pmo_plugins/delivery/urls.py, pmo_plugins/cash/migrations/0006_internal_transfer_guards.py, core/management/commands/verify_integrity.py and governance files; pmo_plugins/cash/classification_services.py and core/cash_accounting.py are only called, not modified (PH-239 semantics preserved). No parallel slice writes these files; independent review is still pending.",
+    "The two transfer legs are written through PH-239's non-routed record_internal_classification with two distinct request tokens (each leg gets its own CashReceipt action=cash_classification.record); the reversal calls reverse_classification twice with two distinct tokens (each gets its own CashReceipt action=cash_classification.reverse). InternalTransferReceipt is separate (action=link/reverse, org+token unique). The report discloses these receipt rows; no public HTTP/PAT/canonical transfer entry is exposed.",
+    "Unique(out_cash_transaction) and Unique(in_cash_transaction) are unconditional lifetime constraints: a cash fact never participates in a second transfer, not even after the first transfer is reversed. This matches the frozen PH-245 spec.",
+    "InternalTransferReversal is an append-only owned fact (org, internal_transfer unique FK + internal_transfer_ref, out/in classification reversal refs, occurred_on, posting_period, status=posted, version) so the canonical reversed event can use source kind internal_transfer_reversal; this model was added per the Lead ruling and canonical contract.",
+    "Cash migration 0006 follows the current leaf 0005_cash_classification_guards; no core migration is added (core leaf stays 0009).",
+    "project/manifest.json active_handoff is left at main's value per the integration convention; tasks.json records PH-245 in_review with owner/handoff.",
+    "No browser 1440/390 checks were run in this round (HTTP tests only); no cost/revenue/receivable/payable/open-item/clearance write is produced by transfers."
+  ],
+  "unverified": [
+    "verify-change --base e8183ff --task PH-245 at this HEAD exits 1 with the single high_risk_review_required error because report.review.status is pending by design; there are no path_out_of_scope or report-shape errors (projectctl check is ok=true/task_count=185). After the independent reviewer records pass it is rerun and must be ok=true.",
+    "No browser 1440/390 check was run in this round; the internal-transfer UI was exercised through HTTP tests only. Visual/keyboard/overflow verification remains for the reviewer/browser round.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "Cross-currency transfers, multi-hop/batch transfers, partial-amount transfers, fee handling (PH-244/250/251), refunds/offsets/corrections, import, opening balances, and automatic reconciliation remain unimplemented."
+  ]
+}
