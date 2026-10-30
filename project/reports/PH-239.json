@@ -5,32 +5,37 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final rebased HEAD (BASE a760cf7, PH-240/244/246 merged): ok=true, task_count=169; PH-239 recorded in_review with owner/handoff, review pending."
+      "evidence": "Actual exit 0 at the final rebased HEAD (BASE 1f02520, PH-240/244/246/247 merged): ok=true, task_count=175; PH-239 recorded done with owner/handoff and the independent reviewer round-2 review block is pass."
     },
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final rebased HEAD: System check identified 58 issues (0 silenced), all pre-existing urls.W003 namespace warnings (main slices + PH-240 + this slice), 0 errors."
+      "evidence": "Actual exit 0 at the final rebased HEAD: System check identified 58 issues (0 silenced), all pre-existing urls.W003 namespace warnings (main slices + this slice), 0 errors."
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final rebased HEAD: No changes detected (cash 0005_cash_classification_guards depending on PH-240 0004_refund_guards, and core 0009_relax_ledger_posting_scope published)."
+      "evidence": "Actual exit 0 at the final rebased HEAD: No changes detected (cash 0005_cash_classification_guards depending on PH-240 0004_refund_guards, and core 0009_relax_ledger_posting_scope published; migration numbers unchanged by the PH-247 rebase)."
     },
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1 at the final HEAD: Ran 822 tests, FAILED (failures=5, errors=3, skipped=62) => 752 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility Accept/codec/large-JSON cases and tests.test_delivery_execution* symlink cases); no new failures. CI Linux is authoritative. The 3 PostgreSQL-only classification bridge races are among the skips and are executed by the PR CI job."
+      "evidence": "Actual local exit 1 at the final rebased HEAD: Ran 822 tests, FAILED (failures=5, errors=3, skipped=62) => 752 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility Accept/codec/large-JSON cases and tests.test_delivery_execution* symlink cases); no new failures. CI Linux is authoritative. The 3 PostgreSQL-only classification bridge races are among the skips and are executed by the PR CI job."
     },
     {
       "command": "python manage.py verify_integrity --json",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final HEAD on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Scoped tests assert ok=true for real classification/reversal data and now cover forged bridge amounts (bridge_event/posting/net error codes) and a duplicate bridge event/posting group (bridge_event_count)."
+      "evidence": "Actual exit 0 at the final rebased HEAD on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Scoped tests assert ok=true for real classification/reversal data and cover forged bridge amounts (bridge_event/posting/net error codes) and a duplicate bridge event/posting group (bridge_event_count)."
     },
     {
       "command": "python manage.py test tests.test_v1_cash_classification tests.test_v1_cash_book_bridge tests.test_v1_cash_classification_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final HEAD: Ran 29 tests, OK (skipped=3) => 26 passed. Includes the reviewer-blocker regressions (mid-month posting_period filtering, internal-only transfer enum, forged bridge amount/duplicate bridge group counterexamples) and the verify query-count constant-query assertion. The 3 skips are the PostgreSQL-only concurrency races; PR CI must run them."
+      "evidence": "Actual exit 0 at the final rebased HEAD: Ran 29 tests, OK (skipped=3) => 26 passed. Includes the reviewer-blocker regressions (mid-month posting_period filtering, internal-only transfer enum, forged bridge amount/duplicate bridge group counterexamples) and the verify query-count constant-query assertion. The 3 skips are the PostgreSQL-only concurrency races; PR CI must run them."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 1f02520 --task PH-239",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final rebased HEAD: ok=true, base=1f02520, 23 changed files all inside the PH-239 allowed_paths (no path_out_of_scope, no report-shape errors); assertion_scope=declaration_only. The report review block is the independent reviewer's round-2 PASS."
     }
   ],
   "review": {
@@ -46,6 +51,7 @@
     "evidence": "VERDICT: PASS (round 2 after 3 blockers, all fixed). Reviewed fix HEAD c22ecae (0dea9f0 + one fix commit, BASE a760cf7) in /tmp/ph239-cash, worktree clean; 10 changed files all inside PH-239 allowed_paths. Independent reruns: projectctl check ok=true/169; manage.py check exit 0 (58 known warnings); makemigrations --check No changes; scoped classification/book-bridge/http 29 tests OK (skipped=3 = 26 pass); governance 23 OK; full suite 822 tests, 5 failures/3 errors/62 skips with failure names identical to the known macOS baseline; verify_integrity --json fresh migrated DB ok=true/errors=[]; verify-change --base a760cf7 --task PH-239 only high_risk_review_required, no path_out_of_scope. Verified blockers fixed: real month-range posting_period filter with 5th/18th/previous-20th regression (Oct=2, Sep=1); model/DB transfer enum restored (migration 0005 edited pre-application only) with client rejection, non-routed internal record_internal_classification, bridge creation and internal-transfer label covered; verifier cash-block prefetch maps remove the per-row reversal/classification queries with a CaptureQueriesContext constant-query regression, and the forged bridge amount (bridge_event/posting/net) and duplicate bridge group (bridge_event_count) counterexamples are real. All previously verified canonical/bridge/claim/reversal/migration contracts still hold; non-blocking notes are CLIENT_CLASSIFICATION_KINDS being unused, the trusted in-process internal entry point, and browser/PG local gaps. The frozen PH-239 acceptance is met."
   },
   "deviations": [
+    "Final rebase to main 1f02520 (PH-247 merged) touched only governance docs/tasks; the PH-247 planning slice is docs-only, so the migration numbers are unchanged (cash 0005_cash_classification_guards after PH-240's 0004_refund_guards; core 0009_relax_ledger_posting_scope), tasks.json keeps main's PH-247/249/250/253 entries plus PH-239 done, manifest keeps main's active_handoff, and docs/verification keeps main's PH-247 entry plus this slice's PH-239 entry.",
     "Reviewer round-1 blocker 1 fixed: classification_list posting_period filtering used transaction_date__startswith='YYYY-MM-01', which on a DateField only matched the 1st of the month. It now filters the real month range [period-01, next-month-01); a regression classifies bank facts dated the 5th, 18th and a previous-month 20th and asserts the period filters return exactly the right rows.",
     "Reviewer round-1 blocker 2 fixed: the frozen PH-239 spec keeps transfer in the CashClassification enum for PH-245 internal-transfer orchestration. The model/DB check now include transfer (migration 0005 content updated before merge; it is not an applied migration on main), the client-facing record_classification still rejects transfer with a business error, and a non-routed internal service record_internal_classification creates transfer classifications for PH-245 only. No public HTTP/PAT/canonical channel exposes transfer in this slice, and a regression asserts client rejection plus internal creation/bridging.",
     "Reviewer round-1 blocker 3 fixed: the verify_integrity cash block no longer calls classification.reversals per row or dereferences reversal.classification per reversal. Reversal links and classification objects are pre-loaded once into maps, keeping the verifier at constant query count; a CaptureQueriesContext regression grows classification/reversal history on the same bank facts and asserts the total verify query count does not grow (<=+2 and <=80). Two new counterexamples forge a wrong-amount bridge event/posting (bridge_event/posting/net errors) and a duplicate bridge event/posting group for one classification (bridge_event_count).",
@@ -59,7 +65,7 @@
     "No public canonical cash.classification.record/v1 or reverse/v1 channel is exposed; only private services implement the commands (x-exposure authenticated_application_service), and caller-supplied balances/proofs/accounting events are rejected by the strict signature."
   ],
   "unverified": [
-    "Reviewer round-2 is pending; report.review stays as the reviewer wrote it and verify-change remains review-gated until a pass is recorded.",
+    "verify-change --base 1f02520 --task PH-239 is rerun at the final evidence HEAD; with the reviewer round-2 pass recorded the gate is expected to be ok=true and the actual output is recorded in the report tests after the run.",
     "verify-change --base a760cf7 --task PH-239 at this HEAD exits 1 with the single high_risk_review_required error because report.review.status is pending by design; there are no path_out_of_scope or report-shape errors (projectctl check is ok=true/task_count=169). After the independent reviewer records pass it is rerun and must be ok=true.",
     "verify-change --base ceded2e --task PH-239 at this HEAD exits 1 with the single high_risk_review_required error because report.review.status is still pending by design; there are no path_out_of_scope or report-shape errors (projectctl check is ok=true). After the independent reviewer records pass this is rerun.",
     "PostgreSQL concurrency (same cash concurrent classification only one wins, duplicate reversal only one wins, interleaved classify/reverse keeps net consistent) is executed by PR CI; the 3 local SQLite skips are not evidence.",
