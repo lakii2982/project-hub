@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base e38b9a6 --task PH-286",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at the candidate revision (BASE e38b9a6): exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 10 changed files (PH-269/PH-274 whitelist+spec notes, 4 new specs PH-287..290, tasks.json, manifest.json, docs/verification.md, PH-286 report/handoff) are inside BASE PH-286 allowed_paths."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at the review-pass HEAD ce3dc3f: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"e38b9a6\",\"head\":\"ce3dc3f22741f79c32335804575d8cb481405ec8\",\"report_path\":\"project/reports/PH-286.json\"}, exit 0; all 11 changed files inside BASE PH-286 allowed_paths and review.status=pass with the reviewer's name; PH-286 done/PH-290 ready per convention."
     }
   ],
   "review": {

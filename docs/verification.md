@@ -571,4 +571,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 3. **程序化比对**：PH-269/PH-274 的 spec 精确白名单与 tasks allowed_paths 逐项一致（spec-only=[]、tasks-only=[]）。
 4. **核号**：BASE 最大 PH-286；远端分支/PR（含 EXP #143/#144、PH-269 PR #161）无 ≥287 占用 → PH-287 起连续。
 5. **新登记**：PH-287 合同收费模板/生效条款只读快照与结算核对（ready，deps PH-214/265/224/232/219/222 done）、PH-288 银行账户/现金余额只读对账汇总（ready，deps PH-228/230/239/240/245 done）、PH-289 onboarding 导入提交/冲突持久化前置（proposed，缺 PH-274/PH-181/PH-185）、PH-290 下一规划槽（proposed，待 PH-286 done 后置 ready）。count 208→212，编号 287-290 连续。
-6. blockers 刷新：PH-276 等 PH-269 done；其余 proposed 未虚假晋级；无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-287/288/289 未实现；PH-269/PH-274 自身测试修改由其实现 PR/CI 验证；review由独立S复核。
+6. blockers 刷新：PH-276 等 PH-269 done；其余 proposed 未虚假晋级；无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断，核对补漏用途/程序化一致性/编号/晋级事实）；最终证据 HEAD ce3dc3f 按槽惯例置 PH-286 done / PH-290 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=212；23 项治理 OK；verify-change --base e38b9a6 --task PH-286 ok=true、11 文件全白名单。未验证：PH-287/288/289 未实现；PH-269/PH-274 自身测试修改由其实现 PR/CI 验证。
