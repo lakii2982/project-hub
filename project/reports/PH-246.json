@@ -1,0 +1,49 @@
+{
+  "task_id": "PH-246",
+  "summary": "Corrected the merged PH-237 quantified evidence to one fixed-SHA reproducible caliber, in exactly the three in-scope places: project/reports/PH-237.json's byte-measure test entry now records baseline 7605fa9 = manifest 663 + tasks.json 217565 + active handoff PH-233.md 1510 + delivery-status 61218 = 280956 bytes and final path b931be0 = orient 3423 + brief PH-232 1893 + delivery-status 1996 + PH-232 spec 8448 = 15760 bytes with reduction 1-15760/280956 = 94.39% ≈ 94.4% plus the per-component reproduction command list; the docs/delivery-status-archive.md PH-237 entry's old percentage became '280,956→15,760 字节（-94.4%，1−15760/280956）'; and the docs/verification.md PH-237 entry gained the same fixed-SHA calibration sentence referencing this report's reproduction commands. The PH-237 report's review block, other test entries and summary are preserved, no other archive entry was touched, and PH-237's three delivered document edits (ROADMAP.md, execution-protocol.md, CONTRIBUTING.md) are outside this slice and unchanged. A new PH-246 verification entry was appended. No product code or runtime change.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE ceded2e): exit 1, {\"command\":\"check\",\"errors\":[{\"code\":\"high_risk_review_required\",\"message\":\"risk S reports require a named reviewer with status pass\",\"path\":\"report.review\"}],\"ok\":false} — single review-pending error, no path/schema errors. Never declared pass before the reviewer landed."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-246 on BASE ceded2e with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "fixed-SHA reproduction: baseline components at 7605fa9 and final-path components at b931be0",
+      "result": "pass",
+      "evidence": "Actual runs: `git show 7605fa9:project/manifest.json | wc -c` = 663; `git show 7605fa9:project/tasks.json | wc -c` = 217565; `git show 7605fa9:project/handoffs/PH-233.md | wc -c` = 1510; `git show 7605fa9:docs/delivery-status.md | wc -c` = 61218 => 280956. Extracted `git archive b931be0` into /tmp/ph237-measure and ran `python scripts/projectctl.py orient | wc -c` = 3423; `python scripts/projectctl.py brief PH-232 | wc -c` = 1893; `wc -c < docs/delivery-status.md` = 1996; `wc -c < project/specs/PH-232.md` = 8448 => 15760. `python -c \"print(round((1-15760/280956)*100,2))\"` = 94.39."
+    },
+    {
+      "command": "grep -n \"94.4%\" project/reports/PH-237.json docs/delivery-status-archive.md docs/verification.md; ! grep -n \"94.5%|94.6%|281349|15360\" <same three files>",
+      "result": "pass",
+      "evidence": "Actual grep: all three files contain 94.4% (PH-237 report 1x, archive 1x, verification 2x incl. the PH-242 planned-slice mention) and none contains 94.5%, 94.6%, 281349 or 15360. The PH-237 review block is preserved verbatim (it mentions the 281KB→15KB figure but no banned stale percentage)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base ceded2e --task PH-246",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE ceded2e): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope — all 7 changed files (PH-237 report, archive PH-237 entry, PH-237 calibration + PH-246 verification entry, tasks.json, manifest.json, PH-246 report/handoff) are inside BASE PH-246 allowed_paths. Replaced after the reviewer lands."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (historical evidence correction and CRITICAL_PATHS governance files); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Only the PH-237 report's byte-measure test entry was rewritten; its review block, summary and other test entries are preserved verbatim (the review block's '281KB→15KB' phrasing is historical and contains no banned stale percentage).",
+    "docs/delivery-status-archive.md is append-only history, so this slice makes the single explicitly authorized PH-237-entry numeric correction mandated by the PH-242 planning slot and spec, and touches no other archive entry; a note that the correction was authorized is kept in this report and the PH-246 verification entry.",
+    "The final-path measurement uses orient/brief output at the fixed commit b931be0 via `git archive` extraction (not the live tree), so it is reproducible and not tied to current repository state; per-component bytes and the exact command list are in the report and PH-237 entry.",
+    "The old numbers were removed from the report evidence so the spec's forbidden-string grep passes; the supersede statement now says 'earlier non-reproducible byte-measure numbers' without repeating them."
+  ],
+  "unverified": [
+    "No product code, migration, tests, browser or PostgreSQL behavior changed; this is an evidence/doc-only slice.",
+    "The PH-237 review block remains the original historical review text and was not re-run; the current fix is reviewed separately under this task.",
+    "Full product test suite not run locally; required CI checks cover the PR."
+  ]
+}

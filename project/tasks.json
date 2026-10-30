@@ -7124,7 +7124,7 @@
       "title": "PH-237 量化证据修正：会话阅读量降幅统一 94.4% 与固定 SHA 复现口径",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -7147,7 +7147,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-246.md"
     },
     {
       "id": "PH-247",
