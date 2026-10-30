@@ -7,14 +7,14 @@
     "write-dtos.schema.json": "e054b4928848a67149d94fb3988cbf0c3d39b3427c2271c4b65e77f98648a4e8",
     "queries.schema.json": "50245c71bbff40c5afcced62446f5762afba8ab53e54909a3751a534e4dd4442",
     "events.schema.json": "47df2a83b172cb269ce350e4f57b71ca42fa5e7a3faab64840fc919a9a090709",
-    "catalog-completeness.schema.json": "c807fa1ec6e0ff38da2f1017a3c518a2f432b0f126845f472e899163afabcb5e",
-    "entities.schema.json": "23d1f40880947cf671e305e1d151f910229dbbcea8a2e736c35bb865c3e4547d",
+    "catalog-completeness.schema.json": "1a1fd6278ec841bfcb01be09f50a91ca27424a6eab54e6fffcce0fdedfd52adc",
+    "entities.schema.json": "b125c182caa22f3b0bfd7a93661585b4575a70d8ff03ce35094a70ae160e99d7",
     "query-results.schema.json": "5b698c58b36b32af7f5e1ec5559983ee1e540fd967bb9005135543d93396485d",
     "contract-catalog.json": "6b7882b5a652cf2329545958bce865db70810ffd06f78ef9bec74b34b9b311da",
-    "relationships.json": "5af3a01e71e3c64895c5ccdd59e20c2cedf0ebc2137f6f39b8d0bff6e4adce3e",
-    "source-registry.json": "faa3cb109525596c304dc50b0cc3a6fab2394419fc11543e5b67b471a21e6df9",
+    "relationships.json": "2e47454ebeed0b611035cf151ae14803afc3ac3f95685cf8db7b729d78556424",
+    "source-registry.json": "97ebe78f937a7f7d05a1aa9c9788f5581f5b4c519b39e65afd616abf0720306a",
     "contract-bundle.schema.json": "6046e83646633ddb972d7cc81cdc6c1c4b0c1845d5abc80ca094403d21c9fda5",
-    "commands.schema.json": "387bf9b2715424f848e6321edf1904cdd74dfefa35887fd2ed7c9659ccf8a369",
+    "commands.schema.json": "30ee34fa42d2223b3b71877e100268d0764bf611641f24dd13f7092555ab9b3d",
     "command-results.schema.json": "aac4931f1eebcf4f3a47df52feb6d624b2667eead6002ef6532c826eb5dc584e"
   },
   "input_sha256": {
@@ -32,5 +32,51 @@
     "ph137_s4_s5_acceptance cash/invoice P1 fixes limited PASS",
     "ph137_gap_design root fee/source/reconciliation closure limited PASS",
     "ph137_gap_design existing-cost alias/AP coverage limited PASS"
+  ],
+  "follow_up_updates": [
+    {
+      "task": "PH-210",
+      "governance_base": "7a2cc1756c572adf7a47a634e63cfb3acfb28178",
+      "kind": "additive_contract_corrections_not_runtime",
+      "affected_artifacts": {
+        "catalog-completeness.schema.json": {
+          "before": "c807fa1ec6e0ff38da2f1017a3c518a2f432b0f126845f472e899163afabcb5e",
+          "after": "1a1fd6278ec841bfcb01be09f50a91ca27424a6eab54e6fffcce0fdedfd52adc"
+        },
+        "entities.schema.json": {
+          "before": "23d1f40880947cf671e305e1d151f910229dbbcea8a2e736c35bb865c3e4547d",
+          "after": "b125c182caa22f3b0bfd7a93661585b4575a70d8ff03ce35094a70ae160e99d7"
+        },
+        "relationships.json": {
+          "before": "5af3a01e71e3c64895c5ccdd59e20c2cedf0ebc2137f6f39b8d0bff6e4adce3e",
+          "after": "2e47454ebeed0b611035cf151ae14803afc3ac3f95685cf8db7b729d78556424"
+        },
+        "source-registry.json": {
+          "before": "faa3cb109525596c304dc50b0cc3a6fab2394419fc11543e5b67b471a21e6df9",
+          "after": "97ebe78f937a7f7d05a1aa9c9788f5581f5b4c519b39e65afd616abf0720306a"
+        },
+        "commands.schema.json": {
+          "before": "387bf9b2715424f848e6321edf1904cdd74dfefa35887fd2ed7c9659ccf8a369",
+          "after": "30ee34fa42d2223b3b71877e100268d0764bf611641f24dd13f7092555ab9b3d"
+        }
+      },
+      "verification_status": "strict_schema_checks_pass_not_runtime",
+      "runtime_business_verified": false,
+      "validation": {
+        "preparation_tests": 7,
+        "schema_tests_skipped": 0,
+        "new_boundary_positive": 6,
+        "new_boundary_rejected": 10,
+        "original_contract_positive": 19,
+        "original_contract_rejected": 37,
+        "original_fixture_positive": 99,
+        "original_fixture_rejected": 8,
+        "requirements": 137,
+        "strict_tool_environment": "jsonschema 4.26.0 / referencing offline registry",
+        "independent": "pending independent S review",
+        "runtime_business_verified": false
+      },
+      "preserved_history": "Original base_sha, 201 patch entries, input_sha256 and independent_static_reviews kept unchanged; old passes are not restated as new-SHA passes."
+    }
   ]
 }

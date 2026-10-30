@@ -38,3 +38,11 @@
 ## 2026-10-28 PH-130准备设计入库
 
 纳入1.0交付方案、简表和长程设计：137需求/62工作包/18UAT。实际只读结构检查、五种拒绝及19治理回归通过；独立复核修正临时加载缓存和政策状态后通过。设计覆盖不是产品实现或客户验收。PH131成为下一准备任务，当前PR的8项required CI仍须合入前核对；产品代码保持119a049，未发布/部署。
+
+## PH-210 单一冲销引用与原现金消费（2026-10-30）
+
+基线7a2cc17。只改canonical契约：AccountingEvent.reverses_event_ref为可选、server-only、readOnly，非空仅允许namespace=core/kind=accounting_event的SourceRef，保持additionalProperties=false；SourceConsumption.consumer追加cash并保留原七用途；relationships.event-reversal补只读桥投影left=原事件/right=冲销事件，桥id/version/created_at取自冲销事件；commands客户端append/reverse DTO不放开新字段；source-registry只加内部用途映射注解（objects身份清单不变）。README/摘要/反例同步，未新增对象/命令/事件/金额字段或弱化旧约束。
+
+固定jsonschema4.26离线环境实际执行：prep 7测试5.158s全执行0skip（含新增边界6正10拒绝），原19正37拒绝、99正8负、137需求与全部契约/来源归属保留；validate_contracts、check_contract_cases、check_fixture通过；projectctl check与23项治理测试通过。fixture仅刷新5个实际canonical摘要；extension-freeze保留原base_sha/201补丁/input_sha256/旧审阅历史，追加PH210前后SHA与本次设计验证，不把旧pass改写为新SHA通过。
+
+边界仅证明设计输入可校验：未运行来源resolver、批准/期间/模型事务、真实服务拒绝、数据库、PG并发、浏览器/客户/生产；现金/成本/收入口径未改，141及后续实现仍待。

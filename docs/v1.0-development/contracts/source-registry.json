@@ -586,5 +586,53 @@
     "ReadModelWatermark",
     "TraceLink"
   ],
-  "invariant": "One canonical owner per fact; projections are not additional writable records. SourceRef namespace/kind is an enforced union, not free strings."
+  "invariant": "One canonical owner per fact; projections are not additional writable records. SourceRef namespace/kind is an enforced union, not free strings.",
+  "posting_consumption": {
+    "cash": {
+      "source": {
+        "namespace": "cash",
+        "kind": "cash_transaction"
+      },
+      "coverage_key": "bank_effect",
+      "identity_components": [
+        "organization_id",
+        "consumer",
+        "source.namespace",
+        "source.kind",
+        "source.id",
+        "coverage_key"
+      ],
+      "excluded_components": [
+        "source.version",
+        "request_id",
+        "idempotency_key",
+        "channel",
+        "classification_id",
+        "allocation_id"
+      ],
+      "claim_lifetime": "permanent",
+      "classification_and_allocation_create_cash": false,
+      "classification_reverse_releases_claim": false,
+      "correction": {
+        "mode": "full_reverse_then_full_replacement",
+        "original_claim_released": false,
+        "preserve": [
+          "cash_transaction_id",
+          "external_source_key",
+          "bank_provenance",
+          "original_rows"
+        ],
+        "unique_consumer": "approved_request_and_effective_predecessor",
+        "branching": false,
+        "net_cash_difference_is_result_only": true,
+        "cost_or_revenue_postings": false,
+        "dependency_policy": "explicit_owner_reversal_first_no_cascade",
+        "source_contract_ref": "../promotion-draft/bank-entry-extension.plan.json#/service_semantics/correction"
+      },
+      "exposure": "trusted_owner_service_only_not_client_authority",
+      "runtime_implemented": false,
+      "producer_owner": "cash",
+      "claim_owner": "core"
+    }
+  }
 }

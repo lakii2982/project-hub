@@ -254,17 +254,37 @@
           "$ref": "./contract-bundle.schema.json#/$defs/AlgorithmVersion"
         },
         "reverses_event_ref": {
+          "readOnly": true,
+          "x-server-only": true,
           "anyOf": [
             {
-              "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+              "type": "null"
             },
             {
-              "type": "null"
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "core"
+                    },
+                    "kind": {
+                      "const": "accounting_event"
+                    }
+                  }
+                }
+              ]
             }
-          ],
-          "readOnly": true
+          ]
         }
-      }
+      },
+      "x-service-invariants": [
+        "reverses_event_ref is optional, nullable, server-generated and read-only; client commands and write DTOs must not accept it. The original AccountingEvent is never updated; only the new full-reversal event holds the single original-event reference.",
+        "Same-organization, authorization, original-version, posting-period, dependency and complete-reversal uniqueness checks are service and persistence responsibilities, not constraints enforced by this schema or its readOnly annotation.",
+        "Legacy rows without an AccountingEvent use the legacy adapter and original reversal service; never synthesize historical events."
+      ]
     },
     "LedgerPosting": {
       "type": "object",

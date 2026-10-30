@@ -439,7 +439,9 @@
         "Company lock first; then tenant/project/period/source/role/policy/version/idempotency rechecked.",
         "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
         "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
-        "Ordinary cost/receipt/payment accepts its one real row. Allocation scope shifts require equal/opposite cost entries; internal transfers require linked cash_out/cash_in with company net zero. No dummy balancing counterpart or new book."
+        "Ordinary cost/receipt/payment accepts its one real row. Allocation scope shifts require equal/opposite cost entries; internal transfers require linked cash_out/cash_in with company net zero. No dummy balancing counterpart or new book.",
+        "reverses_event_ref is server-generated and read-only on AccountingEvent; this command and its write DTO must not accept the field. The readOnly annotation is not service-side authorization or validation.",
+        "Original cash bank_effect consumption uses the stable original CashTransaction namespace/kind/id and excludes request keys, source versions and classification IDs; classification, allocation and their reversal never release that permanent claim or create another bank flow."
       ]
     },
     "core.posting.reverse/v1": {
@@ -519,7 +521,10 @@
         "On absent dry_run server selects true before hashing; explicit false still requires ordinary service authorization.",
         "Same idempotency key+normalized input returns original; changed input conflicts. Business source consumption is a separate unique constraint.",
         "Legacy posting resolves original stored cents and existing reversal service; never synthesizes or recalculates historical event/rate data.",
-        "Reject any standalone reversal/replacement that invalidates a net clearance or fee cost supporting an effective ReceiptFeeSettlement; check inverse dependencies under same company lock for browser/import/API/internal/period paths. Require explicit open-period fee-settlement reversal first; no silent cash/cost cascade."
+        "Reject any standalone reversal/replacement that invalidates a net clearance or fee cost supporting an effective ReceiptFeeSettlement; check inverse dependencies under same company lock for browser/import/API/internal/period paths. Require explicit open-period fee-settlement reversal first; no silent cash/cost cascade.",
+        "reverses_event_ref is generated only by the service on the new full-reversal AccountingEvent and is read-only; the original event is not updated, and this command, its write DTO and clients cannot submit the reference or a reversal bridge. readOnly does not enforce service authorization.",
+        "Cash correction never posts only a difference: after effective dependencies are explicitly reversed by their owners without cascade, append a full reversal of every currently effective posting (preserving book/account/source) and a complete positive-amount replacement while preserving the original CashTransaction, source key and bank provenance. Separate correction consumption uses the approved request and effective predecessor.",
+        "Same-organization, authorization, original-version, posting-period, dependency, complete-reversal uniqueness and correction-chain non-branching checks remain service and persistence responsibilities. Legacy rows without an AccountingEvent use the legacy adapter and original service without synthesizing history."
       ]
     },
     "masterdata.entity.upsert/v1": {
