@@ -361,3 +361,144 @@ def get_billable_confirmation(member, confirmation_id):
         from core.access import require_project
         require_project(member, timesheet.project)
     return row
+
+
+REVERSE_ACTION = 'reverse'
+REVERSAL_ACTION = 'time.billable_confirmation.reversed'
+
+
+def _reason(value):
+    if not isinstance(value, str):
+        _fail('撤销原因须为文本')
+    value = value.strip()
+    if not 1 <= len(value) <= 500:
+        _fail('撤销原因须为1至500个字符')
+    return value
+
+
+@transaction.atomic
+def reverse_billable_confirmation(member, confirmation_id, *, reason, request_token,
+                                  expected_version, dry_run=True):
+    """Append-only confirmed -> reversed transition; no canonical event, no financial write."""
+    member = _fresh(member, write=True)
+    lock_company(member)
+    try:
+        row = BillableConfirmation.objects.select_for_update(of=('self',)).get(
+            pk=confirmation_id, organization=member.organization)
+    except (BillableConfirmation.DoesNotExist, ValueError, ValidationError):
+        raise PermissionDenied('确认记录不存在或无权访问')
+    reason = _reason(reason)
+    payload = {'confirmation': str(row.pk), 'reason': reason, 'expected_version': expected_version}
+    token, digest, replay = _receipt(member, REVERSE_ACTION, request_token, payload, dry_run)
+    if replay is not None:
+        return _snapshot(replay)
+    if row.status != 'confirmed':
+        _fail('只有已确认的可计费记录可以撤销')
+    if row.version != _version(expected_version):
+        _fail('确认记录版本已变化，请刷新后重试')
+    if row.created_by_member_id == member.pk:
+        _fail('创建人不能撤销自己创建的确认，请由另一位负责人撤销')
+    if dry_run:
+        return {'confirmation_id': str(row.pk), 'status': 'reversed',
+                'version': row.version + 1, 'reason': reason,
+                'dry_run': True, 'changed_refs': [row.source_ref, row.timesheet_ref,
+                                                  row.contract_line_ref]}
+    row.status, row.version = 'reversed', row.version + 1
+    row.save(update_fields=['status', 'version'])
+    audit(member, REVERSAL_ACTION, row, {
+        'reason': reason, 'confirmation_ref': row.source_ref,
+        'changed_refs': [row.source_ref, row.timesheet_ref, row.contract_line_ref],
+        'confirmed_minutes': row.confirmed_minutes, 'version': row.version})
+    _record(member, REVERSE_ACTION, token, digest, row)
+    return _snapshot(row)
+
+
+def _expected_value_cents(member, row):
+    try:
+        snapshot = contract_approvals.approved_line_snapshot(
+            member, row.contract_line_ref, row.confirmed_on.isoformat())
+    except (ValidationError, PermissionDenied):
+        return None, None
+    config = snapshot['pricing_configuration']
+    unit_price, unit_minutes = config.get('unit_price_cents'), config.get('unit_minutes')
+    if not isinstance(unit_price, int) or not isinstance(unit_minutes, int) or unit_minutes <= 0:
+        return None, snapshot
+    from decimal import Decimal, ROUND_HALF_UP
+    value = (Decimal(row.confirmed_minutes) * Decimal(unit_price) / Decimal(unit_minutes)).quantize(
+        Decimal('1'), rounding=ROUND_HALF_UP)
+    return int(value), snapshot
+
+
+def billable_confirmation_pairing(member, confirmation_id):
+    """Read-only pairing projection against management revenue and settlement; no writes."""
+    member = _fresh(member)
+    row = get_billable_confirmation(member, confirmation_id)
+    expected_cents, snapshot = _expected_value_cents(member, row)
+    project_id = snapshot['project_id'] if snapshot else None
+    if project_id is None:
+        timesheet = Timesheet.objects.filter(pk=int(row.timesheet_ref['id'])).first()
+        project_id = str(timesheet.project_id) if timesheet and timesheet.project_id else None
+    revenue_rows = []
+    if project_id:
+        from pmo_plugins.management_revenue import services as revenue_services
+        try:
+            revenue_rows = [item for item in revenue_services.revenue_export_rows(
+                member, project_id=project_id)
+                if item['kind'] == 'revenue_recognition'
+                and item['contract_line_id'] == str(row.contract_line_id)
+                and not item.get('is_reversed')]
+        except (PermissionDenied, ValidationError, AttributeError):
+            revenue_rows = []
+        if not revenue_rows:
+            # The owner export is project-level and expects a posted accounting event; fall
+            # back to a read-only line-level projection when that event is not materialised.
+            from pmo_plugins.management_revenue.models import RevenueRecognition
+            rows = RevenueRecognition.objects.filter(
+                organization=member.organization, contract_line_id=row.contract_line_id,
+                status='posted').order_by('occurred_on', 'id')
+            revenue_rows = [{'kind': 'revenue_recognition', 'amount_cents': item.recognized_net_cents,
+                             'source': item.source_ref, 'is_reversed': item.is_reversed}
+                            for item in rows]
+    settlements = []
+    from pmo_plugins.settlement import receivable_services
+    from pmo_plugins.settlement.models import Settlement
+    for settlement_id in Settlement.objects.filter(
+            organization=member.organization, contract_line_id=row.contract_line_id,
+            status='active').order_by('created_at', 'id').values_list('pk', flat=True):
+        try:
+            settlements.append(receivable_services.settlement_snapshot(member, settlement_id))
+        except (PermissionDenied, ValidationError):
+            continue
+    revenue_cents = sum(item['amount_cents'] for item in revenue_rows)
+    settlement_cents = sum(item['gross_cents'] for item in settlements)
+    if not revenue_rows and not settlements:
+        status = 'unpaired'
+    elif (revenue_rows and settlements and expected_cents is not None
+          and revenue_cents == expected_cents and settlement_cents == expected_cents):
+        status = 'paired'
+    else:
+        status = 'partial'
+    return {
+        'confirmation_ref': row.source_ref,
+        'status': row.status, 'status_display': row.get_status_display(),
+        'confirmed_minutes': row.confirmed_minutes,
+        'timesheet_ref': row.timesheet_ref, 'contract_line_ref': row.contract_line_ref,
+        'expected_value_cents': expected_cents,
+        'revenue': {'count': len(revenue_rows), 'net_cents': revenue_cents,
+                    'refs': [item['source'] for item in revenue_rows]},
+        'settlements': {'count': len(settlements), 'gross_cents': settlement_cents,
+                        'refs': [item['settlement_ref'] for item in settlements]},
+        'difference_cents': (None if expected_cents is None
+                             else expected_cents - revenue_cents - settlement_cents),
+        'difference_revenue_cents': (None if expected_cents is None
+                                     else expected_cents - revenue_cents),
+        'difference_settlement_cents': (None if expected_cents is None
+                                        else expected_cents - settlement_cents),
+        'pairing_status': status,
+    }
+
+
+def billable_confirmation_pairing_list(member, *, project_id=None):
+    member = _fresh(member)
+    return [billable_confirmation_pairing(member, row.pk)
+            for row in list_billable_confirmations(member, project_id=project_id)]

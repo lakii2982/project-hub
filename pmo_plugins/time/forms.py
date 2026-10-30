@@ -46,3 +46,11 @@ class ConfirmForm(forms.Form):
     confirmation_id = forms.UUIDField(widget=forms.HiddenInput)
     expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
     request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
+class ReverseForm(forms.Form):
+    confirmation_id = forms.UUIDField(widget=forms.HiddenInput)
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+    reason = forms.CharField(label='撤销原因', max_length=500, min_length=1,
+                             widget=forms.Textarea(attrs={'rows': 3}))

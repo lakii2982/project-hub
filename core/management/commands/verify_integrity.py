@@ -1224,7 +1224,7 @@ class Command(BaseCommand):
         from pmo_plugins.time.models import (BillableConfirmation as _Billable,
                                              BillableConfirmationReceipt as _BillableReceipt)
         from pmo_plugins.contracts.models import ContractLine as _ContractLine
-        from core.models import Timesheet as _Timesheet
+        from core.models import AuditEvent as _ContractAudit, Timesheet as _Timesheet
         billable_statuses = {'draft', 'confirmed'}
         billable_seen = set()
         for row in _Billable.objects.all():
@@ -1252,15 +1252,21 @@ class Command(BaseCommand):
                         or contract.project_id != (timesheet.project_id if timesheet else None)
                         or row.contract_line_ref.get('version') != line.version):
                     errors.append(f"billable_confirmation:{row.pk}:contract_line_state")
-            if row.status == 'confirmed':
+            reversal_audits = _ContractAudit.objects.filter(
+                organization_id=row.organization_id, action='time.billable_confirmation.reversed',
+                entity_id=str(row.pk))
+            if row.status in {'confirmed', 'reversed'}:
                 if row.confirmed_by_member_id is None or row.confirmed_at is None:
                     errors.append(f"billable_confirmation:{row.pk}:missing_confirmer")
                 if row.confirmed_by_member_id == row.created_by_member_id:
                     errors.append(f"billable_confirmation:{row.pk}:self_confirmed")
-                key = (row.organization_id, row.timesheet_id, row.contract_line_id)
-                if key in billable_seen:
-                    errors.append(f"billable_confirmation:{row.pk}:duplicate_confirmed")
-                billable_seen.add(key)
+                if row.status == 'confirmed':
+                    key = (row.organization_id, row.timesheet_id, row.contract_line_id)
+                    if key in billable_seen:
+                        errors.append(f"billable_confirmation:{row.pk}:duplicate_confirmed")
+                    billable_seen.add(key)
+                    if reversal_audits.exists():
+                        errors.append(f"billable_confirmation:{row.pk}:confirmed_with_reversal_audit")
                 events = _ContractEvent.objects.filter(
                     organization_id=row.organization_id, topic='time.billable_confirmed.v1',
                     data__source__id=str(row.pk))
@@ -1269,13 +1275,35 @@ class Command(BaseCommand):
                 else:
                     data = events.get().data or {}
                     payload = data.get('payload') or {}
-                    expected_refs = [row.source_ref, row.timesheet_ref, row.contract_line_ref]
+                    # The canonical event was frozen at confirmation time; a later reversal
+                    # increments the confirmation version but never rewrites the event.
+                    event_source = (dict(row.source_ref, version=row.version - 1)
+                                    if row.status == 'reversed' else row.source_ref)
+                    expected_refs = [event_source, row.timesheet_ref, row.contract_line_ref]
                     if (data.get('schema_version') != 1
                             or data.get('organization_id') != str(row.organization_id)
-                            or data.get('source') != row.source_ref
+                            or data.get('source') != event_source
                             or payload.get('changed_refs') != expected_refs
                             or payload.get('posting_event_refs') != []):
                         errors.append(f"billable_confirmation:{row.pk}:confirmed_event_envelope")
+                if row.status == 'reversed':
+                    if row.version < 3:
+                        errors.append(f"billable_confirmation:{row.pk}:reversed_version")
+                    if reversal_audits.count() != 1:
+                        errors.append(f"billable_confirmation:{row.pk}:reversal_audit_count")
+                    else:
+                        audit_row = reversal_audits.get()
+                        audit_payload = audit_row.payload or {}
+                        if (audit_payload.get('confirmation_ref') != row.source_ref
+                                or not audit_payload.get('reason')
+                                or audit_payload.get('changed_refs')
+                                != [row.source_ref, row.timesheet_ref, row.contract_line_ref]):
+                            errors.append(f"billable_confirmation:{row.pk}:reversal_audit_payload")
+                    reversals = _BillableReceipt.objects.filter(
+                        organization_id=row.organization_id, action='reverse',
+                        result_ref__id=str(row.pk))
+                    if reversals.count() != 1:
+                        errors.append(f"billable_confirmation:{row.pk}:reversal_receipt_count")
             else:
                 if row.confirmed_by_member_id is not None or row.confirmed_at is not None:
                     errors.append(f"billable_confirmation:{row.pk}:draft_decision_fields")
@@ -1283,6 +1311,8 @@ class Command(BaseCommand):
                         organization_id=row.organization_id, topic='time.billable_confirmed.v1',
                         data__source__id=str(row.pk)).exists():
                     errors.append(f"billable_confirmation:{row.pk}:draft_event")
+                if reversal_audits.exists():
+                    errors.append(f"billable_confirmation:{row.pk}:draft_reversal_audit")
             if AccountingEvent.objects.filter(
                     organization_id=row.organization_id,
                     source__namespace='time', source__kind='billable_confirmation').exists():
@@ -1291,11 +1321,19 @@ class Command(BaseCommand):
                     organization_id=row.organization_id,
                     source__kind='billable_confirmation').exists():
                 errors.append(f"billable_confirmation:{row.pk}:source_consumption")
+        if _ContractEvent.objects.filter(topic='time.billable_reversed.v1').exists():
+            errors.append("billable_confirmation:unexpected_canonical_reversed_topic")
         for receipt in _BillableReceipt.objects.all():
             ref = receipt.result_ref or {}
             if ref.get('kind') != 'billable_confirmation' or not _Billable.objects.filter(
                     pk=ref.get('id'), organization_id=receipt.organization_id).exists():
                 errors.append(f"billable_receipt:{receipt.pk}:result_ref")
+            if receipt.action not in {'draft.save', 'confirm', 'reverse'}:
+                errors.append(f"billable_receipt:{receipt.pk}:action")
+            if receipt.action == 'reverse' and not _Billable.objects.filter(
+                    pk=ref.get('id'), organization_id=receipt.organization_id,
+                    status='reversed').exists():
+                errors.append(f"billable_receipt:{receipt.pk}:reverse_state")
         result = {"ok": not errors, "errors": errors, "organizations": Organization.objects.count(), "entries": LedgerEntry.objects.count()}
         self.stdout.write(json.dumps(result, ensure_ascii=False) if options["json"] else ("完整性检查通过" if not errors else "\n".join(errors)))
         if errors: raise CommandError("项目账完整性检查未通过")

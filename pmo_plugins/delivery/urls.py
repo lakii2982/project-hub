@@ -68,5 +68,6 @@ def entry_point():
                       ('bank_charge_list', 'bank_charge_form', 'bank_charge_save', 'bank_charge_action')},
         'time': {name: getattr(time_views, name) for name in
                  ('billable_confirmation_list', 'billable_confirmation_form',
-                  'billable_confirmation_save', 'billable_confirmation_confirm')},
+                  'billable_confirmation_save', 'billable_confirmation_confirm',
+                  'billable_confirmation_detail', 'billable_confirmation_reverse')},
     })

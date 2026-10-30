@@ -8,7 +8,7 @@ from django.shortcuts import redirect, render
 from django.urls import get_script_prefix
 
 from . import services
-from .forms import BillableConfirmationForm, ConfirmForm
+from .forms import BillableConfirmationForm, ConfirmForm, ReverseForm
 
 
 def _url(page, **query):
@@ -26,7 +26,9 @@ def _base(member, **values):
                 list_url=_url('billable_confirmation_list'),
                 form_url=_url('billable_confirmation_form'),
                 save_url=_url('billable_confirmation_save'),
-                confirm_url=_url('billable_confirmation_confirm'), **values)
+                confirm_url=_url('billable_confirmation_confirm'),
+                detail_url=_url('billable_confirmation_detail'),
+                reverse_url=_url('billable_confirmation_reverse'), **values)
 
 
 def billable_confirmation_list(context, payload):
@@ -37,6 +39,7 @@ def billable_confirmation_list(context, payload):
             row.status == 'draft' and row.created_by_member_id == member.pk) else ''
         row.can_confirm = row.status == 'draft' and row.created_by_member_id != member.pk
         row.confirm_token = uuid.uuid4()
+        row.detail_url = _url('billable_confirmation_detail', id=row.pk)
     return render(context.request, 'time/billable_confirmation_list.html', _base(
         member, rows=rows, error=''))
 
@@ -112,6 +115,38 @@ def billable_confirmation_confirm(context, payload):
             messages.error(context.request, '；'.join(error.messages))
             return redirect(_url('billable_confirmation_list'))
         messages.success(context.request, '客户可计费分钟已确认；事件已记录，未生成收入/账本/现金/未清')
+        return redirect(_url('billable_confirmation_list'))
+    messages.error(context.request, '；'.join(str(item) for errors in form.errors.values() for item in errors))
+    return redirect(_url('billable_confirmation_list'))
+
+
+def billable_confirmation_detail(context, payload):
+    member = _fresh(context.member)
+    row = services.get_billable_confirmation(member, payload.get('id'))
+    pairing = services.billable_confirmation_pairing(member, row.pk)
+    can_reverse = (member.role in services.WRITE_ROLES and row.status == 'confirmed'
+                   and row.created_by_member_id != member.pk)
+    form = ReverseForm(initial={
+        'confirmation_id': row.pk, 'expected_version': row.version,
+        'request_token': uuid.uuid4()}) if can_reverse else None
+    return render(context.request, 'time/billable_confirmation_detail.html', _base(
+        member, row=row, pairing=pairing, form=form, can_reverse=can_reverse, error=''))
+
+
+def billable_confirmation_reverse(context, payload):
+    member = _fresh(context.member, write=True)
+    form = ReverseForm(payload)
+    if form.is_valid():
+        data = form.cleaned_data
+        try:
+            services.reverse_billable_confirmation(
+                member, data['confirmation_id'], reason=data['reason'],
+                request_token=data['request_token'],
+                expected_version=data['expected_version'], dry_run=False)
+        except ValidationError as error:
+            messages.error(context.request, '；'.join(error.messages))
+            return redirect(_url('billable_confirmation_detail', id=data['confirmation_id']))
+        messages.success(context.request, '客户可计费确认已撤销；历史保留，不重算收入/账本/现金/未清')
         return redirect(_url('billable_confirmation_list'))
     messages.error(context.request, '；'.join(str(item) for errors in form.errors.values() for item in errors))
     return redirect(_url('billable_confirmation_list'))

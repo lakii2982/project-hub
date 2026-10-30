@@ -8452,7 +8452,7 @@
       "title": "time 可计费确认后续片：confirmed 撤销与收入/结算只读配对",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8491,9 +8491,9 @@
         "python manage.py test tests.test_v1_billable_reversal tests.test_v1_billable_reversal_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-276.md"
     },
     {
       "id": "PH-277",
