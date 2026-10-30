@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Post-final-review actual rerun at reviewed HEAD 92d59ed: {\"command\":\"check\",\"ok\":true,\"task_count\":185}, exit 0; PH-254's corrected acceptance and PH-259's placeholder-free acceptance are schema-valid, and the PH-241 classification_services whitelist correction is included."
+      "evidence": "Post-final-review actual rerun with the recorded pass (reviewed HEAD 92d59ed incl. the PH-241 whitelist correction): {\"command\":\"check\",\"ok\":true,\"task_count\":185}, exit 0; PH-254's corrected acceptance and PH-259's placeholder-free acceptance are schema-valid."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
