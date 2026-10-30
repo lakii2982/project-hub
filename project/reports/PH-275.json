@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":212}."
+      "evidence": "Final Lead integration rerun after rebase onto 62b83a7: {\"command\":\"check\",\"ok\":true,\"task_count\":212} exit 0 (PH-275 done)."
     },
     {
       "command": "python manage.py check",
@@ -49,7 +49,8 @@
     "④管理收入/结算配对只读标记：在既有 approved_line_snapshot 结果新增 terminated/terminated_on/contract_status 字段（approved_terms_snapshot 继承），不改任何写语义；影响页与历史 pairing 读取可显式看到终止。",
     "PM 权限按 spec 实现为“仅其管理项目且只读摘要”：影响 service 对 pm 返回 summary_only=true 并去除决策说明，contract 范围经 require_project 校验；owner/finance/auditor 获取完整只读投影。",
     "无模型/迁移/canonical topic/command/schema 变更；无新写入口；影响聚合只读，不写 generic audit/receipt/domain event，不重算历史事实。",
-    "effective_on 口径修复（reviewer round-1 blocker）：impact 的 effective_on 不再复制 requested_on，而是从已记录事实派生——termination → contract.terminated_on；approved non-termination 且有新批准版本 → after.effective_on；draft/rejected/withdrawn/无新版本 → None；新增 requested_on ≠ 新版本 effective_on 与 termination effective_on==terminated_on 两个回归。"
+    "effective_on 口径修复（reviewer round-1 blocker）：impact 的 effective_on 不再复制 requested_on，而是从已记录事实派生——termination → contract.terminated_on；approved non-termination 且有新批准版本 → after.effective_on；draft/rejected/withdrawn/无新版本 → None；新增 requested_on ≠ 新版本 effective_on 与 termination effective_on==terminated_on 两个回归。",
+    "Lead integration rebase (71d5665 -> 62b83a7) after PH-277 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-275 entry; manifest.active_handoff -> PH-275; PH-275 flipped to done after the round-2 review pass. Gates rerun green."
   ],
   "unverified": [
     "PostgreSQL 运行证据以 CI 为准（本机 SQLite 仅验证服务/模板/反例；无 PG 实例）。",
