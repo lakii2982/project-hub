@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base c1cd18d --task PH-248",
-      "result": "not_run",
-      "evidence": "Pre-review state after the final-review fix: review.status remains pending, so verify-change exits 1 with only high_risk_review_required + acceptance_not_passed and no path_out_of_scope (13 files); replaced after the reviewer lands pass."
+      "result": "pass",
+      "evidence": "Post-final-review actual run at the review-pass HEAD 59bf686: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"c1cd18d\",\"head\":\"59bf6864794afa99d9a35b0e9b69368d98395d09\",\"report_path\":\"project/reports/PH-248.json\"}, exit 0; all 13 changed files inside BASE PH-248 allowed_paths and review.status=pass with the reviewer's final name/evidence."
     }
   ],
   "review": {
