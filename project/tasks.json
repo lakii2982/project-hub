@@ -6352,7 +6352,7 @@
       "title": "现金事实首片：银行账户、银行流水与往来方匹配",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -6404,9 +6404,9 @@
         "python manage.py test tests.test_v1_cash tests.test_v1_cash_concurrency tests.test_v1_cash_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-228.md"
     },
     {
       "id": "PH-229",
