@@ -6249,7 +6249,7 @@
       "title": "后续业务交付独立规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -6267,6 +6267,76 @@
         "docs/verification.md",
         "project/reports/PH-225.json",
         "project/handoffs/PH-225.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "root",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-225.md"
+    },
+    {
+      "id": "PH-226",
+      "title": "PH-224 应收结算业务接入测试前置补充",
+      "kind": "infra",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-223"
+      ],
+      "spec": "project/specs/PH-226.md",
+      "allowed_paths": [
+        "tests/test_acceptance_revenue.py",
+        "tests/test_service_period_revenue_http.py",
+        "tests/test_contract_approval.py",
+        "tests/test_v1_contracts.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "project/reports/PH-226.json",
+        "project/handoffs/PH-226.md",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-227",
+      "title": "后续业务交付独立规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-225"
+      ],
+      "spec": "project/specs/PH-227.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-227.json",
+        "project/handoffs/PH-227.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

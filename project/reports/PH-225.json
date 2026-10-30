@@ -1,0 +1,40 @@
+{
+  "task_id": "PH-225",
+  "summary": "Register PH-226 (narrow, dependency-aware test prerequisite covering 2 SQLite tests and 2 PostgreSQL concurrency class setUps for the settlement plugin) and PH-227 next planning slot; freeze PH-226-before-PH-224 order in the PH-224 spec. No product or test code changed in this planning task.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual 149 tasks validated after registration; PH-225 done, PH-226/PH-227 ready, dependencies done. PH-224 stays ready because projectctl forbids a ready task depending on a not-done task; the PH-226-before-PH-224 order is frozen in the PH-224 spec opening condition."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 5ea4369 --task PH-225",
+      "result": "pass",
+      "evidence": "Post-review actual rerun at HEAD bb7632e against base 5ea4369: ok=true, 7 changed files all inside BASE allowed_paths, no errors."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-225 planning reviewer (fresh context, read-only; two review rounds)",
+    "status": "pass",
+    "findings": [
+      "Round 1 blockers closed: (1) PH-226 whitelist extended to tests/test_v1_contracts.py and tests/test_contract_approval.py after two PostgreSQL concurrency setUp blocks were found disabling delivery; (2) the PH-226-before-PH-224 order is frozen as a hard opening condition in the PH-224 spec because projectctl forbids a ready task depending on a not-done task; (3) report/handoff evidence aligned to 149 tasks and no pre-filled verify-change claim.",
+      "Adopted non-blocking notes: spec forbids swallowing dependency-guard errors with try/except and requires PG CI to actually execute both concurrency classes (SQLite skips are not evidence).",
+      "Round 2 confirmed scope/whitelist/order and required only two wording corrections (PH-226 spec no longer claims PH-224.depends_on was changed; evidence claims are filled from actual reruns after this verdict)."
+    ],
+    "evidence": "Reviewer inspected PH-226/PH-227 specs, PH-224 opening condition, tasks/manifest, handoff/report and the settlement plugin dependency edge; ran projectctl check and verify-change (blocked only by the pending review), the 19 governance tests, and confirmed is_enabled/set_enabled behaviour in core/plugin_runtime.py so the dependency-aware adaptation works on both BASE states."
+  },
+  "deviations": [
+    "PH-226 is an infra test-prerequisite rather than a business slice, mirroring the PH-220 precedent: the settlement plugin adds a real dependency edge that correctly blocks disabling delivery/contracts, so the two old tests' setup must disable settlement first.",
+    "The adaptation must be dependency-aware (check plugin_catalog) so the PH-226 PR passes CI on a BASE that does not yet contain the settlement plugin, avoiding a merge-order deadlock."
+  ],
+  "unverified": [
+    "No test or product code changed here; PH-226 adaptation and PH-224 rerun are not yet executed.",
+    "PH-224 full-suite green, browser evidence, PostgreSQL races, CI and merge remain pending."
+  ]
+}
