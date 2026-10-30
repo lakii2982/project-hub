@@ -20,6 +20,15 @@ from tests.test_service_period_revenue import ServiceRevenueFixture
 
 @skipUnless(connection.vendor == 'postgresql', 'Requires real PostgreSQL independent connections')
 class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
+    @classmethod
+    def tearDownClass(cls):
+        # Worker threads keep thread-local psycopg connections; close them before destroy_test_db.
+        import gc
+        from django.db import connections
+        connections.close_all()
+        gc.collect()
+        super().tearDownClass()
+
     def race(self, *actions):
         barrier = Barrier(len(actions))
 
