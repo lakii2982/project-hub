@@ -6757,7 +6757,7 @@
       "title": "后续交付独立规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -6776,6 +6776,195 @@
         "docs/verification.md",
         "project/reports/PH-238.json",
         "project/handoffs/PH-238.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-238.md"
+    },
+    {
+      "id": "PH-239",
+      "title": "现金分类与账本桥接首片：分类事实、撤分类与现金账入账",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-210",
+        "PH-230"
+      ],
+      "spec": "project/specs/PH-239.md",
+      "allowed_paths": [
+        "pmo_plugins/cash/models.py",
+        "pmo_plugins/cash/classification_services.py",
+        "pmo_plugins/cash/domain_metadata.py",
+        "pmo_plugins/cash/forms.py",
+        "pmo_plugins/cash/views.py",
+        "pmo_plugins/cash/templates/cash/cash_classification_list.html",
+        "pmo_plugins/cash/templates/cash/cash_classification_form.html",
+        "pmo_plugins/cash/templates/cash/cash_transaction_detail.html",
+        "pmo_plugins/cash/migrations/*.py",
+        "core/cash_accounting.py",
+        "core/management/commands/verify_integrity.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_cash_classification.py",
+        "tests/test_v1_cash_book_bridge.py",
+        "tests/test_v1_cash_classification_http.py",
+        "project/reports/PH-239.json",
+        "project/handoffs/PH-239.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_cash_classification tests.test_v1_cash_book_bridge tests.test_v1_cash_classification_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-240",
+      "title": "退款与银行退回：原现金覆盖内的真实退款/退回",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-230",
+        "PH-232"
+      ],
+      "spec": "project/specs/PH-240.md",
+      "allowed_paths": [
+        "pmo_plugins/cash/models.py",
+        "pmo_plugins/cash/refund_services.py",
+        "pmo_plugins/cash/domain_metadata.py",
+        "pmo_plugins/cash/forms.py",
+        "pmo_plugins/cash/views.py",
+        "pmo_plugins/cash/templates/cash/refund_form.html",
+        "pmo_plugins/cash/templates/cash/refund_list.html",
+        "pmo_plugins/cash/templates/cash/bank_return_form.html",
+        "pmo_plugins/cash/templates/cash/cash_transaction_detail.html",
+        "pmo_plugins/cash/migrations/*.py",
+        "pmo_plugins/settlement/clearance_services.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_cash_refund.py",
+        "tests/test_v1_cash_refund_http.py",
+        "tests/test_v1_cash_refund_concurrency.py",
+        "core/management/commands/verify_integrity.py",
+        "project/reports/PH-240.json",
+        "project/handoffs/PH-240.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_cash_refund tests.test_v1_cash_refund_http tests.test_v1_cash_refund_concurrency --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "PH-232 已在最终 BASE（3c21a29，PR #133）done，依赖已满足；按 Lead 分工，晋级 ready 的动作留给 PH-242 规划槽复核（本片不自我授权），故保持 proposed。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-241",
+      "title": "预收/预付抵扣 Offset 首片：客户预收对未清项的部分抵扣",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 3,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-210",
+        "PH-224",
+        "PH-230",
+        "PH-232",
+        "PH-239"
+      ],
+      "spec": "project/specs/PH-241.md",
+      "allowed_paths": [
+        "pmo_plugins/settlement/models.py",
+        "pmo_plugins/settlement/offset_services.py",
+        "pmo_plugins/settlement/receivable_views.py",
+        "pmo_plugins/settlement/receivable_forms.py",
+        "pmo_plugins/settlement/domain_metadata.py",
+        "pmo_plugins/settlement/templates/settlement/offset_list.html",
+        "pmo_plugins/settlement/templates/settlement/receivable_detail.html",
+        "pmo_plugins/settlement/templates/settlement/aging_list.html",
+        "pmo_plugins/settlement/migrations/*.py",
+        "pmo_plugins/cash/transaction_services.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_offset.py",
+        "tests/test_v1_offset_http.py",
+        "tests/test_v1_offset_concurrency.py",
+        "core/management/commands/verify_integrity.py",
+        "project/reports/PH-241.json",
+        "project/handoffs/PH-241.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_offset tests.test_v1_offset_http tests.test_v1_offset_concurrency --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-239 done（advance 分类与现金事实）；PH-210/PH-224/PH-230/PH-232 已 done。依赖完成后由 PH-242 规划槽复核 DoR 与契约缺口（offset 无 canonical 事件、无撤销命令）再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-242",
+      "title": "后续交付独立规划入口（接续 PH-238）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-238"
+      ],
+      "spec": "project/specs/PH-242.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-242.json",
+        "project/handoffs/PH-242.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
