@@ -81,3 +81,14 @@ class BankChargeDecisionForm(BankChargeStrictForm):
     note = forms.CharField(label='审批意见 / 驳回原因', max_length=1000, required=False,
                            widget=forms.Textarea(attrs={'rows': 3}))
     request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+
+class BankChargePairingFilterForm(BankChargeStrictForm):
+    """Read-only filter for the fee/cost/net pairing page."""
+
+    status = forms.ChoiceField(label='手续费状态', required=False, choices=[
+        ('', '全部'), ('draft', '未批准草稿'), ('pending', '待批准'),
+        ('approved', '已批准'), ('rejected', '已驳回'), ('superseded', '已取代')])
+    as_of = forms.DateField(label='基准日', required=False,
+                            widget=forms.DateInput(attrs={'type': 'date'}))
+    cash_transaction_id = forms.CharField(label='现金流水标识', required=False, max_length=64)

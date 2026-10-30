@@ -1,0 +1,21 @@
+{% extends 'costing/bank_charge_list.html' %}
+{% block title %}手续费成本配对{% endblock %}
+{% block breadcrumb %}项目财务 / 手续费成本配对{% endblock %}
+{% block fee_content %}
+<section class="page-header"><div><h1 tabindex="-1">手续费批准/成本与净额只读配对</h1><p>只读聚合 BankCharge 状态/审批链、一次性成本事件与账本过账、原净额现金和退款/退回覆盖；不写手续费、成本、现金或账本。</p></div><a class="button" href="{{ list_url }}">返回手续费列表</a></section>
+{% if error %}<div class="notice" role="alert">{{ error }}</div>{% endif %}
+{% if not enabled %}<div class="notice">成本模块已停用：历史配对只读保留，写入入口不可用。</div>{% endif %}
+<form class="filter-bar panel body" method="get" action="{{ pairing_url }}" aria-label="筛选手续费配对">
+<div class="form-field"><label for="{{ filter_form.status.id_for_label }}">状态</label>{{ filter_form.status }}</div>
+<div class="form-field"><label for="{{ filter_form.as_of.id_for_label }}">基准日</label>{{ filter_form.as_of }}</div>
+<div class="form-field"><label for="{{ filter_form.cash_transaction_id.id_for_label }}">现金流水标识</label>{{ filter_form.cash_transaction_id }}</div>
+<div class="actions"><button type="submit" class="button primary">应用筛选</button><a class="button subtle" href="{{ pairing_url }}">重置</a></div>
+</form>
+<section class="panel"><div class="panel-heading"><h2>配对清单（只读）</h2></div><div class="body"><div class="table-scroll"><table aria-label="手续费成本配对清单"><thead><tr><th>状态</th><th>现金净额（元）</th><th>手续费（元）</th><th>成本过账（元）</th><th>退款/退回（元）</th><th>配对状态</th><th>异常</th><th>引用</th></tr></thead><tbody>
+{% for row in rows %}<tr><td><span class="badge {% if row.status == 'approved' %}success{% else %}info{% endif %}">{{ row.status_display }}</span></td><td data-label="现金净额（元）" class="amount">{{ row.net_display }}</td><td data-label="手续费（元）" class="amount">{{ row.fee_display }}</td><td data-label="成本过账（元）" class="amount">{{ row.cost_display }}</td><td data-label="退款/退回（元）" class="amount">{{ row.refund_display }}</td><td><span class="badge {% if row.pairing_status == 'posted' %}success{% elif row.pairing_status == '异常' %}error{% else %}warning{% endif %}">{{ row.pairing_status }}</span></td><td>{% for code in row.issue_codes %}{{ code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td><td class="trace">{{ row.charge_ref.id }}<br>v{{ row.charge_ref.version }}</td></tr>
+{% empty %}<tr><td colspan="8">无符合条件的手续费记录；请先登记草稿或调整筛选。</td></tr>{% endfor %}</tbody></table></div>
+<p class="notice">配对状态：draft=未批准；approved_unposted=已批准但成本事件/过账缺失；posted=单一成本已过账且金额一致；partial=金额或退款覆盖不一致；paired=成本已过账且存在退款/退回覆盖；异常=重复/缺失/跨域等异常。PH-251（ReceiptFeeSettlement/existing_cost_ref/counterparty-borne/税额拆分）未实现，仅占位不伪造。</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>对账异常（只读）</h2></div><div class="body">{% if issues %}<div class="table-scroll"><table aria-label="手续费配对异常"><thead><tr><th>异常码</th><th>手续费</th><th>引用</th><th>期望</th><th>实际</th></tr></thead><tbody>
+{% for issue in issues %}<tr><td><span class="badge warning">{{ issue.issue_code }}</span></td><td class="trace">{{ issue.charge_ref.id }}</td><td class="trace">{% for ref in issue.refs %}{{ ref }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</td><td>{{ issue.expected }}</td><td>{{ issue.actual }}</td></tr>
+{% endfor %}</tbody></table></div>{% else %}<p>未发现手续费批量/成本/净额配对异常。</p>{% endif %}<p class="notice">异常为只读对账结果：不自动更正、不重算历史、不写成本或账本。</p></div></section>
+{% endblock %}
