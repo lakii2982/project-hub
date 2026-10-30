@@ -134,16 +134,26 @@ def _term_refs(value):
         _fail('请选择1至1000个完整条款行')
     result, seen = [], set()
     for item in value:
-        if not isinstance(item, dict) or set(item) != {'namespace', 'kind', 'id', 'version'}:
+        if isinstance(item, str):
+            kind, _, term_id = item.partition(':')
+            if kind not in TERM_KINDS or not term_id:
+                _fail('条款引用无效')
+            try:
+                term_id = uuid.UUID(term_id)
+            except (TypeError, ValueError, AttributeError):
+                _fail('条款引用无效')
+            ref = {'namespace': 'contracts', 'kind': kind, 'id': str(term_id)}
+        elif isinstance(item, dict) and set(item) == {'namespace', 'kind', 'id', 'version'}:
+            kind = item['kind']
+            if item['namespace'] != 'contracts' or kind not in TERM_KINDS or type(item['version']) is not int:
+                _fail('条款引用无效')
+            try:
+                term_id = uuid.UUID(str(item['id']))
+            except (TypeError, ValueError, AttributeError):
+                _fail('条款引用无效')
+            ref = {'namespace': 'contracts', 'kind': kind, 'id': str(term_id), 'version': item['version']}
+        else:
             _fail('条款引用无效')
-        kind = item['kind']
-        if item['namespace'] != 'contracts' or kind not in TERM_KINDS or type(item['version']) is not int:
-            _fail('条款引用无效')
-        try:
-            term_id = uuid.UUID(str(item['id']))
-        except (TypeError, ValueError, AttributeError):
-            _fail('条款引用无效')
-        ref = {'namespace': 'contracts', 'kind': kind, 'id': str(term_id), 'version': item['version']}
         key = (kind, str(term_id))
         if key in seen:
             _fail('同一条款不能重复选择')
@@ -165,8 +175,8 @@ def _active_totals(member, line):
             rows.aggregate(total=Sum('net_cents'))['total'] or 0)
 
 
-def _consumed(member, line, term_ref):
-    coverage_key = 'term:' + term_ref['kind'] + ':' + term_ref['id']
+def _consumed(member, line, partition_kind, term_id):
+    coverage_key = 'term:' + partition_kind + ':' + str(term_id)
     return SourceConsumption.objects.filter(organization=member.organization, consumer='settlement',
         source_id=line.pk, coverage_key=coverage_key).exists()
 
@@ -186,11 +196,11 @@ def _derive(member, contract_line_ref, term_refs, settled_on):
     requested = []
     for ref in term_refs:
         term = available_terms.get((ref['kind'], ref['id']))
-        if term is None or term['term_ref']['version'] != ref['version']:
+        if term is None or ref.get('version') not in (None, term['term_ref']['version']):
             _fail('所选条款不属于该批准合同明细或版本已失效')
         if term['due_date'] is None:
             _fail('所选条款缺少到期日或质保释放日，不能结算')
-        if _consumed(member, line, term['term_ref']):
+        if _consumed(member, line, TERM_KINDS[ref['kind']], term['id']):
             _fail('所选条款已被其他结算使用')
         requested.append(term)
     order = {(term['term_ref']['kind'], term['term_ref']['id']): index
@@ -206,8 +216,8 @@ def _derive(member, contract_line_ref, term_refs, settled_on):
             'gross_cents': _amount(term['gross_cents']),
             'due_date': _business_date(term['due_date']),
             'release_condition': term.get('release_condition') or '',
-            'coverage_key': 'term:' + kind + ':' + term['id'],
-            'partition_key': partition_kind + ':' + kind + ':' + term['id'],
+            'coverage_key': 'term:' + partition_kind + ':' + term['id'],
+            'partition_key': partition_kind + ':' + term['id'],
         })
     new_gross = sum(term['gross_cents'] for term in selected)
     if new_gross <= 0 or new_gross > MAX_CENTS:
@@ -247,13 +257,21 @@ def _derive(member, contract_line_ref, term_refs, settled_on):
         'line_net_cents': line.net_cents, 'line_tax_cents': line.tax_cents,
         'line_gross_cents': line.gross_cents, 'all_terms': deepcopy(terms['terms']),
         'due_cents': terms['due_cents'], 'retention_cents': terms['retention_cents'],
-        'selected': [{key: deepcopy(term[key]) for key in
-                      ('kind', 'partition_kind', 'id', 'term_ref', 'condition_type',
-                       'gross_cents', 'due_date', 'release_condition', 'coverage_key', 'partition_key')}
+        'selected': [{key: (term[key].isoformat() if key == 'due_date' else deepcopy(term[key]))
+                      for key in ('kind', 'partition_kind', 'id', 'term_ref', 'condition_type',
+                                  'gross_cents', 'due_date', 'release_condition',
+                                  'coverage_key', 'partition_key')}
                      for term in items],
     }
     evidence = [{'evidence_id': str(terms['approval_audit_id']),
                  'sha256': terms['approval_audit_hash'], 'kind': 'approval'}]
+    for source in sources:
+        source_ref, confirmed_on = source['ref'], source['confirmed_on']
+        digest = hashlib.sha256(json.dumps(
+            {'ref': source_ref, 'net_cents': source['net_cents'], 'confirmed_on': confirmed_on},
+            sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
+        evidence.append({'evidence_id': str(source_ref['id']), 'sha256': digest,
+                         'kind': 'customer_confirmation'})
     project = Project.objects.get(organization=member.organization, pk=terms['project_id'])
     return {
         'line': line, 'project': project, 'line_ref': deepcopy(terms['line_ref']),
@@ -272,18 +290,48 @@ def _derive(member, contract_line_ref, term_refs, settled_on):
 
 
 def _echo(derived, *, gross_cents, net_cents, tax_cents, due_date, direction, payee_ref, scope):
-    if gross_cents is not None and gross_cents != derived['gross_cents']:
-        _fail('结算含税额由批准条款派生，不得手填或部分取条款金额')
-    if net_cents is not None and net_cents != derived['net_cents']:
-        _fail('结算净额由批准条款派生，不得手填')
-    if tax_cents is not None and tax_cents != derived['tax_cents']:
-        _fail('结算税额由批准条款派生，不得手填')
+    for value, key, label in ((gross_cents, 'gross_cents', '结算含税额'),
+                              (net_cents, 'net_cents', '结算净额'),
+                              (tax_cents, 'tax_cents', '结算税额')):
+        if value is None:
+            continue
+        if type(value) is not int or value != derived[key]:
+            _fail(label + '由批准条款与累计履约派生，不得手填或只取条款金额的一部分')
     if due_date is not None and _business_date(due_date) != derived['due_date']:
         _fail('到期日由所选条款派生，不得手填')
-    if direction is not None:
+    if direction is not None and direction != 'receivable':
         _fail('结算方向由批准来源派生，不得覆盖')
-    if payee_ref is not None or scope is not None:
-        _fail('收款对象与范围由批准来源派生，不得覆盖')
+    if payee_ref is not None and payee_ref != derived['payee_ref']:
+        _fail('收款对象由批准合同客户派生，不得覆盖')
+    if scope is not None and scope != derived['scope']:
+        _fail('业务范围由批准合同明细派生，不得覆盖')
+
+
+def _evidence_note(value):
+    """Optional UI basis text; amounts/terms still come from the server-derived snapshot."""
+    note = ''
+    if isinstance(value, str):
+        note = value.strip()
+    elif isinstance(value, list):
+        for item in value:
+            if (not isinstance(item, dict) or set(item) != {'reference'}
+                    or not isinstance(item['reference'], str) or not item['reference'].strip()):
+                _fail('结算依据格式无效')
+            note = (note + ' ' + item['reference'].strip()).strip()
+    elif value is not None:
+        _fail('结算依据格式无效')
+    if len(note) > 2000:
+        _fail('结算依据不能超过2000字')
+    return note
+
+
+def _evidence_refs(derived, note):
+    refs = deepcopy(derived['evidence'])
+    if note:
+        digest = hashlib.sha256(note.encode()).hexdigest()
+        refs.append({'evidence_id': str(uuid.uuid5(uuid.NAMESPACE_URL, 'settlement-evidence:' + note)),
+                     'sha256': digest, 'kind': 'attachment', 'reference': note})
+    return refs
 
 
 def _receipt(member, action, request_token, payload, dry_run):
@@ -310,7 +358,7 @@ def _finish(member, action, token, digest, settlement):
 
 def _get(member, settlement_id, *, lock=False):
     try:
-        rows = Settlement.objects.select_related('project', 'items')
+        rows = Settlement.objects.select_related('project')
         if lock:
             rows = rows.select_for_update(of=('self',))
         row = rows.get(organization=member.organization, pk=_identifier(settlement_id, '结算记录不存在或无权访问'))
@@ -320,7 +368,7 @@ def _get(member, settlement_id, *, lock=False):
     return row
 
 
-def _approved_input(derived, member, approved_version):
+def _approved_input(derived, member, approved_version, evidence):
     return {
         'settlement_ref': None,  # replaced by the real ref after the row exists
         'version': approved_version,
@@ -333,7 +381,7 @@ def _approved_input(derived, member, approved_version):
         'terms_snapshot': deepcopy(derived['terms_snapshot']),
         'source_ref': deepcopy(derived['source_ref']),
         'source_performance': deepcopy(derived['source_performance']),
-        'evidence': deepcopy(derived['evidence']),
+        'evidence': deepcopy(evidence),
         'settled_on': derived['settled_on'].isoformat(), 'due_date': derived['due_date'].isoformat(),
         'gross_cents': derived['gross_cents'], 'net_cents': derived['net_cents'],
         'tax_cents': derived['tax_cents'], 'scope': deepcopy(derived['scope']),
@@ -345,7 +393,7 @@ def _approved_input(derived, member, approved_version):
 
 @transaction.atomic
 def save_settlement(member, *, contract_line_ref, term_refs, request_token, settled_on=None,
-                    settlement_id=None, expected_version=None, dry_run=True,
+                    evidence=None, settlement_id=None, expected_version=None, dry_run=True,
                     gross_cents=None, net_cents=None, tax_cents=None, due_date=None,
                     direction=None, payee_ref=None, scope=None):
     _dry(dry_run)
@@ -357,17 +405,21 @@ def save_settlement(member, *, contract_line_ref, term_refs, request_token, sett
     settlement_id = _optional_identifier(settlement_id)
     if settlement_id is None and expected_version is not None:
         _fail('新建结算不接受版本号')
-    derived = _derive(member, contract_line_ref, term_refs, settled_on)
-    _echo(derived, gross_cents=gross_cents, net_cents=net_cents, tax_cents=tax_cents,
-          due_date=due_date, direction=direction, payee_ref=payee_ref, scope=scope)
+    evidence_note = _evidence_note(evidence)
     payload = {'contract_line_ref': contract_line_ref, 'term_refs': term_refs,
-               'settled_on': settled_on.isoformat(), 'settlement_id': str(settlement_id) if settlement_id else None,
+               'settled_on': settled_on.isoformat(), 'evidence_note': evidence_note,
+               'settlement_id': str(settlement_id) if settlement_id else None,
                'expected_version': expected_version, 'gross_cents': gross_cents, 'net_cents': net_cents,
                'tax_cents': tax_cents, 'due_date': due_date, 'direction': direction,
                'payee_ref': payee_ref, 'scope': scope}
     token, digest, existing = _receipt(member, 'save', request_token, payload, dry_run)
     if existing is not None:
         return existing
+    derived = _derive(member, contract_line_ref, term_refs, settled_on)
+    _echo(derived, gross_cents=gross_cents, net_cents=net_cents, tax_cents=tax_cents,
+          due_date=due_date, direction=direction, payee_ref=payee_ref, scope=scope)
+    evidence = _evidence_refs(derived, evidence_note)
+    terms_snapshot = {**deepcopy(derived['terms_snapshot']), 'evidence_note': evidence_note}
     if settlement_id:
         row = _get(member, settlement_id, lock=True)
         if row.status != 'draft' or row.version != _version(expected_version):
@@ -384,7 +436,7 @@ def save_settlement(member, *, contract_line_ref, term_refs, request_token, sett
         'contract_line_ref': derived['line_ref'], 'source_ref': derived['source_ref'],
         'source_performance': derived['source_performance'], 'policy_version': derived['policy_version'],
         'pricing_configuration': derived['pricing_configuration'],
-        'terms_snapshot': derived['terms_snapshot'], 'evidence': derived['evidence'],
+        'terms_snapshot': terms_snapshot, 'evidence': evidence,
         'settled_on': settled_on, 'due_date': derived['due_date'],
         'gross_cents': derived['gross_cents'], 'net_cents': derived['net_cents'],
         'tax_cents': derived['tax_cents'], 'status': 'draft',
@@ -393,7 +445,10 @@ def save_settlement(member, *, contract_line_ref, term_refs, request_token, sett
     if not dry_run:
         row.save()
         audit(member, 'settlement.settlement.saved', row,
-              {'terms': derived['terms_snapshot']['selected'], 'gross_cents': row.gross_cents})
+              {'terms': derived['terms_snapshot']['selected'], 'gross_cents': row.gross_cents,
+               'net_cents': row.net_cents, 'tax_cents': row.tax_cents,
+               'settled_on': row.settled_on.isoformat(), 'due_date': row.due_date.isoformat(),
+               'evidence_note': evidence_note})
         _finish(member, 'save', token, digest, row)
     return row
 
@@ -466,12 +521,14 @@ def review_settlement(member, settlement_id, *, expected_version, request_token,
     # Re-read approved terms, confirmed performance and existing consumption under the
     # company lock, then recompute this draft from the current cumulative state.
     derived = _derive(member, row.contract_line_ref, _selected_refs(row), row.settled_on)
+    frozen_terms = {key: value for key, value in row.terms_snapshot.items() if key != 'evidence_note'}
+    frozen_note = row.terms_snapshot.get('evidence_note', '')
     if (derived['gross_cents'] != row.gross_cents or derived['net_cents'] != row.net_cents
             or derived['tax_cents'] != row.tax_cents or derived['due_date'] != row.due_date
             or derived['source_ref'] != row.source_ref
             or derived['source_performance'] != row.source_performance
-            or derived['terms_snapshot'] != row.terms_snapshot
-            or derived['evidence'] != row.evidence):
+            or derived['terms_snapshot'] != frozen_terms
+            or _evidence_refs(derived, frozen_note) != row.evidence):
         _fail('批准条款或已确认履约累计已变化，请重新保存结算草稿后再审核')
     row.status = 'active'
     row.review_note = note
@@ -479,16 +536,13 @@ def review_settlement(member, settlement_id, *, expected_version, request_token,
     row.approved_by = member
     row.approved_at = timezone.now()
     row.approved_version = row.version
-    approved_input = _approved_input(derived, member, row.version)
+    approved_input = _approved_input(derived, member, row.version, row.evidence)
     approved_input['settlement_ref'] = row.settlement_ref
     row.approved_input_snapshot = approved_input
     if dry_run:
         return row
-    record = audit(member, 'settlement.settlement.activated', row,
-                   {'approved_input': approved_input,
-                    'approved_digest': _digest(approved_input)})
-    row.approval_audit = record
-    row.save()
+    # DB guards allow partitions only for a still-submitted parent and require them to exist
+    # (summing to the approved gross) before the parent itself becomes active.
     items = []
     for item in derived['items']:
         items.append(OpenItem(organization=member.organization, project=derived['project'],
@@ -500,16 +554,23 @@ def review_settlement(member, settlement_id, *, expected_version, request_token,
             due_date=item['due_date'], occurred_on=row.settled_on,
             release_condition=item['release_condition'], status='active', version=1))
     OpenItem.objects.bulk_create(items)
+    record = audit(member, 'settlement.settlement.activated', row,
+                   {'approved_input': approved_input,
+                    'approved_digest': _digest(approved_input)})
+    row.approval_audit = record
+    row.save()
     for item in items:
         SourceConsumption.objects.create(organization=member.organization, consumer='settlement',
             source=row.contract_line_ref, source_id=row.contract_line_id,
-            coverage_key=item.partition_key and 'term:' + item.term_ref['kind'] + ':' + item.term_ref['id'],
-            amount_cents=item.gross_cents, event_ref=row.settlement_ref)
-    for item in items:
+            coverage_key='term:' + item.partition_kind + ':' + item.term_ref['id'],
+            amount_cents=item.gross_cents, event_ref=item.item_ref)
+        item_record = audit(member, 'plugin.settlement.open_item.created', item,
+            {'settlement_ref': row.settlement_ref, 'partition_key': item.partition_key,
+             'gross_cents': item.gross_cents, 'tax_cents': item.tax_cents})
         event_id = uuid.uuid4()
         ref = item.item_ref
-        DomainEvent.objects.create(event_id=event_id, organization=member.organization, source=record,
-            topic='settlement.open_item_created.v1',
+        DomainEvent.objects.create(event_id=event_id, organization=member.organization,
+            source=item_record, topic='settlement.open_item_created.v1',
             data={'event_id': str(event_id), 'topic': 'settlement.open_item_created.v1',
                   'schema_version': 1, 'organization_id': str(member.organization_id),
                   'source': ref, 'occurred_at': timezone.now().isoformat(),
@@ -541,12 +602,16 @@ def withdraw_settlement(member, settlement_id, *, expected_version, request_toke
     return row
 
 
-def settlement_snapshot(member, settlement_id):
+def settlement_snapshot(member, settlement_id, *, as_of=None):
     member = _fresh(member, check_module=False)
     row = _get(member, settlement_id)
+    basis = _business_date(as_of) if as_of is not None else None
     items = list(row.items.order_by('created_at', 'id'))
+    if basis is not None:
+        items = [item for item in items if item.occurred_on <= basis]
     return {
         'settlement': row, 'id': str(row.pk), 'settlement_ref': row.settlement_ref,
+        'as_of': basis.isoformat() if basis else None,
         'version': row.version, 'status': row.status,
         'project_id': str(row.project_id), 'contract_line_ref': deepcopy(row.contract_line_ref),
         'contract_line_id': str(row.contract_line_id), 'counterparty_id': str(row.counterparty_id),
@@ -585,7 +650,10 @@ def open_item_projection(item):
     }
 
 
-def open_items_for_settlement(member, settlement_id):
+def open_items_for_settlement(member, settlement_id, *, as_of=None):
     member = _fresh(member, check_module=False)
     row = _get(member, settlement_id)
-    return [open_item_projection(item) for item in row.items.order_by('created_at', 'id')]
+    items = row.items.all()
+    if as_of is not None:
+        items = items.filter(occurred_on__lte=_business_date(as_of))
+    return [open_item_projection(item) for item in items.order_by('created_at', 'id')]
