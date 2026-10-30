@@ -145,6 +145,53 @@ class OpenItem(models.Model):
         raise ValidationError('未清项不可删除')
 
 
+class Offset(models.Model):
+    """Append-only partial offset of a customer advance against one active receivable item.
+
+    No accounting event, ledger posting, revenue, cost or source consumption is written; the
+    advance cash fact is only read through the cash plugin's named read interface.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='offsets')
+    project = models.ForeignKey('core.Project', on_delete=models.PROTECT,
+                                related_name='offsets')
+    open_item = models.ForeignKey('OpenItem', on_delete=models.PROTECT,
+                                  related_name='offsets')
+    # No cross-owner FK: the posted advance cash fact is verified through the cash named read.
+    advance_cash_transaction_id = models.UUIDField()
+    advance_ref = models.JSONField()
+    offset_cents = models.PositiveBigIntegerField()
+    occurred_on = models.DateField()
+    status = models.CharField(max_length=16, default='active')
+    version = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(offset_cents__gt=0, offset_cents__lte=MAX_CENTS),
+                                   name='settlement_offset_amount_bound'),
+            models.CheckConstraint(condition=Q(status='active'),
+                                   name='settlement_offset_status'),
+        ]
+
+    @property
+    def offset_ref(self):
+        return {'namespace': 'settlement', 'kind': 'offset', 'id': str(self.pk),
+                'version': self.version}
+
+    def save(self, *args, **kwargs):
+        # Append-only: this slice has no Offset reversal, so a row is only ever created.
+        if not self._state.adding:
+            raise ValidationError('抵扣记录创建后不可修改')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('抵扣记录不可删除')
+
+
 class SettlementReceipt(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT, related_name='+')

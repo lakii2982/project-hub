@@ -19,7 +19,7 @@ from core.services import audit
 from .funding_services import (_amount, _business_date, _dry, _evidence, _fail, _fresh,
                                _get_account, _identifier, _locked, _optional_identifier,
                                _receipt, _receipt_row, _record, _text, _version, READ_ROLES, WRITE_ROLES)
-from .models import CashPartyMatch, CashTransaction, FundingAccount
+from .models import CashClassification, CashPartyMatch, CashTransaction, FundingAccount
 
 PAYEE_KINDS = {'unidentified', 'counterparty', 'own_account'}
 MATCH_PAYEE_KINDS = {'counterparty', 'employee', 'own_account'}
@@ -451,6 +451,24 @@ def cash_transaction_list(member, *, as_of=None, status=None):
     return [_transaction_projection(row, member) for row in rows]
 
 
+def _effective_counterparty(row):
+    """Effective counterparty of one cash fact: explicit field or latest unreversed match."""
+    if row.counterparty_id:
+        return {'kind': 'counterparty', 'id': str(row.counterparty_id),
+                'match_ref': None, 'match_version': None}
+    reversed_ids = set(row.matches.filter(action='reverse').values_list(
+        'original_match_id', flat=True))
+    for match in row.matches.filter(action='identify').order_by('-created_at', '-id'):
+        if match.pk in reversed_ids:
+            continue
+        payee = match.identified_payee or {}
+        if payee.get('kind') == 'counterparty' and payee.get('id'):
+            return {'kind': 'counterparty', 'id': str(payee['id']),
+                    'match_ref': match.match_ref, 'match_version': match.version}
+        break
+    return None
+
+
 def posted_cash_for_clearance(member, transaction_ref, *, for_write=True):
     """Root-owned cross-owner read: posted cash facts plus the effective counterparty."""
     member = _fresh(member)
@@ -472,21 +490,7 @@ def posted_cash_for_clearance(member, transaction_ref, *, for_write=True):
         _fail('仅已过账现金事实可用于核销')
     if row.version != transaction_ref['version']:
         _fail('现金流水版本已变化，请刷新后重试')
-    effective = None
-    if row.counterparty_id:
-        effective = {'kind': 'counterparty', 'id': str(row.counterparty_id),
-                     'match_ref': None, 'match_version': None}
-    else:
-        reversed_ids = set(row.matches.filter(action='reverse').values_list(
-            'original_match_id', flat=True))
-        for match in row.matches.filter(action='identify').order_by('-created_at', '-id'):
-            if match.pk in reversed_ids:
-                continue
-            payee = match.identified_payee or {}
-            if payee.get('kind') == 'counterparty' and payee.get('id'):
-                effective = {'kind': 'counterparty', 'id': str(payee['id']),
-                             'match_ref': match.match_ref, 'match_version': match.version}
-            break
+    effective = _effective_counterparty(row)
     posted_at = None
     latest = AuditEvent.objects.filter(organization_id=member.organization_id,
         entity_id=str(row.pk), action=POSTED_ACTION).order_by('-created_at').first()
@@ -498,6 +502,78 @@ def posted_cash_for_clearance(member, transaction_ref, *, for_write=True):
             'counterparty_id': str(row.counterparty_id) if row.counterparty_id else None,
             'effective_counterparty': effective, 'transaction_date': row.transaction_date,
             'posted_at': posted_at, 'funding_account_id': str(row.funding_account_id)}
+
+
+def posted_advance_for_offset(member, advance_ref):
+    """Root-owned cross-owner read: posted incoming cash with an effective advance classification.
+
+    Settlement Offset consumes this named read instead of touching cash tables; the advance
+    fact must be posted, in the same organization, have an effective counterparty and carry
+    exactly one active advance classification from the PH-239 cash classification facts.
+    """
+    member = _fresh(member)
+    if not isinstance(advance_ref, dict) or set(advance_ref) != {
+            'namespace', 'kind', 'id', 'version'}:
+        _fail('预收现金来源无效')
+    if advance_ref['namespace'] != 'cash' or advance_ref['kind'] != 'cash_transaction':
+        _fail('预收现金来源无效')
+    if type(advance_ref['version']) is not int:
+        _fail('预收现金来源版本无效')
+    if member.role not in READ_ROLES:
+        raise PermissionDenied('无权读取可抵扣的预收现金事实')
+    try:
+        row = CashTransaction.objects.select_related('funding_account').get(
+            organization=member.organization,
+            pk=_identifier(advance_ref['id'], '现金流水不存在或无权访问'))
+    except CashTransaction.DoesNotExist:
+        raise PermissionDenied('现金流水不存在或无权访问')
+    if row.status != 'posted':
+        _fail('仅已过账现金可用于抵扣')
+    if row.version != advance_ref['version']:
+        _fail('现金流水版本已变化，请刷新后重试')
+    if row.direction != 'in':
+        _fail('仅收款类现金可作为客户预收抵扣')
+    classification = CashClassification.objects.filter(
+        organization=member.organization, cash_transaction=row, status='active',
+        classification='advance').first()
+    if classification is None:
+        _fail('该现金流水没有有效的预收/预付分类，不能用于抵扣')
+    effective = _effective_counterparty(row)
+    if effective is None or effective.get('kind') != 'counterparty' or not effective.get('id'):
+        _fail('现金流水尚未识别有效往来方，不能用于抵扣')
+    posted_at = None
+    latest = AuditEvent.objects.filter(organization_id=member.organization_id,
+        entity_id=str(row.pk), action=POSTED_ACTION).order_by('-created_at').first()
+    if latest is not None:
+        posted_at = latest.created_at
+    return {'id': str(row.pk), 'transaction_ref': row.transaction_ref, 'version': row.version,
+            'status': row.status, 'gross_cents': row.gross_cents, 'direction': row.direction,
+            'transaction_date': row.transaction_date, 'posted_at': posted_at,
+            'funding_account_id': str(row.funding_account_id),
+            'counterparty_id': str(row.counterparty_id) if row.counterparty_id else None,
+            'effective_counterparty': effective,
+            'classification_ref': classification.classification_ref}
+
+
+def posted_advance_candidates(member, *, counterparty_id, as_of=None):
+    """Root-owned cross-owner read: posted advance-classified cash of one counterparty."""
+    member = _fresh(member)
+    if member.role not in READ_ROLES:
+        raise PermissionDenied('无权读取可抵扣的预收现金事实')
+    counterparty = _identifier(counterparty_id, '往来方标识无效')
+    rows = CashTransaction.objects.filter(organization=member.organization, status='posted',
+                                          direction='in').order_by(
+        'transaction_date', 'created_at', 'id')
+    if as_of is not None:
+        rows = rows.filter(transaction_date__lte=_business_date(as_of))
+    candidates = []
+    for row in rows:
+        item = posted_advance_for_offset(member, row.transaction_ref)
+        effective = item['effective_counterparty'] or {}
+        if effective.get('kind') != 'counterparty' or str(effective.get('id')) != str(counterparty):
+            continue
+        candidates.append(item)
+    return candidates
 
 
 def posted_cash_for_fee(member, transaction_ref, *, for_write=True):
@@ -555,4 +631,10 @@ def posted_cash_candidates(member, *, counterparty_id, as_of=None):
         if effective.get('kind') != 'counterparty' or str(effective.get('id')) != str(counterparty):
             continue
         candidates.append(item)
-    return candidates
+    # PH-241 scheme a: an advance-classified cash fact is reserved for Offset and must not
+    # also be cleared, otherwise the same posted gross would be consumed twice.
+    advance_ids = {str(value) for value in CashClassification.objects.filter(
+        organization=member.organization, status='active', classification='advance',
+        cash_transaction_id__in=[row['id'] for row in candidates]).values_list(
+        'cash_transaction_id', flat=True)}
+    return [item for item in candidates if item['id'] not in advance_ids]

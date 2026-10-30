@@ -594,6 +594,133 @@ class Command(BaseCommand):
                 partition_key=parts[1] + ':' + parts[2]).first()
             if found is None or found.gross_cents != claim.amount_cents:
                 errors.append(f"settlement_claim:{claim.pk}:no_matching_partition")
+        # ----- PH-241 advance offset: append-only derived settlement fact, no ledger/accounting
+        # write, no canonical offset topic; advance cash must be posted/in and advance-classified,
+        # and a cash fact may not be both cleared and offset (scheme a mutual exclusion).
+        from pmo_plugins.settlement.models import Offset as _Offset
+        from pmo_plugins.cash.models import CashTransaction as _OffsetCash
+        from pmo_plugins.cash.models import CashClassification as _OffsetClassification
+        offset_rows = list(_Offset.objects.values(
+            'pk', 'organization_id', 'project_id', 'open_item_id',
+            'advance_cash_transaction_id', 'advance_ref', 'offset_cents', 'status'))
+        if offset_rows:
+            offset_advance_ids = {str(row['advance_cash_transaction_id']) for row in offset_rows}
+            offset_cash = {str(row['pk']): row for row in _OffsetCash.objects.filter(
+                pk__in=offset_advance_ids).values(
+                'pk', 'organization_id', 'status', 'direction', 'gross_cents',
+                'counterparty_id', 'version')}
+            from pmo_plugins.cash.models import CashPartyMatch as _OffsetMatch
+            offset_matches = list(_OffsetMatch.objects.filter(
+                cash_transaction_id__in=offset_advance_ids).values(
+                'pk', 'cash_transaction_id', 'action', 'original_match_id',
+                'identified_payee', 'created_at'))
+            reversed_match_ids = {str(row['original_match_id']) for row in offset_matches
+                                  if row['action'] == 'reverse'}
+            effective_counterparty = {}
+            for row in sorted(offset_matches, key=lambda item: (
+                    str(item['created_at']), str(item['pk']))):
+                cash_id = str(row['cash_transaction_id'])
+                if cash_id in effective_counterparty or row['action'] != 'identify':
+                    continue
+                if str(row['pk']) in reversed_match_ids:
+                    continue
+                payee = row['identified_payee'] or {}
+                if payee.get('kind') == 'counterparty' and payee.get('id'):
+                    effective_counterparty[cash_id] = str(payee['id'])
+            refunded_by_cash = {str(row['original_cash_transaction_id']): row['total'] for row
+                                in _Refund.objects.filter(
+                                    original_cash_transaction_id__in=offset_advance_ids).values(
+                                    'original_cash_transaction_id').annotate(
+                                    total=Sum('gross_cents'))}
+            returned_by_cash = {str(row['original_cash_transaction_id']): row['total'] for row
+                                in _BankReturn.objects.filter(
+                                    original_cash_transaction_id__in=offset_advance_ids).values(
+                                    'original_cash_transaction_id').annotate(
+                                    total=Sum('gross_cents'))}
+            advance_classified = {str(row['cash_transaction_id']) for row in
+                                  _OffsetClassification.objects.filter(
+                                      status='active', classification='advance',
+                                      cash_transaction_id__in=offset_advance_ids).values(
+                                      'cash_transaction_id')}
+            offsets_by_cash = {}
+            offsets_by_item = {}
+            for row in offset_rows:
+                cash_id = str(row['advance_cash_transaction_id'])
+                item_id = str(row['open_item_id'])
+                offsets_by_cash[cash_id] = (offsets_by_cash.get(cash_id, 0)
+                                            + row['offset_cents'])
+                offsets_by_item[item_id] = (offsets_by_item.get(item_id, 0)
+                                            + row['offset_cents'])
+            created_events = {}
+            for event in _CashDomainEvent.objects.filter(
+                    topic='settlement.offset.created.v1').values('data'):
+                data = event['data'] or {}
+                created_events[str(data.get('entity_id'))] = (
+                    created_events.get(str(data.get('entity_id')), 0) + 1)
+            unexpected_topic = _CashDomainEvent.objects.filter(
+                topic__startswith='settlement.offset').exclude(
+                topic='settlement.offset.created.v1').exists()
+            for offset in _Offset.objects.select_related('open_item'):
+                label = f"offset:{offset.pk}"
+                item = offset.open_item
+                if (item.organization_id != offset.organization_id
+                        or item.project_id != offset.project_id):
+                    errors.append(f"{label}:open_item_scope")
+                if item.direction != 'receivable':
+                    errors.append(f"{label}:open_item_direction")
+                if item.status != 'active':
+                    errors.append(f"{label}:open_item_status")
+                if offset.status != 'active' or offset.offset_cents <= 0:
+                    errors.append(f"{label}:status_or_amount")
+                cash_id = str(offset.advance_cash_transaction_id)
+                cash = offset_cash.get(cash_id)
+                if cash is None:
+                    errors.append(f"{label}:missing_advance_cash")
+                elif (cash['organization_id'] != offset.organization_id
+                      or cash['status'] != 'posted' or cash['direction'] != 'in'):
+                    errors.append(f"{label}:advance_cash_state")
+                if cash_id not in advance_classified:
+                    errors.append(f"{label}:missing_advance_classification")
+                advance_ref = offset.advance_ref or {}
+                if str(advance_ref.get('id')) != cash_id:
+                    errors.append(f"{label}:advance_ref")
+                if cash is not None and advance_ref.get('version') != cash['version']:
+                    errors.append(f"{label}:advance_ref_version")
+                expected_party = (effective_counterparty.get(cash_id)
+                                  or (str(cash['counterparty_id'])
+                                      if cash is not None and cash['counterparty_id'] else None))
+                if expected_party is None or expected_party != str(item.counterparty_id):
+                    errors.append(f"{label}:counterparty_mismatch")
+                if created_events.get(str(offset.pk), 0) != 1:
+                    errors.append(f"{label}:audit_event_count")
+            if unexpected_topic:
+                errors.append('offset:unexpected_canonical_topic')
+            cleared_by_cash = {str(row['cash_transaction_id']): row['total'] for row in
+                               Clearance.objects.filter(status='active').values(
+                                   'cash_transaction_id').annotate(total=Sum('cleared_cents'))}
+            cleared_by_item = {str(row['open_item_id']): row['total'] for row in
+                               Clearance.objects.filter(status='active').values(
+                                   'open_item_id').annotate(total=Sum('cleared_cents'))}
+            for item in OpenItem.objects.all():
+                if (cleared_by_item.get(str(item.pk), 0)
+                        + offsets_by_item.get(str(item.pk), 0) > item.gross_cents):
+                    errors.append(f"open_item:{item.pk}:over_offset")
+            for cash_id, total in offsets_by_cash.items():
+                cash = offset_cash.get(cash_id)
+                if cash is not None and total > cash['gross_cents']:
+                    errors.append(f"cash_transaction:{cash_id}:over_offset")
+                if cash is not None:
+                    covered = (cleared_by_cash.get(cash_id, 0) + total
+                               + refunded_by_cash.get(cash_id, 0)
+                               + returned_by_cash.get(cash_id, 0))
+                    if covered > cash['gross_cents']:
+                        errors.append(f"cash_transaction:{cash_id}:offset_over_covered")
+                if cash_id in cleared_by_cash:
+                    errors.append(f"cash_transaction:{cash_id}:clearance_offset_overlap")
+            for cash_id in advance_classified:
+                if cash_id in cleared_by_cash:
+                    errors.append(f"cash_transaction:{cash_id}:advance_cash_cleared")
+
         # ----- PH-253 bank-fee drafts: one draft fact per posted incoming cash, exact saved-event
         # history per version, and (once PH-250 lands) exactly one conditional cost fact set.
         from pmo_plugins.costing.models import (BankCharge as _BankCharge,

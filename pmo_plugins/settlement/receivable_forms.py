@@ -172,6 +172,42 @@ class ReverseClearanceForm(StrictForm):
     request_token = forms.UUIDField(widget=forms.HiddenInput)
 
 
+class OffsetForm(StrictForm):
+    open_item = forms.ChoiceField(label='未清项', choices=())
+    advance_ref = forms.ChoiceField(label='已过账预收现金', choices=())
+    amount = forms.DecimalField(label='抵扣金额（元）', max_digits=14, decimal_places=2,
+                                min_value=Decimal('0.01'),
+                                widget=forms.NumberInput(attrs={'step': '0.01',
+                                                                'inputmode': 'decimal'}))
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, open_items=None, advance_candidates=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['open_item'].choices = open_items or []
+        self.fields['advance_ref'].choices = [('', '请选择已过账预收现金')] + list(
+            advance_candidates or [])
+
+    def clean(self):
+        data = super().clean()
+        if not data.get('open_item'):
+            self.add_error('open_item', '请选择未清项')
+        if not data.get('advance_ref'):
+            self.add_error('advance_ref', '请选择同往来方的已过账预收现金')
+        return data
+
+
+class OffsetListFilterForm(forms.Form):
+    project = forms.ChoiceField(label='项目', required=False, choices=())
+
+    def __init__(self, *args, member, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['project'].choices = [('', '全部项目')] + [
+            (str(project.pk), f'{project.code} · {project.name}')
+            for project in visible_projects(member)]
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', 'form-control')
+
+
 class ClearanceListFilterForm(forms.Form):
     project = forms.ChoiceField(label='项目', required=False, choices=())
 

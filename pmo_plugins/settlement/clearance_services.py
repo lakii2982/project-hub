@@ -18,7 +18,7 @@ from core.models import AccountingPeriod, DomainEvent, Project
 from core.plugin_runtime import is_enabled
 from core.services import audit
 
-from .models import Clearance, ClearanceReceipt, OpenItem
+from .models import Clearance, ClearanceReceipt, Offset, OpenItem
 from .receivable_services import (_business_date, _digest, _dry, _fail, _fresh, _identifier,
                                   _locked, _text, _version)
 
@@ -140,6 +140,28 @@ def _cash_cleared(member, cash_transaction_id):
         total=Sum('cleared_cents'))['total'] or 0
 
 
+def _open_offset(open_item):
+    return Offset.objects.filter(organization_id=open_item.organization_id,
+                                 open_item=open_item, status='active').aggregate(
+        total=Sum('offset_cents'))['total'] or 0
+
+
+def _cash_offset(member, cash_transaction_id):
+    return Offset.objects.filter(organization=member.organization,
+                                 advance_cash_transaction_id=cash_transaction_id,
+                                 status='active').aggregate(
+        total=Sum('offset_cents'))['total'] or 0
+
+
+def _advance_classified(member, cash_transaction_id):
+    """PH-239 named read: an advance-classified cash fact is reserved for Offset."""
+    from pmo_plugins.cash import classification_services as cash_classification
+    rows = cash_classification.classification_list(
+        member, cash_transaction_id=cash_transaction_id)
+    return any(row['classification'] == 'advance' and row['status'] == 'active'
+               for row in rows)
+
+
 def _yuan(cents):
     return format(Decimal(cents) / 100, '.2f')
 
@@ -190,20 +212,23 @@ def create_clearance(member, *, open_item_id, cash_transaction_ref, cleared_cent
         _fail('现金流水尚未识别有效往来方，不能核销')
     if str(item.counterparty_id) != str(effective['id']):
         _fail('现金流水与未清项不是同一往来方')
+    if _advance_classified(member, cash['id']):
+        _fail('预收/预付分类的现金已预留给抵扣，不能用于核销')
     day = cash['transaction_date']
     if type(day) is not date:
         day = _business_date(day)
     if occurred is not None and occurred != day:
         _fail('核销日期必须与现金流水日期一致')
     _period(member, day)
-    remaining_open = item.gross_cents - _open_cleared(item)
+    remaining_open = item.gross_cents - _open_cleared(item) - _open_offset(item)
     cash_id = _identifier(cash['id'], '现金流水标识无效')
     # PH-240 joint coverage: a bank fact can be refunded/returned and cleared, but the sum
     # must never exceed its posted gross. The cash owner exposes the read-only refund
     # coverage so both write paths use the same derived ceiling.
     from pmo_plugins.cash.refund_services import refund_coverage_for_cash
     refund_total = refund_coverage_for_cash(member, cash['transaction_ref'])['total_cents']
-    remaining_cash = cash['gross_cents'] - _cash_cleared(member, cash_id) - refund_total
+    remaining_cash = (cash['gross_cents'] - _cash_cleared(member, cash_id)
+                      - _cash_offset(member, cash_id) - refund_total)
     if remaining_open <= 0 or remaining_cash <= 0:
         _fail('该未清项或现金流水已无未核销余额')
     if cleared > min(remaining_open, remaining_cash):
@@ -219,8 +244,9 @@ def create_clearance(member, *, open_item_id, cash_transaction_ref, cleared_cent
         with transaction.atomic():
             clearance.save()
         # Recheck under the company lock so no half write can leave a negative balance.
-        if (_open_cleared(item) > item.gross_cents
-                or _cash_cleared(member, cash_id) + refund_total > cash['gross_cents']):
+        if (_open_cleared(item) + _open_offset(item) > item.gross_cents
+                or (_cash_cleared(member, cash_id) + _cash_offset(member, cash_id)
+                    + refund_total) > cash['gross_cents']):
             _fail('核销后余额为负，已拒绝本次核销')
     except IntegrityError:
         _fail('核销记录写入冲突，请刷新后重试')
@@ -301,12 +327,16 @@ def open_item_balances(member, open_item_id):
     member = _fresh(member, check_module=False)
     item = _get_open_item(member, open_item_id)
     cleared = _open_cleared(item)
+    offset_total = _open_offset(item)
+    remaining = max(0, item.gross_cents - cleared - offset_total)
     return {
         'open_item_id': str(item.pk), 'open_item_ref': item.item_ref,
         'project_id': str(item.project_id), 'gross_cents': item.gross_cents,
-        'cleared_cents': cleared, 'remaining_cents': max(0, item.gross_cents - cleared),
+        'cleared_cents': cleared, 'offset_cents': offset_total,
+        'remaining_cents': remaining,
         'gross_display': _yuan(item.gross_cents), 'cleared_display': _yuan(cleared),
-        'remaining_display': _yuan(max(0, item.gross_cents - cleared)),
+        'offset_display': _yuan(offset_total),
+        'remaining_display': _yuan(remaining),
         'clearances': [_clearance_projection(row) for row in item.clearances.select_related(
             'open_item__project').order_by('created_at', 'id')],
     }
@@ -354,9 +384,11 @@ def cash_candidates_for_open_item(member, open_item_id):
         cleared = _cash_cleared(member, cash_id)
         refund_total = refund_coverage_for_cash(
             member, candidate['transaction_ref'])['total_cents']
-        available = max(0, candidate['gross_cents'] - cleared - refund_total)
+        offset_total = _cash_offset(member, cash_id)
+        available = max(0, candidate['gross_cents'] - cleared - refund_total - offset_total)
         result.append({**candidate, 'cleared_cents': cleared,
-                       'refunded_cents': refund_total, 'available_cents': available,
+                       'refunded_cents': refund_total, 'offset_cents': offset_total,
+                       'available_cents': available,
                        'available_display': _yuan(available)})
     return result
 
@@ -367,9 +399,8 @@ COVERAGE_READ_ROLES = {'owner', 'finance', 'auditor'}
 def clearance_coverage_for_cash(member, cash_transaction_ref):
     """Cross-owner read-only clearance coverage of one posted bank fact (PH-240).
 
-    Cash refund/return coverage consumes this named read. Offset coverage is reserved on the
-    same interface but is not implemented in this slice, so offset_cents stays 0 and is
-    explicitly labelled instead of being fabricated.
+    Cash refund/return coverage consumes this named read; PH-241 fills the reserved offset
+    slot so a cash fact's cleared + offset coverage is derived from the same named interface.
     """
     from pmo_plugins.cash.models import CashTransaction
     member = _fresh(member, check_module=False)
@@ -396,7 +427,11 @@ def clearance_coverage_for_cash(member, cash_transaction_ref):
                                        cash_transaction_id=cash.pk,
                                        status='active').aggregate(
         total=Sum('cleared_cents'))['total'] or 0
+    offset_total = Offset.objects.filter(organization=member.organization,
+                                         advance_cash_transaction_id=cash.pk,
+                                         status='active').aggregate(
+        total=Sum('offset_cents'))['total'] or 0
     return {'cash_transaction_ref': cash.transaction_ref,
             'posted_gross_cents': cash.gross_cents, 'cleared_cents': cleared,
-            'offset_cents': 0, 'total_cents': cleared,
-            'offset_implemented': False}
+            'offset_cents': offset_total, 'total_cents': cleared + offset_total,
+            'offset_implemented': True}

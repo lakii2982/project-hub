@@ -23,3 +23,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## PH-239 现金分类与账本桥接首片（2026-10-30）
 
 在PH-230已过账现金之上实现分类到现金账的闭环：posted现金分类为receipt/payment/advance/tax（payroll命令层拒绝），每流水至多一条有效分类、撤分类append-only且可重分类；每条有效分类经core具名桥接恰写一个`cash.classification` AccountingEvent与一条cash_in/cash_out、funding_account scope的LedgerPosting，撤分类追加镜像事件/负值posting（原记录不改不删），bank_effect claim每流水唯一永久、撤后重分类净额复用；canonical recorded/reversed事件posting_event_refs恰1个core/accounting_event（PH-243冻结）；core放宽`labor_posting_cost_scope`（core 0009）。cash迁移因PH-240先合入顺延为0005。verify_integrity七项现金账不变式（与PH-240退款provenance守卫合并保留）。独立S复核round 2 PASS（3阻断消除）。明确不做工资分类/项目分配/Offset/退款/手续费/互转/更正/导入/期初，不解除PH-169/170/171 proposed。见`docs/verification.md`与`project/reports/PH-239.json`。
+
+## PH-241 预收/预付抵扣 Offset 首片（2026-10-31）
+
+在PH-239 advance分类与PH-232未清核销之上实现预收抵扣闭环：owner/finance选择同企业/同往来方、已过账且有效advance分类的客户预收现金，部分抵扣active应收OpenItem；append-only Offset事实（settlement 0005），支持同一对多次部分抵扣，余额由服务端按advance可用额与OpenItem剩余额派生；无Offset撤销、无canonical事件、无账本/会计事件/收入/成本/应收应付写。按Lead裁决方案a修正PH-232服务行为：advance可用扣active cleared+offsets、核销候选/上限排除advance分类现金、同一现金不可同时clearance+offset；verify_integrity新增offset分支且不加全局禁令。未验证：PG并发（CI）、浏览器1440/390、独立复核、生产/UAT；PH-232 spec文字待PH-249同步。见`docs/verification.md`与`project/reports/PH-241.json`。
