@@ -235,3 +235,181 @@ class BankChargeServiceTests(BankChargeFixture, TestCase):
         with self.assertRaises(CommandError):
             call_command('verify_integrity', '--json', stdout=out)
         self.assertIn(f'bank_charge:{charge.pk}:amount_over_net', out.getvalue())
+
+
+class BankChargeVerifyIntegrityTests(BankChargeFixture, TestCase):
+    """PH-253: per-version saved-event count and conditional PH-250 cost-fact boundaries."""
+
+    def verify_errors(self):
+        from io import StringIO
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+        out = StringIO()
+        try:
+            call_command('verify_integrity', '--json', stdout=out)
+        except CommandError:
+            pass
+        else:
+            return []
+        import json
+        return json.loads(out.getvalue())['errors']
+
+    def saved_events(self, charge):
+        return list(DomainEvent.objects.filter(
+            topic=TOPIC, data__source__id=str(charge.pk)).order_by('created_at', 'id'))
+
+    def duplicate_saved_event(self, charge):
+        from core.services import audit
+        template = self.saved_events(charge)[0].data
+        source = audit(self.owner, 'plugin.costing.bank_charge.saved', charge, {})
+        DomainEvent.objects.create(event_id=uuid.uuid4(), organization=self.org,
+                                   source=source, topic=TOPIC, data=template)
+
+    def force_status(self, charge, status):
+        """Test-only status transition; rollback restores the migration triggers."""
+        from django.db import connection
+        with connection.cursor() as cursor:
+            for trigger in ('costing_bankcharge_update_guard', 'costing_bankcharge_insert_guard',
+                            'costing_bankcharge_no_delete'):
+                cursor.execute(f'DROP TRIGGER IF EXISTS {trigger}')
+        BankCharge.objects.filter(pk=charge.pk).update(status=status)
+        charge.refresh_from_db()
+
+    def add_cost_facts(self, charge, *, posting_amount=None, duplicate_event=False,
+                       create_posting=True):
+        amount = charge.gross_cents if posting_amount is None else posting_amount
+        event_id = uuid.uuid4()
+        claim = SourceConsumption.objects.create(
+            organization=charge.organization,
+            source={'namespace': 'costing', 'kind': 'bank_charge', 'id': str(charge.pk),
+                    'version': charge.version},
+            source_id=charge.pk, consumer='cost', coverage_key=f'bank_charge:{charge.pk}',
+            amount_cents=charge.gross_cents,
+            event_ref={'namespace': 'core', 'kind': 'accounting_event', 'id': str(event_id),
+                       'version': 1})
+        event = AccountingEvent.objects.create(
+            id=event_id, organization=charge.organization,
+            source={'namespace': 'costing', 'kind': 'bank_charge', 'id': str(charge.pk),
+                    'version': charge.version},
+            event_type='costing.bank_charge.cost', occurred_on=charge.occurred_on,
+            posting_period=charge.posting_period, algorithm_version='bank_fee_cost_v1',
+            claim=claim, claim_effect_cents=charge.gross_cents)
+        posting = None
+        if create_posting:
+            posting = LedgerPosting.objects.create(
+                organization=charge.organization, accounting_event=event, book='cost',
+                amount_cents=amount, scope_kind='project', scope_id=charge.scope_id,
+                origin='current', line_index=1)
+        if duplicate_event:
+            AccountingEvent.objects.create(
+                id=uuid.uuid4(), organization=charge.organization, source=event.source,
+                event_type='costing.bank_charge.cost', occurred_on=charge.occurred_on,
+                posting_period=charge.posting_period, algorithm_version='bank_fee_cost_v1',
+                claim=claim, claim_effect_cents=charge.gross_cents)
+        return claim, event, posting
+
+    def test_empty_database_and_normal_drafts_pass(self):
+        self.assertEqual(self.verify_errors(), [])
+        charge = self.fee()
+        self.assertEqual(self.verify_errors(), [])
+        self.fee(expected_version=1, gross_cents=150)
+        self.assertEqual(charge.version, 1)
+        self.assertEqual(self.verify_errors(), [])
+
+    def test_missing_middle_version_event_is_detected(self):
+        charge = self.fee()
+        self.fee(expected_version=1, gross_cents=150)
+        self.saved_events(charge)[0].delete()
+        errors = self.verify_errors()
+        self.assertTrue(any(f'bank_charge:{charge.pk}:saved_event_count' in row for row in errors), errors)
+
+    def test_duplicate_same_version_event_is_detected(self):
+        charge = self.fee()
+        self.duplicate_saved_event(charge)
+        errors = self.verify_errors()
+        self.assertTrue(any(f'bank_charge:{charge.pk}:saved_event_count' in row for row in errors), errors)
+
+    def test_tampered_saved_event_envelopes_are_detected(self):
+        charge = self.fee()
+        events = self.saved_events(charge)
+        bad = events[0].data
+        bad['source']['version'] = 99
+        events[0].data = bad
+        events[0].save(update_fields=['data'])
+        errors = self.verify_errors()
+        self.assertTrue(any(f'bank_charge:{charge.pk}:saved_event_envelope' in row for row in errors), errors)
+        bad['source']['version'] = 1
+        bad['payload']['changed_refs'] = [{'namespace': 'costing', 'kind': 'bank_charge',
+                                           'id': str(charge.pk), 'version': 2}]
+        events[0].data = bad
+        events[0].save(update_fields=['data'])
+        errors = self.verify_errors()
+        self.assertTrue(any(f'bank_charge:{charge.pk}:saved_event_envelope' in row for row in errors), errors)
+
+    def test_approved_without_cost_facts_is_the_transitional_state(self):
+        charge = self.fee()
+        self.force_status(charge, 'approved')
+        self.assertEqual(self.verify_errors(), [])
+
+    def test_approved_with_valid_cost_facts_passes(self):
+        charge = self.fee()
+        self.force_status(charge, 'approved')
+        self.add_cost_facts(charge)
+        self.assertEqual(self.verify_errors(), [])
+
+    def test_duplicate_cost_event_is_detected(self):
+        charge = self.fee()
+        self.force_status(charge, 'approved')
+        self.add_cost_facts(charge, duplicate_event=True)
+        errors = self.verify_errors()
+        self.assertTrue(any(f'bank_charge:{charge.pk}:cost_event_count' in row for row in errors), errors)
+
+    def test_missing_cost_posting_is_detected(self):
+        charge = self.fee()
+        self.force_status(charge, 'approved')
+        self.add_cost_facts(charge, create_posting=False)
+        errors = self.verify_errors()
+        self.assertTrue(any(f'bank_charge:{charge.pk}:cost_posting_count' in row for row in errors), errors)
+
+    def test_approved_cost_amount_mismatch_is_detected(self):
+        charge = self.fee()
+        self.force_status(charge, 'approved')
+        self.add_cost_facts(charge, posting_amount=charge.gross_cents + 1)
+        errors = self.verify_errors()
+        self.assertTrue(any(f'bank_charge:{charge.pk}:cost_posting' in row for row in errors), errors)
+
+    def test_unapproved_states_must_not_carry_cost_facts(self):
+        for status in ('pending', 'rejected'):
+            with self.subTest(status=status):
+                cash = self.posted_cash(external_source_key='FEE-' + status + '-' + uuid.uuid4().hex[:6])
+                charge = fees.save_bank_charge_draft(
+                    self.owner, cash_transaction_ref=cash.transaction_ref, gross_cents=100,
+                    scope_id=self.project.pk, evidence='回单', request_token=uuid.uuid4(),
+                    dry_run=False)
+                self.force_status(charge, status)
+                self.add_cost_facts(charge)
+                errors = self.verify_errors()
+                self.assertTrue(any(f'bank_charge:{charge.pk}:cost_fact_on_unapproved' in row
+                                    for row in errors), errors)
+
+    def test_orphan_cost_event_is_detected(self):
+        charge = self.fee()
+        event_id = uuid.uuid4()
+        claim = SourceConsumption.objects.create(
+            organization=self.org,
+            source={'namespace': 'costing', 'kind': 'bank_charge', 'id': str(uuid.uuid4()),
+                    'version': 1},
+            source_id=uuid.uuid4(), consumer='cost', coverage_key='bank_charge:orphan',
+            amount_cents=100,
+            event_ref={'namespace': 'core', 'kind': 'accounting_event', 'id': str(event_id),
+                       'version': 1})
+        AccountingEvent.objects.create(
+            id=event_id, organization=self.org,
+            source={'namespace': 'costing', 'kind': 'bank_charge', 'id': str(uuid.uuid4()),
+                    'version': 1},
+            event_type='costing.bank_charge.cost', occurred_on=self.today,
+            posting_period=self.today.strftime('%Y-%m'), algorithm_version='bank_fee_cost_v1',
+            claim=claim, claim_effect_cents=100)
+        errors = self.verify_errors()
+        self.assertTrue(any(':orphan_cost_event' in row for row in errors), errors)
+        self.assertTrue(any(':unexpected_source_consumption' in row for row in errors), errors)

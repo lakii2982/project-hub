@@ -41,6 +41,9 @@ class Command(BaseCommand):
         for event in AccountingEvent.objects.select_related('claim', 'reverses_event'):
             if event.source.get('namespace') == 'management_revenue':
                 continue
+            if event.source.get('namespace') == 'costing' and event.source.get('kind') == 'bank_charge':
+                # PH-250 fee cost facts are validated in the dedicated bank-fee branch below.
+                continue
             if event.source.get('namespace') != 'costing' or not isinstance(event.labor_origin_ref, dict):
                 errors.append(f'accounting_event:{event.pk}:unknown_source')
                 continue
@@ -363,12 +366,39 @@ class Command(BaseCommand):
                 partition_key=parts[1] + ':' + parts[2]).first()
             if found is None or found.gross_cents != claim.amount_cents:
                 errors.append(f"settlement_claim:{claim.pk}:no_matching_partition")
-        # ----- PH-244 bank-fee drafts: one draft fact per posted incoming cash, zero financial effect.
+        # ----- PH-253 bank-fee drafts: one draft fact per posted incoming cash, exact saved-event
+        # history per version, and (once PH-250 lands) exactly one conditional cost fact set.
         from pmo_plugins.costing.models import (BankCharge as _BankCharge,
                                                 BankChargeReceipt as _BankChargeReceipt)
         from core.models import DomainEvent as _FeeEvent
         from django.db.models import Count as _Count
         fee_topic = 'costing.bank_charge_saved.v1'
+        fee_statuses = {'draft', 'pending', 'approved', 'rejected', 'superseded'}
+        fee_cost_event_type = 'costing.bank_charge.cost'
+        fee_claim_keys = set()
+
+        def _fee_ref(charge, version):
+            return {'namespace': 'costing', 'kind': 'bank_charge', 'id': str(charge.pk),
+                    'version': version}
+
+        def _fee_cost_facts(charge):
+            claim_key = f'bank_charge:{charge.pk}'
+            fee_claim_keys.add(claim_key)
+            claims = list(SourceConsumption.objects.filter(
+                organization_id=charge.organization_id, coverage_key=claim_key))
+            claim_ids = [claim.pk for claim in claims]
+            events = list(AccountingEvent.objects.filter(
+                organization_id=charge.organization_id,
+                source__namespace='costing', source__kind='bank_charge',
+                source__id=str(charge.pk)))
+            if claim_ids:
+                events += [event for event in AccountingEvent.objects.filter(
+                    organization_id=charge.organization_id, claim_id__in=claim_ids)
+                    if event.pk not in {row.pk for row in events}]
+            postings = list(LedgerPosting.objects.filter(
+                accounting_event_id__in=[event.pk for event in events])) if events else []
+            return claims, events, postings
+
         for duplicate in _BankCharge.objects.values('organization_id', 'cash_transaction_id').annotate(
                 total=_Count('id')).filter(total__gt=1):
             errors.append(f"bank_charge:{duplicate['organization_id']}:{duplicate['cash_transaction_id']}:duplicate_cash")
@@ -382,7 +412,7 @@ class Command(BaseCommand):
                 errors.append(f"bank_charge:{charge.pk}:cash_state")
             if not 0 < charge.gross_cents <= transaction.gross_cents:
                 errors.append(f"bank_charge:{charge.pk}:amount_over_net")
-            if charge.status != 'draft':
+            if charge.status not in fee_statuses:
                 errors.append(f"bank_charge:{charge.pk}:unexpected_status")
             if (charge.fee_bearer != 'company' or charge.scope_kind != 'project'
                     or charge.existing_cost_ref is not None):
@@ -390,27 +420,85 @@ class Command(BaseCommand):
             cash_month = transaction.transaction_date.strftime('%Y-%m')
             if charge.occurred_on.strftime('%Y-%m') != cash_month or charge.posting_period != cash_month:
                 errors.append(f"bank_charge:{charge.pk}:period")
-            ref = {'namespace': 'costing', 'kind': 'bank_charge', 'id': str(charge.pk),
-                   'version': charge.version}
-            events = _FeeEvent.objects.filter(
+            # Exactly one canonical saved event per draft version (1..version), each a complete
+            # envelope carrying its own version; missing, duplicated or tampered history is corruption.
+            saved = list(_FeeEvent.objects.filter(
                 organization_id=charge.organization_id, topic=fee_topic,
-                data__source__id=str(charge.pk))
-            if not events.exists():
+                data__source__id=str(charge.pk)).order_by('created_at', 'id'))
+            if len(saved) != charge.version:
                 errors.append(f"bank_charge:{charge.pk}:saved_event_count")
-            else:
-                data = events.order_by('-created_at', '-id').first().data or {}
+            seen_versions = set()
+            for event in saved:
+                data = event.data or {}
                 payload = data.get('payload') or {}
+                source = data.get('source') or {}
+                version = source.get('version')
                 if (data.get('topic') != fee_topic or data.get('schema_version') != 1
-                        or data.get('source') != ref
-                        or data.get('organization_id') != str(charge.organization_id)
-                        or payload.get('changed_refs') != [ref]
+                        or data.get('organization_id') != str(charge.organization_id)):
+                    errors.append(f"bank_charge:{charge.pk}:saved_event_envelope")
+                    continue
+                if (source.get('namespace') != 'costing' or source.get('kind') != 'bank_charge'
+                        or str(source.get('id')) != str(charge.pk) or type(version) is not int):
+                    errors.append(f"bank_charge:{charge.pk}:saved_event_source")
+                    continue
+                if (payload.get('changed_refs') != [_fee_ref(charge, version)]
                         or payload.get('posting_event_refs') != []):
                     errors.append(f"bank_charge:{charge.pk}:saved_event_envelope")
-        if AccountingEvent.objects.filter(
-                source__namespace='costing', source__kind='bank_charge').exists():
-            errors.append('bank_charge:unexpected_accounting_event')
+                    continue
+                if version < 1 or version > charge.version or version in seen_versions:
+                    errors.append(f"bank_charge:{charge.pk}:saved_event_version")
+                    continue
+                seen_versions.add(version)
+            if charge.version >= 1 and seen_versions != set(range(1, charge.version + 1)):
+                errors.append(f"bank_charge:{charge.pk}:saved_event_version_coverage")
+            # Conditional cost facts: unapproved states must be zero; approved may be the PH-250
+            # transitional state without facts, or must carry exactly one complete cost fact set.
+            claims, cost_events, cost_postings = _fee_cost_facts(charge)
+            has_cost_facts = bool(claims or cost_events or cost_postings)
+            if charge.status in {'draft', 'pending', 'rejected', 'superseded'}:
+                if has_cost_facts:
+                    errors.append(f"bank_charge:{charge.pk}:cost_fact_on_unapproved")
+                continue
+            if not has_cost_facts:
+                continue
+            claim_key = f'bank_charge:{charge.pk}'
+            if len(claims) != 1:
+                errors.append(f"bank_charge:{charge.pk}:cost_claim_count")
+            claim = claims[0] if len(claims) == 1 else None
+            if claim is not None:
+                if (claim.consumer != 'cost' or claim.coverage_key != claim_key
+                        or claim.amount_cents != charge.gross_cents):
+                    errors.append(f"bank_charge:{charge.pk}:cost_claim")
+                if str(claim.source_id) != str(charge.pk):
+                    errors.append(f"bank_charge:{charge.pk}:cost_claim_source")
+            if len(cost_events) != 1:
+                errors.append(f"bank_charge:{charge.pk}:cost_event_count")
+            else:
+                cost_event = cost_events[0]
+                if (cost_event.event_type != fee_cost_event_type
+                        or cost_event.claim_effect_cents != charge.gross_cents
+                        or cost_event.occurred_on != charge.occurred_on
+                        or cost_event.posting_period != charge.posting_period):
+                    errors.append(f"bank_charge:{charge.pk}:cost_event")
+                if claim is not None and cost_event.claim_id != claim.pk:
+                    errors.append(f"bank_charge:{charge.pk}:cost_event_claim")
+            if len(cost_postings) != 1:
+                errors.append(f"bank_charge:{charge.pk}:cost_posting_count")
+            else:
+                posting = cost_postings[0]
+                if (posting.book != 'cost' or posting.origin != 'current'
+                        or posting.scope_kind != 'project' or posting.scope_id != charge.scope_id
+                        or posting.amount_cents != charge.gross_cents):
+                    errors.append(f"bank_charge:{charge.pk}:cost_posting")
+        fee_charge_ids = {str(pk) for pk in _BankCharge.objects.values_list('pk', flat=True)}
+        for event in AccountingEvent.objects.filter(
+                source__namespace='costing', source__kind='bank_charge'):
+            if str((event.source or {}).get('id')) not in fee_charge_ids:
+                errors.append(f"bank_charge:{event.pk}:orphan_cost_event")
         for claim in SourceConsumption.objects.all():
-            if (claim.source or {}).get('kind') == 'bank_charge':
+            is_fee_claim = claim.coverage_key.startswith('bank_charge:') or (
+                claim.source or {}).get('kind') == 'bank_charge'
+            if is_fee_claim and claim.coverage_key not in fee_claim_keys:
                 errors.append(f"bank_charge_claim:{claim.pk}:unexpected_source_consumption")
         for receipt in _BankChargeReceipt.objects.all():
             result_ref = receipt.result_ref or {}

@@ -1,0 +1,63 @@
+{
+  "task_id": "PH-253",
+  "summary": "Harden the PH-244 verify_integrity bank-fee saved-event checks: each BankCharge must have exactly one costing.bank_charge_saved.v1 event per version (1..version), each event must be a complete envelope for its own version (source=costing/bank_charge stable ref, source.version, topic/schema_version, changed_refs=[that version ref], posting_event_refs=[]), and missing/duplicated/old-version/tampered history is corruption. The branch now accepts the canonical five statuses: draft/pending/rejected/superseded must carry no cost facts, while approved may be the PH-250 transitional state without cost facts or must carry exactly one complete cost fact set (one SourceConsumption claim consumer=cost coverage_key=bank_charge:<id> amount=gross, one AccountingEvent event_type=costing.bank_charge.cost effect=gross with frozen occurred_on/posting_period, one LedgerPosting book=cost origin=current scope=project amount=gross); duplicates, missing postings, amount mismatches, orphan cost events and stray fee claims are reported. The labor event loop allowlists the PH-250 costing/bank_charge cost event so it is validated only by the fee branch. No canonical contract, PH-244 service/model or migration change.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":175}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (53 issues, 0 silenced), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: 'No changes detected' (this fix changes only the verify_integrity command and its tests; no model/migration change)."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual empty freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Probe DB with a version-2 draft: ok=true/errors=[]; after deleting one saved event: exit 1, ok=false, errors [\"bank_charge:<id>:saved_event_count\", \"bank_charge:<id>:saved_event_version_coverage\"]."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_bank_charge --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual: Ran 19 tests in 0.697s, OK (8 original PH-244 service tests plus 11 new corruption/lifecycle tests: empty DB + normal drafts/revisions, deleted middle-version event, duplicate same-version event, tampered source.version and changed_refs, approved transitional state, approved valid cost facts, duplicate cost event, missing cost posting, amount mismatch, unapproved states carrying cost facts, orphan cost event/claim)."
+    },
+    {
+      "command": "python manage.py test tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual: Ran 23 tests in 2.263s, OK."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Extra full-suite run: Ran 804 tests in 114.456s, 5 failures/3 errors/59 environment skips; the 8 failures are exactly the known macOS environment-limited baseline names (6 DRF Accept/codec/large-JSON, 2 delivery symlink), no new names. Baseline at 1f02520 is 793 tests; this branch adds 11 tests. Linux CI authoritative."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级最终差异复核由 fresh-context reviewer 实际重跑上述命令并核对 corruption 探测/五状态/成本事实边界后写入 pass/rejected；实现者不自写 pass。复核对象为 /tmp/ph253-verify 的 PH-253 提交（BASE 1f02520）。"
+  },
+  "deviations": [
+    "本片只改 verify_integrity 手续费分支与 tests/test_v1_bank_charge.py，并追加 docs/verification、report/handoff、tasks/manifest；未改 canonical 契约、PH-244 服务/模型/迁移或任何其它 owner 断言（clearance/classification/cash 断言原样保留）。",
+    "为兼容 PH-250（尚未落地），labor AccountingEvent 循环显式放行 source=costing/kind=bank_charge 的成本事件，改由手续费分支按条件校验；PH-250 落地后仍走同一分支，无需二次放行。",
+    "approved 且无成本事实按 PH-253 spec 作为 PH-250 未落地过渡态接受；本片用合成 core 事实（claim/event/posting）验证 approved 合法成本与损坏路径，PH-250 真实服务落地后回归。",
+    "损坏探测测试为临时 SQLite 探针库与 ORM 事实篡改；approved 状态在 PH-244 触发器仍限 draft 的情况下由测试内临时 DROP TRIGGER + 事务回滚恢复构造（仅测试代码，不改迁移）。",
+    "本分支提交为 in_review + review pending：S 级 done 需独立复核 pass 后才置位，避免自写 pass；预复核 verify-change 仅会因该门禁失败，路径白名单/报告结构已清。",
+    "docs/delivery-status.md 未改（纯加固、无能力变化，且不在本任务白名单）；验证记录写入 docs/verification.md。"
+  ],
+  "unverified": [
+    "PH-250 的真实 submit/approve/reject 流程与成本过账服务尚未实现；approved 成本事实边界仅以合成的 core AccountingEvent/LedgerPosting/SourceConsumption 验证，不是 PH-250 服务证据。",
+    "No local PostgreSQL run: the command/`ORM reads` are DB-agnostic, but the PG CI test-database path and PH-244 trigger interaction are verified only by Linux CI.",
+    "No browser/UI change in this fix, so no 1440/390/keyboard check applies; no production/customer evidence.",
+    "Independent S review is pending (this report's review block); tasks stay in_review until the reviewer records pass, then done + verify-change are rerun.",
+    "Exact-head CI required checks and normal PR merge remain for the Lead."
+  ]
+}
