@@ -5,12 +5,12 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=220; PH-288 recorded in_review with owner/handoff; no path/acceptance schema issues."
+      "evidence": "Actual exit 0 at this HEAD (BASE 24efcf7): ok=true, task_count=224 (PH-280 done, PH-288 done with owner/handoff); no path/acceptance schema issues."
     },
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual exit 0: System check identified 88 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (cash domain metadata validates the two history_read bank-balance routes)."
+      "evidence": "Actual exit 0 on BASE 24efcf7: System check identified 89 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (cash domain metadata validates the two history_read bank-balance routes)."
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1: Ran 1056 tests, FAILED (failures=5, errors=3, skipped=69) => 979 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); the BASE e43c2c2 total grows to 1056 with the 15 new PH-288 tests and no new failure class. CI Linux (including the PG domain) is authoritative."
+      "evidence": "Actual local exit 1 on BASE 24efcf7: Ran 1064 tests, FAILED (failures=5, errors=3, skipped=69) => 992 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); the BASE 24efcf7 total grows to 1064 with the 15 new PH-288 tests and no new failure class. CI Linux (including the PG domain) is authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -31,6 +31,11 @@
       "command": "python manage.py test tests.test_v1_bank_balance_read tests.test_v1_bank_balance_read_http --verbosity 1",
       "result": "pass",
       "evidence": "Actual exit 0: Ran 15 tests, OK => 15 passed (11 service + 4 HTTP). Covers golden balance/issues=[], unclassified cash + ledger mismatch, append-only extra posting mismatch, negative balance, clean period with prior history issues=[] (ledger window comparison), prior refund excluded from period window, future transfer excluded by as_of, as_of filtering, role/module-disabled history read, read-only fact counts, derived balance semantics, and browser filters/history_read GET 200/POST 405."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 24efcf7 --task PH-288",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=24efcf7, 13 changed files all inside the PH-288 allowed_paths, no path_out_of_scope/report-shape errors; assertion_scope=declaration_only. The report review block is the independent reviewer's round-2 PASS at f028063."
     }
   ],
   "review": {
@@ -57,7 +62,7 @@
   ],
   "unverified": [
     "No browser 1440/390 check was run; the bank balance/issues UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
-    "Independent S review recorded round-1 blockers (window/ledger false positive, refund/transfer window filtering); the fixes and regressions are in this HEAD, awaiting round-2 PASS. verify-change remains review-gated.",
+    "Independent S review recorded round-2 PASS at f028063; this HEAD carries the final BASE 24efcf7 evidence and the done transition.",
     "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
     "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
     "Offset (PH-241), fees (PH-251), bank statement import, automatic correction/export, persisted balance tables and a true project-attributed pm bank summary remain unimplemented."
