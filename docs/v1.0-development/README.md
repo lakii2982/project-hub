@@ -22,6 +22,8 @@
 | 材料 | 用途 | 不能替代什么 |
 | --- | --- | --- |
 | [工作包索引](work-package-index.md)／[结构化目录](work-packages.json) | 包目标、需求归属、依赖、交付物、并行占用、待冻结项 | 不替代project/tasks.json，不具有ready权限 |
+
+work-packages.json 超过200KB：只经 work-package-index.md 或 `jq` 按包ID查询所需字段，禁止整文件读入上下文；requirement-trace.json 同理。
 | [需求与验收追踪](requirement-trace.json) | 137条需求的唯一主包、验收要点和适用UAT | 不把计划覆盖当成测试通过 |
 | [接口和数据契约](architecture-contracts.md) | 内核/领域接口、数据所有权、事务、迁移与旧新切换 | 不能替代每PH的字段级schema和实际实现 |
 | [执行协议](execution-protocol.md) | 主控/执行/复核、派遣/集成、接续、失败与证据规则 | 不复制或放宽现有治理，不是新增常驻执行器 |

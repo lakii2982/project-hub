@@ -2,9 +2,9 @@
 
 ## 开始、续接与完成任务
 
-本仓库是长期项目，任何coding agent都从仓库事实恢复，不依赖之前的聊天。先读project/manifest.json、project/tasks.json、活动handoff、docs/delivery-status.md和对应spec；执行git status与最近提交检查，保留用户的脏修改。
+本仓库是长期项目，任何coding agent都从仓库事实恢复，不依赖之前的聊天。开场先运行 `python scripts/projectctl.py orient` 一次获取manifest摘要、活动handoff正文、ready任务与验收命令，再执行git status与最近提交检查，保留用户的脏修改。
 
-运行 `python scripts/projectctl.py check`、`python scripts/projectctl.py next`，再用 `python scripts/projectctl.py brief PH-001` 获取目标任务的最小上下文。只执行ready任务；proposed/blocked不是开工许可。用户提出新问题时先定位，再补入规划任务；普通技术决策由整合者处理，不让用户反复确认。业务口径冲突才交给用户判断。
+用 `python scripts/projectctl.py brief PH-001` 获取目标任务的最小上下文；`draft-report PH-001` 起草交付报告骨架。只执行ready任务；proposed/blocked不是开工许可。禁止把project/tasks.json、docs/delivery-status.md（只读现状头）或docs/v1.0-development/work-packages.json整文件读入上下文：任务契约用brief，工作包用work-package-index.md或jq按包ID查询。用户提出新问题时先定位，再补入规划任务；普通技术决策由整合者处理，不让用户反复确认。业务口径冲突才交给用户判断。
 
 分支用 `feat/PH-001-short-name` / `fix/PH-001-short-name`。除首次建库，全部经PR合入main；禁止强推main、删除用户修改或重写已发布标签。任务范围取BASE中的tasks契约；需要扩大范围先做规划PR，再实现，不能在同一PR自我授权。
 

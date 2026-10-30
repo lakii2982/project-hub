@@ -1,0 +1,44 @@
+{
+  "task_id": "PH-234",
+  "summary": "Context-lean docs rework, content moved verbatim only: AGENTS.md opening now routes sessions through projectctl orient/brief/draft-report and bans whole-file reads of tasks.json, delivery-status.md and work-packages.json (acceptance commands and every long-term constraint untouched, byte-verified); delivery-status.md split into a 1996-byte current-state head plus docs/delivery-status-archive.md holding the complete prior document verbatim (new entries append to the archive only); the four superseded ai-delivery-controller/pilot/isolation/delivery.md files git-mv'd 100% into docs/engineering/archive/ with a README marker; v1.0-development/README.md gained a query-don't-load guard for work-packages.json.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run after final report written (worktree /Users/lakii2982/项目/pmo-opt-234): ok=true, task_count=158, PH-234 done with handoff and report."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: 23 tests OK; no test files touched by this slice."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 7605fa9 --task PH-234",
+      "result": "pass",
+      "evidence": "Actual rerun after commit on feat/PH-234-context-lean-docs against BASE 7605fa9: ok=true, all changed files inside BASE allowed_paths, report validated."
+    },
+    {
+      "command": "diff <(tail -n +5 docs/delivery-status-archive.md | head -509) <(git show 7605fa9:docs/delivery-status.md)",
+      "result": "pass",
+      "evidence": "Actual run: byte-identical; archive holds the complete pre-split document verbatim; '^## PH-' count 32 -> 33 with the single new PH-234 entry; wc -c head = 1996; git diff -M --summary shows four 100% renames."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-234 reviewer (fresh context, read-only; single round)",
+    "status": "pass",
+    "findings": [
+      "No blockers across all eight review dimensions (AGENTS.md minimal diff with byte-identical acceptance section, verbatim archive split, 100% renames with no leftovers, README guards, spec counterexamples, whitelist, actual runs, factual accuracy of the distilled head).",
+      "Minor note, kept: the v1.0 README guard sentence also covers requirement-trace.json, one line beyond the spec's literal work-packages.json scope; declared in handoff/verification entries, weakens nothing, inside whitelist."
+    ],
+    "evidence": "Reviewer independently diffed AGENTS.md against BASE (only lines 5 and 7 changed), byte-compared the archive against git show 7605fa9:docs/delivery-status.md, confirmed renames and absence of stale references, ran check (single expected missing-report error at the time) and the 23-test suite, and cross-checked the distilled head against the archived 2026-10-27 snapshot and BASE tasks.json."
+  },
+  "deviations": [
+    "The archive initially duplicated the PH-233/PH-235 entries (they were already inside the pre-split file and were appended again); caught by byte-verification and fixed by deterministically rebuilding the archive from git show 7605fa9 plus exactly one new PH-234 entry. Final state verified duplicate-free.",
+    "ROADMAP.md and docs/v1.0-development/execution-protocol.md each contain one reference to an archived ai-delivery-* path; both files are outside this task's whitelist, so the stale links are declared as known leftovers for PH-236 instead of being edited here."
+  ],
+  "unverified": [
+    "Full product test suite not run locally (docs-only slice); CI required checks cover it on this PR.",
+    "Real token/time savings re-measurement: cold-start reading drops from ~281KB (manifest+tasks.json+handoff+delivery-status whole files at BASE) to ~4KB (orient+brief+2KB head) on the live tree, measured after the report landed; wall-clock savings per task are goals to be confirmed in normal use and are tracked against the PH-233 baseline."
+  ]
+}
