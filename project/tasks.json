@@ -7908,8 +7908,8 @@
         "project/manifest.json",
         "docs/delivery-status.md",
         "docs/verification.md",
-        "project/reports/{tid}.json",
-        "project/handoffs/{tid}.md"
+        "project/reports/PH-264.json",
+        "project/handoffs/PH-264.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -7961,8 +7961,8 @@
         "project/manifest.json",
         "docs/delivery-status.md",
         "docs/verification.md",
-        "project/reports/{tid}.json",
-        "project/handoffs/{tid}.md"
+        "project/reports/PH-265.json",
+        "project/handoffs/PH-265.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
