@@ -487,6 +487,7 @@
       "x-service-invariants": [
         "Legacy rows stay physically unchanged; adapter projects original project scope/cents. legacy_project cash is registered historical project cash, never a verified bank balance.",
         "New bank cash uses funding_account scope once; project attribution is cash allocation, not another cash posting.",
+        "Cash classification bridge ownership: the cash owner records the classification fact and core writes the single cash-book posting through the named core interface; book must be cash_in/cash_out with scope.kind=funding_account and origin=current, and a classification reversal appends the mirror reversal posting (reverses_event_ref/reverses_posting_id) instead of a second positive bank flow.",
         "Company cost sums all cost scopes once; allocation posts equal/opposite scope shifts with net company zero.",
         "Keep actual baseline book codes cost/cash_in/cash_out and original signed amounts, including reversal negatives. Net cash = sum(cash_in) - sum(cash_out); never change old stored book/sign or invent AccountingEvent for old rows."
       ]
