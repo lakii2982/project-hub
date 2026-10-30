@@ -1,0 +1,40 @@
+{
+  "task_id": "PH-247",
+  "summary": "Consumed the PH-247 planning slot on main 0721ad4 (PH-244 and PH-246 merged; PH-239/PH-240 ready). Resolved the stale promotion wording in the frozen PH-243 spec (PH-239 was already promoted to ready during PH-243 delivery; PH-247 now only verifies it and no longer claims to perform the promotion), and registered six follow-on tasks with frozen specs: PH-248 next planning slot (ready); PH-249 PH-232 coverage-formula synchronization after refund/bank-return (proposed, waiting on PH-240); PH-250 fee submit/approve plus one-time cost posting with the core.document.decide bank_charge handler (ready, PH-210/PH-244 done); PH-251 ReceiptFeeSettlement / existing_cost_ref / counterparty-borne / tax follow-up (proposed, waiting on PH-250 and PH-157); PH-252 invoice registration and line allocation first slice (proposed, waiting on PH-150/PH-155); PH-253 the PH-244 verify_integrity saved-event count hardening residual (ready, PH-244 done). PH-241 and PH-245 stay proposed because PH-239 is ready-not-done. No product code, migration, test or runtime behavior was written; this is a planning-registration slice only.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE 0721ad4): exit 1, {\"command\":\"check\",\"errors\":[{\"code\":\"high_risk_review_required\",\"message\":\"risk S reports require a named reviewer with status pass\",\"path\":\"report.review\"}],\"ok\":false} — single review-pending error, no path/schema errors. Never declared pass before the reviewer landed."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-247 on main 0721ad4 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 0721ad4 --task PH-247",
+      "result": "not_run",
+      "evidence": "Entry will be replaced with the actual post-independent-review run. Pre-review actual run at the candidate revision (BASE 0721ad4): exit 1, errors = high_risk_review_required (report.review) + acceptance_not_passed (\"python scripts/projectctl.py check\"), ok=false; no path_out_of_scope — all 13 changed files (PH-243 spec wording, 6 new specs PH-248..253, tasks.json, manifest.json, docs/verification.md, PH-247 report/handoff) are inside BASE PH-247 allowed_paths. Replaced after the reviewer lands."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (planning registration and CRITICAL_PATHS governance files); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "PH-239 is already ready (promoted when PH-243 merged), so this slice only edits the two stale PH-243 spec sentences to say PH-247 verifies the state instead of performing the promotion; PH-247's own frozen spec scope text is left as the historical contract and the resolution is recorded here and in the handoff.",
+    "No existing task was promoted: PH-241 and PH-245 still depend on PH-239 done, so they remain proposed with their frozen blockers; PH-240 (ready) is not done at this BASE, so PH-249 stays proposed waiting for it. PH-250/PH-253 are registered ready because PH-210/PH-244 are done.",
+    "PH-252's whitelist uses the pmo_plugins/invoicing/* prefix because the invoicing app bootstrap ownership must be settled by its upstream planning (PH-150/PH-155); the spec states the app must already be registered by then and forbids self-created scaffolding.",
+    "PH-249/PH-251/PH-252 were deliberately not promoted to ready: their frozen specs reference not-yet-done upstream contracts (PH-240, PH-250/PH-157, PH-150/PH-155); promoting them now would violate the ready-requires-done-dependencies rule."
+  ],
+  "unverified": [
+    "No product code, migration, runtime service, browser, PostgreSQL or CI evidence exists for PH-249/PH-250/PH-251/PH-252/PH-253; they are frozen planning contracts only.",
+    "PH-249's formula wording must be re-confirmed against PH-240's actual implementation when PH-240 lands; PH-251's existing_cost_ref branch is conditional on PH-157 providing a valid approved cost source.",
+    "PH-252's invoicing app bootstrap ownership is unresolved until PH-150/PH-155 planning confirms it; the spec forbids creating the app scaffold in that slice without the upstream registration.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
