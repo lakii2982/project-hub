@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=190; PH-264 recorded in_review with owner/handoff, review pending."
+      "evidence": "Final Lead integration rerun after rebase onto 6155e2d: {\"command\":\"check\",\"ok\":true,\"task_count\":190} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -33,9 +33,9 @@
       "evidence": "Actual exit 0: Ran 17 tests, OK => 17 passed (10 service + 7 HTTP). Covers role/scope diff, last-owner/self rules, employee and manager handoff, token revocation, restore without scope/token restore, cross-org/project rejection, idempotent replay/conflict, dry_run zero side effects, read permissions and settings-page boundaries."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 1e4c480 --task PH-264",
+      "command": "python scripts/projectctl.py verify-change --base 6155e2d --task PH-264",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=1e4c480, 14 changed files all inside the PH-264 allowed_paths (13 implementation/test/docs files plus project/manifest.json whose active_handoff now points at the PH-264 handoff per the Lead instruction); no path_out_of_scope or report-shape errors; assertion_scope=declaration_only. The report review block is the independent reviewer's PASS."
+      "evidence": "Final Lead integration rerun after rebase onto 6155e2d (PH-266 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 14 changed files all inside BASE PH-264 allowed_paths."
     }
   ],
   "review": {
@@ -57,7 +57,8 @@
     "core.Membership and core.Project use integer primary keys; the service accepts integer ids (and numeric strings) and returns ids as strings, while the canonical command payload schema is followed semantically. No cloned account or UUID PK change was made.",
     "Single worker owns the whole write set for this task (core/models.py Membership.version, core/masterdata.py service, core/forms.py form, core/views.py settings handler, core/migrations/0010, templates/settings.html, tests, governance); no parallel slice writes these files; independent review is pending.",
     "project/manifest.json active_handoff is left at main's value per the integration convention; tasks.json records PH-264 in_review with owner/handoff.",
-    "No browser 1440/390 check was run in this round (HTTP tests only); no new canonical event topic, ledger/amount/period write or AgentToken capability was added."
+    "No browser 1440/390 check was run in this round (HTTP tests only); no new canonical event topic, ledger/amount/period write or AgentToken capability was added.",
+    "Lead integration rebase (1e4c480 -> 6155e2d) after PH-266 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-264 entry; manifest.active_handoff -> PH-264. Gates rerun green."
   ],
   "unverified": [
     "No browser 1440/390 check was run in this round; the settings membership UI was exercised through HTTP tests only. Visual/keyboard/overflow verification remains for the reviewer/browser round.",
