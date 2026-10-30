@@ -55,7 +55,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 83a2577 --task PH-224",
       "result": "pass",
-      "evidence": "Post-commit, post-review rerun declared after actual execution (see handoff)."
+      "evidence": "Post-commit actual rerun at HEAD 80463f2 against base 83a2577: ok=true, 33 changed files all inside BASE allowed_paths, no errors."
     }
   ],
   "review": {
