@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual 722 tests pass, 45 environment skips (SQLite; includes 5 PostgreSQL-only cash concurrency tests that CI must run)."
+      "evidence": "Actual 723 tests pass, 45 environment skips (SQLite; includes 5 PostgreSQL-only cash concurrency tests that CI must run)."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -30,7 +30,7 @@
     {
       "command": "python manage.py test tests.test_v1_cash tests.test_v1_cash_posting tests.test_v1_cash_concurrency tests.test_v1_cash_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual 37 tests pass (22 backend + 7 posting + 8 HTTP; the 5 PostgreSQL-only concurrency tests are skipped locally and executed by PR CI)."
+      "evidence": "Actual 38 tests pass (22 backend + 8 posting + 8 HTTP; the 5 PostgreSQL-only concurrency tests are skipped locally and executed by PR CI)."
     },
     {
       "command": "python scripts/projectctl.py verify-change --base bac9d33 --task PH-230",
@@ -49,7 +49,8 @@
     "No canonical cash.transaction.record/v1 channel is exposed; posting is a private service operating on an already-registered draft id to avoid a second write path.",
     "Only one canonical cash.transaction_recorded.v1 event is written per posted transaction; a suppressed plugin.* audit is used as the DomainEvent source to avoid the OneToOne source conflict, while a generic cash.cash_transaction.posted audit records the business action.",
     "Coverage is a private estimate (posted_net_estimate_cents/available_estimate_cents, cleared=0), labelled as not cash balance or available balance; canonical cash.account_coverage.get is deferred.",
-    "Posted time is derived from the latest posting audit timestamp; no posted_at field was added."
+    "Posted time is derived from the latest posting audit timestamp; no posted_at field was added.",
+    "Posting guards also freeze created_by/created_at and require version=OLD.version+1 on the draft->posted transition in both SQLite and PostgreSQL; verify_integrity validates the full canonical event envelope (source/version/payload/event_id) and the posting receipt."
   ],
   "unverified": [
     "PostgreSQL concurrency (5 tests incl. double posting) is executed by the PR CI job; local SQLite skips are not evidence.",
