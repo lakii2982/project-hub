@@ -768,3 +768,48 @@ def offset_save(context, payload):
     values = _offset_page(context, member, payload, offset_form=form,
                           open_item_id=open_item_id or None)
     return render(context.request, 'settlement/offset_list.html', values, status=400)
+
+
+def _coverage_fresh(member):
+    from .receivable_services import _fresh as read_fresh
+    return read_fresh(member, check_module=False)
+
+
+def settlement_coverage_snapshot(context, payload):
+    member = _coverage_fresh(context.member)
+    from . import coverage_read_services as coverage_read
+    as_of = (payload or {}).get('as_of') or None
+    project_id = (payload or {}).get('project') or None
+    snapshot = coverage_read.open_item_coverage_snapshot(
+        member, as_of=as_of, project_id=project_id)
+    return render(context.request, 'settlement/coverage_snapshot.html', _base(
+        member, 'coverage', snapshot=snapshot, issues=snapshot['issues'],
+        mode='snapshot', as_of=snapshot['as_of'],
+        selected_project=project_id or '',
+        project_options=_coverage_project_options(member),
+        issues_url=_url('settlement_coverage_issues'),
+        snapshot_url=_url('settlement_coverage_snapshot')))
+
+
+def settlement_coverage_issues(context, payload):
+    member = _coverage_fresh(context.member)
+    from . import coverage_read_services as coverage_read
+    as_of = (payload or {}).get('as_of') or None
+    project_id = (payload or {}).get('project') or None
+    result = coverage_read.open_item_coverage_issues(
+        member, as_of=as_of, project_id=project_id)
+    return render(context.request, 'settlement/coverage_snapshot.html', _base(
+        member, 'coverage', snapshot=result, issues=result['issues'],
+        mode='issues', as_of=result['as_of'],
+        selected_project=project_id or '',
+        project_options=_coverage_project_options(member),
+        issues_url=_url('settlement_coverage_issues'),
+        snapshot_url=_url('settlement_coverage_snapshot')))
+
+
+def _coverage_project_options(member):
+    rows = visible_projects(member)
+    if member.role == 'pm':
+        rows = rows.filter(manager=member)
+    return [(str(project.pk), f'{project.code} · {project.name}')
+            for project in rows.order_by('code')]

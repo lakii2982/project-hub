@@ -1,0 +1,71 @@
+{
+  "task_id": "PH-283",
+  "summary": "结算未清/核销/退款覆盖只读核对首片（无迁移/无写入口）：新增 pmo_plugins/settlement/coverage_read_services.py，按公司/项目聚合 OpenItem gross → Σactive Clearance → 退款/退回覆盖 → posted 现金 gross，服务端派生 remaining（gross - active cleared - offset(0) - refunded/returned 覆盖）并输出未清覆盖快照与 issue_code 异常清单（cleared_over_gross、remaining_negative、remaining_mismatch、clearance_duplicate_active、clearance_cross_org、clearance_cash_missing/cross_org/not_posted/direction/ref_mismatch、cash_coverage_over_gross）。offset_cents 固定 0、offset_implemented=false（PH-241 未合入，不读 Offset 表、不伪造 offset 事实）。权限 owner/finance/auditor 全量；pm 仅 visible_projects 中其管理项目（manager=member）；member 拒绝；settlement 模块停用后服务层历史可读、两条 history_read 浏览器路由 GET 仍 200；无 audit/写/迁移。浏览器新增只读未清覆盖/异常清单页与 as_of/项目筛选。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto e329727: {\"command\":\"check\",\"ok\":true,\"task_count\":220} exit 0."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 on BASE a4584d1: System check identified 83 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (settlement domain metadata validates the two history_read coverage routes)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (this slice adds no model, table or migration; settlement leaf stays 0005)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 on BASE a4584d1: Ran 1013 tests, FAILED (failures=5, errors=3, skipped=69) => 936 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE a4584d1 baseline (999/5F+3E/69 plus the 14 new PH-283 tests); no new failures. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. This slice adds no ledger/amount business invariant and does not change existing verify_integrity semantics."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_settlement_coverage_read tests.test_v1_settlement_coverage_read_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 14 tests, OK => 14 passed (10 service + 4 HTTP). Covers golden clearance+refund remaining (gross - cleared - refunded/returned), no false issue without clearance, append-only INSERT over-clearance, duplicate active clearance by canonical (open item, cash fact) identity including different amount/date, missing cash reference, as_of filtering, role/managed-project permissions, read-only fact counts, settlement-module-disabled history read and history_read GET 200/POST 405, and derived-field semantics."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base e329727 --task PH-283",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto e329727 (PH-276 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 changed files all inside BASE PH-283 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-283 settlement-coverage reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKERS RESOLVED AT 3d130bc: (1) `_item_bundle` now derives remaining = item.gross - active cleared - offset(0) - refunded - returned, both per item and in summary; the gold test asserts gross-30000-5000 and remaining_mismatch compares an adjusted model remaining so refunds no longer create a false mismatch. (2) `clearance_duplicate_active` now keys on the canonical (open_item_id, cash_transaction_id) identity, so a second active clearance with a different amount/date is reported; a new append-only regression covers exactly that case. Scoped tests now 14 OK.",
+      "OTHER VERIFIED: read-only purity (no writes/audit/receipt/migration; service check_module=False for history), no Offset table read and offset_cents=0/offset_implemented=false, append-only INSERT counterexamples, OpenItem gross/active Clearance/refund/return coverage/posted cash checks, 200-item cap, cross-org/missing/not-posted/direction/ref-mismatch/cash_coverage_over_gross issue codes, owner/finance/auditor company scope, pm visible_projects with manager=member, member denied, history_read routes GET-readable after module disable, no verify_integrity change, 13 changed files all inside PH-283 allowed_paths; task in_review, manifest=PH-283.",
+      "EVIDENCE AT 3d130bc (BASE cfa185f): check ok=true/task_count=216; manage.py check exit 0; makemigrations --check No changes; scoped coverage tests Ran 14 OK; full suite Ran 1013 tests, 5 failures/3 errors/69 skips (exactly the known 8 macOS baseline, no fifth class); verify_integrity fresh DB ok=true/errors=[]; verify-change --base cfa185f --task PH-283 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass. After the worker's final evidence/done transition, verify-change should be clean."
+    ],
+    "evidence": "VERDICT: PASS (round 2; remaining formula and duplicate-key blockers fixed). Reviewed HEAD 3d130bc (BASE cfa185f) in /tmp/ph283-settlement-read, worktree clean; 13 changed files all inside PH-283 allowed_paths; task in_review, manifest=PH-283. remaining now deducts refunded/returned coverage and the gold/derived tests assert gross-cleared-refunded/returned; duplicate_active uses the (open item, cash fact) canonical identity and a different amount/date append-only duplicate is covered; scoped 14 OK. Read-only purity, no Offset read/placeholder, append-only counterexamples, permissions/history_read, no migration/verify_integrity change verified. Independent runs: check ok=216; manage check exit 0; makemigrations clean; full suite 1013/5F+3E/69 = known 8 macOS baseline; verify_integrity fresh DB ok; verify-change only high_risk_review_required, no path_out_of_scope."
+  },
+  "deviations": [
+    "Offset: PH-241 is in_review and not a dependency; the snapshot never reads the Offset table, reports offset_cents=0 and offset_implemented=false, and does not invent an offset fact, per the spec.",
+    "Cross-project reference checks: cash facts (CashTransaction/FundingAccount/Refund/BankReturn) carry no project attribution, so only cross-organization / missing / non-posted / direction / stale-ref clearance-cash issues are derivable; a true cross-project cash-vs-open-item reference cannot be expressed in the current schema and is disclosed for a future contract.",
+    "Refund/return coverage is derived directly from the Refund/BankReturn models rather than calling cash.refund_coverage_for_cash, because the latter gates on the cash module being enabled; this keeps settlement/cash history readable when either module is disabled (spec requirement) while still deriving from the same owner facts.",
+    "pm scope: pm reads only open items of visible_projects where manager=member (and a project filter must be a managed project); the snapshot scope is labelled managed_projects. owner/finance/auditor see company scope.",
+    "Counterexamples are append-only compatible: extra active Clearance/duplicate rows are INSERTed, never UPDATE/DELETE, so the tests behave identically on SQLite and PostgreSQL append-only triggers; no historical row is mutated.",
+    "remaining is server-derived as gross - active cleared - offset(0) - refunded/returned coverage (summary and per-item share the formula); remaining_mismatch adjusts the model's refund-agnostic remaining_cents by subtracting refunded/returned before comparing with the new derived value, so a refund does not create a false mismatch. The duplicate_active branch uses the canonical (open item, cash fact) identity, so a second active clearance with a different amount or occurred_on is still reported; both counterexamples are append-only INSERTs.",
+    "The read path writes no generic audit (the spec made it optional), keeping the snapshot side-effect free; no verify_integrity assertion is changed or added.",
+    "Single worker owns the whole write set (settlement coverage service/views/template/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending.",
+    "Reviewer round-1 fixes: remaining now deducts refunded/returned coverage (gold test updated to gross - cleared - refunded/returned), and clearance_duplicate_active keys on the canonical (open_item, cash_transaction) identity instead of (amount, occurred_on), with an added different-amount/date append-only counterexample.",
+    "Lead integration rebase (a4584d1 -> e329727) after PH-276 merged: docs/verification.md conflict resolved keeping main entries plus the PH-283 entry; manifest.active_handoff -> PH-283. Gates rerun green."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run; the coverage snapshot/issues UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
+    "Independent S review recorded round-2 PASS at 3d130bc; this HEAD carries the final BASE a4584d1 evidence and the done transition.",
+    "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "Offset (PH-241), automatic correction/export, write entries, persisted snapshots and a true cross-project cash attribution contract remain unimplemented."
+  ]
+}
