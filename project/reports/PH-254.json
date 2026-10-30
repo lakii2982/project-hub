@@ -1,0 +1,52 @@
+{
+  "task_id": "PH-254",
+  "summary": "自我改进三回路 EXP-1 合入：projectctl 新增只读 lessons/metrics 子命令与 brief --precedents（默认关闭，有界注入、自排除、两级通用性过滤），附 9 项测试、严格时间序回测脚本与预注册判据评估报告；契约层（AGENTS.md/manifest/schema/core）零改动，默认 brief 与 origin/main 逐字节一致。回测（基线 df01896：94.4%/1259.7B/1810B；合并后 HEAD 复跑：94.8%/1300.7B/1820B）证明机制层优于现状（教训 0% 触达 → 94%+ 可及）；前瞻效果未证，已登记为遗留交下一规划槽。",
+  "tests": [
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_projectctl_lessons tests.test_governance",
+      "result": "pass",
+      "evidence": "Ran 32 tests in 3.652s — OK（合入 origin/main 1f02520 后实际输出）。覆盖提取/过滤/上界/自排除/两级通用性/零写入/计数/无旗标输出形状。"
+    },
+    {
+      "command": "diff <(git show origin/main:scripts/projectctl.py … brief PH-238) <(worktree scripts/projectctl.py … brief PH-238)",
+      "result": "pass",
+      "evidence": "逐字节一致（diff 为空，C4-REGRESSION vs origin/main: byte-identical）。默认 brief 输出与 BASE 无任何变化。"
+    },
+    {
+      "command": "python scripts/experiments/backtest_lessons.py --samples PH-232,PH-237",
+      "result": "pass",
+      "evidence": "合并后 HEAD 复跑：77 报告扫描 0 跳过、634 条教训、tasks_with_prior_lesson=73/77（94.8%）、注入 avg_bytes_all=1300.7/max=1820、无先例任务恰 0 字节；universal_paths_dropped=4、universal_modules_dropped=[project/handoffs, project/reports, tests]。"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1（全量收尾一次）",
+      "result": "not_run",
+      "evidence": "全量套件在后台实跑中，完成后以实际输出回填本条（本机已知环境限制失败按 D02 口径如实写明计数；CI Linux 为权威）。"
+    },
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "待独立复核落 pass 后按最终 HEAD 实跑回填本条（D03 顺序：复核落定后再跑 check/verify-change；此前一次实跑因本报告文件尚不存在被门禁正确拦截，属预期顺序而非回归）。"
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base <merge-base> --task PH-254",
+      "result": "not_run",
+      "evidence": "待独立复核落 pass 后按最终 HEAD 实跑回填本条。"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": []
+  },
+  "deviations": [
+    "登记与实现同 PR：实验分支 74a6be6 先于任务登记提交，系用户 2026-10-30 分步明示授权（先「worktree 验证、证明更好才可议合并」，后「回测已足够，登记规划任务并开 PR 走审合」）；独立 S 复核针对全部交付差异照常执行，不因授权豁免。",
+    "回测方法论在实验中修正两次（模块键两段化、路径级+模块级两级通用性过滤），修正前 98.6% 覆盖率读数判定为虚假膨胀并弃用；最终口径见评估报告。",
+    "分支历史：EXP-1 提交（74a6be6）→ merge origin/main（049e111，无冲突）→ 本登记提交；verify-change 的 BASE 以最终 merge-base 为准。"
+  ],
+  "unverified": [
+    "前瞻效果（重复失败率实际下降）未验证——回测只证明教训可及性（机制层）；随 2–3 个真实任务实测后由下一规划槽登记。",
+    "模块键为启发式：C6 相关性抽查 3/3 相关（1 项中度），未做全量人工复核。",
+    "全量套件中本机环境限制失败项（若与 D02 基线一致）未在本机修复，CI Linux 为权威；PostgreSQL 并发、浏览器 1440/390、生产/UAT 不在本片范围。"
+  ]
+}

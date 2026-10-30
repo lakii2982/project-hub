@@ -14,7 +14,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 
 ## 交付效率改造（2026-10-30 起）
 
-会话开场 `projectctl orient`、任务上下文 `brief <id>`、报告起草 `draft-report <id>`；本文件、`project/tasks.json`、`docs/v1.0-development/work-packages.json` 禁止整文件读入。量化基线与复测口径见归档 PH-233 条目。
+会话开场 `projectctl orient`、任务上下文 `brief <id>`、报告起草 `draft-report <id>`；教训聚合 `lessons`、质量计数 `metrics`、同模块先例注入 `brief <id> --precedents`（默认关闭，上界≈1.8KB）。本文件、`project/tasks.json`、`docs/v1.0-development/work-packages.json` 禁止整文件读入。量化基线与复测口径见归档 PH-233 条目。
 
 ## PH-240 退款与银行退回（2026-10-30）
 
