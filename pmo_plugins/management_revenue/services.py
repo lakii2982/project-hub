@@ -3,6 +3,7 @@ from copy import deepcopy
 from datetime import date
 import hashlib
 import json
+import re
 import uuid
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -16,6 +17,9 @@ from core.services import audit, lock_company, check_period
 from .models import RevenueRecognition, RevenueAdjustment, RevenueReceipt
 
 ALGORITHM = 'fixed_milestone_cumulative_half_up_v1'
+SERVICE_ALGORITHM = 'fixed_service_period_cumulative_half_up_v1'
+_SERVICE_MONTH = re.compile(r'^[0-9]{4}-(0[1-9]|1[0-2])$')
+NO_PARTIAL_MESSAGE = '该批准合同缺明确月价，需后续正式合同变更独立批准月度分配'
 
 
 def _fail(message):
@@ -82,6 +86,27 @@ def _period(member, occurred_on):
     return period
 
 
+def _service_month(value):
+    if type(value) is not str or not _SERVICE_MONTH.fullmatch(value):
+        _fail('服务月份须为YYYY-MM')
+    return value
+
+
+def _service_period(member, service_month, coverage_start, coverage_end):
+    # Core owns the double-lock/month-period rule; this call never creates a period.
+    from core.revenue_accounting import check_service_revenue_period
+    period = check_service_revenue_period(member.organization, coverage_start, coverage_end)
+    if period != service_month:
+        _fail('服务月与覆盖日期不一致')
+    return period
+
+
+def _confirmed_service_snapshot(member, ref, *, for_recognition):
+    # Lazy import keeps the revenue app importable before the delivery slice lands.
+    from pmo_plugins.delivery.service_period_services import confirmed_service_snapshot
+    return confirmed_service_snapshot(member, ref, for_recognition=for_recognition)
+
+
 def _digest(payload):
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False,
         separators=(',', ':'), allow_nan=False).encode()).hexdigest()
@@ -97,7 +122,10 @@ def _receipt(member, action, request_token, payload, dry_run):
             _fail('同一请求标识已用于不同输入')
         if dry_run:
             return token, digest, {'dry_run': True, 'existing': True, 'result': deepcopy(row.result)}
-        model = RevenueRecognition if action == 'recognize' else RevenueAdjustment
+        model = {'recognize': RevenueRecognition, 'recognize_service_month': RevenueRecognition,
+                 'reverse': RevenueAdjustment}.get(action)
+        if model is None:
+            _fail('请求动作无效')
         result = model.objects.get(organization=member.organization, pk=row.result['id'])
         require_project(member, result.project, finance=True)
         return token, digest, result
@@ -127,7 +155,7 @@ def _event(member, result, core_event, topic):
 
 def _recognition(member, recognition_id):
     try:
-        row = RevenueRecognition.objects.select_related('project', 'acceptance', 'contract_line', 'accounting_event').get(
+        row = RevenueRecognition.objects.select_related('project', 'acceptance', 'service_confirmation', 'service_confirmation_month', 'contract_line', 'accounting_event').get(
             organization=member.organization, pk=_identifier(recognition_id))
     except RevenueRecognition.DoesNotExist:
         raise PermissionDenied('收入记录不存在或无权访问')
@@ -188,6 +216,91 @@ def recognize_acceptance(member, acceptance_id, *, expected_version, request_tok
     return _finish(member, 'recognize', token, digest, row)
 
 
+def _cross_month_no_partial(snapshot):
+    if snapshot['pricing_configuration'].get('partial_period_rule') != 'no_partial':
+        return False
+    start, end = snapshot['coverage_start'], snapshot['coverage_end']
+    return (start.year, start.month) != (end.year, end.month)
+
+
+@transaction.atomic
+def recognize_service_month(member, confirmation_id, *, service_month, expected_version, request_token, dry_run=True):
+    member = _locked(member)
+    _dry(dry_run)
+    confirmation_id = _identifier(confirmation_id)
+    if type(expected_version) is not int or expected_version < 1:
+        _fail('服务确认版本无效')
+    service_month = _service_month(service_month)
+    # Historical read first so a later reversal/disable cannot break receipt replay.
+    snapshot = _confirmed_service_snapshot(member, confirmation_id, for_recognition=False)
+    token, digest, existing = _receipt(member, 'recognize_service_month', request_token,
+        {'confirmation_id': str(confirmation_id), 'service_month': service_month,
+         'expected_version': expected_version}, dry_run)
+    if existing is not None:
+        return existing
+    snapshot = _confirmed_service_snapshot(member, confirmation_id, for_recognition=True)
+    if snapshot['version'] != expected_version:
+        _fail('服务确认版本已变更，请刷新后重试')
+    confirmation = snapshot['confirmation']
+    project = snapshot['project']
+    require_project(member, project, finance=True)
+    month = next((item for item in snapshot['months'] if item['service_month'] == service_month), None)
+    if month is None:
+        _fail('该服务月不是已冻结的真实分配月')
+    if _cross_month_no_partial(snapshot):
+        _fail(NO_PARTIAL_MESSAGE)
+    if RevenueRecognition.objects.filter(organization=member.organization,
+            service_confirmation_month_id=month['id']).exists():
+        _fail('该服务月已产生管理收入，不能再次确认')
+    amount = _amount(month['allocated_net_cents'])
+    occurred_on = _business_date(month['coverage_end'])
+    if occurred_on.strftime('%Y-%m') != service_month:
+        _fail('服务月与覆盖日期不一致')
+    period = _service_period(member, service_month, month['coverage_start'], occurred_on)
+    line = snapshot['contract_line']
+    cap = _amount(line.net_cents)
+    income = RevenueRecognition.objects.filter(organization=member.organization, contract_line=line, status='posted').aggregate(total=Sum('recognized_net_cents'))['total'] or 0
+    adjustments = RevenueAdjustment.objects.filter(organization=member.organization, recognition__contract_line=line, status='posted').aggregate(total=Sum('adjustment_cents'))['total'] or 0
+    if income + adjustments + amount > cap:
+        _fail('累计管理收入超过批准合同明细净额')
+    if dry_run:
+        return {'dry_run': True, 'action': 'recognize_service_month',
+                'confirmation_id': str(confirmation.pk), 'confirmation_version': expected_version,
+                'service_confirmation_month_id': str(month['id']), 'service_month': service_month,
+                'coverage_start': month['coverage_start'].isoformat(),
+                'coverage_end': occurred_on.isoformat(),
+                'recognized_net_cents': amount, 'occurred_on': occurred_on.isoformat(),
+                'posting_period': period}
+    from core.revenue_accounting import service_recognition_snapshot
+    row = RevenueRecognition.objects.create(organization=member.organization, project=project,
+        acceptance=None, service_confirmation=confirmation, service_confirmation_month_id=month['id'],
+        contract_line=line, created_by=member,
+        contract_line_ref=deepcopy(snapshot['contract_line_ref']),
+        performance_ref=deepcopy(snapshot['source_ref']),
+        policy_version=deepcopy(snapshot['policy_version']),
+        pricing_snapshot=deepcopy(snapshot['pricing_configuration']),
+        accepted_snapshot=service_recognition_snapshot(snapshot, month),
+        recognized_net_cents=amount, occurred_on=occurred_on, posting_period=period,
+        algorithm_version=SERVICE_ALGORITHM)
+    from core.revenue_accounting import post_service_revenue_recognition
+    row.accounting_event = post_service_revenue_recognition(member, row)
+    row.status = 'posted'
+    row.save(update_fields=['status', 'accounting_event'])
+    _event(member, row, row.accounting_event, 'management_revenue.recognized.v1')
+    return _finish(member, 'recognize_service_month', token, digest, row)
+
+
+def recognition_for_service_month(confirmation_id, service_month):
+    """Read-only fact lookup for delivery reversal precondition/root aggregates.
+
+    The caller must have authorized organization and project access first; no
+    member/module check is repeated here so dependency reads survive disabling.
+    """
+    return RevenueRecognition.objects.filter(
+        service_confirmation_id=_identifier(confirmation_id),
+        posting_period=_service_month(service_month), status='posted').first()
+
+
 @transaction.atomic
 def reverse_recognition(member, recognition_id, *, reason, request_token, dry_run=True):
     member = _locked(member)
@@ -202,16 +315,32 @@ def reverse_recognition(member, recognition_id, *, reason, request_token, dry_ru
         return existing
     if row.status != 'posted' or not row.accounting_event_id or row.is_reversed:
         _fail('收入尚未确认或已完整冲销')
-    from pmo_plugins.delivery.services import confirmed_acceptance_snapshot
-    snapshot = confirmed_acceptance_snapshot(member, row.acceptance_id, for_recognition=False)
-    if snapshot['source'] != row.performance_ref or snapshot['accepted_net_cents'] != row.recognized_net_cents:
-        _fail('原收入与验收来源不一致')
-    _amount(row.recognized_net_cents)
-    period = _period(member, row.occurred_on)
-    if period != row.posting_period:
-        _fail('原收入日期与期间不一致')
+    if row.acceptance_id:
+        from pmo_plugins.delivery.services import confirmed_acceptance_snapshot
+        snapshot = confirmed_acceptance_snapshot(member, row.acceptance_id, for_recognition=False)
+        if snapshot['source'] != row.performance_ref or snapshot['accepted_net_cents'] != row.recognized_net_cents:
+            _fail('原收入与验收来源不一致')
+        _amount(row.recognized_net_cents)
+        period = _period(member, row.occurred_on)
+        if period != row.posting_period:
+            _fail('原收入日期与期间不一致')
+        source_kind = 'acceptance'
+    else:
+        from core.revenue_accounting import service_recognition_snapshot
+        snapshot = _confirmed_service_snapshot(member, row.performance_ref, for_recognition=False)
+        month = next((item for item in snapshot['months'] if item['id'] == row.service_confirmation_month_id), None)
+        if (month is None or row.service_confirmation_id != snapshot['confirmation'].pk
+                or row.performance_ref != snapshot['source_ref']
+                or row.accepted_snapshot != service_recognition_snapshot(snapshot, month)
+                or row.recognized_net_cents != month['allocated_net_cents']
+                or row.occurred_on != month['coverage_end']
+                or row.posting_period != month['service_month']):
+            _fail('原收入与服务月来源不一致')
+        _amount(row.recognized_net_cents)
+        period = _service_period(member, row.posting_period, month['coverage_start'], month['coverage_end'])
+        source_kind = 'service_month'
     if dry_run:
-        return {'dry_run': True, 'action': 'reverse', 'recognition_id': str(row.pk),
+        return {'dry_run': True, 'action': 'reverse', 'recognition_id': str(row.pk), 'source_kind': source_kind,
                 'adjustment_cents': -row.recognized_net_cents, 'occurred_on': row.occurred_on.isoformat(), 'posting_period': period}
     adjustment = RevenueAdjustment.objects.create(organization=member.organization, project=row.project,
         recognition=row, created_by=member, adjustment_cents=-row.recognized_net_cents,
@@ -273,27 +402,50 @@ def project_revenue_summary(member, project_id=None, *, as_of=None):
     if as_of is not None:
         sources = sources.filter(confirmed_on__lte=_business_date(as_of))
     confirmed = sources.filter(status='confirmed')
-    posted = RevenueRecognition.objects.filter(organization=member.organization, status='posted')
-    reversed_ids = RevenueAdjustment.objects.filter(organization=member.organization, status='posted').values('recognition__acceptance_id')
+    posted = RevenueRecognition.objects.filter(organization=member.organization, status='posted', acceptance__isnull=False)
+    reversed_ids = RevenueAdjustment.objects.filter(organization=member.organization, status='posted',
+        recognition__acceptance__isnull=False).values('recognition__acceptance_id')
+    # Per-month service truth: a parent with one posted month never hides other months.
+    from pmo_plugins.delivery.models import ServiceConfirmation, ServiceConfirmationMonth
+    service_parents = ServiceConfirmation.objects.filter(organization=member.organization, project__in=projects)
+    service_months = ServiceConfirmationMonth.objects.filter(service_confirmation__in=service_parents)
+    if as_of is not None:
+        service_months = service_months.filter(coverage_end__lte=_business_date(as_of))
+    confirmed_months = service_months.filter(service_confirmation__status='confirmed')
+    posted_months = RevenueRecognition.objects.filter(organization=member.organization, status='posted',
+        service_confirmation_month__isnull=False).values('service_confirmation_month_id')
+    reversed_months = RevenueAdjustment.objects.filter(organization=member.organization, status='posted',
+        recognition__service_confirmation_month__isnull=False).values('recognition__service_confirmation_month_id')
     return {'project_id': str(project_id) if project_id is not None else None,
         'recognized_net_cents': gross, 'adjustment_cents': reversed_cents,
         'management_revenue_cents': gross + reversed_cents,
         'recognition_count': rows.count(), 'adjustment_count': adjustments.count(),
         'pending_acceptance_count': sources.filter(status__in=['draft', 'submitted']).count(),
         'unrecognized_acceptance_count': confirmed.exclude(pk__in=posted.values('acceptance_id')).count(),
-        'reversed_pending_acceptance_count': confirmed.filter(pk__in=reversed_ids).count()}
+        'reversed_pending_acceptance_count': confirmed.filter(pk__in=reversed_ids).count(),
+        'pending_service_confirmation_count': service_parents.filter(status__in=['draft', 'submitted']).count(),
+        'unrecognized_service_month_count': confirmed_months.exclude(pk__in=posted_months).count(),
+        'reversed_pending_service_month_count': confirmed_months.filter(pk__in=reversed_months).count()}
 
 
 def revenue_export_rows(member, project_id=None, *, as_of=None):
     rows, adjustments = _rows(member, project_id, as_of)
-    rows = rows.select_related('acceptance__contract_version')
-    adjustments = adjustments.select_related('recognition__acceptance__contract_version')
+    rows = rows.select_related('acceptance__contract_version', 'service_confirmation__contract_version')
+    adjustments = adjustments.select_related('recognition__acceptance__contract_version',
+        'recognition__service_confirmation__contract_version')
     def trace(original, event):
-        return {'contract_version_id': str(original.acceptance.contract_version_id),
+        service = original.service_confirmation_id is not None
+        source = original.service_confirmation if service else original.acceptance
+        return {'contract_version_id': str(source.contract_version_id),
             'contract_line_id': str(original.contract_line_id),
             'accounting_event_id': str(event.pk),
             'reverses_event_id': str(event.reverses_event_id) if event.reverses_event_id else None,
-            'recognition_id': str(original.pk), 'acceptance_id': str(original.acceptance_id)}
+            'recognition_id': str(original.pk),
+            'acceptance_id': str(original.acceptance_id) if original.acceptance_id else None,
+            'service_confirmation_id': str(original.service_confirmation_id) if service else None,
+            'service_confirmation_month_id': str(original.service_confirmation_month_id) if service else None,
+            'service_month': original.posting_period if service else None,
+            'customer_confirmed_on': source.confirmed_on.isoformat()}
     result = [{'id': str(row.pk), 'kind': 'revenue_recognition', 'project_id': str(row.project_id),
         'amount_cents': row.recognized_net_cents, 'occurred_on': row.occurred_on.isoformat(),
         'posting_period': row.posting_period, 'source': row.source_ref, 'is_reversed': row.is_reversed,
