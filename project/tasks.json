@@ -6189,7 +6189,8 @@
         "PH-214",
         "PH-219",
         "PH-222",
-        "PH-223"
+        "PH-223",
+        "PH-226"
       ],
       "spec": "project/specs/PH-224.md",
       "allowed_paths": [
@@ -6292,6 +6293,8 @@
       "allowed_paths": [
         "tests/test_acceptance_revenue.py",
         "tests/test_service_period_revenue_http.py",
+        "tests/test_contract_approval.py",
+        "tests/test_v1_contracts.py",
         "project/tasks.json",
         "project/manifest.json",
         "project/reports/PH-226.json",
