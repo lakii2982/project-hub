@@ -6083,7 +6083,7 @@
       "title": "服务期客户确认与归属月份管理收入",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -6140,9 +6140,9 @@
         "python -B docs/v1.0-development/fixtures/check_fixture.py"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/115",
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-222.md"
     },
     {
       "id": "PH-223",

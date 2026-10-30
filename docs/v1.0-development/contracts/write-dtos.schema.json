@@ -3724,6 +3724,30 @@
         "confirmed_on": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
         },
+        "replaces_confirmation_ref": {
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
+                },
+                {
+                  "properties": {
+                    "namespace": {
+                      "const": "delivery"
+                    },
+                    "kind": {
+                      "const": "service_confirmation"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "confirmed_minutes": {
           "type": "integer",
           "minimum": 0

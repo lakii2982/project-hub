@@ -7,6 +7,7 @@ from .plugin import Plugin
 
 def entry_point():
     from pmo_plugins.costing import labor_views
+    from . import service_period_views
     from . import views as delivery_views
     from pmo_plugins.costing.domain_metadata import DOMAIN_METADATA as COSTING_METADATA
     from pmo_plugins.costing.plugin import Plugin as CostingPlugin
@@ -29,7 +30,7 @@ def entry_point():
             'version_submit': approval_views.version_submit, 'version_review': approval_views.version_review,
         },
         'management_revenue': {},
-        'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action')},
+        'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action')} | {name: getattr(service_period_views,name) for name in ('service_confirmation_list','service_confirmation_detail','service_confirmation_form','service_confirmation_save','service_confirmation_action')},
         'costing': {name: getattr(labor_views, name) for name in
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')},
     })

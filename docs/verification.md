@@ -314,3 +314,7 @@ PH219 PR111/e592275真实CI发现旧合同PG用例默认依赖前置不再成立
 
 
 PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合入f98755c，才在两个原合同PG class setup隔离新业务依赖；共同Fixture与原测试体保持。新默认依赖拒绝反例、无条件来源event验证保留，仅独立schema工具按实际依赖条件执行。本机605项101.443秒579通过26环境跳过；真实PG17.11当前CI605项95.546秒595通过10跳过，6新收入PG及原合同竞态实际执行，完整性ok=true/errors=[]。源码全部12CI成功/CLEAN/0讨论，独立窄修S35项21通过14跳过。最终元数据head仍须全部CI与正常合入；无生产/客户验收，完整1.0未完成。
+
+## PH222 服务期客户确认与归属月份管理收入（2026-10-30）
+
+固定 Python3.12 + DRF3.18.2 + TMPDIR=/private/tmp 实际执行：全量 645 项 OK（34 环境/PG skip）、专项 40 项 OK（8 skip，其中 25 服务层含 canonical 事件/审计与草稿锁期用例 + 7 HTTP 执行）、check 与 makemigrations 无问题、verify_integrity ok（47 entries）。迁移：全新库 migrate/seed 通过；旧 0.0.58 备份（36 表/47 LedgerEntry）与 PH219 非空业务库（2 验收/2 收入/合同行）副本实际升级，重复 migrate 无待执行，旧业务列逐表比对 0 变化（仅权限/内容类型/迁移记录/sqlite_sequence 预期增长）。契约 9 schema/2977 refs/137 requirements/71 commands/47 events、19 正 37 拒、fixture errors=[]。浏览器真实登录 1440/390/768/1024/1440、客户确认日期与服务月分列、逐月办理/反冲/重复400/锁月400/CSV/五角色/键盘/停用态证据见 runtime/ph222-browser/evidence.json（私有忽略，未装产品；修复前 403 与 768 溢出见 phases 留证，由 304d2b1/64a0704 修复）。草稿保存阶段已按 spec 增加覆盖月锁期/关期检查（2 条新用例）；月行 INSERT 触发器另校验 service_month 与覆盖月份一致；月行合计=父净额由服务层派生、读侧冻结校验与集成测试断言，未加 DB 聚合触发器。PG 多连接竞态由 CI PostgreSQL 作业执行，本机无 PG，不以 SQLite 冒充。首轮 PG CI 暴露三处真实缺陷（并发夹具未来日期、同一项目已批准服务段不可重叠导致第二合同构造不可能、触发器 RAISE 未映射 IntegrityError），已修为「上一完整月内两个不相交确认子区间」与「同一批准行两草稿并发审批」，PG 触发器 RAISE 使用 ERRCODE 23514；验证库已按更新后的迁移从 BASE 重建并重录升级/完整性证据，待本轮 PG CI 复跑确认。独立 S 复核与当次 CI 另核；无生产或客户验收。

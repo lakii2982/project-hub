@@ -515,13 +515,15 @@ def export_data(request, kind):
             raise PermissionDenied("管理收入明细导出限公司财务读取角色")
         from pmo_plugins.management_revenue.services import revenue_export_rows
         mapping = {str(p.pk): p for p in projects_qs}
-        rows.append(["项目编号", "记录类型", "业务日期", "过账期间", "管理收入净额_分", "收入原记录", "原验收", "合同批准版本", "合同明细", "核算事件", "冲销原核算事件"])
+        rows.append(["项目编号", "记录类型", "业务日期", "过账期间", "管理收入净额_分", "收入原记录", "原验收", "服务确认", "服务月", "客户确认日", "合同批准版本", "合同明细", "核算事件", "冲销原核算事件"])
         for item in revenue_export_rows(request.member, selected or None):
             project = mapping.get(item["project_id"])
             if project is not None:
                 rows.append([project.code, "收入确认" if item["kind"] == "revenue_recognition" else "收入冲销",
                     item["occurred_on"], item["posting_period"], item["amount_cents"], item["recognition_id"],
-                    item["acceptance_id"], item["contract_version_id"], item["contract_line_id"],
+                    item.get("acceptance_id", ""), item.get("service_confirmation_id", ""),
+                    item.get("service_month", ""), item.get("customer_confirmed_on", ""),
+                    item["contract_version_id"], item["contract_line_id"],
                     item["accounting_event_id"], item["reverses_event_id"]])
     elif kind == "projects":
         rows.append(["项目编号", "项目名称", "客户", "阶段", "负责人", "开始日", "交付日"])

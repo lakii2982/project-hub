@@ -5318,13 +5318,13 @@
     "commands.schema.json": "387bf9b2715424f848e6321edf1904cdd74dfefa35887fd2ed7c9659ccf8a369",
     "contract-bundle.schema.json": "6046e83646633ddb972d7cc81cdc6c1c4b0c1845d5abc80ca094403d21c9fda5",
     "contract-catalog.json": "6b7882b5a652cf2329545958bce865db70810ffd06f78ef9bec74b34b9b311da",
-    "entities.schema.json": "52e3b6e9714fc854bd64e4efba8ca78050ab91ae360bbb644dfa3e5275607c57",
+    "entities.schema.json": "23d1f40880947cf671e305e1d151f910229dbbcea8a2e736c35bb865c3e4547d",
     "events.schema.json": "47df2a83b172cb269ce350e4f57b71ca42fa5e7a3faab64840fc919a9a090709",
     "queries.schema.json": "50245c71bbff40c5afcced62446f5762afba8ab53e54909a3751a534e4dd4442",
     "query-results.schema.json": "5b698c58b36b32af7f5e1ec5559983ee1e540fd967bb9005135543d93396485d",
     "relationships.json": "5af3a01e71e3c64895c5ccdd59e20c2cedf0ebc2137f6f39b8d0bff6e4adce3e",
     "requirements-coverage.json": "72e9192317e258a11a91ee3b66527e1d6a10c481d1ae9b9ce140e012160abf2e",
     "source-registry.json": "faa3cb109525596c304dc50b0cc3a6fab2394419fc11543e5b67b471a21e6df9",
-    "write-dtos.schema.json": "067d21b47591241074f3a76ff885816b9daaf8fc1f3149fe08f63cc51b8cdc22"
+    "write-dtos.schema.json": "e054b4928848a67149d94fb3988cbf0c3d39b3427c2271c4b65e77f98648a4e8"
   }
 }

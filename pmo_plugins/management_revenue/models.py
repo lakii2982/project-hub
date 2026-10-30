@@ -22,7 +22,9 @@ class RevenueRecognition(FrozenPosted):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT)
     project = models.ForeignKey('core.Project', on_delete=models.PROTECT)
-    acceptance = models.OneToOneField('delivery.Acceptance', on_delete=models.PROTECT, related_name='revenue_recognition')
+    acceptance = models.OneToOneField('delivery.Acceptance', on_delete=models.PROTECT, null=True, related_name='revenue_recognition')
+    service_confirmation = models.ForeignKey('delivery.ServiceConfirmation', on_delete=models.PROTECT, null=True, related_name='+')
+    service_confirmation_month = models.OneToOneField('delivery.ServiceConfirmationMonth', on_delete=models.PROTECT, null=True, related_name='revenue_recognition')
     contract_line = models.ForeignKey('contracts.ContractLine', on_delete=models.PROTECT)
     version = models.PositiveIntegerField(default=1)
     status = models.CharField(max_length=16, default='draft')
@@ -40,7 +42,16 @@ class RevenueRecognition(FrozenPosted):
     accounting_event = models.OneToOneField('core.AccountingEvent', on_delete=models.PROTECT, null=True, related_name='+')
 
     class Meta:
-        constraints = [models.CheckConstraint(condition=Q(recognized_net_cents__lte=10**12), name='revenue_recognition_amount_bound')]
+        constraints = [
+            models.CheckConstraint(condition=Q(recognized_net_cents__lte=10**12), name='revenue_recognition_amount_bound'),
+            models.CheckConstraint(
+                condition=(
+                    Q(acceptance__isnull=False, service_confirmation__isnull=True, service_confirmation_month__isnull=True)
+                    | Q(acceptance__isnull=True, service_confirmation__isnull=False, service_confirmation_month__isnull=False)
+                ),
+                name='revenue_recognition_one_source',
+            ),
+        ]
 
     @property
     def source_ref(self):
