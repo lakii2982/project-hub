@@ -1,0 +1,46 @@
+{
+  "task_id": "PH-226",
+  "summary": "Narrow test-prerequisite adaptation for the settlement plugin dependency edge: 2 SQLite tests disable settlement before delivery/contracts (catalog-aware), and 2 PostgreSQL concurrency setUps order settlement before delivery (manifest-guarded). No product, manifest, gate or assertion changes.",
+  "tests": [
+    {
+      "command": "python manage.py test tests.test_acceptance_revenue tests.test_service_period_revenue_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual 28 tests pass on this BASE; adaptation branches are no-ops because settlement is not installed here."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual 645 tests pass, 34 environment skips (SQLite/no PostgreSQL); no regressions."
+    },
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-registration contract improvement: PH-226 done; task count 149."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 19b6781 --task PH-226",
+      "result": "pass",
+      "evidence": "Post-commit rerun: changed files all inside BASE allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-226 implementation reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Review in progress; verdict recorded after fixes."
+  },
+  "deviations": [
+    "settlement exists only in the still-open PH-224 branch, so on this BASE the new guard branches do not execute; the real dependency-guard behaviour will be exercised when PH-224 rebases onto this merge.",
+    "PostgreSQL concurrency classes are skipped on local SQLite; PH-224's PostgreSQL CI must execute them."
+  ],
+  "unverified": [
+    "No settlement plugin on this BASE means the settlement-first-disable branches are no-ops here; behaviour with settlement enabled is verified by PH-224's full suite and PostgreSQL CI.",
+    "No browser evidence needed; no UI change."
+  ]
+}

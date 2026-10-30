@@ -353,6 +353,10 @@ class ServicePeriodHTTPTests(ServicePeriodHTTPFixture, TestCase):
         row = self.confirmation()
         from core.plugin_runtime import set_enabled
         set_enabled(self.owner, 'management_revenue', False)
+        # PH-226: disable the newer settlement dependant before its delivery/contracts dependencies.
+        from core.plugin_runtime import plugin_catalog
+        if any(spec['id'] == 'settlement' for spec in plugin_catalog()):
+            set_enabled(self.owner, 'settlement', False)
         set_enabled(self.owner, 'delivery', False)
         self.login(self.auditor)
         self.assertEqual(self.client.get(LIST).status_code, 403)

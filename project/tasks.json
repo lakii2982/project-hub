@@ -6282,7 +6282,7 @@
       "title": "PH-224 应收结算业务接入测试前置补充",
       "kind": "infra",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -6310,9 +6310,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-226.md"
     },
     {
       "id": "PH-227",
