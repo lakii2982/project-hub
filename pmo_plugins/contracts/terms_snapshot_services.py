@@ -96,6 +96,8 @@ def _snapshot_version(contract, as_of):
         versions = versions.filter(effective_on__lte=as_of)
     version = versions.order_by('-version_no', '-id').first()
     if version is None:
+        if as_of is not None:
+            raise ValidationError('该日期没有生效的合同条款快照')
         version = contract.versions.filter(status='approved').order_by('-version_no', '-id').first()
     return version
 

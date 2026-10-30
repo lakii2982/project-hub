@@ -80,6 +80,10 @@ class TermsSnapshotServiceTests(TermsSnapshotFixture, TestCase):
         self.assertEqual(historical['version_ref']['id'], str(self.approved.pk))
         self.assertEqual(terms_snapshot_services.terms_settlement_issues(
             self.owner, as_of=self.today.isoformat()), [])
+        with self.assertRaises(ValidationError):
+            terms_snapshot_services.approved_terms_snapshot(
+                self.owner, contract_id=self.contract.pk,
+                as_of=(self.today - timedelta(days=10)).isoformat())
 
     def test_terms_amount_and_partition_anomalies(self):
         ContractLine.objects.filter(pk=self.approved_line.pk).update(gross_cents=100000)
