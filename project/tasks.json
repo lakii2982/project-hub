@@ -6477,7 +6477,9 @@
         "project/reports/PH-230.json",
         "project/handoffs/PH-230.md",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "pmo_plugins/cash/models.py",
+        "tests/test_v1_cash_concurrency.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -6485,7 +6487,7 @@
         "python manage.py makemigrations --check --dry-run",
         "python manage.py test tests --verbosity 1",
         "python manage.py verify_integrity --json",
-        "python manage.py test tests.test_v1_cash tests.test_v1_cash_posting tests.test_v1_cash_http --verbosity 1"
+        "python manage.py test tests.test_v1_cash tests.test_v1_cash_posting tests.test_v1_cash_concurrency tests.test_v1_cash_http --verbosity 1"
       ],
       "github_issue": null,
       "owner": null,
