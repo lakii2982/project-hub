@@ -1,0 +1,54 @@
+{
+  "task_id": "PH-254",
+  "summary": "PH-244 evidence-caliber correction (docs-only). The merged PH-244 report's full-suite line still carried the pre-rebase BASE e91346a measurement (Ran 772 tests/111.552s, 55 environment skips); PH-254 re-ran the exact acceptance command at its own BASE 26d0408 (main after PH-239/PH-243/PH-248/PH-250/PH-253) and records the real output: Ran 849 tests in 118.423s, 5 failures/3 errors, 62 environment skips, with the failure/error name set identical to the known macOS environment baseline (6 DRF Accept/codec/large-JSON + 2 delivery symlink) and the 13 PH-244 tests passing. The PH-244 final-main calibration (ceded2e, 773 tests/56 environment skips per the PH-254 contract) is recorded as the historical merged-main caliber, and 772/55 as the pre-rebase measurement; all three calibers are disclosed together with the reason the current BASE count is higher (intervening slices expanded the test set). docs/verification.md appends the matching calibration sentence to the PH-244 entry. Only the PH-244 full-suite tests entry evidence and that verification sentence changed: the PH-244 review block, summary, other tests rows, deviations/unverified, service/model/contract/test code and other task reports are untouched, and the historical pass is not rewritten as a new-SHA pass.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":180}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0: only the repository's known urls.W003 plugin-route-name warnings (59 issues, 0 silenced), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: 'No changes detected'; docs-only slice, no code/model/migration change."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run at BASE 26d0408 (main after PH-239/PH-243/PH-248/PH-250/PH-253): Ran 849 tests in 118.423s, FAILED (failures=5, errors=3, skipped=62); the 8 failures/errors are exactly the known macOS environment-limited baseline names (6 DRF Accept/codec/large-JSON in tests.test_drf_security_compatibility, 2 delivery symlink cases in tests.test_delivery_execution / tests.test_delivery_execution_sandbox), no new names; the 13 PH-244 tests passed. The PH-244 report line is corrected to this real run while retaining the historical 772/55 (pre-rebase e91346a) and 773/56 (PH-244 merged main ceded2e) calibers; the higher current BASE count is explained by intervening slices. Linux CI authoritative."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 2.492s, OK (2.492s)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base <PH-254 BASE> --task PH-254",
+      "result": "pass",
+      "evidence": "Actual invocation with this task BASE: python scripts/projectctl.py verify-change --base 26d0408 --task PH-254. Before the independent review it fails only on high_risk_review_required (no path_out_of_scope; the 6 changed files are all inside the BASE allowed_paths, confirming scope). After the reviewer records status=pass in this report the identical command is rerun at the closed HEAD and must return ok=true; that final rerun is recorded in the handoff/task evidence before done."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级复核由 fresh-context reviewer 实际重跑全量/治理/verify-change 并核对 PH-244 report 仅全量 tests 行发生变化、review 块与其它行原样、verification 校准句与实跑一致后写入 pass/rejected；实现者不自写 pass。复核对象为 /tmp/ph254-evidence 的 PH-254 提交（BASE 26d0408）。"
+  },
+  "deviations": [
+    "实际重跑口径与 PH-254 spec 预期数字不一致已披露：spec/PH-248 记录的“773 tests/56 skips”是 PH-244 合入时 main（ceded2e）的口径；本任务 BASE 26d0408 已包含 PH-239/PH-243/PH-248/PH-250/PH-253 等后续切片，实际为 849 tests/118.423s/62 skips，失败集仍为同一 8 项 macOS 基线。按 spec“若重跑结果与 773/56 不一致，以实际 BASE 输出为准并在报告披露，不虚构”，PH-244 report 行同时保留三个口径并解释差异来源。",
+    "只改 PH-244 report 的全量测试 tests 条目 command/evidence 与 docs/verification.md PH-244 段落的校准句；PH-244 review 块、summary、其它 tests 行、deviations/unverified 原样保留，未把历史 reviewer pass 改写成新 SHA 通过。",
+    "未改 PH-244 服务/模型/契约/测试代码，未改其它任务 report/handoff，未改 docs/delivery-status*；review 保持 pending，S 级 done 待独立复核 pass 后置位。"
+  ],
+  "unverified": [
+    "PH-244 final-main ceded2e 的 773/56 采用 PH-254 契约（来自 PH-248 记录）作为历史口径，未在本工作树直接复跑 ceded2e（该提交不在当前 BASE 历史的可直接工作树中）；本任务实际重跑的是自身 BASE 26d0408（849/62），二者失败集均为同一 8 项 macOS 基线。",
+    "全量 849 项中的 5F+3E 为本机 macOS 环境限制基线（6 DRF Accept/codec/large-JSON、2 delivery symlink），Linux CI 仍为权威；本机未跑 PG 多连接并发/浏览器/生产。",
+    "未运行 verify_integrity 探针（本任务 docs-only，验收命令不含；产品代码与测试未改）。",
+    "独立 S 复核 pending：本报告 review 块由 reviewer 填写；通过后置 done、重跑 check+verify-change 并报最终 SHA。"
+  ]
+}

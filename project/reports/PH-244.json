@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual one full run: Ran 772 tests in 111.552s, 5 failures/3 errors, 55 environment skips. The 8 failures are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON in tests.test_drf_security_compatibility, 2 delivery symlink cases in tests.test_delivery_execution / tests.test_delivery_execution_sandbox); no new failure names, and all 13 PH-244 tests passed. Linux CI is authoritative."
+      "evidence": "Actual full-suite correlations, one command with the same failure set: pre-rebase BASE e91346a Ran 772 tests in 111.552s with 55 environment skips (this was the stale line); after PH-244 merged onto main ceded2e the PH-254 contract records the final main caliber as 773 tests / 56 environment skips; the PH-254 correction re-ran this exact command at PH-254 BASE 26d0408 (main after PH-239/PH-243/PH-248/PH-250/PH-253) and got Ran 849 tests in 118.423s, 5 failures/3 errors, 62 environment skips. In all runs the 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON in tests.test_drf_security_compatibility, 2 delivery symlink cases in tests.test_delivery_execution / tests.test_delivery_execution_sandbox), no new names, and the 13 PH-244 tests passed. The count difference between 772/55, 773/56 and 849/62 comes from the BASE test-set/version (the later BASE includes intervening slices), not from PH-244; Linux CI remains authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
