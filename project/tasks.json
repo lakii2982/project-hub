@@ -7086,7 +7086,7 @@
       "title": "内部账户互转首片：成对现金关联、公司范围抵销与撤转",
       "kind": "feature",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [

@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=185; PH-245 recorded in_review with owner/handoff, review pending."
+      "evidence": "Final Lead integration rerun after rebase onto ccf3855: {\"command\":\"check\",\"ok\":true,\"task_count\":190} exit 0 (PH-245 done with reviewer pass)."
     },
     {
       "command": "python manage.py check",
@@ -33,9 +33,9 @@
       "evidence": "Actual exit 0: Ran 24 tests, OK (skipped=3) => 21 passed. The 3 skips are the PostgreSQL-only concurrency races (same out cash concurrent link one winner, duplicate reverse one winner, link/reverse interleave company net zero); SQLite cannot prove production concurrency and PR CI must run them."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base e8183ff --task PH-245",
+      "command": "python scripts/projectctl.py verify-change --base ccf3855 --task PH-245",
       "result": "pass",
-      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=e8183ff, 19 changed files all inside the PH-245 allowed_paths (no path_out_of_scope, no report-shape errors); assertion_scope=declaration_only. The report review block is the independent reviewer's PASS."
+      "evidence": "Final Lead integration rerun after rebase onto ccf3855 (PH-259/PH-263 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 19 changed files all inside BASE PH-245 allowed_paths."
     }
   ],
   "review": {
@@ -58,7 +58,8 @@
     "InternalTransferReversal is an append-only owned fact (org, internal_transfer unique FK + internal_transfer_ref, out/in classification reversal refs, occurred_on, posting_period, status=posted, version) so the canonical reversed event can use source kind internal_transfer_reversal; this model was added per the Lead ruling and canonical contract.",
     "Cash migration 0006 follows the current leaf 0005_cash_classification_guards; no core migration is added (core leaf stays 0009).",
     "project/manifest.json active_handoff is left at main's value per the integration convention; tasks.json records PH-245 in_review with owner/handoff.",
-    "No browser 1440/390 checks were run in this round (HTTP tests only); no cost/revenue/receivable/payable/open-item/clearance write is produced by transfers."
+    "No browser 1440/390 checks were run in this round (HTTP tests only); no cost/revenue/receivable/payable/open-item/clearance write is produced by transfers.",
+    "Lead integration rebase (e8183ff -> ccf3855) after PH-259/PH-263 merged: docs/verification.md conflict resolved by keeping main entries and appending the PH-245 entry; tasks.json auto-merged with the new PH-264..268 registrations retained; PH-245 flipped to done with its handoff after the reviewer pass (the candidate had left it in_review per the S-gate); manifest.active_handoff -> PH-245. Gates rerun green."
   ],
   "unverified": [
     "PostgreSQL concurrency (same out cash concurrent link one winner, duplicate reverse one winner, link/reverse interleave company net zero) is executed by PR CI; the 3 local SQLite skips are not evidence. The final verify-change gate at BASE e8183ff is ok=true with 19 files; review is pass.",
