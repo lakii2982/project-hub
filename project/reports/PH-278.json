@@ -1,0 +1,47 @@
+{
+  "task_id": "PH-278",
+  "summary": "Consumed the PH-278 planning slot on main 7d8877f (PH-273 merged; task_count 200). Promoted PH-277 (insights read-model contract freeze) to ready because its dependencies PH-270 (ADR 0013, done), PH-002/PH-024/PH-235 are all done; PH-274/PH-275 were already ready and were left unchanged. Numbering was checked against the BASE (max PH-278), all remote branches incl. the open EXP-line PR branches (highest PH-254) and open PRs - no one occupies >=PH-279 - so the new tasks were registered continuously from PH-279. Three new executable read-only slices were registered ready because every dependency is done: PH-279 cash classification/ledger-bridge plus refund/internal-transfer read-only reconciliation snapshot (deps PH-239/240/244/245/230/228/224 done; no migration/write path), PH-280 fee approval/cost and net read-only pairing (deps PH-244/250/224/232/230 done; no migration/write path), PH-281 member account/project-scope and authorization audit read-only operations view (deps PH-264/PH-024 done). PH-282 was registered as the next planning slot (deps PH-278 done). Existing blockers were refreshed (PH-276 now waits for PH-269 done; PH-251/252/255/256/257/260/261/262/271/272 stay proposed on their upstream dependencies with no false promotion). Task count 200 -> 204 with unique continuous ids; no product code, migration, contract-schema change or scaffold was written.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual rerun with the recorded pass (reviewed HEAD f36e283, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":204}, exit 0; PH-278 done with handoff and PH-282 ready on PH-278 done."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in worktree /Users/lakii2982/项目/pmo-278 on main 7d8877f with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 7d8877f --task PH-278",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at the review-pass HEAD d7a5cdb: {\"command\":\"verify-change\",\"ok\":true,\"base\":\"7d8877f\",\"head\":\"d7a5cdb1e865c7dada00889c5c91d6fb7d65188b\",\"report_path\":\"project/reports/PH-278.json\"}, exit 0; all 10 changed files inside BASE PH-278 allowed_paths and review.status=pass with the reviewer's name; PH-278 done/PH-282 ready per convention."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-278 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 STATE BLOCKER RESOLVED AT f36e283: PH-278 is back to in_review with handoff and PH-282 is back to proposed with the explicit blocker 'PH-278 done 后置 ready'; the review=pass then final evidence commit is the only step that will set PH-278 done/PH-282 ready and clear the blocker. projectctl check is ok=true/task_count=204 with the expected pre-review gates (verify-change currently reports high_risk_review_required + acceptance_not_passed only; no path_out_of_scope), so the state now follows the PH-263/268/273 convention.",
+      "PROMOTIONS/DEPS VERIFIED: PH-277 is ready on done PH-270 (ADR 0013)/PH-002/PH-024/PH-235; PH-274/PH-275 were already ready. PH-279 ready deps PH-239/PH-240/PH-244/PH-245/PH-230/PH-228/PH-224 are all done; PH-279 correctly treats PH-241 as in_review (BASE fact) and does not depend on it, showing offset_implemented=false rather than fabricating offset facts. PH-280 ready deps PH-244/PH-250/PH-224/PH-232/PH-230 are done and leaves PH-251's fields as not-implemented placeholders. PH-281 ready deps PH-264/PH-024 are done; removing stale PH-110 (ready-not-done) is justified for a backend read-only view. No other proposed task was promoted; PH-251/252/255/256/257/260/261/262/271/272 remain proposed with accurate blockers, and PH-276 now waits for PH-269 done.",
+      "DoR/NUMBERING/ACCEPTANCE: PH-279/280/281 freeze read-only services/views/permissions/pagination/issue codes/counterexamples/executable acceptance/risk with no write path and no business migration; PH-282 is the next planning slot; PH-277's ready spec keeps its contract-freeze scope. Numbering is continuous PH-279..PH-282 (BASE max 278; no remote/local >=279), task_count 204 unique; no <PH-/{tid} placeholders; all acceptance commands executable; no scaffold/contract-schema/code change and no done report/review edits. PH-279/280/281 tasks whitelists are exact per-file lists including delivery-urls/test/governance paths; PH-282 has the planning-slot whitelist.",
+      "ACCEPTANCE EVIDENCE AT f36e283 (BASE 7d8877f): projectctl check ok=true/task_count=204 (PH-278 in_review); governance 23 tests OK; verify-change --base 7d8877f --task PH-278 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; 10 changed files all inside PH-278 allowed_paths; task_count 204, manifest=PH-278; PH-279/280/281 ready, PH-282 proposed. The final evidence commit must replace pre-review test entries and set PH-278 done/PH-282 ready after this pass."
+    ],
+    "evidence": "VERDICT: PASS (round 2; premature done/ready state fixed). Reviewed HEAD f36e283 (BASE 7d8877f) in /Users/lakii2982/项目/pmo-278, worktree clean; PH-278 in_review with handoff and PH-282 proposed with the done-transition blocker; check ok=true/204; governance 23 OK; verify-change --base 7d8877f --task PH-278 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; 10 changed files all inside PH-278 allowed_paths; manifest=PH-278. Content verified: PH-277 promoted on done PH-270/002/024/235; PH-279 ready deps all done, correctly treats in_review PH-241 as out of dependency scope with offset_implemented=false; PH-280 ready deps all done and placeholder for PH-251; PH-281 ready deps PH-264/024 done with the stale PH-110 dependency correctly removed for a backend read-only view; PH-274/275 already ready; other proposed tasks not promoted. PH-279/280/281 read-only DoR (services/views/permissions/pagination/issue codes/counterexamples/acceptance/risk, no write path/migration), PH-282 next planning slot; numbering 279-282 unique/continuous; no placeholders; no scaffold/schema/code/done-report changes. Final evidence commit sets PH-278 done/PH-282 ready and reruns check/verify-change."
+  },
+  "deviations": [
+    "Post-review state-convention fix: the planning-slot convention (PH-263/268/273) keeps the current slot in_review and the next slot proposed until the independent review pass, with the final evidence commit flipping them. The candidate had prematurely set PH-278 done and PH-282 ready (projectctl check went green, which the reviewer flagged as the symptom). Fixed: PH-278 is in_review (handoff kept) and PH-282 is proposed with blocker 'PH-278 done 后置 ready（当前 PH-278 为 in_review，待独立 S 复核 pass 的最终证据 commit 再置 done/ready）'; PH-282 spec/whitelist unchanged. The final evidence commit after this review's PASS will set PH-278 done and PH-282 ready and clear the blocker.",
+    "PH-277 was promoted to ready only after confirming PH-270 is done (ADR 0013 merged) and PH-002/PH-024/PH-235 are done; its spec dependency/risk lines now say so. No other proposed task was promoted: PH-251 (needs PH-157), PH-252 (needs PH-150/PH-155), PH-255/256/257/260/261/262/271/272 remain proposed with refreshed/accurate blockers, and PH-276 now explicitly waits for PH-269 done.",
+    "PH-281 originally listed PH-110 (frontend standards) as a dependency, but PH-110 is ready-not-done at this BASE; since the slice is a backend read-only view and does not require PH-110 implementation, the dependency was corrected to PH-264/PH-024 (both done) and the spec/risk text was updated accordingly - this is a dependency-accuracy fix, not a scope expansion.",
+    "PH-279/PH-280 are registered ready with no business migration/write path: they are read-only reconciliation/pairing views over already-done owner facts (PH-239/240/244/245/250/224/232/230 etc.), and PH-241 (in_review) is deliberately not a dependency; the specs show offset/ReceiptFeeSettlement as 'not implemented' placeholders rather than fabricating them.",
+    "Numbering basis: BASE max PH-278; checked all remote branch tasks.json copies (including open EXP PR branches #143/#144, highest PH-254) and open PRs - no >=PH-279 ids exist, so PH-279..PH-282 are free and continuous; PH-282's own spec requires re-checking numbering when it runs.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-279/PH-280/PH-281 are implementation slices only registered as ready; no product code, tests, migration, browser, PostgreSQL or CI evidence exists for them yet.",
+    "PH-277 is a docs/contract-freeze slice; its ADR 0014 output is not yet written (it is the next ready task).",
+    "PH-276/PH-251/PH-252/PH-255/PH-256/PH-257/PH-260/PH-261/PH-262/PH-271/PH-272 remain blocked on upstream proposed tasks; no promotion or scope change was made.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}

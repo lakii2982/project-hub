@@ -541,3 +541,13 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 ## PH-273 后续交付独立规划入口（2026-10-31）
 
 基线61950e1（PH-268规划合入后的main）。本片为规划槽+授权白名单修正：①PH-269 allowed_paths由25扩为29，新增tests/test_v1_contract_change.py、tests/test_v1_contract_change_http.py、tests/test_acceptance_revenue.py、tests/test_v1_cash_book_bridge.py，并在PH-269 spec精确白名单加入同四文件及「白名单扩容说明」——time插件manifest requires={contracts}使contracts模块停用被「工时与可计费」依赖正确阻塞，故3个既有禁用/顺序loop测试需同实现一并停用/恢复time；verify_integrity新增time分支使cash bridge query-count上限80→84（保留「随分类历史常量」第二段断言、仅上调上限不改断言语义）。②按BASE事实核号（最大PH-273，无EXP id/远端分支占用）登记PH-274 onboarding导入预览前置（ready，deps PH-267/002/024 done）、PH-275合同变更影响只读追溯与终止阻断深化（ready，deps PH-265/224/232/219/222 done）、PH-276 time confirmed撤销与收入/结算只读配对（proposed，缺PH-269 done）、PH-277 insights读模型契约冻结（proposed，缺PH-270 done）、PH-278下一规划槽（proposed，缺PH-273 done）；刷新PH-251/252/256/257/262/271/272 blockers到当前事实。只规划/登记，不实现业务、不建scaffold、不改contract schema，除授权项外未自扩白名单；新任务acceptance全可执行、无占位符。实际执行（最终HEAD）：projectctl check ok=true/task_count=200；tests.test_projectctl+tests.test_governance共23项OK；占位符grep无输出；verify-change --base 61950e1 --task PH-273在review pending时仅high_risk_review_required（预期）。复核round 1阻断已修：PH-276撤销DoR与PH-269 receipt/触发器约束矛盾——PH-276现冻结自有time 0002_time_billable_reversal_guards（扩receipt action允许reverse、双vendor触发器允许confirmed→reversed，不改已应用0001、不新增表），白名单加time migrations；另按非阻断意见把PH-269「可修改/删除草稿」改为「创建/修改、草稿禁删」。未验证：PH-274/275未实现、PH-276/277/278仍proposed；本片docs-only无全量测试/浏览器/PG；复核round 2仅剩PH-276 tasks/spec精确白名单不一致（tasks缺time迁移路径），已补`pmo_plugins/time/migrations/*.py`并逐项对齐（spec 17=tasks 17），PH-276仍proposed；独立S复核终审pending。
+
+
+## PH-278 后续交付独立规划入口（接续 PH-273）（2026-10-31）
+
+基线7d8877f（PH-273 合入后，count 200）。纯规划片：
+1. **晋级**：PH-277（insights 读模型实现前置/契约冻结，deps PH-270 done + PH-002/024/235 done）→ ready；PH-274/275 已 ready 保持不变。
+2. **核号**：BASE 最大 PH-278；检查远端分支 tasks（含 EXP PR #143/#144 分支，最高 PH-254）与 open PR，均未占用 ≥279；故 PH-279 起连续登记。
+3. **新登记（ready，依赖全 done）**：PH-279 现金分类/账本桥接与退款/互转只读核对快照（deps PH-239/240/244/245/230/228/224 done；无迁移/无写入口）；PH-280 手续费批准/成本与净额只读配对（deps PH-244/250/224/232/230 done；无迁移）；PH-281 成员账号/项目范围与授权审计只读运营视图（deps PH-264/024/110 done）；PH-282 下一规划槽（deps PH-278 done）。count 200→204，编号 279-282 连续。
+4. **blockers 刷新**：PH-276 更新为“缺 PH-269 done（ready 未 done）”；其余 proposed（PH-251/252/255/256/257/260/261/262/271/272）依赖未 done，保持 proposed 并未虚假晋级。
+5. 占位符检查：改动 specs/tasks 无 `<PH-`/`{tid}`；acceptance 全可执行命令。独立 S 复核：首轮阻断（规划槽状态惯例——候选提前置 PH-278 done/PH-282 ready）→ 修复（PH-278 in_review+owner、PH-282 proposed+blocker）→ 二轮 PASS；最终证据 HEAD d7a5cdb 置 PH-278 done/PH-282 ready、blocker 清空。最终门禁：projectctl check ok=true/task_count=204；23 项治理 OK；verify-change --base 7d8877f --task PH-278 ok=true、10 文件全白名单。未验证：PH-279/280/281 未实现（无代码/迁移/运行时证据）；PH-282 为下一规划槽。
