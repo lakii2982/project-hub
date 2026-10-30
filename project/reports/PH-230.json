@@ -40,10 +40,14 @@
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-230 implementation reviewer (fresh context, read-only)",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Review in progress."
+    "reviewer": "independent PH-230 implementation reviewer (fresh context, read-only; multi-round)",
+    "status": "pass",
+    "findings": [
+      "Round 1 major fixed: the 0003 SQLite guard now freezes created_by_id/created_at and requires version=OLD.version+1 on the draft->posted transition (PostgreSQL guard also enforces version+1); a direct-update regression test rejects created_by/created_at/gross/version tampering while normal posting still succeeds with version+1.",
+      "Round 1 major fixed: verify_integrity now validates the full canonical envelope (schema_version, topic, organization_id, event_id, data.source equal to transaction_ref including version, changed_refs=[ref], posting_event_refs=[]) and requires the cash_transaction.post receipt for posted facts, on top of exactly-one-event, no draft events, non-future posting and no cash accounting events/claims.",
+      "Retained minors: duplicate-post business error text is not rendered on the posted detail page (400, no 500, state unchanged); omitted vs explicit occurred_on/posting_period produce different receipt digests for the same token (low risk); a dedicated posting race for revocation/module-disable after lock wait can be added later; browser is Chromium-only; classification/clearing/production remain future slices."
+    ],
+    "evidence": "Reviewer rechecked HEAD 5609022 after the fixes: 0003 trigger probes (created_by/created_at updates rejected with IntegrityError), canonical envelope tampering rejected by verify_integrity, full suite 723 OK/45 skip, cash target 30 OK, fresh-migrated and real cash databases verify_integrity ok:true, browser 29/29 on unchanged UI. Formal PASS is conditional on the PR PostgreSQL CI executing all 5 cash concurrency tests successfully."
   },
   "deviations": [
     "No canonical cash.transaction.record/v1 channel is exposed; posting is a private service operating on an already-registered draft id to avoid a second write path.",
@@ -55,6 +59,9 @@
   "unverified": [
     "PostgreSQL concurrency (5 tests incl. double posting) is executed by the PR CI job; local SQLite skips are not evidence.",
     "Cash classification, ledger bridge, clearing (PH-170), refunds (PH-171), bank-file import, opening balances, production/customer UAT remain unverified/not implemented; PH-169 is not complete.",
-    "Browser evidence covers Chromium 320/390/768/1024/1440 only; printing/dark mode/touch/non-Chromium untested."
+    "Browser evidence covers Chromium 320/390/768/1024/1440 only; printing/dark mode/touch/non-Chromium untested.",
+    "Duplicate-post business error text is not rendered on the posted detail page (returns 400, no 500, state unchanged); deferred to a later UX fix.",
+    "Omitted vs explicit occurred_on/posting_period form different receipt digests for the same token (low-risk idempotency edge); no state corruption.",
+    "A dedicated posting race after lock-wait for membership revocation/module disable is not covered yet; single-threaded revocation/disable rejections are covered."
   ]
 }
