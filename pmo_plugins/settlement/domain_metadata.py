@@ -4,7 +4,7 @@ DOMAIN_METADATA = {
     'contracts': {'commands': [], 'queries': [], 'events': []},
     'migration_dependencies': ['core', 'contracts', 'delivery'],
     'routes': [{'name': name, 'path': name.replace('_', '-') + '/',
-                'access': ('history_read' if name == 'offset_list' else
+                'access': ('history_read' if name in {'offset_list', 'settlement_coverage_snapshot', 'settlement_coverage_issues'} else
                            'business_read' if name in {'settlement_list', 'settlement_detail',
                                                        'settlement_form', 'aging_list',
                                                        'clearance_list'} else
@@ -12,5 +12,6 @@ DOMAIN_METADATA = {
                for name in ('settlement_list', 'settlement_detail', 'settlement_form', 'settlement_save',
                             'settlement_action', 'aging_list', 'clearance_create',
                             'clearance_reverse', 'clearance_list', 'offset_list',
-                            'offset_save')],
+                            'offset_save', 'settlement_coverage_snapshot',
+                            'settlement_coverage_issues')],
 }

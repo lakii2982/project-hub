@@ -1,0 +1,60 @@
+{
+  "task_id": "PH-283",
+  "summary": "结算未清/核销/退款覆盖只读核对首片（无迁移/无写入口）：新增 pmo_plugins/settlement/coverage_read_services.py，按公司/项目聚合 OpenItem gross → Σactive Clearance → 退款/退回覆盖 → posted 现金 gross，服务端派生 remaining（gross - active cleared - offset(0)）并输出未清覆盖快照与 issue_code 异常清单（cleared_over_gross、remaining_negative、remaining_mismatch、clearance_duplicate_active、clearance_cross_org、clearance_cash_missing/cross_org/not_posted/direction/ref_mismatch、cash_coverage_over_gross）。offset_cents 固定 0、offset_implemented=false（PH-241 未合入，不读 Offset 表、不伪造 offset 事实）。权限 owner/finance/auditor 全量；pm 仅 visible_projects 中其管理项目（manager=member）；member 拒绝；settlement 模块停用后服务层历史可读、两条 history_read 浏览器路由 GET 仍 200；无 audit/写/迁移。浏览器新增只读未清覆盖/异常清单页与 as_of/项目筛选。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=216; PH-283 recorded in_review with owner/handoff; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 83 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (settlement domain metadata validates the two history_read coverage routes)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (this slice adds no model, table or migration; settlement leaf stays 0005)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1: Ran 1012 tests, FAILED (failures=5, errors=3, skipped=69) => 935 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE cfa185f baseline (999/5F+3E/69 plus the 13 new PH-283 tests); no new failures. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. This slice adds no ledger/amount business invariant and does not change existing verify_integrity semantics."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_settlement_coverage_read tests.test_v1_settlement_coverage_read_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 13 tests, OK => 13 passed (9 service + 4 HTTP). Covers golden clearance+refund remaining/coverage, no false issue without clearance, append-only INSERT over-clearance (cleared_over_gross/remaining_negative/cash_coverage_over_gross), duplicate active clearance, missing cash reference, as_of filtering, role/managed-project permissions, read-only fact counts, settlement-module-disabled history read and history_read GET 200/POST 405, and derived-field semantics."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-283 settlement-coverage reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: read-only boundary (no migration/table/write/audit), open-item remaining/clearance/refund coverage derivation, issue_code/refs/expected/actual fidelity, offset_implemented=false placeholder without reading Offset, pm managed-project scoping, member denial, module-disabled history_read behavior, append-only compatible counterexamples (no UPDATE/DELETE), and the precise whitelist. projectctl check, check, makemigrations, verify_integrity and scoped tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "Offset: PH-241 is in_review and not a dependency; the snapshot never reads the Offset table, reports offset_cents=0 and offset_implemented=false, and does not invent an offset fact, per the spec.",
+    "Cross-project reference checks: cash facts (CashTransaction/FundingAccount/Refund/BankReturn) carry no project attribution, so only cross-organization / missing / non-posted / direction / stale-ref clearance-cash issues are derivable; a true cross-project cash-vs-open-item reference cannot be expressed in the current schema and is disclosed for a future contract.",
+    "Refund/return coverage is derived directly from the Refund/BankReturn models rather than calling cash.refund_coverage_for_cash, because the latter gates on the cash module being enabled; this keeps settlement/cash history readable when either module is disabled (spec requirement) while still deriving from the same owner facts.",
+    "pm scope: pm reads only open items of visible_projects where manager=member (and a project filter must be a managed project); the snapshot scope is labelled managed_projects. owner/finance/auditor see company scope.",
+    "Counterexamples are append-only compatible: extra active Clearance/duplicate rows are INSERTed, never UPDATE/DELETE, so the tests behave identically on SQLite and PostgreSQL append-only triggers; no historical row is mutated.",
+    "remaining is server-derived as gross - active cleared - offset(0); remaining_mismatch compares it with the model's derived remaining_cents (which ignores offset, currently 0), so the branch is defensive and currently equivalent.",
+    "The read path writes no generic audit (the spec made it optional), keeping the snapshot side-effect free; no verify_integrity assertion is changed or added.",
+    "Single worker owns the whole write set (settlement coverage service/views/template/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run; the coverage snapshot/issues UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "Offset (PH-241), automatic correction/export, write entries, persisted snapshots and a true cross-project cash attribution contract remain unimplemented."
+  ]
+}
