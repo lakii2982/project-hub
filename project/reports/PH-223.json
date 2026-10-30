@@ -1,0 +1,36 @@
+{
+  "task_id": "PH-223",
+  "summary": "AR planning: register PH-224 (customer settlement, due/retention open items and read-only aging) and PH-225 next planning slot as ready, freeze the term-row-combination settlement design in spec/ADR-0009, and explicitly revise two named read-only interfaces plus a concurrency test file missing from the old PH-155/156 whitelists; no product code.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual 146 tasks validated after registration; PH-223 done with handoff, PH-224/PH-225 ready, dependencies done."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual 19 governance tests pass."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base aec8f67 --task PH-223",
+      "result": "pass",
+      "evidence": "Post-commit rerun: all changed paths inside BASE allowed_paths, report and acceptance declarations validated."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-223 planning reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Independent S review in progress; verdict recorded after fixes."
+  },
+  "deviations": [
+    "PH-224 whitelist extends the old PH-155/156 whitelists with two named read-only interfaces (contracts.approved_terms_snapshot, delivery.confirmed_line_performance), delivery/urls.py plugin wiring and a concurrency test file; reasons are frozen in ADR-0009 because the old whitelists would force the implementer to read other owners' tables directly or omit PG evidence.",
+    "Thin slice deliberately excludes active-settlement reversal, cash clearing, credit/bad debt, AP, invoice, disputes/extensions and opening open items; these stay with their original proposed tasks or a later planning slot."
+  ],
+  "unverified": [
+    "No PH-224 product code, settlement app, models, migrations, PostgreSQL concurrency, browser, legacy upgrade, customer UAT or production evidence; none claimed.",
+    "PH-224 implementation is not authorized until this planning PR merges into a trusted BASE and the task is ready there."
+  ]
+}
