@@ -467,3 +467,8 @@ PH222 PR117 合入 aec8f67 后完成应收规划：登记 PH-224「客户结算�
 
 按PH-225规划登记并实施：将4处既有测试/并发类setUp改为“存在settlement时先停用settlement，再停用delivery/contracts”，以适配PH-224新增的插件依赖边；不改产品、manifest、门禁或断言，不跳过测试。本BASE（不含settlement）全量645项通过；含settlement的行为由PH-224 rebase后的全量与PostgreSQL CI验证。详细证据见`project/reports/PH-226.json`与`docs/verification.md`。
 
+
+## PH-224 客户结算、到期/质保未清与账龄首片（2026-10-30）
+
+新增settlement插件与“条款行组合结算 → 到期/质保未清 → 只读账龄”闭环：一次结算覆盖1..n个完整且未消费的批准条款行，金额只由条款gross派生并按整行累计比例HALF_UP守恒；批准按当前累计重算拒绝陈旧草稿；未清项分due/retention，质保未到release_on不计逾期；账龄纯读、五桶、CSV。不做现金/核销/折让/应付/发票/争议/反冲/期初；历史读取不依赖模块启用，HTTP路由在模块停用时拒绝。见`docs/verification.md`与`project/reports/PH-224.json`。
+

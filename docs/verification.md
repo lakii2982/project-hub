@@ -329,3 +329,9 @@ PH219 当前源码1ab3ad2验收收口：PH220 PR113独立S/全12CI后正常合�
 
 实际执行：`manage.py test tests.test_acceptance_revenue tests.test_service_period_revenue_http`=28项通过；`manage.py test tests --verbosity 1`=645项通过、34项环境跳过（本BASE不含settlement，适配分支为no-op）；`manage.py check`/`makemigrations --check`/`verify_integrity --json` 通过；独立复核落 pass 后实际重跑 `projectctl check` 与 `verify-change`（ok=true）。含settlement的真实行为与PG并发执行由PH-224在其rebase后的BASE验证。未验证：PH-226改动在含settlement BASE上的行为（待PH-224）。
 
+
+## PH-224 客户结算、到期/质保未清与账龄首片（2026-10-30）
+
+基线83a2577（PH-226测试前置合入）。新增settlement插件（结算/未清项/收据、SQLite+PG守卫迁移0001/0002）、条款行组合结算服务、只读账龄、6条路由与4个模板、两个跨owner只读接口、verify_integrity分支。金额按整行累计比例HALF_UP且累计差守恒（53000/50000/3000、42400/40000/2400、10600/10000/600 → 106000/100000/6000）；批准公司锁内按当前累计重算并拒绝陈旧草稿；条款一次性消费；不做现金/核销/会计事件/账本写入。
+实际执行：全量680项通过、40项环境跳过（含6项PG-only并发）；settlement+http+concurrency目标35项通过（本机6项PG skip）；check/makemigrations/verify_integrity通过；真实结算浏览器库与新建种子库完整性ok；旧库与非空库升级后完整性ok且既有列无变化；浏览器1440/390五角色/CSV/停用态/键盘/无横溢/0个500；独立S复核两轮。PostgreSQL并发由PR的PG CI实跑。未验证：生产/UAT、核销/折让/应付/发票/反冲/期初。
+
