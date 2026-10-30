@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Post-review final HEAD: {\"command\":\"check\",\"ok\":true,\"task_count\":200} exit 0 (PH-273 done, PH-278 ready)."
+      "evidence": "Final Lead integration rerun after rebase onto 8da269a: {\"command\":\"check\",\"ok\":true,\"task_count\":200} exit 0 (PH-270/PH-273 done, PH-274/275/278 ready)."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -18,9 +18,9 @@
       "evidence": "Post-review final HEAD: no placeholder matches (exit 1 from grep = no matches, recorded as pass)."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 61950e1 --task PH-273",
+      "command": "python scripts/projectctl.py verify-change --base 8da269a --task PH-273",
       "result": "pass",
-      "evidence": "Post-review final HEAD: {\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 changed files all inside BASE PH-273 allowed_paths."
+      "evidence": "Final Lead integration rerun after rebase onto 8da269a (PH-270 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 changed files all inside BASE PH-273 allowed_paths."
     }
   ],
   "review": {
@@ -43,7 +43,8 @@
     "PH-278 (next planning slot) is registered proposed rather than ready because its dependency PH-273 is in_review at this BASE; projectctl rejects a ready task whose dependency is not done. It becomes promotable once PH-273 is merged/done.",
     "Numbering basis: BASE tasks.json max id is PH-273; there are no EXP-* task ids or remote EXP branches in this checkout, so PH-274–PH-278 are free and consecutive; no collision.",
     "Only planning/registry files changed (specs, tasks, manifest, docs/verification, report/handoff); no business code, migration, scaffold, contract schema or route changed; no other task report/review block edited.",
-    "PH-274 is a deliberately narrowed prerequisite of PH-271 (onboarding bootstrap + read-only CSV template/mapping preview, no ImportConflict persistence, no normalized_commands, no submit/opening); PH-271 remains proposed for the full conflict/submission slice and is not promoted."
+    "PH-274 is a deliberately narrowed prerequisite of PH-271 (onboarding bootstrap + read-only CSV template/mapping preview, no ImportConflict persistence, no normalized_commands, no submit/opening); PH-271 remains proposed for the full conflict/submission slice and is not promoted.",
+    "Lead integration rebase (61950e1 -> 8da269a) after PH-270 merged: tasks.json conflict resolved by keeping the PH-273 registrations while restoring PH-270 done+handoff; verification kept main entries plus the PH-273 entry; manifest.active_handoff -> PH-273. Gates rerun green (check ok=true/200, verify-change --base 8da269a ok=true)."
   ],
   "unverified": [
     "PH-274/PH-275 are registered ready but not implemented; no runtime/browser/PG verification exists for them in this planning slice.",
