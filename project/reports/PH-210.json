@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Post-rebase Lead rerun (HEAD 5fce06c, BASE 5ee8af1): {\"command\":\"check\",\"ok\":true,\"task_count\":160} exit 0."
+      "evidence": "Final Lead integration rerun (HEAD f1f1a37, BASE b931be0 after PH-237 merge): {\"command\":\"check\",\"ok\":true,\"task_count\":160} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -38,9 +38,9 @@
       "evidence": "Pinned jsonschema/referencing env: Ran 7 tests in 5.262s, OK, 0 skipped; markers PH210_STRICT_CONTRACT_BOUNDARIES_EXECUTED positive=6 rejected=10 no_runtime_business_claim, PH135_CONTRACT_SCHEMAS_EXECUTED validator=strict_jsonschema, PH135_FIXTURE_SCHEMA_EXECUTED positive=99 negative=8. New cases: legal absent/null/reference accepted; wrong namespace, wrong kind, missing version, SourceRef extra field, AccountingEvent extra field, unknown consumer and client append/reverse DTO injection rejected. The .agent-venv is the pinned preparation tool environment created from integrations/mcp/requirements.txt (jsonschema 4.26.0, referencing) exactly as .github/workflows/preparation.yml does, not a product dependency."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 5ee8af1 --task PH-210",
+      "command": "python scripts/projectctl.py verify-change --base b931be0 --task PH-210",
       "result": "pass",
-      "evidence": "Post-rebase Lead rerun (HEAD 5fce06c, BASE 5ee8af1): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 15 changed files all inside BASE PH-210 allowed_paths; declaration_only."
+      "evidence": "Final Lead integration rerun (HEAD f1f1a37, BASE b931be0): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 15 changed files all inside BASE PH-210 allowed_paths; declaration_only."
     }
   ],
   "review": {
@@ -61,7 +61,8 @@
     "fixture.json/extension-freeze.json 只刷新 5 个受影响 canonical 摘要（另 commands 摘要），未改旧 base_sha/201 补丁/input_sha256/旧审阅历史；不把历史 pass 改写为新 SHA 通过。",
     "所有新字段/注解只作设计与严格结构断言，未声称真实服务已强制 readOnly、唯一性或期间/授权检查；这些仍属 PH-141/后续实现。",
     "独立复核 follow-up 已处理：extension-freeze.follow_up_updates[0].validation.independent 由 pending 更新为具名 reviewer + PASS，并记录 BASE 本已存在可选 readOnly reverses_event_ref(SourceRef|null)、PH-210 实际是收紧为 core/accounting_event + x-server-only 的措辞说明（spec 用词'新增'不精确，未改契约语义、无 weakening）。",
-    "Lead integration rebase (7a2cc17 -> 5ee8af1): conflicts in docs/verification.md (PH-236 entry added upstream) and project/manifest.json resolved by keeping both PH-236 and PH-210 verification sections and pointing active_handoff at PH-210; project/tasks.json auto-merged (PH-210 done retained alongside PH-237/238 registration). Post-rebase acceptance rerun by Lead: check ok=true (task_count=160), verify-change --base 5ee8af1 ok=true, governance 23 OK, contract scripts pass under pinned jsonschema 4.26 (.agent-venv), test_v1_preparation 7 OK/4 designed skips (0 skips in strict env)."
+    "Lead integration rebase (7a2cc17 -> 5ee8af1): conflicts in docs/verification.md (PH-236 entry added upstream) and project/manifest.json resolved by keeping both PH-236 and PH-210 verification sections and pointing active_handoff at PH-210; project/tasks.json auto-merged (PH-210 done retained alongside PH-237/238 registration). Post-rebase acceptance rerun by Lead: check ok=true (task_count=160), verify-change --base 5ee8af1 ok=true, governance 23 OK, contract scripts pass under pinned jsonschema 4.26 (.agent-venv), test_v1_preparation 7 OK/4 designed skips (0 skips in strict env).",
+    "Second Lead rebase (5ee8af1 -> b931be0) after the concurrent PH-237 delivery landed on main: clean rebase (no conflicts), gates rerun green with the new BASE. No scope or content change."
   ],
   "unverified": [
     "No source resolver, authorization/approval, posting-period adapter, model transaction, persistence constraint or real service rejection was executed; readOnly/schema pass is not service enforcement.",
