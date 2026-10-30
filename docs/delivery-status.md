@@ -31,3 +31,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## PH-245 内部账户互转首片（2026-10-31）
 
 在PH-239分类桥接之上实现内部账户互转：同企业、反方向、同额、同日的两条已过账现金成对关联为append-only InternalTransfer（cash 0006），经PH-239非路由内部服务为两腿各写一条transfer分类与cash_out/cash_in posting（funding_account scope），公司净现金恒为零；撤转append-only追加两条撤分类+冲销posting、InternalTransferReversal与canonical reversed事件；Unique(out/in_cash_transaction)无条件终身一次；两腿不同request_token；服务层先owner/finance fresh校验；canonical linked/reversed的posting_event_refs为0/0、changed_refs恰3、classification_reversal_refs=2；verify_integrity新增internal_transfer分支（批量、无全局禁令）。无新增canonical topic、无公开transfer通道；不做手续费/Offset/退款/更正/导入/期初，不写成本/收入/应收/应付/未清。未验证：PG并发（CI）、浏览器1440/390、独立复核、生产/UAT。见`docs/verification.md`与`project/reports/PH-245.json`。
+
+## PH-264 成员账号生命周期与项目范围首片（2026-10-31）
+
+实现成员账号最小生命周期闭环：owner 变更公司内成员角色（owner/pm/finance/member/auditor）、以 ProjectMember 差集维护可见项目范围、停用/恢复成员；停用要求先处理在职员工绑定与有效项目经理交接，同事务撤销全部未撤销 AgentToken、清空项目范围并写审计；最后 active owner 不可降级/停用、不可自停用、停用成员不可再改（除恢复）；公司级角色不接受项目范围；Membership.version 乐观版本（core 0010）+ generic audit identity.membership.changed（无新 canonical topic/无新 business 表）；同 token 重放、dry_run 零副作用；finance/auditor 只读全部成员，pm/member 仅读自己；settings 页面 owner 表单承载。未验证：浏览器1440/390、独立复核、生产/UAT。见`docs/verification.md`与`project/reports/PH-264.json`。

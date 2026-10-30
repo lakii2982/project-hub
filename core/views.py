@@ -26,7 +26,8 @@ from .models import (Project, Membership, Employee, CostRate, ProjectMember, Tas
 from .services import (create_project, submit_time, submit_document, create_task, review as review_record,
                        reverse as reverse_record, transition as change_stage, update_task, accept_milestone,
                        cents, audit, lock_company, check_open, plan_remaining, verify_audit, edit_task)
-from .masterdata import create_employee, create_rate, update_project
+from .masterdata import (change_membership, create_employee, create_rate,
+                         membership_snapshot, update_project)
 from .reporting import (project_summary, portfolio_metrics, cash_forecast, alerts_for,
                         overdue_plan_totals, project_cost_burndown)
 from .imports import HEADERS, parse_csv, preview_rows as validate_import, commit_rows
@@ -416,13 +417,56 @@ def assistant(request):
         "jobs": jobs, "form": form, "candidate": candidate})
 
 
+def _membership_rows(org):
+    from .models import ProjectMember
+    scope = {}
+    for row in ProjectMember.objects.filter(member__organization=org).select_related("project"):
+        scope.setdefault(row.member_id, []).append(
+            {"id": str(row.project_id), "label": f"{row.project.code} · {row.project.name}"})
+    rows = []
+    for item in Membership.objects.filter(organization=org).select_related("user"):
+        rows.append({"id": str(item.pk), "username": item.user.get_username(),
+                     "display": item.user.get_full_name() or item.user.get_username(),
+                     "role_display": item.get_role_display(), "active": item.active,
+                     "version": item.version,
+                     "project_scope": sorted(scope.get(item.pk, []),
+                                             key=lambda value: value["label"])})
+    return rows
+
+
 @workspace_view
 def settings_page(request):
     if request.member.role not in WRITE_FINANCE: raise PermissionDenied()
     org = request.member.organization
     form = ui.OrgForm(request.POST or None, instance=org)
+    membership_form = None
+    if request.member.role == "owner":
+        membership_form = ui.MembershipChangeForm(member=request.member)
     if request.method == "POST":
         if request.member.role != "owner": raise PermissionDenied()
+        if "membership_id" in request.POST:
+            membership_form = ui.MembershipChangeForm(request.POST, member=request.member)
+            if membership_form.is_valid():
+                data = membership_form.cleaned_data
+                active = {"": None, "1": True, "0": False}[data.get("active") or ""]
+                try:
+                    change_membership(
+                        request.member, membership_id=data["membership_id"].pk,
+                        role=data["role"],
+                        project_scope=data.get("project_scope") or [],
+                        active=active,
+                        expected_version=data.get("expected_version"),
+                        request_token=data["request_token"], dry_run=False)
+                except ValidationError as exc:
+                    membership_form.add_error(None, "；".join(exc.messages))
+                else:
+                    messages.success(request, "成员账号已更新")
+                    return redirect("settings")
+            return render(request, "settings.html", {"nav": "settings", "form": form,
+                "membership_form": membership_form,
+                "memberships": _membership_rows(org),
+                "employees": Employee.objects.filter(organization=org).select_related("member__user"),
+                "rates": CostRate.objects.filter(employee__organization=org).select_related("employee")[:200]}, status=400)
         if form.is_valid():
             with transaction.atomic():
                 locked = lock_company(request.member)
@@ -434,8 +478,9 @@ def settings_page(request):
                     messages.success(request, "公司设置与锁账日期已更新")
                     return redirect("settings")
     return render(request, "settings.html", {"nav": "settings", "form": form,
+        "membership_form": membership_form,
+        "memberships": _membership_rows(org),
         "employees": Employee.objects.filter(organization=org).select_related("member__user"),
-        "memberships": Membership.objects.filter(organization=org).select_related("user"),
         "rates": CostRate.objects.filter(employee__organization=org).select_related("employee")[:200]})
 
 

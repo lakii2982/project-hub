@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 from django import forms
 from django.contrib.auth import get_user_model
@@ -304,3 +305,49 @@ class AgentTokenForm(BaseForm):
         if user is None or user.pk != self.member.user_id:
             raise ValidationError("登录密码不正确或密码验证暂时被锁定")
         return self.cleaned_data["password"]
+
+
+class MembershipChangeForm(BaseForm):
+    """Owner-only membership lifecycle form (canonical identity.membership.change/v1)."""
+
+    membership_id = forms.ModelChoiceField(
+        queryset=Membership.objects.none(), label="成员账号",
+        empty_label="请选择成员")
+    role = forms.ChoiceField(choices=Membership.Role.choices, label="角色")
+    project_scope = forms.MultipleChoiceField(
+        choices=(), required=False, label="可见项目范围",
+        widget=forms.CheckboxSelectMultiple,
+        help_text="公司级角色（owner/finance/auditor）必须为空；pm/member 可为空")
+    active = forms.ChoiceField(
+        required=False, choices=[("", "保持不变"), ("1", "恢复/在用"), ("0", "停用")],
+        label="账号状态")
+    expected_version = forms.IntegerField(required=False, min_value=1,
+                                          widget=forms.HiddenInput)
+    request_token = forms.UUIDField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, member=None, **kwargs):
+        super().__init__(*args, member=member, **kwargs)
+        self.fields["membership_id"].queryset = Membership.objects.filter(
+            organization=member.organization).select_related("user").order_by(
+            "user__username")
+        self.fields["membership_id"].label_from_instance = (
+            lambda row: f"{row.user.get_full_name() or row.user.username} · "
+                        f"{row.get_role_display()}")
+        self.fields["project_scope"].choices = [
+            (str(project.pk), f"{project.code} · {project.name}")
+            for project in Project.objects.filter(
+                organization=member.organization).order_by("code")]
+        if not self.is_bound:
+            self.fields["request_token"].initial = uuid.uuid4()
+
+    def clean(self):
+        data = super().clean()
+        allowed = set(self.fields) | {"csrfmiddlewaretoken"}
+        extra = set(self.data) - allowed
+        if extra:
+            raise forms.ValidationError("包含不允许的字段，请刷新后重试")
+        role = data.get("role")
+        scope = data.get("project_scope") or []
+        if role in {"owner", "finance", "auditor"} and scope:
+            self.add_error("project_scope", "公司级角色不接受项目范围，请留空")
+        return data

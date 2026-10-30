@@ -1,0 +1,59 @@
+{
+  "task_id": "PH-264",
+  "summary": "成员账号生命周期与项目范围首片：按 canonical identity.membership.change/v1 语义实现具名服务与 settings 浏览器承载——owner 变更成员角色（owner/pm/finance/member/auditor）、以 ProjectMember 差集维护可见项目范围、停用/恢复成员；停用要求先处理在职员工绑定与有效项目经理交接，同事务撤销该成员全部未撤销 AgentToken、清空项目范围并写审计；最后 active owner 不可降级/停用，不可自停用，停用成员不可再改（除恢复）；公司级角色（owner/finance/auditor）不接受项目范围；每次成功变更 Membership.version+1、写 generic audit identity.membership.changed（changed_fields/role/active/project_scope_ids/request_token/input_digest/result，不含敏感字段）；同 request_token 重放原结果、改输入冲突；dry_run 零副作用；finance/auditor 只读全部成员，pm/member 仅读自己。core 迁移 0010 仅新增 Membership.version（回填默认 1）；不新增 business 表/账本/金额/期间写，不新增 canonical 事件 topic，不扩展 AgentToken 能力。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=190; PH-264 recorded in_review with owner/handoff, review pending."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 66 issues (0 silenced), all pre-existing urls.W003 namespace warnings, 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (core 0010_membership_version published; other migration leaves unchanged)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1: Ran 922 tests, FAILED (failures=5, errors=3, skipped=68) => 849 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility Accept/codec/large-JSON cases and tests.test_delivery_execution* symlink cases); no new failures. CI Linux is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. PH-264 adds no ledger/amount business invariant; the existing audit-chain check still passes."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_membership_lifecycle tests.test_v1_membership_lifecycle_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 17 tests, OK => 17 passed (10 service + 7 HTTP). Covers role/scope diff, last-owner/self rules, employee and manager handoff, token revocation, restore without scope/token restore, cross-org/project rejection, idempotent replay/conflict, dry_run zero side effects, read permissions and settings-page boundaries."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-264 membership-lifecycle reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: canonical identity.membership.change/v1 service semantics, Membership.version migration 0010, last-owner/self/employee/manager guards, AgentToken immediate revocation, ProjectMember scope diff, audit payload without sensitive fields, idempotent replay/dry-run, settings-page role boundaries, and the no-new-canonical-topic constraint. projectctl check passes; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "Idempotency reuses the append-only AuditEvent payload (action identity.membership.changed, payload.request_token + input_digest + result) instead of adding a receipt table, because the frozen PH-264 spec forbids new business tables and allows only Membership.version as the structural change. Same token+input replays the stored result; changed input conflicts.",
+    "The generic audit helper also emits its ordinary non-canonical outbox DomainEvent for the action name; no canonical event topic is added to the contract catalog and no canonical event id is claimed by the command result. Report discloses this generic outbox row.",
+    "Active project for the manager-handoff guard means a Project whose stage is not closed/cancelled; the spec says 'active 项目的 manager' without enumerating stages, so this interpretation is disclosed.",
+    "core.Membership and core.Project use integer primary keys; the service accepts integer ids (and numeric strings) and returns ids as strings, while the canonical command payload schema is followed semantically. No cloned account or UUID PK change was made.",
+    "Single worker owns the whole write set for this task (core/models.py Membership.version, core/masterdata.py service, core/forms.py form, core/views.py settings handler, core/migrations/0010, templates/settings.html, tests, governance); no parallel slice writes these files; independent review is pending.",
+    "project/manifest.json active_handoff is left at main's value per the integration convention; tasks.json records PH-264 in_review with owner/handoff.",
+    "No browser 1440/390 check was run in this round (HTTP tests only); no new canonical event topic, ledger/amount/period write or AgentToken capability was added."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run in this round; the settings membership UI was exercised through HTTP tests only. Visual/keyboard/overflow verification remains for the reviewer/browser round.",
+    "Independent S review is still pending; verify-change --base 1e4c480 --task PH-264 at this HEAD exits 1 with the single high_risk_review_required error (no path_out_of_scope or report-shape errors, 13 changed files all inside allowed_paths) until the reviewer records pass.",
+    "PostgreSQL-specific behaviour is covered by the existing PG suite/CI; this slice adds no new concurrency-only race test (company lock + conditional version update are exercised in service tests; CI remains authoritative).",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "Invitations/registration/email, password/MFA, cross-company migration, account deletion, role-permission matrix expansion and sensitive payroll/rate display remain unimplemented."
+  ]
+}
