@@ -220,6 +220,8 @@ def save_funding_account(member, *, name, masked_identifier=None, request_token,
         row = _get_account(member, account_id, lock=True)
         if row.status != 'draft' or row.version != _version(expected_version):
             _fail('仅可修改当前版本的银行账户草稿')
+        if row.opening_cents != 0 or row.opening_on is None:
+            _fail('银行账户期初余额或期初日期异常，不能继续编辑')
         row.version += 1
     else:
         if expected_version is not None:
@@ -262,6 +264,8 @@ def activate_funding_account(member, account_id, *, expected_version, request_to
         _fail('银行账户版本已变化，请刷新后重试')
     if row.status != 'draft':
         _fail('仅可启用当前版本的银行账户草稿')
+    if row.opening_cents != 0 or row.opening_on is None:
+        _fail('期初余额必须为0且期初日期必须有效，期初导入留待后续片')
     row.status, row.version = 'active', row.version + 1
     if not dry_run:
         row.save()

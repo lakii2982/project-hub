@@ -257,12 +257,14 @@ def cash_transaction_save(context, payload):
 
 
 def _reverse_choices(snapshot):
+    # Reversed identifies stay selectable so an explicit reverse attempt reaches the owner
+    # service and shows its business message instead of a generic choice error.
     reversed_ids = {item['original_match_ref']['id'] for item in snapshot['matches']
                     if item['action'] == 'reverse' and item.get('original_match_ref')}
     return [(item['id'], f"{item['action_display']} · {item['identified_payee_display']} "
-                         f"(v{item['version']})")
-            for item in snapshot['matches']
-            if item['action'] == 'identify' and item['id'] not in reversed_ids]
+                         f"(v{item['version']})"
+             + ('（已反向）' if item['id'] in reversed_ids else ''))
+            for item in snapshot['matches'] if item['action'] == 'identify']
 
 
 def _detail_context(member, snapshot, *, identify_form=None, reverse_form=None):

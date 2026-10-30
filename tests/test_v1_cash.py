@@ -151,6 +151,31 @@ class FundingAccountTests(CashFixture, TestCase):
         for value in (True, 1.0, 0, -1, '1'):
             self.denied(lambda value=value: self.activate(other, expected_version=value))
 
+    def test_opening_balance_and_opening_date_are_frozen(self):
+        draft = self.draft_account(name='冻结户')
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                FundingAccount.objects.filter(pk=draft.pk).update(opening_cents=100)
+        row = FundingAccount.objects.get(pk=draft.pk)
+        row.opening_cents = 100
+        with self.assertRaises(ValidationError):
+            row.save()
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                FundingAccount.objects.filter(pk=draft.pk).update(
+                    opening_on=self.today - timedelta(days=1))
+        row = FundingAccount.objects.get(pk=draft.pk)
+        row.opening_on = self.today - timedelta(days=1)
+        with self.assertRaises(ValidationError):
+            row.save()
+        with self.assertRaises(ValidationError):
+            FundingAccount.objects.create(organization=self.org, name='非法期初',
+                opening_cents=100, opening_on=self.today, created_by=self.owner)
+        updated = funding.save_funding_account(self.owner, name='冻结户二',
+            masked_identifier='****0001', account_id=draft.pk, expected_version=draft.version,
+            request_token=uuid.uuid4(), dry_run=False)
+        self.assertEqual(self.activate(updated).status, 'active')
+
     def test_module_disable_keeps_history_readable_but_writes_refuse(self):
         active = self.active_account()
         PluginState.objects.update_or_create(organization=self.org, plugin_id='cash',
@@ -206,6 +231,32 @@ class CashTransactionTests(CashFixture, TestCase):
             defaults={'status': 'posted', 'closed_through': self.today})
         self.denied(lambda: self.tx())
 
+    def test_payee_and_matching_require_active_party_window_and_account(self):
+        inactive = Counterparty.objects.create(organization=self.org, display_name='停用客户',
+            roles=['customer'], active_from=self.today, status='inactive')
+        expired = Counterparty.objects.create(organization=self.org, display_name='过期客户',
+            roles=['customer'], active_from=self.today - timedelta(days=10),
+            inactive_on=self.today - timedelta(days=1))
+        future = Counterparty.objects.create(organization=self.org, display_name='未来客户',
+            roles=['customer'], active_from=self.today + timedelta(days=1))
+        for party in (inactive, expired, future):
+            self.denied(lambda party=party: self.tx(
+                payee={'kind': 'counterparty', 'id': str(party.pk)}))
+            row = self.tx()
+            self.denied(lambda party=party, row=row: self.identify(
+                row, {'kind': 'counterparty', 'id': str(party.pk)}))
+        self.denied(lambda: self.tx(payee={'kind': 'counterparty', 'id': str(self.party.pk)},
+                                    transaction_date=self.today + timedelta(days=1)))
+        Employee.objects.filter(pk=self.employee.pk).update(active=False)
+        row = self.tx()
+        self.denied(lambda: self.identify(row, {'kind': 'employee', 'id': self.employee.pk}))
+        draft_account = self.draft_account(name='草稿自有户')
+        self.denied(lambda: self.tx(payee={'kind': 'own_account',
+                                           'id': str(draft_account.pk)}))
+        self.denied(lambda: self.identify(row, {'kind': 'own_account',
+                                                'id': str(draft_account.pk)}))
+        self.assertEqual(CashPartyMatch.objects.count(), 0)
+
     def test_cross_organization_account_and_payee_are_refused(self):
         other = Organization.objects.create(name='其他公司')
         foreign = FundingAccount.objects.create(organization=other, name='外部户',
@@ -232,6 +283,36 @@ class CashTransactionTests(CashFixture, TestCase):
         second = self.tx(external_source_key='KEY-2')
         self.denied(lambda: self.tx(transaction_id=second.pk, external_source_key='KEY-1',
                                     expected_version=second.version))
+
+    def test_replay_survives_later_party_deactivation(self):
+        token = uuid.uuid4()
+        first = self.tx(payee={'kind': 'counterparty', 'id': str(self.party.pk)},
+                        external_source_key='LATE-1', request_token=token)
+        other = self.tx(external_source_key='LATE-2')
+        match_token = uuid.uuid4()
+        match = self.identify(other, {'kind': 'employee', 'id': self.employee.pk},
+                              request_token=match_token)
+        Counterparty.objects.filter(pk=self.party.pk).update(status='inactive')
+        Employee.objects.filter(pk=self.employee.pk).update(active=False)
+        before = self.facts()
+        replay = self.tx(payee={'kind': 'counterparty', 'id': str(self.party.pk)},
+                         external_source_key='LATE-1')
+        self.assertEqual(replay.pk, first.pk)
+        same_token = self.tx(payee={'kind': 'counterparty', 'id': str(self.party.pk)},
+                             external_source_key='LATE-1', request_token=token)
+        self.assertEqual(same_token.pk, first.pk)
+        match_replay = cash.match_party(self.owner, other.pk, action='identify',
+            identified_payee={'kind': 'employee', 'id': self.employee.pk},
+            evidence=[{'reference': '匹配依据'}], expected_version=other.version,
+            request_token=match_token, dry_run=False)
+        self.assertEqual(match_replay.pk, match.pk)
+        self.assertEqual(before, self.facts())
+        self.denied(lambda: self.tx(payee={'kind': 'counterparty', 'id': str(self.party.pk)},
+                                    external_source_key='LATE-1', gross_cents=999))
+        self.denied(lambda: self.tx(payee={'kind': 'counterparty', 'id': str(self.party.pk)}))
+        fresh = self.tx()
+        self.denied(lambda: self.identify(fresh, {'kind': 'employee',
+                                                  'id': self.employee.pk}))
 
     def test_draft_edit_version_and_receipt_replay(self):
         row = self.tx()
@@ -371,6 +452,26 @@ class CashPartyMatchTests(CashFixture, TestCase):
                 expected_version=row.version, request_token=uuid.uuid4(), dry_run=False))
         self.assertFalse(CashPartyMatch.objects.filter(action='reverse',
                                                        original_match__isnull=True).exists())
+
+    def test_identify_is_frozen_to_the_current_effective_match(self):
+        row = self.tx()
+        first = self.identify(row, {'kind': 'employee', 'id': self.employee.pk})
+        self.denied(lambda: self.identify(row, {'kind': 'counterparty',
+                                                'id': str(self.party.pk)}))
+        first_reverse = self.reverse(row, first)
+        self.denied(lambda: self.reverse(row, first))
+        second = self.identify(row, {'kind': 'counterparty', 'id': str(self.party.pk)})
+        self.denied(lambda: self.identify(row, {'kind': 'employee', 'id': self.employee.pk}))
+        self.denied(lambda: self.reverse(row, first))
+        second_reverse = self.reverse(row, second)
+        third = self.identify(row, {'kind': 'own_account', 'id': str(self.account.pk)})
+        actions = list(row.matches.order_by('created_at', 'id').values_list('action', flat=True))
+        self.assertEqual(actions, ['identify', 'reverse', 'identify', 'reverse', 'identify'])
+        self.assertEqual((first_reverse.original_match_id, second_reverse.original_match_id),
+                         (first.pk, second.pk))
+        self.assertEqual(third.identified_payee, {'kind': 'own_account',
+                                                  'id': str(self.account.pk)})
+        self.denied(lambda: self.reverse(row, third, reason=''))
 
     def test_match_dry_run_and_receipt_replay(self):
         row = self.tx()

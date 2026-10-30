@@ -32,9 +32,8 @@ class FundingAccount(models.Model):
                                    name='cash_funding_account_owner'),
             models.CheckConstraint(condition=Q(status__in=['draft', 'active']),
                                    name='cash_funding_account_status'),
-            models.CheckConstraint(condition=Q(opening_cents__gte=-MAX_CENTS,
-                                               opening_cents__lte=MAX_CENTS),
-                                   name='cash_funding_account_opening_bound'),
+            models.CheckConstraint(condition=Q(opening_cents=0),
+                                   name='cash_funding_account_opening_zero'),
         ]
 
     @property
@@ -46,8 +45,21 @@ class FundingAccount(models.Model):
         return {'draft': '草稿', 'active': '已启用'}.get(self.status, self.status)
 
     def save(self, *args, **kwargs):
-        if self.pk and type(self).objects.filter(pk=self.pk, status='active').exists():
+        if self._state.adding:
+            if self.opening_cents != 0:
+                raise ValidationError('银行账户期初余额必须为0，期初导入留待后续片')
+            super().save(*args, **kwargs)
+            return
+        persisted = type(self).objects.filter(pk=self.pk).values(
+            'status', 'opening_cents', 'opening_on').first()
+        if persisted is None:
+            super().save(*args, **kwargs)
+            return
+        if persisted['status'] == 'active':
             raise ValidationError('已启用银行账户不可修改')
+        if (self.opening_cents != 0 or persisted['opening_cents'] != 0
+                or self.opening_on != persisted['opening_on']):
+            raise ValidationError('银行账户期初余额与期初日期在创建后不可修改')
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
@@ -67,6 +79,8 @@ class CashTransaction(models.Model):
     gross_cents = models.PositiveBigIntegerField()
     external_source_key = models.CharField(max_length=200)
     payee = models.JSONField()
+    # Deliberately no cross-owner FK: same-company existence/status is verified through
+    # contracts.party_services.get_party in the service layer (see PH-228 deviations).
     counterparty_id = models.UUIDField(null=True, blank=True)
     evidence = models.JSONField(default=list)
     status = models.CharField(max_length=16, default='draft')

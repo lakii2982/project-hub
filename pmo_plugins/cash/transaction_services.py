@@ -34,6 +34,18 @@ def _party(member, party_id):
         raise PermissionDenied('往来方不存在或无权访问')
 
 
+def _party_for_day(member, party_id, day):
+    """Named read verifies tenant/existence; cash adds the status/effective-date gate."""
+    party = _party(member, party_id)
+    if party.status != 'active':
+        _fail('往来方已停用，不能作为收款方或匹配对象')
+    if party.inactive_on is not None and party.inactive_on <= day:
+        _fail('往来方在业务日已失效，不能作为收款方或匹配对象')
+    if party.active_from is not None and day < party.active_from:
+        _fail('往来方在业务日尚未生效，不能作为收款方或匹配对象')
+    return party
+
+
 def _period(member, day):
     if type(day) is not date:
         _fail('银行流水日期须为有效的年月日')
@@ -51,8 +63,8 @@ def _external_key(value):
     return _text(value, 200, '外部流水编号须为1至200个字符')
 
 
-def _payee(value, member):
-    """Bank payee only supports unidentified / external counterparty / own account."""
+def _payee_shape(value):
+    """Structural payee normalization only; live party state is checked for new writes."""
     if not isinstance(value, dict) or 'kind' not in value:
         _fail('收款方信息无效')
     kind = value['kind']
@@ -70,42 +82,58 @@ def _payee(value, member):
     if set(value) != {'kind', 'id'}:
         _fail('收款方只接受 kind 与 id')
     if kind == 'counterparty':
-        party = _party(member, _identifier(value['id'], '往来方标识无效'))
-        return {'kind': 'counterparty', 'id': str(party.pk)}, party.pk
+        party_id = _identifier(value['id'], '往来方标识无效')
+        return {'kind': 'counterparty', 'id': str(party_id)}, party_id
     account_id = _identifier(value['id'], '自有账户标识无效')
-    if not _funding_account_exists(member, account_id):
-        _fail('自有账户不存在或不属于本公司')
     return {'kind': 'own_account', 'id': str(account_id)}, None
 
 
-def _funding_account_exists(member, account_id):
-    return FundingAccount.objects.filter(organization=member.organization, pk=account_id).exists()
+def _payee_state(member, payee, day):
+    """Live state gate for a new save only; replays must resolve before this point."""
+    kind = payee['kind']
+    if kind == 'counterparty':
+        _party_for_day(member, _identifier(payee['id'], '往来方标识无效'), day)
+    elif kind == 'own_account':
+        if not _active_funding_account_exists(member, _identifier(payee['id'], '自有账户标识无效')):
+            _fail('自有账户须为本公司已启用的银行账户')
 
 
-def _identified_payee(member, value):
+def _active_funding_account_exists(member, account_id):
+    return FundingAccount.objects.filter(organization=member.organization, pk=account_id,
+                                         status='active').exists()
+
+
+def _identified_payee_shape(value):
+    """Structural identification normalization; live state is checked for new matches only."""
     if not isinstance(value, dict) or set(value) != {'kind', 'id'}:
         _fail('识别收款方须为 kind 与 id')
     kind = value['kind']
     if kind not in MATCH_PAYEE_KINDS:
         _fail('识别收款方类型无效')
     if kind == 'counterparty':
-        party = _party(member, _identifier(value['id'], '往来方标识无效'))
-        return {'kind': 'counterparty', 'id': str(party.pk)}
+        return {'kind': 'counterparty', 'id': str(_identifier(value['id'], '往来方标识无效'))}
     if kind == 'employee':
         raw = value['id']
         if type(raw) is bool:
             _fail('员工标识无效')
         try:
-            employee_id = int(raw)
+            return {'kind': 'employee', 'id': int(raw)}
         except (TypeError, ValueError):
             _fail('员工标识无效')
-        if not Employee.objects.filter(organization=member.organization, pk=employee_id).exists():
-            _fail('员工不存在或不属于本公司')
-        return {'kind': 'employee', 'id': employee_id}
-    account_id = _identifier(value['id'], '自有账户标识无效')
-    if not _funding_account_exists(member, account_id):
-        _fail('自有账户不存在或不属于本公司')
-    return {'kind': 'own_account', 'id': str(account_id)}
+    return {'kind': 'own_account', 'id': str(_identifier(value['id'], '自有账户标识无效'))}
+
+
+def _identified_payee_state(member, payee, day):
+    kind = payee['kind']
+    if kind == 'counterparty':
+        _party_for_day(member, _identifier(payee['id'], '往来方标识无效'), day)
+    elif kind == 'employee':
+        if not Employee.objects.filter(organization=member.organization, pk=payee['id'],
+                                       active=True).exists():
+            _fail('员工不存在、已停用或不属于本公司')
+    else:
+        if not _active_funding_account_exists(member, _identifier(payee['id'], '自有账户标识无效')):
+            _fail('自有账户须为本公司已启用的银行账户')
 
 
 def _match_ref(value):
@@ -166,7 +194,7 @@ def save_cash_transaction(member, *, funding_account_id, transaction_date, direc
         _fail('银行流水方向须为收入或支出')
     gross = _amount(gross_cents)
     key = _external_key(external_source_key)
-    payee_value, counterparty_id = _payee(payee, member)
+    payee_value, counterparty_id = _payee_shape(payee)
     evidence_refs = _evidence(evidence, required=True)
     transaction_id = _optional_identifier(transaction_id, '银行流水标识无效')
     payload = {'funding_account_id': str(account_id), 'transaction_date': day.isoformat(),
@@ -178,11 +206,10 @@ def save_cash_transaction(member, *, funding_account_id, transaction_date, direc
                                       dry_run)
     if receipt is not None:
         return _receipt_row(member, receipt, CashTransaction)
-    account = _get_account(member, account_id, lock=True)
-    if account.status != 'active':
-        _fail('只能在已启用的银行账户登记流水')
+    # Replay resolution must not depend on mutable party/account state: a later
+    # counterparty/employee/account deactivation cannot invalidate an existing fact.
     duplicates = CashTransaction.objects.filter(organization=member.organization,
-                                                funding_account=account,
+                                                funding_account_id=account_id,
                                                 external_source_key=key)
     if transaction_id:
         duplicates = duplicates.exclude(pk=transaction_id)
@@ -193,6 +220,10 @@ def save_cash_transaction(member, *, funding_account_id, transaction_date, direc
                 counterparty_id=counterparty_id, evidence=evidence_refs):
             return existing
         _fail('同一外部流水编号已用于不同内容，请核对后使用新的外部编号')
+    _payee_state(member, payee_value, day)
+    account = _get_account(member, account_id, lock=True)
+    if account.status != 'active':
+        _fail('只能在已启用的银行账户登记流水')
     _period(member, day)
     if transaction_id:
         row = _get_transaction(member, transaction_id, lock=True)
@@ -235,7 +266,7 @@ def match_party(member, transaction_id, *, action, identified_payee=None, match_
             _fail('识别匹配不接受原匹配引用')
         if reason not in (None, ''):
             _fail('识别匹配不记录原因')
-        payee_value = _identified_payee(member, identified_payee)
+        payee_value = _identified_payee_shape(identified_payee)
         reason_value, match_ref_value = None, None
     else:
         payee_value = None
@@ -255,6 +286,11 @@ def match_party(member, transaction_id, *, action, identified_payee=None, match_
         _fail('只能对草稿银行流水办理往来方匹配')
     if row.version != expected:
         _fail('银行流水版本已变化，请刷新后重试')
+    if action == 'identify':
+        _identified_payee_state(member, payee_value, row.transaction_date)
+        if CashPartyMatch.objects.filter(cash_transaction=row, action='identify',
+                                         reversals__isnull=True).exists():
+            _fail('该银行流水已有未被反向的识别匹配，请先反向后再重新识别')
     original = None
     if action == 'reverse':
         original = _get_match(member, match_ref_value['id'])
@@ -262,7 +298,7 @@ def match_party(member, transaction_id, *, action, identified_payee=None, match_
             _fail('原匹配不属于该银行流水')
         if original.action != 'identify' or original.version != match_ref_value['version']:
             _fail('只能反向该流水当前版本的识别匹配')
-        if CashPartyMatch.objects.filter(original_match=original).exists():
+        if original.reversals.exists():
             _fail('该识别匹配已被反向，不能重复反向')
     match = CashPartyMatch(organization=member.organization, cash_transaction=row, action=action,
                            identified_payee=payee_value, original_match=original,

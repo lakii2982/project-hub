@@ -11,6 +11,7 @@ from core.models import (AccountingEvent, Employee, LedgerEntry, LedgerPosting,
 from pmo_plugins.cash import funding_services as funding
 from pmo_plugins.cash import transaction_services as tx
 from pmo_plugins.cash.models import CashPartyMatch, CashReceipt, CashTransaction, FundingAccount
+from pmo_plugins.contracts.models import Counterparty
 from pmo_plugins.contracts.party_services import create_party
 from pmo_plugins.settlement.models import OpenItem, Settlement
 from tests.test_v1_contracts import Fixture
@@ -257,3 +258,60 @@ class CashHTTPTests(CashHTTPFixture, TestCase):
         accounts_page = self.client.get(ACCOUNTS)
         self.assertContains(accounts_page, str(self.today))
         self.assertContains(accounts_page, '0.00')
+
+    def test_match_semantics_inactive_objects_duplicate_identify_and_reidentify(self):
+        account = self.account()
+        row = self.transaction(account=account)
+        self.login(self.owner)
+        party = create_party(self.owner, display_name='匹配往来客户', roles=['customer'],
+                             active_from=self.today, request_token=uuid.uuid4())
+        # Inactive counterparty cannot be a bank payee or an identified party.
+        Counterparty.objects.filter(pk=party.pk).update(status='inactive')
+        response = self.client.post(TX_SAVE, self.tx_data(
+            account, payee_kind='counterparty', counterparty=str(party.pk),
+            external_source_key='BANK-INACTIVE-PARTY'))
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, '停用', status_code=400)
+        self.assertEqual(CashTransaction.objects.filter(external_source_key='BANK-INACTIVE-PARTY').count(), 0)
+        Counterparty.objects.filter(pk=party.pk).update(status='active')
+        # A draft funding account cannot be used as the own-account payee.
+        draft_account = funding.save_funding_account(
+            self.owner, name='草稿账户', masked_identifier='****0002',
+            request_token=uuid.uuid4(), dry_run=False)
+        response = self.client.post(TX_SAVE, self.tx_data(
+            account, payee_kind='own_account', own_account=str(draft_account.pk),
+            external_source_key='BANK-DRAFT-ACCOUNT'))
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(CashTransaction.objects.filter(
+            external_source_key='BANK-DRAFT-ACCOUNT').exists())
+        # An inactive employee is not selectable/identifiable.
+        inactive = Employee.objects.create(organization=self.org, name='停用员工', active=False)
+        response = self.client.post(f'{MATCH}?id={row.pk}&action=identify', self.match_data(
+            payee_kind='employee', employee=str(inactive.pk), counterparty=''))
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(CashPartyMatch.objects.exists())
+        # Identify succeeds, a second unreversed identify is refused with the service message.
+        response = self.client.post(f'{MATCH}?id={row.pk}&action=identify', self.match_data(
+            counterparty=str(party.pk)))
+        self.assertEqual(response.status_code, 302)
+        first = CashPartyMatch.objects.get(action='identify')
+        response = self.client.post(f'{MATCH}?id={row.pk}&action=identify', self.match_data(
+            counterparty=str(party.pk)))
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, '未被反向', status_code=400)
+        self.assertEqual(CashPartyMatch.objects.filter(action='identify').count(), 1)
+        # Reverse the effective identify; a second reverse of the same match is refused.
+        response = self.client.post(f'{MATCH}?id={row.pk}&action=reverse', self.match_data(
+            action='reverse', original_match_ref=str(first.pk),
+            reason='原识别有误', evidence='反向证据 R-002'))
+        self.assertEqual(response.status_code, 302)
+        response = self.client.post(f'{MATCH}?id={row.pk}&action=reverse', self.match_data(
+            action='reverse', original_match_ref=str(first.pk),
+            reason='重复反向', evidence='反向证据 R-003'))
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, '已被反向', status_code=400)
+        # After an explicit reverse the same fact can be identified again.
+        response = self.client.post(f'{MATCH}?id={row.pk}&action=identify', self.match_data(
+            payee_kind='own_account', own_account=str(account.pk), counterparty=''))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(CashPartyMatch.objects.filter(action='identify').count(), 2)
