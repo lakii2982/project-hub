@@ -20,7 +20,7 @@
 
 PH-097是后续需求规划入口；PH-096冻结统一令牌接线与本轮收口任务，PH-108已修复取消集成测试的启动同步，PH-109同步文档并交付本地测试环境。新需求不能复用done任务，契约变化先合入规划PR，实现使用新main基线。
 
-研发体系的PH-100至PH-107已完成本机四CLI的受控执行、独立复核与真实GitHub闭环演练；它不等于常驻调度、无人值守部署或产品个人Agent客户端验收。见[试点使用说明](docs/engineering/ai-delivery-pilot.md)与[AI原生研发契约](docs/engineering/ai-native-delivery.md)。
+研发体系的PH-100至PH-107已完成本机四CLI的受控执行、独立复核与真实GitHub闭环演练；它不等于常驻调度、无人值守部署或产品个人Agent客户端验收。见[试点使用说明](docs/engineering/archive/ai-delivery-pilot.md)与[AI原生研发契约](docs/engineering/ai-native-delivery.md)。
 
 ## 不变的产品判断
 

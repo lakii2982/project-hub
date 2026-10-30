@@ -516,3 +516,8 @@ PH222 PR117 合入 aec8f67 后完成应收规划：登记 PH-224「客户结算�
 ## PH-234 会话上下文减负文档改造（2026-10-30）
 
 delivery-status拆分落地区：现状头1996字节，原文件全文逐字入archive，新条目只追加归档。AGENTS.md开场改orient→brief/draft-report路径并禁止裸读tasks.json/delivery-status/work-packages.json全文；ai-delivery-controller/pilot/isolation/delivery.md四篇git mv入docs/engineering/archive/（内容零改动）；v1.0-development/README加work-packages.json与requirement-trace.json的按需查询护栏。遗留：ROADMAP.md与execution-protocol.md各一处旧路径链接留PH-236修复。见`docs/verification.md`与`project/reports/PH-234.json`。
+
+
+## PH-237 文档收尾：失效链接修复与作用域测试指引（2026-10-30）
+
+PH-234遗留的两处ai-delivery-*旧路径链接（ROADMAP、execution-protocol）改指archive；CONTRIBUTING加作用域测试指引（开发中模块级并行快速反馈、收尾全量一次、CI兜底），验收四命令未动。效率改造实测：新会话开场+任务上下文阅读量281KB→15KB（-94.6%）。见`docs/verification.md`与`project/reports/PH-237.json`。
