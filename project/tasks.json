@@ -7550,24 +7550,29 @@
       ],
       "spec": "project/specs/PH-256.md",
       "allowed_paths": [
-        "pmo_plugins/importing/models.py",
-        "pmo_plugins/importing/preview_services.py",
-        "pmo_plugins/importing/views.py",
-        "pmo_plugins/importing/forms.py",
-        "pmo_plugins/importing/domain_metadata.py",
-        "pmo_plugins/importing/urls.py",
-        "pmo_plugins/importing/templates/importing/preview_form.html",
-        "pmo_plugins/importing/templates/importing/preview_list.html",
-        "pmo_plugins/importing/migrations/*.py",
+        "pmo_plugins/onboarding/__init__.py",
+        "pmo_plugins/onboarding/apps.py",
+        "pmo_plugins/onboarding/plugin.py",
+        "pmo_plugins/onboarding/models.py",
+        "pmo_plugins/onboarding/preview_services.py",
+        "pmo_plugins/onboarding/views.py",
+        "pmo_plugins/onboarding/forms.py",
+        "pmo_plugins/onboarding/domain_metadata.py",
+        "pmo_plugins/onboarding/urls.py",
+        "pmo_plugins/onboarding/templates/onboarding/preview_form.html",
+        "pmo_plugins/onboarding/templates/onboarding/preview_list.html",
+        "pmo_plugins/onboarding/migrations/*.py",
+        "pmo/settings.py",
+        "pmo/urls.py",
         "pmo_plugins/delivery/urls.py",
         "tests/test_v1_import_preview.py",
         "tests/test_v1_import_preview_http.py",
-        "project/reports/PH-256.json",
-        "project/handoffs/PH-256.md",
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "project/reports/PH-256.json",
+        "project/handoffs/PH-256.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -7580,7 +7585,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-181（四类核对/差额）与 PH-185（项目聚合/结项）done；importing app 归属决策已登记 PH-267（ready），决策完成后仍须上述依赖 done 才能晋级。"
+        "缺 PH-181（四类核对/差额）与 PH-185（项目聚合/结项）done；归属已由 PH-267 ADR 0012 决定（新建 pmo_plugins.onboarding，白名单已同步为 onboarding bootstrap/文件）；依赖 done 后由后续规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -7628,7 +7633,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-180（期间预检/锁定）与 PH-181（四类核对/差额）done；insights app 归属决策待 PH-267 决策并可能单列前置片；依赖完成后由后续规划槽复核 DoR 再晋级。"
+        "缺 PH-180（期间预检/锁定）与 PH-181（四类核对/差额）done；insights 归属按 PH-267 ADR 0012 单列独立决策片（不并入 onboarding），待该决策完成；依赖/决策完成后由后续规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -8024,7 +8029,7 @@
       "title": "导入/期初插件归属与契约决策前置",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8052,7 +8057,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-267.md"
     },
     {
       "id": "PH-268",
