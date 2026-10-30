@@ -1,0 +1,63 @@
+{
+  "task_id": "PH-265",
+  "summary": "Contract change/termination first slice. contracts gains append-only ContractChange (canonical fields: change_type add_scope/reduce_scope/price_change/extension/termination, five statuses, signed deltas, evidence, draft_content, decider/time/note) and ContractChangeReceipt idempotency receipts, plus Contract.terminated_on and contracts migration 0003 with SQLite/PostgreSQL triggers (no deletes; draft revision version+1; a single decision with creator != decider enforced by service and trigger; terminated contracts immutable). save_contract_change_draft and decide_contract_change carry the canonical contracts.contract_change.draft.save/v1 and contracts.change.decide/v1 semantics in a named service/browser workflow: company lock, one approved version required, PH-214 schema validation reuse, server-derived signed deltas checked against client input, termination without replacement content, one draft per contract, replay/changed-input conflict and optimistic version; approval creates a new approved ContractVersion and supersedes the previous one (or terminates the contract without a new version) and emits exactly one contracts.version_approved.v1 (source=new version, changed_refs=[version, change]) and one contracts.change_effective.v1 (source=change; changed_refs=[change, version] or [change, contract] for termination) with posting_event_refs=[]; no new canonical topic/command, no ledger/cash/revenue/open-item write. approved_line_snapshot allows business dates before termination; approved_terms_snapshot rejects settlement on/after terminated_on while posted settlements/open items stay unchanged. Views/forms/templates add change history, draft form, independent decision and contract-detail change area. verify_integrity adds contract-change invariants (status/type/org, approved change exactly one change_effective envelope and matching version/termination state, draft/unapproved cannot carry the effective event, one draft per contract, active contracts exactly one approved version, terminated contracts keep their approved version and date, approved versions have an approval chain and exactly one version_approved envelope).",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":190}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (71 issues, 0 silenced), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: 'No changes detected'; contracts migration 0003 (Contract.terminated_on, ContractChange/ContractChangeReceipt, dual SQLite/PostgreSQL guard triggers) matches the models."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual one full run: Ran 918 tests in 123.894s, 5 failures/3 errors/68 environment skips. The 8 failures are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Baseline at 1e4c480 is 905 tests; this slice adds 13. Linux CI authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Separate probe DB after an approved price_change contract change: contract version=3 and verify_integrity ok=true; after deleting the change_effective event it exits 1 with [\"contract_change:<id>:effective_event_count\"]. Empty DB after migration also passes."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_contract_change tests.test_v1_contract_change_http tests.test_v1_contract_termination --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual: Ran 13 tests, OK (service 7: draft/deltas/no version or canonical event, replay/duplicate/conflict, self-review + independent approval new version + two canonical envelopes + approved-line snapshot, reject/withdraw terminal, termination date/event/settlement guard, roles/module disable; HTTP 3: forms/list roles, browser termination flow with self-approval 400 then finance approval, CSRF/unknown fields/disabled module; termination 3: history preservation + guard, missing event and corruption probes)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 1e4c480 --task PH-265",
+      "result": "pass",
+      "evidence": "Actual rerun at the final reviewed HEAD: ok=true; all changed files inside the BASE 1e4c480 PH-265 allowed_paths. Before the independent review the same command failed only on high_risk_review_required, confirming path scope was clean."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级复核由 fresh-context reviewer 实际重跑 check/全量/verify_integrity/scoped/verify-change，并核对 canonical 事件 envelope、版本 supersede、终止守卫、触发器不可变、幂等/自审/零半笔与白名单后写入 pass/rejected；实现者不自写 pass。复核对象为 /tmp/ph265-contract-change 的 PH-265 提交（BASE 1e4c480）。"
+  },
+  "deviations": [
+    "单一 worker 按 Lead 授权承担 root_only 写集：core/management/commands/verify_integrity.py 与 pmo_plugins/delivery/urls.py；未并行其它片写这些文件，交付经独立复核。",
+    "canonical change_effective 事件的审计来源使用 suppressed `plugin.contracts.change.effective` audit；未另写 `contracts.change.effective` generic audit，因为 core.audit 会为非 plugin 前缀动作自动生成同名 topic 的非 canonical outbox 事件，与 canonical topic 冲突（重复 topic）。审计链仍完整，报告披露；rejected/withdrawn/draft_saved 仍写 generic audit。",
+    "变更 requested_on 冻结为不得未来（与 PH-214 首次生效日期口径一致）：终止立即生效，`approved_terms_snapshot` 的 as_of>=terminated_on 守卫因此同时覆盖回溯日期；未实现未来生效的终止排期（留后续片）。",
+    "`ContractTrigger` 仅强化终止后合同不可再改、禁止删除与终止日期/状态一致性，保留既有草稿编辑/首次批准/版本递增行为（未引入新的合同全字段不可变触发器，避免破坏 PH-212/214 既有路径）。",
+    "变更类型/生效日期创建后不可修改（触发器冻结），draft 更新仅允许内容/证据/版本；本片不产生 canonical pending_customer 状态（spec 排除），客户确认流转留后续片。",
+    "UI 结构复用既有 panel/form 模式，但 1440/390、键盘焦点与空/错/加载态未实测；作为未验证项披露。"
+  ],
+  "unverified": [
+    "本机无 PostgreSQL：同一合同并发 draft 只一胜、重复批准只一胜由公司锁+行锁+唯一约束与 SQLite 路径测试覆盖，真实 PG 双连接并发交 Linux CI。",
+    "未做浏览器 1440/390 与键盘/焦点/空态/错误态/停用态实测；HTTP 断言只覆盖状态码/流程/权限。",
+    "未验证真实客户合同、附件、生产/UAT；变更证据仅 JSON 结构登记（不上传附件）。",
+    "PH-150/PH-151/PH-155 legacy proposed 未解除；客户确认流转（pending_customer）、变更对已过账结算的追溯调整、未来生效终止排期与多币种均不在本片。",
+    "独立 S 复核 pending：report.review 由 reviewer 填写；通过后置 done、重跑 check+verify-change 并报最终 SHA。"
+  ]
+}
