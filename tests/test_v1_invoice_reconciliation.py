@@ -79,22 +79,39 @@ class InvoiceReconciliationReadTests(ReconciliationFixture, TestCase):
         self.assertIn('tax_qualification_missing',
                       [item['code'] for item in snapshot['invoice']['missing']])
         row = Invoice.objects.get(pk=invoice['invoice_ref']['id'])
-        TaxQualification.objects.create(
-            organization=self.org, source_ref={'namespace': 'invoicing', 'kind': 'invoice',
-                                               'id': str(row.pk), 'version': 1},
-            tax_cents=1000, status='pending', qualification_status='unknown')
+        source_ref = {'namespace': 'invoicing', 'kind': 'invoice',
+                      'id': str(row.pk), 'version': 1}
+        from pmo_plugins.invoicing import services
+        opened = services.open_tax_qualification(
+            self.owner, source_ref=source_ref, tax_cents=1000,
+            evidence=[{'kind': 'tax_invoice', 'reference': 'pending'}],
+            request_token=uuid.uuid4(), dry_run=False)
+        self.assertEqual(opened['status'], 'pending')
         snapshot = self.detail(invoice)
         self.assertIn('tax_unconfirmed', {issue['code'] for issue in snapshot['invoice']['issues']})
         confirmed = self.record(gross_cents=2000, net_cents=1800, tax_cents=200)
         confirmed_row = Invoice.objects.get(pk=confirmed['invoice_ref']['id'])
-        TaxQualification.objects.create(
-            organization=self.org, source_ref={'namespace': 'invoicing', 'kind': 'invoice',
-                                               'id': str(confirmed_row.pk), 'version': 1},
-            tax_cents=200, status='confirmed', qualification_status='recoverable',
-            decided_on=self.today)
+        confirmed_source = {'namespace': 'invoicing', 'kind': 'invoice',
+                            'id': str(confirmed_row.pk), 'version': 1}
+        opened_confirmed = services.open_tax_qualification(
+            self.owner, source_ref=confirmed_source, tax_cents=200,
+            evidence=[{'kind': 'tax_invoice', 'reference': 'confirmed'}],
+            request_token=uuid.uuid4(), dry_run=False)
+        services.confirm_tax_qualification(
+            self.owner, opened_confirmed['qualification_ref']['id'],
+            qualification_status='recoverable', decided_on=self.today,
+            evidence=[{'kind': 'tax_decision', 'reference': '可抵扣'}],
+            request_token=uuid.uuid4(), expected_version=1, dry_run=False)
         confirmed_snapshot = self.detail(confirmed)
         self.assertNotIn('tax_unconfirmed',
                          {issue['code'] for issue in confirmed_snapshot['invoice']['issues']})
+        from django.db import IntegrityError, transaction
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                TaxQualification.objects.create(
+                    organization=self.org, source_ref=source_ref, tax_cents=1000,
+                    status='confirmed', qualification_status='recoverable',
+                    decided_on=self.today)
 
     def test_missing_source_is_null_plus_missing_not_zero(self):
         from pmo_plugins.invoicing.models import InvoiceAllocation, InvoiceLine

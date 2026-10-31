@@ -1,6 +1,6 @@
 {
   "task_id": "PH-325",
-  "summary": "Implemented the PH-325 read-only invoice pairing slice at BASE 20ffc12 (rebased; originally 863f946). New pmo_plugins/invoicing/invoice_reconciliation_services.py exposes invoice_pairing(member, *, invoice_id=None, project_id=None, as_of=None): it derives invoice header/line/allocation/reversal/tax-qualification facts together with the referenced settlement OpenItem/Clearance/Settlement snapshots (gross/cleared/remaining/due), management-revenue recognition/adjustment totals per project, and contract-line terms, returning allocated/unallocated totals, recognized revenue, tax-qualification facts, issue codes (source_missing, unsupported_source_kind, unallocated_amount, over_allocated, duplicate_pairing, revenue_invoice_mismatch, tax_unconfirmed, cross_org_source, invalid_source_ref) and missing[] entries where upstream data is absent (null plus code, never zero). Reads are role-scoped: owner/finance/auditor get the organization, pm only visible/managed projects (detail and project filters enforce this, member is denied), and the canonical GET route is bound as history_read through pmo_plugins/delivery/urls.py (no invoicing/urls.py). A read-only filter form and template render the snapshot; no writes, audit events, receipts, migrations or ledger facts are created. 18 new tests cover role boundaries, project scoping, settlement/contract/tax projections, unallocated and missing-source cases, duplicate pairing across invoices, org/project aggregation, zero-write behavior, HTTP 200/400/403 boundaries, history_read after disabling the module, and the review regressions: no-revenue null+missing, as_of-bounded future adjustments, per-project revenue comparison for multi-project invoices, and project-filter mismatch denial. Tax-qualification confirmation is deliberately not implemented in this read-only slice and is deferred to PH-320.",
+  "summary": "Implemented the PH-325 read-only invoice pairing slice at BASE 20ffc12 (rebased; originally 863f946). New pmo_plugins/invoicing/invoice_reconciliation_services.py exposes invoice_pairing(member, *, invoice_id=None, project_id=None, as_of=None): it derives invoice header/line/allocation/reversal/tax-qualification facts together with the referenced settlement OpenItem/Clearance/Settlement snapshots (gross/cleared/remaining/due), management-revenue recognition/adjustment totals per project, and contract-line terms, returning allocated/unallocated totals, recognized revenue, tax-qualification facts, issue codes (source_missing, unsupported_source_kind, unallocated_amount, over_allocated, duplicate_pairing, revenue_invoice_mismatch, tax_unconfirmed, cross_org_source, invalid_source_ref) and missing[] entries where upstream data is absent (null plus code, never zero). Reads are role-scoped: owner/finance/auditor get the organization, pm only visible/managed projects (detail and project filters enforce this, member is denied), and the canonical GET route is bound as history_read through pmo_plugins/delivery/urls.py (no invoicing/urls.py). A read-only filter form and template render the snapshot; no writes, audit events, receipts, migrations or ledger facts are created. 18 new tests cover role boundaries, project scoping, settlement/contract/tax projections, unallocated and missing-source cases, duplicate pairing across invoices, org/project aggregation, zero-write behavior, HTTP 200/400/403 boundaries, history_read after disabling the module, and the review regressions: no-revenue null+missing, as_of-bounded future adjustments, per-project revenue comparison for multi-project invoices, and project-filter mismatch denial. Tax-qualification confirmation is not implemented in this read-only reconciliation slice; after PH-320 merged, its fixture uses PH-320's open_tax_qualification/confirm_tax_qualification services instead of direct non-initial ORM inserts.",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
@@ -10,7 +10,7 @@
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual run after rebase onto main 20ffc12: System check identified 109 issues (0 silenced) — pre-existing warnings (baseline 108 plus this slice's one new route-name W003), 0 errors."
+      "evidence": "Actual run after merging main 4c0d309 (PH-320): System check identified 112 issues (0 silenced) — pre-existing warnings (main baseline 111 plus this slice's one new route-name W003), 0 errors."
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run after rebase onto main 20ffc12: Ran 1203 tests in 136.3s, FAILED (failures=5, errors=3, skipped=69) — exactly the known macOS/DRF environment set, no new failure."
+      "evidence": "Actual run after merging main 4c0d309: Ran 1212 tests in 134.8s, FAILED (failures=5, errors=3, skipped=69) — exactly the known macOS/DRF environment set, no new failure."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -30,7 +30,7 @@
     {
       "command": "python manage.py test tests.test_v1_invoice_reconciliation tests.test_v1_invoice_reconciliation_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run after the review fixes: Ran 18 tests, OK (added regressions: no-revenue null+revenue_missing, as_of bounds future adjustment, multi-project per-project comparison, project-filter mismatch denial)."
+      "evidence": "Actual run: Ran 18 tests, OK (service-based tax fixture: open_tax_qualification + confirm_tax_qualification; direct non-initial ORM insert asserted rejected by the PH-320 guard)."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -40,7 +40,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 4c0d309 --task PH-325",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 files inside BASE PH-325 allowed_paths (merge-resolved integration rerun)."
+      "evidence": "Post-merge actual run at HEAD f92eddb: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"f92eddbce09284b09b2b5e0bd4e1c76727176676\",\"count\":13,\"errors\":null}; all 13 files inside BASE 4c0d309 allowed_paths and review.status=pass (round-2 PASS)."
     }
   ],
   "review": {
@@ -55,6 +55,7 @@
     "evidence": "VERDICT: PASS (round 2; revenue null/as-of/per-project/project-filter fixes verified). Reviewed HEAD 6334677 (BASE 20ffc12) in /tmp/ph325-invoice-recon, worktree clean; 14 files within the whitelist; no migration/audit/write. No-revenue -> null+missing; adjustments bounded by as_of; multi-project comparisons per project; detail honors project_id and pm visible set with regressions; read-only projections/issues/permissions otherwise intact. Independent runs: check ok=263; makemigrations clean; scoped 18 OK; full 1203/5F+3E/69 known baseline; fresh verify_integrity ok; verify-change only review/acceptance gates, no path_out_of_scope."
   },
   "deviations": [
+    "CI-fix (old->new): the PH-325 tax fixture no longer creates TaxQualification rows directly in a non-initial state; it now opens them through open_tax_qualification (pending/unknown/version 1) and confirms through confirm_tax_qualification, matching PH-320's INSERT guard. The test also asserts that a direct ORM insert of a confirmed row is rejected with IntegrityError. Re-ran scoped 18, full suite 1212=5F+3E+69 (main 4c0d309 baseline, no new), fresh verify_integrity ok, check 112 warnings (main 111 + one route W003)/0 errors, makemigrations clean.",
     "Review-blocker fix (old->new): (1) _revenue_for_project now returns None when no posted RevenueRecognition exists, so recognized revenue is null plus revenue_missing instead of 0; (2) RevenueAdjustment is bounded by its own occurred_on <= as_of; (3) multi-project invoices compare recognized revenue per project against that project's allocated net (recognized_by_project, deterministic project_ids) instead of comparing one arbitrary project to the total; (4) invoice detail now enforces the requested project_id and the pm visible-project set before returning, and the project list filter is unchanged. Four regression tests were added (18 scoped tests total); full suite 1179=5F+3E+69 with no new failure.",
     "Task instruction and this slice are read-only with no audit/write/receipt; the spec's behaviour 2 (TaxQualification pending→confirmed write) is therefore NOT implemented here and is deferred to PH-320. The page only projects the existing TaxQualification facts and raises tax_unconfirmed when pending/unknown or missing, so no confirmation capability is claimed.",
     "The canonical route was added to pmo_plugins/invoicing/domain_metadata.py and bound through the existing pmo_plugins/delivery/urls.py handler map; no pmo_plugins/invoicing/urls.py was created (that file does not exist).",
