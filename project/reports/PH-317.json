@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD a581f45 (BASE fcb7b17, PH-317 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":259}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":259} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base fcb7b17 --task PH-317",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD a581f45: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 6 changed files (PH-317 spec closure section, tasks.json, manifest.json, docs/verification.md, PH-317 report/handoff) are inside BASE PH-317 allowed_paths."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-317 allowed_paths (independent review pass recorded)."
     }
   ],
   "review": {

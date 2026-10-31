@@ -10117,7 +10117,7 @@
       "title": "发票红冲/税额抵扣实现前置：红冲负值、税额拆分与抵扣边界",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
