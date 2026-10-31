@@ -1,0 +1,44 @@
+{
+  "task_id": "PH-327",
+  "summary": "Delivered the docs-only close/reopen acceptance and operations runbook at BASE 1c2c6ca, grounded in the merged PH-322 delivery close implementation. docs/engineering/close-runbook.md covers: roles and four-eyes control (owner/finance execute, auditor read-only, pm project-summary-only with period pages denied, member denied, independent reviewer), the frozen objects/states (AccountingPeriod, append-only PeriodCloseRun with close/reopen + closing/closed/reopened + unique sequence, ProjectClose, DeliveryReceipt idempotency/expected_version), the precheck issue_code tables for period close and project close with blocker/warning severity and owner-specific remediation, precheck_digest binding, step-by-step period close/reopen and project close/reopen procedures (prepare, precheck, dry_run, execute, verify_integrity, evidence), exception handling for verify_integrity error codes (sequence/action_state/missing_closing_pair/dangling_closing/latest/reopen_stage) with an absolute ban on manual row edits, trigger disabling or SQL repairs, stale-version/concurrency retry rules, browser 1440/390/keyboard/empty-error-loading-disabled checklist, PostgreSQL multi-connection close/reopen scenarios, and an evidence-backfill template aligned with PH-366 (candidate SHA, precheck digest, run ref, L1–L5 layers, gaps, four-eyes signature). It states honestly that no real close/reopen drill, browser walkthrough, PG concurrency or production acceptance was executed by this slice (not_run) and that the release gate remains per PH-366. No code, migration, route, schema or gate change and no fabricated acceptance result.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE 1c2c6ca): {\"command\":\"check\",\"ok\":true,\"task_count\":295}, exit 0; PH-327 done with handoff."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph327-close-ops on main 1c2c6ca with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 1c2c6ca --task PH-327",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-327 allowed_paths (review pass recorded)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-327 close/reopen operations-runbook reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PH-322 ALIGNMENT VERIFIED: the runbook's signatures and canonical routes match the merged implementation (close_period/reopen_period/close_project/reopen_project with request_token/expected_version/dry_run/reason/allow_open_period; period_close_precheck/reopen_period_precheck/project_close_precheck/reopen_project_precheck; period-close/period-close-execute/period-reopen/project-close/project-close-execute/project-reopen); PeriodCloseRun/ProjectClose states closing/closed/reopened, sequence uniqueness, closing->closed pair, reopen only after closed, ProjectClose from_stage, and DeliveryReceipt idempotency match models/services. The verify_integrity error table covers sequence/action_state/closed_date/missing_closing_pair/dangling_closing/close_transition/reopen_transition/reopen_state/latest_*/reopened_state/reopen_stage and the runbook correctly forbids hand-editing/deleting rows, disabling triggers, or direct SQL repair.",
+      "OPERATIONS/EVIDENCE: exception handling stops work and preserves logs/receipts/audit/evidence; stale-version concurrent retry is one retry and no old token; permissions (owner/finance execute, auditor read-only, pm project summary/period denial, member denial, module-disabled history read) and four-eyes/company-lock/expected_version/request_token/dry_run are documented; the close/reopen steps, precheck blockers/warnings, browser 1440/390 keyboard/empty/error/disabled checklist, real-PG concurrency not_run, and PH-366 evidence template (SHA/precheck_digest/run_ref/L1-L5/gaps/signatures) are present; current status honestly says L1+L2 only, real rehearsal/browser/PG/production not_run and release gate blocked by PH-366.",
+      "CONTENT/GATES: docs-only, no product code/migration/route/schema/gate change; 7 changed files within the PH-327 whitelist; no placeholders; task_count 295; check ok=295; governance 23 OK; verify-change --base 1c2c6ca --task PH-327 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD f751152 (BASE 1c2c6ca) in /tmp/ph327-close-ops, worktree clean; 7 files within the PH-327 whitelist; docs-only, no code/migration/schema/gate change. Runbook matches PH-322 signatures/routes/models/state machine/verify_integrity codes, forbids destructive repair, documents permissions/dry_run/four-eyes/stale retry, browser checklist, honest not_run status and PH-366 evidence template; check ok=295; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "The runbook is documentation/acceptance method only; no real close/reopen drill, browser walkthrough, PostgreSQL concurrency or production acceptance was executed, so those items are explicitly not_run and no pass is claimed.",
+    "Exception handling forbids manual edits/deletes of append-only close runs, receipt manipulation, trigger disabling and direct SQL repair; dangling/inconsistent runs must stop the operation, preserve evidence and escalate to engineering.",
+    "The evidence template reuses PH-366's release-evidence contract (candidate SHA, precheck digest, L1–L5, gaps, four-eyes signature) rather than defining a second evidence standard; the runbook references PH-322's scoped-test evidence as L1/L2 only.",
+    "No code, migration, route, schema, gate or product-behavior change; the Docker/CI/browser/PG/L5 items remain unverified."
+  ],
+  "unverified": [
+    "No real period close/reopen or project close/reopen drill was executed; no run refs/evidence artifacts were produced by this slice.",
+    "No browser 1440/390/keyboard/empty/error/loading/disabled-state walkthrough exists.",
+    "No real PostgreSQL close/reopen concurrency evidence exists (SQLite does not count); no production/customer acceptance.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}

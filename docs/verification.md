@@ -994,3 +994,17 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 4. **新登记（PH-370–373 连续）**：PH-370 跨 owner 编排执行首片（ready，基于 PH-320 引用链）；PH-371 税额→costing 开放期成本更正（ready）；PH-372 批次 C 收尾证据回填/gate 判定（proposed，deps PH-350/357/367）；PH-373 下一规划槽（proposed，待 PH-369 done）。count 291→295。
 5. **ROADMAP** 新增批次 C 收尾/D 批规划节；发布资格仍按 PH-366 blocked（PH-350 未实现、L3/L4/L5 未执行），不得宣称就绪。
 6. 独立 S 复核首轮 2 阻断（PH-327 spec 状态、PH-338/353 依赖图）+ 1 required（PH-362 白名单）已修，二轮 PASS（reviewer-b）；最终证据 HEAD c6d0e51 按槽惯例置 PH-369 done / PH-373 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=295；23 项治理 OK；verify-change --base 5763f4a --task PH-369 ok=true、12 文件全白名单、无 errors。未验证：PH-327/362/370/371/372 未实现；PH-350/335/357/367 未完成（main 后续已合入 PH-333/350，下一槽按新 BASE 复核）；发布资格仍 blocked。
+
+
+## PH-327 关期/结项写侧验收与运维 runbook（docs-only）（2026-10-31）
+
+基线 1c2c6ca。新增 `docs/engineering/close-runbook.md`：
+1. **角色/四眼/期间**：owner/finance 执行、auditor 只读、pm 仅项目摘要（period 拒绝）、member 拒绝；关期/结项/重开四眼复核；公司锁/expected_version/request_token 幂等/dry_run。
+2. **对象/状态**：AccountingPeriod、PeriodCloseRun（close/reopen、closing/closed/reopened、唯一序列、append-only）、ProjectClose、DeliveryReceipt；canonical 路由与命令/预检签名。
+3. **预检 issue_code 表**：期间（period_missing/period_already_closed/future_dated_fact/settlement_coverage_issue/revenue_pairing_issue/fee_pairing_issue/cash_unposted 等）与项目（contract_*/change_draft_pending/open_item_balance/period_not_closed/archive_evidence_missing 等）的 blocker/warning 与处置；precheck_digest 绑定。
+4. **操作步骤**：期间关期/重开、项目结项/重开（准备→预检→dry_run→execute→verify_integrity→证据），归档/迟到款边界。
+5. **异常处置**：verify_integrity 错误码（sequence/action_state/missing_closing_pair/dangling_closing/latest_state/reopen_stage 等）→ 停止/保留证据/升级工程，禁止手改/删行/关 trigger/SQL 修；stale_version/并发重试规则。
+6. **验收**：浏览器 1440/390/键盘/空错停用态清单、真实 PG 并发场景、证据回填模板（对齐 PH-366：候选 SHA/预检 digest/命令/run_ref/层级 L1–L5/缺口/四眼签名）。
+7. **当前状态**：PH-322 实现（L1+L2 scoped 23 tests）已合入；本片真实演练/浏览器/PG/生产 **not_run**，不得宣称通过；发布 gate 依 PH-366。
+未写代码/迁移/schema；无虚构验收结果。
+实跑：projectctl check ok/295；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：真实关期/结项/重开、浏览器、PG 并发、生产/客户验收。
