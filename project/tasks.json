@@ -10620,31 +10620,39 @@
     },
     {
       "id": "PH-329",
-      "title": "下一规划槽：验收实现切片与批次 C 登记",
+      "title": "后续交付独立规划入口（接续 PH-328）",
       "status": "ready",
       "risk": "S",
-      "milestone": "v1.0.0",
+      "milestone": "v1.0-preparation",
       "depends_on": [
         "PH-328"
       ],
       "blockers": [],
       "allowed_paths": [
         "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
         "project/tasks.json",
         "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
         "docs/verification.md",
-        "ROADMAP.md",
+        "docs/v1.0-development/*",
         "project/reports/PH-329.json",
         "project/handoffs/PH-329.md"
       ],
       "owning_plugin": "core",
       "acceptance": [
         "python scripts/projectctl.py check",
-        "python -m unittest tests.test_projectctl tests.test_governance -v",
-        "python scripts/projectctl.py verify-change --task PH-329"
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "handoff": null,
-      "owner": null
+      "owner": null,
+      "kind": "docs",
+      "priority": 3,
+      "spec": "project/specs/PH-329.md",
+      "github_issue": null
     },
     {
       "id": "PH-330",
@@ -10657,12 +10665,14 @@
         "PH-322"
       ],
       "blockers": [
-        "等待依赖 done"
+        "缺 PH-313（分摊/预算实现前置，ready 未 done）与 PH-322（关期/结项实现，proposed）done；实现前置完成后由规划槽复核 DoR 再晋级。"
       ],
       "allowed_paths": [
         "pmo_plugins/costing/",
         "tests/test_v1_shared_cost*.py",
         "tests/test_v1_budget*.py",
+        "pmo_plugins/delivery/urls.py",
+        "pmo_plugins/delivery/domain_metadata.py",
         "docs/delivery-status.md",
         "docs/verification.md",
         "project/reports/PH-330.json",
@@ -10672,12 +10682,17 @@
       ],
       "owning_plugin": "delivery",
       "acceptance": [
-        "python scripts/projectctl.py check",
-        "python -m unittest tests.test_projectctl tests.test_governance -v",
-        "python scripts/projectctl.py verify-change --task PH-330"
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
       ],
       "handoff": null,
-      "owner": null
+      "owner": null,
+      "kind": "feature",
+      "priority": 2,
+      "spec": "project/specs/PH-330.md",
+      "github_issue": null
     }
   ]
 }
