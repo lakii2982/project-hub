@@ -30,7 +30,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base feat/PH-325-planning --task PH-325",
       "result": "pass",
-      "evidence": "ok=true（HEAD 9d16d6d，BASE b71356e=规划分支，assertion_scope=declaration_only）：11 个变更文件与 allowed_paths 全量一致；首两跑被门禁正确拦截并如实处置——(1) --base 1f02520 task_not_in_baseline（单PR自我授权的机械拦截→拆分规划PR，PH-325 以 ready 先入 BASE），(2) 验收命令逐字匹配缺 -v（按原命令实跑回填）。规划 PR squash 合入后按仓库叠放惯例 rebase --onto 新基复跑。"
+      "evidence": "改号重建 HEAD 实跑：ok=true（head cafa863，base 2c037b8=规划分支，assertion_scope=declaration_only），9 个变更文件与 allowed_paths 全量一致。历史拦截如实记录——PH-254 期：(1) --base 1f02520 task_not_in_baseline（单PR自我授权的机械拦截→拆分规划PR，任务以 ready 先入 BASE），(2) 验收命令逐字匹配缺 -v（按原命令实跑回填）；改号重建期：(3) 报告未提交时 file_not_in_revision（门禁读已提交 HEAD 的语义，提交后通过）。规划 PR squash 合入后按仓库叠放惯例 rebase --onto 新基复跑。"
     }
   ],
   "review": {
