@@ -12921,7 +12921,7 @@
       "title": "后续交付独立规划入口（接续 PH-386）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
