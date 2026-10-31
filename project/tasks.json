@@ -9935,7 +9935,7 @@
       "title": "共享费用分摊/预算 ETC 实现前置：分摊批次、预算版本与只读缺口核对",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9963,7 +9963,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-313.md"
     },
     {
       "id": "PH-314",
