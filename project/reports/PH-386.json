@@ -15,7 +15,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 9830b37 --task PH-386",
       "result": "pass",
-      "evidence": "Actual run after the reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-386 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
+      "evidence": "Actual run after the reviewer pass and final status commit 6f8ecef: ok=true, head=6f8ecef446d4b016d705fb6321f5d8af3a7d8a75, changes=16 files all inside the PH-386 allowlist, errors=[]."
     }
   ],
   "review": {
