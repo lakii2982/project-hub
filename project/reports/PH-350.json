@@ -1,6 +1,6 @@
 {
   "task_id": "PH-350",
-  "summary": "健康/容量/积压基线实现 on BASE fe9c257. Implements scripts/ops/healthcheck.py against the PH-345 V1-OPS-05 read-only contract: PH-345 evidence envelope v1, append-only JSONL dedupe, exit codes 0 pass / 2 not_run / 3 fail / 4 environment error / 5 security refusal; dry_run default; execute restricted to --env rehearsal with staging/production execute blocked exit 5. Local/test redacted facts feed health checks (DB reachability/migration pending/cache/worker/disk/backup age), capacity checks (connection utilisation, largest table bytes, slow-query count, attachment bytes), backlog checks (queue depth/reminders/todos/unsettled with frozen local thresholds), and perf samples (nearest-rank P50/P95) without guessing production SLOs. Missing facts/environment return not_run exit 2; sensitive keys are recursively redacted so no password/token/credential/customer/payroll values enter evidence. Adds docs/engineering/observability.md with the frozen facts schema/thresholds/evidence/not_run discipline and updates ops-runbook V1-OPS-05 from unimplemented/blocked to local/rehearsal implemented. Real CI/deployment capacity, PG/table/slow-query/attachment/queue metrics and page P50/P95 remain not_run and are explicitly not claimed from local numbers. No production access, product code, migration, contract schema, canonical or CI-gate changes. Scoped 7 tests cover envelope, exit codes, missing environment, staging/production refusal, backlog/disk/backup/connection/migration thresholds, redaction, P50/P95 and JSONL idempotency.",
+  "summary": "健康/容量/积压基线实现 on BASE fe9c257. Implements scripts/ops/healthcheck.py against the PH-345 V1-OPS-05 read-only contract: PH-345 evidence envelope v1, append-only JSONL dedupe, exit codes 0 pass / 2 not_run / 3 fail / 4 environment error / 5 security refusal; dry_run default; execute restricted to --env rehearsal with staging/production execute blocked exit 5. Local/test redacted facts feed health checks (DB reachability/migration pending/cache/worker/disk/backup age), capacity checks (connection utilisation, largest table bytes, slow-query count, attachment bytes), backlog checks (queue depth/reminders/todos/unsettled with frozen local thresholds), and perf samples (nearest-rank P50/P95) without guessing production SLOs. Missing facts/environment return not_run exit 2; sensitive keys are recursively redacted so no password/token/credential/customer/payroll values enter evidence. Adds docs/engineering/observability.md with the frozen facts schema/thresholds/evidence/not_run discipline and records the V1-OPS-05 local/rehearsal status in the allowlisted observability document (ops-runbook is outside the PH-350 whitelist and was left unchanged). Real CI/deployment capacity, PG/table/slow-query/attachment/queue metrics and page P50/P95 remain not_run and are explicitly not claimed from local numbers. No production access, product code, migration, contract schema, canonical or CI-gate changes. Scoped 7 tests cover envelope, exit codes, missing environment, staging/production refusal, backlog/disk/backup/connection/migration thresholds, redaction, P50/P95 and JSONL idempotency.",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
@@ -51,6 +51,11 @@
       "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-350",
       "result": "not_run",
       "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-350",
+      "result": "not_run",
+      "evidence": "Path scope correction: ops-runbook.md is outside the PH-350 allowlist and was reverted; only allowlisted observability.md carries the status."
     }
   ],
   "review": {
@@ -65,7 +70,8 @@
     "The script consumes redacted fact JSON supplied by the local/test environment; it deliberately does not connect to production or auto-discover credentials. Real environment collection belongs to deployment/CI evidence.",
     "Thresholds are frozen local rehearsal defaults, not production SLOs; local numbers must not be used to claim production capacity.",
     "Artifacts are written under /tmp/ph350-evidence and not committed; no product code/migration/schema/canonical/CI-gate changes.",
-    "No browser/product UI, PG or customer data is exercised in this slice."
+    "No browser/product UI, PG or customer data is exercised in this slice.",
+    "docs/engineering/ops-runbook.md is outside the PH-350 allowed_paths, so it was not modified; the V1-OPS-05 local/rehearsal status is recorded in the allowlisted docs/engineering/observability.md and report, with the runbook sync left to a later authorized slice."
   ],
   "unverified": [
     "Real CI/deployment health/capacity/backlog/performance baselines and L4/L5 evidence",

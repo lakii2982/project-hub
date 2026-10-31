@@ -1,6 +1,6 @@
 # 健康/容量/积压可观测性基线契约（PH-350 实现，配合 PH-345 V1-OPS-05）
 
-- 实现：`scripts/ops/healthcheck.py`；契约：PH-345 `ops-runbook.md` 通用 envelope/退出码；本文件记录 PH-350 的输入事实、检查项、阈值、脱敏与证据边界。
+- 实现：`scripts/ops/healthcheck.py`；契约：PH-345 `ops-runbook.md` 通用 envelope/退出码（本片白名单不含 ops-runbook，故 V1-OPS-05 状态更新只记在本文件，未修改 ops-runbook）；本文件记录 PH-350 的输入事实、检查项、阈值、脱敏与证据边界。
 - 原则：只读；不触碰生产；真实容量/积压以 CI/部署环境为准，本地/隔离数字不冒充生产容量；缺失 not_run，不猜阈值。
 
 ## 1. 调用
@@ -76,3 +76,9 @@ python manage.py test tests.test_v1_ops_observability --verbosity 1
 
 - 契约测试覆盖：envelope、退出码 0/2/3/4/5、缺环境 not_run、积压/磁盘/备份/连接/迁移阈值、脱敏、P50/P95、JSONL 幂等。
 - 真实容量/PG/部署环境由 CI/部署另行执行；本片不声明。
+
+
+## 6. PH-350 状态
+
+- V1-OPS-05 新状态：本地/隔离已实现（`healthcheck.py`）；真实 staging/production/CI 容量未执行，统一 `not_run`。
+- 本片只改 `docs/engineering/observability.md`（白名单），未改 `ops-runbook.md`；ops-runbook 的 V1-OPS-05 状态由后续获授权规划/实现片按实际 BASE 同步。
