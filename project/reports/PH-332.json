@@ -1,0 +1,40 @@
+{
+  "task_id": "PH-332",
+  "summary": "Delivered the docs-only batch C acceptance matrix and operations runbook skeleton at docs/v1.0-development/batch-c-acceptance.md. It defines five evidence layers (code presence, automated pass, CI including PG, browser, production) with an explicit rule that lower layers cannot impersonate higher ones and unexecuted items must be marked not_run; maps M01–M15 requirement groups (V1-ORG/MD/PRO/CON/TIM/CST/SPD/SET/CSH/REV/PLN/REC/INS/ONB/OPS) to acceptance goals, prerequisites, executable commands or explicit not_run evidence, pass criteria, responsible roles and unverified boundaries; records the batch C dependency/sequence PH-332 -> PH-333 (deploy/upgrade/backup-recovery) -> PH-334 (PG concurrency) -> PH-335 (health/capacity/perf); and provides the V1-OPS-01–06 runbook skeleton (install/diagnose, TLS/security, upgrade/rollback, backup/restore, health/backlog/capacity, PostgreSQL multi-connection) with role placeholders and evidence paths. It adds no code, migration or script, executes no deployment/recovery/concurrency/performance test, records no passing claims, and cross-references ROADMAP batch C and docs/verification.md.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 9719f93 (BASE 0281043, PH-332 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":258}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph332-batch-c on main 0281043 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 0281043 --task PH-332",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 9719f93: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (batch-c-acceptance.md, ROADMAP.md, tasks.json, manifest.json, docs/verification.md, PH-332 report/handoff) are inside BASE PH-332 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (acceptance matrix/runbook skeleton, evidence-layer rules and no-fabrication boundaries); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "The acceptance matrix intentionally leaves M03/M06/M10/M11/M12/M13/M14/M15 rows as not_run/blocked where the corresponding write-side or ops slices (PH-322/321/330/252/320, PH-333/334/335) are not yet delivered; this is a deliberate truthful boundary, not a partial deliverable.",
+    "Responsible persons are expressed as roles (release owner, DBA, finance reviewer, support owner, security owner), not individual names/privacy data; actual names are filled at release time outside this file.",
+    "No deployment/upgrade/backup-recovery/PG-concurrency/performance execution was performed; all such evidence paths are method definitions, and PH-333/334/335 remain the executing slices.",
+    "No product behavior, contract schema, migration, task status (other than PH-332 in_review) or gate was changed by this docs-only slice."
+  ],
+  "unverified": [
+    "Batch C real deployment, upgrade, backup/restore, PostgreSQL multi-connection and performance baselines are not executed and remain unverified.",
+    "Write-side implementations referenced by M03/M06/M10/M11/M12/M13/M14/M15 are not all merged; those rows are blocked/not_run rather than passed.",
+    "No browser 1440/390, keyboard/focus, empty/error/loading/disabled-state evidence exists because no UI was changed.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
