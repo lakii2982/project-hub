@@ -41,7 +41,18 @@
 
 - `invoicing.invoice.reverse/v1` 创建 `InvoiceReversal`：负值 signed 金额、`original_invoice_ref`、行/分配冲销明细、原因与日期；冲销金额 ≤ 原票未冲销余额；同一行/分配不可重复超冲。
 - 原票与原始行/分配**永不修改或删除**（除全额冲销后的 status=reversed 状态位）；历史期间锁定后不得补开红冲跨期改写历史，只能按 open-period 规则在开放期追加。
-- 部分冲销：原票保持 `posted`，UI/只读派生 remaining；全额冲销：原票 `reversed`，reversal 仍为独立 append-only 事实。
+- 部分冲销：原票保持 `active`（status 不变），由 append-only `InvoiceReversal` 与只读派生 remaining 表达已冲部分；全额冲销：原票 `active → reversed`（仅状态位变化），reversal 仍为独立 append-only 事实。
+- 状态转移表（首片冻结）：
+
+  | 当前状态 | 动作 | 结果状态 | 说明 |
+  | --- | --- | --- | --- |
+  | 无 | `invoicing.invoice.record/v1` | `active` | 私有 draft 不输出 canonical；金额/行/分配登记即固化 |
+  | `active` | `invoicing.invoice.reverse/v1`（部分） | `active` | status 不变；追加负值 reversal，remaining 只读派生 |
+  | `active` | `invoicing.invoice.reverse/v1`（全额） | `reversed` | 仅状态位变化，原票金额/行/分配不改 |
+  | `reversed` | 再次 reverse | 拒绝 | 已全额冲销不可重复冲销 |
+  | `posted` | — | — | 预留后续入账/税务动作，首片不产生、不进入本表 |
+
+  `superseded` 同理为首片不产生的后续规划状态；任何未列出的转移一律拒绝。
 - 红冲与收入/现金的边界：收入冲销只能走 management_revenue owner 的冲销命令；退款/银行退回只能走 cash owner；invoicing 不直接写收入/现金/账本/未清。
 
 ### 4) 命令/服务与幂等
@@ -63,7 +74,7 @@
 
 - PH-252 是**唯一写侧实现片**（保持 proposed，依赖 PH-150/PH-155 的 legacy 契约边界由本 ADR + 已交付 contracts/settlement 能力覆盖的部分在 PH-252 规划时复核；不得在本 ADR 内假装实现完成）。
 - PH-252 按 ADR 0010 新建 `pmo_plugins.invoicing`（manifest 8 字段 requires={contracts,settlement,cash,management_revenue,costing}、自有迁移 0001、settings/PMO_PLUGIN_MODULES/delivery-urls root 单写、canonical route 先入 domain_metadata）。
-- 只读核对接入点（后续为 PH-291/PH-283/PH-284/PH-304 工作台/导出提供数据，不复制表）：发票列表/详情（posted/reversed/remaining）、按结算/收入引用反查分配、税额资格与待确定清单、红冲链、发票-结算/收入只读配对。
+- 只读核对接入点（后续为 PH-291/PH-283/PH-284/PH-304 工作台/导出提供数据，不复制表）：发票列表/详情（active/reversed/remaining）、按结算/收入引用反查分配、税额资格与待确定清单、红冲链、发票-结算/收入只读配对。
 - 精确实现白名单/反例由 PH-252 spec 按实际 BASE 冻结；本 ADR 只给边界。
 
 ## 明确不做
