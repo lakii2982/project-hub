@@ -1,0 +1,46 @@
+{
+  "task_id": "PH-396",
+  "summary": "v1.0 遗留任务对账与关闭（docs-only，BASE 7748ea1；二次复核修正版）：对 v1.0.0 BASE open 113 项逐项对账，输出 docs/v1.0-development/closure-reconciliation.md。按“宁可少关、不可错关”只保留 6 项有直接已合并实现/验收报告的关闭：PH-176←PH-252/320/325、PH-187/256/271←PH-274、PH-261←PH-306/330、PH-377←PH-372；PH-262 因无 insights/MetricSnapshot 实现、PH-285 因缺 revenue_pairing 导出已重开 proposed（精确 gap）。其余 60 项原关闭全部重开为 BASE 状态并逐项刷新 blocker；非 v1.0 PH-007/008/010/012/015/016/019 恢复 proposed。计数：6 关闭 / 106 保留（未开工/部分覆盖，含本片 PH-396）/ 1 验收中（PH-241）= 113；cancelled 共 12 = 原 6 + 新 6。PH-198 恢复 BASE proposed（记录 gap）；PH-310 blocker 改为真实 gap（PH-285 重开 proposed、缺 revenue_pairing 导出）。发布资格 release_ready=false；建议 PH-241→PH-387/372→PH-389/390→PH-393→PH-394→PH-395→PH-020。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at HEAD (BASE 7748ea1): ok=true, task_count=317; PH-396 in_review; 6 verified closures (cancelled) with direct merged implementation/report evidence; 106 retained (incl. this slice) + 1 in_review (PH-241); PH-262/PH-285 reopened; non-v1.0 PH-007/008/010/012/015/016/019 restored proposed."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 78539bc --task PH-396",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — files inside BASE PH-396 allowed_paths (review pass; post-rebase)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD 2549e5a: §2.1 is restored with the six per-ID closure rows and merged PR/report evidence (PH-176←PH-252 #205/PH-320 #214/PH-325 #215; PH-187/256/271←PH-274; PH-261←PH-306 #206/PH-330 #218; PH-377←PH-372 #250), and §2.2 lists the 60 reopened items with reasons. The report summary is corrected to 60 reopened, and the counts are consistent: 6 closed + 106 retained (incl. PH-396) + 1 in_review (PH-241) = 113; cancelled 12 = base 6 + new 6.",
+      "SIX CLOSURES INDIVIDUALLY CHECKED: PH-176 is covered by the merged PH-252 invoice record/allocation/reversal, PH-320 tax/orchestration and PH-325 read-only pairing reports; PH-187/PH-256/PH-271 are the read-only CSV/template/mapping/conflict preview delivered by PH-274 (no persistence is claimed); PH-261 is covered by the PH-306 budget/ETC contract plus PH-330's ProjectBudgetVersion/Line/Receipt and ETC implementation; PH-377 is covered by the executed PH-372 batch-C gate record. PH-262 and PH-285 remain correctly reopened proposed with exact gaps (no insights/MetricSnapshot; no revenue_pairing export and PH-325 not wired); PH-198 is back to proposed.",
+      "BOARD/DOC CONSISTENCY: tasks have 6 v1.0 cancellations (PH-176/187/256/271/261/377) and 107 open v1.0 tasks (106 retained incl. PH-396 + PH-241 in_review); non-v1.0 PH-007/008/010/012/015/016/019 are proposed; PH-310's blocker names the reopened PH-285 and the real CSV archive/format/audit gap; no retained depends_on/blocker references a cancelled task; release_ready=false/L3/L4/L5/three-party sign-off wording is honest; no placeholders/code/migration/schema/gate changes.",
+      "GATES (HEAD 2549e5a, BASE 7748ea1): projectctl check ok=true/task_count=317; governance 23 tests OK; verify-change --base 7748ea1 --task PH-396 pre-review only high_risk_review_required (report check pass, no path errors); 9-path whitelist and 8 changed files; final evidence commit should record the final-HEAD check/verify pass."
+    ],
+    "evidence": "VERDICT: PASS - §2.1/§2.2 are restored and self-consistent, the report's reopened count is corrected to 60, and the six remaining closures (PH-176/187/256/271/261/377) are supported by the cited merged reports; PH-262/PH-285/PH-198 remain proposed with exact gaps, counts are 6 closed/106 retained/1 in_review=113 with 12 total cancelled, and no closed task blocks a retained one. Reviewed HEAD 2549e5a (BASE 7748ea1), worktree clean; check ok=317; governance 23 OK; verify-change only high_risk_review_required (no path errors)."
+  },
+  "deviations": [
+    "Third reviewer REJECTED PH-285 closure: PH-304 exports ops_overview/settlement_coverage/cash_bridge/fee_pairing and PH-316 adds descriptors only for those four; revenue_pairing export is missing and PH-325 is not wired. PH-285 is reopened to proposed with that exact gap; only 6 closures remain (176/187/256/271/261/377).",
+    "Counts corrected to 6 closed + 106 retained (unstarted/partial, including this PH-396 slice) + 1 in_review (PH-241) = 113; cancelled total 12 = original 6 (PH-318/326 + non-v1.0 4) + new 6. All doc/report/ROADMAP/delivery/verification references updated.",
+    "PH-310 blocker corrected to the real gap: PH-285 is reopened (missing revenue_pairing export), PH-304 is done, and CSV archival/format-version/export-audit remains unimplemented.",
+    "PH-198 restored to BASE proposed with the gap that PH-348 PG execute is not_run/exit 2 (no pg_restore/isolated restore/RPO-RTO).",
+    "Other reviewer-confirmed closures (176/187/256/271/261/377) kept; 60 prior closures reopened to BASE status/deps/blockers; non-v1.0 tasks restored proposed; no closed task blocks a retained one."
+  ],
+  "unverified": [
+    "L3 CI/PG, L4 browser 1440/390 and L5 production/customer acceptance remain not_run; no real-environment evidence was produced.",
+    "PH-262 and the other 106 retained tasks have precise gaps; no merged insights/MetricSnapshot implementation exists.",
+    "PH-389/390 depend on PH-378/383/379/384 (proposed); PH-393/394/395 and three-party sign-off are not complete; release_ready=false.",
+    "PH-241 is not merged; PH-020 release review remains pending; independent S review is pending and verify-change is review-gated."
+  ]
+}

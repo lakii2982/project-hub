@@ -1172,3 +1172,11 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **缺口/偏差**：发票当前 schema 无原币/汇率字段，对账以 `invoice_original_currency_fields_missing` 显式 missing，不伪造原币；结算非 CNY 反查未构造夹具（CNY 已覆盖）；真实 PG/CI 与浏览器由 CI/部署回填。
 - **整体判定**：本地 L1+L2 实现通过；L3–L5 not_run，产品级/发布级不宣称通过。
 - 实跑：check ok=true/task_count=316；manage check exit0；makemigrations No changes；治理 23 OK；全量 1320 tests/134.711s（5F+3E/70 环境跳过，已知 8 项 macOS 失败无新增）；fresh SQLite verify_integrity ok；verify-change 待 review pass。
+
+## PH-396 v1.0 遗留任务对账与关闭（2026-10-31，BASE 7748ea1）
+
+- 范围：BASE 中 v1.0.0 open 113 项（proposed/ready/in_review/blocked）；非 v1.0 遗留 17 项见附录。
+- 结论：8 项已覆盖→关闭（cancelled，逐项证据见 `docs/v1.0-development/closure-reconciliation.md` §2）；106 项保留（含 PH-241 in_review、PH-388 ready、PH-389/390/393/394/395、导入/通知/insights 链），逐项 gap/blocker 已刷新；无批量无据关闭。
+- 关闭规则：每项至少一条已合并实现/契约/验收证据；历史 ID 保留；关闭项不再阻塞保留项；执行人不得自批，独立 S 复核 pending。
+- v1.0 发布资格：release_ready=false；L3 CI/PG、L4 浏览器、L5 生产/客户验收、人工三方签批未完成；PH-020 上线评审在 gate 通过后执行。
+- 实际执行（最终 HEAD）：projectctl check ok=true/task_count=317；23 项治理 OK；verify-change --base 7748ea1 --task PH-396 在 review pending 时仅 high_risk_review_required（预期）。未验证：L3/L4/L5、PH-389/390/393/394/395、三方签批、独立 S 复核。
