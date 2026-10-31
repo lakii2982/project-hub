@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD (BASE ab1845b): ok=true, task_count=252; PH-252 in_review with owner/handoff; 40 allowed_paths include the 16 dependency-order test files plus the invoicing plugin/migrations/tests and root-only wiring; no path/acceptance schema issues."
+      "evidence": "Actual exit 0 at this HEAD (BASE e05adee): ok=true, task_count=253; PH-252 done with owner/handoff; 40 allowed_paths include the 16 dependency-order test files plus the invoicing plugin/migrations/tests and root-only wiring; no path/acceptance schema issues."
     },
     {
       "command": "python manage.py check",
@@ -46,6 +46,7 @@
   },
   "deviations": [
     "Reverse is implemented in this slice (InvoiceReversal + reverse_invoice + verify branch) per the Lead task instruction and ADR 0015; the older PH-252 spec text said reversal was deferred, but ADR 0015 freezes invoicing.invoice.reverse/v1 and the Lead explicitly required record/allocate/reverse. No posted/superseded status is produced.",
+    "PG-only CI follow-up: tests/test_contract_approval.py and tests/test_v1_contracts.py disable dependants in setUp before the test body, so the invoicing guard was moved into those setUps (is_enabled check + set_enabled before the contracts/settlement disable loop). No other whitelisted setUp disables contracts/settlement; no business assertion changed.",
     "Reviewer round-3 whitelist decision applied: the 16 whitelisted dependency-order test files (14 locally failing + tests/test_contract_approval.py and tests/test_v1_contracts.py PG-only) now call set_enabled(owner,'invoicing',False) before disabling contracts/settlement; no business assertion was changed and the PG-only cases disable invoicing before starting their lock/threads to avoid deadlock.",
     "Reviewer round-2 blocker 1 fix: manifest.requires narrowed to contracts+settlement per ADR 0010 (removed cash/management_revenue/costing). This eliminated the costing/management_revenue dependency-guard regressions; 14 tests remain failing because they directly disable contracts or settlement, which invoicing legitimately requires. Those test files are outside the PH-252 whitelist; exact list is recorded in the report/handoff for a planning-slot whitelist expansion (no self-expansion).",
     "Reviewer round-1 blocker 2 fix: reverse_invoice now validates every line_reversal reference belongs to the invoice and stays within that line's remaining amount, every allocation_reversal reference/line/business-source belongs to the invoice and stays within that allocation's remaining amount, and line vs allocation reversal totals must match; over-line and foreign-allocation regressions were added, and verify_integrity cross-checks line/allocation detail totals and cumulative reversals.",
