@@ -25,7 +25,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run: Ran 1331 tests in 157.117s; 5 failures + 3 errors + 70 environment skips. All 8 names match the established main macOS baseline (6 DRF Accept/codec/large-JSON and 2 delivery /private/var symlink cases); no new failure. Linux CI remains authoritative and is not claimed locally."
+      "evidence": "Actual final-HEAD run: Ran 1332 tests in 142.576s; 5 failures + 3 errors + 70 environment skips. All 8 names match the established main macOS baseline (6 DRF Accept/codec/large-JSON and 2 delivery /private/var symlink cases); no new failure. Linux CI remains authoritative and is not claimed locally."
     },
     {
       "command": "python manage.py verify_integrity --json",
