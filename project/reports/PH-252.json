@@ -55,7 +55,8 @@
     "TaxQualification model is created per ADR/spec but no qualification write service/UI is exposed in this slice (ADR leaves qualification confirmation to a later slice); tax treatment remains a snapshot fact only.",
     "The plugin requires all five owner plugins in its manifest (per ADR 0015) but its migration_dependencies are core/contracts/settlement to keep the migration graph acyclic; cash/management_revenue/costing are runtime read dependencies.",
     "No core model/migration is modified; invoicing owns its own migration chain (0001_initial) and root-only files (settings, delivery urls, verify_integrity, governance) are the integrator-owned wiring explicitly allowed by the spec.",
-    "Counterexamples/tests never UPDATE/DELETE historical rows through supported paths; DB triggers and model guards are asserted with savepoint-contained IntegrityError checks."
+    "Counterexamples/tests never UPDATE/DELETE historical rows through supported paths; DB triggers and model guards are asserted with savepoint-contained IntegrityError checks.",
+    "Lead integration rebase (ab1845b -> e05adee) after PH-329 merged: docs/verification.md kept main entries plus PH-252 entry; manifest.active_handoff -> PH-252. Gates rerun green."
   ],
   "unverified": [
     "Full suite is back to the known baseline: 5 failures + 3 errors (8 macOS environment limits) + 69 skips; no dependency-guard errors remain after the whitelisted order sync. PG-only ordering cases are exercised only in CI.",
