@@ -12596,7 +12596,7 @@
       "title": "批次 D-01 跨 owner 编排验收执行（PH-370 后续）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12620,7 +12620,7 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": null,
-      "owner": "worker-docs",
+      "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-382.md"
     },
