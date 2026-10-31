@@ -11844,7 +11844,7 @@
       "title": "后续交付独立规划入口（接续 PH-356）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -11988,7 +11988,7 @@
       "title": "后续交付独立规划入口（接续 PH-361）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -12013,9 +12013,7 @@
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
-      "blockers": [
-        "缺 PH-361（当前规划槽，in_review 未 done）done；PH-361 done 后由下一规划槽复核 DoR 并置 ready。"
-      ],
+      "blockers": [],
       "github_issue": null,
       "owner": null,
       "handoff": null
