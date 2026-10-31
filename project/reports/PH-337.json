@@ -1,0 +1,50 @@
+{
+  "task_id": "PH-337",
+  "summary": "Consumed the PH-337 planning slot on main 9e0991f (PH-317 merged; 263 tasks after registration) and completed the planned status/dependency sync. PH-320 and PH-325 were already promoted to ready by PH-317's blocker fix and then merged, so this slot synced their spec internal status text (opening/risk sections) from proposed to ready with the all-done dependency evidence (PH-320: PH-293/PH-252/PH-214/PH-224/PH-232; PH-325: PH-252/PH-284/PH-283/PH-287/PH-293) and cleared the in-spec blocker wording. Dependency re-baseline found no additional fully-done-dependency task to promote (PH-141 remains a legacy case requiring its own DoR review; PH-241 is in_review under another slice); the ready implementation queue is PH-320/PH-321/PH-322/PH-325. Batch C and follow-up blockers were refreshed precisely: PH-330 waits on PH-322; PH-333/PH-334 wait on PH-322/PH-321/PH-330; PH-335 waits on PH-333/PH-334; PH-314 still lacks PH-301/PH-310/PH-285/PH-179/PH-183. Four tasks were registered continuously: PH-338 invoice batch/import follow-up (proposed), PH-339 insights read-model implementation (proposed; waits on PH-272), PH-340 notification-center implementation (proposed; waits on PH-301/PH-314) and PH-341 as the next planning slot. ROADMAP gained a batch B/C progress section with the ready queue, precise blockers and new registrations. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run (final HEAD 3de878b, BASE 9e0991f): {\"command\":\"check\",\"ok\":true,\"task_count\":263}, exit 0; PH-337 done with handoff and PH-341 ready."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph337-planning on main 9e0991f with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base ce29ab2 --task PH-337",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 16 changed files inside BASE PH-337 allowed_paths (review pass; post-rebase gate rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-337 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-3 BLOCKER RESOLVED AT bca34eb: PH-320 is now retitled 'tax qualification confirmation and cross-owner orchestration (reusing PH-252)' and its DoR/acceptance are rewritten to TaxQualification pending->confirmed append-only, cross-owner orchestration via revenue/cash/settlement named services with reference chains, read-only projection, permissions/idempotency/period reuse and explicit non-goals (no record/tax-split/reversal reimplementation); the base invoice behaviors are labeled as existing PH-252 facts, the migration section reuses PH-252 models (no new canonical entity), and acceptance now requires the new test_v1_invoice_tax tests. This removes the second-invoice-owner/duplicate-work risk.",
+      "EARLIER FIXES RE-VERIFIED: PH-339 blocker now says PH-272 proposed with PH-277/291/304/309 done; PH-325 whitelist points to the existing pmo_plugins/delivery/urls.py (no nonexistent invoicing/urls.py); PH-320 whitelist uses real pmo_plugins/invoicing/* paths + delivery/urls.py and new tax tests. PH-320/PH-325 are ready with all-done deps and cleared blockers; PH-333/PH-334 keep accurate ready-not-done blockers; no new ready promotion for PH-141 (needs independent DoR) or PH-241 (in_review); new PH-338..PH-341 are continuous 259->263, PH-341 proposed on PH-337 with the acceptance typo fixed; no placeholders; ROADMAP batch B/C progress present; 16 changed files within PH-337 allowed paths.",
+      "SLOT CONVENTION/GATES: PH-337 remains in_review/PH-341 proposed; final evidence must set PH-337 done/PH-341 ready, record the check declaration as pass, then rerun check/verify-change. At HEAD bca34eb (BASE 9e0991f): check ok=true/task_count=263; governance 23 tests OK; verify-change --base 9e0991f --task PH-337 only high_risk_review_required + acceptance_not_passed (pre-review), no path_out_of_scope; manifest=PH-337."
+    ],
+    "evidence": "VERDICT: PASS (round 3; PH-320 scope narrowed). Reviewed HEAD bca34eb (BASE 9e0991f) in /tmp/ph337-planning, worktree clean; 16 changed files within PH-337 allowed paths; task_count 263 unique continuous PH-338..PH-341; manifest=PH-337. PH-320 now only tax confirmation/cross-owner orchestration reusing PH-252 (new test_v1_invoice_tax acceptance, no duplicate record/tax/reversal); PH-339 blocker precise; PH-325/PH-320 real paths; dependencies/blockers/ready states accurate; no placeholders; check ok=263; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope. Final evidence sets PH-337 done/PH-341 ready."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): PH-320's DoR was rewritten from re-listing invoice issuance/tax-split/reversal (already delivered by PH-252) to only the ADR-0015 follow-up — TaxQualification confirmation plus cross-owner orchestration via named revenue/cash/settlement services, with no reimplementation of PH-252 record/allocate/reverse, no new canonical topic and no direct writes to other owners; the task whitelist already points at the real pmo_plugins/invoicing/* + delivery/urls.py files and new invoice_tax tests. PH-325's whitelist in the spec/task was already corrected to real files (no nonexistent invoicing/urls.py). PH-339's blocker was already precise in the current files (PH-277 done, only PH-272 proposed). No product code/schema change.",
+    "PH-320/PH-325 were already promoted in the canonical task graph by PH-317's blocker fix; this slot only synced their spec internal status text and risk sections from proposed to ready with the done-dependency evidence, because PH-317's whitelist did not cover those spec files. No task status change was needed beyond the existing ready state.",
+    "No additional promotion was made: the only other fully-done-dependency open tasks are PH-141 (legacy, needs its own DoR review) and PH-241 (already in_review under another worker). The rest still have proposed/ready-not-done dependencies, so they stay proposed with refreshed precise blockers.",
+    "Batch C blockers refreshed: PH-330 waits on PH-322; PH-333/PH-334 on PH-322/PH-321/PH-330; PH-335 on PH-333/PH-334; PH-314 still lacks PH-301/PH-310/PH-285/PH-179/PH-183. No false promotion.",
+    "Registered PH-338 (invoice batch/import), PH-339 (insights read model), PH-340 (notification center) as proposed with explicit blockers and PH-341 as the next planning slot (proposed until PH-337 done); ROADMAP records the batch B/C progress and ready queue.",
+    "Planning-slot state convention: PH-337 is kept in_review with handoff and PH-341 is proposed with blocker 'PH-337 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-337 done and PH-341 ready and clear the blocker.",
+    "Numbering basis: BASE max PH-337; checked remote branches/PRs (PH-322 feature branch and dependabot only) - no >=PH-338 ids exist, so PH-338..PH-341 are continuous and free.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands.",
+    "reviewer round-1：PH-339 blocker 改为「PH-277 done、缺 PH-272 proposed」；PH-320 白名单纠正为真实 invoicing 插件路径（`pmo_plugins/invoicing/services.py/views.py/forms.py/domain_metadata.py/templates/invoicing/invoice_tax.html/migrations/*` + `delivery/urls.py`）并把范围收窄为 TaxQualification 确认+跨 owner 编排（不重复 PH-252 record/税分/红冲）；PH-325 白名单去不存在的 `invoicing/urls.py`，改为 `delivery/urls.py` 绑定。",
+    "Lead integration rebase (9e0991f -> ce29ab2) after PH-321 merged: docs/verification.md kept main entries plus PH-337 entry; manifest.active_handoff -> PH-337. Gates rerun green."
+  ],
+  "unverified": [
+    "PH-320/PH-321/PH-322/PH-325 remain ready but unimplemented; their write-side code and tests do not exist yet.",
+    "PH-338/PH-339/PH-340 are registered proposed only; no code/tests/CI evidence exists.",
+    "Batch C deployment/recovery/concurrency/performance execution is still not performed and stays not_run/blocked until the corresponding implementations land.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}

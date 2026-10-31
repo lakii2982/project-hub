@@ -10230,20 +10230,21 @@
       ],
       "spec": "project/specs/PH-320.md",
       "allowed_paths": [
-        "pmo_plugins/delivery/invoice_services.py",
-        "pmo_plugins/delivery/invoice_views.py",
-        "pmo_plugins/delivery/invoice_forms.py",
-        "pmo_plugins/delivery/templates/delivery/invoices.html",
-        "pmo_plugins/delivery/domain_metadata.py",
+        "pmo_plugins/invoicing/services.py",
+        "pmo_plugins/invoicing/views.py",
+        "pmo_plugins/invoicing/forms.py",
+        "pmo_plugins/invoicing/domain_metadata.py",
+        "pmo_plugins/invoicing/templates/invoicing/invoice_tax.html",
+        "pmo_plugins/invoicing/migrations/*.py",
         "pmo_plugins/delivery/urls.py",
-        "tests/test_v1_invoice.py",
-        "tests/test_v1_invoice_http.py",
-        "project/reports/PH-320.json",
-        "project/handoffs/PH-320.md",
+        "tests/test_v1_invoice_tax.py",
+        "tests/test_v1_invoice_tax_http.py",
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "project/reports/PH-320.json",
+        "project/handoffs/PH-320.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -10471,15 +10472,15 @@
         "pmo_plugins/invoicing/forms.py",
         "pmo_plugins/invoicing/templates/invoicing/invoice_reconciliation.html",
         "pmo_plugins/invoicing/domain_metadata.py",
-        "pmo_plugins/invoicing/urls.py",
+        "pmo_plugins/delivery/urls.py",
         "tests/test_v1_invoice_reconciliation.py",
         "tests/test_v1_invoice_reconciliation_http.py",
-        "project/reports/PH-325.json",
-        "project/handoffs/PH-325.md",
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "project/reports/PH-325.json",
+        "project/handoffs/PH-325.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -10795,7 +10796,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-322（关期/结项实现）、PH-321（多币种实现）、PH-252（发票实现）done 与 PH-330（分摊/预算实现）done；实现完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-322（关期/结项实现首片，ready 未 done）、PH-321（多币种实现首片，ready 未 done）、PH-330（分摊/预算实现首片，proposed）done；PH-252 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10831,7 +10832,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-322/PH-321/PH-252/PH-330 done（写侧并发场景需真实实现）；实现完成后由下一规划槽复核 DoR 再晋级；真实 PG 交 CI/部署环境。"
+        "缺 PH-322/PH-321/PH-330 done（同 PH-333）；PH-252 已 done；实现完成后由下一规划槽复核 DoR 再晋级；真实 PG 交 CI/部署环境。"
       ],
       "handoff": null
     },
@@ -10911,7 +10912,7 @@
       "title": "后续交付独立规划入口（接续 PH-336）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [],
@@ -10929,6 +10930,179 @@
         "docs/v1.0-development/*",
         "project/reports/PH-337.json",
         "project/handoffs/PH-337.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-337.md"
+    },
+    {
+      "id": "PH-338",
+      "title": "发票批量/导入后续：发票导入模板、批量登记与来源分配（按 ADR 0015/PH-252）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-252",
+        "PH-320",
+        "PH-274",
+        "PH-289"
+      ],
+      "spec": "project/specs/PH-338.md",
+      "allowed_paths": [
+        "pmo_plugins/invoicing/invoice_import_services.py",
+        "pmo_plugins/invoicing/views.py",
+        "pmo_plugins/invoicing/forms.py",
+        "pmo_plugins/invoicing/templates/invoicing/invoice_import.html",
+        "pmo_plugins/invoicing/domain_metadata.py",
+        "pmo_plugins/invoicing/urls.py",
+        "tests/test_v1_invoice_import.py",
+        "tests/test_v1_invoice_import_http.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-338.json",
+        "project/handoffs/PH-338.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_invoice_import tests.test_v1_invoice_import_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-320（发票编排首片，ready 未 done）与 PH-274/PH-289（导入预览/提交，PH-289 proposed）done；PH-252 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-339",
+      "title": "insights 读模型实现首片：期间预检/核对差异单/工作台只读投影（按 ADR 0014）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-277",
+        "PH-272",
+        "PH-291",
+        "PH-304",
+        "PH-309"
+      ],
+      "spec": "project/specs/PH-339.md",
+      "allowed_paths": [
+        "pmo_plugins/insights/models.py",
+        "pmo_plugins/insights/services.py",
+        "pmo_plugins/insights/views.py",
+        "pmo_plugins/insights/forms.py",
+        "pmo_plugins/insights/domain_metadata.py",
+        "pmo_plugins/insights/urls.py",
+        "pmo_plugins/insights/templates/insights/dashboard.html",
+        "pmo_plugins/insights/migrations/0001_initial.py",
+        "tests/test_v1_insights.py",
+        "tests/test_v1_insights_http.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-339.json",
+        "project/handoffs/PH-339.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_insights tests.test_v1_insights_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-272（insights 读模型实现前置，proposed）done；PH-277（insights ADR 0014）已 done、PH-291/304/309 已 done；PH-272 完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-340",
+      "title": "通知中心实现首片：待办/到期提醒收件箱、去重与权限过滤（WP-NOTIFY）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-301",
+        "PH-314"
+      ],
+      "spec": "project/specs/PH-340.md",
+      "allowed_paths": [
+        "core/notification_services.py",
+        "core/notification_views.py",
+        "core/notification_forms.py",
+        "core/templates/core/notifications.html",
+        "core/management/commands/scan_due.py",
+        "tests/test_v1_notifications.py",
+        "tests/test_v1_notifications_http.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-340.json",
+        "project/handoffs/PH-340.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_notifications tests.test_v1_notifications_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-301（通知中心首片契约，proposed）与 PH-314（通知/导出实现前置，proposed）done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-341",
+      "title": "后续交付独立规划入口（接续 PH-337）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-337"
+      ],
+      "spec": "project/specs/PH-341.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "docs/v1.0-development/*",
+        "project/reports/PH-341.json",
+        "project/handoffs/PH-341.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
