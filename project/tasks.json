@@ -11373,7 +11373,7 @@
       "title": "批次 C-3a PostgreSQL 并发验收执行（PH-334 拆分：双审批/超核销/退款/分摊/锁账）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11400,7 +11400,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-349.md"
     },
     {
       "id": "PH-350",

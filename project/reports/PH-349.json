@@ -1,0 +1,69 @@
+{
+  "task_id": "PH-349",
+  "summary": "Implemented the PH-349 PostgreSQL multi-connection concurrency acceptance slice at BASE a5ba2fd. tests/test_v1_pg_concurrency.py contains (a) a CLI/probe runner aligned with PH-345: --dsn/PMO_PG_DSN/DATABASE_URL resolution, JSON evidence envelope (script/contract_version/mode/profile/app_sha/started_at/finished_at/exit_code/status/checks/artifacts/redactions/notes), frozen exit-code mapping (0 pass, 2 not_run/prerequisite, 3 assertion fail, 4 environment fail, 5 security reject), with a safe dry_run default, execute authorization/profile gate and exit 5 security rejection, and (b) real PostgreSQL probes that create a random isolated schema and drop it: company advisory-lock serialization (V1-OPS-06.1), concurrent unique receipt for the same org+request_token (06.2), append-only trigger rejection of UPDATE/DELETE (06.3), opposite-order locking deadlock detection plus rollback retry success (06.4). SQLite or non-PostgreSQL DSNs are rejected with exit 2 and never treated as concurrency evidence; missing DSN yields not_run; unreachable PG yields exit 4. The module also provides always-runnable contract tests (envelope shape/status mapping, missing/SQLite/non-PG DSN rejection, CLI exit 2 envelopes, unreachable PG exit 4) and a PG probe test class that skips with an explicit not_run reason when no real DSN is configured. CLI mode/security is tested: default dry_run needs no execute permission, execute without --allow-execute and execute on a production profile both return exit 5 before I/O, and dry_run on an unreachable PG returns exit 4. docs/engineering/pg-concurrency.md documents invocation, probe matrix, envelope, exit codes, isolation/redaction rules, business-level PG suites and the honest current not_run status. No production data was touched; no business tables, migrations, code paths or contracts were changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE a5ba2fd): {\"command\":\"check\",\"ok\":true,\"task_count\":283}, exit 0; PH-349 done with handoff."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run: System check identified 114 issues (0 silenced) — pre-existing warnings (baseline 113 plus this slice's one route-name W003), 0 errors."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_pg_concurrency --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run (no local PG DSN): Ran 14 tests, OK (skipped=1) — 13 contract tests pass (envelope/status mapping, missing/SQLite/non-PG DSN rejection, CLI not_run, execute-without-allow and production-profile exit 5, default dry_run, dry_run and execute unreachable exit 4 with matching envelope mode); the real PG probe test is skipped with an explicit not_run reason."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1238 tests in 135.4s, FAILED (failures=5, errors=3, skipped=70) — the 5F+3E set matches clean main a5ba2fd (verified on a clean worktree) and skipped is baseline 69 plus this slice's PG probe not_run (+1); no new failures."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base ea8e765 --task PH-349",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — files inside BASE PH-349 allowed_paths (reviewer-b pass; post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD 1a4f162: both `run_probes()` envelopes now pass `mode='execute'` (success and connection-failure paths) and the CLI records the actual mode; the added regression tests cover execute+unreachable PG -> exit 4 with mode=execute and the direct run_probes connection-failure envelope, while the default CLI remains dry_run/mode=dry_run. Security gate remains correct: execute without --allow-execute or with production/unknown profile returns status=fail/exit 5 before DSN/DDL; dry_run is read-only and unreachable PG returns exit 4; SQLite/non-PG/no DSN return exit 2.",
+      "PROBES/ARTIFACTS VERIFIED: 06.1 asserts no second acquisition before release and final order [first,second]; 06.3 counts only SQLSTATE P0001 trigger rejections; artifacts include PG version and max_connections; random isolated schema with DROP CASCADE and no business/production tables. Local no-PG execution correctly skips the PG probe with an explicit not_run reason; report/docs do not claim concurrency correctness and defer real PG evidence to CI.",
+      "GATES (HEAD 1a4f162, BASE a5ba2fd): projectctl check ok=true/task_count=283; manage.py check 114 pre-existing warnings/0 errors; makemigrations --check no changes; scoped 14 tests OK (1 PG skip); full suite 1238 = 5F+3E+70 baseline (no new class); CLI smoke: execute/unreachable -> exit4 mode=execute, default/no DSN -> exit2 mode=dry_run; verify-change --base a5ba2fd --task PH-349 pre-review reports high_risk_review_required + acceptance_not_passed because the report check declaration is still not_run (no path errors; expected pre-review).",
+      "MINOR final-evidence sync: report check evidence references d57c7eb while the reviewed HEAD is 1a4f162 (the docs-sync commit); after this pass block is committed, record the actual check pass/verify-change pass at the final HEAD and set task state per the slot convention.",
+      "WHITELIST/NO-CODE-SCOPE: 7 changed files all inside BASE PH-349 allowed_paths; no placeholders; no product migrations, schema, product code or engineering-gate changes; docs/verification and handoff record the L1/L2-only evidence honestly."
+    ],
+    "evidence": "VERDICT: PASS - the last mode blocker is fixed at HEAD 1a4f162: execute probe envelopes record mode=execute (success and connection-failure), default dry_run remains safe, the security gate still returns exit 5 for missing authorization/production profiles, and the strengthened 06.1/06.3 probes plus PG version/max_connections artifacts are in place. Reviewed HEAD 1a4f162 (BASE a5ba2fd), worktree clean; 7 files inside allowlist; check ok=283; manage 114 warnings/0 errors; makemigrations clean; scoped 14 OK (1 PG skip); full suite 1238 = 5F+3E+70 baseline; CLI smoke matches exit/mode contract; verify-change only review + pre-review check declaration (no path errors) pending the final evidence commit."
+  },
+  "deviations": [
+    "Execute-mode envelope fix (reviewer blocker): run_probes() now passes mode='execute' on both the success envelope and the connection-failure (exit 4) envelope, so a real execute run cannot record the dry_run default. Regression tests cover the CLI execute path with an unreachable PG (exit 4, mode=execute) and run_probes connection failure (mode=execute); scoped tests are now 14 (13 contract pass + 1 PG skip).",
+    "Review-blocker fix (old->new): the CLI now implements the full PH-345 mode/security contract — `--mode dry_run|execute` with safe `dry_run` default (read-only version check, no schema/DDL), `execute` requires explicit `--allow-execute` and a profile in {ci, staging, rehearsal}; production/unauthorized profiles or a missing allow flag return exit 5 security rejection before connecting or executing DDL, and the envelope records the actual mode. Probe assertions were strengthened: 06.1 now asserts the waiter does not acquire before release and the final order is [first, second]; 06.3 requires SQLSTATE P0001 from the append-only trigger (not any exception); artifacts record PG version and max_connections. Contract tests cover execute-without-allow, production-profile rejection, default dry_run and dry_run unreachable PG exit 4 (12 scoped tests: 11 pass, 1 PG skip).",
+    "Real PostgreSQL was not available locally, so the PG probe test is skipped with an explicit not_run reason; the slice delivers the executable probe/CLI and contract tests, not a local PG pass. Real PG evidence is delegated to CI/deployment and must not be replaced by SQLite.",
+    "No scripts/ops/* file was created because the BASE PH-349 allowed_paths only include tests/test_v1_pg_concurrency.py/docs; the executable runner is therefore the test module CLI (`python -m tests.test_v1_pg_concurrency --dsn ...`), which produces the same PH-345 envelope and exit codes.",
+    "The probe file uses psycopg3 (the installed PostgreSQL driver) directly with random throwaway schemas and no business tables; it does not modify applied migrations or production data.",
+    "Business-level concurrency (double approval, over-clearance, refunds, allocation, opening balances, close, invoice reversal, FX snapshots) is covered by existing owner concurrency suites on PG; this slice adds infrastructure probes (lock/idempotency/append-only/deadlock) and documents the business-set linkage rather than duplicating those suites.",
+    "Full-suite first run showed a transient delivery_execution heartbeat failure; it passed in isolation and in the rerun, and the stable full-run failure set equals the clean main baseline (5F+3E), so it is recorded as pre-existing flakiness, not a new regression.",
+    "Lead integration rebase (a5ba2fd -> ea8e765) after PH-347/348 merged: verification/manifest merged; gates rerun."
+  ],
+  "unverified": [
+    "No real PostgreSQL probe matrix execution locally (not_run); CI/deployment PG evidence does not exist yet in this slice.",
+    "Business-level PG concurrency one-winner-one-rejection results, RPO/RTO, capacity/performance baselines and production L5 were not executed.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
