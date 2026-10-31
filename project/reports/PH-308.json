@@ -1,0 +1,55 @@
+{
+  "task_id": "PH-308",
+  "summary": "多币种/汇率（WP-FX）契约冻结首片 on BASE 15cf20c, docs-only. Per Lead ruling C (the BASE PH-308 exact allowlist has no docs/adr entry and the spec itself asks for contract freeze rather than an ADR file), the frozen multi-currency/FX contract is written into project/specs/PH-308.md instead of creating docs/adr/0015-multi-currency-fx.md. The frozen text covers: reporting currency (org-level CNY) vs functional currency (ISO 4217 on every money fact, frozen in terms/confirmation snapshots); append-only versioned FX rate snapshots keyed by organization/base/quote/business effective date/source/version with Decimal rate (no float, unique effective version, no lookback fallback, no reciprocal auto-derivation, missing rate rendered as missing); conversion boundary semantics (convert once at each boundary, persist fx_rate_ref plus original currency/amount, ROUND_HALF_UP to integer cents exactly once, aggregate already-rounded cents, never sum originals then convert, no client-supplied converted amounts); cross-owner ownership boundaries (contracts owns functional-currency contract lines/terms, settlement owns settlement/open-item/clearance currency plus fx ref, management_revenue derives reporting read-only from approved terms, cash stays bank-currency with foreign cash/exchange gain-loss explicitly out of scope, costing/time unchanged); read-only display/reconciliation rules (show original + reporting values and rate ref, missing never 0/default rate, stable issue codes required when implemented, role rules owner/finance rates, auditor read, pm project summary, member denied, disabled-module history read, unauth 403); canonical/API/migration boundaries (no new canonical/model/migration/route in this slice, PH-321 implementation must plan any new canonical and migrate via explicit migration, no implicit recomputation of history); 12 rejection cases; acceptance/completion and an explicit not-implemented list. No product code, model, migration, schema, route, canonical event or docs/adr file was written; no existing write path or business fact changed. Reviewer round-1 blocker fixed by option A: the frozen contract no longer assumes the existing CNY-only canonical entities can persist foreign functional currency. PH-308 spec now has §9A 'required canonical extension' registering proposed task PH-324 (canonical currency/original-amount fields or Money type for contracts/settlement/management_revenue/cash/invoicing entities, additive migration with currency='CNY' backfill, dual-read compatibility, non-CNY writes rejected until backfill, explicit migration-only recomputation, PG coverage, release order PH-324 -> PH-321); PH-321 depends_on now includes PH-324; before PH-324 only CNY facts/read-only display are allowed and non-CNY writes must not start. PH-324 is proposed with spec pointing at PH-308 §9A until the planning slot can split its own spec file (PH-308 allowlist has no new spec path). Reviewer round-2 blockers fixed: (1) PH-321 blockers text now includes PH-324 in addition to depends_on; (2) PH-324 allowed_paths now include the canonical contract schema set (docs/v1.0-development/contracts/* plus docs/verification.md), and spec section 9A.3 requires PH-324 to update entities.schema.json, relationships.json, source-registry.json, contract-bundle.schema.json, commands.schema.json and validate_contracts.py.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto f61e970: {\"command\":\"check\",\"ok\":true,\"task_count\":246} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 0.3s, OK (projectctl 8 + governance 15), exit 0; no governance regression."
+    },
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto f61e970: {\"command\":\"check\",\"ok\":true,\"task_count\":246} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run after round-2 fixes: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base f61e970 --task PH-308",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto f61e970 (PH-300 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-308 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-308 multi-currency/FX contract reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-3 BLOCKERS RESOLVED AT 380d8a0: PH-321's blockers now explicitly include PH-324 (proposed canonical extension) alongside PH-308 and the legacy PH-150/PH-155, matching its depends_on; PH-324's allowed_paths now include `docs/v1.0-development/contracts/*` and the spec names the required canonical files (entities/relationship/source-registry/contract-bundle/commands schemas + validate_contracts.py) so the currency field/type/schema-version change is deliverable. No residual mismatch.",
+      "CONTENT RE-VERIFIED: §9A registers PH-324, PH-321 depends on it, and §1/§2/§5 state CNY-only until PH-324 (non-CNY writes refused); the additive nullable currency/original-amount fields, CNY backfill, dual-read, non-CNY write refusal, explicit-recompute migration, publish order PH-324 -> PH-321, and canonical/schema update list are frozen; FX snapshot uniqueness/Decimal/no recent-rate fallback/inverse guessing, boundary-once conversion with fx_rate_ref and ROUND_HALF_UP/no aggregate-then-convert, cross-owner ownership, null+missing, permissions/history-read and no implicit historical recompute remain coherent. The PH-308 change itself stays docs-only in the 6-path whitelist with no docs/adr/code/migration; number/linkage/report disclosure intact.",
+      "EVIDENCE AT 380d8a0 (BASE 15cf20c): check ok=true/task_count=246; governance 23 tests OK; verify-change --base 15cf20c --task PH-308 only high_risk_review_required + acceptance_not_passed (pre-review), no path_out_of_scope; report review now pass. After the final evidence/done transition, verify-change should be clean."
+    ],
+    "evidence": "VERDICT: PASS (round 3; PH-321/PH-324 dependency and canonical-schema whitelist aligned). Reviewed HEAD 380d8a0 (BASE 15cf20c) in /tmp/ph308-fx-adr, worktree clean; PH-308 spec + tasks/manifest/docs/verification/report/handoff within the 6-path whitelist; no code/migration/schema/docs-adr. PH-321 blockers include PH-324; PH-324 paths cover the canonical contracts files; §9A registers the extension and restricts pre-PH-324 to CNY with additive backfill/dual-read/publish order; FX/conversion/missing/cross-owner/permissions otherwise frozen. Independent runs: check ok=246; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "reviewer round-2 blockers 修复：PH-321 blockers 文本补 PH-324（与 depends_on 一致）；PH-324 allowed_paths 增加 `docs/v1.0-development/contracts/*`（canonical 契约 schema 套件）并补 docs/verification.md，spec §9A.3 明确必须更新 entities.schema.json/relationships.json/source-registry.json/contract-bundle.schema.json/commands.schema.json/validate_contracts.py。影响：PH-324 的币种字段扩展有可写 schema 路径，依赖/阻塞一致。",
+    "reviewer round-1 blocker 修复（option A）：新增 spec §9A 登记 proposed **PH-324**（canonical 币种字段/类型扩展 + 旧 CnyCents 兼容/回填 + 迁移计划），明确现有 CNY-only canonical 实体不能表示 USD/HKD 事实；多币种事实依赖 PH-324，PH-324 完成前仅 CNY 只读展示、非 CNY 写入不得开始；PH-321 depends_on 增加 PH-324。改变：契约可执行性修复；影响：PH-321/PH-324 依赖顺序冻结，PH-324 spec 暂复用 PH-308 §9A（白名单不含新 spec 文件）。",
+    "Lead 指示原为 docs/adr/ 新增多币种 ADR；核对 BASE 15cf20c 后 PH-308 的 tasks.json allowed_paths（6 项）和 spec 精确白名单均不含 docs/adr/，且实际 ADR 叶为 0014（新文件应为 0015 而非 0018）。经 Lead 裁决 C，改为把契约冻结正文写入 project/specs/PH-308.md，不新增 docs/adr 文件，避免 path_out_of_scope。",
+    "本片为 docs-only：无产品代码/模型/迁移/schema/路由/canonical 变更；未写 docs/delivery-status.md（不在白名单）。",
+    "实现片 PH-321 仍 proposed；本片不解除任何 proposed，也不预占 canonical topic/命令编号。",
+    "Lead integration rebase (15cf20c -> f61e970) after PH-293/PH-299/PH-300 merged: docs/verification.md kept main entries plus the PH-308 entry; manifest.active_handoff -> PH-308. Gates rerun green."
+  ],
+  "unverified": [
+    "契约的写侧实现（PH-321）未实现/未测试；本片只冻结口径。",
+    "PG/浏览器/生产不适用（无代码/迁移/UI 变更）；docs-only 验收以 check + 23 治理 + verify-change 为准。",
+    "独立 S 复核 pending；通过后置 done、重跑 check/verify-change 并报最终 SHA。"
+  ]
+}

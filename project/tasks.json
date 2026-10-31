@@ -9740,7 +9740,7 @@
       "title": "多币种/汇率（WP-FX）首片：币种/汇率快照与只读换算口径冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9765,7 +9765,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-308.md"
     },
     {
       "id": "PH-309",
@@ -10255,7 +10255,8 @@
       "depends_on": [
         "PH-308",
         "PH-150",
-        "PH-155"
+        "PH-155",
+        "PH-324"
       ],
       "spec": "project/specs/PH-321.md",
       "allowed_paths": [
@@ -10284,7 +10285,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-308（多币种/汇率契约冻结，ready 未 done）与 PH-150/PH-155（legacy 合同/结算）done；契约完成后由 PH-323 规划槽复核 DoR 再晋级。"
+        "缺 PH-308（多币种/汇率契约冻结，ready 未 done）、PH-324（canonical 币种字段/类型扩展与迁移，proposed）与 PH-150/PH-155（legacy 合同/结算）done；契约/扩展完成后由 PH-323 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10366,6 +10367,54 @@
       "acceptance": [
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-324",
+      "title": "canonical 币种字段/类型扩展与迁移计划（多币种事实前置）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-308"
+      ],
+      "spec": "project/specs/PH-308.md",
+      "allowed_paths": [
+        "core/models.py",
+        "core/migrations/*",
+        "core/services.py",
+        "pmo_plugins/contracts/models.py",
+        "pmo_plugins/contracts/migrations/*",
+        "pmo_plugins/settlement/models.py",
+        "pmo_plugins/settlement/migrations/*",
+        "pmo_plugins/management_revenue/models.py",
+        "pmo_plugins/management_revenue/migrations/*",
+        "pmo_plugins/cash/models.py",
+        "pmo_plugins/cash/migrations/*",
+        "pmo_plugins/delivery/models.py",
+        "pmo_plugins/delivery/migrations/*",
+        "tests/test_v1_currency_schema.py",
+        "tests/test_v1_currency_backfill.py",
+        "project/reports/PH-324.json",
+        "project/handoffs/PH-324.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "docs/v1.0-development/contracts/*"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_currency_schema tests.test_v1_currency_backfill --verbosity 1"
       ],
       "github_issue": null,
       "owner": null,
