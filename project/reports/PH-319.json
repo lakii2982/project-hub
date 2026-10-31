@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 2ec2232 --task PH-319",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all changed files (7 spec updates for the promoted ADRs/PH-316, 4 new specs PH-320..323, tasks.json, manifest.json, docs/verification.md, ROADMAP.md route section, PH-319 report/handoff) are inside BASE PH-319 allowed_paths."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD 9fc38a8: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"9fc38a86bcf4ec05f042d5e18fdb0a44439b9e71\",\"count\":17,\"errors\":null}, exit 0; all 17 changed files inside BASE PH-319 allowed_paths and review.status=pass with the reviewer's name (second-round PASS after the PH-305/306 write-side mapping fix)."
     }
   ],
   "review": {

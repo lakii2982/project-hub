@@ -721,4 +721,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 3. **不晋级**：PH-317/318（等 PH-293/308 done）、PH-312/313/314（等 ADR/实现前置）、PH-310（等 PH-285/181/182）、PH-292（等 PH-289/181/185）等保持 proposed + 精确 blocker，无虚假晋级。
 4. **实现路线**：新增 `ROADMAP.md（剩余 1.0 实现路线节）`（批次 A ADR 冻结 → 批次 B 写侧首片 → 批次 C 验收/运维与剩余缺口）。
 5. **登记**：PH-320 发票实现（proposed，deps PH-293/252/214/224/232）、PH-321 多币种实现（proposed，deps PH-308/150/155）、PH-322 关期/结项实现（proposed，deps PH-299/300/312/180-185）、PH-323 下一规划槽（proposed，待 PH-319 done 后置 ready）。count 241→245，编号 320-323 连续。
-6. 无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-320/321/322 未实现；review由独立S复核。
+6. 独立 S 复核首轮 1 阻断（PH-305/306 写侧误指 PH-320/PH-323）已修为 PH-313，二轮 PASS；最终证据 HEAD 9fc38a8 按槽惯例置 PH-319 done / PH-323 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=245；23 项治理 OK；verify-change --base 2ec2232 --task PH-319 ok=true、17 文件全白名单、无 errors。未验证：PH-293/299/300/305/306/308/316 的 ADR/契约文档本身与 PH-320/321/322 实现尚未交付；review 二轮 PASS。
