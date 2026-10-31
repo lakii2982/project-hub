@@ -29,7 +29,8 @@
     "This is a docs/contract freeze only: it creates docs/engineering/ops-runbook.md and docs/engineering/upgrade-recovery.md and appends §6 to the existing batch-C acceptance matrix; no scripts/ops/* implementation, deployment, restore, PG concurrency or production operation was executed or claimed.",
     "The scripts listed (ops_preflight, ops_tls_probe, ops_upgrade, ops_backup_verify, ops_restore_rehearsal, ops_health_capacity, ops_pg_concurrency) are frozen as contracts; their implementation belongs to PH-333/334/335. Current statuses are explicitly not_run (PH-333/PH-335) or blocked (PH-334 waiting PH-330).",
     "The common envelope/exit codes are additive contract text; they do not alter existing CI gates, acceptance commands, product behavior or contract schemas.",
-    "No real customer/payroll/credential data is included; evidence examples are schema-only and redaction requirements are explicit."
+    "No real customer/payroll/credential data is included; evidence examples are schema-only and redaction requirements are explicit.",
+    "Lead integration rebase (4c0d309 -> cc44124) after PH-325 merged: docs/verification.md kept main entries plus PH-345 entry; manifest.active_handoff -> PH-345."
   ],
   "unverified": [
     "This slice is docs-only: no runtime, deployment, backup/restore, PG concurrency, browser or production verification applies; all V1-OPS statuses remain not_run/blocked.",
