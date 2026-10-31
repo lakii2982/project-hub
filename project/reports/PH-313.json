@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base bfc5ca3 --task PH-313",
-      "result": "not_run",
-      "evidence": "Actual run before review pass: ok=false, errors=[{\"code\":\"high_risk_review_required\",\"path\":\"report.review\"}] (no path_out_of_scope). will be rerun and set to pass only after the independent reviewer status=pass."
+      "result": "pass",
+      "evidence": "Actual run after committing the review pass and task done (BASE bfc5ca3, HEAD bc5e29f): ok=true, changes=6 files all inside the 6-path PH-313 allowlist, errors=[]."
     }
   ],
   "review": {
