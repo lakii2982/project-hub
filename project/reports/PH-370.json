@@ -1,0 +1,68 @@
+{
+  "task_id": "PH-370",
+  "summary": "跨 owner 编排执行首片 on BASE d38165a (rebased after PH-327). Adds invoicing/orchestration_services.py that turns a PH-320 reversal/attribution context into named owner-service execution for management-revenue reversal, cash refund/bank return and settlement clearance/reverse-clearance. The service validates invoice/reversal/expected_version, derives a deterministic owner request token from the orchestration token, invokes the owner's named service (reverse_recognition / record_refund / record_bank_return / create_clearance / reverse_clearance), builds the resulting owner ref, and appends it through PH-320 link_invoice_orchestration after attribution validation. It stores an append-only execution receipt in AuditEvent keyed by request_token+digest (receipt is checked before state gates for replay), records executed/link_pending audit, and on owner/link failure leaves no execution receipt/link; the owner action is retried through its own idempotency receipt on retry. It never writes revenue/cash/settlement directly and explicitly returns single_transaction_claim=false. Adds a read-only orchestration snapshot and invoicing page with separate history_read page and business_write execute routes; owner/finance write, auditor read, member denied. No new canonical model/migration/canonical topic/contract schema. Tests cover real cash-refund owner execution + link + audit + snapshot, token replay/no duplicate owner fact and changed-input conflict, failed owner action with no execution/link, role/expected-version rejection, cross-org invoice and mismatched-counterparty attribution rejection, revenue/settlement dispatch via injected named-service fakes, and HTTP GET/POST/invalid/role behavior. verify_integrity has no new PH-370 branch because core verify_integrity is outside the PH-370 allowlist; the read-only snapshot is the in-scope reconciliation surface. Reviewer round-1 blocker fixed: execute now requires invoicing module enabled at the service layer (not just the page), and orchestration_snapshot now allows only owner/finance/auditor/pm (pm project scope preserved), denying member/unknown roles; regressions cover disabled-module execute and direct member snapshot reads.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":295}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: 'No changes detected'; no new model/migration."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual final run after rebase onto d38165a: Ran 1294 tests in 143.729s, 5 failures/3 errors/70 environment skips. The 8 failure/error names are exactly the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI authoritative."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_invoice_orchestration tests.test_v1_invoice_orchestration_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run after the round-1 fixes: Ran 9 tests, OK. Adds disabled-module execute rejection and direct member snapshot denial to the real cash owner/link/idempotency/failure/roles/attribution/HTTP coverage."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 2.456s, OK."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No PH-370 verifier branch because core/management/commands/verify_integrity.py is outside the PH-370 allowlist; orchestration reconciliation is the read-only snapshot."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base d38165a --task PH-370",
+      "result": "pass",
+      "evidence": "Actual run after the round-2 reviewer pass and final status commit 8030e1a: ok=true, head=8030e1ac518a8d618f820784ab750a52a712a8de, changes=14 files all inside the PH-370 allowlist, errors=[]."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-370 cross-owner orchestration reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 SERVICE GATE BLOCKER RESOLVED AT 83326d8: `_fresh(write=True)` now checks `is_enabled(organization, 'invoicing')` before execute, so a disabled invoicing module rejects direct service/API execution rather than relying on the view's invoice read gate; `orchestration_snapshot` now rejects both pm and member and allows only owner/finance/auditor across the direct service path. Regressions cover module-disabled execute (no Refund) and member direct snapshot denial.",
+      "CONTENT RE-VERIFIED: execute validates invoice/reversal/expected_version, action mapping and payload, derives an owner token for retry idempotency, calls only named owner services (revenue reversal, cash refund/bank return, settlement clearance/reverse), records the PH-320 link plus an append-only AuditEvent receipt, and returns single_transaction_claim=false with a read-only snapshot; failure paths leave no execution receipt/link (and no owner duplicate on retry); cash-refund owner action is exercised end-to-end; revenue/settlement dispatch is injected-fake and disclosed; no new canonical model/migration/topic/contract schema and no direct owner-model writes; pages/domain metadata/routes/templates wired; no verifier branch is disclosed; 14 files within the PH-370 whitelist.",
+      "EVIDENCE AT 83326d8 (BASE d38165a): check ok=true/task_count=295; manage.py check exit0; makemigrations --check No changes; scoped orchestration tests 9 OK; full suite 1294/5F+3E/70 = known macOS baseline; fresh SQLite verify_integrity ok; verify-change --base d38165a --task PH-370 only high_risk_review_required, no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS (round 2; service-layer module/read-role gates fixed). Reviewed HEAD 83326d8 (BASE d38165a) in /tmp/ph370-orchestration, worktree clean; 14 files within PH-370 whitelist; no migration/schema. Direct execute rejects disabled invoicing module; snapshot rejects member (and pm) and permits owner/finance/auditor; named-owner execution/link/audit/idempotency and honest single_transaction_claim=false otherwise verified; cash-refund real e2e, revenue/settlement fake disclosed. Independent runs: check ok=295; makemigrations clean; scoped 9 OK; full 1294/5F+3E/70 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope. Round-2 reviewer PASS (83326d8): execute rejects disabled invoicing module; snapshot rejects member (and pm) and permits owner/finance/auditor; 14 files in whitelist, no migration/schema. Final evidence commit records the actual verify-change pass."
+  },
+  "deviations": [
+    "Only the cash-refund path is exercised against the real cash owner service and real owner models in tests; management-revenue reversal and settlement clearance dispatch are tested with injected named-service fakes to avoid constructing the full owner fixtures. This is disclosed, not a claim of full owner end-to-end coverage.",
+    "No verifier branch was added: core/management/commands/verify_integrity.py is outside the PH-370 allowlist. The in-scope read-only orchestration snapshot is the reconciliation surface; verify_integrity fresh-DB run remains ok.",
+    "The orchestration receipt is stored in the append-only AuditEvent payload rather than a new internal table/migration, consistent with the no-new-model whitelist. The service does not claim a global single transaction; owner actions and link recording share the request's DB transaction but owner services remain the sole owner writers.",
+    "No PDF/email/portal, multi-currency extension, batch execution, or direct revenue/cash/settlement writes were added; no PG concurrency claim."
+  ],
+  "unverified": [
+    "Full real owner-service end-to-end for management-revenue reversal and settlement clearance (fake-dispatched in this slice)",
+    "PostgreSQL CI/concurrency, browser 1440/390 and production execution",
+    "Independent S review and CI/PR pending"
+  ]
+}

@@ -7,8 +7,9 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import redirect, render
 from django.urls import get_script_prefix
 
-from . import services
-from .forms import AllocateForm, InvoiceForm, ReverseForm, TaxConfirmForm, TaxLinkForm
+from . import orchestration_services, services
+from .forms import (AllocateForm, InvoiceForm, OrchestrationExecuteForm, ReverseForm,
+                     TaxConfirmForm, TaxLinkForm)
 
 
 def _url(page, **query):
@@ -202,3 +203,42 @@ def invoice_tax_link(context, payload):
         return redirect(_url('invoice_tax', id=form.cleaned_data['invoice_id']))
     return _invoice_tax_page(context, member, invoice_id=invoice_id, link_form=form,
                              error='请核对编排字段', status=400)
+
+
+def _orchestration_page(context, member, *, invoice_id=None, form=None, error='', status=200):
+    snapshot = orchestration_services.orchestration_snapshot(member, invoice_id) if invoice_id else None
+    values = _base(member, snapshot=snapshot, error=error,
+                   execute_form=form or (OrchestrationExecuteForm(initial={'invoice_id': invoice_id})
+                                         if member.role in services.WRITE_ROLES else None),
+                   page_url=_url('invoice_orchestration_page'),
+                   execute_url=_url('invoice_orchestration_execute'))
+    return render(context.request, 'invoicing/orchestration.html', values, status=status)
+
+
+def invoice_orchestration(context, payload):
+    member = services._fresh(context.member)
+    invoice_id = payload.get('invoice_id') or context.request.GET.get('invoice_id')
+    if context.request.method == 'POST':
+        member = services._fresh(context.member, write=True)
+        form = OrchestrationExecuteForm(payload)
+        if form.is_valid():
+            try:
+                orchestration_services.execute_invoice_orchestration(
+                    member, invoice_id=form.cleaned_data['invoice_id'],
+                    reversal_id=form.cleaned_data['reversal_id'],
+                    action=form.cleaned_data['action'],
+                    payload=form.cleaned_data['payload'],
+                    request_token=(form.cleaned_data.get('request_token')
+                                   or payload.get('request_token') or uuid.uuid4()),
+                    expected_version=form.cleaned_data['expected_version'],
+                    dry_run=form.cleaned_data['dry_run'])
+            except ValidationError as exc:
+                return _orchestration_page(context, member,
+                                           invoice_id=form.cleaned_data['invoice_id'],
+                                           form=form, error='；'.join(exc.messages), status=400)
+            messages.success(context.request, '跨 owner 编排已执行')
+            return redirect(_url('invoice_orchestration_page', invoice_id=form.cleaned_data['invoice_id']))
+        return _orchestration_page(context, member,
+                                   invoice_id=payload.get('invoice_id'), form=form,
+                                   error='请核对编排字段', status=400)
+    return _orchestration_page(context, member, invoice_id=invoice_id)

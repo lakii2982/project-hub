@@ -14,5 +14,7 @@ DOMAIN_METADATA = {
         {'name': 'invoice_tax', 'path': 'invoice-tax/', 'access': 'history_read'},
         {'name': 'invoice_tax_confirm', 'path': 'invoice-tax-confirm/', 'access': 'business_write'},
         {'name': 'invoice_tax_link', 'path': 'invoice-tax-link/', 'access': 'business_write'},
+        {'name': 'invoice_orchestration_page', 'path': 'invoice-orchestration/', 'access': 'history_read'},
+        {'name': 'invoice_orchestration_execute', 'path': 'invoice-orchestration-execute/', 'access': 'business_write'},
     ],
 }
