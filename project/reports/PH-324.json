@@ -48,9 +48,9 @@
       "evidence": "Fresh DB: migrate --noinput then verify_integrity --json -> {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 094f61e --task PH-324",
+      "command": "python scripts/projectctl.py verify-change --base ab1845b --task PH-324",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 29 changed files inside BASE PH-324 allowed_paths (reviewer-b pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — changed files inside BASE PH-324 allowed_paths (reviewer-b pass recorded; post-rebase gate rerun)."
     }
   ],
   "review": {
@@ -69,7 +69,8 @@
     "The additive canonical extension is backward-compatible (new optional fields; legacy CNY documents validate), so no breaking canonical version bump was made; freeze canonical hashes were updated only for modified files, as the contract process requires.",
     "BankCharge is intentionally out of scope for the materialized model layer: PH-324's BASE whitelist covers contracts/settlement/management_revenue/cash models only; the canonical schema no longer advertises fields the slice does not materialize, and README/spec record the PH-321/costing follow-up.",
     "No business write side: services, views, runtime conversion and non-CNY acceptance remain PH-321; schema/model pass does not claim runtime multi-currency.",
-    "Cross-whitelist: PH-328 merged as BASE 094f61e added promotion-draft/extension-freeze.json and project/specs/PH-324.md; the branch is rebased and verify-change now reports only the review gate."
+    "Cross-whitelist: PH-328 merged as BASE 094f61e added promotion-draft/extension-freeze.json and project/specs/PH-324.md; the branch is rebased and verify-change now reports only the review gate.",
+    "Lead integration rebase (094f61e -> ab1845b) after PH-328 planning PR merged: docs/verification.md kept main entries plus the PH-324 entry; manifest.active_handoff -> PH-324. Gates rerun green."
   ],
   "unverified": [
     "No service/model/migration/runtime support for multi-currency exists; PH-321 must implement FX snapshots, conversion and non-CNY write rejection.",
