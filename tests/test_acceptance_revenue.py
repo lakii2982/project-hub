@@ -341,6 +341,7 @@ class AcceptanceRevenueTests(RevenueFixture, TestCase):
 
     def test_new_business_dependency_guard_blocks_contract_disable_without_half_write(self):
         from core.plugin_runtime import set_enabled, is_enabled
+        set_enabled(self.owner, 'invoicing', False)
         self.assertTrue(is_enabled(self.org,'delivery'))
         self.assertTrue(is_enabled(self.org,'management_revenue'))
         before=self.facts()+(PluginState.objects.count(),)

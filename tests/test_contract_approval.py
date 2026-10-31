@@ -409,6 +409,7 @@ class ContractApprovalConcurrencyTests(Fixture, TransactionTestCase):
 
     def waiting_approval(self, revoke):
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'invoicing', False)
         ready, pids, results = Event(), {}, []
         def worker():
             close_old_connections()

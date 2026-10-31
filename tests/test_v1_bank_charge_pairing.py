@@ -163,6 +163,7 @@ class BankChargePairingServiceTests(FeePairingFixture, TestCase):
         self.synthetic(self.cash(suffix='pm-other'), scope=other)
         self.assertEqual(len(pairing.bank_charge_pairing(self.pm)), 1)
         from core.plugin_runtime import get_registry, set_enabled
+        set_enabled(self.owner, 'invoicing', False)
         for plugin_id in ('onboarding', 'time', 'management_revenue', 'settlement', 'delivery',
                           'contracts', 'costing'):
             if plugin_id in get_registry().manifests:

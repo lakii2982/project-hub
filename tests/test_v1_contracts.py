@@ -273,6 +273,7 @@ class ContractsConcurrencyTests(Fixture, TransactionTestCase):
 
     def waiting_writer_refused(self, revoke=False):
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'invoicing', False)
         ready = Event()
         pids, results = {}, []
         def queued():
@@ -331,6 +332,7 @@ class ContractsConcurrencyTests(Fixture, TransactionTestCase):
 
     def test_committed_write_precedes_waiting_disable_then_later_writes_refused(self):
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'invoicing', False)
         ready = Event()
         pids, errors = {}, []
         def disable():
