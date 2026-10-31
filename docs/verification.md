@@ -864,3 +864,11 @@ BASE 20ffc12（PH-322 合入后）。复用 PH-252 已交付 `pmo_plugins/invoic
 ### PH-320 复核 round-1 阻断修复
 
 1) 跨 owner 引用要求对应 InvoiceReversal 并校验 namespace/kind、发票 allocations 派生的 project/counterparty 归属（跨项目/外来/缺 reversal 拒绝）；2) migration 0002 新增 vendor-aware INSERT 守卫仅允许 pending/unknown/v1，supersede 先追加 pending 再过渡，补直接插入探针；3) confirm 追加确认 evidence 保留 pending 证据，测试断言。scoped 9 + PH-252 invoice 18 OK。
+
+## PH-325 发票-结算/收入/条款只读对账（2026-10-31）
+
+基线 863f946。只读派生（无 audit/写/迁移/收据），单据：`pmo_plugins/invoicing/invoice_reconciliation_services.py`（`invoice_pairing`）、视图/表单/模板、canonical 路由 `invoice-reconciliation/`（`history_read`，经 `pmo_plugins/delivery/urls.py` 绑定，无 `invoicing/urls.py`）、`tests/test_v1_invoice_reconciliation.py` + `_http.py`（18 tests，含复核回归）。
+- 能力：发票头/行/分配/红冲/税额资格 ↔ 结算 OpenItem/Clearance/Settlement ↔ 管理收入确认/调整 ↔ 合同条款只读聚合；派生已分配/未分配/已核销/未清/已确认收入/税额资格；issue 覆盖 source_missing/unsupported_source/unallocated/over_allocated/duplicate_pairing/revenue_invoice_mismatch/tax_unconfirmed/cross_org_source；missing 用 null+code（不显示 0）；权限 owner/finance/auditor 全量、pm 仅管理项目、member 拒绝、停用 history_read；GET 无写副作用、无收据。
+- 偏差：spec 行为 2 的“税额资格确认 pending→confirmed”按本片任务书（只读、无 audit/写/收据）**未实现**，留 PH-320；本片只读展示 TaxQualification 事实（tax_unconfirmed issue）。
+- 实跑（合并 main 4c0d309/PH-320 后）：projectctl check ok/268；23 项治理 OK；manage.py check 112 既有 warning（基线 111 + 本片 1 条路由 W003）/0 error；makemigrations 无变更；全量 1212 tests=5F+3E+69（既有 macOS/DRF 基线，无新增）；scoped 18 tests OK；新库 verify_integrity ok。
+- CI 修复：测试 fixture 改经 **open_tax_qualification**（pending/unknown/v1）→ **confirm_tax_qualification** 生成税额资格，不再直接插非初始态；并断言直接 ORM 插 confirmed 被 PH-320 INSERT 守卫拒绝（IntegrityError）。独立 S 复核首轮 4 个派生/过滤阻断（无收入显示 0、adjustment 未按 as_of、多项目单项目比较、detail 忽略 project_id）已修并加 4 回归；二轮 **PASS**（HEAD 6334677，BASE 20ffc12）。最终门禁：projectctl check ok=true/task_count=263；23 项治理 OK；verify-change --base 20ffc12 --task PH-325 ok=true、13 文件全白名单、无 errors。未验证：浏览器 1440/390 实机未截图（模板已实现但未人工走查）；PG 交 CI；税额确认未实现。
