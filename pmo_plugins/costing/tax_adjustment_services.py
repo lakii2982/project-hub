@@ -29,6 +29,9 @@ WRITE_ROLES = {'owner', 'finance'}
 READ_ROLES = {'owner', 'finance', 'auditor', 'pm'}
 ACTION = 'tax.cost.adjust'
 REVERSE_ACTION = 'tax.cost.reverse'
+# NOTE: SharedCostAllocationBatch.POOL_KINDS (models.py) is not exhaustive; this
+# owner slice uses tax_not_recoverable without widening that shared constant
+# (models.py is outside the PH-371 whitelist).
 POOL_KIND = 'tax_not_recoverable'
 DRIVER = 'fixed_weights'
 ALGORITHM = 'tax_not_recoverable_cost_adjust_v1'
@@ -101,8 +104,7 @@ def _record(member, action, token, digest, result):
 
 def _project_weights(invoice, amount):
     rows = list(InvoiceAllocation.objects.filter(
-        invoice_line__invoice=invoice, status='active').select_related(
-        'invoice_line__invoice'))
+        invoice_line__invoice=invoice, status='active'))
     weights = {}
     for row in rows:
         source = row.business_source_ref or {}
@@ -216,14 +218,14 @@ def reverse_tax_cost_adjustment(member, batch_id, *, reason, request_token, dry_
     text = str(reason or '').strip()
     if not 1 <= len(text) <= 500:
         _fail('冲销原因须为1至500字符')
-    if SharedCostAllocationBatch.objects.filter(
-            organization=member.organization, reverses_batch=batch, kind='reversal').exists():
-        _fail('该税额成本调整已冲销')
     payload = {'batch_id': str(batch.pk), 'amount_cents': -batch.amount_cents, 'reason': text}
     digest = _digest(payload)
     receipt, token = _receipt(member, REVERSE_ACTION, request_token, digest, dry_run)
     if receipt is not None:
         return receipt.result
+    if SharedCostAllocationBatch.objects.filter(
+            organization=member.organization, reverses_batch=batch, kind='reversal').exists():
+        _fail('该税额成本调整已冲销')
     if dry_run:
         return {'dry_run': True, 'batch_ref': batch.source_ref,
                 'amount_cents': -batch.amount_cents, 'period': batch.period}
@@ -234,6 +236,11 @@ def reverse_tax_cost_adjustment(member, batch_id, *, reason, request_token, dry_
         source_refs=[batch.source_ref], source_digest=batch.source_digest,
         input_digest=digest, algorithm_version=ALGORITHM, reverses_batch=batch,
         reason=text, created_by=member)
+    for line in batch.lines.order_by('sequence'):
+        SharedCostAllocationLine.objects.create(
+            organization=member.organization, batch=reversal, sequence=line.sequence,
+            target_kind=line.target_kind, target_id=line.target_id,
+            basis_points=line.basis_points, allocated_cents=-line.allocated_cents)
     reversal.status = 'posted'
     reversal.save()
     result = {'reversal_ref': reversal.source_ref, 'batch_ref': batch.source_ref,
