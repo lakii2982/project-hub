@@ -8,7 +8,7 @@
     "queries.schema.json": "50245c71bbff40c5afcced62446f5762afba8ab53e54909a3751a534e4dd4442",
     "events.schema.json": "d359377d0e4035531fa83479fa08e331956c2ad7a71564e2403b7fca94547e58",
     "catalog-completeness.schema.json": "61ac045f1d772ae9089816bedcfe345afcd98f93547182ee506c833d39674884",
-    "entities.schema.json": "d0ad1a8c0b50cf1b6ad02934f04fbf46e5c1cc8a5c2231662a7c52e1bb40db55",
+    "entities.schema.json": "d4cad7fff64bf203c9d5fa4ff9d1332432102f785c160eecf74477bf456f37c8",
     "query-results.schema.json": "5b698c58b36b32af7f5e1ec5559983ee1e540fd967bb9005135543d93396485d",
     "contract-catalog.json": "6b7882b5a652cf2329545958bce865db70810ffd06f78ef9bec74b34b9b311da",
     "relationships.json": "2e47454ebeed0b611035cf151ae14803afc3ac3f95685cf8db7b729d78556424",

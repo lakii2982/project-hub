@@ -187,8 +187,12 @@ class ContractLine(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     line_no = models.PositiveIntegerField()
     net_cents = models.PositiveBigIntegerField()
+    currency = models.CharField(max_length=3, default='CNY', editable=False)
+    original_net_cents = models.PositiveBigIntegerField(null=True, default=None)
     tax_cents = models.PositiveBigIntegerField()
+    original_tax_cents = models.PositiveBigIntegerField(null=True, default=None)
     gross_cents = models.PositiveBigIntegerField()
+    original_gross_cents = models.PositiveBigIntegerField(null=True, default=None)
 
     class Meta:
         ordering = ['line_no']
@@ -227,6 +231,7 @@ class PaymentTerm(models.Model):
     def get_condition_type_display(self):
         return {'unconditional': '无条件', 'conditional': '附条件', 'warranty': '质保款'}.get(self.condition_type, '')
 
+    currency = models.CharField(max_length=3, default='CNY', editable=False)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
     contract_line = models.ForeignKey(ContractLine, on_delete=models.PROTECT, related_name='payment_terms')
@@ -235,12 +240,14 @@ class PaymentTerm(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     condition_type = models.CharField(max_length=16)
     gross_cents = models.PositiveBigIntegerField()
+    original_gross_cents = models.BigIntegerField(null=True, default=None)
     due_date = models.DateField(null=True)
     release_condition = models.CharField(max_length=500, blank=True)
 
 
 class WarrantyTerm(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    currency = models.CharField(max_length=3, default='CNY', editable=False)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
     contract_line = models.ForeignKey(ContractLine, on_delete=models.PROTECT, related_name='warranty_terms')
     payment_term = models.ForeignKey(PaymentTerm, on_delete=models.PROTECT, related_name='warranty_terms')
@@ -250,6 +257,7 @@ class WarrantyTerm(models.Model):
     release_condition = models.CharField(max_length=500)
     release_on = models.DateField(null=True)
     gross_cents = models.PositiveBigIntegerField()
+    original_gross_cents = models.BigIntegerField(null=True, default=None)
 
 
 class MethodPolicySelection(models.Model):
@@ -287,6 +295,7 @@ CHANGE_DECISIONS = ('approved', 'rejected', 'withdrawn')
 
 class ContractChange(models.Model):
     """Append-only contract change request; approval creates or terminates a version."""
+    currency = models.CharField(max_length=3, default='CNY', editable=False)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='contract_changes')
     contract = models.ForeignKey(Contract, on_delete=models.PROTECT, related_name='changes')
@@ -296,8 +305,11 @@ class ContractChange(models.Model):
     change_type = models.CharField(max_length=16, choices=[(x, x) for x in CHANGE_TYPES])
     requested_on = models.DateField()
     net_delta_cents = models.BigIntegerField(default=0)
+    original_net_delta_cents = models.BigIntegerField(null=True, default=None)
     tax_delta_cents = models.BigIntegerField(default=0)
+    original_tax_delta_cents = models.BigIntegerField(null=True, default=None)
     gross_delta_cents = models.BigIntegerField(default=0)
+    original_gross_delta_cents = models.BigIntegerField(null=True, default=None)
     evidence = models.JSONField(default=list)
     draft_content = models.JSONField(default=dict)
     created_by_member = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')

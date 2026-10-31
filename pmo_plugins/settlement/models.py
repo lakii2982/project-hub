@@ -29,8 +29,12 @@ class Settlement(models.Model):
     settled_on = models.DateField()
     due_date = models.DateField()
     gross_cents = models.PositiveBigIntegerField()
+    currency = models.CharField(max_length=3, default='CNY', editable=False)
+    original_gross_cents = models.PositiveBigIntegerField(null=True, default=None)
     net_cents = models.PositiveBigIntegerField()
+    original_net_cents = models.PositiveBigIntegerField(null=True, default=None)
     tax_cents = models.PositiveBigIntegerField()
+    original_tax_cents = models.PositiveBigIntegerField(null=True, default=None)
     version = models.PositiveIntegerField(default=1)
     status = models.CharField(max_length=16, default='draft')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -88,6 +92,7 @@ class Settlement(models.Model):
 class OpenItem(models.Model):
     """Immutable receivable partition inherited from one approved settlement."""
 
+    currency = models.CharField(max_length=3, default='CNY', editable=False)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT, related_name='open_items')
     project = models.ForeignKey('core.Project', on_delete=models.PROTECT, related_name='open_items')
@@ -101,7 +106,9 @@ class OpenItem(models.Model):
     scope = models.JSONField()
     source = models.JSONField()
     gross_cents = models.PositiveBigIntegerField()
+    original_gross_cents = models.BigIntegerField(null=True, default=None)
     tax_cents = models.PositiveBigIntegerField()
+    original_tax_cents = models.BigIntegerField(null=True, default=None)
     due_date = models.DateField()
     occurred_on = models.DateField()
     release_condition = models.CharField(max_length=500, blank=True)
