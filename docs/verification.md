@@ -917,4 +917,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 3. **证据回填模板与批次 C 退出标准**：`docs/verification.md` 条目模板（环境/SHA/命令实际输出/逐层判定/not_run）；M15 与 V1-OPS 映射；退出标准要求真实执行且无 not_run/blocked 遗留。
 4. **反例**：无证据写通过、配置/演练冒充生产、SQLite 冒充 PG、跳过备份、证据含敏感原文、not_run 计通过、以手册存在代替执行证据。
 5. 与 `batch-c-acceptance.md`（PH-332 矩阵）交叉引用；ROADMAP 批次 C 状态同步。命令已逐条替换为仓库真实模块（41 个 `tests.*` label 全部存在；抽跑 M03 50、M04 36、M06 48、M09 79、M10 38、M12 39、M14 15 项均 OK）；未写代码/脚本/迁移，未执行部署/恢复/并发/性能；所有项按实际标 not_run/blocked。
-实跑：projectctl check ok/278；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：M01–M15 与 V1-OPS-01–06 均未执行；批次 C 演练待 PH-347–350。
+独立 S 复核首轮 1 阻断（占位/不存在的测试 label）已修（41 个 label 全部真实存在；M03/M04/M06/M09/M10/M12/M14 抽跑 OK）；二轮 PASS。最终门禁：projectctl check ok=true/task_count=278；23 项治理 OK；verify-change --base db8ed47 --task PH-352 ok=true、8 文件全白名单、无 errors。未验证：M01–M15 与 V1-OPS-01–06 均未执行；批次 C 演练待 PH-347–350。

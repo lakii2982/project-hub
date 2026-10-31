@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base db8ed47 --task PH-352",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD d4349f0: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 8 changed files (batch-c-runbook.md, batch-c-acceptance.md xref, ROADMAP.md, tasks.json, manifest.json, docs/verification.md, PH-352 report/handoff) inside BASE PH-352 allowed_paths."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD eda0b63: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"eda0b634fecfbb07ec4efeec7d9dab531e21a6ab\",\"count\":8,\"errors\":null}; all 8 files inside BASE PH-352 allowed_paths and review.status=pass with the reviewer's name."
     }
   ],
   "review": {
