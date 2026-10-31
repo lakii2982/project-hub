@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD d73c0b2 (BASE 2f082a3, PH-368 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":297}, exit 0; final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE 2f082a3): {\"command\":\"check\",\"ok\":true,\"task_count\":297}, exit 0; PH-368 done with handoff."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (SLO/threshold governance, alert/backlog policy, trend/capacity-planning rules, PH-366 mapping and honest not-implemented status); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-368 observability follow-up contract reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "BASELINE ACCURACY: the contract correctly describes PH-350 (facts-driven health/capacity/backlog/perf checks, PH-345 envelope/0-2-3-4-5, dry_run default, rehearsal-only pass, staging/production dry_run not_run/execute exit5, recursive redaction) and PH-335 (`rollup_evidence` L1/L2, L3-L5 not_run, release_ready=false, missing L3_ci_pg/L4_browser/L5_production); it explicitly does not reimplement or alter existing checks/thresholds.",
+      "SLO/ALERT/TREND DISCIPLINE: SLO records have id/scope/metric/environment/target/window/severity/owner/approved_by/status, environment+version uniqueness, append-only supersede, rehearsal defaults are not production SLOs, missing SLO -> not_run/blocked, production approval with no self-approval; alert records have stable alert_key/window aggregation/blocker-warning escalation/ack-resolve evidence and no automatic scaling/restart/config/external sends; backlog four categories and sustained-no-decrease escalation; PH-364 reminder boundary is explicit.",
+      "TREND/CAPACITY/GATE: append-only series with no interpolation and null+missing_sample, nearest-rank P50/P95, ≥7 valid samples before prediction with insufficient_samples otherwise, capacity plans with null/assumptions/confidence/manual action, and a PH-366 L2-L5 evidence map that never promotes rehearsal/local evidence to L3/L4/L5; current status is L2 local only, L3-L5 not_run, release_ready=false and core items non-waivable.",
+      "GATES: docs-only, no product code/migration/script/gate change; 7 changed files within the PH-368 whitelist; no placeholders; task_count 297; check ok=297; governance 23 OK; verify-change --base 2f082a3 --task PH-368 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 229ce89 (BASE 2f082a3) in /tmp/ph368-observability-next, worktree clean; 7 files within PH-368 whitelist; docs-only. PH-350/PH-335 baseline is described accurately; SLO governance/versioning/approval, alert dedupe/escalation/no-automation, backlog escalation, trend/capacity null/insufficient_samples rules and PH-366 L2-L5 mapping are complete; no code/migration/script/gate change; check ok=297; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
   },
   "deviations": [
     "The contract deliberately reuses PH-350's checks/thresholds/exit codes and PH-335's L1/L2 rollup instead of redefining them; this slice only freezes the follow-up governance/policy/trend/evidence-mapping rules.",

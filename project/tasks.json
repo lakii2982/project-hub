@@ -12089,7 +12089,7 @@
       "title": "容量/健康/积压基线后续契约（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12114,7 +12114,7 @@
       ],
       "blockers": [],
       "github_issue": null,
-      "owner": "worker-docs",
+      "owner": null,
       "handoff": "project/handoffs/PH-368.md"
     },
     {
