@@ -1387,11 +1387,41 @@ class Command(BaseCommand):
                 errors.append(f"invoice:{invoice.pk}:reversed_without_full_reversal")
             if invoice.status == 'active' and reversed_total >= invoice.gross_cents and reversals:
                 errors.append(f"invoice:{invoice.pk}:full_reversal_but_active")
+            line_ids = {str(line.pk) for line in lines}
+            allocation_ids = {str(row.pk) for row in InvoiceAllocation.objects.filter(
+                invoice_line__invoice_id=invoice.pk)}
+            line_reversed, allocation_reversed = {}, {}
             for row in reversals:
                 if row.gross_cents >= 0 or row.net_cents > 0 or row.tax_cents > 0:
                     errors.append(f"invoice_reversal:{row.pk}:signed")
                 if row.gross_cents != row.net_cents + row.tax_cents:
                     errors.append(f"invoice_reversal:{row.pk}:tax_split")
+                line_sum = sum(item.get('gross_cents', 0) for item in row.line_reversals or [])
+                allocation_sum = sum(item.get('gross_cents', 0)
+                                     for item in row.allocation_reversals or [])
+                if line_sum != row.gross_cents or allocation_sum != row.gross_cents:
+                    errors.append(f"invoice_reversal:{row.pk}:detail_total")
+                for item in row.line_reversals or []:
+                    ref = (item.get('original_line_ref') or {}).get('id')
+                    if str(ref) not in line_ids:
+                        errors.append(f"invoice_reversal:{row.pk}:line_ref")
+                    else:
+                        line_reversed[str(ref)] = line_reversed.get(str(ref), 0) + abs(
+                            item.get('gross_cents', 0))
+                for item in row.allocation_reversals or []:
+                    ref = (item.get('original_allocation_ref') or {}).get('id')
+                    if str(ref) not in allocation_ids:
+                        errors.append(f"invoice_reversal:{row.pk}:allocation_ref")
+                    else:
+                        allocation_reversed[str(ref)] = allocation_reversed.get(str(ref), 0) + abs(
+                            item.get('gross_cents', 0))
+            for line in lines:
+                if line_reversed.get(str(line.pk), 0) > line.gross_cents:
+                    errors.append(f"invoice_line:{line.pk}:over_reversed")
+            for allocation in InvoiceAllocation.objects.filter(
+                    invoice_line__invoice_id=invoice.pk):
+                if allocation_reversed.get(str(allocation.pk), 0) > allocation.gross_cents:
+                    errors.append(f"invoice_allocation:{allocation.pk}:over_reversed")
             events = _ContractEvent.objects.filter(
                 organization_id=invoice.organization_id, topic='invoicing.recorded.v1',
                 data__source__id=str(invoice.pk))

@@ -5,6 +5,6 @@ class Plugin:
         'requires': {'contracts': '>=0.1.0', 'settlement': '>=0.1.0',
                      'cash': '>=0.1.0', 'management_revenue': '>=0.1.0',
                      'costing': '>=0.1.0'},
-        'default_enabled': False, 'capabilities': [],
+        'default_enabled': True, 'capabilities': [],
         'description': '销售/采购发票登记、行项目与业务来源分配、红冲（不写收入/现金/账本）。',
     }

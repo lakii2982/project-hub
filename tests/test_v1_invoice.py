@@ -183,12 +183,17 @@ class InvoiceReversalTests(InvoiceFixture, TestCase):
         invoice_id = invoice['invoice_ref']['id']
         row = Invoice.objects.get(pk=invoice_id)
         line = row.lines.get(line_no=1)
+        allocation = line.allocations.first()
         partial = services.reverse_invoice(
             self.owner, invoice_id=invoice_id, reason='部分红冲', reversal_date=self.today,
             line_reversals=[{'original_line_ref': line.line_ref, 'gross_cents': -3000,
                              'net_cents': -2700, 'tax_cents': -300}],
-            allocation_reversals=[], expected_version=1,
-            request_token=uuid.uuid4(), dry_run=False)
+            allocation_reversals=[{'original_allocation_ref': allocation.allocation_ref,
+                                   'original_line_ref': line.line_ref,
+                                   'business_source_ref': allocation.business_source_ref,
+                                   'gross_cents': -3000, 'net_cents': -2700,
+                                   'tax_cents': -300}],
+            expected_version=1, request_token=uuid.uuid4(), dry_run=False)
         self.assertFalse(partial['full'])
         self.assertEqual(Invoice.objects.get(pk=invoice_id).status, 'active')
         full = services.reverse_invoice(
@@ -201,6 +206,58 @@ class InvoiceReversalTests(InvoiceFixture, TestCase):
             services.reverse_invoice(
                 self.owner, invoice_id=invoice_id, reason='再次', reversal_date=self.today,
                 expected_version=1, request_token=uuid.uuid4(), dry_run=False)
+
+    def test_partial_reversal_over_line_and_foreign_allocation_rejected(self):
+        invoice, _ = self.allocated()
+        invoice_id = invoice['invoice_ref']['id']
+        row = Invoice.objects.get(pk=invoice_id)
+        line = row.lines.get(line_no=1)
+        with self.assertRaises(ValidationError):
+            services.reverse_invoice(
+                self.owner, invoice_id=invoice_id, reason='超行', reversal_date=self.today,
+                line_reversals=[{'original_line_ref': line.line_ref, 'gross_cents': -7000,
+                                 'net_cents': -6300, 'tax_cents': -700}],
+                allocation_reversals=[], expected_version=1,
+                request_token=uuid.uuid4(), dry_run=False)
+        with self.assertRaises(ValidationError):
+            services.reverse_invoice(
+                self.owner, invoice_id=invoice_id, reason='外来分配', reversal_date=self.today,
+                line_reversals=[{'original_line_ref': line.line_ref, 'gross_cents': -3000,
+                                 'net_cents': -2700, 'tax_cents': -300}],
+                allocation_reversals=[{
+                    'original_allocation_ref': {'namespace': 'invoicing',
+                                                'kind': 'invoice_allocation',
+                                                'id': str(uuid.uuid4()), 'version': 1},
+                    'original_line_ref': line.line_ref, 'business_source_ref': {},
+                    'gross_cents': -3000, 'net_cents': -2700, 'tax_cents': -300}],
+                expected_version=1, request_token=uuid.uuid4(), dry_run=False)
+        self.assertEqual(InvoiceReversal.objects.count(), 0)
+
+    def test_tax_qualification_trigger_guard(self):
+        from pmo_plugins.invoicing.models import TaxQualification
+        row = TaxQualification.objects.create(
+            organization=self.org, source_ref={'kind': 'invoice', 'id': 'x'},
+            tax_cents=100, status='pending', qualification_status='unknown')
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                TaxQualification.objects.filter(pk=row.pk).update(qualification_status='recoverable')
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                TaxQualification.objects.filter(pk=row.pk).delete()
+        with self.assertRaises(ValidationError):
+            row.delete()
+
+    def test_verify_integrity_probe_catches_bad_reversal_detail(self):
+        invoice, _ = self.allocated()
+        row = Invoice.objects.get(pk=invoice['invoice_ref']['id'])
+        InvoiceReversal.objects.create(
+            organization=self.org, invoice=row, reason='坏明细', reversal_date=self.today,
+            line_reversals=[], allocation_reversals=[], gross_cents=-1, net_cents=-1,
+            tax_cents=0, created_by=self.owner)
+        output = StringIO()
+        with self.assertRaises(CommandError):
+            call_command('verify_integrity', '--json', stdout=output)
+        self.assertIn('invoice_reversal:', output.getvalue())
 
     def test_verify_integrity_probe_catches_malformed_invoice(self):
         Invoice.objects.create(

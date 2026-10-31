@@ -46,7 +46,7 @@ def install(apps, schema_editor):
                   RETURN NEW;
                 END; $$""")
             for table in ('invoicing_invoiceline', 'invoicing_invoiceallocation',
-                          'invoicing_invoicereversal'):
+                          'invoicing_invoicereversal', 'invoicing_taxqualification'):
                 cursor.execute(f'CREATE TRIGGER {table}_guard BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION invoicing_immutable_guard()')
         elif vendor == 'sqlite':
             cursor.execute("""CREATE TRIGGER invoicing_invoice_insert_guard BEFORE INSERT ON invoicing_invoice
@@ -64,7 +64,7 @@ def install(apps, schema_editor):
             cursor.execute("""CREATE TRIGGER invoicing_invoice_no_delete BEFORE DELETE ON invoicing_invoice
                 FOR EACH ROW BEGIN SELECT RAISE(ABORT, 'Invoice history cannot be deleted'); END;""")
             for table in ('invoicing_invoiceline', 'invoicing_invoiceallocation',
-                          'invoicing_invoicereversal'):
+                          'invoicing_invoicereversal', 'invoicing_taxqualification'):
                 cursor.execute(f"""CREATE TRIGGER {table}_update_guard BEFORE UPDATE ON {table}
                     FOR EACH ROW BEGIN SELECT RAISE(ABORT, 'Invoicing facts are immutable'); END;""")
                 cursor.execute(f"""CREATE TRIGGER {table}_no_delete BEFORE DELETE ON {table}
@@ -76,7 +76,8 @@ def uninstall(apps, schema_editor):
     with schema_editor.connection.cursor() as cursor:
         if vendor == 'postgresql':
             for table in ('invoicing_invoice', 'invoicing_invoiceline',
-                          'invoicing_invoiceallocation', 'invoicing_invoicereversal'):
+                          'invoicing_invoiceallocation', 'invoicing_invoicereversal',
+                          'invoicing_taxqualification'):
                 cursor.execute(f'DROP TRIGGER IF EXISTS {table}_guard ON {table}')
             cursor.execute('DROP FUNCTION IF EXISTS invoicing_invoice_guard()')
             cursor.execute('DROP FUNCTION IF EXISTS invoicing_immutable_guard()')
@@ -87,7 +88,9 @@ def uninstall(apps, schema_editor):
                          'invoicing_invoiceallocation_update_guard',
                          'invoicing_invoiceallocation_no_delete',
                          'invoicing_invoicereversal_update_guard',
-                         'invoicing_invoicereversal_no_delete'):
+                         'invoicing_invoicereversal_no_delete',
+                         'invoicing_taxqualification_update_guard',
+                         'invoicing_taxqualification_no_delete'):
                 cursor.execute(f'DROP TRIGGER IF EXISTS {name}')
 
 

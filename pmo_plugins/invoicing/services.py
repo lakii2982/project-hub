@@ -386,15 +386,24 @@ def reverse_invoice(member, *, invoice_id, reason, reversal_date, line_reversals
     lines = list(invoice.lines.order_by('line_no'))
     allocations = list(InvoiceAllocation.objects.filter(
         organization=member.organization, invoice_line__invoice=invoice, status='active'))
-    prior_line = {}
+    line_map = {str(line.pk): line for line in lines}
+    allocation_map = {str(row.pk): row for row in allocations}
+    prior_line, prior_allocation = {}, {}
     for row in invoice.reversals.all():
         for item in row.line_reversals or []:
             ref = item.get('original_line_ref') or {}
-            key = ref.get('id')
-            used = prior_line.setdefault(key, [0, 0, 0])
+            used = prior_line.setdefault(ref.get('id'), [0, 0, 0])
             used[0] += abs(item.get('gross_cents', 0))
             used[1] += abs(item.get('net_cents', 0))
             used[2] += abs(item.get('tax_cents', 0))
+        for item in row.allocation_reversals or []:
+            ref = item.get('original_allocation_ref') or {}
+            used = prior_allocation.setdefault(ref.get('id'), [0, 0, 0])
+            used[0] += abs(item.get('gross_cents', 0))
+            used[1] += abs(item.get('net_cents', 0))
+            used[2] += abs(item.get('tax_cents', 0))
+    if (line_reversals is None) != (allocation_reversals is None):
+        _fail('红冲须同时提供行与分配明细，或均留空表示全额')
     if line_reversals is None:
         line_reversals = []
         for line in lines:
@@ -405,13 +414,75 @@ def reverse_invoice(member, *, invoice_id, reason, reversal_date, line_reversals
                                        'net_cents': -(line.net_cents - used[1]),
                                        'tax_cents': -(line.tax_cents - used[2])})
     if allocation_reversals is None:
-        allocation_reversals = [{'original_allocation_ref': row.allocation_ref,
-                                 'original_line_ref': row.invoice_line.line_ref,
-                                 'business_source_ref': row.business_source_ref,
-                                 'gross_cents': -row.gross_cents,
-                                 'net_cents': -row.net_cents,
-                                 'tax_cents': -row.tax_cents}
-                                for row in allocations]
+        allocation_reversals = []
+        for row in allocations:
+            used = prior_allocation.get(str(row.pk), [0, 0, 0])
+            if row.gross_cents - used[0] > 0:
+                allocation_reversals.append({
+                    'original_allocation_ref': row.allocation_ref,
+                    'original_line_ref': row.invoice_line.line_ref,
+                    'business_source_ref': row.business_source_ref,
+                    'gross_cents': -(row.gross_cents - used[0]),
+                    'net_cents': -(row.net_cents - used[1]),
+                    'tax_cents': -(row.tax_cents - used[2])})
+    if not isinstance(line_reversals, list) or not isinstance(allocation_reversals, list):
+        _fail('红冲明细须为数组')
+    seen_lines = set()
+    for item in line_reversals:
+        if not isinstance(item, dict) or set(item) != {
+                'original_line_ref', 'gross_cents', 'net_cents', 'tax_cents'}:
+            _fail('行红冲字段无效')
+        ref = item['original_line_ref']
+        if (not isinstance(ref, dict) or set(ref) != {'namespace', 'kind', 'id', 'version'}
+                or ref.get('namespace') != 'invoicing' or ref.get('kind') != 'invoice_line'):
+            _fail('行红冲引用无效')
+        line = line_map.get(str(ref.get('id')))
+        if line is None:
+            _fail('行红冲引用不属于本发票')
+        if str(ref.get('id')) in seen_lines:
+            _fail('同一发票行不能重复红冲')
+        seen_lines.add(str(ref.get('id')))
+        gross = _int(item['gross_cents'], '行红冲含税', signed=True)
+        net = _int(item['net_cents'], '行红冲不含税', signed=True)
+        tax = _int(item['tax_cents'], '行红冲税额', signed=True)
+        if gross >= 0 or gross - net - tax != 0:
+            _fail('行红冲金额须为负值且含税=不含税+税额')
+        used = prior_line.get(str(line.pk), [0, 0, 0])
+        if (abs(gross) > line.gross_cents - used[0]
+                or abs(net) > line.net_cents - used[1]
+                or abs(tax) > line.tax_cents - used[2]):
+            _fail('行红冲金额超过该行未冲销余额')
+    seen_allocations = set()
+    for item in allocation_reversals:
+        if not isinstance(item, dict) or set(item) != {
+                'original_allocation_ref', 'original_line_ref', 'business_source_ref',
+                'gross_cents', 'net_cents', 'tax_cents'}:
+            _fail('分配红冲字段无效')
+        ref = item['original_allocation_ref']
+        if (not isinstance(ref, dict) or set(ref) != {'namespace', 'kind', 'id', 'version'}
+                or ref.get('namespace') != 'invoicing'
+                or ref.get('kind') != 'invoice_allocation'):
+            _fail('分配红冲引用无效')
+        row = allocation_map.get(str(ref.get('id')))
+        if row is None:
+            _fail('分配红冲引用不属于本发票')
+        if str(ref.get('id')) in seen_allocations:
+            _fail('同一分配不能重复红冲')
+        seen_allocations.add(str(ref.get('id')))
+        if str((item['original_line_ref'] or {}).get('id')) != str(row.invoice_line_id):
+            _fail('分配红冲的行引用不匹配')
+        if item['business_source_ref'] != row.business_source_ref:
+            _fail('分配红冲的业务来源不匹配')
+        gross = _int(item['gross_cents'], '分配红冲含税', signed=True)
+        net = _int(item['net_cents'], '分配红冲不含税', signed=True)
+        tax = _int(item['tax_cents'], '分配红冲税额', signed=True)
+        if gross >= 0 or gross - net - tax != 0:
+            _fail('分配红冲金额须为负值且含税=不含税+税额')
+        used = prior_allocation.get(str(row.pk), [0, 0, 0])
+        if (abs(gross) > row.gross_cents - used[0]
+                or abs(net) > row.net_cents - used[1]
+                or abs(tax) > row.tax_cents - used[2]):
+            _fail('分配红冲金额超过该分配未冲销余额')
     total_gross = sum(item['gross_cents'] for item in line_reversals)
     total_net = sum(item['net_cents'] for item in line_reversals)
     total_tax = sum(item['tax_cents'] for item in line_reversals)
@@ -419,6 +490,11 @@ def reverse_invoice(member, *, invoice_id, reason, reversal_date, line_reversals
         _fail('红冲金额须为负值且含税=不含税+税额')
     if abs(total_gross) > remaining:
         _fail('红冲金额超过原票未冲销余额')
+    alloc_gross = sum(item['gross_cents'] for item in allocation_reversals)
+    alloc_net = sum(item['net_cents'] for item in allocation_reversals)
+    alloc_tax = sum(item['tax_cents'] for item in allocation_reversals)
+    if (alloc_gross, alloc_net, alloc_tax) != (total_gross, total_net, total_tax):
+        _fail('行红冲与分配红冲金额不一致')
     payload = {'invoice_id': str(invoice.pk), 'expected_version': expected_version,
                'reason': text, 'reversal_date': day.isoformat(),
                'line_reversals': line_reversals, 'allocation_reversals': allocation_reversals}
