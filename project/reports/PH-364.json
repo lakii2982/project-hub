@@ -1,0 +1,27 @@
+{
+  "task_id": "PH-364",
+  "summary": "到期扫描/待办/通知契约冻结（docs-only）on BASE d81c11c. Freezes the read-only reminder contract consumed by PH-355 and the later notification center: source ownership and adapter boundary; SourceRef/reminder_ref and frozen pending-item shape; an issue_code registry (settlement open-item overdue/clearance, cash-plan overdue, contract change/termination, billable confirmation, invoice tax qualification, budget missing/overrun, close precheck blocker, import conflict, agent-token expiry, read-model missing, module-disabled history) with severity/source/recipient mapping; recipient matrix (owner/finance/auditor all-org, pm managed projects only, member self only, revoked/inactive deny, disabled module history-only); deterministic reminder_key excludes as_of/token/channel/display so the same source fact+issue+recipient is deduped; frozen scan envelope (core.reminders.read/v1, scan_key/scan_digest, read_only=true, notifications_sent=0, missing/issues/truncated); time semantics (Asia/Shanghai as_of, no future, due/overdue/30-day horizon, overdue never moved); null+missing discipline; idempotent repeated scan with no queue/read-state/audit/outbox/external send; permission/rejection paths; PH-301/314/PH-355 boundaries (no inbox persistence/read state/external push in this slice; no new canonical topic/command/schema; no implementation/migration/table); PH-355 acceptance and counterexamples; change control. Updates PH-355 depends_on to include PH-364 and its blocker to the remaining PH-179/PH-183/PH-151 proposed dependencies; keeps all notification-center tasks proposed. No product code, migration, contract-schema, CI-gate or canonical change.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":287}. Only PH-364 spec/tasks/manifest/docs/report/handoff changes; PH-355 dependency/blocker refreshed."},
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests in 2.258s, OK."},
+    {"command": "python scripts/projectctl.py verify-change --base d81c11c --task PH-364", "result": "not_run", "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after the independent review pass."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Independent S review pending. Verify the frozen contract covers source ownership/adapters, reminder_ref/pending-item shape, issue_code registry, deterministic dedupe excluding as_of/token/channel, scan envelope (scan_key/scan_digest/read_only/notifications_sent=0), time/window semantics, null+missing, recipient matrix and revoked/disabled behavior, PH-301/314/PH-355 boundaries, no write/queue/external/canonical/schema/migration, PH-355 dependency/blocker refresh, and docs/report honesty. Implementer does not self-pass."
+  },
+  "deviations": [
+    "This is a contract-only docs slice: it freezes the reminder read projection but does not implement PH-355 or persist inbox/read state. PH-355 remains proposed because PH-179/PH-183/PH-151 are still proposed.",
+    "The contract intentionally uses an internal projection identifier `core.reminders.read/v1`, not a canonical topic/command/query; no contract schema, canonical entity, migration or new table is added.",
+    "PH-355 depends_on now includes PH-364; its blocker still names PH-179/PH-183/PH-151 and is not cleared by this slice.",
+    "Notification-center tasks PH-301/314/340/344 remain proposed; no false promotion or execution evidence is claimed."
+  ],
+  "unverified": [
+    "PH-355 implementation, browser 1440/390/keyboard states and PG/CI are future work; this slice executes only docs/governance checks.",
+    "No real scans, inbox persistence, read state, external notifications or production behavior were implemented or verified.",
+    "Independent S review and CI/PR pending."
+  ]
+}

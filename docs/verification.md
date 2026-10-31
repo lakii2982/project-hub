@@ -955,3 +955,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 6. **precheck_digest**：canonical JSON SHA256；PH-353 提交须服务端重算并拒绝 `precheck_stale`/`precheck_blocked`，客户端 digest 不作授权。
 7. **证据/验收/未验证/反例**：给出未来实现片命令与反例；本片无实现/迁移/表/产品代码，当前 not implemented（PH-181/185 后续、PH-353 消费）。
 独立 S 复核首轮 1 阻断（precheck 非 canonical）已修（真实 canonical PeriodPrecheck + 字段/状态映射 + 扩展字段置 envelope 顶层）；二轮 PASS。最终门禁：projectctl check ok=true/task_count=287；23 项治理 OK；verify-change --base d81c11c --task PH-363 ok=true、7 文件全白名单、无 errors。未验证：四类核对聚合实现、digest 与 PH-353 联动、浏览器/CI/生产。
+
+## PH-364 到期扫描/待办/通知契约冻结（2026-10-31，BASE d81c11c）
+
+在 `project/specs/PH-364.md` 冻结 reminder 只读契约：owner/来源 adapter 边界；`reminder_ref`/待办 item 形状；issue_code 注册表（结算逾期/核销、现金计划、合同变更/终止、可计费确认、发票税额、预算缺失/超支、关期预检、导入冲突、令牌临期、read_model_missing、module_disabled_history）；收件人矩阵（owner/finance/auditor 全 org、pm 管理项目、member 本人、停用/撤权拒绝、模块停用历史只读）；`reminder_key=sha256(org+source_ref+issue_code+recipient_scope+active)` 确定性去重（排除 as_of/token/渠道）；扫描 envelope `core.reminders.read/v1`（scan_key/scan_digest/read_only=true/notifications_sent=0/missing/issues/truncated，重复扫描同 digest、零写/零外发）；as_of/period/到期窗口/null+missing 语义；PH-301/301/314/PH-355 边界与变更控制。PH-355 depends_on 加入 PH-364，blocker 保留 PH-179/183/151 proposed；通知中心任务均保持 proposed。实跑：check ok=true/task_count=287；`python -m unittest tests.test_projectctl tests.test_governance -v` **23 OK**；无代码/迁移/表/canonical/schema 变更。verify-change 待 review pass；未验证 PH-355 实现/浏览器/PG/生产/独立 review。
