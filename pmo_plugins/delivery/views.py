@@ -281,4 +281,5 @@ def ops_workbench(context, payload):
         'page_url': get_script_prefix() + 'modules/delivery/ops-workbench/',
         'overview_url': get_script_prefix() + 'modules/delivery/ops-reconciliation-overview/',
         'export_url': get_script_prefix() + 'modules/delivery/ops-export/',
+        'export_base_url': get_script_prefix() + 'modules/delivery/ops-export/',
     }, status=400 if error else 200)

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}{% block title %}核对底稿导出{% endblock %}{% block breadcrumb %}交付 / 核对底稿导出{% endblock %}{% block content %}
-<section class="page-heading"><div><div class="eyebrow">DELIVERY · RECONCILIATION EXPORT</div><h1>核对底稿导出</h1><p>授权只读导出已交付核对结果（总览/结算覆盖/现金桥接/手续费配对）；CSV 含 refs、as_of、生成时间、行数与校验行，不写任何业务事实。</p></div><div class="page-actions"><a class="button" href="{{ overview_url }}">核对总览</a></div></section>
+<section class="page-heading"><div><div class="eyebrow">DELIVERY · RECONCILIATION EXPORT</div><h1>核对底稿导出</h1><p>授权只读导出已交付核对结果（总览/结算覆盖/现金桥接/手续费配对）；CSV 含 refs、as_of、生成时间、行数与校验行，不写任何业务事实。</p></div><div class="page-actions"><a class="button" href="{{ overview_url }}">核对总览</a><a class="button" href="/modules/delivery/ops-workbench/">工作台</a></div></section>
 <section class="panel"><div class="panel-heading"><h2>筛选与导出</h2></div><div class="panel-body">
 {% if error %}<div class="message error" role="alert">{{ error }}</div>{% endif %}
 <form method="get" action="{{ page_url }}">

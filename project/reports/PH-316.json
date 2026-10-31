@@ -1,0 +1,59 @@
+{
+  "task_id": "PH-316",
+  "summary": "运营核对工作台导出联动首片（只读，无新写通道/迁移/表）：扩展 pmo_plugins/delivery/ops_workbench_services.py，为每个工作台分区增加导出描述符（dataset/as_of/period/export_missing）；ops_overview/settlement_coverage/cash_bridge/fee_pairing 四个分区链接到 PH-304 既有 ops-export/ 具名导出服务与路由，使用与工作台相同的 as_of/期间，行数/合计与分区摘要一致；identity_access 分区因 PH-304 导出数据集不含身份敏感明细而显示 export=null + export_missing=['export_dataset_not_implemented']；pm 的 cash_bridge 分区 export=null + permission。工作台模板为可导出分区渲染「导出底稿」链接（dataset+as_of+period），导出页回链工作台；复用既有 canonical ops-workbench/ 与 ops-export/ history_read 路由，不新增元数据副本/写通道/迁移/表/审计；无写、事实计数不变，反例 append-only 兼容。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=245; PH-316 in_review with owner/handoff; 15 allowed_paths match the changed files; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 93 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (delivery domain metadata keeps the existing ops-workbench/ops-export history_read routes)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (this slice adds no model, table or migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1: Ran 1125 tests, FAILED (failures=5, errors=3, skipped=69) => 1048 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE 15cf20c baseline (1115 + 10 new PH-316 tests); no new failure class. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. This slice writes no ledger/cash/amount fact and does not change existing verify_integrity semantics."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_workbench_export tests.test_v1_ops_workbench_export_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 10 tests, OK => 10 passed (5 service + 5 HTTP). Covers partition export datasets/filters, identity export unavailable, pm cash export unavailable, export content vs partition metric consistency, zero fact-count change, member denial, workbench export links with dataset/as_of, export-from-link CSV, pm project rows/cash denial, no new POST channel and module-disabled history read."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-316 workbench-export reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: partition-to-PH-304 export descriptors with the same as_of/period, reuse of the existing ops-export/ service and history_read routes (no new channel/metadata copy), identity export unavailable due to PH-304 dataset scope, pm cash export unavailable, authorization/member denial, zero writes/audit/migration and fact-count stability, append-only compatibility (no historical row mutation), and the precise 15-path whitelist. projectctl check, check, makemigrations, verify_integrity and scoped tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "Identity access has no export link: PH-304 freezes only four CSV datasets (ops_overview/settlement_coverage/cash_bridge/fee_pairing) and deliberately excludes identity-sensitive token/password details; the workbench therefore returns export=null + export_missing=['export_dataset_not_implemented'] for identity_access instead of inventing a new export format (PH-310 is the follow-up for new formats).",
+    "PM cash export is unavailable: cash facts carry no project attribution (same limitation disclosed by PH-279/PH-288/PH-309), so the cash_bridge partition exposes export=null + export_missing=['permission'] for pm rather than leaking company-wide cash.",
+    "The linkage reuses the existing PH-304 ops-export/ named service and canonical history_read route; no new route, metadata copy, POST/write channel, table, migration or audit write is introduced. The export still uses PH-304's request_token semantics and zero-audit default.",
+    "The workbench template builds export links from dataset/as_of/period descriptors; the export page links back to the workbench, but both pages remain GET-only history_read.",
+    "No business rule is re-derived: partition metrics come from the PH-309 aggregation and CSV rows from the PH-304 composition of the same owner read services; consistency is asserted for the settlement partition row count vs its open_item_count metric.",
+    "Counterexamples/tests never UPDATE/DELETE historical rows; the linkage itself is read-only, so append-only triggers are untouched.",
+    "Single worker owns the whole write set (workbench service/view/templates/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run; the workbench/export linkage was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "New export formats (PH-310), identity-sensitive exports, ZIP/external delivery, scheduled/emailed exports and persisted export receipts remain unimplemented."
+  ]
+}
