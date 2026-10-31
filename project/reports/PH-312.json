@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run on BASE 2659317: {\"command\":\"check\",\"ok\":true,\"task_count\":250}."
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":250} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -15,7 +15,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run after verifier-rule fix: {\"command\":\"check\",\"ok\":true,\"task_count\":250}."
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":250} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -23,9 +23,9 @@
       "evidence": "Actual run after verifier-rule fix: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 2659317 --task PH-312",
+      "command": "python scripts/projectctl.py verify-change --base 5a86124 --task PH-312",
       "result": "pass",
-      "evidence": "Actual run after committing the round-4 review pass and task done (BASE 2659317, HEAD f6930ad): ok=true, changes=6 files all inside the 6-path PH-312 allowlist, errors=[]."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-312 allowed_paths (independent review pass recorded)."
     }
   ],
   "review": {
@@ -46,7 +46,8 @@
     "两实体落点选 delivery 插件而非 core：避免 core 迁移抢号、避免改 core schema；PeriodCloseRun 仅引用 core.AccountingPeriod 并由命令更新既有 current 行，ProjectClose 仅引用 core.Project 并更新既有 stage/version。",
     "项目结项 closing/reopened 选 B（ADR 0017 推荐）；期间关期同样选 B（ADR 0016 允许 A/B），A 的取舍与拒绝理由已写入 spec（会破坏 active/posted CheckConstraint 与全部 owner 期间校验，且仍需 append-only 结论表）。",
     "无数据回填：既有 active/posted 与 Project.stage closed 视为历史映射；历史关期/结项无 run 时读模型给 historical_close_without_run warning，不伪造 run、不改历史行。",
-    "通知中心 PH-301 未实现，本片只冻结确定性 reminder_ref 只读形状；不建通知队列/推送、不自动审批/支付/关期/结项。"
+    "通知中心 PH-301 未实现，本片只冻结确定性 reminder_ref 只读形状；不建通知队列/推送、不自动审批/支付/关期/结项。",
+    "Lead integration rebase (2659317 -> 5a86124) after PH-328 merged: manifest.active_handoff -> PH-312; gates rerun green."
   ],
   "unverified": [
     "PH-322 实现未落地：两模型/迁移/命令/页面/verify_integrity 仅有可执行 spec，未运行代码或 PG 并发。",
