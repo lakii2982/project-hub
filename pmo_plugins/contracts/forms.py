@@ -114,7 +114,4 @@ class FxRateForm(StrictForm):
         return value
 
     def clean_effective_on(self):
-        value = self.cleaned_data.get('effective_on')
-        if value and value > timezone.localdate():
-            raise forms.ValidationError('汇率生效日期不能在未来')
-        return value
+        return self.cleaned_data.get('effective_on')

@@ -193,8 +193,6 @@ def record_fx_rate(member, *, quote_currency, rate, effective_on, source='manual
     if source not in SOURCES:
         _fail('汇率来源无效')
     when = _day(effective_on)
-    if when > timezone.localdate():
-        _fail('汇率生效日期不能在未来')
     value = _decimal(rate)
     ref = reference if isinstance(reference, str) else ''
     ref = ref.strip()
@@ -285,6 +283,8 @@ def contract_line_fx_snapshots(member, *, project_id=None, contract_id=None,
                 if not line.fx_rate_ref:
                     _fail('非 CNY 合同行缺少冻结汇率引用')
                 rate = resolve_fx_ref(member, line.fx_rate_ref)
+                if date.fromisoformat(rate['effective_on']) > line.contract_version.effective_on:
+                    _fail('汇率生效日期晚于合同行业务日期')
             except (ValidationError, PermissionDenied):
                 item['missing'].append('fx_rate')
                 item['issues'].append({'issue_code': 'fx_rate_missing',
@@ -329,6 +329,8 @@ def prepare_contract_line_fx(member, *, currency, original_net_cents,
         rate = resolve_fx_ref(member, fx_rate_ref)
         if rate['quote_currency'] != code or rate['base_currency'] != 'CNY':
             _fail('汇率引用币种对不匹配')
+        if date.fromisoformat(rate['effective_on']) > when:
+            _fail('汇率生效日期晚于合同业务日期，不能使用未来汇率')
     else:
         rate = resolve_fx_rate(member, quote_currency=code, effective_on=when)
     converted = convert_original_amounts(

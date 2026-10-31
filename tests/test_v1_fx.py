@@ -42,8 +42,15 @@ class FxRateSnapshotTests(FxFixture, TestCase):
             self.record(quote_currency='CNY')
         with self.assertRaises(ValidationError):
             self.record(rate='0')
+        future = (self.today + timedelta(days=1)).isoformat()
+        future_row = self.record(effective_on=future)
+        self.assertEqual(fx_services.resolve_fx_rate(
+            self.owner, quote_currency='USD', effective_on=future)['rate'], '7.20000000')
         with self.assertRaises(ValidationError):
-            self.record(effective_on=(self.today + timedelta(days=1)).isoformat())
+            fx_services.prepare_contract_line_fx(
+                self.owner, currency='USD', original_net_cents=10000,
+                effective_on=self.today, fx_rate_ref=future_row['ref'])
+        self.assertEqual(future_row['effective_on'], future)
         with self.assertRaises(ValidationError):
             self.record(source='unknown')
         before = fx_services.FxRateSnapshot.objects.count()

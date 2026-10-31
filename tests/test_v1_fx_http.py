@@ -38,10 +38,12 @@ class FxHTTPTests(FxFixture, TestCase):
         self.assertEqual(self.client.post(self.save_url, {
             'quote_currency': 'USD', 'rate': '0', 'effective_on': self.today.isoformat(),
             'source': 'manual'}).status_code, 400)
+        future = (self.today + __import__('datetime').timedelta(days=10)).isoformat()
         self.assertEqual(self.client.post(self.save_url, {
-            'quote_currency': 'USD', 'rate': '7.2',
-            'effective_on': (self.today.replace(day=28) + __import__('datetime').timedelta(days=8)).isoformat(),
-            'source': 'manual'}).status_code, 400)
+            'quote_currency': 'USD', 'rate': '7.2', 'effective_on': future,
+            'source': 'manual'}).status_code, 302)
+        self.assertTrue(fx_services.FxRateSnapshot.objects.filter(
+            quote_currency='USD', effective_on=future).exists())
         self.client.force_login(self.auditor.user)
         page = self.client.get(self.url)
         self.assertEqual(page.status_code, 200)
