@@ -1,0 +1,70 @@
+{
+  "task_id": "PH-320",
+  "summary": "发票税额资格确认与跨 owner 编排（复用 PH-252）on BASE 20ffc12. Does not reimplement invoice record/tax split/reversal: those stay in PH-252. Adds invoicing/migrations/0002_tax_qualification_guard.py which replaces only the TaxQualification append-only guard with vendor-aware SQLite/PG rules allowing pending->confirmed (recoverable/not_recoverable, decided_on/evidence/version change) and confirmed->superseded (status/version only), while keeping source_ref/tax_cents/created_at immutable and DELETE forbidden. Adds services: open_tax_qualification (pending fact for an existing invoice/line/allocation/reversal source, tax <= source tax), confirm_tax_qualification (owner/finance, company lock, request_token/expected_version, period/lock checks, evidence, plugin audit, no ledger/cost/revenue/cash writes), supersede_tax_qualification (old confirmed->superseded plus appended replacement confirmed fact preserving history), and link_invoice_orchestration (validates invoice/reversal ownership and the referenced owner fact for management-revenue reversal / cash refund / bank return / settlement adjustment incl. settlement/clearance/open-item refs; records the append-only reference chain in AuditEvent with plugin action, does not mutate other owners and does not claim a global single transaction). Adds read-only invoice_tax_snapshot/list with qualification history, effective qualification, orchestration reference chain and frozen issues (tax_qualification_missing/pending/superseded, orchestration_ref_missing, not_recoverable_costing_review_required); missing is null+missing, never zero. Adds invoicing/invoice_tax.html plus invoice-tax history_read page and invoice-tax-confirm/link business_write routes (owner/finance write, auditor read, member denied, disabled-module history read). No new canonical topic/command, no contract schema or applied-migration edits, no other-owner writes. Tests: 8 scoped (4 service incl. append-only/DB trigger probes, supersede, permissions/period, orchestration chain after reversal; 3 HTTP; plus existing PH-252 invoice suite). Actual runs: check ok/task_count=263; manage.py check exit0; makemigrations no changes; fresh SQLite verify ok; scoped 8 OK; full 1169/140.002s with only the known 8 macOS baseline failures. Deviations: PM project-level summary is impossible because Invoice has no project FK, so PM is denied detail/list (disclosed); orchestration is reference recording/validation only (owner writes must be performed first by the corresponding named owner service; invoicing does not invoke them), so no false single-transaction claim; no tax/orchestration verifier branch because core verify_integrity is outside the PH-320 allowlist (fresh DB passes; trigger probes included in tests); models.py unchanged. Reviewer round-1 blockers fixed: (1) link_invoice_orchestration now requires a matching InvoiceReversal for all cross-owner link kinds, validates the declared namespace/kind of each owner ref, derives the invoice project/counterparty source set from its allocations, and checks the referenced owner fact project/source and counterparty against that set (revenue adjustment, settlement/clearance/open-item and cash-refund/bank-return counterparty); cross-project/foreign and missing-reversal cases reject with zero writes, with regressions. (2) TaxQualification INSERT is now guarded by vendor-aware triggers requiring status pending, qualification_status unknown, decided_on NULL and version 1; supersede now appends a pending row then transitions it, so no direct confirmed/superseded insert is possible; a direct-insert probe covers this. (3) confirm_tax_qualification appends the confirmation evidence to the pending evidence instead of overwriting it, and supersede keeps the old evidence in the superseded row/replacement; tests assert the open evidence survives. The earlier PH-252 reuse/migration-only guard replacement/permissions/audit/no-ledger-write behaviour is unchanged.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run on BASE 20ffc12 after rebase: {\"command\":\"check\",\"ok\":true,\"task_count\":263}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; 105 known URL/field-system warnings, no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: 'No changes detected'; the only new migration is invoicing/0002_tax_qualification_guard.py and no applied migration is modified."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual final run after rebase onto 20ffc12: Ran 1194 tests in 134.732s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_invoice_tax tests.test_v1_invoice_tax_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run after the round-1 fixes: Ran 9 tests, OK. Service 6: pending->confirmed with preserved evidence/no owner writes; duplicate/supersede; permissions/period/DB trigger and direct INSERT probes; settlement link/duplicate/missing reversal; cross-project owner-ref rejection; reversal reference chain. HTTP 3: owner page+confirm; link with reversal/invalid posts; roles/disabled-module history read."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base b50f5ca --task PH-320",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 15 files inside BASE PH-320 allowed_paths (review pass; post-rebase rerun)."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run after the round-1 fixes: Ran 18 tests, OK alongside the PH-320 scoped tests (27 total invoice/tax tests OK). Reused PH-252 invoice record/allocate/reverse suite remains green."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-320 invoice tax/orchestration reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKERS RESOLVED AT ff6c614 (code at ee446e8): (1) link_invoice_orchestration now requires an InvoiceReversal belonging to the invoice, derives project/counterparty sets from the invoice allocations, validates owner_ref namespace/kind and the owner fact's project/counterparty attribution, and rejects cross-project/foreign/absent-reversal links with regressions; (2) migration 0002 adds vendor-aware INSERT guards on PostgreSQL and SQLite requiring initial pending/unknown/version 1 (direct-insert probes), and supersede first appends a pending replacement before the old confirmed->superseded transition and pending->confirmed replacement; (3) confirm appends new evidence to the pending evidence and supersede preserves old evidence, with tests asserting the open evidence is still recoverable.",
+      "CONTENT RE-VERIFIED: PH-252 record/allocate/reverse is reused, not reimplemented; migration 0002 only replaces the TaxQualification guard; confirmation is pending->confirmed with recoverable/not_recoverable, decided_on/evidence/version, company lock, expected_version, period and plugin audit; supersede has the required old confirmed->superseded plus replacement pending->confirmed sequence; no ledger/cost/revenue/cash writes; UI invoice-tax history_read + confirm/link business_write; owner/finance/auditor/pm/member and disabled history reads; canonical delivery/urls binding, no invoicing/urls.py; 15 changed files within the PH-320 whitelist; no core migration.",
+      "EVIDENCE AT ff6c614 (BASE 20ffc12): check ok=true/task_count=263; manage.py check exit0; makemigrations --check No changes; scoped tax tests 9 OK + reused PH-252 invoice tests 18 OK; full suite 1194/5F+3E/69 = known macOS baseline; fresh SQLite verify_integrity ok; verify-change --base 20ffc12 --task PH-320 only high_risk_review_required, no path_out_of_scope; report review now pass. Final evidence/PR should record the real post-review run."
+    ],
+    "evidence": "VERDICT: PASS (round 2; owner attribution, INSERT guard and evidence retention fixed). Reviewed HEAD ff6c614 (BASE 20ffc12) in /tmp/ph320-invoice-tax, worktree clean; 15 files within the PH-320 whitelist; no core migration. Cross-owner links require the invoice reversal, derive and validate project/counterparty/namespace-kind attribution; TaxQualification INSERT only pending/unknown/v1 with vendor triggers and direct-insert probes; confirmation appends/retains evidence and supersede keeps old evidence; PH-252 record/allocate/reverse reused; no ledger/cost/revenue/cash writes. Independent runs: check ok=263; makemigrations clean; scoped 9+18 OK; full 1194/5F+3E/69 known baseline; fresh verify_integrity ok; verify-change --base 20ffc12 only high_risk_review_required, no path_out_of_scope."
+  },
+  "deviations": [
+    "PH-252 的 record/价税分离/红冲基础未重实现；仅在 TaxQualification 上新增 append-only 状态迁移 trigger（migration 0002）与编排/只读服务。",
+    "跨 owner 编排实现为“owner 事实现有后，invoicing 校验并记录引用链”：不直接调用/改写 management_revenue/cash/settlement，也不声称单事务；owner 写必须先经各自具名服务完成，report/页面明确说明。",
+    "PM 项目摘要无法收敛：Invoice 模型无 project FK（PH-252 范围），本片对 pm 的税额/编排详情与列表拒绝，pm 只能使用其它按项目收敛的只读页面；已在 report/handoff 披露。",
+    "verify_integrity 无税额/编排专门分支（core/management/commands/verify_integrity.py 不在 PH-320 白名单）；fresh DB verify 通过，trigger 探针在 scoped tests 内覆盖；不新增 canonical topic/command。",
+    "未修改 models.py（TaxQualification 字段复用 status/qualification_status/decided_on/evidence/version）；编排引用存于 append-only AuditEvent payload，不新增内部链接表。",
+    "非 CNY/多币种税额映射未在本片范围；PG CI/浏览器/生产未验证。"
+  ],
+  "unverified": [
+    "PostgreSQL 运行证据以 CI 为准；本机 SQLite vendor-aware trigger/迁移通过。",
+    "浏览器 1440/390/键盘/空错停用态未实机；HTTP 测试仅断言页面/权限/表单/停用 history_read。",
+    "跨 owner 编排不执行 owner 写服务（仅引用校验/记录）、PM 项目摘要、verify_integrity 专门分支、PG/生产/独立 review 未验证。"
+  ]
+}

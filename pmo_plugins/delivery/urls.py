@@ -59,7 +59,8 @@ def entry_point():
                        ('import_preview_list', 'import_preview_run', 'import_preview_upload')},
         'invoicing': {name: getattr(invoicing_views, name) for name in
                       ('invoice_list', 'invoice_form', 'invoice_record', 'invoice_detail',
-                       'invoice_allocate', 'invoice_reverse', 'invoice_reconciliation')},
+                       'invoice_allocate', 'invoice_reverse', 'invoice_tax',
+                       'invoice_tax_confirm', 'invoice_tax_link', 'invoice_reconciliation')},
         'settlement': {name: getattr(receivable_views, name) for name in ('settlement_list', 'settlement_detail', 'settlement_form', 'settlement_save', 'settlement_action', 'aging_list', 'clearance_create', 'clearance_reverse', 'clearance_list', 'offset_list', 'offset_save', 'settlement_coverage_snapshot', 'settlement_coverage_issues')},
         'cash': {name: getattr(cash_views, name) for name in ('funding_account_list', 'funding_account_form', 'funding_account_save', 'funding_account_activate', 'cash_transaction_list', 'cash_transaction_form', 'cash_transaction_save', 'cash_transaction_detail', 'cash_party_match', 'cash_transaction_record', 'cash_refund_list',
                               'cash_refund_form', 'cash_refund_save', 'cash_bank_return_form',

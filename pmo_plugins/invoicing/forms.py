@@ -94,3 +94,54 @@ class InvoiceReconciliationFilterForm(forms.Form):
             self.fields['project'] = forms.ModelChoiceField(
                 queryset=projects.order_by('name'), required=False,
                 label='项目')
+class TaxConfirmForm(forms.Form):
+    qualification_id = forms.UUIDField()
+    qualification_status = forms.ChoiceField(choices=[('recoverable', '可抵扣'),
+                                                       ('not_recoverable', '不可抵扣')])
+    decided_on = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    evidence = forms.CharField(widget=forms.Textarea)
+    expected_version = forms.IntegerField(min_value=1)
+    request_token = forms.UUIDField(required=False)
+
+    def clean_evidence(self):
+        raw = (self.cleaned_data.get('evidence') or '').strip()
+        try:
+            value = json.loads(raw)
+        except ValueError:
+            raise forms.ValidationError('证据须为JSON数组')
+        if not isinstance(value, list) or not value:
+            raise forms.ValidationError('证据须为非空JSON数组')
+        return value
+
+
+class TaxLinkForm(forms.Form):
+    invoice_id = forms.UUIDField()
+    reversal_id = forms.UUIDField(required=False)
+    link_kind = forms.ChoiceField(choices=[('revenue_reversal', '管理收入反冲'),
+                                           ('cash_refund', '现金退款'),
+                                           ('cash_bank_return', '银行退回'),
+                                           ('settlement_adjustment', '结算调整')])
+    owner_ref = forms.CharField(widget=forms.Textarea)
+    evidence = forms.CharField(widget=forms.Textarea)
+    expected_version = forms.IntegerField(min_value=1)
+    request_token = forms.UUIDField(required=False)
+
+    def _json(self, name):
+        raw = (self.cleaned_data.get(name) or '').strip()
+        try:
+            value = json.loads(raw)
+        except ValueError:
+            raise forms.ValidationError('须为JSON')
+        return value
+
+    def clean_owner_ref(self):
+        value = self._json('owner_ref')
+        if not isinstance(value, dict):
+            raise forms.ValidationError('owner 引用须为JSON对象')
+        return value
+
+    def clean_evidence(self):
+        value = self._json('evidence')
+        if not isinstance(value, list) or not value:
+            raise forms.ValidationError('证据须为非空JSON数组')
+        return value

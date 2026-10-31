@@ -1,5 +1,6 @@
 """PH-252 invoicing browser handlers; every write goes through the named services."""
 from urllib.parse import urlencode
+import uuid
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -7,7 +8,7 @@ from django.shortcuts import redirect, render
 from django.urls import get_script_prefix
 
 from . import services
-from .forms import AllocateForm, InvoiceForm, ReverseForm
+from .forms import AllocateForm, InvoiceForm, ReverseForm, TaxConfirmForm, TaxLinkForm
 
 
 def _url(page, **query):
@@ -135,3 +136,69 @@ def invoice_reconciliation(context, payload):
                    'filter_form': form, 'error': error,
                    'reconciliation_url': _url('invoice_reconciliation')},
                   status=400 if error else 200)
+
+
+def _invoice_tax_page(context, member, *, invoice_id=None, form=None, link_form=None,
+                      error='', status=200):
+    snapshot = services.invoice_tax_snapshot(member, invoice_id) if invoice_id else None
+    rows = services.invoice_tax_list(member) if invoice_id is None else []
+    values = _base(
+        member, rows=rows, snapshot=snapshot, error=error,
+        confirm_form=form or (TaxConfirmForm() if member.role in services.WRITE_ROLES else None),
+        link_form=link_form or (TaxLinkForm() if member.role in services.WRITE_ROLES else None),
+        detail_url=_url('invoice_tax'), confirm_url=_url('invoice_tax_confirm'),
+        link_url=_url('invoice_tax_link'))
+    return render(context.request, 'invoicing/invoice_tax.html', values, status=status)
+
+
+def invoice_tax(context, payload):
+    member = services._fresh(context.member)
+    invoice_id = payload.get('id') or context.request.GET.get('id')
+    return _invoice_tax_page(context, member, invoice_id=invoice_id)
+
+
+def invoice_tax_confirm(context, payload):
+    member = services._fresh(context.member, write=True)
+    form = TaxConfirmForm(payload)
+    invoice_id = payload.get('invoice_id') or context.request.GET.get('invoice_id')
+    if form.is_valid():
+        try:
+            services.confirm_tax_qualification(
+                member, form.cleaned_data['qualification_id'],
+                qualification_status=form.cleaned_data['qualification_status'],
+                decided_on=form.cleaned_data['decided_on'],
+                evidence=form.cleaned_data['evidence'],
+                request_token=(form.cleaned_data.get('request_token')
+                               or payload.get('request_token') or uuid.uuid4()),
+                expected_version=form.cleaned_data['expected_version'], dry_run=False)
+        except ValidationError as exc:
+            return _invoice_tax_page(context, member, invoice_id=invoice_id, form=form,
+                                     error='；'.join(exc.messages), status=400)
+        messages.success(context.request, '税额资格已确认')
+        return redirect(_url('invoice_tax', id=invoice_id))
+    return _invoice_tax_page(context, member, invoice_id=invoice_id, form=form,
+                             error='请核对确认字段', status=400)
+
+
+def invoice_tax_link(context, payload):
+    member = services._fresh(context.member, write=True)
+    form = TaxLinkForm(payload)
+    invoice_id = payload.get('invoice_id')
+    if form.is_valid():
+        try:
+            services.link_invoice_orchestration(
+                member, invoice_id=form.cleaned_data['invoice_id'],
+                link_kind=form.cleaned_data['link_kind'],
+                owner_ref=form.cleaned_data['owner_ref'],
+                evidence=form.cleaned_data['evidence'],
+                request_token=(form.cleaned_data.get('request_token')
+                               or payload.get('request_token') or uuid.uuid4()),
+                expected_version=form.cleaned_data['expected_version'],
+                reversal_id=form.cleaned_data.get('reversal_id'), dry_run=False)
+        except ValidationError as exc:
+            return _invoice_tax_page(context, member, invoice_id=invoice_id, link_form=form,
+                                     error='；'.join(exc.messages), status=400)
+        messages.success(context.request, '跨 owner 编排引用已登记')
+        return redirect(_url('invoice_tax', id=form.cleaned_data['invoice_id']))
+    return _invoice_tax_page(context, member, invoice_id=invoice_id, link_form=form,
+                             error='请核对编排字段', status=400)

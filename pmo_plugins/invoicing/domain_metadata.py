@@ -11,5 +11,8 @@ DOMAIN_METADATA = {
         {'name': 'invoice_allocate', 'path': 'invoice-allocate/', 'access': 'business_write'},
         {'name': 'invoice_reverse', 'path': 'invoice-reverse/', 'access': 'business_write'},
         {'name': 'invoice_reconciliation', 'path': 'invoice-reconciliation/', 'access': 'history_read'},
+        {'name': 'invoice_tax', 'path': 'invoice-tax/', 'access': 'history_read'},
+        {'name': 'invoice_tax_confirm', 'path': 'invoice-tax-confirm/', 'access': 'business_write'},
+        {'name': 'invoice_tax_link', 'path': 'invoice-tax-link/', 'access': 'business_write'},
     ],
 }
