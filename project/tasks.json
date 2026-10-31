@@ -11639,7 +11639,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "PH-364 到期扫描/待办/通知契约冻结 ready；本片 done 后仍缺 PH-179/PH-183/PH-151（proposed）done，不提前晋级。"
+        "PH-364 到期扫描/待办/通知契约冻结已 done；仍缺 PH-179/PH-183/PH-151（proposed）done，不提前晋级。"
       ],
       "handoff": null
     },
@@ -11948,7 +11948,7 @@
       "title": "到期扫描/待办/通知契约冻结（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
