@@ -48,6 +48,25 @@
 - request_token 收据（org+token 唯一、dataset/input digest、result）；同 token 同输入幂等重放、改输入冲突；公司锁；同期间并发关期一胜；重复关期拒绝。
 - 不写 generic audit 之外的隐式副作用；关期/预测结论的审计按实现片 spec 冻结。
 
+## 与既有模型映射（PH-322 前置，必须落实）
+
+ADR 冻结的 `open/closing/closed/reopened` 是**契约状态名**，不是既有 `core.AccountingPeriod` 的枚举事实。现有模型只有 `status ∈ {active, posted}`，并由 CheckConstraint 约束 `active ↔ closed_through IS NULL`、`posted ↔ closed_through IS NOT NULL`；没有 `closing/reopened`。旧→新映射如下，实现片不得把不兼容枚举写成既有事实：
+
+| 契约状态 | 既有事实映射 | 语义与约束 |
+| --- | --- | --- |
+| `open` | `AccountingPeriod.status='active'`（`closed_through IS NULL`） | 既有事实；本 ADR 的 open 即该状态 |
+| `closed` | `AccountingPeriod.status='posted'`（`closed_through IS NOT NULL`） | 既有事实；本 ADR 的 closed 即该状态 |
+| `closing` | **无既有映射** | 未来 schema 变更；不得在现有枚举/约束中伪称已存在 |
+| `reopened` | **无既有映射** | 未来 schema 变更；不得在现有枚举/约束中伪称已存在 |
+
+**迁移/回填/约束计划（PH-322 实现前置）**：
+
+1. 在实现片按实际 BASE 二选一并写入 PH-322 spec/report：方案 A 扩展 `AccountingPeriod.status` 允许 `closing/reopened`（需新迁移、放宽/替换 CheckConstraint、保留 active/posted 历史语义）；方案 B 新增 append-only `PeriodCloseRun`（期间、状态迁移、blockers 摘要、操作者、时间、request_token），`AccountingPeriod` 保持 active/posted 不变，closing/reopened 仅由 CloseRun 表达。
+2. 回填：既有 `active` 回填为 open 语义、`posted` 回填为 closed 语义；不得改写历史期间行；若方案 A 改约束，须证明旧行仍满足新约束。
+3. 约束/不变量：同一期间至多一个进行中的 closing；closed 后业务写拒绝由各 owner 期间校验保证；reopened 必须 append-only 记录且保留原关期结论。
+4. 未实现标记：本 ADR 交付时 `closing/reopened` 与关期命令均未实现；PH-322 未落地前，对外只读投影只能显示 active/posted 映射并标注 `close_command_not_implemented`/`reopen_not_implemented`，不得显示为已关期或已重开。
+5. 不得改已应用迁移、不得抢迁移号；迁移号由 PH-322 按实际叶申请。
+
 ## 非目标
 
 关期实现、期间锁定写侧、通知/导出、预测算法/机器学习、客户门户、canonical schema 变更、自动业务修正、账本/收入/成本/现金/未清写、PAT/MCP 关期工具。
