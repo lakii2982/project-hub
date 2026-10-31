@@ -1,0 +1,44 @@
+{
+  "task_id": "PH-357",
+  "summary": "批次 C 演练证据回填与验收汇总（docs-only，按 PH-366 契约）：把 PH-347/348/349/350/352 报告中**实际执行过的本地 L1+L2 证据**逐项回填到 docs/v1.0-development/batch-c-runbook.md §10、batch-c-acceptance.md §7、ROADMAP 与 docs/verification.md：V1-OPS-01 安装预检 pass/staging-production execute blocked、02 TLS not_run、03 升级 dry_run pass/生产 blocked、04 SQLite 备份恢复/RPO-RTO pass/PG execute not_run、05 健康容量 dry_run pass/阈值 fail 探针/生产拒绝、06 无 PG not_run/SQLite 拒绝；未重跑脚本、未执行真实环境。生成发布资格 gate 判定 release_ready=false，缺口清单：L3 CI/PG/真实 staging 部署、L4 浏览器、L5 生产/客户验收、PH-367/PH-372；双人复核/签名/14 天时效/不可挑选规则按 PH-366 §6。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=297; PH-357 in_review with owner/handoff; changed files all inside the PH-357 whitelist."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base ef13003 --task PH-357",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-357 allowed_paths (review pass recorded)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-357 batch-C evidence backfill reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "EVIDENCE BACKFILL IS TRUTHFUL: §10 and docs/verification.md correctly source the actual local L1+L2 evidence from PH-347 (install/upgrade drrills; staging/production execute exit 5; TLS no real domain not_run), PH-348 (SQLite backup/restore plus manifest/hash/RPO-RTO; PG execute explicitly not_run), PH-349 (PG CLI contract tests + no-DSN/SQLite refusal; real PG probe not_run), PH-350 (healthcheck local facts pass; missing facts not_run; production/staging execute refused; backlog threshold fail probe) and PH-352 (runbook L1). The text explicitly says no scripts were rerun and no real environment was executed, matching the source reports.",
+      "LAYER/GATE DISCIPLINE: L3 (CI/PG/real staging install-upgrade-TLS-restore-concurrency), L4 (browser 1440/390) and L5 (production/customer) remain not_run; release_ready=false with the full gap list (L3/L4/L5, PH-367 and PH-372, PH-333/334/335 not substituting documents); dual review/signature, 14-day validity and non-selective evidence rules follow PH-366 §6 with no executor self-approval; ROADMAP/batch-c-runbook/batch-c-acceptance/verification statements are consistent.",
+      "CONTENT/GATES: docs-only, no product code/migration/script/CI-gate change; 8 files within the PH-357 whitelist; no placeholders; task_count 297; check ok=297; governance 23 OK; verify-change --base ef13003 --task PH-357 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD bbab347 (BASE ef13003) in /tmp/ph357-evidence-backfill, worktree clean; 8 files within PH-357 whitelist; docs-only. PH-347/348/349/350/352 local L1+L2 evidence is accurately backfilled from their reports; no rerun/production claims; L3-L5 strictly not_run; release_ready=false with complete gaps and PH-366 review/signature/14-day rules; check ok=297; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "This slice is docs-only evidence backfill: it does not rerun any drill and does not execute staging/production, TLS, PG concurrency, recovery or performance. Evidence is quoted from the execution slices' reports (PH-347/348/349/350/352) with their BASE SHAs and local commands.",
+    "Only L1 (code exists) + L2 (local automated/rehearsal) evidence is present. L3 CI/PG/real deployment, L4 browser and L5 production/customer acceptance are strictly not_run; release_ready=false.",
+    "The publish gate remains blocked by design: PH-367 (deployment/recovery/concurrency summary acceptance) and PH-372 (D-batch acceptance runbook) are not complete; PH-333/334/335 summary slices must not use this backfill as execution evidence.",
+    "No product code, migration, schema, script, CI gate or acceptance command was changed; only docs/ROADMAP/tasks/manifest/report/handoff."
+  ],
+  "unverified": [
+    "L3 CI/PG and real staging installation/upgrade/TLS/recovery/concurrency evidence are absent; L4 browser 1440/390 and L5 production/customer acceptance are absent.",
+    "PH-367 and PH-372 are not complete; PH-333/334/335 summary acceptance remains open.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "No dual-review signatures or 14-day evidence freshness were established for real-environment evidence because no real-environment run was performed."
+  ]
+}

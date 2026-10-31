@@ -11683,7 +11683,7 @@
       "title": "批次 C 演练证据回填与验收汇总（PH-352 后续，docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11710,9 +11710,9 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-357.md"
     },
     {
       "id": "PH-358",

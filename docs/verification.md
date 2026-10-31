@@ -1024,3 +1024,19 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 3. **新登记/删除**：原 PH-374 reminder 只读实现因与 PH-355 重复且绕过 PH-179/183/151 blockers，按复核**删除**（PH-355 保持唯一 reminder 实现任务，proposed 不变）；保留 **PH-375**（ready，批次 D 验收矩阵与 runbook，deps PH-352/366/327 done）与 **PH-376**（proposed，下一规划槽）。count 295→297，编号 374 留空并说明。
 4. **ROADMAP** 新增批次 C 收尾/D 批规划节；发布资格仍按 PH-366（PH-357/367/372 未完成，不得宣称就绪）。
 5. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-335/357/368/375 未实现；PH-355/371/362 未 done；发布资格不完整。
+
+
+## PH-357 批次 C 演练证据回填与验收汇总（2026-10-31，BASE ef13003）
+
+- 候选 SHA：ef13003（回填时 main）；环境/profile：本地 rehearsal（无 staging/production）；执行人角色：交付执行；复核角色：独立 S 复核（pending）。
+- 来源：PH-347（install_drill/upgrade_drill，BASE cbb84c2）、PH-348（backup_drill/restore_drill，BASE cbb84c2）、PH-349（test_v1_pg_concurrency CLI，BASE a5ba2fd）、PH-350（healthcheck.py，BASE fe9c257）、PH-352（runbook，BASE db8ed47）；只引用报告中的真实执行证据，未重跑脚本。
+- V1-OPS-01：`install_drill.py --mode dry_run --env rehearsal` exit 0/pass；staging/production execute exit 5/blocked。层级 L1+L2；L3 真实安装 not_run。
+- V1-OPS-02：`install_drill.py --step tls` 无真实域名/证书 → not_run；错误配置拒绝有契约测试。层级 L1+L2（契约）；L3 TLS not_run。
+- V1-OPS-03：`upgrade_drill.py --mode dry_run --env rehearsal` exit 0/pass（备份证据、迁移前缀、重复/破坏性拒绝、结构兼容回退）；production execute exit 5/blocked。层级 L1+L2；L3/L5 真实升级/回退 not_run。
+- V1-OPS-04：`backup_drill.py` SQLite 快照/哈希/行数/integrity/manifest pass；`restore_drill.py` 隔离恢复/表/schema/附件/RPO-RTO pass；PG execute 诚实 not_run/exit 2。层级 L1+L2（SQLite）；L3 真实 PG 恢复 not_run。
+- V1-OPS-05：`healthcheck.py --mode dry_run --env rehearsal --facts <complete-local>` exit 0/pass；缺 facts not_run；staging/production execute exit 5/blocked；backlog 阈值 fail 探针 exit 3。层级 L1+L2；L3/L5 真实容量/性能 not_run。
+- V1-OPS-06：无 PG DSN → not_run/exit 2；SQLite DSN 拒绝；真实 PG 探针矩阵 L3 not_run。层级 L1+L2（契约）；SQLite 不冒充 PG。
+- 证据 artifacts：各执行片 report 的 `tests` 条目/本地 `/tmp` envelope（未入库；脱敏摘要见上）；无真实 CI run URL、无浏览器截图、无生产记录。
+- 证据层级：L1 有（脚本/测试存在）；L2 有（本地自动化/演练命令与计数）；L3 无（CI/PG/真实部署）；L4 无（浏览器 1440/390）；L5 无（生产/试点/客户验收）。
+- 缺口/未执行：L3 CI/PG/真实 staging 安装/升级/TLS/恢复/并发；L4 浏览器；L5 生产/客户验收；PH-367（部署/恢复/并发汇总）与 PH-372（D 批验收 runbook）未完成；PH-333/334/335 汇总不得以本回填替代执行证据。
+- 判定：**blocked（release_ready=false）**；L1+L2 证据可追溯，L3–L5 严格 not_run，不构成发布资格；双人复核/签名/14 天时效/不可挑选规则沿用 PH-366 §6，执行人不得自批豁免。
