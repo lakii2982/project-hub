@@ -20,12 +20,16 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
+    "reviewer": "independent PH-375 batch-D acceptance/runbook reviewer (fresh context, read-only)",
     "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (batch D matrix coverage, required-layer/command mapping, runbook/backfill alignment, honest not_run/blocked and release-blocked status); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "findings": [
+      "BLOCKER - D-03/D-04 still claim PH-362 is not done: the matrix and runbook prerequisites say D-03 is blocked on 'PH-289/PH-362 not done' and D-04 on 'PH-181/185/289/362 not done', but at this BASE PH-362 is done and the task board explicitly says 'PH-362 契约已 done; still waits PH-289/181/185'. The rows remain correctly blocked because PH-289/PH-181/PH-185 are proposed, but the stated reason is stale and contradicts tasks.json. Fix: remove PH-362 from the not-done prerequisite lists (and update any matching text) so D-03/D-04 cite only the genuinely pending deps.",
+      "OTHER CONTENT CHECKED: the D-01–D-11 matrix covers PH-370/371, PH-338/353, PH-339/354, PH-340/355, PH-372, batch C rollup and multi-currency re-scope; each row has required layers/command-or-blocked/pass criteria/role/current status; D-01 (PH-370 merged) is honestly acceptance not_run, D-02–D-11 remain blocked, release eligibility is blocked; the runbook's PH-366 evidence template (SHA/environment/command/artifacts/L1–L5/gaps/four-eyes signature), execution protocol, slice cards and failure handling are actionable; alignment with PH-332/352/366/345 and no second rule set; docs-only, no product code/migration/script/gate change; 8 files within the PH-375 whitelist; no placeholders; task_count 297; check ok=297; governance 23 OK; verify-change --base ef13003 --task PH-375 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: REJECTED - 1 blocker: D-03/D-04 matrix/runbook still list PH-362 as not done even though it is done at this BASE; only PH-289/181/185 remain pending. Reviewed HEAD 569a5d5 (BASE ef13003) in /tmp/ph375-batch-d; 8 files within whitelist; no code/migration/script. Matrix/runbook coverage, honest D-01 not_run/D-02–D-11 blocked, PH-366 template and release-gate blocked status otherwise complete; check ok=297; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope. Update the D-03/D-04 prerequisite text and rerun."
   },
   "deviations": [
+    "Review-blocker fix (old->new): D-03/D-04 prerequisite text no longer claims PH-362 is not done; PH-362 contract is done at this BASE, so the rows/cards now cite only the genuinely pending PH-289/PH-181/PH-185 while remaining blocked.",
     "D-01 (PH-370) implementation is merged but its batch D acceptance has not been executed, so it is marked not_run rather than pass; all other D items are blocked by undone dependencies and are labeled blocked.",
     "The matrix/runbook reuse PH-332 five-layer evidence, PH-352 execution templates, PH-366 release gate/envelope and PH-345 ops contract instead of introducing another verification standard.",
     "Release qualification is explicitly stated as blocked (batch C PH-357/367/372 incomplete; no L3/L4/L5 evidence); this document does not claim release readiness.",

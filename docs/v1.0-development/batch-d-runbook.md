@@ -50,14 +50,14 @@
 - 状态：**blocked**（PH-371 未实现）。
 
 ### D-03 PH-338 发票批量/导入
-- 前置：PH-289/PH-362 done（当前未 done → blocked）。
+- 前置：PH-289 done（当前未 done；PH-362 契约已 done）→ blocked。
 - 步骤：模板→预检→批量登记→行/来源分配→冲突/错误行→重排重试幂等；L4 上传/错误页。
 - 命令：实现后 `python manage.py test tests.test_v1_invoice_import tests.test_v1_invoice_import_http --verbosity 1`。
 - 判据：全有或全无、零半笔、幂等；失败处置：拒绝整批并可下载错误清单，不部分提交。
 - 状态：**blocked**。
 
 ### D-04 PH-353 导入提交
-- 前置：PH-181/185/289/362 done（当前未 done → blocked）。
+- 前置：PH-181/185/289 done（当前未 done；PH-362 契约已 done）→ blocked。
 - 步骤：预览→提交（原子/幂等）→冲突回滚→期初核对；`verify_integrity`。
 - 命令：实现后 `tests.test_v1_import_submission`/`_http`；判据：无半笔/零业务事实于失败、重复 token 幂等。
 - 状态：**blocked**。
