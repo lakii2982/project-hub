@@ -33,7 +33,7 @@
       "evidence": "Actual full run: Ran 1310 tests in 141.269s, FAILED (failures=5, errors=3, skipped=70). The 8 failure/error names are exactly the known macOS baseline (drf_security_compatibility 4F+3E, delivery_execution 1F, delivery_execution_sandbox 1F); no new failures. Not green; used only as a no-new-failures baseline."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 3af39a8 --task PH-372",
+      "command": "python scripts/projectctl.py verify-change --base 3bcbb5e --task PH-372",
       "result": "pass",
       "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-372 allowed_paths (post-rebase rerun)."
     }
