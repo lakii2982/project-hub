@@ -1,0 +1,48 @@
+{
+  "task_id": "PH-346",
+  "summary": "Consumed the PH-346 planning slot on main de85caa (PH-325/PH-345 merged; 273 tasks after registration). Dependency re-baseline found no honest promotion: PH-330 is ready (implementation in progress, not done), so PH-333/PH-334 stay proposed waiting on PH-330; PH-335 waits on PH-333/PH-334; PH-338/PH-342 wait on PH-289 (proposed); PH-339/PH-343 wait on PH-272 (proposed); PH-340/PH-344 wait on PH-301/PH-314 (proposed). Blockers were refreshed precisely to those facts. Batch C drill execution was split into four new proposed slices: PH-347 install/upgrade drills (V1-OPS-01/02/03), PH-348 backup/restore drills (V1-OPS-04), PH-349 PostgreSQL concurrency acceptance execution, PH-350 health/capacity/backlog baseline (V1-OPS-05), all depending on PH-330 (plus PH-345 for the scripts contract) and PH-350 additionally on PH-347/348/349; PH-351 is the next planning slot (proposed until PH-346 done). ROADMAP gained a batch B/C status section listing the merged features, the ready queue, the new drill splits and precise blockers. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":273} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph346-planning on main de85caa with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base de85caa --task PH-346",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — changed files inside BASE PH-346 allowed_paths (reviewer-b pass recorded)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD 45e4d07: PH-338's task blocker and spec dependency/risk section now state the re-baselined facts (PH-252/PH-274/PH-320 done; only PH-289 proposed), matching PH-342 and the report/ROADMAP/docs claims; PH-347/348/349/350 specs' '精确白名单（与 task allowed_paths 一致）' now lists exactly the same paths as their tasks (verified set equality: 11/10/8/9 paths).",
+      "NO FALSE PROMOTION: PH-330 remains ready (implementation in progress, not done); PH-333/334 stay proposed on PH-330, PH-335 on PH-333/334, PH-338/342 on PH-289, PH-339/343 on PH-272, PH-340/344 on PH-301/314; PH-347 install/upgrade, PH-348 backup/restore, PH-349 PG concurrency, PH-350 health/capacity are proposed on PH-330 (PH-350 additionally on 347/348/349); PH-351 is the next slot (proposed until the final evidence commit). count 273, PH-347..PH-351 continuous, no placeholders, no code/migration/schema/gate changes.",
+      "ROADMAP VERIFIED: the new batch B/C status section matches the merged facts (PH-320/321/322/325/345 done), the ready queue (PH-330), the four new drill splits, precise remaining blockers (333/334->330, 335->333/334, 338/342->289, 339/343->272, 340/344->301/314), PH-351 next slot, and the not_run/blocked evidence boundary.",
+      "FINAL EVIDENCE REQUIREMENT (expected, not blocking this review): the report's check declaration is still not_run, so at HEAD verify-change reports high_risk_review_required + acceptance_not_passed (no path errors); after this pass block is committed, record the real check pass (task_count 273) and the verify-change pass with --base de85caa, and set PH-346 done / PH-351 ready + clear its blocker (PH-351 is currently proposed with the explicit PH-346 blocker).",
+      "GATES: projectctl check ok=true/task_count=273; governance 23 tests OK; 15 changed files all inside BASE PH-346 allowed paths; no placeholders; docs/verification records the planning evidence. verify-change pre-review errors are only review + the not_run check declaration (no path/acceptance scope errors)."
+    ],
+    "evidence": "VERDICT: PASS - the prior blocker and required fix are resolved at HEAD 45e4d07 (BASE de85caa): PH-338 blocker/spec now match the done deps (only PH-289 left) and PH-347/348/349/350 spec whitelists are exactly equal to their task allowed_paths. No false promotion: PH-330 stays ready-in-progress, 333/334/335/338/339/340/342/343/344 keep precise blockers, the four new drill splits are proposed on PH-330 (350 on 347/348/349), PH-351 is the next slot; count 273, IDs 347-351 continuous, no placeholders/code/migration/schema changes, 15 files inside allowlist. check ok=273; governance 23 OK; verify-change at this HEAD only review + the pre-review not_run check declaration (no path errors) — final evidence commit should record the passing check and set PH-346 done / PH-351 ready."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): PH-338's task blocker and spec were stale (claiming PH-320 ready-not-done and PH-274 missing) and were re-baselined to the BASE facts — PH-252/PH-274/PH-320 done, only PH-289 proposed. The PH-347/348/349/350 spec whitelists now enumerate the governance paths (project/tasks.json, project/manifest.json, docs/delivery-status.md, docs/verification.md) instead of the '治理文件' shorthand, matching their task allowed_paths.",
+    "No promotion was made: the only relevant ready task is PH-330, which is implementation-in-progress and not done. PH-333/334 remain proposed on PH-330; PH-335 on 333/334; PH-338/342 on PH-289; PH-339/343 on PH-272; PH-340/344 on PH-301/314. All blocker texts now state the exact missing done task.",
+    "Batch C drills were split into executable sub-slices PH-347 (install/upgrade), PH-348 (backup/restore), PH-349 (PG concurrency) and PH-350 (health/capacity/perf), with PH-350 depending on the first three; all are proposed because PH-330 is not done yet. The existing PH-333/334/335 umbrella tasks remain for end-to-end sign-off.",
+    "PH-351 is registered as the next planning slot (proposed until PH-346 done); after review PASS the final evidence commit will set PH-346 done and PH-351 ready and clear the blocker.",
+    "Numbering basis: BASE max PH-346; checked remote branches/PRs (no >=PH-347 ids) so PH-347..PH-351 are continuous and free.",
+    "No placeholder strings or non-executable acceptance commands; no code/migration/schema/gate changes.",
+    "reviewer-b round-1：PH-338 blockers/spec 同步为「仅缺 PH-289」（PH-252/274/320 done）；PH-347–350 spec 精确白名单枚举为与 task allowed_paths 一致；report check 证据改按当前 HEAD。"
+  ],
+  "unverified": [
+    "PH-330 remains unimplemented/in progress; PH-333/334/335 and PH-347/348/349/350 are not implemented and have no drill evidence.",
+    "Batch C real deployment/upgrade/backup-restore/PG-concurrency/performance execution is still not performed and remains not_run/blocked.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}

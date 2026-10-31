@@ -132,3 +132,12 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - **新登记**：PH-342 发票批量/导入实现前置（proposed，等 PH-320/289）、PH-343 insights 读模型实现前置（proposed，等 PH-272）、PH-344 通知中心契约前置（proposed，等 PH-301/314）、PH-345 批次 C 演练前置：部署/恢复/并发验收脚本契约（**ready**，deps PH-332/322/321/252 均 done）、PH-346 下一规划入口（**ready**）。
 - 下一实现队列：PH-330 → PH-345（并行 planning/ops 契约）→ PH-333/334（等 PH-330）→ PH-335；发票/insights/通知前置按依赖推进。
 - 验收矩阵仍以 `docs/v1.0-development/batch-c-acceptance.md` 为唯一方法；批次 C 演练/部署/并发/性能在对应实现完成前保持 not_run/blocked。
+
+## 批次 B/C 状态同步（PH-346 规划槽，2026-10-31，BASE de85caa）
+
+- **已合入完成**：PH-320 发票编排、PH-321 多币种、PH-322 关期/结项、PH-325 发票只读对账、PH-345 批次 C 演练契约（PH-333/334/335 的验收脚本冻结）。
+- **ready 实现队列**：PH-330（分摊/预算实现，进行中）。
+- **批次 C 演练拆分（新登记，均 proposed）**：PH-347 安装/升级演练（PH-333 拆分）、PH-348 备份/恢复演练（PH-333 拆分）、PH-349 PG 并发验收执行（PH-334 拆分）、PH-350 健康/容量/积压基线（PH-335 拆分）；PH-330 done 后由规划槽复核晋级。
+- **仍 proposed（精确 blocker）**：PH-333/PH-334 等 PH-330；PH-335 等 PH-333/334；PH-338/PH-342 等 PH-289；PH-339/PH-343 等 PH-272；PH-340/PH-344 等 PH-301/314。
+- 下一规划槽：PH-351（PH-346 done 后置 ready）。
+- 验收矩阵仍以 `docs/v1.0-development/batch-c-acceptance.md` 为唯一方法；批次 C 真实演练/部署/并发/性能在执行前保持 not_run/blocked。
