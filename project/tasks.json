@@ -11300,7 +11300,7 @@
       "title": "批次 C-2a 安装/升级演练执行（PH-333 拆分：V1-OPS-01/02/03）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11328,9 +11328,9 @@
         "python manage.py test tests.test_v1_ops_install_upgrade --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-347.md"
     },
     {
       "id": "PH-348",

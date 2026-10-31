@@ -45,4 +45,5 @@
 
 - 每次演练产出一份 `ops_runbook` evidence JSON（见 ops-runbook.md §1.2），写入 `docs/verification.md` 条目并在报告引用。
 - 未执行/环境缺失必须写 `not_run`/`blocked` 与原因；不得写“通过”。
-- 本文件与脚本契约由 PH-333 实现时按实际 BASE 复核；PH-334/335 的健康/并发证据另行产出，不互相冒充。
+- PH-347 已实现 `scripts/ops/upgrade_drill.py` 的本地/隔离 rehearsal 契约：dry_run 检查备份/迁移只追加/回滚兼容；execute 仅隔离 SQLite（真迁移 + smoke 未执行时 not_run）；production execute 永远 exit 5 拒绝；真实 staging/production 未执行。
+- 本文件与脚本契约由 PH-333/PH-347 实现时按实际 BASE 复核；PH-334/335 的健康/并发证据另行产出，不互相冒充。
