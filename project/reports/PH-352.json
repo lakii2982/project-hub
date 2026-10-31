@@ -1,0 +1,41 @@
+{
+  "task_id": "PH-352",
+  "summary": "Landed the docs-only batch C acceptance runbook at docs/v1.0-development/batch-c-runbook.md (319 lines), aligning PH-332's acceptance matrix with PH-345's script contract. It provides per-item M01–M15 execution cards (prerequisites, steps, executable commands or explicit blocked/not_run, expected output, evidence template ids, pass criteria, failure handling, responsible role and current status), V1-OPS-01–06 execution procedures that reuse PH-345's JSON evidence envelope/exit codes/idempotency/dual-review/redaction rules for ops_preflight, ops_tls_probe, ops_upgrade, ops_backup_verify/ops_restore_rehearsal, ops_health_capacity and ops_pg_concurrency, a docs/verification.md evidence-backfill template with per-layer verdicts, batch C exit criteria (no not_run/blocked may be signed off) and a counterexample list (no pass without evidence, no config/deployment substitution, no SQLite for PG concurrency, no backup skipping, no sensitive data, no not_run counted as pass). The acceptance matrix and ROADMAP cross-reference the runbook. The file records zero execution results: every M/OPS item is marked not_run or blocked as appropriate; no code, scripts, migrations or contracts were changed and no deployment/recovery/concurrency/performance run was performed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD d4349f0 (BASE db8ed47, PH-352 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":278}, exit 0; final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph352-batch-c-runbook on main db8ed47 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base db8ed47 --task PH-352",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD d4349f0: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 8 changed files (batch-c-runbook.md, batch-c-acceptance.md xref, ROADMAP.md, tasks.json, manifest.json, docs/verification.md, PH-352 report/handoff) inside BASE PH-352 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (M01–M15/V1-OPS execution cards, evidence templates, not_run honesty, PH-332/PH-345 alignment); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Every M and V1-OPS item is deliberately marked not_run or blocked where the implementation/script does not exist; the runbook defines method and templates only and records no pass. This is the required truthful state, not a partial execution.",
+    "The runbook reuses PH-345's envelope/exit-code/idempotency/redaction contract by reference instead of redefining it; M15/V1-OPS sections point at docs/engineering/ops-runbook.md, and no scripts/ops/* were created.",
+    "Roles are named placeholders (release owner, DBA, finance reviewer, support owner, security owner, independent acceptance reviewer); actual persons are filled at release time and are not committed.",
+    "Responsible commands for M items list the executable suite/scope as it exists at this BASE (some scoped test globs are written as `tests.test_v1_*` patterns because the exact modules vary by upcoming slices); where a capability is not delivered the item is blocked rather than given a fake command.",
+    "No code, migration, contract-schema, gate or acceptance-command change; no execution evidence is claimed."
+  ],
+  "unverified": [
+    "No M01–M15 acceptance run was executed; all items are not_run or blocked.",
+    "No V1-OPS-01–06 script exists or was executed; deployment/upgrade/backup-restore/PG-concurrency/health-capacity evidence is absent (PH-347/348/349/350 own execution).",
+    "Browser 1440/390, real PG and production/试点 evidence do not exist for this docs-only slice.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
