@@ -1083,3 +1083,13 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 ## PH-381 后续交付独立规划入口（2026-10-31，BASE 3c77653）
 
 按最新 main 复核：PH-367/PH-371 保持 ready（未 done，不重复晋级）；PH-372 等 PH-367，PH-338/353 等 PH-289/181/185，PH-339/354 等 PH-272，PH-340/355 等 PH-301/314/179/183/151；无新的依赖全 done 既有任务可晋级。新登记连续切片 **PH-382** 批次 D-01 跨 owner 编排验收执行（**ready**，deps PH-370 done，只回填验收证据/不重实现）、**PH-383** 发票批量导入错误清单/来源覆盖后续（proposed，等 PH-378）、**PH-384** insights 工作台/差异单性能与导出后续（proposed，等 PH-379）、**PH-385** 通知中心扫描调度/已读后续（proposed，等 PH-380）、**PH-386** 后续交付独立规划入口（proposed，deps PH-381；PH-381 done 后置 ready）。批次 D 状态/blockers 与 PH-375 矩阵一致；未执行 D-01 验收/L3 CI/PG/L4/L5，不冒充通过。实跑：check ok=true/task_count=307；`python -m unittest tests.test_projectctl tests.test_governance -v` 23 OK；无代码/迁移/schema/门禁变更；verify-change 待 review pass。
+
+## PH-386 任务板卫生与批次 D 验收规划（2026-10-31，BASE 9830b37）
+
+- **关闭已合并陈旧槽**：PH-329（#204）、PH-336（#208）、PH-341（#213）、PH-367（#243）、PH-371（#244）均已有 report review pass/合并记录 → done，附 PR/commit 证据。
+- **多币种旧片**：PH-318/PH-326 deps 已 done 但范围被 PH-324（#203）/PH-321（#211）覆盖 → cancelled；剩余汇率历史反查/对账转 PH-388（proposed），不重复已交付。
+- **legacy v0.3.0**：PH-006/009/011 已由现 contracts/costing/time 插件实现覆盖 → cancelled；PH-014 通知范围转 PH-301/340/355/380/385 链 → cancelled。
+- **晋级**：PH-372 批次 C 收尾 gate 判定（deps PH-350/357/367 均 done）→ ready；PH-141 依赖 PH-140/PH-210 done 但 DoR 未闭合（缺 source resolver/posting/period 适配、`core/plugin_sdk/{sources,posting,periods}.py`/tests 不存在）→ 保持 proposed 并写精确 blocker。
+- **legacy 主交付链复核**：PH-179/181/183/185/151 的 deps 仍有大量 proposed/ready 未 done（PH-170–184 等），非“依赖已完成”；保持 proposed，blockers 已按实际依赖刷新。
+- **新登记 PH-387–391**：PH-387 D-02 税额成本验收执行（ready，deps PH-371 done）、PH-388 多币种反查/对账后续（proposed）、PH-389 D-03/04 发票/导入验收（proposed）、PH-390 D-05/06 insights 验收（proposed）、PH-391 下一规划入口（proposed，deps PH-386）。
+- 实跑：check ok=true/task_count=312；治理 23 OK；无代码/迁移/schema/门禁变更；verify-change 待 review pass。

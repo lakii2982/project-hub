@@ -230,3 +230,18 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
   - **PH-386**（proposed）后续交付独立规划入口（deps PH-381；PH-381 done 后置 ready）。
 - 批次 D 矩阵仍以 `batch-d-acceptance.md`/`batch-d-runbook.md` 为唯一方法；PH-382 只执行 D-01 验收，不改变未实现项的 blocked/not_run。
 - 发布资格仍按 PH-366 gate：L3 CI/PG、L4 浏览器、L5 生产未执行；不得以本地/演练冒充。
+
+## 任务板卫生与批次 D 验收（PH-386 规划槽，2026-10-31，BASE 9830b37）
+
+- **关闭已合并陈旧规划槽**：PH-329（PR #204）、PH-336（PR #208）、PH-341（PR #213）→ done；PH-367 汇总验收前置契约（PR #243）→ done；PH-371 税额→costing 修正（PR #244）→ done（report review pass/verify-change pass）。
+- **关闭/重定多币种旧片**：PH-318/PH-326 已由 PH-324（PR #203）/PH-321（PR #211）覆盖，置 **cancelled**；剩余汇率历史反查/对账范围转 **PH-388**（proposed）。
+- **关闭 legacy v0.3.0 重复片**：PH-006/PH-009/PH-011 已由现 contracts/costing/time 插件实现覆盖，PH-014 通知范围由 PH-301/PH-340/PH-355/PH-380/PH-385 链承接 → 均 **cancelled**。
+- **晋级 ready**：PH-372 批次 C 收尾 gate 判定（deps PH-350/357/367 done）。
+- **保持 proposed（精确 blocker）**：PH-141 依赖 done 但 DoR 未闭合；PH-179/181/183/185/151 等 legacy 主交付链依赖的 PH-170–184 等仍 proposed/ready 未 done，不晋级。
+- **新登记（PH-387–391，编号已核）**：
+  - PH-387（ready）批次 D-02 税额→costing 验收执行（deps PH-371 done）；
+  - PH-388（proposed）多币种汇率反查/对账后续（接收 PH-318/326 剩余；先冻结 DoR）；
+  - PH-389（proposed）批次 D-03/04 发票/导入验收执行；
+  - PH-390（proposed）批次 D-05/06 insights 验收执行；
+  - PH-391（proposed）下一规划入口（依赖 PH-386；PH-386 done 后置 ready）。
+- 发布资格仍按 PH-366 gate；未执行 L3 CI/PG、L4 浏览器、L5 生产，不冒充。

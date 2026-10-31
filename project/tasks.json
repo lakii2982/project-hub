@@ -280,7 +280,7 @@
       "title": "合同插件：先冻结合同与变更的领域契约",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "cancelled",
       "priority": 2,
       "milestone": "v0.3.0",
       "depends_on": [
@@ -305,7 +305,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "v0.3.0 合同插件能力已由现 pmo_plugins/contracts 实现与后续任务覆盖；PH-386 关闭。"
+      ],
       "handoff": null
     },
     {
@@ -379,7 +381,7 @@
       "title": "成本插件：共享费用与最大余数分摊",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "cancelled",
       "priority": 2,
       "milestone": "v0.3.0",
       "depends_on": [
@@ -404,7 +406,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "v0.3.0 成本/分摊能力已由现 pmo_plugins/costing 实现与 PH-330 分摊/预算覆盖；PH-386 关闭。"
+      ],
       "handoff": null
     },
     {
@@ -445,7 +449,7 @@
       "title": "资源周工时与容量日历",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "cancelled",
       "priority": 2,
       "milestone": "v0.3.0",
       "depends_on": [
@@ -470,7 +474,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "v0.3.0 周工时/容量能力已由现 pmo_plugins/time 实现与后续任务覆盖；PH-386 关闭。"
+      ],
       "handoff": null
     },
     {
@@ -545,7 +551,7 @@
       "title": "通知待办、事件幂等与任务追踪",
       "kind": "feature",
       "risk": "A",
-      "status": "proposed",
+      "status": "cancelled",
       "priority": 2,
       "milestone": "v0.3.0",
       "depends_on": [
@@ -570,7 +576,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "通知待办能力已由 PH-301/PH-340/PH-355/PH-380/PH-385 规划链承接；PH-386 关闭旧重复任务，剩余范围转该链。"
+      ],
       "handoff": null
     },
     {
@@ -2310,7 +2318,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "依赖 PH-140/PH-210 已 done，但 DoR 未闭合：缺受信来源 resolver/批准与权限/book/scope/稳定消费映射，旧 locked_through 与 posting_period/开放期调整权威适配，新 AccountingEvent/Posting/SourceConsumption/幂等持久约束与唯一 audit/Outbox owner；core/plugin_sdk/{sources,posting,periods}.py 与 tests/test_v1_kernel.py 尚不存在。保持 proposed，需下一规划槽先冻结 DoR/拆分。"
+      ],
       "handoff": null
     },
     {
@@ -2795,7 +2805,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "合同变更/终止首片已登记 PH-265（ready）；其余合同变化关联视图待后续槽按 PH-265 实现事实复核。"
+        "依赖 PH-150/PH-149 仍 proposed、PH-110 ready 未 done；PH-265 合同变更首片已另立，PH-151 关联视图需等 PH-265 实现事实后重定，保持 proposed。"
       ],
       "handoff": null
     },
@@ -4231,7 +4241,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "依赖 PH-170/PH-171/PH-172/PH-173 仍 proposed、PH-110 ready 未 done；13 周预测能力未交付，保持 proposed。"
+      ],
       "handoff": null
     },
     {
@@ -4336,7 +4348,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "依赖 PH-180/PH-179/PH-174/PH-175 仍 proposed、PH-110 ready 未 done；四类核对/差额追踪未交付，保持 proposed。"
+      ],
       "handoff": null
     },
     {
@@ -4443,7 +4457,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "依赖 PH-179/PH-181/PH-151 仍 proposed、PH-110 ready 未 done；到期扫描/幂等待办未交付，保持 proposed。"
+      ],
       "handoff": null
     },
     {
@@ -4552,7 +4568,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "依赖 PH-184/PH-180/PH-170/PH-178 仍 proposed、PH-110 ready 未 done；项目聚合/结项/归档后迟到款未交付，保持 proposed。"
+      ],
       "handoff": null
     },
     {
@@ -10152,7 +10170,7 @@
       "title": "多币种实现前置：币种/汇率快照落地、换算边界与只读展示",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "cancelled",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10176,7 +10194,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "PH-308/PH-321/PH-324/PH-252 已 done，PH-321/PH-324 已交付多币种/汇率首片；本片为旧实现前置，范围可能与已交付重叠，需下一规划槽复核后关闭或重定范围，不得虚假晋级。"
+        "已由 PH-324 canonical 币种扩展（#203）与 PH-321 多币种实现首片（#211）覆盖；PH-386 关闭，剩余反查/对账范围转 PH-388。"
       ],
       "handoff": null
     },
@@ -10501,7 +10519,7 @@
       "title": "多币种汇率快照实现与只读展示后续（汇率 owner 落表/历史）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "cancelled",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10540,7 +10558,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "PH-324/PH-321/PH-214/PH-224 已 done；PH-321 已交付 FxRateSnapshot/record/list/resolve 首片；本片后续范围（反查/对账深化）需下一规划槽重定后再晋级，不得重复已交付能力。"
+        "已由 PH-321 汇率快照/record/list/resolve 首片（#211）覆盖；PH-386 关闭，剩余反查/对账范围转 PH-388。"
       ],
       "handoff": null
     },
@@ -10616,7 +10634,7 @@
     {
       "id": "PH-329",
       "title": "后续交付独立规划入口（接续 PH-328）",
-      "status": "in_review",
+      "status": "done",
       "risk": "S",
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -10873,7 +10891,7 @@
       "title": "后续交付独立规划入口（接续 PH-331）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -11080,7 +11098,7 @@
       "title": "后续交付独立规划入口（接续 PH-337）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -12245,7 +12263,7 @@
       "title": "批次 C 收尾：演练证据回填与发布资格 gate 判定执行（PH-366 契约）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12271,9 +12289,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-357 已 done；缺 PH-367（汇总验收前置，ready 未 done）done；PH-367 完成后由下一规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -12724,7 +12740,7 @@
       "title": "后续交付独立规划入口（接续 PH-381）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -12744,6 +12760,189 @@
         "docs/verification.md",
         "project/reports/PH-386.json",
         "project/handoffs/PH-386.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "worker-contract",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-386.md"
+    },
+    {
+      "id": "PH-387",
+      "title": "批次 D-02 税额→costing 开放期成本更正验收执行（PH-371 后续）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-371"
+      ],
+      "spec": "project/specs/PH-387.md",
+      "allowed_paths": [
+        "docs/verification.md",
+        "docs/v1.0-development/batch-d-acceptance.md",
+        "docs/v1.0-development/batch-d-runbook.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-387.json",
+        "project/handoffs/PH-387.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py test tests.test_v1_tax_cost_adjustment tests.test_v1_tax_cost_adjustment_http --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-388",
+      "title": "多币种汇率反查/对账后续（接收 PH-318/326 剩余范围）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-321",
+        "PH-324"
+      ],
+      "spec": "project/specs/PH-388.md",
+      "allowed_paths": [
+        "pmo_plugins/contracts/fx_models.py",
+        "pmo_plugins/contracts/fx_services.py",
+        "pmo_plugins/contracts/views.py",
+        "pmo_plugins/contracts/forms.py",
+        "pmo_plugins/contracts/domain_metadata.py",
+        "pmo_plugins/contracts/urls.py",
+        "pmo_plugins/contracts/templates/contracts/fx_rates.html",
+        "pmo_plugins/contracts/migrations/*.py",
+        "tests/test_v1_fx_history*.py",
+        "project/reports/PH-388.json",
+        "project/handoffs/PH-388.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests.test_v1_fx_history tests.test_v1_fx_history_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "PH-321/PH-324 已 done，但本片先冻结反查/对账 DoR 与范围；确认不重复 PH-321 已交付能力后由下一规划槽复核再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-389",
+      "title": "批次 D-03/04 发票/导入验收执行（PH-378/383 后续）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-378",
+        "PH-383"
+      ],
+      "spec": "project/specs/PH-389.md",
+      "allowed_paths": [
+        "docs/verification.md",
+        "docs/v1.0-development/batch-d-acceptance.md",
+        "docs/v1.0-development/batch-d-runbook.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-389.json",
+        "project/handoffs/PH-389.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py test tests.test_v1_invoice_batch_commit tests.test_v1_invoice_batch_commit_http tests.test_v1_invoice_import_errors --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-378/PH-383（发票批量导入实现与错误清单后续，均 proposed）done；依赖完成后复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-390",
+      "title": "批次 D-05/06 insights 验收执行（PH-379/384 后续）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-379",
+        "PH-384"
+      ],
+      "spec": "project/specs/PH-390.md",
+      "allowed_paths": [
+        "docs/verification.md",
+        "docs/v1.0-development/batch-d-acceptance.md",
+        "docs/v1.0-development/batch-d-runbook.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-390.json",
+        "project/handoffs/PH-390.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py test tests.test_v1_insights_difference tests.test_v1_insights_workbench tests.test_v1_insights_perf tests.test_v1_insights_export --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-379/PH-384（insights 实现与性能/导出后续，均 proposed）done；依赖完成后复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-391",
+      "title": "后续交付独立规划入口（接续 PH-386）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-386"
+      ],
+      "spec": "project/specs/PH-391.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-391.json",
+        "project/handoffs/PH-391.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
