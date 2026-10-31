@@ -35,7 +35,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 9e0991f --task PH-321",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 18 files inside BASE PH-321 allowed_paths (review pass; post-rebase gate rerun)."
+      "evidence": "Actual run after the reviewer round-2 pass and rebase onto 9e0991f (HEAD 723ecb5): ok=true, changes=18 files all inside the PH-321 allowlist, errors=[]."
     }
   ],
   "review": {
