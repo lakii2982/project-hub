@@ -7374,14 +7374,15 @@
       "title": "发票登记与逐行分配首片：sales/purchase 发票、行项目与业务来源分配",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-150",
-        "PH-155",
+        "PH-214",
         "PH-224",
-        "PH-232"
+        "PH-232",
+        "PH-287",
+        "PH-293"
       ],
       "spec": "project/specs/PH-252.md",
       "allowed_paths": [
@@ -7420,9 +7421,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-150（合同收费明细/生效方法）与 PH-155（结算/未清）done 的契约边界复核；PH-224/PH-232/PH-259 已 done；契约已由 docs/adr/0015-invoice-tax-contract.md（PH-293）冻结；PH-150/PH-155 就绪后由后续规划槽复核 DoR 再晋级（本片不自行晋级 PH-252）。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -9897,16 +9896,21 @@
       "title": "期间关期/项目结项实现前置：关期与结项命令边界、只读核对与通知联动",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-299",
         "PH-300",
-        "PH-180",
-        "PH-181",
-        "PH-182",
-        "PH-185"
+        "PH-291",
+        "PH-283",
+        "PH-288",
+        "PH-280",
+        "PH-281",
+        "PH-284",
+        "PH-287",
+        "PH-309",
+        "PH-304"
       ],
       "spec": "project/specs/PH-312.md",
       "allowed_paths": [
@@ -9923,9 +9927,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-299/PH-300（关期/结项契约冻结，ready 未 done）与 PH-180/PH-181/PH-182/PH-185（proposed）done；契约合入 done 后由 PH-323 规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -9933,16 +9935,17 @@
       "title": "共享费用分摊/预算 ETC 实现前置：分摊批次、预算版本与只读缺口核对",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-305",
         "PH-306",
-        "PH-162",
-        "PH-255",
-        "PH-177",
-        "PH-261"
+        "PH-217",
+        "PH-244",
+        "PH-250",
+        "PH-214",
+        "PH-287"
       ],
       "spec": "project/specs/PH-313.md",
       "allowed_paths": [
@@ -9959,9 +9962,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-305/PH-306（分摊/预算契约冻结，ready 未 done）与 PH-162/PH-255/PH-177/PH-261（legacy proposed）done；契约合入 done 后由 PH-323 规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -10014,7 +10015,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-301（通知中心首片）、PH-310（导出归档后续）与 PH-285/PH-179/PH-183（proposed）done；PH-304/PH-316 已 ready/done 但不满足全部契约；依赖完成后由 PH-323 规划槽复核 DoR 再晋级。"
+        "缺 PH-301（通知中心首片，proposed）与 PH-310（导出归档后续，proposed）done；PH-285/PH-179/PH-183（proposed）done；PH-304/PH-316 已 done 但不构成通知/归档交付；依赖完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10240,7 +10241,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-293（发票契约冻结，ready 未 done）与 PH-252（发票实现，proposed）done；PH-214/PH-224/PH-232 已 done；契约/实现前置完成后由 PH-323 规划槽复核 DoR 再晋级。"
+        "缺 PH-252（发票实现首片，ready 未 done）done；PH-293（ADR 0015）/PH-214/PH-224/PH-232 已 done；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10254,9 +10255,11 @@
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-308",
-        "PH-150",
-        "PH-155",
-        "PH-324"
+        "PH-324",
+        "PH-214",
+        "PH-224",
+        "PH-232",
+        "PH-287"
       ],
       "spec": "project/specs/PH-321.md",
       "allowed_paths": [
@@ -10285,7 +10288,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-308（多币种/汇率契约冻结，ready 未 done）、PH-324（canonical 币种字段/类型扩展与迁移，proposed）与 PH-150/PH-155（legacy 合同/结算）done；契约/扩展完成后由 PH-323 规划槽复核 DoR 再晋级。"
+        "缺 PH-324（canonical 币种扩展，ready 未 done）done；PH-308（多币种 ADR）/PH-214/PH-224/PH-232/PH-287 已 done；PH-324 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10301,10 +10304,14 @@
         "PH-299",
         "PH-300",
         "PH-312",
-        "PH-180",
-        "PH-181",
-        "PH-182",
-        "PH-185"
+        "PH-291",
+        "PH-283",
+        "PH-288",
+        "PH-280",
+        "PH-281",
+        "PH-284",
+        "PH-287",
+        "PH-309"
       ],
       "spec": "project/specs/PH-322.md",
       "allowed_paths": [
@@ -10334,7 +10341,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-299（关期/预测契约冻结，ADR 0016；含与 AccountingPeriod active/posted 的映射及 closing/reopened 迁移/回填计划）与 PH-300（项目结项契约冻结，ADR 0017；含与 Project.stage 的映射及 ProjectClose 迁移计划）done；缺 PH-312（实现前置，proposed）与 PH-180/PH-181/PH-182/PH-185（proposed）done。契约/前置完成后由 PH-323 规划槽复核 DoR 再晋级。"
+        "缺 PH-312（关期/结项实现前置，ready 未 done）done；PH-299/PH-300（ADR 0016/0017）与只读核对来源 PH-291/283/288/280/281/284/287/309 已 done；PH-312 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10343,7 +10350,7 @@
       "title": "后续交付独立规划入口（接续 PH-319）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -10371,14 +10378,14 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-323.md"
     },
     {
       "id": "PH-324",
       "title": "canonical 币种字段/类型扩展与迁移计划（多币种事实前置）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10415,6 +10422,172 @@
         "python manage.py test tests --verbosity 1",
         "python manage.py verify_integrity --json",
         "python manage.py test tests.test_v1_currency_schema tests.test_v1_currency_backfill --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-325",
+      "title": "发票-结算/收入只读对账与税额资格确认（发票写侧后续）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-252",
+        "PH-284",
+        "PH-283",
+        "PH-287",
+        "PH-293"
+      ],
+      "spec": "project/specs/PH-325.md",
+      "allowed_paths": [
+        "pmo_plugins/invoicing/invoice_reconciliation_services.py",
+        "pmo_plugins/invoicing/views.py",
+        "pmo_plugins/invoicing/forms.py",
+        "pmo_plugins/invoicing/templates/invoicing/invoice_reconciliation.html",
+        "pmo_plugins/invoicing/domain_metadata.py",
+        "pmo_plugins/invoicing/urls.py",
+        "tests/test_v1_invoice_reconciliation.py",
+        "tests/test_v1_invoice_reconciliation_http.py",
+        "project/reports/PH-325.json",
+        "project/handoffs/PH-325.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_invoice_reconciliation tests.test_v1_invoice_reconciliation_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-252（发票实现首片，ready 未 done）done；PH-284/PH-283/PH-287/PH-293 已 done；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-326",
+      "title": "多币种汇率快照实现与只读展示后续（汇率 owner 落表/历史）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-324",
+        "PH-321",
+        "PH-214",
+        "PH-224"
+      ],
+      "spec": "project/specs/PH-326.md",
+      "allowed_paths": [
+        "pmo_plugins/contracts/fx_models.py",
+        "pmo_plugins/contracts/fx_services.py",
+        "pmo_plugins/contracts/views.py",
+        "pmo_plugins/contracts/forms.py",
+        "pmo_plugins/contracts/domain_metadata.py",
+        "pmo_plugins/contracts/urls.py",
+        "pmo_plugins/contracts/templates/contracts/fx_rates.html",
+        "pmo_plugins/contracts/migrations/*.py",
+        "tests/test_v1_fx_history.py",
+        "tests/test_v1_fx_history_http.py",
+        "project/reports/PH-326.json",
+        "project/handoffs/PH-326.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_fx_history tests.test_v1_fx_history_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-324（canonical 币种扩展，ready 未 done）与 PH-321（多币种实现首片，proposed）done；PH-214/PH-224 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-327",
+      "title": "关期/结项写侧验收与运维 runbook（浏览器/PG/恢复演练）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-322",
+        "PH-312",
+        "PH-291",
+        "PH-299",
+        "PH-300"
+      ],
+      "spec": "project/specs/PH-327.md",
+      "allowed_paths": [
+        "project/specs/PH-327.md",
+        "docs/engineering/close-runbook.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-327.json",
+        "project/handoffs/PH-327.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-322（关期/结项写侧实现，proposed）与 PH-312（实现前置，ready 未 done）done；PH-291/PH-299/PH-300 已 done；实现完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-328",
+      "title": "后续交付独立规划入口（接续 PH-323）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-323"
+      ],
+      "spec": "project/specs/PH-328.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "docs/v1.0-development/*",
+        "project/reports/PH-328.json",
+        "project/handoffs/PH-328.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
       "owner": null,

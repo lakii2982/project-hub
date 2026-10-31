@@ -763,3 +763,13 @@ BASE 15cf20c，docs-only：契约冻结正文写入 `project/specs/PH-306.md`（
 ## PH-316 运营核对工作台导出联动首片（2026-10-31）
 
 基线15cf20c。扩展pmo_plugins/delivery/ops_workbench_services.py：每个工作台分区增加导出描述符（dataset/as_of/period/export_missing）；ops_overview/settlement_coverage/cash_bridge/fee_pairing链接到PH-304既有ops-export/具名导出服务与路由，使用与工作台相同as_of/期间，行数/合计与分区摘要一致；identity_access因PH-304导出数据集不含身份敏感明细而export=null+export_dataset_not_implemented；pm cash_bridge export=null+permission。模板为可导出分区渲染「导出底稿」链接，导出页回链工作台；复用既有canonical ops-workbench/与ops-export/ history_read路由，不新增元数据副本/写通道/迁移/表/审计；工作台与导出同一as_of/期间口径；零写、事实计数不变；反例append-only兼容。实际执行（最终HEAD）：projectctl check ok=true/task_count=245；manage.py check exit0（93条既有W003、0错误）；makemigrations无变更；全量1125项=1048 pass+69 skip+8项既有macOS失败（BASE 15cf20c 1115+10新测试，无新增）；verify_integrity全新迁移库ok=true；scoped 10项全通过；verify-change --base 15cf20c --task PH-316在review pending时仅high_risk_review_required（预期）。未验证：浏览器1440/390、独立S复核、PG/并发、生产/UAT、旧库升级；新导出格式（PH-310）/身份敏感导出/ZIP外发/定时邮件/持久化收据未实现。
+
+
+## PH-323 批次 B 写侧首片晋级：依赖再基线（2026-10-31）
+
+基线 1ce48fc（批次 A 全部合入；注册后 count 250）。纯规划/契约文字片：
+1. **依赖再基线**：对 PH-312/313/314/320/321/322/324 逐条对照 done 证据；晋级 4 项：PH-324（deps PH-308 done）、PH-252（→PH-214/224/232/287/293）、PH-312（→PH-299/300+PH-291/283/288/280/281/284/287/309/304）、PH-313（→PH-305/306+PH-217/244/250+PH-214/287）。
+2. **保持 proposed**：PH-321（等 PH-324）、PH-320（等 PH-252）、PH-322（等 PH-312）、PH-314（等 PH-301/310/285/179/183）；无虚假晋级，blockers 精确。
+3. **顺序**：PH-324 → PH-321 → PH-252 → PH-320 → PH-312 → PH-322 → PH-313 → PH-314（ROADMAP 已记录）。
+4. **登记**：PH-325 发票-结算/收入对账+税额资格（proposed）、PH-326 汇率历史（proposed）、PH-327 关期/结项验收 runbook（proposed）、PH-328 下一规划槽（proposed，待 PH-323 done 后置 ready）。count 246→250，编号 325-328 连续。
+5. 无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：依赖重映射/晋级证据/blockers/编号事实核对通过）；最终证据 HEAD 7de3412 按槽惯例置 PH-323 done / PH-328 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=250；23 项治理 OK；verify-change --base 1ce48fc --task PH-323 ok=true、18 文件全白名单、无 errors。未验证：PH-324/252/312/313 未实现；PH-325/326/327 未实现。
