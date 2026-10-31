@@ -24,9 +24,9 @@
 | D-06 | PH-354 insights 期间预检只读 | M12/M13 | proposed（等 PH-272）→ **blocked** |
 | D-07 | PH-340 通知中心实现 | M13 | proposed（等 PH-301/314）→ **blocked** |
 | D-08 | PH-355 reminder refs/扫描骨架 | M13 | proposed（等 PH-179/183/151）→ **blocked** |
-| D-09 | PH-372 批次 C 收尾证据/gate 判定 | M15/V1-OPS | proposed（等 PH-357/367）→ **blocked** |
-| D-10 | 批次 C 汇总/发布资格（PH-335/357/367） | M15/V1-OPS-01–06 | PH-335/357 ready，PH-367 proposed → **blocked** |
-| D-11 | 多币种后续（PH-318/326 重定/关闭） | M04/M08/M10 | proposed 重定 → **blocked** |
+| D-09 | PH-372 批次 C 收尾证据/gate 判定 | M15/V1-OPS | PH-372 done：**blocked**；PH-377 后续复核 proposed |
+| D-10 | 批次 C 汇总/发布资格（PH-335/357/367） | M15/V1-OPS-01–06 | PH-333/334/335/357/372 done（L1+L2）；PH-394 终审 proposed → **blocked** |
+| D-11 | 多币种后续（PH-318/326 重定/关闭） | M04/M08/M10 | PH-388 ready（汇率反查/对账）；PH-318/326 重定待处理 → **blocked** |
 
 ## 2. 必需证据层（按行适用）
 
@@ -64,9 +64,9 @@ python manage.py verify_integrity --json
 | D-06 | 期间预检只读 API：blockers/warnings/issue_code/refs/digest；零写 | `tests.test_v1_insights_precheck`/`_http`（实现后）+ PH-363 契约核对 | 预检与来源一致；member/跨 org 拒绝；零写 | 财务复核人 | **blocked**（PH-272） |
 | D-07 | 通知收件箱：按来源去重、权限过滤、已读/停用；无外部推送 | `tests.test_v1_notifications`/`_http`（实现后）+ L4 | 同事实只一条；越权/跨 org 拒绝；停用历史只读 | 支持负责人 | **blocked**（PH-301/314） |
 | D-08 | reminder refs/扫描骨架：键去重、幂等扫描、无外部副作用 | `tests.test_v1_reminders`/`_http`（实现后，PH-355） | 重复扫描不重复；不发邮件/短信/Webhook；权限/停用正确 | 支持负责人 | **blocked**（PH-179/183/151） |
-| D-09 | 批次 C 证据回填与 release gate 判定：SHA/层级/缺口/豁免/签名 | `docs/verification.md` 回填 + PH-366 gate 清单 + `projectctl check` | 每证据有 SHA/artifacts/层级；gate 结论与缺口一致；无证据不写 pass | 独立验收复核人 | **blocked**（PH-357/367 未 done） |
-| D-10 | V1-OPS-01–06 汇总：安装/升级/恢复/并发/容量证据；发布资格清单 | PH-347/348/349/350 envelope + CI PG + PH-366 gate | 各脚本/探针 pass 且 artifacts 可复核；无 not_run 遗留（除批准豁免） | 发布负责人 + DBA + 安全负责人 | PH-335/357 ready、PH-367 proposed → **blocked** |
-| D-11 | 多币种后续范围重定/关闭决策（PH-318/326）与已交付 PH-321/324 的边界 | 规划评审输出（决策记录/任务状态） | 决策有证据、无重复实现、后续片 DoR 完整 | 架构/整合者 | **blocked**（待重定） |
+| D-09 | 批次 C 证据回填与 release gate 判定：SHA/层级/缺口/豁免/签名 | `docs/verification.md` 回填 + PH-366 gate 清单 + `projectctl check` | 每证据有 SHA/artifacts/层级；gate 结论与缺口一致；无证据不写 pass | 独立验收复核人 | PH-372 done：**blocked**（L3/L4/L5 not_run）；PH-377 后续复核 proposed |
+| D-10 | V1-OPS-01–06 汇总：安装/升级/恢复/并发/容量证据；发布资格清单 | PH-347/348/349/350 envelope + CI PG + PH-366 gate | 各脚本/探针 pass 且 artifacts 可复核；无 not_run 遗留（除批准豁免） | 发布负责人 + DBA + 安全负责人 | PH-333/334/335/357/372 均 done（L1+L2）；PH-394 终审 proposed → **blocked** |
+| D-11 | 多币种后续范围重定/关闭决策（PH-318/326）与已交付 PH-321/324 的边界 | 规划评审输出（决策记录/任务状态） | 决策有证据、无重复实现、后续片 DoR 完整 | 架构/整合者 | PH-388 ready（汇率反查/对账）；PH-318/326 重定待处理 → **blocked** |
 
 ## 4. 退出标准
 
@@ -84,5 +84,5 @@ python manage.py verify_integrity --json
 
 ## 6. 未验证
 
-- D-01 已执行本地 L2 部分验收（PH-382：cash-refund 真实 e2e pass；revenue/settlement 真实 e2e、L3/L4/L5 not_run；整体未通过）；D-02–D-11 均未实现/未执行（blocked/not_run）。
+- D-01 已执行本地 L2 部分验收（PH-382：cash-refund 真实 e2e pass；revenue/settlement 真实 e2e、L3/L4/L5 not_run；整体未通过）；D-02 已执行但不通过（PH-387 L2 pass/L3–L5 not_run，false）；D-03–D-08 blocked；D-09/D-10 gate blocked；D-11 PH-388 ready + PH-318/326 重定待处理。
 - 无浏览器 L4、CI L3、生产 L5 证据；批次 D 发布资格仍 blocked。

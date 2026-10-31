@@ -2,7 +2,7 @@
 
 - 产出任务：PH-375（docs-only；不实现/不执行；本文件为执行模板，不含通过结论）。
 - 对齐：`batch-d-acceptance.md`（矩阵）、`batch-c-runbook.md`（执行协议）、`batch-c-release-evidence-contract.md`（envelope/证据/发布 gate）、`docs/engineering/ops-runbook.md`（脚本契约）。
-- 当前状态：D-01 已执行本地 L2 部分验收（PH-382：cash-refund 真实 e2e pass；revenue/settlement 真实 e2e、L3/L4/L5 not_run；整体未通过）；D-02–D-11 `blocked`；发布资格仍按 PH-366 **blocked**。
+- 当前状态：D-01 本地 L2 部分（PH-382；未通过）；D-02 本地 L2 pass 但整体**不通过（false）**（PH-387：L3–L5 not_run）；D-03–D-08 `blocked`；D-09/D-10 gate `blocked`（PH-372）；D-11 PH-388 `ready` + PH-318/326 重定待处理；发布资格仍按 PH-366 **blocked**。
 
 ## 1. 通用执行协议
 
@@ -75,19 +75,19 @@
 - 状态：**blocked**。
 
 ### D-09/D-10 批次 C 收尾与发布资格
-- 前置：PH-335/357/367/372 done（当前 PH-335/357 ready、PH-367/372 proposed → blocked）。
+- 前置：PH-335/357/367/372 **均 done**（L1+L2 汇总已回填）。
 - 步骤：按 PH-366 §6 收集 V1-OPS-01–06 证据→回填 `docs/verification.md`→输出 gate/缺口/豁免→三方签批。
 - 命令：`python scripts/projectctl.py check` + `python -m unittest tests.test_projectctl tests.test_governance -v` + 各 ops 脚本/CI PG URL；判据：每项 pass/无 not_run 遗留；失败处置：blocked 不发布。
-- 状态：**blocked/not_run**（PH-357 证据回填未执行；发布资格 blocked）。
+- 状态：**blocked**（gate 原因：L3 CI/PG、L4 浏览器、L5 生产/客户验收 not_run；PH-394 终审未做；PH-377 后续 proposed）。
 
 ### D-11 多币种后续重定
-- 前置：PH-318/326 范围重定决策（当前 blocked）。
+- 前置：PH-388（ready，汇率反查/对账）+ PH-318/326 范围重定决策（当前 blocked）。
 - 步骤：对照 PH-321/324 已交付能力，决定关闭或重定后续薄片；记录决策与 DoR。
 - 判据：不重复已交付、后续片依赖/白名单完整；状态：**blocked**。
 
 ## 4. 未验证与发布资格
 
-- 本片 docs-only；D-01 已有 PH-382 本地 L2 部分证据（cash-refund 真实；revenue/settlement 真实 e2e 未执行）；D-02–D-11 全部 blocked。
+- 本片 docs-only；D-01 有 PH-382 本地 L2 部分证据（cash-refund 真实；revenue/settlement 真实 e2e 未执行）；D-02 有 PH-387 L2 pass（L3–L5 not_run，整体不通过/false）；D-03–D-08 blocked；D-09/D-10 gate blocked；D-11 PH-388 ready + PH-318/326 重定待处理。
 - 无 L3 CI PG、L4 浏览器、L5 生产/试点证据；批次 D 发布资格仍 **blocked**（依 PH-366，不得以本 runbook 宣称就绪）。
 
 ## 5. 反例

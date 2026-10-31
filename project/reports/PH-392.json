@@ -1,0 +1,48 @@
+{
+  "task_id": "PH-392",
+  "summary": "Delivered the docs-only batch D execution-order and evidence-backfill orchestration at BASE c931137, reusing PH-375/PH-376/PH-366/PH-372 standards rather than adding a second acceptance rule set. docs/v1.0-development/batch-d-execution-orchestration.md freezes: the current D-01–D-11 state baseline (D-01 PH-382 local L2 partial and not passed; D-02 PH-387 L2 pass but L3/L4/L5 not_run so false; D-03–D-08 blocked on unimplemented slices; D-09/D-10 blocked by PH-372 gate; D-11 PH-388 ready plus re-scope); the execution waves W0 (already-done PH-382/PH-387/PH-372 base) → W1 local/parallel work (PH-388, PH-377 gate re-check, D-03–08 implementation slices) → W2 real-environment groups (PH-393 D-01 L3/L4, PH-389/PH-390 acceptance, serialized on PG/browser/release window) → W3 serial gate PH-394 and sign-off list PH-395; the fixed five-step evidence backfill order (execute→docs/verification→batch-d row/card→merged gate record and digest recompute→ROADMAP/task status); the gate-recompute triggers (new required evidence, waiver sign-off, SHA/env/contract change, 14-day expiry, execution-slice completion) and non-triggers; the L3–L5 real-environment must-have matrix versus local-only work; blocked/not_run/fail semantics, retry bounds, roles/signatures and counterexamples. It also syncs the stale D-09/D-10 matrix rows and the runbook current-status line. Per the Lead's addendum, PH-396 'v1.0 leftover-task reconciliation and closure (docs)' was registered ready (deps=[], kind docs, risk S, spec docs/v1.0-development/closure-reconciliation.md) and its spec was created in this PR, covering the ~115 open tasks/legacy chains with evidence-based close/partial→new-slice/keep-with-gap conclusions and the final v1.0 delivery + blocker lists; this slice only registers it and does not execute the reconciliation. No code, scripts, migrations, contracts or gates changed; no real PG/browser/production execution or acceptance pass is claimed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE c931137): {\"command\":\"check\",\"ok\":true,\"task_count\":317}, exit 0; PH-392 done with handoff; PH-396 remains ready."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph392-batch-d-orchestration on main c931137 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base c931137 --task PH-392",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD 94d6491: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"94d64919d4f93163a6e71af8e1a50601b8f18041\",\"count\":10,\"errors\":null}; all 10 files inside BASE PH-392 allowed_paths and review.status=pass with reviewer-b."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD 62eb54a: the batch-d-runbook D-09/D-10 section now states PH-335/357/367/372 are all done (L1+L2 summary backfilled) and the status is blocked for the actual gate reasons (L3 CI/PG, L4 browser, L5 production/customer not_run; PH-394 terminal review not done; PH-377 follow-up proposed), matching the trusted BASE and the fixed matrix/top-level rows. The D-09/D-10 cards, D-11 card/row, top status rows and current-status paragraph are consistent: D-01 partial/not passed, D-02 false, D-03–08 blocked, D-09/D-10 gate blocked, D-11 PH-388 ready + re-scope pending.",
+      "ORCHESTRATION/PH-396 VERIFIED: W0–W3 waves, 5-step evidence backfill order, gate-recompute triggers (new required evidence/waiver/sign-off/SHA-env-contract/14-day/execution completion; doc-only non-triggers), L3–L5 real-environment thresholds and blocked/not_run/fail semantics are executable and honest; no D-batch pass or release readiness is claimed. PH-396 is ready with deps=[], spec docs/v1.0-development/closure-reconciliation.md created with the required reconciliation/close/partial/new-slice/keep-with-gap/final delivery+blocker content; 9-path whitelist self-consistent; ID 396 continuous; count 317.",
+      "GATES (HEAD 62eb54a, BASE c931137): projectctl check ok=true/task_count=317; governance 23 tests OK; 10 changed files all inside BASE PH-392 allowed paths; no placeholders; no code/script/migration/schema/gate changes; verify-change --base c931137 --task PH-392 pre-review only high_risk_review_required + acceptance_not_passed (report check still not_run; no path errors).",
+      "MINOR final-evidence note: report check evidence cites intermediate HEAD 9771d828 and verify cites 1cb0ffb; after this pass block is committed record the final-HEAD check/verify pass. No substantive issue."
+    ],
+    "evidence": "VERDICT: PASS - the final runbook D-09/D-10 section is synced to the done facts and gate-blocked reasons, with matrix/cards/top rows/current-status and D-11 all consistent; the orchestration waves/backfill/gate triggers/L3–L5 thresholds are correct and honest, and PH-396 registration/spec/whitelist are valid. Reviewed HEAD 62eb54a (BASE c931137), worktree clean; count 317; check ok=317; governance 23 OK; verify-change only review + pre-review check declaration (no path errors)."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): the acceptance matrix rows/cards now consistently state D-09=PH-372 done/blocked, D-10=PH-333/334/335/357/372 done+PH-394 proposed/blocked and D-11=PH-388 ready+PH-318/326 re-scope pending; the runbook current-status line distinguishes D-01/D-02 not passed (L2 only) from D-03–D-08 blocked and D-09/D-10 blocked; stale 'D-02–D-11 blocked' and 'PH-357/367 not done' text removed.",
+    "Review-minor fix: the report check evidence was refreshed to the new (post-fix) HEAD.",
+    "The orchestration is documentation-only and freezes order/backfill/gate rules; it does not execute any D-batch acceptance, real PG/browser/production run, or implementation work.",
+    "D-01/D-02 are recorded as not passed (L2 only; L3/L4/L5 not_run) and D-03–D-11 as blocked/not_run; no acceptance pass or release readiness is claimed.",
+    "PH-396 was registered per the Lead's addendum as ready with deps=[], kind docs, risk S and spec docs/v1.0-development/closure-reconciliation.md; the spec file was created in this PR. Its ~115-task evidence-based reconciliation is NOT executed by this slice (worker-clearance owns it).",
+    "batch-d-acceptance D-09/D-10 stale rows and batch-d-runbook current-status line were synced to actual PH-372/PH-387 facts without changing acceptance criteria.",
+    "No code, scripts, migrations, contract-schema, CI-gate or product-behavior change."
+  ],
+  "unverified": [
+    "No D-batch real-environment evidence exists (L3 CI/PG, L4 browser, L5 production/customer); D-01/D-02 remain L2-only and D-03–D-11 blocked/not_run.",
+    "PH-396 reconciliation (legacy ~115 tasks close/partial/keep) was not executed; only registration + spec.",
+    "PH-393/PH-394/PH-395 (D-01 L3/L4 supplement, final D gate, v1.0 blocker list) are not executed.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}

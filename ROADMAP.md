@@ -802,3 +802,9 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - 合并 PH-333/334/335/357 本地 L1+L2 证据（多来源取最严，无冲突）；治理基线：check ok/312、23 治理 OK、manage.py check 0 error、makemigrations clean、verify_integrity ok、全量 1310/5F+3E（既有 macOS 基线无新增）。
 - V1-OPS-01–06/M15/L4/L5 的 L3–L5 全部 not_run；缺口 G1–G8（真实部署/升级/TLS、PG 恢复/RPO-RTO、CI/PG 容量/并发、浏览器、生产/客户、独立签名）；无豁免。
 - **判定：blocked；release_ready=false；未发布**。见 `docs/v1.0-development/release-evidence-backfill.md`。
+
+## 批次 D 验收执行顺序编排（PH-392，2026-10-31，BASE c931137）
+
+- 新增 `docs/v1.0-development/batch-d-execution-orchestration.md`：D-01–D-11 状态基线、W0/W1/W2/W3 波次（本地→真实环境→gate）、每项 5 步回填顺序、gate 重算触发、L3–L5 真实环境门槛、blocked/not_run 语义。
+- 现状：D-01/D-02 仅 L2（未通过）；D-03–D-08 blocked；D-09/D-10 gate blocked；D-11 PH-388 ready；批次 D 无整体通过项，发布资格仍 blocked（PH-372）。
+- 追加登记 **PH-396**（ready，docs，deps=[]）：v1.0 遗留任务对账与关闭，spec `docs/v1.0-development/closure-reconciliation.md`；本片只登记，对账由 worker-clearance 承接。

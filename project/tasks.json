@@ -12956,7 +12956,7 @@
       "title": "批次 D 验收执行顺序与证据回填编排（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12985,7 +12985,7 @@
       "blockers": [],
       "github_issue": null,
       "owner": null,
-      "handoff": null
+      "handoff": "project/handoffs/PH-392.md"
     },
     {
       "id": "PH-393",
@@ -13095,6 +13095,36 @@
       ],
       "github_issue": null,
       "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-396",
+      "title": "v1.0 遗留任务对账与关闭（docs：~115 open 任务映射/关闭规则/最终交付与阻塞清单）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [],
+      "spec": "docs/v1.0-development/closure-reconciliation.md",
+      "allowed_paths": [
+        "docs/v1.0-development/closure-reconciliation.md",
+        "docs/v1.0-development/*",
+        "docs/verification.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-396.json",
+        "project/handoffs/PH-396.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
       "handoff": null
     }
   ]
