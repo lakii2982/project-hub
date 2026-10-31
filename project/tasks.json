@@ -11910,7 +11910,7 @@
       "title": "期间预检/四类核对/差额契约冻结（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11939,8 +11939,8 @@
       ],
       "blockers": [],
       "github_issue": null,
-      "owner": null,
-      "handoff": null
+      "owner": "worker-docs",
+      "handoff": "project/handoffs/PH-363.md"
     },
     {
       "id": "PH-364",
