@@ -1,0 +1,39 @@
+{
+  "task_id": "PH-366",
+  "summary": "Froze the docs-only batch C drill-evidence and release-qualification contract at BASE fe9c257. New docs/v1.0-development/batch-c-release-evidence-contract.md defines: the evidence sources (PH-347 install/upgrade scripts, PH-348 backup/restore scripts, PH-349 PG concurrency CLI, PH-350 pending, PH-352 runbook, PH-332 matrix, PH-345 envelope contract) with artifact storage/redaction/dedupe rules; the required envelope fields and exit-code→status normalization (0 pass, 2 not_run, 3 fail, 4 environment_error fail, 5 blocked, most-severe wins); the docs/verification.md backfill template (candidate SHA, env/profile, command, exit/status, checks counts, artifacts+sha256, L1–L5 layers, gaps, verdict); L1–L5 evidence rules (rehearsal/staging is L2/L3 and never L5; SQLite is not PG evidence; dry_run is not execute); the release gate checklist (governance baseline, V1-OPS-01–06, M01–M15 required layers, browser L4, release package), gap/waiver register requiring product+release+independent-reviewer approval (executor cannot self-approve), dual-review signatures/timestamps/evidence digest, SHA binding/14-day freshness/rerun invalidation and anti-cherry-picking rules; boundaries for PH-357 backfill/PH-367 summary acceptance/PH-333-335 umbrellas; counterexamples; and an honest current-status section (PH-350 unimplemented, L3/L4/L5 not executed → release qualification blocked). No code, scripts, migration, gate or product behavior change; no run results are claimed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD f9daca7 (BASE fe9c257, PH-366 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":291}, exit 0; final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph366-evidence-release on main fe9c257 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-366",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD f9daca7: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (release-evidence contract, PH-366 spec summary, tasks/manifest, docs/verification, report/handoff) inside BASE PH-366 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (evidence sources/envelope normalization, backfill/L1–L5 rules, release gate completeness, waiver/sign-off/freshness rules and honest current status); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "The contract deliberately records the current release qualification as blocked: PH-350/V1-OPS-05 is not implemented, real PG backup/restore and PG concurrency evidence are not_run, and L3/L4/L5 are not executed. It does not claim release readiness.",
+    "Evidence acceptance reuses PH-345 envelope and PH-332 matrix rules instead of defining a second verification standard; the contract only adds normalization, backfill, freshness and gate/sign-off mechanics.",
+    "Waivers are restricted: core items (upgrade/rollback, backup/restore, PG concurrency, M15, L5 core) cannot be waived; non-core waivers require product+release+independent-reviewer approval and cannot be self-signed by the executor.",
+    "No scripts/ops implementation, CI gate, product code, migration or acceptance-command change; PH-350 remains the owner of ops_health_capacity and PH-357/PH-367 execute the backfill/summary per this contract."
+  ],
+  "unverified": [
+    "No real staging/production drill, PG backup/restore, real PG concurrency, PH-350 health/capacity, L3 CI, L4 browser or L5 customer acceptance was executed; the contract records these as not_run/blocked.",
+    "No evidence files/artifacts were produced by this docs-only slice.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
