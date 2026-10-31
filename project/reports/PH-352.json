@@ -13,9 +13,9 @@
       "evidence": "Actual run in /tmp/ph352-batch-c-runbook on main db8ed47 with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base db8ed47 --task PH-352",
+      "command": "python scripts/projectctl.py verify-change --base cbb84c2 --task PH-352",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD eda0b63: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"eda0b634fecfbb07ec4efeec7d9dab531e21a6ab\",\"count\":8,\"errors\":null}; all 8 files inside BASE PH-352 allowed_paths and review.status=pass with the reviewer's name."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-352 allowed_paths (review pass; post-rebase rerun)."
     }
   ],
   "review": {
@@ -34,7 +34,8 @@
     "The runbook reuses PH-345's envelope/exit-code/idempotency/redaction contract by reference instead of redefining it; M15/V1-OPS sections point at docs/engineering/ops-runbook.md, and no scripts/ops/* were created.",
     "Roles are named placeholders (release owner, DBA, finance reviewer, support owner, security owner, independent acceptance reviewer); actual persons are filled at release time and are not committed.",
     "Responsible commands for M items list the executable suite/scope as it exists at this BASE (some scoped test globs are written as `tests.test_v1_*` patterns because the exact modules vary by upcoming slices); where a capability is not delivered the item is blocked rather than given a fake command.",
-    "No code, migration, contract-schema, gate or acceptance-command change; no execution evidence is claimed."
+    "No code, migration, contract-schema, gate or acceptance-command change; no execution evidence is claimed.",
+    "Lead integration rebase (db8ed47 -> cbb84c2): ROADMAP conflict resolved keeping PH-356 batch-C section and runbook reference; verification/manifest merged; gates rerun green."
   ],
   "unverified": [
     "No M01–M15 acceptance run was executed; all items are not_run or blocked.",
