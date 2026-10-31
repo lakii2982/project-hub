@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 95eba15 (BASE 81ec533, PH-315 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":241}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run (reviewed HEAD 108dee0, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":241}, exit 0; PH-315 done with handoff and PH-319 ready on PH-315 done."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (planning registration); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-315 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "NO FALSE PROMOTION: PH-316 is proposed on PH-309 (ready, not done) and done PH-304; PH-317/318 are proposed on proposed contract deps (PH-293/252/150/155 and PH-308/150/155/252); PH-319 is proposed on PH-315 in_review with the done-transition blocker. PH-309 remains the only ready implementation slice; the previously listed proposed tasks (292/293/295/296/297/299/300/301/305/306/308/310/312/313/314) remain proposed; no task was promoted or demoted.",
+      "BLOCKERS ACCURATE: PH-316's blocker correctly says PH-309 ready-not-done and PH-304 done/satisfied; PH-317/318 list their still-not-done contract dependencies; PH-319 carries the PH-315 done-transition blocker. No ready task depends on a not-done task; no false readiness.",
+      "NEW TASKS/NUMBERING/DoR: task_count 241 unique continuous PH-316..PH-319 (BASE max 315; no remote/local branch/spec >=316). PH-316 is a workbench/export linkage slice reusing PH-304 (no new write channel/migration); PH-317 is an invoice red-offset/tax-deduction implementation-prerequisite contract freeze; PH-318 is an FX implementation-prerequisite contract freeze; PH-319 is the next planning slot. Specs have precise whitelists/DoR/counterexamples/acceptance; no scaffold/code/migration/schema change; 9 changed files all inside PH-315 allowed_paths; no placeholder strings; acceptance commands executable; PH-315 in_review with owner/handoff and PH-319 proposed.",
+      "SLOT CONVENTION/GATES: PH-315 remains in_review and PH-319 proposed; after this pass the final evidence commit must set PH-315 done/PH-319 ready and clear the blocker, then rerun check/verify-change. At HEAD 108dee0 (BASE 81ec533): projectctl check ok=true/task_count=241; governance 23 tests OK; verify-change --base 81ec533 --task PH-315 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; manifest=PH-315."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 108dee0 (BASE 81ec533) in /tmp/ph315-planning, worktree clean; 9 changed files all inside PH-315 allowed_paths; task_count 241 unique continuous PH-316..PH-319; manifest=PH-315. No new ready promotions: PH-316 waits on ready-not-done PH-309 + done PH-304; PH-317/318 wait on proposed contract deps; PH-319 on PH-315 in_review. New specs freeze workbench-export linkage, invoice red-offset/tax and FX implementation prerequisites with complete DoR/whitelists/counterexamples/acceptance; numbering free/continuous; no placeholders/scaffold/schema/code. Gates: check ok=true/241; governance 23 OK; verify-change --base 81ec533 --task PH-315 only review/acceptance gates, no path_out_of_scope. Final evidence sets PH-315 done/PH-319 ready."
   },
   "deviations": [
     "Planning-slot state convention: PH-315 is kept in_review with handoff and PH-319 is proposed with blocker 'PH-315 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-315 done and PH-319 ready and clear the blocker.",
