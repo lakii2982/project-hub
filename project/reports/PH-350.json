@@ -48,14 +48,14 @@
       "evidence": "Actual run exit 3; envelope status fail with backlog.reminders fail; threshold enforcement confirmed."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 5763f4a --task PH-350",
+      "command": "python scripts/projectctl.py verify-change --base b3769fb --task PH-350",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-350 allowed_paths (review pass; post-rebase rerun)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-350 allowed_paths (post-rebase rerun)."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 5763f4a --task PH-350",
+      "command": "python scripts/projectctl.py verify-change --base b3769fb --task PH-350",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-350 allowed_paths (review pass; post-rebase rerun)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-350 allowed_paths (post-rebase rerun)."
     },
     {
       "command": "python scripts/ops/healthcheck.py --mode dry_run --env production --facts <complete-local-facts> --out /tmp/ph350-evidence/health-production-dry-notrun.jsonl",
