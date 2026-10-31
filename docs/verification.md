@@ -1148,3 +1148,17 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 6. **缺口 G1–G8**：真实 staging 部署/升级/TLS、PG 备份恢复/RPO-RTO、CI/PG 容量/并发、L4 浏览器、L5 生产/客户、独立复核签名；核心项不可豁免。
 7. **判定：blocked**；release_ready=false；未发布/未试点；签名 pending（执行人不得自批）。未执行任何真实环境；不得以本地/演练/文档宣称通过。
 - 独立 S 复核：首轮 2 阻断（PH-371 产品代码基线误述、digest 不可复现）已修（基线=PH-371/36cdf00；完整 canonical 记录嵌入，digest=3ee83650…可重算）；二轮 PASS。最终门禁：check ok=true/task_count=312；23 项治理 OK；verify-change --base 5278c96 --task PH-372 ok=true、7 文件全白名单、无 errors。
+
+
+## PH-392 批次 D 验收执行顺序与证据回填编排（docs-only）（2026-10-31）
+
+基线 c931137。新增 `docs/v1.0-development/batch-d-execution-orchestration.md`：
+1. **当前状态基线**：D-01 PH-382 本地 L2 部分（未通过）、D-02 PH-387 L2 pass/L3 缺（false）、D-03–D-08 blocked（实现/验收片未开工）、D-09 PH-372 blocked、D-10 汇总 blocked、D-11 PH-388 ready/其余重定；批次 D 无整体通过项。
+2. **执行波次**：W0 已完成基座（PH-382/387/372）；W1 纯本地可并行（PH-388、PH-377 复核、D-03–08 实现片）；W2 真实环境分组（PH-393 D-01 L3/L4、PH-389/390 验收等），PG/浏览器/发布窗口串行；W3 gate 终审 PH-394→PH-395 串行。
+3. **证据回填顺序固定 5 步**：执行→verification→batch-d 行/卡→gate 合并记录/digest 重算→ROADMAP/任务状态；先写结论后补证据/跳过 verification 均拒绝。
+4. **gate 重算时机**：新增 required 证据/缺口关闭/豁免签批/SHA-环境-契约变化/14 天时效/执行片完成；文档措辞或 L1/L2 不触发；重算后仍非全 pass 则维持 blocked。
+5. **真实环境门槛**：V1-OPS-01–06/M15/L4/L5 必须真实环境；本地仅 L1/L2/治理基线/合并回填；未执行 not_run、依赖未 done blocked。
+6. 同步 batch-d 矩阵 D-09/D-10 现状与 runbook 当前状态行；不新增验收口径。
+7. **追加登记 PH-396**（ready，deps=[]，docs，risk S，spec=`docs/v1.0-development/closure-reconciliation.md`）：v1.0 遗留任务对账/关闭/最终交付与阻塞清单；本片只登记，不执行对账；count 316→317。
+8. 无代码/脚本/迁移/契约/门禁变更；未执行任何真实 PG/浏览器/生产。
+实跑：projectctl check ok/317；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：D 批真实 L3–L5、PH-396 对账、PH-393–395。

@@ -87,7 +87,7 @@
 
 ## 4. 未验证与发布资格
 
-- 本片 docs-only；D-01 已有 PH-382 本地 L2 部分证据（cash-refund 真实；revenue/settlement 真实 e2e 未执行）；D-02–D-11 全部 blocked。
+- 本片 docs-only；D-01 有 PH-382 本地 L2 部分证据（cash-refund 真实；revenue/settlement 真实 e2e 未执行）；D-02 有 PH-387 L2 pass（L3–L5 not_run，整体不通过）；D-03–D-11 blocked。
 - 无 L3 CI PG、L4 浏览器、L5 生产/试点证据；批次 D 发布资格仍 **blocked**（依 PH-366，不得以本 runbook 宣称就绪）。
 
 ## 5. 反例

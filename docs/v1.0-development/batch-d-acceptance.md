@@ -24,8 +24,8 @@
 | D-06 | PH-354 insights 期间预检只读 | M12/M13 | proposed（等 PH-272）→ **blocked** |
 | D-07 | PH-340 通知中心实现 | M13 | proposed（等 PH-301/314）→ **blocked** |
 | D-08 | PH-355 reminder refs/扫描骨架 | M13 | proposed（等 PH-179/183/151）→ **blocked** |
-| D-09 | PH-372 批次 C 收尾证据/gate 判定 | M15/V1-OPS | proposed（等 PH-357/367）→ **blocked** |
-| D-10 | 批次 C 汇总/发布资格（PH-335/357/367） | M15/V1-OPS-01–06 | PH-335/357 ready，PH-367 proposed → **blocked** |
+| D-09 | PH-372 批次 C 收尾证据/gate 判定 | M15/V1-OPS | PH-372 done：**blocked**；PH-377 后续复核 proposed |
+| D-10 | 批次 C 汇总/发布资格（PH-335/357/367） | M15/V1-OPS-01–06 | PH-333/334/335/357/372 done（L1+L2）；PH-394 终审 proposed → **blocked** |
 | D-11 | 多币种后续（PH-318/326 重定/关闭） | M04/M08/M10 | proposed 重定 → **blocked** |
 
 ## 2. 必需证据层（按行适用）
