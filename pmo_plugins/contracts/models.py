@@ -378,3 +378,51 @@ class ContractChangeReceipt(models.Model):
             models.CheckConstraint(condition=models.Q(action__in=['draft.save', 'decide']),
                                    name='contracts_change_receipt_action'),
         ]
+
+
+class FxRateSnapshot(models.Model):
+    """Append-only FX rate: 1 quote_currency = rate base_currency units (PH-321)."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT,
+                                     related_name='fx_rate_snapshots')
+    base_currency = models.CharField(max_length=3, default='CNY')
+    quote_currency = models.CharField(max_length=3)
+    effective_on = models.DateField()
+    rate = models.DecimalField(max_digits=18, decimal_places=8)
+    source = models.CharField(max_length=16, default='manual')
+    reference = models.CharField(max_length=240, blank=True, default='')
+    version = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    algorithm_version = models.CharField(max_length=64, default='fx_rate_snapshot_v1')
+
+    class Meta:
+        db_table = 'contracts_fxratesnapshot'
+        ordering = ['-effective_on', 'quote_currency', '-version']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organization', 'base_currency', 'quote_currency',
+                        'effective_on', 'version'], name='contracts_fx_rate_version_unique'),
+            models.CheckConstraint(condition=models.Q(rate__gt=0), name='contracts_fx_rate_positive'),
+            models.CheckConstraint(condition=~models.Q(base_currency=models.F('quote_currency')),
+                                   name='contracts_fx_rate_pair_distinct'),
+            models.CheckConstraint(condition=models.Q(source__in=['manual', 'bank', 'provider']),
+                                   name='contracts_fx_rate_source'),
+            models.CheckConstraint(condition=models.Q(base_currency__regex=r'^[A-Z]{3}$')
+                                   & models.Q(quote_currency__regex=r'^[A-Z]{3}$'),
+                                   name='contracts_fx_rate_currency_code'),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise ValidationError('汇率快照不可修改')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('汇率快照不可删除')
+
+    @property
+    def source_ref(self):
+        return {'namespace': 'contracts', 'kind': 'fx_rate_snapshot',
+                'id': str(self.pk), 'version': self.version}

@@ -6,7 +6,8 @@ from . import services as service
 from . import change_services
 from . import approval_services
 from . import terms_snapshot_services
-from .forms import ContractDraftForm
+from . import fx_services
+from .forms import ContractDraftForm, FxRateForm
 from .party_services import _reader, _writer
 from .party_views import _context, url
 
@@ -113,3 +114,42 @@ def contract_terms_snapshot(context, payload):
         contracts_url=url('contracts'), snapshot_url=url('contract-terms-snapshot'),
         contract_url=url('contract', id=contract_id) if contract_id else '',
         contract_choices=form.fields['contract'].queryset))
+
+
+def fx_rates(context, payload):
+    """Read-only FX rate and contract-line original/book display; writers see the form."""
+    member = fx_services._reader(context.member, roles=fx_services.READ_ROLES)
+    form = FxRateForm() if member.role in fx_services.WRITE_ROLES else None
+    error = ''
+    try:
+        rates = (fx_services.fx_rate_list(member)
+                 if member.role in fx_services.RATE_ROLES else [])
+        lines = fx_services.contract_line_fx_snapshots(member)
+    except (PermissionDenied, ValidationError) as exc:
+        rates, lines = [], []
+        error = '；'.join(getattr(exc, 'messages', [str(exc)]))
+    return render(context.request, 'contracts/fx_rates.html', _context(
+        member, rates=rates, lines=lines, form=form, error=error,
+        enabled=member.role in fx_services.WRITE_ROLES,
+        fx_rate_save_url=url('fx-rate-save')))
+
+
+def fx_rate_save(context, payload):
+    member = fx_services._writer(context.member)
+    form = FxRateForm(payload)
+    if form.is_valid():
+        try:
+            fx_services.record_fx_rate(
+                member, quote_currency=form.cleaned_data['quote_currency'],
+                rate=form.cleaned_data['rate'], effective_on=form.cleaned_data['effective_on'],
+                source=form.cleaned_data['source'], reference=form.cleaned_data['reference'])
+        except ValidationError as error:
+            form.add_error(None, '；'.join(error.messages))
+        else:
+            messages.success(context.request, '汇率快照已追加；历史版本不会被改写')
+            return redirect(url('fx-rates'))
+    return render(
+        context.request, 'contracts/fx_rates.html',
+        _context(member, rates=fx_services.fx_rate_list(member),
+                 lines=fx_services.contract_line_fx_snapshots(member), form=form,
+                 error='', enabled=True, fx_rate_save_url=url('fx-rate-save')), status=400)

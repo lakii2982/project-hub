@@ -1,0 +1,66 @@
+{
+  "task_id": "PH-321",
+  "summary": "多币种/汇率实现首片 on BASE 9e0991f (Lead ruling B: contracts-only; cross-owner settlement/revenue/cash/invoicing and verify_integrity remain out of scope). Adds a real managed FxRateSnapshot ORM model in pmo_plugins/contracts/models.py with contracts migration 0007 (CreateModel + vendor-aware SQLite/PG UPDATE/DELETE append-only guards; no core migration, makemigrations clean), and contracts/fx_services.py: record_fx_rate (owner/finance, company lock, exact business date including future registration per PH-308, version increment, dry_run zero-write, plugin-prefixed audit, no historical rewrite), resolve_fx_rate with exact-date lookup and NO nearest-date fallback, resolve_fx_ref, one-time ROUND_HALF_UP convert_cents/convert_original_amounts with book gross=net+tax and 10^12 bounds, fx_rate_list, and contract_line_fx_snapshots (original/book/rate/missing; non-CNY lines require a frozen fx_rate_ref or are reported fx_rate_missing without date fallback). The contract write path is integrated: approval_services._normalize_lines accepts currency/original_net_cents/original_tax_cents/original_gross_cents/fx_rate_ref, rejects CNY rows carrying original/FX data, requires member+effective date context for non-CNY, resolves/validates the frozen rate (including rejecting a frozen ref whose effective_on is later than the line business date), verifies client book amounts equal the one-time conversion, and review_version persists currency/original/fx_rate_ref on created ContractLine rows; change_services._derive_deltas and _apply_approved_change use the same normalization and persist the same fields for effective change versions. Non-CNY writes without an exact frozen rate are rejected before any version/line write; historical rows and amounts are never recomputed. UI: fx-rates history_read page + fx-rate-save business_write; owner/finance write, auditor read, PM project-line scope, member denied, disabled-module history read. Tests test_v1_fx.py (8) + _http.py (3): record/list/version/exact-date/no-fallback, permissions/disabled module, one-time conversion, DB/model append-only guards, CNY/non-CNY/missing contract-line display, write-preparation helper, non-CNY contract approval writes currency/original/fx fields, change-version write, invalid no-rate rejection. Deviations: version configuration UI does not yet surface currency/original fields (services/API contract supports them; future UI wiring); cross-owner integration and verify_integrity FX branch remain out of this B slice; payment/warranty term original-currency persistence is not included (line-level only). CI follow-up: the PostgreSQL domain failed because the append-only trigger regression asserted the database rejection with the savepoint outside assertRaises, leaving the TestCase transaction aborted. The test now uses the PostgreSQL-correct pattern (assertRaises(DatabaseError) wrapping transaction.atomic()/cursor) for both UPDATE and DELETE trigger probes; model-level guard assertions still fail before the database. Scoped tests and full suite are green on SQLite; PG CI is authoritative.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run on BASE 9e0991f after rebase: {\"command\":\"check\",\"ok\":true,\"task_count\":259}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; only known repository URL/field-system warnings, no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: 'No changes detected'; contracts/0007_fxratesnapshot is the only new migration and core migrations are untouched."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual final run after the PG savepoint fix: Ran 1161 tests in 131.997s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_fx tests.test_v1_fx_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run after the PG savepoint fix: Ran 11 tests, OK. The UPDATE/DELETE trigger probes now use assertRaises(DatabaseError) around transaction.atomic() so PostgreSQL rolls back the failed savepoint instead of leaving the TestCase transaction aborted."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 9e0991f --task PH-321",
+      "result": "pass",
+      "evidence": "Actual run after the reviewer round-2 pass and rebase onto 9e0991f (HEAD 723ecb5): ok=true, changes=18 files all inside the PH-321 allowlist, errors=[]."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-321 multi-currency implementation reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKERS RESOLVED AT fbdf66d: record_fx_rate no longer rejects future effective dates, so PH-308's future-rate registration is honored; prepare_contract_line_fx now rejects an explicit fx_rate_ref whose snapshot effective_on is later than the contract-line business date (and still validates the base/quote pair); contract_line_fx_snapshots also marks a future rate ref missing/issue instead of using it. Regression coverage records a future rate and rejects using its ref for an earlier line.",
+      "CONTENT RE-VERIFIED: managed FxRateSnapshot + contracts 0007 CreateModel with org/base/quote/effective_on/version uniqueness, Decimal(18,8), source/created_by/algorithm_version and vendor-aware SQLite/PG UPDATE/DELETE guards; fx_rate_list/resolve exact business-date lookup with no nearest-rate fallback; one-time ROUND_HALF_UP conversion with gross=net+tax and 10^12 bounds; record owner/finance, company lock, version increment, dry_run and plugin audit; approval_services._normalize_lines/review_version and change_services._derive_deltas/_apply_approved_change persist currency/original/fx_rate_ref, reject CNY with original/FX data, reject non-CNY without a rate and verify client book amounts; no historical recompute; canonical fx-rates history_read + fx-rate-save business_write routes, owner/finance/auditor/pm/member and disabled-module history reads; 18 files within the 18-path whitelist, contracts 0007 only, no core migration; B-scope exclusions are honestly disclosed in the report.",
+      "EVIDENCE AT fbdf66d (BASE fcb7b17): check ok=true/task_count=259; manage.py check exit0; makemigrations --check No changes; scoped FX tests 11 OK; full suite 1161/5F+3E/69 = known macOS baseline; fresh SQLite verify_integrity ok; verify-change --base fcb7b17 --task PH-321 only high_risk_review_required, no path_out_of_scope; report review now pass. Final evidence/PR should record the real post-review full/verify run."
+    ],
+    "evidence": "VERDICT: PASS (round 2; future-rate registration and ref business-date bound fixed). Reviewed HEAD fbdf66d (BASE fcb7b17) in /tmp/ph321-fx-impl, worktree clean; 18 files within the 18-path whitelist; contracts 0007 only; no core migration. Future rates may be recorded but are never applied to an earlier business date; explicit refs are date/pair validated; append-only FxRateSnapshot, one-time ROUND_HALF_UP, contract approval/change integration, permissions/routes and honest B-scope exclusions otherwise verified. Independent runs: check ok=259; makemigrations clean; scoped 11 OK; full 1161/5F+3E/69 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope."
+  },
+  "deviations": [
+    "Lead 裁决 B 收窄到 contracts：结算/收入/现金/发票跨 owner 写入与 verify_integrity FX 分支不在本片（BASE 白名单也不含这些路径），report/handoff 披露。",
+    "FxRateSnapshot 已从 unmanaged 模型改为 contracts/models.py 真实 managed ORM；migration 0007 为正常 CreateModel + vendor-aware trigger，makemigrations 无变更、无 core 迁移。",
+    "合同行写入只覆盖首次批准与变更生效的 ContractLine 级 currency/original/fx_rate_ref；付款/质保条款的原始币种持久化、合同配置 UI 的币种/原币输入未在本片接入（服务/API 已支持 lines 输入，UI 后续切片）。",
+    "仅新增 contracts/0007_fxratesnapshot.py；未改已应用迁移/core 迁移。",
+    "PH-308 future-rate registration is supported by record_fx_rate (no future-date rejection); however conversion never uses a rate whose effective_on is later than the contract-line business date, and the exact-date resolver still does not fall back to another date. Read-only contract-line display applies the same effective-date rule to frozen refs.",
+    "Lead integration: rebase onto 9e0991f (PH-317 merged); gates rerun green; manifest.active_handoff -> PH-321."
+  ],
+  "unverified": [
+    "PostgreSQL 运行证据以 CI 为准；本机 SQLite vendor-aware trigger/迁移通过。",
+    "浏览器 1440/390/键盘/空错停用态未实机；HTTP 测试仅断言页面/权限/表单/停用 history_read。",
+    "跨 owner（结算/收入/现金/发票）换算、verify_integrity FX 分支、配置 UI 币种录入、付款/质保条款原币持久化未实现（B 范围/后续切片）。",
+    "独立 S 复核 pending；pass 后重跑 verify-change --base fcb7b17 --task PH-321 并 push。"
+  ]
+}

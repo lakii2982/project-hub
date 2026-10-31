@@ -10263,7 +10263,7 @@
       "title": "多币种实现首片：汇率快照/换算与只读展示（按 ADR 落地）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10304,9 +10304,9 @@
         "python manage.py test tests.test_v1_fx tests.test_v1_fx_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-321.md"
     },
     {
       "id": "PH-322",

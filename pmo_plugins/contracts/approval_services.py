@@ -14,6 +14,7 @@ from core.services import audit, lock_company
 from .models import (Contract, ContractVersion, ContractLine, PaymentTerm, WarrantyTerm,
                      MethodPolicySelection, normalize_display)
 from .party_services import _reader, _writer, _digest, _request_token, _version, _active_party
+from . import fx_services
 from .services import _contract_for_read, _project
 
 MAX_AMOUNT = 10**12
@@ -71,7 +72,7 @@ def _header(contract):
             'signed_on': contract.signed_on.isoformat() if contract.signed_on else None}
 
 
-def _normalize_lines(contract, lines, *, validate_live=True):
+def _normalize_lines(contract, lines, *, validate_live=True, member=None, effective_on=None):
     result, line_numbers, milestones_seen, intervals = [], set(), set(), []
     # All callers hold the company lock. Approved coverage in this same project
     # remains authoritative across different contracts, not only this candidate.
@@ -86,13 +87,49 @@ def _normalize_lines(contract, lines, *, validate_live=True):
             intervals.extend((_date(item['coverage_start']), _date(item['coverage_end']))
                              for item in configuration['service_schedule'])
     for candidate in _array(lines, 1):
-        _keys(candidate, {'line_no', 'net_cents', 'tax_cents', 'gross_cents', 'pricing_configuration', 'payment_terms', 'warranty_terms'},
+        _keys(candidate, {'line_no', 'net_cents', 'tax_cents', 'gross_cents',
+                          'pricing_configuration', 'payment_terms', 'warranty_terms',
+                          'currency', 'original_net_cents', 'original_tax_cents',
+                          'original_gross_cents', 'fx_rate_ref'},
               {'line_no', 'net_cents', 'tax_cents', 'gross_cents', 'pricing_configuration'})
         number = candidate['line_no']
         if type(number) is not int or number < 1 or number in line_numbers:
             _reject('明细行号须为不重复正整数')
         line_numbers.add(number)
-        net, tax, gross = (_amount(candidate[k]) for k in ('net_cents', 'tax_cents', 'gross_cents'))
+        currency = candidate.get('currency') or 'CNY'
+        if not isinstance(currency, str) or len(currency) != 3 or not currency.isalpha() or not currency.isascii():
+            _reject('合同行币种须为三位 ISO 4217 代码')
+        currency = currency.upper()
+        if currency == 'CNY':
+            if any(candidate.get(field) is not None for field in
+                   ('original_net_cents', 'original_tax_cents', 'original_gross_cents')) \
+                    or candidate.get('fx_rate_ref') is not None:
+                _reject('CNY 合同行不得携带原币金额或汇率引用')
+            net, tax, gross = (_amount(candidate[k]) for k in ('net_cents', 'tax_cents', 'gross_cents'))
+            original_net = original_tax = original_gross = None
+            fx_ref = None
+        else:
+            if member is None or effective_on is None:
+                _reject('非 CNY 合同行缺少汇率校验上下文')
+            original_net = _amount(candidate.get('original_net_cents'))
+            original_tax = _amount(candidate.get('original_tax_cents', 0))
+            if original_net + original_tax > 10**12:
+                _reject('原币含税金额超出允许范围')
+            if candidate.get('original_gross_cents') is not None \
+                    and candidate.get('original_gross_cents') != original_net + original_tax:
+                _reject('原币净额加税额须等于原币含税额')
+            prepared = fx_services.prepare_contract_line_fx(
+                member, currency=currency, original_net_cents=original_net,
+                original_tax_cents=original_tax, effective_on=effective_on,
+                fx_rate_ref=candidate.get('fx_rate_ref'))
+            net, tax, gross = prepared['net_cents'], prepared['tax_cents'], prepared['gross_cents']
+            for field, expected in (('net_cents', net), ('tax_cents', tax), ('gross_cents', gross)):
+                if candidate.get(field) is not None and candidate.get(field) != expected:
+                    _reject('客户端记账币金额与汇率换算结果不一致')
+            original_net = prepared['original_net_cents']
+            original_tax = prepared['original_tax_cents']
+            original_gross = prepared['original_gross_cents']
+            fx_ref = prepared['fx_rate_ref']
         if net + tax != gross:
             _reject('净额加税额须等于含税额')
         p = deepcopy(candidate['pricing_configuration'])
@@ -185,8 +222,12 @@ def _normalize_lines(contract, lines, *, validate_live=True):
             release = _date(term.get('release_on'), True)
             warranties.append({'payment_key': key, 'gross_cents': value,
                 'release_condition': _text(term['release_condition'], 500), 'release_on': release.isoformat() if release else None})
-        result.append({'line_no': number, 'net_cents': net, 'tax_cents': tax, 'gross_cents': gross,
-                       'pricing_configuration': p, 'payment_terms': payments, 'warranty_terms': warranties})
+        result.append({'line_no': number, 'net_cents': net, 'tax_cents': tax,
+                       'gross_cents': gross, 'currency': currency,
+                       'original_net_cents': original_net, 'original_tax_cents': original_tax,
+                       'original_gross_cents': original_gross, 'fx_rate_ref': fx_ref,
+                       'pricing_configuration': p, 'payment_terms': payments,
+                       'warranty_terms': warranties})
     for field in ('net_cents', 'tax_cents', 'gross_cents'):
         _amount(sum(line[field] for line in result))
     count = 2 + sum(2 + len(line['payment_terms']) + len(line['warranty_terms']) for line in result)
@@ -259,10 +300,11 @@ def save_version(member, contract_id, *, lines, effective_on, contract_reference
     contract = _contract_for_read(member, contract_id)
     # Hash deterministic submitted facts first. Live coverage/FK state must not
     # invalidate the receipt of an already completed save.
-    normalized = _normalize_lines(contract, lines, validate_live=False)
     effective_on = _date(effective_on)
     if effective_on > timezone.localdate():
         _reject('首次生效日期不能在未来')
+    normalized = _normalize_lines(contract, lines, validate_live=False,
+                                  member=member, effective_on=effective_on)
     reference = _text(contract_reference, 240)
     payload = {'contract_id': str(contract.pk), 'version_id': str(version_id) if version_id else None,
                'lines': normalized, 'effective_on': effective_on, 'reference': reference, 'expected_version': expected_version}
@@ -270,7 +312,7 @@ def save_version(member, contract_id, *, lines, effective_on, contract_reference
     if existing:
         return existing
     _available(member, contract)
-    normalized = _normalize_lines(contract, normalized)
+    normalized = _normalize_lines(contract, normalized, member=member, effective_on=effective_on)
     if contract.versions.filter(status='submitted').exists():
         _reject('合同已提交，候选内容不可修改')
     if version_id:
@@ -306,7 +348,8 @@ def submit_version(member, version_id, *, expected_version, request_token):
         _reject('已有等待审批的版本')
     if version.header_snapshot != _header(version.contract):
         _reject('合同头已变更，请重新保存配置')
-    _normalize_lines(version.contract, version.draft_content['lines'])
+    _normalize_lines(version.contract, version.draft_content['lines'],
+                     member=member, effective_on=version.effective_on)
     version.submitted_digest = _frozen_digest(version)
     version.status, version.submitted_by_member = 'submitted', member
     version.version += 1
@@ -346,7 +389,8 @@ def review_version(member, version_id, *, expected_version, request_token, decis
     _available(member, version.contract)
     if version.header_snapshot != _header(version.contract) or version.submitted_digest != _frozen_digest(version):
         _reject('冻结内容不一致，拒绝审批')
-    lines = _normalize_lines(version.contract, version.draft_content['lines'])
+    lines = _normalize_lines(version.contract, version.draft_content['lines'],
+                             member=member, effective_on=version.effective_on)
     if version.effective_on > timezone.localdate():
         _reject('首次生效日期不能在未来')
     version.review_note = note
@@ -362,10 +406,14 @@ def review_version(member, version_id, *, expected_version, request_token, decis
     contract.save(update_fields=['status', 'version'])
     changed = [_ref(contract, 'contract'), _ref(version, 'contract_version')]
     for candidate in lines:
-        line = ContractLine.objects.create(organization=member.organization, contract_version=version,
-                 **{key: candidate[key] for key in ('line_no', 'net_cents', 'tax_cents', 'gross_cents')})
+        line = ContractLine.objects.create(
+            organization=member.organization, contract_version=version,
+            **{key: candidate[key] for key in (
+                'line_no', 'net_cents', 'tax_cents', 'gross_cents', 'currency',
+                'original_net_cents', 'original_tax_cents', 'original_gross_cents',
+                'fx_rate_ref')})
         selection_id = uuid.uuid4()
-        config = {**deepcopy(candidate['pricing_configuration']), 'currency': 'CNY',
+        config = {**deepcopy(candidate['pricing_configuration']), 'currency': candidate['currency'],
                   'confirmed_by_customer_required': True, 'policy_ref': {'policy_id': str(selection_id), 'version': 1}}
         selection = MethodPolicySelection.objects.create(id=selection_id, organization=member.organization,
             contract_line=line, selected_on=version.effective_on, approved_by_member=member,
