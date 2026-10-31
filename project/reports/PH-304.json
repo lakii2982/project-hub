@@ -1,0 +1,60 @@
+{
+  "task_id": "PH-304",
+  "summary": "运营核对底稿授权只读 CSV 导出首片（无迁移/无写入口）：新增 pmo_plugins/delivery/operations_export_services.py，按授权范围组合已交付只读接口导出四类 CSV 底稿——ops_overview（PH-291 跨域总览）、settlement_coverage（PH-283 未清/核销/退款覆盖）、cash_bridge（PH-279 现金分类/桥接/退款/互转）、fee_pairing（PH-280 手续费批准/成本/净额配对）；CSV 为 UTF-8+BOM、表头、refs/金额/状态、as_of/期间、生成时间、行数与 sha256 校验行；dry_run 返回计划（数据集/列/行数/校验行）不生成文件；request_token 幂等（同 token 同输入返回同一 content_id、改输入冲突）。权限 owner/finance/auditor 全量；pm 仅可导出有项目归属的数据集（ops_overview/settlement_coverage/fee_pairing），cash_bridge 因无项目归属拒绝；member 拒绝；delivery 模块停用后 history_read 历史可读。canonical `pmo_plugins/delivery/domain_metadata.py` 声明 `ops-export/` history_read 路由，`delivery/urls.py` 仅导入；无写/无迁移/无审计/零事实计数变化。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=229; PH-304 recorded in_review with owner/handoff; 14 allowed_paths match the changed files; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 91 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (delivery domain metadata validates the ops-export history_read route)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (this slice adds no model, table or migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1: Ran 1092 tests, FAILED (failures=5, errors=3, skipped=69) => 1015 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE a352b4a baseline (1079 + 13 new PH-304 tests); no new failure class. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. This slice writes no ledger/cash/amount fact and does not change existing verify_integrity semantics."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_export tests.test_v1_ops_export_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 13 tests, OK => 13 passed (8 service + 5 HTTP). Covers dry_run plan, UTF-8 BOM/header/checksum/row-count consistency, token replay + changed-input conflict, invalid dataset/date/period/token, settlement/cash/fee derived CSV values, ops-overview rows, member/pm dataset denials, zero fact-count change, page/download, invalid query params 400, POST 405 and module-disabled history_read 200."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-304 operations-export reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: canonical domain_metadata history_read route + urls-import-only wiring, authorized dataset composition (ops/settlement/cash/fee), CSV BOM/header/refs/as_of/generated_at/row-count/checksum consistency, dry_run zero file, request_token idempotency, pm dataset scoping, member denial, module-disabled history read, zero writes/audit/migration and fact-count stability, append-only compatibility (no historical row mutation), and the precise 14-path whitelist. projectctl check, check, makemigrations, verify_integrity and scoped tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "Idempotency receipt is a process-local in-memory map keyed by (organization, request_token) storing the input digest plus plan/result, because this slice must not create a business table and no reusable receipt table exists; it is therefore non-durable across processes/restarts and is disclosed in the report (spec allows reporting this limitation instead of creating a table).",
+    "PM dataset scope: pm may export ops_overview, settlement_coverage and fee_pairing because those read services scope rows to visible managed projects; cash_bridge is denied for pm because bank/cash facts carry no project attribution (same limitation disclosed by PH-279/PH-288), rather than leaking company-wide cash.",
+    "The browser uses the single canonical ops-export/ history_read route for both the preview page and the CSV download (download=1); there is no POST/write route. The download response is streamed from memory with Content-Disposition and an X-Content-SHA256 header, not persisted to a temp file.",
+    "CSV layout: UTF-8 BOM, one header row, dataset rows, then a #checksum row carrying dataset/as_of/period/row_count/sha256/generated_at; content_id is the same sha256. Checksum is computed over the data body plus row count/as_of/period, so repeated identical exports are stable.",
+    "Export composes the delivered read services without re-deriving business rules: ops_overview -> operations_read_services.ops_reconciliation_overview; settlement_coverage -> settlement.coverage_read_services.open_item_coverage_snapshot; cash_bridge -> cash.reconciliation_services.cash_bridge_snapshot; fee_pairing -> costing.bank_charge_pairing_services.bank_charge_pairing.",
+    "The read path writes no generic audit (optional in the spec) and no receipt/session persistence beyond the in-memory token map; no verify_integrity assertion is changed or added.",
+    "Counterexamples and tests never UPDATE/DELETE historical rows; the export itself is read-only, so append-only triggers are untouched.",
+    "Single worker owns the whole write set (delivery export service/views/forms/domain metadata/template, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run; the export page/download was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "ZIP/manifest/encrypted external delivery, scheduled/emailed exports, persisted export receipts and identity-sensitive token/password/payroll fields remain unimplemented."
+  ]
+}

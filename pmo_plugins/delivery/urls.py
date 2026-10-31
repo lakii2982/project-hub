@@ -64,7 +64,7 @@ def entry_point():
                               'cash_internal_transfer_save',
                               'cash_internal_transfer_reverse',
                               'cash_internal_transfer_reverse_save', 'cash_bridge_snapshot', 'cash_bridge_issues')} | {name: getattr(bank_views, name) for name in ('bank_balance_snapshot', 'bank_balance_issues')},
-        'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action','ops_reconciliation_overview')} | {name: getattr(service_period_views,name) for name in ('service_confirmation_list','service_confirmation_detail','service_confirmation_form','service_confirmation_save','service_confirmation_action')}
+        'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action','ops_reconciliation_overview', 'ops_export')} | {name: getattr(service_period_views,name) for name in ('service_confirmation_list','service_confirmation_detail','service_confirmation_form','service_confirmation_save','service_confirmation_action')}
                    | {'identity_access': identity_views.identity_access_entry},
         'costing': {name: getattr(labor_views, name) for name in
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}

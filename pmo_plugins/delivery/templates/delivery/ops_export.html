@@ -1,0 +1,15 @@
+{% extends 'base.html' %}{% block title %}核对底稿导出{% endblock %}{% block breadcrumb %}交付 / 核对底稿导出{% endblock %}{% block content %}
+<section class="page-heading"><div><div class="eyebrow">DELIVERY · RECONCILIATION EXPORT</div><h1>核对底稿导出</h1><p>授权只读导出已交付核对结果（总览/结算覆盖/现金桥接/手续费配对）；CSV 含 refs、as_of、生成时间、行数与校验行，不写任何业务事实。</p></div><div class="page-actions"><a class="button" href="{{ overview_url }}">核对总览</a></div></section>
+<section class="panel"><div class="panel-heading"><h2>筛选与导出</h2></div><div class="panel-body">
+{% if error %}<div class="message error" role="alert">{{ error }}</div>{% endif %}
+<form method="get" action="{{ page_url }}">
+<div class="form-field"><label for="export-dataset">数据集</label><select id="export-dataset" name="dataset">{% for key,label in form.fields.dataset.choices %}<option value="{{ key }}"{% if form.dataset.value == key %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+<div class="form-field"><label for="export-as-of">快照日期</label><input id="export-as-of" type="date" name="as_of" value="{{ form.as_of.value|default:'' }}"></div>
+<div class="form-field"><label for="export-period">期间</label><input id="export-period" type="month" name="period" value="{{ form.period.value|default:'' }}"></div>
+<div class="actions"><button type="submit" class="button">预览导出</button>{% if plan %}<a class="button primary" href="{{ download_url }}">下载 CSV</a>{% endif %}</div>
+</form>
+<p class="help-text">导出为 UTF-8+BOM CSV；权限 owner/finance/auditor，pm 仅可导出有项目归属的数据集；member 拒绝。模块停用后历史仍可读。</p>
+</div></section>
+{% if plan %}<section class="panel"><div class="panel-heading"><h2>导出计划</h2></div><div class="panel-body"><dl class="detail-grid">
+<div><dt>数据集</dt><dd>{{ plan.dataset_label }}（{{ plan.dataset }}）</dd></div><div><dt>as_of</dt><dd>{{ plan.as_of|default:'—' }}</dd></div><div><dt>期间</dt><dd>{{ plan.period|default:'—' }}</dd></div><div><dt>行数</dt><dd>{{ plan.row_count }}</dd></div><div><dt>列</dt><dd>{{ plan.columns|join:', ' }}</dd></div><div><dt>校验行</dt><dd>{{ plan.checksum_row|join:' | ' }}</dd></div></dl><p class="help-text">预览为 dry_run，不生成文件；下载请求使用 request_token 幂等语义。</p></div></section>{% endif %}
+{% endblock %}
