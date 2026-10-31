@@ -1186,3 +1186,11 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - PR #254 PG run 41217305149 的 6 个失败均为当前月 28 日客户确认跨日变成未来；仅改测试夹具为已结束自然月，不改业务未来日期拒绝。
 - scoped 34 tests OK（8 个 PG-only 在 SQLite 跳过）；check ok/318；manage.py check exit 0；makemigrations No changes；fresh SQLite verify exit 0。
 - 全量 1321 tests，5F+3E/70 skips，均为既有 8 项 macOS 基线，无新增；独立 S 复核 PASS；真实 PG/PR CI pending。直接 main 引导被保护拒绝，origin/main 未改。不得将 BASE task_not_in_baseline 或业务红灯写成通过。
+
+## PH-120 可信 PR 交付契约与仲裁（2026-10-31，BASE b26c26f）
+
+- **L1 实现**：版本化 BASE delivery-policy；S 级授权来源 + task/spec contract_digest；离线 PR 元数据 gate 与只读 Delivery arbitration workflow；现有 GitHubDelivery 合并入口接入 BASE policy、mergeable/CLEAN、远端保护、test-merge SHA、最新 HEAD checks、讨论及官方 Codex/Actions 仲裁读取。
+- **L2 实际结果**：登记的 projectctl/governance/delivery 测试 **70 tests OK**；另 delivery controller 组合 119 tests OK；manage.py check exit 0（119 个既有警告）；makemigrations No changes；fresh SQLite verify_integrity ok/errors=[]。
+- **全量本地**：1331 tests，5F+3E/70 skips；8 个失败/错误逐项与 main 既有 macOS 基线一致，无新增；不据此声称 Linux/PG 通过。
+- **L3/L4/L5：not_run**。本片未做真实 Codex PASS、远端保护启用、浏览器、生产或客户 UAT；`remote_checks_enforced=false`，PH-122 必须做真实对抗验证。
+- 独立 S review 与 verify-change：pending；执行人未自批。

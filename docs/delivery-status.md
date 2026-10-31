@@ -83,3 +83,6 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 
 ## PH-398 测试跨日恢复（2026-11-01）
 - 仅将服务期并发测试完整月份夹具改为已结束自然月，保留业务未来日期拒绝和全部并发断言；scoped 34 tests OK，PG/全量 CI 与独立复核待完成。
+
+## PH-120 可信 PR 交付（rolling，2026-10-31）
+- BASE policy/离线元数据 gate 与真实合并入口已接线；S 授权绑定任务/spec 摘要，合并检查 mergeable/test-merge/远端保护，新增官方 Codex/Actions 仲裁读取路径。作用域 70 tests OK；全量仍仅既有 8 项 macOS 失败。`remote_checks_enforced=false`，远端强制与真实 Codex 对抗由 PH-122 验证，不能视为已启用。

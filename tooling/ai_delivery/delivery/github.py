@@ -18,6 +18,11 @@ import tempfile
 import uuid
 
 from ..controller import repository
+from scripts.delivery_gate import (
+    GateError as PolicyError,
+    authorize_task,
+    validate_policy,
+)
 
 
 class DeliveryError(RuntimeError):
@@ -440,7 +445,7 @@ class GitHubDelivery:
         data = self._gh_json(
             ["pr", "view", str(number), "--repo", self.repo.slug, "--json",
              "number,url,state,headRefName,headRefOid,baseRefName,baseRefOid,"
-             "isDraft,mergeCommit"],
+             "isDraft,mergeCommit,mergeable,mergeStateStatus,body"],
             operation,
         )
         if not isinstance(data, dict) or data.get("number") != number:
@@ -546,10 +551,23 @@ class GitHubDelivery:
             self.repo.refresh()
             if self.repo.base() != base_sha:
                 _fail("base_changed")
+            policy = self._delivery_policy(base_sha)
+            required = frozenset(policy["required_status_checks"]) if policy else _REQUIRED_CHECKS
+            if policy is not None:
+                task_id = pr.get("task_id")
+                contract = self.repo.contract(task_id, base_sha=base_sha)
+                if contract["task"]["risk"] == "S":
+                    authorize_task(policy, task_id, contract["contract_digest"])
             current = self._pr(number)
+            if policy is not None:
+                _body(current.get("body"), task_id)
             branch = self._open(current, branch, head_sha)
-            protection = self._protection()
-            checks = self._checks(head_sha, protection)
+            protection = self._protection(required)
+            checks = self._checks(head_sha, protection, required)
+            test_merge_sha = self._test_merge_sha(number)
+            arbitration = None
+            if policy is not None and policy["bootstrap"]["remote_checks_enforced"]:
+                arbitration = self._arbitration(number, head_sha, policy)
             self._threads(number)
             # Final immediate recheck: BASE, PR identity and head must still
             # be the exact state that just passed verification.
@@ -557,6 +575,8 @@ class GitHubDelivery:
             if self.repo.base() != base_sha:
                 _fail("base_changed")
             self._open(self._pr(number), branch, head_sha)
+            if self._test_merge_sha(number) != test_merge_sha:
+                _fail("test_merge_changed")
             self._gh(
                 ["pr", "merge", str(number), "--repo", self.repo.slug,
                  "--squash", "--match-head-commit", head_sha],
@@ -569,10 +589,13 @@ class GitHubDelivery:
             commit_sha = commit.get("oid") if isinstance(commit, dict) else None
             return self._result(
                 number, merged.get("url"), branch, base_sha, head_sha, "merged",
-                checks=checks, merge_commit=commit_sha,
+                checks=checks, merge_commit=commit_sha, test_merge_sha=test_merge_sha,
+                arbitration=arbitration or "bootstrap_not_enforced",
             )
         except DeliveryError:
             raise
+        except PolicyError:
+            _fail("s_task_not_authorized")
         except repository.ControllerError:
             _fail("merge_failed")
         except OSError:
@@ -587,6 +610,8 @@ class GitHubDelivery:
             _fail("pr_base_changed")
         if data.get("isDraft") is True:
             _fail("pr_draft")
+        if data.get("mergeable") != "MERGEABLE" or data.get("mergeStateStatus") != "CLEAN":
+            _fail("pr_not_mergeable")
         name = data.get("headRefName")
         if not isinstance(name, str) or not _BRANCH.fullmatch(name):
             _fail("pr_head_changed")
@@ -594,7 +619,118 @@ class GitHubDelivery:
             _fail("pr_head_changed")
         return name
 
-    def _protection(self):
+    def _delivery_policy(self, base_sha):
+        present = self._git(
+            self.repo.root,
+            ["ls-tree", base_sha, "--", "project/delivery-policy.json"],
+            "delivery_policy",
+        )
+        if not present.strip():
+            # Pre-policy BASEs retain the original eight-check gate. Once a
+            # policy exists, every parse/validation failure remains blocking.
+            return None
+        raw = self._git(
+            self.repo.root,
+            ["cat-file", "blob", f"{base_sha}:project/delivery-policy.json"],
+            "delivery_policy",
+        )
+        try:
+            value = json.loads(raw)
+            return validate_policy(value)
+        except (ValueError, UnicodeError, PolicyError):
+            _fail("delivery_policy_invalid")
+
+    def _test_merge_sha(self, number):
+        data = self._gh_json(
+            ["api", "--hostname", "github.com",
+             f"repos/{self.repo.slug}/pulls/{number}"],
+            "test_merge",
+        )
+        merge_sha = data.get("merge_commit_sha") if isinstance(data, dict) else None
+        return _sha(merge_sha, 40, "test_merge_missing")
+
+    def _arbitration(self, number, head_sha, policy):
+        """Verify the official Codex result and trusted Actions event for HEAD."""
+        remote = policy["remote_arbitration"]
+        app = self._gh_json(
+            ["api", "--hostname", "github.com", "apps/chatgpt-codex-connector"],
+            "review_app",
+        )
+        if app.get("id") != remote["codex_app_id"]:
+            _fail("review_app_identity")
+        comments = []
+        for page in range(1, 51):
+            batch = self._gh_json(
+                ["api", "--hostname", "github.com",
+                 f"repos/{self.repo.slug}/issues/{number}/comments?per_page=100&page={page}"],
+                "review_comments",
+            )
+            if not isinstance(batch, list):
+                _fail("review_comments_unavailable")
+            comments.extend(batch)
+            if len(batch) < 100:
+                break
+        else:
+            _fail("review_comments_incomplete")
+        candidates = []
+        marker = re.compile(r"<!-- codex-review-state:v1 (\{[^\n]*\}) -->")
+        for comment in comments if isinstance(comments, list) else []:
+            user = comment.get("user") if isinstance(comment, dict) else None
+            if (not isinstance(user, dict) or user.get("id") != remote["codex_bot_user_id"]
+                    or user.get("login") != remote["codex_bot_login"]
+                    or user.get("type") != "Bot"):
+                continue
+            match = marker.search(comment.get("body") or "")
+            if match and type(comment.get("id")) is int:
+                candidates.append((comment["id"], match.group(1)))
+        if not candidates:
+            _fail("independent_review_missing")
+        try:
+            summary = json.loads(max(candidates)[1])
+        except (ValueError, TypeError):
+            _fail("independent_review_invalid")
+        review = summary.get("code_review") if isinstance(summary, dict) else None
+        if (not isinstance(review, dict) or review.get("commit_sha") != head_sha
+                or review.get("status") != "success"
+                or review.get("has_any_findings") is not False
+                or review.get("has_unresolved_findings") is not False):
+            _fail("independent_review_not_passed")
+        runs = self._gh_json(
+            ["api", "--hostname", "github.com",
+             f"repos/{self.repo.slug}/commits/{head_sha}/check-runs?per_page=100"],
+            "arbitration_checks",
+        )
+        rows = runs.get("check_runs") if isinstance(runs, dict) else None
+        if not isinstance(rows, list) or runs.get("total_count") != len(rows):
+            _fail("arbitration_checks_incomplete")
+        matches = [row for row in rows or [] if row.get("name") == "Delivery arbitration"
+                   and (row.get("app") or {}).get("id") == 15368
+                   and row.get("head_sha") == head_sha]
+        if not matches:
+            _fail("arbitration_check_missing")
+        check = max(matches, key=lambda row: row.get("id", -1))
+        if check.get("status") != "completed" or check.get("conclusion") != "success":
+            _fail("arbitration_check_not_passed")
+        url = check.get("html_url") or check.get("details_url") or ""
+        match = re.search(r"/actions/runs/([0-9]+)", url)
+        if match is None:
+            _fail("arbitration_run_missing")
+        run = self._gh_json(
+            ["api", "--hostname", "github.com",
+             f"repos/{self.repo.slug}/actions/runs/{match.group(1)}"],
+            "arbitration_run",
+        )
+        if (run.get("event") != remote["workflow_event"]
+                or run.get("head_sha") != head_sha
+                or run.get("path") != remote["workflow_path"]
+                or run.get("status") != "completed"
+                or run.get("conclusion") != "success"):
+            _fail("arbitration_event_mismatch")
+        return {"codex_app_id": app["id"], "codex_bot_user_id": remote["codex_bot_user_id"],
+                "actions_run_id": run.get("id"), "head_sha": head_sha}
+
+    def _protection(self, required_checks=None):
+        expected = _REQUIRED_CHECKS if required_checks is None else required_checks
         data = self._gh_json(
             ["api", "--hostname", "github.com",
              f"repos/{self.repo.slug}/branches/{_MAIN}/protection"],
@@ -602,11 +738,17 @@ class GitHubDelivery:
         )
         if not isinstance(data, dict):
             _fail("protection_unavailable")
+        for field in ("enforce_admins", "required_linear_history",
+                      "required_conversation_resolution"):
+            if (data.get(field) or {}).get("enabled") is not True:
+                _fail("protection_" + field)
+        if not isinstance(data.get("required_pull_request_reviews"), dict):
+            _fail("protection_pull_request_required")
         required = data.get("required_status_checks")
         if not isinstance(required, dict) or required.get("strict") is not True:
             _fail("protection_strict_missing")
         rows = required.get("checks")
-        if not isinstance(rows, list) or len(rows) != len(_REQUIRED_CHECKS):
+        if not isinstance(rows, list) or len(rows) != len(expected):
             _fail("protection_checks_mismatch")
         mapping = {}
         for row in rows:
@@ -617,11 +759,12 @@ class GitHubDelivery:
             if not isinstance(name, str) or type(app_id) is not int or name in mapping:
                 _fail("protection_checks_mismatch")
             mapping[name] = app_id
-        if set(mapping) != _REQUIRED_CHECKS:
+        if set(mapping) != expected:
             _fail("protection_checks_mismatch")
         return mapping
 
-    def _checks(self, head_sha, protection):
+    def _checks(self, head_sha, protection, required_checks=None):
+        expected = _REQUIRED_CHECKS if required_checks is None else required_checks
         rows = []
         total = None
         page = 1
@@ -678,7 +821,7 @@ class GitHubDelivery:
                     "conclusion": row.get("conclusion"),
                 }
         summary = []
-        for name in sorted(_REQUIRED_CHECKS):
+        for name in sorted(expected):
             key = (name, protection[name])
             row = latest.get(key)
             if row is None:

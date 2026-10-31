@@ -1720,7 +1720,7 @@
       "title": "可信PR交付契约、独立审查与自动仲裁",
       "kind": "infra",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "rolling",
       "depends_on": [
@@ -1765,9 +1765,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/57",
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-120.md"
     },
     {
       "id": "PH-121",
