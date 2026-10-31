@@ -10294,7 +10294,8 @@
         "pmo_plugins/contracts/models.py",
         "pmo_plugins/contracts/migrations/*",
         "pmo_plugins/contracts/approval_services.py",
-        "pmo_plugins/contracts/change_services.py"
+        "pmo_plugins/contracts/change_services.py",
+        "pmo_plugins/delivery/urls.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -10347,7 +10348,9 @@
         "docs/delivery-status.md",
         "docs/verification.md",
         "pmo_plugins/delivery/models.py",
-        "pmo_plugins/delivery/migrations/*"
+        "pmo_plugins/delivery/migrations/*",
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_cash_book_bridge.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
