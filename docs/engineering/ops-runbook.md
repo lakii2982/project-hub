@@ -2,7 +2,7 @@
 
 - 产出：PH-345（docs-only；本文件只冻结脚本契约，不实现脚本、不执行部署/恢复/并发，不记录任何“通过”）。
 - 对齐：`docs/v1.0-development/batch-c-acceptance.md`（PH-332）五层证据、M15/V1-OPS-01–06；实现片 PH-333/334/335。
-- 原则：低层证据不得冒充高层；`not_run`/`blocked`/`skipped` 如实标注；不写生产数据、不包含真实客户/凭据；脚本默认 dry_run/只读，执行态需显式参数与角色确认。
+- 原则：低层证据不得冒充高层；`not_run`/`blocked`/`skipped` 如实标注；不写生产数据、不包含真实客户/凭据；脚本默认 dry_run/只读；PH-347 本地演练中 execute 仅允许 `--env rehearsal`，staging/production execute 一律 exit 5 拒绝，执行态需显式参数与角色确认。
 
 ## 1. 通用脚本契约（所有 V1-OPS 脚本）
 

@@ -103,12 +103,12 @@ def preflight(profile, mode="dry_run", *, facts=None, confirm_production=False,
             _check("mode.valid", "fail", "dry_run|execute", mode)
         ], EXIT["fail"])
     checks = []
-    if mode == "execute" and profile == "production":
-        checks.append(_check("safety.production_execute", "fail",
-                             "production execute refused by drill", "refused"))
+    if mode == "execute" and profile != "rehearsal":
+        checks.append(_check("safety.execute_profile", "fail",
+                             "execute only in isolated rehearsal", profile))
         return EXIT["refused"], _envelope("ops_preflight", mode, profile, checks,
                                           EXIT["refused"], status="blocked",
-                                          notes="Production execution is never performed by this drill.")
+                                          notes="Execute is restricted to the rehearsal profile; staging/production were not performed.")
     checks.append(_check("profile.known", "pass", "rehearsal|staging|production", profile))
     python_ok = sys.version_info >= (3, 12)
     checks.append(_check("runtime.python", "pass" if python_ok else "fail",
@@ -123,8 +123,11 @@ def preflight(profile, mode="dry_run", *, facts=None, confirm_production=False,
                          "Compose v2 recorded", facts.get("compose_version") or "missing"))
     checks.append(_check("db.engine", "pass" if facts.get("db_engine") else "not_run",
                          "DB engine recorded", facts.get("db_engine") or "missing"))
-    checks.append(_check("migration.mode", "pass" if facts.get("migrations_append_only", True) else "fail",
-                         "append-only migrations", "append_only" if facts.get("migrations_append_only", True) else "not_append_only"))
+    append_only = facts.get("migrations_append_only")
+    checks.append(_check("migration.mode",
+                         "pass" if append_only is True else "fail" if append_only is False else "not_run",
+                         "explicit append-only migration evidence",
+                         "append_only" if append_only is True else "not_append_only" if append_only is False else "missing"))
     artifacts = []
     if mode == "execute":
         if not confirm_production and profile == "production":

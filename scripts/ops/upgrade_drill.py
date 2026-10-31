@@ -123,11 +123,12 @@ def upgrade_plan(profile, mode="dry_run", *, baseline=None, candidate=None,
     if mode not in {"dry_run", "execute"}:
         return EXIT["fail"], _envelope("ops_upgrade", mode, profile, [
             _check("mode.valid", "fail", "dry_run|execute", mode)], EXIT["fail"])
-    if mode == "execute" and profile == "production":
+    if mode == "execute" and profile != "rehearsal":
         return EXIT["refused"], _envelope("ops_upgrade", mode, profile, [
-            _check("safety.production_execute", "fail", "production execute refused", "refused")
+            _check("safety.execute_profile", "fail",
+                   "execute only in isolated rehearsal", profile)
         ], EXIT["refused"], status="blocked",
-            notes="Production upgrade is never performed by this drill.")
+            notes="Execute is restricted to the rehearsal profile; staging/production upgrades were not performed.")
     checks.append(_check("profile.known", "pass", "rehearsal|staging|production", profile))
     for label, value in (("baseline", baseline), ("candidate", candidate)):
         ok = isinstance(value, str) and value.strip() != ""

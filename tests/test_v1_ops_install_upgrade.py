@@ -42,12 +42,27 @@ class InstallDrillTests(unittest.TestCase):
         self.assertEqual(evidence['status'], 'not_run')
         self.assertEqual(evidence['exit_code'], 2)
 
+    def test_missing_migration_evidence_not_run(self):
+        facts = {'compose_version': '2.29.0', 'db_engine': 'postgresql'}
+        code, evidence = install.preflight('rehearsal', 'dry_run', facts=facts)
+        self.assertEqual(code, 2)
+        self.assertEqual(evidence['status'], 'not_run')
+        migration = [c for c in evidence['checks'] if c['id'] == 'migration.mode'][0]
+        self.assertEqual(migration['status'], 'not_run')
+        self.assertEqual(migration['actual'], 'missing')
+
+    def test_staging_execute_refused(self):
+        code, evidence = install.preflight('staging', 'execute', facts=self.facts())
+        self.assertEqual(code, 5)
+        self.assertEqual(evidence['status'], 'blocked')
+        self.assertIn('safety.execute_profile', [c['id'] for c in evidence['checks']])
+
     def test_production_execute_refused(self):
         code, evidence = install.preflight('production', 'execute', facts=self.facts(),
                                            confirm_production=True)
         self.assertEqual(code, 5)
         self.assertEqual(evidence['status'], 'blocked')
-        self.assertIn('safety.production_execute',
+        self.assertIn('safety.execute_profile',
                       [c['id'] for c in evidence['checks']])
 
     def test_execute_rehearsal_is_isolated(self):
@@ -127,6 +142,12 @@ class UpgradeDrillTests(unittest.TestCase):
         code, evidence = self.plan(profile='production', mode='execute')
         self.assertEqual(code, 5)
         self.assertEqual(evidence['status'], 'blocked')
+
+    def test_upgrade_staging_execute_refused(self):
+        code, evidence = self.plan(profile='staging', mode='execute')
+        self.assertEqual(code, 5)
+        self.assertEqual(evidence['status'], 'blocked')
+        self.assertIn('safety.execute_profile', [c['id'] for c in evidence['checks']])
 
     def test_upgrade_execute_without_backup_not_run(self):
         code, evidence = self.plan(mode='execute', backup=None)
