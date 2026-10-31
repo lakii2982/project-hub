@@ -74,3 +74,17 @@ Dependabot提案没有Task行而被治理检查拒绝时，先评估升级必要
 新会话先处理active_handoff指向的未完成工作，再选next中的ready任务。用户明确要求切换Agent并继续某任务时，可以接管该任务：记录旧执行者、新执行者、分支/提交、接管原因和重新验证结果，不等待旧模型响应。若旧执行者仍在写同一范围，先停止旧写入或用独立worktree隔离；不能因时间过去就假定锁已释放。
 
 无法判断并行写入归属时，保留原工作树和未提交差异，在独立分支/worktree重建已确认部分；不自动stash、reset、清理用户文件。取消任务时同步处理依赖者：改为blocked并说明缺失依赖，或经规划PR替换依赖；取消不算done。
+
+## 9. PH-397 · v1.0 后续交付独立规划入口
+
+来源：用户 2026-10-31 明确要求 Claude 接手 `HANDOFF-FOR-CLAUDE.md`，完成 1.0 剩余全部工作并推进到 release 标准。PH-396 收尾后没有 ready 规划槽；PH-397 只恢复合规规划，不直接实现业务功能，不恢复已暂停的 EXP-1，也不改变 PH-110 暂不入库的用户决定。
+
+1. 以执行时最新 main 为 BASE，用 `projectctl brief` 和已合并 Git/PR/report 证据复核任务，禁止把目标文档当作实现证据。
+2. 将 PH-241 按已合并 PR #150（merge commit `e8183ff34525abe0a0ea16c424835e2bd928229b`、12 项 checks 全绿）从遗留 `in_review` 收口为 done；不得重复实现 Offset。
+3. 对依赖已 done、DoR 已冻结的任务按现有 spec 晋级 ready；优先评估 PH-342、PH-343、PH-353、PH-354、PH-355。只刷新陈旧 blocker/依赖，不在规划 PR 自我扩大 allowed_paths、验收或业务口径。
+4. 为后续批次保留一个独立规划槽；按写域互斥安排导入/发票、insights、通知及运维验收。真实 PG、浏览器、staging/生产、UAT 缺口保持显式，不用本地或文档冒充。
+5. 逐项复核旧 legacy 主交付与已合并薄片的覆盖关系。只有直接满足原 DoR 且有合并/验收证据才可 cancelled；部分覆盖必须保留并写精确 gap。
+
+非目标：不实现产品代码、迁移、canonical schema、发布标签或生产部署；不关闭 L3–L5 gate，不做三方自签；不登记或恢复 EXP-1；不强制发布设计参考；不触碰其他在飞实现分支。新功能实现必须在对应规划 PR 合入后，以新 BASE 的 ready 任务单独交付、独立 S 复核并经 PR/CI。
+
+验收：`python scripts/projectctl.py check` 与 `python -m unittest tests.test_projectctl tests.test_governance -v`；报告列出实际晋级、保留或取消的任务及逐项证据，独立 S 复核与 BASE verify-change 通过。
