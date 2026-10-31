@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 0408365 (BASE 1ce48fc, PH-323 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":250}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run (reviewed HEAD 43e6ad4, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":250}, exit 0; PH-323 done with handoff and PH-328 ready on PH-323 done."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (batch B dependency re-baseline, promotions and registrations); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-323 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PROMOTION EVIDENCE VERIFIED: PH-252 (deps PH-214/224/232/287/293 all done; ADR 0015 frozen), PH-312 (deps PH-299/300 + PH-291/283/288/280/281/284/287/309/304 all done), PH-313 (deps PH-305/306 + PH-217/244/250/214/287 all done), and PH-324 (dep PH-308 done; canonical extension/backfill/migration plan registered with docs/v1.0-development/contracts in its whitelist) are the only new ready tasks. No promoted task has a non-done dependency; the old->new dependency rationale is written into each spec risk section and the ROADMAP batch-B section.",
+      "NO FALSE PROMOTION OF REMAINING SLICES: PH-320 stays proposed on ready-not-done PH-252; PH-321 stays proposed on ready-not-done PH-324; PH-322 stays proposed on ready-not-done PH-312; PH-314 stays proposed on missing PH-301/310 and other notification/archive prerequisites; their blockers are precise and match the dependency lists. PH-324/252/312/313 readiness does not silently unblock their downstream tasks.",
+      "NEW TASKS/DoR/NUMBERING: task_count 250 unique continuous PH-325..PH-328 (BASE max 324; no remote/local branch/spec conflict). PH-325 invoice-settlement/revenue read-only pairing + TaxQualification confirmation, PH-326 FX snapshot/history implementation, PH-327 close/close-run acceptance runbook, PH-328 next planning slot all have scope/DoR/whitelists/acceptance/counterexamples; no placeholders/code/migration/schema changes; 18 changed files all inside PH-323 allowed paths (specs/*, ROADMAP, tasks/manifest/docs/report/handoff); PH-323 in_review/PH-328 proposed.",
+      "SLOT CONVENTION/GATES: PH-323 remains in_review and PH-328 proposed; after this pass the final evidence commit must set PH-323 done/PH-328 ready and clear the blocker, then rerun check/verify-change. At HEAD 43e6ad4 (BASE 1ce48fc): projectctl check ok=true/task_count=250; governance 23 tests OK; verify-change --base 1ce48fc --task PH-323 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; manifest=PH-323."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 43e6ad4 (BASE 1ce48fc) in /tmp/ph323-planning, worktree clean; 18 changed files all inside PH-323 allowed paths; task_count 250 unique continuous PH-325..PH-328; manifest=PH-323. Four new ready tasks all have only done dependencies (PH-252: 214/224/232/287/293; PH-312: 299/300 + 291/283/288/280/281/284/287/309/304; PH-313: 305/306 + 217/244/250/214/287; PH-324: 308), with old->new rationale in specs/ROADMAP; PH-320/321/322/314 stay proposed with accurate blockers; new 325-328 DoR/whitelists/acceptance complete; no placeholders/code/schema; check ok=250; governance 23 OK; verify-change --base 1ce48fc --task PH-323 only review/acceptance gates, no path_out_of_scope. Final evidence sets PH-323 done/PH-328 ready."
   },
   "deviations": [
     "Batch B re-baseline (old->new): PH-252 deps PH-150/PH-155/PH-224/PH-232 -> PH-214/PH-224/PH-232/PH-287/PH-293 (ADR 0015); PH-312 deps PH-299/300/180/181/182/185 -> PH-299/300 + PH-291/283/288/280/281/284/287/309/304; PH-313 deps PH-305/306/162/255/177/261 -> PH-305/306 + PH-217/244/250 + PH-214/287; PH-324 deps PH-308 (already done); PH-321 deps PH-150/PH-155 -> PH-214/224/232/287 (done) but keeps PH-324; PH-322 keeps PH-312; PH-320 keeps PH-252. All four promoted slices have only done dependencies now.",
