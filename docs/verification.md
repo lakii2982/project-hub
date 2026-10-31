@@ -751,3 +751,7 @@ BASE 15cf20c，docs-only：沿用 Lead 裁决 C，将契约冻结正文写入 `p
 ## PH-306 预算/ETC（WP-BUDGET/ETC）契约冻结首片（2026-10-31）
 
 BASE 15cf20c，docs-only：契约冻结正文写入 `project/specs/PH-306.md`（白名单不含 docs/adr；Lead 裁决同 PH-308）。冻结内容：预算基线项目/期间/版本、draft→approved→superseded、批准后不可改、唯一有效版本、科目 labor/expense/procurement/other、整数分、四眼审批、request_token+expected_version+公司锁、as_of 缺失 null；ETC 默认 `budget_residual_v1`（ETC=max(0,预算−已发生成本)、EAC=已发生+ETC、variance/over_budget/gap/remaining），预算或成本缺失/不可读时 null+missing 不伪造 0；已发生成本仅 costing 已过账 book=cost/origin=current（含负值冲销），排除现金付款/结算收入/未批准手续费/预算/未过账；缺口/未分配/超支语义、科目不可归属显示 missing 不摊派；跨 owner 边界（costing/time/contracts/settlement/revenue/cash/budget）；只读展示权限 owner/finance/auditor/pm/member/停用 history_read；本片无 canonical/model/migration/route/代码；历史重算必须显式迁移回填；12 条反例与未实现清单。无代码/迁移/UI 变更，不适用 PG/浏览器/生产验证。实际执行：`projectctl check` ok=true/task_count=245；`python -m unittest tests.test_projectctl tests.test_governance -v` 23 tests OK；verify-change 预期仅 review pending。
+
+### PH-306 复核 round-1 阻断修复
+
+复核阻断：预算版本状态机未把 `rejected` 纳入枚举/合法迁移，却定义了 rejected 终止草稿。修复：冻结枚举 `draft/approved/superseded/rejected`；合法迁移 `draft→approved`、`draft→rejected`（终态、必填 reason、保留审计、不生效不参与 as_of）、`approved→superseded`（仅新版本批准触发）；`superseded/rejected` 终态不可回到 `draft/approved`。重跑 check ok=true/task_count=245、23 治理 OK。
