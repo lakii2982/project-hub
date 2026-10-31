@@ -13,9 +13,9 @@
       "evidence": "Actual run in /tmp/ph363-period-precheck on main d81c11c with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base d81c11c --task PH-363",
+      "command": "python scripts/projectctl.py verify-change --base 43be7fe --task PH-363",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-363 allowed_paths (review pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-363 allowed_paths (post-rebase rerun)."
     }
   ],
   "review": {
@@ -34,7 +34,8 @@
     "The four reconciliation domains reuse existing owner read services and their issue_code vocabularies verbatim (cash bridge, settlement coverage, revenue pairing, bank charge pairing) instead of redefining rules; period precheck only aggregates and adds period/lock determination.",
     "Cash offset (PH-241) and insights read models (PH-272) are not delivered; the contract represents them as offset_implemented=false/missing rather than treating them as zero or implemented.",
     "precheck_digest binds a read-only precheck snapshot for PH-353 import submission; it is not an amount authorization and must be server-recomputed, with stale/blocked rejection. No persistence table is added by this contract; PH-353 owns storing the digest with its submission.",
-    "No code, migration, table, route, contract schema, gate or acceptance-command change; the capability remains not implemented (PH-181/PH-185 follow-up)."
+    "No code, migration, table, route, contract schema, gate or acceptance-command change; the capability remains not implemented (PH-181/PH-185 follow-up).",
+    "Lead integration rebase (d81c11c -> 43be7fe) after PH-365 merged: verification/manifest merged; gates rerun."
   ],
   "unverified": [
     "No implementation of period precheck or the four reconciliation aggregation exists; all behavior is contract text only.",
