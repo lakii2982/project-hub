@@ -66,3 +66,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## PH-252 发票实现首片（invoicing 插件）（2026-10-31）
 
 新建 invoicing 插件：Invoice/InvoiceLine/InvoiceAllocation/InvoiceReversal/TaxQualification + 自有迁移 0001 + vendor-aware append-only 触发器；record/allocate/reverse 服务（公司锁、request_token 幂等、期间/锁期、整数分价税分离、来源额度只读派生、部分/全额红冲、append-only 负值冲销、红票≠退款），不写收入/现金/账本/未清；浏览器表单/列表/详情、verify_integrity 发票分支、generic audit + canonical events。插件默认停用（opt-in，避免反向依赖阻断模块停用）；分配首片仅 sales 合同明细/结算未清项/结算。未验证：浏览器 1440/390、独立复核、PG 触发器/并发、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-252.json`。
+
+## PH-322 关期/结项实现首片（2026-10-31）
+
+delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aware append-only 守护）；close/reopen period/project 命令（公司锁、expected_version、DeliveryReceipt 幂等、dry_run 零写、closing+closed 成对、plugin. 审计，仅更新既有期间/项目当前行，不写业务事实）；只读预检复用既有 owner 接口（issue_code/reminder_ref/precheck_digest/missing）；close 页面/执行/重开表单；verify_integrity 五类 close 分支。偏差：BASE 白名单缺 models/migrations/verify_integrity（PH-336 规划槽补），全量新增 1 项白名单外 query-count 阈值失败（84→88，需调 92）。未验证：独立复核、PG trigger/并发、浏览器 1440/390、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-322.json`。

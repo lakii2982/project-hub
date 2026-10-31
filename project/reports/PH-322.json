@@ -1,0 +1,65 @@
+{
+  "task_id": "PH-322",
+  "summary": "关期/结项实现首片（delivery append-only run，按 ADR 0016/0017 + PH-312 spec）：新增 delivery.models.PeriodCloseRun/ProjectClose 与迁移 0005（唯一序列、action/state 组合、closed 日期、vendor-aware UPDATE/DELETE 守护），命令 close_period/reopen_period/close_project/reopen_project（owner/finance、公司锁、expected_version、DeliveryReceipt request_token 幂等、dry_run 零写、closing+closed 成对追加、plugin. 审计、不写账本/收入/成本/现金/未清）；只读预检 period_close_precheck/reopen_period_precheck/project_close_precheck/reopen_project_precheck 复用 PH-291/283/284/280/288/275/287/274/269/281/309 等既有 owner 只读接口，冻结 blocker/warning issue_code + reminder_ref + precheck_digest；close 页面/执行 POST/重开表单（history_read 预检、business_write 执行、停用历史只读）；verify_integrity 新增期间/项目 close 分支（序列连续、closing→closed 成对、无 dangling closing、latest 与 AccountingPeriod/Project 当前状态一致、cancelled 无 run、重开链、收据结果引用）；新增 15 项 scoped 测试（服务+HTTP+trigger/verifier 探针）。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD (BASE 987ec1e): ok=true, task_count=253; PH-322 in_review with owner/handoff; the changed files include pmo_plugins/delivery/models.py, delivery/migrations/0005 and core/management/commands/verify_integrity.py which are NOT yet in the BASE PH-322 allowed_paths (planning slot PH-336 pending); no schema/acceptance errors."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 106 issues (0 silenced), all pre-existing W003/W342 warnings; 0 errors (delivery close routes/metadata validate)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected; delivery migration 0005_periodcloserun_projectclose matches the two new models and is the new delivery leaf (no core migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "fail",
+      "evidence": "Actual local exit 1: Ran 1165 tests, FAILED (failures=6, errors=3, skipped=69) => 1087 passed. 8 are the known macOS environment limits (5 failures + 3 errors). The additional failure is tests.test_v1_cash_book_bridge.CashBookBridgeTests.test_verify_query_count_stays_constant_with_more_classifications: the new close verification adds 4 fixed queries (88 vs the frozen <=84 threshold); the test file is outside the PH-322 whitelist and needs a planning-slot threshold bump (84 -> 92) like PH-269/PH-274 precedents. No other new failure class."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Probe tests create dangling closing rows and assert verify_integrity fails with period_close:/project_close: errors; append-only trigger probes assert UPDATE/DELETE are rejected on SQLite."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_close tests.test_v1_close_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 15 tests, OK => 15 passed (10 service + 5 HTTP). Covers precheck shape/digest, dry_run zero writes, closing+closed pair, period posted/closed_through, owner write refusal, reopen append/requires reason, stale version, token replay/changed input, permissions/module disabled, append-only triggers, dangling-closing verifier probes, project close blocker/zero writes, close/reopen stage restore, cancelled rejection, pm scope, HTTP pages/execute/reopen/member denial/module-disabled read kept."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 987ec1e --task PH-322",
+      "result": "fail",
+      "evidence": "Expected fail before the planning slot: BASE 987ec1e has PH-322 status proposed and its allowed_paths lack pmo_plugins/delivery/models.py, pmo_plugins/delivery/migrations/* and core/management/commands/verify_integrity.py, so verify-change reports task_not_executable/path_out_of_scope. Lead decision: PH-336 planning slot will set PH-322 ready and add these paths plus the verifier query-count test threshold; then rebase/rerun should yield ok=true."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-322 close implementation reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: ADR 0016/0017 + PH-312 alignment (append-only run pair, current-state updates only, no core schema, no business fact writes), command semantics (company lock, expected_version, DeliveryReceipt idempotency, dry_run zero writes, closing+closed pair, reopen chain), precheck reuse of owner read services with frozen issue codes/reminder refs/precheck digest, permissions/module gating, UI history_read/business_write split, verifier five branches and probes, append-only vendor-aware guards, and the exact whitelist/planning-slot gap. projectctl check, manage.py check, makemigrations, verify_integrity and scoped tests pass; full suite has the known macOS failures plus the out-of-whitelist query-count threshold failure; verify-change is expected red until PH-336. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "BASE whitelist gap (explicitly disclosed): PH-322 is still proposed on BASE 987ec1e and its allowed_paths do not include pmo_plugins/delivery/models.py, pmo_plugins/delivery/migrations/* or core/management/commands/verify_integrity.py, although PH-312 §9.2 requires them. Implementation proceeded per Lead decision; PH-336 planning slot will expand the whitelist, after which this branch must be rebased and verify-change re-run.",
+    "Full suite adds one out-of-whitelist failure: tests/test_v1_cash_book_bridge.py's verifier query-count ceiling (84) is exceeded by 4 fixed close-verification queries (88). The test file is outside the PH-322 whitelist; the planning slot should bump the threshold (e.g. 92) as done for earlier verifier branches (PH-269/PH-274 precedent).",
+    "closing is a transactional phase, not a durable observable state: the committed history contains the pair closing(n)+closed(n+1); reads/verifier treat a dangling closing as corruption. This follows PH-312's frozen decision B and does not add a closing branch to owner period/project checks.",
+    "Period precheck/project precheck reuse existing owner read services with conservative issue-code mapping; unsupported read sources are reported as missing (not as 0) and no second reconciliation rule is created. Cash bank issues are read via bank_account_issues dict issue_count, not treated as a list.",
+    "request_token idempotency uses DeliveryReceipt (action/digest/result_id); run request_token is stored only on the first (closing/reopened) row and is null on the paired closed row, matching the frozen PH-312 model constraint.",
+    "No core model/migration is changed; only existing AccountingPeriod.status/closed_through and Project.stage/previous_stage current rows are updated in the same transaction as the run pair and audit/receipt.",
+    "No automatic correction, export, notification push, PAT/MCP close tool or customer portal is added; no business fact is written by close/reopen."
+  ],
+  "unverified": [
+    "Full suite is not fully green: the known 8 macOS environment failures remain plus the out-of-whitelist verifier query-count threshold failure (88 > 84) that needs the PH-336 planning whitelist bump.",
+    "verify-change --base 987ec1e --task PH-322 is expected red (proposed + missing allowed_paths) until PH-336; no claim of ok=true on this BASE.",
+    "Independent S review is still pending.",
+    "PostgreSQL trigger/function behaviour and true multi-connection concurrency (company lock, concurrent close one-winner) are not exercised locally; CI including the PG domain is authoritative. SQLite does not prove production concurrency correctness.",
+    "Browser 1440/390 visual/keyboard/focus/overflow/empty-error-disabled states were not manually checked; only HTTP tests were run.",
+    "Production/UAT and legacy database upgrades are not verified; only freshly migrated SQLite databases were exercised."
+  ]
+}

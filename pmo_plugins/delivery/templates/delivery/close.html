@@ -1,0 +1,27 @@
+{% extends 'base.html' %}{% block title %}关期 / 结项{% endblock %}{% block breadcrumb %}交付 / 关期与结项{% endblock %}{% block content %}
+<section class="page-heading"><div><div class="eyebrow">DELIVERY · CLOSE</div><h1>期间关期与项目结项</h1><p>只读预检复用各 owner 核对结果；关期/结项仅追加 run 并更新既有期间/项目当前状态，不写账本、收入、成本、现金或未清。</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>筛选</h2></div><div class="panel-body">
+{% if error %}<div class="message error" role="alert">{{ error }}</div>{% endif %}
+{% if scope == 'period' %}<form method="get" action="{{ period_url }}"><div class="form-field"><label for="close-period">期间</label><input id="close-period" name="period" value="{{ period|default:'' }}" placeholder="YYYY-MM"></div><div class="actions"><button class="button primary" type="submit">预检</button></div></form>
+{% else %}<form method="get" action="{{ project_url }}"><div class="form-field"><label for="close-project">项目</label><input id="close-project" name="project" value="{{ project_id|default:'' }}"></div><div class="form-field"><label><input type="checkbox" name="allow_open_period" value="1"> 允许未关期结项（记录 warning）</label></div><div class="actions"><button class="button primary" type="submit">预检</button></div></form>{% endif %}
+</div></section>
+{% if precheck %}<section class="panel"><div class="panel-heading"><h2>预检结果</h2></div><div class="panel-body"><dl class="detail-grid"><div><dt>范围</dt><dd>{{ precheck.scope }}</dd></div><div><dt>状态</dt><dd>{% if precheck.scope == 'period' %}{{ precheck.state }}{% else %}{{ precheck.stage }}{% endif %}</dd></div><div><dt>precheck_digest</dt><dd>{{ precheck.precheck_digest }}</dd></div></dl>
+{% if precheck.blockers %}<div class="message error" role="alert">blockers：{% for item in precheck.blockers %}{{ item.issue_code }}{% if not forloop.last %}；{% endif %}{% endfor %}</div>{% endif %}
+{% if precheck.warnings %}<div class="message warning">warnings：{% for item in precheck.warnings %}{{ item.issue_code }}{% if not forloop.last %}；{% endif %}{% endfor %}</div>{% endif %}
+{% if precheck.missing %}<p class="help-text">missing：{{ precheck.missing|join:', ' }}</p>{% endif %}
+<div class="table-scroll"><table aria-label="预检问题"><thead><tr><th>级别</th><th>issue_code</th><th>expected</th><th>actual</th><th>reminder</th></tr></thead><tbody>{% for item in precheck.blockers %}<tr><td>blocker</td><td>{{ item.issue_code }}</td><td>{{ item.expected|default:'—' }}</td><td>{{ item.actual|default:'—' }}</td><td>{{ item.reminder_ref.id }}</td></tr>{% endfor %}{% for item in precheck.warnings %}<tr><td>warning</td><td>{{ item.issue_code }}</td><td>{{ item.expected|default:'—' }}</td><td>{{ item.actual|default:'—' }}</td><td>{{ item.reminder_ref.id }}</td></tr>{% endfor %}</tbody></table></div>
+</div></section>
+{% if can_write and not reopen %}<section class="panel"><div class="panel-heading"><h2>执行{% if scope == 'period' %}关期{% else %}结项{% endif %}</h2></div><div class="panel-body">
+<form method="post" action="{% if scope == 'period' %}{{ period_execute_url }}{% else %}{{ project_execute_url }}{% endif %}">{% csrf_token %}
+{% if scope == 'period' %}<input type="hidden" name="period" value="{{ period }}"><input type="hidden" name="expected_version" value="{{ precheck.period_version }}">{% else %}<input type="hidden" name="project" value="{{ project_id }}"><input type="hidden" name="expected_version" value="{{ precheck.project_version }}"><input type="hidden" name="allow_open_period" value="{% if allow_open %}1{% endif %}">{% endif %}
+<input type="hidden" name="request_token" value="{{ request_token|default:'' }}">
+<div class="form-field"><label for="close-reason">原因（重开必填）</label><input id="close-reason" name="reason"></div>
+<div class="actions"><button class="button primary" type="submit">确认执行（不可撤销，只能重开）</button></div></form>
+<p class="help-text">执行会追加 closing+closed run 并更新既有当前状态；失败零半笔。重开请用下方重开表单。</p>
+</div></section>
+<section class="panel"><div class="panel-heading"><h2>重开</h2></div><div class="panel-body"><form method="post" action="{% if scope == 'period' %}{{ period_reopen_url }}{% else %}{{ project_reopen_url }}{% endif %}">{% csrf_token %}
+{% if scope == 'period' %}<input type="hidden" name="period" value="{{ period }}">{% else %}<input type="hidden" name="project" value="{{ project_id }}">{% endif %}<input type="hidden" name="expected_version" value="{% if scope == 'period' %}{{ precheck.period_version }}{% else %}{{ precheck.project_version }}{% endif %}">
+<div class="form-field"><label for="reopen-reason">重开原因</label><input id="reopen-reason" name="reason" required></div>
+<div class="actions"><button class="button" type="submit">重开（append-only）</button></div></form></div></section>{% endif %}
+{% if reopen %}<section class="panel"><div class="panel-heading"><h2>重开</h2></div><div class="panel-body">{% if form.non_field_errors %}<div class="message error">{{ form.non_field_errors }}</div>{% endif %}<form method="post" action="{% if scope == 'period' %}{{ period_reopen_url }}{% else %}{{ project_reopen_url }}{% endif %}">{% csrf_token %}{% include 'partials/form_fields.html' with form=form %}<button class="button primary" type="submit">提交重开</button></form></div></section>{% endif %}{% endif %}
+{% endblock %}

@@ -7,7 +7,7 @@ from .plugin import Plugin
 
 def entry_point():
     from pmo_plugins.costing import bank_charge_views, labor_views
-    from . import service_period_views
+    from . import close_views, service_period_views
     from . import views as delivery_views
     from core import identity_views
     from pmo_plugins.costing.domain_metadata import DOMAIN_METADATA as COSTING_METADATA
@@ -72,6 +72,7 @@ def entry_point():
                               'cash_internal_transfer_reverse',
                               'cash_internal_transfer_reverse_save', 'cash_bridge_snapshot', 'cash_bridge_issues')} | {name: getattr(bank_views, name) for name in ('bank_balance_snapshot', 'bank_balance_issues')},
         'delivery': {name: getattr(delivery_views,name) for name in ('acceptance_list','acceptance_detail','acceptance_form','acceptance_save','acceptance_action','ops_reconciliation_overview', 'ops_export', 'ops_workbench')} | {name: getattr(service_period_views,name) for name in ('service_confirmation_list','service_confirmation_detail','service_confirmation_form','service_confirmation_save','service_confirmation_action')}
+                   | {name: getattr(close_views, name) for name in ('period_close_page','period_close_execute','project_close_page','project_close_execute','period_reopen','project_reopen')}
                    | {'identity_access': identity_views.identity_access_entry},
         'costing': {name: getattr(labor_views, name) for name in
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}
