@@ -1,0 +1,43 @@
+{
+  "task_id": "PH-337",
+  "summary": "Consumed the PH-337 planning slot on main 9e0991f (PH-317 merged; 263 tasks after registration) and completed the planned status/dependency sync. PH-320 and PH-325 were already promoted to ready by PH-317's blocker fix and then merged, so this slot synced their spec internal status text (opening/risk sections) from proposed to ready with the all-done dependency evidence (PH-320: PH-293/PH-252/PH-214/PH-224/PH-232; PH-325: PH-252/PH-284/PH-283/PH-287/PH-293) and cleared the in-spec blocker wording. Dependency re-baseline found no additional fully-done-dependency task to promote (PH-141 remains a legacy case requiring its own DoR review; PH-241 is in_review under another slice); the ready implementation queue is PH-320/PH-321/PH-322/PH-325. Batch C and follow-up blockers were refreshed precisely: PH-330 waits on PH-322; PH-333/PH-334 wait on PH-322/PH-321/PH-330; PH-335 waits on PH-333/PH-334; PH-314 still lacks PH-301/PH-310/PH-285/PH-179/PH-183. Four tasks were registered continuously: PH-338 invoice batch/import follow-up (proposed), PH-339 insights read-model implementation (proposed; waits on PH-272), PH-340 notification-center implementation (proposed; waits on PH-301/PH-314) and PH-341 as the next planning slot. ROADMAP gained a batch B/C progress section with the ready queue, precise blockers and new registrations. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 35ee4d5 (BASE 9e0991f, PH-337 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":263}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph337-planning on main 9e0991f with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 9e0991f --task PH-337",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 35ee4d5: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 16 changed files (PH-320/325/330/333/334/335 spec syncs, 4 new specs PH-338..341, tasks.json, manifest.json, docs/verification.md, ROADMAP.md, PH-337 report/handoff) are inside BASE PH-337 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (PH-320/325 spec sync, dependency re-baseline, blockers refresh and new slice registration); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "PH-320/PH-325 were already promoted in the canonical task graph by PH-317's blocker fix; this slot only synced their spec internal status text and risk sections from proposed to ready with the done-dependency evidence, because PH-317's whitelist did not cover those spec files. No task status change was needed beyond the existing ready state.",
+    "No additional promotion was made: the only other fully-done-dependency open tasks are PH-141 (legacy, needs its own DoR review) and PH-241 (already in_review under another worker). The rest still have proposed/ready-not-done dependencies, so they stay proposed with refreshed precise blockers.",
+    "Batch C blockers refreshed: PH-330 waits on PH-322; PH-333/PH-334 on PH-322/PH-321/PH-330; PH-335 on PH-333/PH-334; PH-314 still lacks PH-301/PH-310/PH-285/PH-179/PH-183. No false promotion.",
+    "Registered PH-338 (invoice batch/import), PH-339 (insights read model), PH-340 (notification center) as proposed with explicit blockers and PH-341 as the next planning slot (proposed until PH-337 done); ROADMAP records the batch B/C progress and ready queue.",
+    "Planning-slot state convention: PH-337 is kept in_review with handoff and PH-341 is proposed with blocker 'PH-337 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-337 done and PH-341 ready and clear the blocker.",
+    "Numbering basis: BASE max PH-337; checked remote branches/PRs (PH-322 feature branch and dependabot only) - no >=PH-338 ids exist, so PH-338..PH-341 are continuous and free.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-320/PH-321/PH-322/PH-325 remain ready but unimplemented; their write-side code and tests do not exist yet.",
+    "PH-338/PH-339/PH-340 are registered proposed only; no code/tests/CI evidence exists.",
+    "Batch C deployment/recovery/concurrency/performance execution is still not performed and stays not_run/blocked until the corresponding implementations land.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
