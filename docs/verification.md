@@ -772,4 +772,4 @@ BASE 15cf20c，docs-only：契约冻结正文写入 `project/specs/PH-306.md`（
 2. **保持 proposed**：PH-321（等 PH-324）、PH-320（等 PH-252）、PH-322（等 PH-312）、PH-314（等 PH-301/310/285/179/183）；无虚假晋级，blockers 精确。
 3. **顺序**：PH-324 → PH-321 → PH-252 → PH-320 → PH-312 → PH-322 → PH-313 → PH-314（ROADMAP 已记录）。
 4. **登记**：PH-325 发票-结算/收入对账+税额资格（proposed）、PH-326 汇率历史（proposed）、PH-327 关期/结项验收 runbook（proposed）、PH-328 下一规划槽（proposed，待 PH-323 done 后置 ready）。count 246→250，编号 325-328 连续。
-5. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-324/252/312/313 未实现；PH-325/326/327 未实现。
+5. 无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：依赖重映射/晋级证据/blockers/编号事实核对通过）；最终证据 HEAD 7de3412 按槽惯例置 PH-323 done / PH-328 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=250；23 项治理 OK；verify-change --base 1ce48fc --task PH-323 ok=true、18 文件全白名单、无 errors。未验证：PH-324/252/312/313 未实现；PH-325/326/327 未实现。

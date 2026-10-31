@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 1ce48fc --task PH-323",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 0408365: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 18 changed files (specs PH-252/308/312/313/314/320/321/322 + new PH-325..328, tasks.json, manifest.json, docs/verification.md, ROADMAP.md, PH-323 report/handoff) are inside BASE PH-323 allowed_paths."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD 7de3412: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"7de3412ebadc99bd63014512e983653a99d19e27\",\"count\":18,\"errors\":null}, exit 0; all 18 changed files inside BASE PH-323 allowed_paths and review.status=pass with the reviewer's name."
     }
   ],
   "review": {
