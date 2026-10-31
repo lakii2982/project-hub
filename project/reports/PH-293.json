@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 15cf20c --task PH-293",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 14bb580: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (ADR 0015, PH-252 spec sync, tasks.json, manifest.json, docs/verification.md, PH-293 report/handoff) are inside BASE PH-293 allowed_paths."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD 0d27522: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"0d27522633805cb626ee4a8989a761f9dc2bee60\",\"count\":7,\"errors\":null}, exit 0; all 7 changed files inside BASE PH-293 allowed_paths and review.status=pass with the reviewer's name (second-round PASS after the partial-reversal status fix)."
     }
   ],
   "review": {
