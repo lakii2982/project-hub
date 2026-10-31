@@ -904,3 +904,7 @@ request_token 收据先于状态/重复门（allocate/reverse/approve/reject/sup
 3. **新登记**：PH-352 批次 C 验收 runbook（ready，docs-only，deps PH-332/345 done）、PH-353 导入提交拆分（proposed，等 PH-181/185）、PH-354 insights 期间预检（proposed，等 PH-272）、PH-355 通知 reminder refs/扫描（proposed，等 PH-179/183/151）、PH-356 下一规划槽（proposed，待 PH-351 done）。count 273→278，编号 352-356 连续。
 4. **ROADMAP** 新增批次 C 状态同步节（PH-330 即将合入/原片拆片关系/新片/not_run 边界）。
 5. 独立 S 复核首轮 2 阻断（PH-354 depends_on 缺 PH-272、汇总验收片未编码拆片依赖）已修，二轮 PASS（reviewer-b）；rebase 到 main 371e80f（PH-330 合入）后最终证据 HEAD ecc7a18 按槽惯例置 PH-351 done / PH-356 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=278；23 项治理 OK；verify-change --base 371e80f --task PH-351 ok=true、14 文件全白名单、无 errors。未验证：PH-330 已合入 main（本槽仍按 BASE d830929 评审，下一槽可直接晋级 PH-347–350 拆片）；PH-333/334/335/347/348/349/350/353/354/355 未实现；批次 C 演练未执行。
+
+## PH-356 后续交付独立规划入口（2026-10-31，BASE db8ed47）
+
+PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-348（备份/恢复）、PH-349（PG 并发）为 ready**（deps PH-330/PH-345 均 done；spec 状态/blockers/白名单已同步）。PH-350 保持 proposed（等 347/348/349 done）；PH-333/PH-334/PH-335 汇总验收 deps 已含对应执行片，blockers 刷新为执行片 done 后再复核，不虚假晋级。新登记 PH-357（批次 C 演练证据回填/验收汇总，proposed）、PH-358（发票批量导入实现首片，proposed）、PH-359（insights 差异单/工作台只读实现首片，proposed）、PH-360（通知中心收件箱实现首片，proposed）、PH-361（后续交付独立规划入口，ready）。实跑：`projectctl check` ok=true/task_count=283；`python -m unittest tests.test_projectctl tests.test_governance -v` **23 tests OK**；仅规划/治理文件变更，无代码/迁移/schema/合同变更。verify-change 待 report 落盘后运行；review pending。未验证：实际 CI/部署环境（本片非执行片）。
