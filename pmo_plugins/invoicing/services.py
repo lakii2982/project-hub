@@ -653,13 +653,14 @@ def confirm_tax_qualification(member, qualification_id, *, qualification_status,
         _fail('确认日期须为YYYY-MM-DD')
     _period(member, day)
     evidence = _json_list(evidence, '证据')
+    merged_evidence = list(row.evidence or []) + evidence
     if TaxQualification.objects.filter(
             organization=member.organization, source_ref=row.source_ref,
             status='confirmed').exclude(pk=row.pk).exists():
         _fail('同一来源已有有效税额资格，请使用更正/取代流程')
     payload = {'qualification_id': str(row.pk), 'qualification_status': qualification_status,
                'decided_on': day.isoformat(), 'evidence': evidence,
-               'expected_version': expected_version}
+               'expected_version': expected_version, 'preserves_open_evidence': True}
     digest = _digest(payload)
     receipt, token = _receipt(member, TAX_ACTIONS['confirmed'], request_token, digest, dry_run)
     if receipt is not None:
@@ -672,7 +673,7 @@ def confirm_tax_qualification(member, qualification_id, *, qualification_status,
         pk=row.pk, organization=member.organization, status='pending',
         version=row.version).update(
         status='confirmed', qualification_status=qualification_status,
-        decided_on=day, evidence=evidence, version=row.version + 1)
+        decided_on=day, evidence=merged_evidence, version=row.version + 1)
     if updated != 1:
         _fail('税额资格确认并发冲突，请刷新后重试')
     row.refresh_from_db()
@@ -709,7 +710,8 @@ def supersede_tax_qualification(member, qualification_id, *, qualification_statu
     evidence = _json_list(evidence, '证据')
     payload = {'qualification_id': str(old.pk), 'qualification_status': qualification_status,
                'decided_on': day.isoformat(), 'evidence': evidence,
-               'expected_version': expected_version, 'supersedes': _qualification_ref(old)}
+               'expected_version': expected_version, 'supersedes': _qualification_ref(old),
+               'preserves_open_evidence': True}
     digest = _digest(payload)
     receipt, token = _receipt(member, TAX_ACTIONS['superseded'], request_token, digest, dry_run)
     if receipt is not None:
@@ -717,16 +719,27 @@ def supersede_tax_qualification(member, qualification_id, *, qualification_statu
     if dry_run:
         return {'dry_run': True, 'supersedes': _qualification_ref(old),
                 'qualification_status': qualification_status, 'decided_on': day.isoformat()}
+    # Append a new pending row first (DB insert guard requires pending/unknown/v1),
+    # then mark the old confirmed row superseded (only status/version may change),
+    # then transition the replacement pending->confirmed with preserved evidence.
+    replacement = TaxQualification.objects.create(
+        organization=member.organization, source_ref=old.source_ref,
+        tax_cents=old.tax_cents, status='pending', qualification_status='unknown',
+        evidence=list(old.evidence or []))
     updated = TaxQualification.objects.filter(
         pk=old.pk, organization=member.organization, status='confirmed',
         version=old.version).update(status='superseded', version=old.version + 1)
     if updated != 1:
         _fail('税额资格取代并发冲突，请刷新后重试')
-    replacement = TaxQualification.objects.create(
-        organization=member.organization, source_ref=old.source_ref,
-        tax_cents=old.tax_cents, status='confirmed',
-        qualification_status=qualification_status, decided_on=day,
-        evidence=evidence + [{'kind': 'tax_supersedes', 'supersedes': _qualification_ref(old)}])
+    merged_evidence = list(old.evidence or []) + evidence + [
+        {'kind': 'tax_supersedes', 'supersedes': _qualification_ref(old)}]
+    changed = TaxQualification.objects.filter(
+        pk=replacement.pk, organization=member.organization, status='pending',
+        version=1).update(status='confirmed', qualification_status=qualification_status,
+                          decided_on=day, evidence=merged_evidence, version=2)
+    if changed != 1:
+        _fail('税额资格取代并发冲突，请刷新后重试')
+    replacement.refresh_from_db()
     result = {'qualification_ref': _qualification_ref(replacement),
               'supersedes': _qualification_ref(old), 'source_ref': replacement.source_ref,
               'status': 'confirmed', 'qualification_status': qualification_status,
@@ -735,35 +748,92 @@ def supersede_tax_qualification(member, qualification_id, *, qualification_statu
     return result
 
 
-def _owner_ref_value(member, link_kind, owner_ref):
+def _invoice_source_context(member, invoice):
+    """Derive project/counterparty/source context from invoice allocations."""
+    project_ids, counterparty_ids = set(), {str(invoice.counterparty_id)}
+    from pmo_plugins.contracts.models import ContractLine
+    from pmo_plugins.settlement.models import OpenItem, Settlement
+    for allocation in InvoiceAllocation.objects.filter(
+            invoice_line__invoice=invoice).select_related('invoice_line'):
+        ref = allocation.business_source_ref or {}
+        try:
+            if ref.get('namespace') == 'contracts' and ref.get('kind') == 'contract_line':
+                line = ContractLine.objects.select_related('contract_version__contract').get(
+                    organization=member.organization, pk=ref.get('id'))
+                project_ids.add(str(line.contract_version.contract.project_id))
+                counterparty_ids.add(str(line.contract_version.contract.party_id))
+            elif ref.get('namespace') == 'settlement' and ref.get('kind') == 'open_item':
+                item = OpenItem.objects.get(organization=member.organization, pk=ref.get('id'))
+                project_ids.add(str(item.project_id))
+                counterparty_ids.add(str(item.counterparty_id))
+            elif ref.get('namespace') == 'settlement' and ref.get('kind') == 'settlement':
+                settlement = Settlement.objects.get(organization=member.organization, pk=ref.get('id'))
+                project_ids.add(str(settlement.project_id))
+                counterparty_ids.add(str(settlement.counterparty_id))
+        except Exception:
+            continue
+    return project_ids, counterparty_ids
+
+
+def _owner_ref_value(member, link_kind, owner_ref, *, project_ids, counterparty_ids):
     if (not isinstance(owner_ref, dict)
-            or set(owner_ref) != {'namespace', 'kind', 'id', 'version'}):
+            or set(owner_ref) != {'namespace', 'kind', 'id', 'version'}
+            or type(owner_ref.get('version')) is not int):
         _fail('跨 owner 引用无效')
     namespace, kind, raw_id = owner_ref.get('namespace'), owner_ref.get('kind'), owner_ref.get('id')
+    project_id = counterparty_id = None
     try:
         if link_kind == 'revenue_reversal':
+            if (namespace, kind) != ('management_revenue', 'revenue_adjustment'):
+                _fail('管理收入反冲引用必须为 revenue_adjustment')
             from pmo_plugins.management_revenue.models import RevenueAdjustment
-            row = RevenueAdjustment.objects.get(
+            row = RevenueAdjustment.objects.select_related(
+                'recognition__contract_line__contract').get(
                 organization=member.organization, pk=raw_id, status='posted')
+            project_id = str(row.project_id)
+            counterparty_id = str(row.recognition.contract_line.contract.party_id)
         elif link_kind == 'cash_refund':
+            if (namespace, kind) != ('cash', 'cash_refund'):
+                _fail('现金退款引用必须为 cash_refund')
             from pmo_plugins.cash.models import Refund
-            row = Refund.objects.get(organization=member.organization, pk=raw_id, status='active')
+            row = Refund.objects.select_related('original_cash_transaction').get(
+                organization=member.organization, pk=raw_id, status='active')
+            counterparty_id = str(row.original_cash_transaction.counterparty_id or '')
         elif link_kind == 'cash_bank_return':
+            if (namespace, kind) != ('cash', 'cash_bank_return'):
+                _fail('银行退回引用必须为 cash_bank_return')
             from pmo_plugins.cash.models import BankReturn
-            row = BankReturn.objects.get(organization=member.organization, pk=raw_id,
-                                         status='active')
+            row = BankReturn.objects.select_related('original_cash_transaction').get(
+                organization=member.organization, pk=raw_id, status='active')
+            counterparty_id = str(row.original_cash_transaction.counterparty_id or '')
         else:
+            if namespace != 'settlement' or kind not in {'settlement', 'clearance', 'open_item'}:
+                _fail('结算调整引用类型无效')
+            from pmo_plugins.settlement.models import Clearance, OpenItem, Settlement
             if kind == 'clearance':
-                from pmo_plugins.settlement.models import Clearance
-                row = Clearance.objects.get(organization=member.organization, pk=raw_id)
+                row = Clearance.objects.select_related('open_item').get(
+                    organization=member.organization, pk=raw_id)
+                project_id = str(row.open_item.project_id)
+                counterparty_id = str(row.open_item.counterparty_id)
             elif kind == 'open_item':
-                from pmo_plugins.settlement.models import OpenItem
                 row = OpenItem.objects.get(organization=member.organization, pk=raw_id)
+                project_id = str(row.project_id)
+                counterparty_id = str(row.counterparty_id)
             else:
-                from pmo_plugins.settlement.models import Settlement
                 row = Settlement.objects.get(organization=member.organization, pk=raw_id)
+                project_id = str(row.project_id)
+                counterparty_id = str(row.counterparty_id)
+    except ValidationError:
+        raise
     except Exception:
         _fail('跨 owner 引用不存在、不可读或不属于本公司')
+    if counterparty_id and counterparty_id not in counterparty_ids:
+        _fail('跨 owner 引用与发票往来方不一致')
+    if link_kind in {'revenue_reversal', 'settlement_adjustment'}:
+        if not project_ids:
+            _fail('发票缺少可核对的项目来源，不能登记项目级编排引用')
+        if project_id not in project_ids:
+            _fail('跨 owner 引用项目与发票来源不一致')
     return row
 
 
@@ -787,14 +857,16 @@ def link_invoice_orchestration(member, *, invoice_id, link_kind, owner_ref, evid
         _fail('发票版本已变化，请刷新后重试')
     if link_kind not in LINK_KINDS:
         _fail('跨 owner 编排类型无效')
-    reversal = None
-    if reversal_id is not None:
-        try:
-            reversal = InvoiceReversal.objects.get(
-                organization=member.organization, invoice=invoice, pk=reversal_id)
-        except (InvoiceReversal.DoesNotExist, ValueError, TypeError):
-            raise PermissionDenied('发票红冲不存在或不属于该发票')
-    _owner_ref_value(member, link_kind, owner_ref)
+    if reversal_id is None:
+        _fail('跨 owner 编排引用必须关联发票红冲')
+    try:
+        reversal = InvoiceReversal.objects.get(
+            organization=member.organization, invoice=invoice, pk=reversal_id)
+    except (InvoiceReversal.DoesNotExist, ValueError, TypeError):
+        raise PermissionDenied('发票红冲不存在或不属于该发票')
+    project_ids, counterparty_ids = _invoice_source_context(member, invoice)
+    _owner_ref_value(member, link_kind, owner_ref, project_ids=project_ids,
+                     counterparty_ids=counterparty_ids)
     if not isinstance(evidence, list) or not evidence:
         _fail('编排证据须为非空JSON数组')
     payload = {'invoice_id': str(invoice.pk), 'reversal_id': str(reversal.pk) if reversal else None,
@@ -850,7 +922,9 @@ def _orchestration_links(member, invoice):
         owner_ref = payload.get('owner_ref') or {}
         exists = True
         try:
-            _owner_ref_value(member, payload.get('link_kind'), owner_ref)
+            project_ids, counterparty_ids = _invoice_source_context(member, invoice)
+            _owner_ref_value(member, payload.get('link_kind'), owner_ref,
+                             project_ids=project_ids, counterparty_ids=counterparty_ids)
         except (ValidationError, PermissionDenied):
             exists = False
         links.append({'link_kind': payload.get('link_kind'),

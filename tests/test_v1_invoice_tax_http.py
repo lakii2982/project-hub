@@ -36,25 +36,31 @@ class TaxHTTPTests(TaxFixture, TestCase):
         self.assertContains(page, 'recoverable')
 
     def test_link_and_invalid_posts(self):
+        from pmo_plugins.invoicing.models import Invoice
+        invoice, _ = self.allocated()
+        invoice_id = invoice['invoice_ref']['id']
+        invoice_row = Invoice.objects.get(pk=invoice_id)
+        reversal = self.make_reversal(invoice_row)
         opened = self.open()
         self.confirm(opened)
         self.client.force_login(self.owner.user)
         owner_ref = {'namespace': 'settlement', 'kind': 'settlement',
                      'id': str(self.settlement.pk), 'version': self.settlement.version}
         response = self.client.post(self.link_url, {
-            'invoice_id': self.invoice_id, 'link_kind': 'settlement_adjustment',
-            'owner_ref': json.dumps(owner_ref), 
+            'invoice_id': invoice_id, 'reversal_id': str(reversal.pk),
+            'link_kind': 'settlement_adjustment',
+            'owner_ref': json.dumps(owner_ref),
             'evidence': json.dumps([{'kind': 'owner_fact', 'evidence_id': 'http'}]),
             'expected_version': '1'})
         self.assertEqual(response.status_code, 302)
-        page = self.client.get(self.url + '?id=' + self.invoice_id)
+        page = self.client.get(self.url + '?id=' + invoice_id)
         self.assertContains(page, 'settlement_adjustment')
         self.assertEqual(self.client.post(self.confirm_url, {
             'qualification_id': opened['qualification_ref']['id'],
             'qualification_status': 'recoverable', 'decided_on': self.today.isoformat(),
             'evidence': '[]', 'expected_version': '1'}).status_code, 400)
         self.assertEqual(self.client.post(self.link_url, {
-            'invoice_id': self.invoice_id, 'link_kind': 'bogus',
+            'invoice_id': invoice_id, 'link_kind': 'bogus',
             'owner_ref': '{}', 'evidence': '[]', 'expected_version': '1'}).status_code, 400)
 
     def test_roles_and_disabled_module_history_read(self):

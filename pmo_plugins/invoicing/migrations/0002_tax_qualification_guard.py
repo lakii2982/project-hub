@@ -25,6 +25,10 @@ def install(apps, schema_editor):
                     RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Tax qualification history cannot be deleted';
                   END IF;
                   IF TG_OP = 'INSERT' THEN
+                    IF NEW.status <> 'pending' OR NEW.qualification_status <> 'unknown'
+                       OR NEW.decided_on IS NOT NULL OR NEW.version <> 1 THEN
+                      RAISE EXCEPTION USING ERRCODE = '23514', MESSAGE = 'Tax qualification must start pending/unknown version 1';
+                    END IF;
                     RETURN NEW;
                   END IF;
                   IF NEW.id <> OLD.id OR NEW.organization_id <> OLD.organization_id
@@ -50,8 +54,13 @@ def install(apps, schema_editor):
             cursor.execute(f'CREATE TRIGGER {TABLES}_guard BEFORE INSERT OR UPDATE OR DELETE ON {TABLES} '
                            f'FOR EACH ROW EXECUTE FUNCTION invoicing_tax_qualification_guard_v2()')
         else:
+            cursor.execute(f'DROP TRIGGER IF EXISTS {TABLES}_insert_guard')
             cursor.execute(f'DROP TRIGGER IF EXISTS {TABLES}_update_guard')
             cursor.execute(f'DROP TRIGGER IF EXISTS {TABLES}_no_delete')
+            cursor.execute(f"""CREATE TRIGGER {TABLES}_insert_guard BEFORE INSERT ON {TABLES}
+                FOR EACH ROW WHEN NEW.status <> 'pending' OR NEW.qualification_status <> 'unknown'
+                  OR NEW.decided_on IS NOT NULL OR NEW.version <> 1
+                BEGIN SELECT RAISE(ABORT, 'Tax qualification must start pending/unknown version 1'); END;""")
             cursor.execute(f"""CREATE TRIGGER {TABLES}_update_guard BEFORE UPDATE ON {TABLES}
                 FOR EACH ROW WHEN NEW.id <> OLD.id OR NEW.organization_id <> OLD.organization_id
                   OR NEW.source_ref <> OLD.source_ref OR NEW.tax_cents <> OLD.tax_cents
@@ -90,6 +99,7 @@ def uninstall(apps, schema_editor):
             cursor.execute(f'CREATE TRIGGER {TABLES}_guard BEFORE UPDATE OR DELETE ON {TABLES} '
                            f'FOR EACH ROW EXECUTE FUNCTION invoicing_immutable_guard()')
         else:
+            cursor.execute(f'DROP TRIGGER IF EXISTS {TABLES}_insert_guard')
             cursor.execute(f'DROP TRIGGER IF EXISTS {TABLES}_update_guard')
             cursor.execute(f'DROP TRIGGER IF EXISTS {TABLES}_no_delete')
             cursor.execute(f"""CREATE TRIGGER {TABLES}_update_guard BEFORE UPDATE ON {TABLES}

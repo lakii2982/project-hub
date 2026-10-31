@@ -27,6 +27,14 @@ class TaxFixture(InvoiceFixture):
         values.update(changes)
         return services.open_tax_qualification(self.owner, **values)
 
+    def make_reversal(self, invoice_row):
+        from pmo_plugins.invoicing.models import InvoiceReversal
+        return InvoiceReversal.objects.create(
+            organization=self.org, invoice=invoice_row, reason='编排红冲',
+            reversal_date=self.today, line_reversals=[], allocation_reversals=[],
+            gross_cents=-invoice_row.gross_cents, net_cents=-invoice_row.net_cents,
+            tax_cents=-invoice_row.tax_cents, created_by=self.owner)
+
     def confirm(self, opened, **changes):
         values = dict(qualification_status='recoverable', decided_on=self.today,
                       evidence=[{'kind': 'tax_decision', 'evidence_id': 'd1'}],
@@ -49,9 +57,11 @@ class TaxQualificationTests(TaxFixture, TestCase):
         self.assertEqual(row.qualification_status, 'recoverable')
         self.assertEqual(row.decided_on, self.today)
         self.assertEqual(row.version, 2)
-        self.assertEqual(confirmed['qualification_ref'], row.__class__ and {
+        self.assertEqual(confirmed['qualification_ref'], {
             'namespace': 'invoicing', 'kind': 'tax_qualification',
             'id': str(row.pk), 'version': 2})
+        self.assertIn({'kind': 'tax_invoice', 'evidence_id': 'tax-1'}, row.evidence)
+        self.assertIn({'kind': 'tax_decision', 'evidence_id': 'd1'}, row.evidence)
         self.assertEqual(before, (AccountingEvent.objects.count(), LedgerEntry.objects.count(),
                                   DomainEvent.objects.count()))
         self.assertTrue(AuditEvent.objects.filter(
@@ -110,37 +120,101 @@ class TaxQualificationTests(TaxFixture, TestCase):
                 with connection.cursor() as cursor:
                     cursor.execute('DELETE FROM invoicing_taxqualification WHERE id=%s',
                                    [opened['qualification_ref']['id'].replace('-', '')])
+        with self.assertRaises(DatabaseError):
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        'INSERT INTO invoicing_taxqualification '
+                        '(id, organization_id, source_ref, tax_cents, status, qualification_status, '
+                        'decided_on, evidence, version, created_at) '
+                        'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP)',
+                        [uuid.uuid4().hex, self.org.pk, '{}', 1000, 'confirmed',
+                         'recoverable', self.today.isoformat(), '[]', 1])
 
     def test_orchestration_reference_chain(self):
-        opened = self.open()
-        self.confirm(opened)
+        from pmo_plugins.invoicing.models import Invoice
+        invoice, _ = self.allocated()
+        invoice_id = invoice['invoice_ref']['id']
+        row = Invoice.objects.get(pk=invoice_id)
+        reversal = self.make_reversal(row)
+        opened = services.open_tax_qualification(
+            self.owner, source_ref=row.invoice_ref, tax_cents=row.tax_cents,
+            evidence=[{'kind': 'tax_invoice', 'evidence_id': 'tax-2'}],
+            request_token=uuid.uuid4(), dry_run=False)
+        services.confirm_tax_qualification(
+            self.finance, opened['qualification_ref']['id'],
+            qualification_status='recoverable', decided_on=self.today,
+            evidence=[{'kind': 'tax_decision', 'evidence_id': 'd3'}],
+            request_token=uuid.uuid4(), expected_version=1, dry_run=False)
         link = services.link_invoice_orchestration(
-            self.owner, invoice_id=self.invoice_id, link_kind='settlement_adjustment',
+            self.owner, invoice_id=invoice_id, link_kind='settlement_adjustment',
             owner_ref={'namespace': 'settlement', 'kind': 'settlement',
                        'id': str(self.settlement.pk), 'version': self.settlement.version},
             evidence=[{'kind': 'owner_fact', 'evidence_id': 's1'}],
-            request_token=uuid.uuid4(), expected_version=1, dry_run=False)
+            request_token=uuid.uuid4(), expected_version=1, reversal_id=reversal.pk,
+            dry_run=False)
         self.assertEqual(link['link_kind'], 'settlement_adjustment')
-        snapshot = services.invoice_tax_snapshot(self.owner, self.invoice_id)
+        snapshot = services.invoice_tax_snapshot(self.owner, invoice_id)
         self.assertEqual(len(snapshot['orchestration_links']), 1)
         self.assertTrue(snapshot['orchestration_links'][0]['exists'])
         with self.assertRaises(ValidationError):
             services.link_invoice_orchestration(
-                self.owner, invoice_id=self.invoice_id, link_kind='settlement_adjustment',
+                self.owner, invoice_id=invoice_id, link_kind='settlement_adjustment',
                 owner_ref={'namespace': 'settlement', 'kind': 'settlement',
                            'id': str(self.settlement.pk), 'version': self.settlement.version},
                 evidence=[{'kind': 'owner_fact', 'evidence_id': 's1'}],
+                request_token=uuid.uuid4(), expected_version=1, reversal_id=reversal.pk,
+                dry_run=False)
+        with self.assertRaises(ValidationError):
+            services.link_invoice_orchestration(
+                self.owner, invoice_id=invoice_id, link_kind='settlement_adjustment',
+                owner_ref={'namespace': 'settlement', 'kind': 'settlement',
+                           'id': str(self.settlement.pk), 'version': self.settlement.version},
+                evidence=[{'kind': 'owner_fact', 'evidence_id': 's2'}],
                 request_token=uuid.uuid4(), expected_version=1, dry_run=False)
         with self.assertRaises(ValidationError):
             services.link_invoice_orchestration(
-                self.owner, invoice_id=self.invoice_id, link_kind='cash_refund',
+                self.owner, invoice_id=invoice_id, link_kind='cash_refund',
                 owner_ref={'namespace': 'cash', 'kind': 'cash_refund',
                            'id': str(uuid.uuid4()), 'version': 1},
                 evidence=[{'kind': 'owner_fact', 'evidence_id': 'c1'}],
-                request_token=uuid.uuid4(), expected_version=1, dry_run=False)
+                request_token=uuid.uuid4(), expected_version=1, reversal_id=reversal.pk,
+                dry_run=False)
         rows = services.invoice_tax_list(self.auditor)
-        self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0]['orchestration_link_count'], 1)
+        matched = [item for item in rows if item['invoice']['id'] == invoice_id][0]
+        self.assertEqual(matched['orchestration_link_count'], 1)
+
+    def test_cross_project_owner_ref_rejected(self):
+        from core.models import Project
+        from pmo_plugins.management_revenue.models import RevenueAdjustment
+        invoice, _ = self.allocated()
+        row = __import__('pmo_plugins.invoicing.models', fromlist=['Invoice']).Invoice.objects.get(
+            pk=invoice['invoice_ref']['id'])
+        reversal = self.make_reversal(row)
+        other = Project.objects.create(organization=self.org, code='OTHER-FX', name='其它项目',
+                                       manager=self.owner, start_date=self.today,
+                                       end_date=self.today)
+        recognition = self.recognition(10000)
+        adjustment = RevenueAdjustment.objects.create(
+            organization=self.org, project=other, recognition=recognition,
+            adjustment_cents=-1000, reason='跨项目反冲', occurred_on=self.today,
+            posting_period=self.today.strftime('%Y-%m'), status='posted',
+            created_by=self.owner)
+        with self.assertRaises(ValidationError):
+            services.link_invoice_orchestration(
+                self.owner, invoice_id=row.pk, link_kind='revenue_reversal',
+                owner_ref={'namespace': 'management_revenue', 'kind': 'revenue_adjustment',
+                           'id': str(adjustment.pk), 'version': 1},
+                evidence=[{'kind': 'owner_fact', 'evidence_id': 'r1'}],
+                request_token=uuid.uuid4(), expected_version=1,
+                reversal_id=reversal.pk, dry_run=False)
+        with self.assertRaises(ValidationError):
+            services.link_invoice_orchestration(
+                self.owner, invoice_id=row.pk, link_kind='revenue_reversal',
+                owner_ref={'namespace': 'management_revenue', 'kind': 'revenue_adjustment',
+                           'id': str(adjustment.pk), 'version': 1},
+                evidence=[{'kind': 'owner_fact', 'evidence_id': 'r2'}],
+                request_token=uuid.uuid4(), expected_version=1, dry_run=False)
 
 
 class TaxOrchestrationAfterReversalTests(TaxFixture, TestCase):
