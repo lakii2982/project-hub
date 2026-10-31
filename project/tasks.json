@@ -10566,7 +10566,7 @@
       "title": "后续交付独立规划入口（接续 PH-323）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -10595,6 +10595,73 @@
       "owner": "root",
       "blockers": [],
       "handoff": "project/handoffs/PH-328.md"
+    },
+    {
+      "id": "PH-329",
+      "title": "后续交付独立规划入口（接续 PH-328）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-328"
+      ],
+      "spec": "project/specs/PH-329.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "docs/v1.0-development/*",
+        "project/reports/PH-329.json",
+        "project/handoffs/PH-329.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-330",
+      "title": "自我改进三回路：lessons/metrics 聚合与 brief 先例注入（EXP-1 合入）",
+      "kind": "infra",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [],
+      "spec": "project/specs/PH-330.md",
+      "allowed_paths": [
+        "scripts/projectctl.py",
+        "tests/test_projectctl_lessons.py",
+        "scripts/experiments/backtest_lessons.py",
+        "docs/engineering/experiment-exp1-self-improve-loop.md",
+        "project/tasks.json",
+        "project/specs/PH-330.md",
+        "project/reports/PH-330.json",
+        "project/handoffs/PH-330.md",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_projectctl_lessons tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
     }
   ]
 }

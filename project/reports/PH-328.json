@@ -1,45 +1,68 @@
 {
   "task": "PH-328",
-  "title": "下一规划槽：PH-324 白名单修正 + PH-324 spec",
+  "title": "下一规划槽：PH-324 白名单修正 + PH-324 spec + PH-330/PH-329 登记",
   "risk": "S",
   "owner": "root",
-  "summary": "将 docs/v1.0-development/promotion-draft/extension-freeze.json 与 project/specs/PH-324.md 加入 PH-324 allowed_paths；创建 PH-324 spec（canonical 币种物化契约）；关闭本槽。",
+  "summary": "将 docs/v1.0-development/promotion-draft/extension-freeze.json 与 project/specs/PH-324.md 加入 PH-324 allowed_paths；创建 PH-324 spec（canonical 币种字段/类型物化契约；保留 *CnyCents 兼容；同步 extension-freeze canonical_sha256；validate 必须通过）。本槽续消费（同槽双交付记账，rebase 合并）：登记 PH-330「自我改进三回路：lessons/metrics 聚合与 brief 先例注入（EXP-1 合入）」ready（S 级，白名单含代码/测试/回测/评估文档/交付三件套）与 PH-329 下一规划槽 ready（接续本槽，含 PH-330 前瞻验证消费项与 PH-325/326/327 复核移交）。关闭本槽。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":250} exit 0"
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":250} exit 0（PH-324 白名单交付时点实跑，独立复核已核）；槽续消费后最终 HEAD 重跑见末条。"
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
       "result": "pass",
-      "evidence": "Ran 23 tests OK"
+      "evidence": "Ran 23 tests OK（PH-324 白名单交付时点）；槽续消费后最终 HEAD 重跑见末条。"
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 2659317 --task PH-328",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 5 changed files all inside BASE PH-328 allowed_paths (independent review pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 5 changed files all inside BASE PH-328 allowed_paths (independent review pass recorded)。"
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v（槽续消费最终 HEAD）",
+      "result": "not_run",
+      "evidence": "待 rebase 合并解决落定后按最终 HEAD 实跑回填本条（此前 2.506s OK 为 rebase 前 566d7d3 读数，本槽不改代码、预期同值，但以实跑为准）。"
+    },
+    {
+      "command": "python scripts/projectctl.py check（槽续消费最终 HEAD）",
+      "result": "not_run",
+      "evidence": "待 round-3 复核落 pass 后按最终 HEAD 实跑回填本条（预期 task_count=252：250+PH-330/PH-329 登记）。"
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base <merged-main> --task PH-328（槽续消费最终 HEAD）",
+      "result": "not_run",
+      "evidence": "待 round-3 复核落 pass、rebase 完成后按最终 HEAD 实跑回填（预期 BASE=合并后 main，变更文件并入槽白名单核验）。"
     }
   ],
   "deviations": [
     "PH-324 实现发现 canonical 契约文件被 extension-freeze.json 的 canonical_sha256 锁定，而该文件不在 PH-324 白名单：本槽按 Lead 授权把它与 PH-324 spec 一并加入 PH-324 allowed_paths（真实交付，不降级为旁路 schema）。",
-    "PH-324 spec 此前缺失（PH-323 仅登记任务未建 spec），本槽补齐。"
+    "PH-324 spec 此前缺失（PH-323 仅登记任务未建 spec），本槽补齐。",
+    "同槽双交付记账（第三起撞车，独立复核 BLOCKER 1 拦截）：PH-324 白名单修正线（#198，Lead/root）与 EXP-1 登记线（本 PR 作者）在互不知情下同时消费 PH-328。rebase 5a86124 后合并双方记账：PH-328 沿用 in_review→done、owner=root 保留，报告/交接双叙事合并，双方 tests/deviations/unverified 全量保留。",
+    "EXP-1 号位史：首次登记取 PH-254，与 PH-248 槽已交付的 PH-244 证据修正片撞车；改 PH-325 又与 PH-323 链预留号（本槽 spec 依赖复核清单明载 325/326/327）撞车且该号随后被并行链登记；终取 PH-330（329 留给下一槽）。教训：热 repo 登记前须 fetch 后核实时 max(id) 与槽 spec 预留号，落号与开 PR 间窗口尽量短；双线并行的槽消费必须先对账台账。",
+    "结构史：EXP-1 交付最初试图登记+实现同 PR，verify-change 被 task_not_in_baseline 拦截三次，确认本仓库治理链为预注册链——新任务只能经 ready 规划槽交付登记。",
+    "EXP-1 线重建过程中工作树两次误覆盖 main 侧已交付的 PH-254 spec/report/handoff，均即时自 origin/main 恢复，恢复后 check 确认无缺失文件；未进入任何提交。"
   ],
   "unverified": [
     "PH-324 实现本身未开始",
-    "本片 docs/governance-only，无浏览器/PG/生产证据"
+    "本片 docs/governance-only，无浏览器/PG/生产证据",
+    "PH-330 实现不在本 PR：代码/测试/回测/评估文档随后续交付 PR（Task: PH-330）送达并独立复核",
+    "PH-330 前瞻效果（重复失败率下降）未证，消费入口已写入 PH-329 spec",
+    "PH-325/326/327 复核移交 PH-329 槽（PH-325 已被并行链占用登记）"
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-328 next-planning-slot reviewer (fresh context, read-only)",
-    "status": "pass",
+    "reviewer": "independent PH-328 next-planning-slot reviewer (fresh context, read-only)；round-3（PH-330/PH-329 登记增量与双消费合并）独立复核中",
+    "status": "pending",
     "findings": [
       "ROUND-2 BLOCKERS RESOLVED AT 5922533: (1) the report's verify-change test entry no longer claims a pass; it is `not_run` and records the actual pre-review `ok:false/high_risk_review_required` with no path errors, noting the real pass run will be recorded after this review. (2) the PH-324 spec acceptance now uses executable `python` commands only (`validate_contracts.py`, `manage.py check`, governance unittest) with no `<BASE>` placeholder and no nonexistent `.agent-venv`/`.venv` paths; the verify-change note states the BASE is injected by task acceptance and is not written as a placeholder.",
       "WHITELIST/SCOPE: PH-324 allowed_paths now add only `docs/v1.0-development/promotion-draft/extension-freeze.json` (the canonical hash lock file that must be updated) and `project/specs/PH-324.md` (the missing spec), on top of the existing contract/model/test paths; this is the minimal unblocking change and does not absorb another task's scope. PH-328 remains a docs/governance planning slice; no product code/migration/schema change.",
       "PH-324 SPEC: consistent with PH-308 §9A - target entities/contract-bundle Money+CurrencyCode/write-dtos/commands/relationships/source-registry; keep `*CnyCents` compatibility/CNY backfill/double-read; sync extension-freeze canonical_sha256; validate_contracts must pass; non-CNY writes rejected before PH-321; historical recompute requires explicit migration; counterexamples and executable acceptance are present and no placeholders remain. PH-328 is in_review with handoff/manifest; 5 changed files all inside PH-328 allowed paths.",
-      "EVIDENCE AT 5922533 (BASE 2659317): check ok=true/task_count=250; governance 23 tests OK; verify-change --base 2659317 --task PH-328 only high_risk_review_required, no path_out_of_scope (this pass clears it); report review now pass. Final evidence/PR should record the real post-review verify-change pass run."
+      "EVIDENCE AT 5922533 (BASE 2659317): check ok=true/task_count=250; governance 23 tests OK; verify-change --base 2659317 --task PH-328 only high_risk_review_required, no path_out_of_scope (this pass clears it); report review now pass. Final evidence/PR should record the real post-review verify-change pass run.",
+      "ROUND-1 (PH-324 白名单线) VERDICT: PASS — 原报告 review 块全文保留于本轮 findings 前身，见上方四条；本槽续消费（PH-330/PH-329 登记 + 双消费合并）为 round-3 增量，pending 独立复核，落 pass 后本块 status 置 pass 并追加 round-3 结论。"
     ],
-    "evidence": "VERDICT: PASS (round 2; fabricated evidence and non-executable spec acceptance fixed). Reviewed HEAD 5922533 (BASE 2659317) in /tmp/ph328-planning, worktree clean; 5 changed files (tasks/manifest/PH-324 spec/report/handoff) within PH-328 allowed paths; task_count 250; PH-328 in_review/handoff, manifest=PH-328. Report now records actual pre-review verify-change (ok=false/high_risk, not_run) and the PH-324 spec acceptance is executable with no `<BASE>`/venv placeholders; PH-324 whitelist addition is minimal (extension-freeze + spec) and the spec matches PH-308 §9A (entities/bundle/Money/CurrencyCode/write-dtos/commands/relationships/source-registry, CnyCents compatibility/backfill, freeze hash sync, validate, non-CNY pre-PH-321 rejection, explicit migration, counterexamples). Independent runs: check ok=250; governance 23 OK; verify-change --base 2659317 --task PH-328 only review gate, no path_out_of_scope. Post-review real verify-change pass should be recorded by the final evidence commit."
+    "evidence": "ROUND-1/2: VERDICT PASS (round 2; fabricated evidence and non-executable spec acceptance fixed). Reviewed HEAD 5922533 (BASE 2659317) in /tmp/ph328-planning, worktree clean; 5 changed files (tasks/manifest/PH-324 spec/report/handoff) within PH-328 allowed paths; task_count 250; PH-328 in_review/handoff, manifest=PH-328. Report now records actual pre-review verify-change (ok=false/high_risk, not_run) and the PH-324 spec acceptance is executable with no `<BASE>`/venv placeholders; PH-324 whitelist addition is minimal (extension-freeze + spec) and the spec matches PH-308 §9A (entities/bundle/Money/CurrencyCode/write-dtos/commands/relationships/source-registry, CnyCents compatibility/backfill, freeze hash sync, validate, non-CNY pre-PH-321 rejection, explicit migration, counterexamples). Independent runs: check ok=250; governance 23 OK; verify-change --base 2659317 --task PH-328 only review gate, no path_out_of_scope. Post-review real verify-change pass should be recorded by the final evidence commit. ROUND-3（PH-330/329 增量）: 独立复核第一轮 FAIL 拦截同槽双消费（BLOCKER 1），按修复路径 rebase 5a86124 合并双方记账后送 round-3 增量确认。"
   },
   "task_id": "PH-328"
 }
