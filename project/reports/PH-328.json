@@ -27,13 +27,13 @@
     },
     {
       "command": "python scripts/projectctl.py check（槽续消费最终 HEAD）",
-      "result": "not_run",
-      "evidence": "待 round-3 复核落 pass 后按最终 HEAD 实跑回填本条（预期 task_count=252：250+PH-330/PH-329 登记）。"
+      "result": "pass",
+      "evidence": "review 落 pass 后实跑：{\"command\":\"check\",\"ok\":true,\"task_count\":252}（PH-324 白名单交付 + PH-330/PH-329 登记）。"
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base <merged-main> --task PH-328（槽续消费最终 HEAD）",
-      "result": "not_run",
-      "evidence": "待 round-3 复核落 pass、rebase 完成后按最终 HEAD 实跑回填（预期 BASE=合并后 main，变更文件并入槽白名单核验）。"
+      "command": "python scripts/projectctl.py verify-change --base origin/main --task PH-328（槽续消费最终 HEAD）",
+      "result": "pass",
+      "evidence": "ok=true（head ff146fe，base 094f61e=origin/main，assertion_scope=declaration_only）：5 个变更文件全在 BASE PH-328 allowed_paths。规划 PR squash 合入后交付 PR（Task: PH-330）以新 main 为 BASE。"
     }
   ],
   "deviations": [
