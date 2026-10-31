@@ -1,0 +1,38 @@
+{
+  "task_id": "PH-347",
+  "summary": "安装/升级演练执行首片 on BASE cbb84c2. Implements scripts/ops/install_drill.py (V1-OPS-01 preflight install diagnostics and V1-OPS-02 TLS/security probe) and scripts/ops/upgrade_drill.py (V1-OPS-03 upgrade/rollback rehearsal) against the PH-345 frozen contract: append-only JSONL evidence envelope v1 (script/contract_version/mode/profile/app_sha/started_at/finished_at/exit_code/status/checks/artifacts/redactions/notes), exit codes 0 pass / 2 not_run (missing prerequisite) / 3 fail / 4 environment error / 5 security refusal, dry_run default, idempotent evidence dedupe by script+profile+started_at, explicit production execute refusal (exit 5 blocked), isolated rehearsal only, redacted evidence, no production/customer data. Preflight checks runtime, git SHA, disk, Compose/DB declarations, append-only migration mode and refuses production execution; execute path is a disposable isolated rehearsal. TLS probe validates domain/validity/expiry/hostname/HSTS/Secure cookies, reports no-domain as not_run, and accepts an injected handshake for deterministic tests. Upgrade drill validates baseline/candidate SHA, verified non-empty backup evidence, append-only migration prefix, duplicate/destructive migration rejection and structural-compatible rollback, supports isolated execute with optional real migration against a temporary copied SQLite DB, and refuses production execution. Docs update ops-runbook/upgrade-recovery statuses from not implemented to local/rehearsal implemented with real staging/production marked not_run. Scoped 12 tests cover envelope/exit codes/idempotency/production refusal/TLS expired/hostname/migration regression/backup missing. No real deployment, TLS, restore, PG concurrency, performance, customer data, or production access was performed; those remain not_run.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":283}."},
+    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."},
+    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 1236 tests in 148.862s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI authoritative."},
+    {"command": "python manage.py test tests.test_v1_ops_install_upgrade --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 12 tests, OK. Covers preflight envelope/pass/not_run, production execute exit 5 refusal, isolated execute rehearsal, TLS valid/expired/refused/no-domain, JSONL append idempotency, upgrade dry-run envelope/pass, backup missing not_run, migration duplicate/rewrite fail, production refusal, evidence dedupe, CLI exit/out."},
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests in 2.622s, OK."},
+    {"command": "python scripts/ops/install_drill.py --mode dry_run --env rehearsal --facts '{\"compose_version\":\"2.29.0\",\"db_engine\":\"sqlite\",\"migrations_append_only\":true}' --out /tmp/ph347-evidence/install.jsonl", "result": "pass", "evidence": "Actual local run exit 0; envelope status pass, checks profile/python/sha/disk/compose/db/migration; artifact /tmp/ph347-evidence/install.jsonl."},
+    {"command": "python scripts/ops/install_drill.py --mode execute --env production --out /tmp/ph347-evidence/install-production-refused.jsonl", "result": "pass", "evidence": "Actual run exit 5; envelope status blocked with safety.production_execute fail; no production operation performed."},
+    {"command": "python scripts/ops/install_drill.py --step tls --mode dry_run --env staging --out /tmp/ph347-evidence/tls.jsonl", "result": "pass", "evidence": "Actual run exit 2; envelope status not_run because no real domain/TLS probe was executed; no configuration was treated as a pass."},
+    {"command": "python scripts/ops/upgrade_drill.py --mode dry_run --env rehearsal --baseline <HEAD> --candidate deadbeef --backup /tmp/ph347-evidence/backup.dump --migrations-before '[\"core.0001_initial\"]' --migrations-after '[\"core.0001_initial\",\"costing.0005_shared_cost_allocation\"]' --out /tmp/ph347-evidence/upgrade.jsonl", "result": "pass", "evidence": "Actual local run exit 0; envelope status pass with backup/append-only/rollback checks; artifact /tmp/ph347-evidence/upgrade.jsonl."},
+    {"command": "python scripts/ops/upgrade_drill.py --mode execute --env rehearsal --baseline <HEAD> --candidate <HEAD> --backup /tmp/ph347-evidence/backup.dump --db /tmp/ph347-rehearsal.sqlite3 --run-migrate --migrations-before '[\"core.0001_initial\"]' --migrations-after '[\"core.0001_initial\",\"costing.0005_shared_cost_allocation\"]' --out /tmp/ph347-evidence/upgrade-execute.jsonl", "result": "pass", "evidence": "Actual isolated SQLite rehearsal: migrate exit 0, smoke not executed, so envelope status not_run/exit 2 (not claimed as pass); artifact /tmp/ph347-evidence/upgrade-execute.jsonl."},
+    {"command": "python scripts/ops/upgrade_drill.py --mode execute --env production --baseline <HEAD> --candidate deadbeef --backup /tmp/ph347-evidence/backup.dump --out /tmp/ph347-evidence/upgrade-production-refused.jsonl", "result": "pass", "evidence": "Actual run exit 5; envelope status blocked with safety.production_execute fail; no production upgrade performed."},
+    {"command": "python scripts/projectctl.py verify-change --base cbb84c2 --task PH-347", "result": "not_run", "evidence": "Not run before report creation; expected only high_risk_review_required while review is pending. Will be rerun after the independent review pass."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Independent S review pending. Verify PH-345 envelope/exit-code contract, production execute refusal, dry_run/execute idempotent evidence, isolated-only rehearsal, TLS expired/hostname/no-domain semantics, backup-before-upgrade and append-only migration/rollback-compatible checks, duplicate/rewrite rejection, docs not_run honesty, exact whitelist and scoped/full evidence. Implementer does not self-pass."
+  },
+  "deviations": [
+    "No real staging/production installation, TLS handshake, upgrade, or rollback was executed; only local/isolated rehearsal and contract tests. Real-environment items are marked not_run.",
+    "Upgrade execute was performed only against a temporary copied SQLite DB; its smoke step was not executed, so the evidence status is not_run/exit 2 rather than a fabricated pass. PG/backup-restore/PG-concurrency are separate slices (PH-348/349).",
+    "TLS probe CLI requires a real domain and uses a real socket; deterministic tests inject handshake facts. No domain was probed in this slice, so CLI evidence is not_run.",
+    "Artifacts are written under /tmp/ph347-evidence and referenced from the report/handoff; they are not committed (runtime evidence, no customer/credential data).",
+    "No product code, migration, canonical/schema or CI-gate changes."
+  ],
+  "unverified": [
+    "Real staging/production install/upgrade/TLS/rollback execution and L4/L5 evidence",
+    "Backup/restore drill and PG concurrency (PH-348/349, not started)",
+    "Browser/product-surface verification not applicable",
+    "Independent S review and CI/PR pending"
+  ]
+}

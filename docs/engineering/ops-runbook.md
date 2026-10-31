@@ -68,7 +68,7 @@
 | 输出/证据 | 环境检查、版本、端口/磁盘、迁移列表、健康检查；`status` 按结果 |
 | 通过判据 | 全部前置满足且健康检查 200；失败安全重试记录 |
 | 失败处置 | exit 2/3/4；不继续部署；记录诊断包（脱敏） |
-| 当前状态 | 未实现（PH-333）；`not_run` |
+| 当前状态 | PH-347 实现：`scripts/ops/install_drill.py --step preflight`；本地 rehearsal dry_run pass；真实 staging/production 未执行，`not_run` |
 
 ### V1-OPS-02 TLS/安全（PH-333）
 
@@ -79,7 +79,7 @@
 | 输出/证据 | TLS 握手/证书到期/续期演练、安全头、错误配置拒绝结果 |
 | 通过判据 | 证书有效/可续期、HSTS/Cookie 边界正确、错误配置拒绝 |
 | 失败处置 | exit 3/4；不贴配置冒充通过 |
-| 当前状态 | 未实现（PH-333）；`not_run` |
+| 当前状态 | PH-347 实现：`install_drill.py --step tls`（真实域名探测；无域名 exit 2 not_run；测试注入 handshake 验证过期/主机名/HSTS 拒绝）；真实生产未执行，`not_run` |
 
 ### V1-OPS-03 升级与兼容回退（PH-333）
 
@@ -91,7 +91,7 @@
 | 输出/证据 | 升级前后 SHA、迁移应用列表、冒烟结果、回退演练记录 |
 | 通过判据 | 迁移成功、冒烟通过、失败可恢复、不倒放账本 |
 | 失败处置 | 停止升级；按 `upgrade-recovery.md` 回退；保留备份/日志 |
-| 当前状态 | 未实现（PH-333）；`not_run` |
+| 当前状态 | PH-347 实现：`scripts/ops/upgrade_drill.py`；本地 rehearsal dry_run pass；隔离 SQLite execute migrate pass 但 smoke 未执行 → `not_run` exit 2；production execute exit 5 拒绝；真实 staging/production `not_run` |
 
 ### V1-OPS-04 备份与恢复（PH-333）
 
@@ -132,9 +132,9 @@
 
 | 矩阵项 | 脚本契约 | 实现片 | 当前状态 |
 | --- | --- | --- | --- |
-| V1-OPS-01 安装/诊断 | `ops_preflight` | PH-333 | not_run |
-| V1-OPS-02 TLS/安全 | `ops_tls_probe` | PH-333 | not_run |
-| V1-OPS-03 升级/回退 | `ops_upgrade` | PH-333 | not_run |
+| V1-OPS-01 安装/诊断 | `ops_preflight` | PH-347（本地/隔离） | 本地 rehearsal pass；真实环境 not_run |
+| V1-OPS-02 TLS/安全 | `ops_tls_probe` | PH-347（本地/隔离） | 无真实域名 not_run；契约测试通过 |
+| V1-OPS-03 升级/回退 | `ops_upgrade` | PH-347（本地/隔离） | 本地 dry_run pass；execute smoke not_run；生产拒绝 exit 5 |
 | V1-OPS-04 备份/恢复 | `ops_backup_verify` / `ops_restore_rehearsal` | PH-333 | not_run |
 | V1-OPS-05 健康/容量/积压 | `ops_health_capacity` | PH-335 | blocked |
 | V1-OPS-06 PG 并发 | `ops_pg_concurrency` | PH-334 | blocked |

@@ -918,3 +918,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 4. **反例**：无证据写通过、配置/演练冒充生产、SQLite 冒充 PG、跳过备份、证据含敏感原文、not_run 计通过、以手册存在代替执行证据。
 5. 与 `batch-c-acceptance.md`（PH-332 矩阵）交叉引用；ROADMAP 批次 C 状态同步。命令已逐条替换为仓库真实模块（41 个 `tests.*` label 全部存在；抽跑 M03 50、M04 36、M06 48、M09 79、M10 38、M12 39、M14 15 项均 OK）；未写代码/脚本/迁移，未执行部署/恢复/并发/性能；所有项按实际标 not_run/blocked。
 独立 S 复核首轮 1 阻断（占位/不存在的测试 label）已修（41 个 label 全部真实存在；M03/M04/M06/M09/M10/M12/M14 抽跑 OK）；二轮 PASS。最终门禁：projectctl check ok=true/task_count=278；23 项治理 OK；verify-change --base db8ed47 --task PH-352 ok=true、8 文件全白名单、无 errors。未验证：M01–M15 与 V1-OPS-01–06 均未执行；批次 C 演练待 PH-347–350。
+
+## PH-347 安装/升级演练执行（2026-10-31，BASE cbb84c2）
+
+实现 `scripts/ops/install_drill.py`（V1-OPS-01 preflight、V1-OPS-02 TLS）与 `scripts/ops/upgrade_drill.py`（V1-OPS-03 升级/回退），按 PH-345 envelope（script/contract_version/mode/profile/app_sha/started_at/finished_at/exit_code/status/checks/artifacts/redactions/notes）、退出码 0/2/3/4/5、append-only JSONL evidence、dry_run/execute、生产 execute 显式拒绝（exit 5）、幂等/去重、隔离 rehearsal。实际本地证据（/tmp/ph347-evidence）：install dry_run exit0 pass；install production execute exit5 blocked；TLS 无域名 exit2 not_run；upgrade dry_run exit0 pass；upgrade production execute exit5 blocked；隔离 SQLite execute migrate pass、smoke 未执行 → status not_run/exit2。真实 staging/production 安装、TLS、升级、回退未执行，标 not_run；未做备份恢复/PG 并发/性能/客户数据。scoped 12 tests OK；全量 **1236 tests/148.862s，5F+3E/69=已知 8 项 macOS 基线无新增**；check 283；governance 23 OK；verify-change review pending。
