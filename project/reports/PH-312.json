@@ -24,8 +24,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 2659317 --task PH-312",
-      "result": "not_run",
-      "evidence": "Actual run before review pass: ok=false, errors=[{\"code\":\"high_risk_review_required\",\"path\":\"report.review\"}] (no path_out_of_scope). Marked not_run (report schema allows pass/not_run/fail); will be rerun and set to pass only after the independent reviewer status=pass."
+      "result": "pass",
+      "evidence": "Actual run after committing the round-4 review pass and task done (BASE 2659317, HEAD f6930ad): ok=true, changes=6 files all inside the 6-path PH-312 allowlist, errors=[]."
     }
   ],
   "review": {
