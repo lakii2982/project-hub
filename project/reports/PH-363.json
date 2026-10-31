@@ -15,7 +15,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base d81c11c --task PH-363",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD 73e69c1: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"73e69c16a47b348bac4e1a389d747d7ff99c510a\",\"count\":7,\"errors\":null}; all 7 files inside BASE PH-363 allowed_paths and review.status=pass with the reviewer's name."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-363 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
