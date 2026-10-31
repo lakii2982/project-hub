@@ -360,10 +360,15 @@ class GitHubGuardTests(ControllerFixture):
     def test_protection_must_remain_strict_and_exactly_eight(self):
         from tooling.ai_delivery.delivery.github import DeliveryError
         required = {"strict": True, "checks": [{"context": n, "app_id": app} for n, app in self.protection.items()]}
-        with mock.patch.object(self.delivery, "_gh_json", return_value={"required_status_checks": required}):
+        payload = {"required_status_checks": required, "enforce_admins": {"enabled": True},
+                   "required_linear_history": {"enabled": True},
+                   "required_conversation_resolution": {"enabled": True},
+                   "required_pull_request_reviews": {"required_approving_review_count": 0}}
+        with mock.patch.object(self.delivery, "_gh_json", return_value=payload):
             self.assertEqual(self.delivery._protection(), self.protection)
         for broken in [dict(required, strict=False), dict(required, checks=required["checks"][:-1])]:
-            with mock.patch.object(self.delivery, "_gh_json", return_value={"required_status_checks": broken}):
+            with mock.patch.object(self.delivery, "_gh_json",
+                                   return_value=dict(payload, required_status_checks=broken)):
                 with self.assertRaises(DeliveryError):
                     self.delivery._protection()
 
@@ -390,12 +395,14 @@ class GitHubGuardTests(ControllerFixture):
     def test_base_advance_after_checks_prevents_actual_merge(self):
         from tooling.ai_delivery.delivery.github import DeliveryError
         pr = {"pr": 1, "head": self.head, "base": self.BASE, "branch": "feat/PH-103-delivery-fixture"}
-        state = {"state": "OPEN", "headRefOid": self.head, "headRefName": pr["branch"], "baseRefName": "main"}
+        state = {"state": "OPEN", "headRefOid": self.head, "headRefName": pr["branch"],
+                 "baseRefName": "main", "mergeable": "MERGEABLE", "mergeStateStatus": "CLEAN"}
         with mock.patch.object(self.delivery.repo, "refresh"), \
              mock.patch.object(self.delivery.repo, "base", side_effect=[self.BASE, "f" * 40]), \
              mock.patch.object(self.delivery, "_pr", return_value=state), \
              mock.patch.object(self.delivery, "_protection", return_value=self.protection), \
              mock.patch.object(self.delivery, "_checks", return_value=self.rows), \
+             mock.patch.object(self.delivery, "_test_merge_sha", return_value="b" * 40), \
              mock.patch.object(self.delivery, "_threads"), \
              mock.patch.object(self.delivery, "_gh") as write:
             with self.assertRaisesRegex(DeliveryError, "base_changed"):
@@ -405,17 +412,56 @@ class GitHubGuardTests(ControllerFixture):
     def test_head_change_after_checks_prevents_actual_merge(self):
         from tooling.ai_delivery.delivery.github import DeliveryError
         pr = {"pr": 1, "head": self.head, "base": self.BASE, "branch": "feat/PH-103-delivery-fixture"}
-        state = {"state": "OPEN", "headRefOid": self.head, "headRefName": pr["branch"], "baseRefName": "main"}
+        state = {"state": "OPEN", "headRefOid": self.head, "headRefName": pr["branch"],
+                 "baseRefName": "main", "mergeable": "MERGEABLE", "mergeStateStatus": "CLEAN"}
         with mock.patch.object(self.delivery.repo, "refresh"), \
              mock.patch.object(self.delivery.repo, "base", return_value=self.BASE), \
              mock.patch.object(self.delivery, "_pr", side_effect=[state, dict(state, headRefOid="f" * 40)]), \
              mock.patch.object(self.delivery, "_protection", return_value=self.protection), \
              mock.patch.object(self.delivery, "_checks", return_value=self.rows), \
+             mock.patch.object(self.delivery, "_test_merge_sha", return_value="b" * 40), \
              mock.patch.object(self.delivery, "_threads"), \
              mock.patch.object(self.delivery, "_gh") as write:
             with self.assertRaisesRegex(DeliveryError, "head_changed"):
                 self.delivery.merge(pr, self.BASE, self.head)
             write.assert_not_called()
+
+    def test_unknown_or_conflicting_merge_state_blocks_before_merge(self):
+        from tooling.ai_delivery.delivery.github import DeliveryError
+        for mergeable, state in [("CONFLICTING", "DIRTY"), ("MERGEABLE", "UNKNOWN"),
+                                 (None, "CLEAN")]:
+            with self.subTest(mergeable=mergeable, state=state):
+                data = {"state": "OPEN", "headRefOid": self.head,
+                        "headRefName": "feat/PH-103-delivery-fixture", "baseRefName": "main",
+                        "mergeable": mergeable, "mergeStateStatus": state}
+                with self.assertRaisesRegex(DeliveryError, "not_mergeable"):
+                    self.delivery._open(data, None, self.head)
+
+    def test_remote_arbitration_requires_official_current_head_and_actions_event(self):
+        policy = json.loads((Path(__file__).resolve().parent.parent /
+                             "project/delivery-policy.json").read_text())
+        summary = {"code_review": {"commit_sha": self.head, "status": "success",
+                                    "has_any_findings": False, "has_unresolved_findings": False}}
+        comment = {"id": 7, "user": {"id": 199175422,
+                                      "login": "chatgpt-codex-connector[bot]", "type": "Bot"},
+                   "body": f"<!-- codex-review-state:v1 {json.dumps(summary)} -->"}
+        responses = [
+            {"id": 1144995}, [comment],
+            {"total_count": 1, "check_runs": [{"id": 9, "name": "Delivery arbitration", "app": {"id": 15368},
+                              "head_sha": self.head, "status": "completed", "conclusion": "success",
+                              "html_url": "https://github.com/example/project/actions/runs/42"}]},
+            {"id": 42, "event": "pull_request", "head_sha": self.head,
+             "path": ".github/workflows/delivery.yml", "status": "completed", "conclusion": "success"},
+        ]
+        with mock.patch.object(self.delivery, "_gh_json", side_effect=responses):
+            result = self.delivery._arbitration(1, self.head, policy)
+        self.assertEqual(result["actions_run_id"], 42)
+        stale = dict(summary, code_review=dict(summary["code_review"], commit_sha="f" * 40))
+        comment["body"] = f"<!-- codex-review-state:v1 {json.dumps(stale)} -->"
+        from tooling.ai_delivery.delivery.github import DeliveryError
+        with mock.patch.object(self.delivery, "_gh_json", side_effect=responses[:2]), \
+             self.assertRaisesRegex(DeliveryError, "not_passed"):
+            self.delivery._arbitration(1, self.head, policy)
 
     def test_publication_rebuilds_from_manifest_without_worker_git_authority(self):
         row = self.execute()

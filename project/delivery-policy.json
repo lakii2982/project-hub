@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "policy_id": "project-hub.delivery-policy/v1",
+  "base_policy_source": "git-show-base",
+  "task_line": {
+    "pattern": "^Task: (PH-[0-9]{3,6})\\s*$",
+    "required_count": 1
+  },
+  "required_status_checks": [
+    "CodeQL (javascript-typescript)",
+    "CodeQL (python)",
+    "Container smoke",
+    "MCP protocol",
+    "SQLite domain",
+    "PostgreSQL domain",
+    "Public hygiene",
+    "Project governance"
+  ],
+  "arbitration_sources": [
+    "independent_review_app_identity",
+    "arbitration_workflow_and_event",
+    "event_base_and_head_sha",
+    "test_merge_sha"
+  ],
+  "required_check_count": 12,
+  "s_authorization": {
+    "tasks": [
+      {"task_id": "PH-120", "contract_digest": "b0288e47677e5fb718ea9aaf89f9f610e6c74d6fcc5342f16821a04d530754d9", "source": "user-2026-10-27-PH120-122"},
+      {"task_id": "PH-121", "contract_digest": "e395ddd8fbef44fc262c669ff680ca475331daa7e5c4721c25f55909227f33ea", "source": "user-2026-10-27-PH120-122"},
+      {"task_id": "PH-122", "contract_digest": "50f641db388933015cf5228fa73cbea6711624dce65c09b9395e10a8461cb2b6", "source": "user-2026-10-27-PH120-122"}
+    ]
+  },
+  "remote_arbitration": {
+    "codex_app_id": 1144995,
+    "codex_bot_user_id": 199175422,
+    "codex_bot_login": "chatgpt-codex-connector[bot]",
+    "workflow_path": ".github/workflows/delivery.yml",
+    "workflow_event": "pull_request"
+  },
+  "independent_review": {
+    "required": true,
+    "reviewer_must_differ_from_source_actors": true,
+    "current_head_only": true,
+    "latest_complete_result_only": true,
+    "reject_unresolved_findings": true,
+    "official_bot_identity_required": true
+  },
+  "merge": {
+    "linear_history_required": true,
+    "strict_required": true,
+    "administrator_protection_required": true,
+    "mergeable_required": true,
+    "unresolved_discussions_rejected": true,
+    "self_reported_pass_rejected": true
+  },
+  "bootstrap": {
+    "remote_checks_enforced": false,
+    "note": "Current BASE gate is bootstrap only until PH-122 verifies the remote enforcement."
+  }
+}

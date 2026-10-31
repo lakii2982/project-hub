@@ -1180,3 +1180,11 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - 关闭规则：每项至少一条已合并实现/契约/验收证据；历史 ID 保留；关闭项不再阻塞保留项；执行人不得自批，独立 S 复核 pending。
 - v1.0 发布资格：release_ready=false；L3 CI/PG、L4 浏览器、L5 生产/客户验收、人工三方签批未完成；PH-020 上线评审在 gate 通过后执行。
 - 实际执行（最终 HEAD）：projectctl check ok=true/task_count=317；23 项治理 OK；verify-change --base 7748ea1 --task PH-396 在 review pending 时仅 high_risk_review_required（预期）。未验证：L3/L4/L5、PH-389/390/393/394/395、三方签批、独立 S 复核。
+
+## PH-120 可信 PR 交付契约与仲裁（2026-10-31，BASE b26c26f）
+
+- **L1 实现**：版本化 BASE delivery-policy；S 级授权来源 + task/spec contract_digest；离线 PR 元数据 gate 与只读 Delivery arbitration workflow；现有 GitHubDelivery 合并入口接入 BASE policy、mergeable/CLEAN、远端保护、test-merge SHA、最新 HEAD checks、讨论及官方 Codex/Actions 仲裁读取。
+- **L2 实际结果**：登记的 projectctl/governance/delivery 测试 **70 tests OK**；另 delivery controller 组合 119 tests OK；manage.py check exit 0（119 个既有警告）；makemigrations No changes；fresh SQLite verify_integrity ok/errors=[]。
+- **全量本地**：1331 tests，5F+3E/70 skips；8 个失败/错误逐项与 main 既有 macOS 基线一致，无新增；不据此声称 Linux/PG 通过。
+- **L3/L4/L5：not_run**。本片未做真实 Codex PASS、远端保护启用、浏览器、生产或客户 UAT；`remote_checks_enforced=false`，PH-122 必须做真实对抗验证。
+- 独立 S review 与 verify-change：pending；执行人未自批。
