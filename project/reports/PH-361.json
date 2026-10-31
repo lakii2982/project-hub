@@ -1,0 +1,42 @@
+{
+  "task_id": "PH-361",
+  "summary": "后续交付独立规划入口（接续 PH-356，docs-only）：按 BASE ea8e765 复核批次 C 依赖——PH-347/348 已 done、PH-349 ready（未 done），故 PH-350（健康/容量基线，deps 347/348/349）保持 proposed 并刷新 blocker；PH-333/334 汇总验收仍等 PH-349、PH-335 等 PH-333/334/PH-350、PH-357 等 PH-349/350/352，均保持 proposed 并刷新精确 blocker；只晋级依赖全 done 的（本 BASE 无新增可晋级执行片；PH-365 作为接续规划入口依赖本槽 PH-361，保持 proposed，待本槽 done 后由下一规划槽置 ready）。登记下一批 4 个切片（PH-362–PH-365，编号从 362 连续、已核无并行占用）：PH-362 导入提交实现前置契约冻结（proposed，等 PH-363）、PH-363 期间预检/四类核对/差额契约冻结（ready，deps PH-291/283/284/288/280 done）、PH-364 到期扫描/待办/通知契约冻结（ready，deps PH-291/304/309/281 done）、PH-365 下一规划入口（proposed，depends_on PH-361，等 PH-361 done 后由下一规划槽复核 DoR 置 ready）。同步刷新 PH-289→PH-362、PH-353→PH-363、PH-355→PH-364、PH-338 等依赖与 blocker；ROADMAP 批次 C 进展同步；无产品代码/迁移/脚本/门禁/contract schema 变更。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=287; PH-361 in_review with owner/handoff; new PH-362..PH-365 specs/fields valid; only dependency-complete tasks (PH-363/364) are ready; PH-365 stays proposed behind PH-361; PH-350/333/334/335/357 remain proposed with precise blockers."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-361 planning reviewer",
+    "status": "pass",
+    "findings": [
+      "Round-1 REJECTED: PH-365 was prematurely ready while PH-361 in_review; ROADMAP queue line still said PH-365 could run in parallel.",
+      "Round-2 PASS: PH-365 proposed with depends_on=[PH-361] and precise blocker; ROADMAP queue line 'PH-363/364 parallel; PH-365 waits PH-361 done'; blockers for PH-350/333/334/335/357 accurate; PH-362-365 sequential and whitelisted; check 287, governance 23 OK, verify-change only review/acceptance with no path errors.",
+      "Final evidence: PH-361 done, PH-365 ready with blockers cleared; gates rerun after rebase."
+    ]
+  },
+  "deviations": [
+    "No batch-C execution slice could be promoted in this BASE: PH-349 is ready but not done, so PH-350/PH-333/PH-334/PH-335/PH-357 remain proposed with refreshed exact blockers (PH-349/PH-350/PH-352 as applicable).",
+    "PH-362 is proposed because its prerequisite PH-363 is ready but not done; PH-363 and PH-364 are ready because their dependencies are all done (PH-291/283/284/288/280 and PH-291/304/309/281 respectively); PH-365 is the next planning slot but stays proposed behind PH-361 (in_review); the next planning slot sets it ready after PH-361 is done.",
+    "Existing dependency links were refreshed (PH-289->PH-362, PH-353->PH-363, PH-355->PH-364, PH-338 also waits PH-289/PH-362) instead of pretending the legacy PH-181/185/179/183/151 proposed tasks are done.",
+    "Numbering checked against the BASE task set: highest existing PH id was PH-361; PH-362..PH-365 are contiguous and free (no parallel EXP/number collision observed).",
+    "No product code, migration, table, route, script, CI gate, contract schema or acceptance command was changed; only specs/tasks/manifest/ROADMAP/governance docs.",
+    "Reviewer round-1 blocker fixed: PH-365 (next planning entry) now has depends_on=['PH-361'], status=proposed and a precise blocker (PH-361 in_review); it will be set ready by the next planning slot only after PH-361 is done. Its spec remains '接续 PH-361' consistently.",
+    "Reviewer round-2 blocker fixed: ROADMAP batch-C queue line now says 'PH-363/364 可并行；PH-365 等 PH-361 done 后启动', consistent with PH-365 proposed/depends_on PH-361 and its blocker; report/handoff wording aligned.",
+    "Lead integration rebase (ea8e765 -> 87e90e6) after PH-349 merged: ROADMAP/verification/manifest merged keeping PH-350 blocked (promotion happens in the next slot PH-365); gates rerun."
+  ],
+  "unverified": [
+    "This slice is planning-only: no runtime, browser, PG or migration verification applies; implementation tasks must re-validate specs against the actual BASE.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PH-349/PH-350/PH-333/334/335/PH-357 and PH-362/363/364 implementations remain unimplemented (ready/proposed but not started).",
+    "No deployment/recovery/concurrency/performance evidence was executed; batch C evidence remains not_run/blocked as recorded."
+  ]
+}
