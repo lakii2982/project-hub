@@ -52,6 +52,26 @@ owner/finance 触发只读结项核对，返回 blockers（必须清零）与 wa
 - request_token 收据（org+token 唯一、input digest、result）；同 token 同输入幂等重放、改输入冲突；公司锁；同项目并发结项一胜；重复结项拒绝。
 - 结项结论 append-only 审计（generic audit 或实现片 spec 冻结的审计方式），不新增 canonical topic/command 除非另立规划并核号。
 
+## 与既有模型映射（PH-322 前置，必须落实）
+
+ADR 冻结的 `active/closing/closed/reopened` 是**契约状态名**，不是既有 `core.Project.stage` 的枚举事实。现有 `Project.stage ∈ {initiation, planning, execution, acceptance, warranty, closed, on_hold, cancelled}`（另有 `previous_stage`），没有 `active/closing/reopened`。旧→新映射如下，实现片不得把不兼容枚举写成既有事实：
+
+| 契约状态 | 既有事实映射 | 语义与约束 |
+| --- | --- | --- |
+| `active` | `Project.stage` ∈ {initiation, planning, execution, acceptance, warranty, on_hold}（即 stage ∉ {closed, cancelled}） | 既有事实；本 ADR 的 active 即"未结项" |
+| `closed` | `Project.stage='closed'` | 既有事实；本 ADR 的 closed 即该状态 |
+| `closing` | **无既有映射** | 未来 schema 变更；不得在现有 stage 枚举中伪称已存在 |
+| `reopened` | **无既有映射** | 未来 schema 变更；不得在现有 stage 枚举中伪称已存在 |
+| —（取消） | `Project.stage='cancelled'` | 既有独立终态，不是本 ADR 的结项；不得把取消当结项/重开 |
+
+**迁移/回填/约束计划（PH-322 实现前置）**：
+
+1. 在实现片按实际 BASE 二选一并写入 PH-322 spec/report：方案 A 扩展 `Project.stage` 允许 `closing/reopened`（需新迁移、放宽/替换 stage 约束、保留既有 stage 语义与 `previous_stage`）；方案 B 新增 append-only `ProjectClose`（项目 ref、状态迁移、blockers/warnings 摘要、结论、操作者、时间、request_token），`Project.stage` 保持既有枚举，closing/reopened 仅由 ProjectClose 表达（推荐，避免污染项目 stage 语义）。
+2. 回填：既有 `stage='closed'` 回填为 closed 语义；其余未取消项目回填为 active 语义；不得改写历史项目行；若方案 A 改约束，须证明旧行仍满足新约束。
+3. 约束/不变量：同一项目至多一个进行中的 closing；closed 后业务写拒绝由各 owner 项目/期间校验保证；reopened 必须 append-only 记录并保留原结项结论；`cancelled` 与 `closed` 互斥，取消不触发结项结论。
+4. 未实现标记：本 ADR 交付时 `closing/reopened`、结项命令与结项结论表均未实现；PH-322 未落地前，只读投影只能显示 stage 映射并标注 `close_command_not_implemented`/`reopen_not_implemented`，不得显示为已结项或已重开。
+5. 不得改已应用迁移、不得抢迁移号；迁移号由 PH-322 按实际叶申请。
+
 ## 非目标
 
 结项写侧、项目归档文件/导出、通知、账本/收入/成本/现金/未清写、多币种、客户门户、自动业务修正、canonical schema 变更、PAT/MCP 结项工具。
