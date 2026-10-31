@@ -1,0 +1,39 @@
+{
+  "task_id": "PH-317",
+  "summary": "Closed the invoice reversal/tax-credit implementation boundary as a docs-only slice grounded in ADR 0015 and the merged PH-252 invoicing implementation. The spec now records what PH-252 already delivers (Invoice/InvoiceLine/InvoiceAllocation/InvoiceReversal/TaxQualification append-only models; record/allocate/reverse services with request_token receipts, company lock, expected_version, period/lock checks, role matrix and history_read; reversal only for active invoices, partial/full, exact negative mirrors, no double/over reversal, and no revenue/cash/ledger/open-item writes) so later slices must not reimplement it. It freezes what remains unimplemented and must be delivered by follow-up slices: tax-qualification confirmation with open-period costing-owner adjustment (no invoicing direct ledger/cost write), reversal cross-owner orchestration (management-revenue reversal, cash refund, settlement adjustment) via named owner services with reference-based reconciliation rather than a false single-transaction guarantee, a possible standalone red-letter invoice entity requiring a canonical extension and its own planning, and read-only invoice/settlement/revenue/tax pairing owned by PH-325. It maps PH-320 (orchestration follow-up, proposed), PH-325 (read-only pairing, proposed), PH-321 (multi-currency, ready) and this closure, and adds acceptance/counterexample rules. No code, migration, route, contract-schema or applied-migration change.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD a581f45 (BASE fcb7b17, PH-317 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":259}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph317-invoice-followup on main fcb7b17 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fcb7b17 --task PH-317",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD a581f45: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 6 changed files (PH-317 spec closure section, tasks.json, manifest.json, docs/verification.md, PH-317 report/handoff) are inside BASE PH-317 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (implementation-boundary closure grounded in ADR 0015 and merged PH-252 code); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "The closure cites the merged PH-252 implementation as evidence of what already exists (models/services/routes/tests) and explicitly refuses to reimplement or claim it; the remaining tax-confirmation/cross-owner/red-letter/pairing capabilities are recorded as unimplemented follow-up slices rather than passed work.",
+    "Cross-owner consistency is frozen as reference-based orchestration plus reconciliation reports, not a false all-domain single transaction; invoicing remains the invoice-fact owner and never writes revenue/cash/ledger/open-item facts.",
+    "A standalone red-letter invoice entity is explicitly deferred to a canonical-extension planning slice (ADR 0015 boundary); this slice does not modify contract schema.",
+    "No code/migration/route/schema change and no runtime/browser/PG execution; PH-252's own report/CI remain the evidence for the implemented reversal/tax-fact behavior."
+  ],
+  "unverified": [
+    "TaxQualification confirmation service, costing open-period adjustment, cross-owner reversal/refund/settlement orchestration, standalone red-letter invoice entity and read-only pairing are not implemented.",
+    "No runtime/browser/PostgreSQL verification applies to this docs-only closure; PH-252 implementation evidence is cited from its merged slice.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
