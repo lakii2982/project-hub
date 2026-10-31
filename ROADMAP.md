@@ -199,3 +199,9 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - 已回填 PH-347/348/349/350/352 的实际本地 L1+L2 证据到 `docs/v1.0-development/batch-c-runbook.md` §10 与 `docs/verification.md`：V1-OPS-01–06 本地可执行证据/缺口逐项记录；未重跑脚本、未执行真实环境。
 - **发布资格 gate：release_ready=false**。缺口：L3 CI/PG/真实 staging 安装/升级/TLS/恢复/并发、L4 浏览器、L5 生产/客户验收、PH-367（部署/恢复/并发汇总）与 PH-372（D 批验收 runbook）；PH-333/334/335 汇总片不得以文档替代执行证据。
 - 双人复核/签名/14 天时效/不可挑选规则沿用 PH-366 契约；执行人不得自批豁免。
+
+## 批次 D 验收矩阵与 runbook（PH-375，2026-10-31，BASE ef13003）
+
+- 新增 `docs/v1.0-development/batch-d-acceptance.md`（D-01–D-11 矩阵：需求映射/required 层/命令/证据/判据/角色/blocked 现状）与 `docs/v1.0-development/batch-d-runbook.md`（执行协议/回填模板/切片执行卡/退出标准）。
+- 现状：D-01（PH-370 编排执行）实现已合入但验收 **not_run**；D-02–D-11 **blocked**（PH-371/338/353/339/354/340/355/372 等未 done）；发布资格仍按 PH-366 **blocked**。
+- 不新增验收口径；五层证据/PH-345 envelope/PH-366 release gate 为唯一口径。
