@@ -40,7 +40,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base d38165a --task PH-370",
       "result": "pass",
-      "evidence": "Actual run after the round-2 reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-370 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
+      "evidence": "Actual run after the round-2 reviewer pass and final status commit 8030e1a: ok=true, head=8030e1ac518a8d618f820784ab750a52a712a8de, changes=14 files all inside the PH-370 allowlist, errors=[]."
     }
   ],
   "review": {
