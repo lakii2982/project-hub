@@ -11480,7 +11480,7 @@
       "title": "批次 C 验收 runbook 落地（docs-only：M01–M15 验收执行手册与证据模板）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11506,7 +11506,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-352.md"
     },
     {
       "id": "PH-353",

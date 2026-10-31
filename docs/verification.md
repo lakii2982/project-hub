@@ -908,3 +908,13 @@ request_token 收据先于状态/重复门（allocate/reverse/approve/reject/sup
 ## PH-356 后续交付独立规划入口（2026-10-31，BASE db8ed47）
 
 PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-348（备份/恢复）、PH-349（PG 并发）为 ready**（deps PH-330/PH-345 均 done；spec 状态/blockers/白名单已同步）。PH-350 保持 proposed（等 347/348/349 done）；PH-333/PH-334/PH-335 汇总验收 deps 已含对应执行片，blockers 刷新为执行片 done 后再复核，不虚假晋级。新登记 PH-357（批次 C 演练证据回填/验收汇总，proposed）、PH-358（发票批量导入实现首片，proposed）、PH-359（insights 差异单/工作台只读实现首片，proposed）、PH-360（通知中心收件箱实现首片，proposed）、PH-361（后续交付独立规划入口，ready）。实跑：`projectctl check` ok=true/task_count=283；`python -m unittest tests.test_projectctl tests.test_governance -v` **23 tests OK**；仅规划/治理文件变更，无代码/迁移/schema/合同变更。verify-change --base db8ed47 --task PH-356 → ok=true/18 文件全白名单；reviewer round-2 PASS；PH-356 done、PH-361 ready（接续 PH-356）。未验证：实际 CI/部署环境（本片非执行片）。
+
+## PH-352 批次 C 验收 runbook 落地（docs-only）（2026-10-31）
+
+基线 db8ed47。新增 `docs/v1.0-development/batch-c-runbook.md`（319 行）：
+1. **M01–M15 执行手册**：逐项前置/步骤/可执行命令/预期输出/证据模板（代码/命令/CI/浏览器/PG）/通过判据/失败处置/责任角色/当前状态（not_run 或 blocked），明确无执行结论。
+2. **V1-OPS-01–06 执行手册**：对齐 PH-345 `docs/engineering/ops-runbook.md` 的脚本契约、evidence envelope（status/checks/artifacts/redactions）、退出码 0/2/3/4/5、幂等/双人复核/脱敏/失败处置；未实现脚本标 `not_run`/`blocked`。
+3. **证据回填模板与批次 C 退出标准**：`docs/verification.md` 条目模板（环境/SHA/命令实际输出/逐层判定/not_run）；M15 与 V1-OPS 映射；退出标准要求真实执行且无 not_run/blocked 遗留。
+4. **反例**：无证据写通过、配置/演练冒充生产、SQLite 冒充 PG、跳过备份、证据含敏感原文、not_run 计通过、以手册存在代替执行证据。
+5. 与 `batch-c-acceptance.md`（PH-332 矩阵）交叉引用；ROADMAP 批次 C 状态同步。命令已逐条替换为仓库真实模块（41 个 `tests.*` label 全部存在；抽跑 M03 50、M04 36、M06 48、M09 79、M10 38、M12 39、M14 15 项均 OK）；未写代码/脚本/迁移，未执行部署/恢复/并发/性能；所有项按实际标 not_run/blocked。
+独立 S 复核首轮 1 阻断（占位/不存在的测试 label）已修（41 个 label 全部真实存在；M03/M04/M06/M09/M10/M12/M14 抽跑 OK）；二轮 PASS。最终门禁：projectctl check ok=true/task_count=278；23 项治理 OK；verify-change --base db8ed47 --task PH-352 ok=true、8 文件全白名单、无 errors。未验证：M01–M15 与 V1-OPS-01–06 均未执行；批次 C 演练待 PH-347–350。

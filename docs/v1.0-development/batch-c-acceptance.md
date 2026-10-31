@@ -3,6 +3,7 @@
 - 产出任务：PH-332（docs-only；不实现、不部署、不执行真实客户数据）
 - 基线：见 PH-332 report 的 BASE/HEAD；本文件只定义验收方法与证据格式，不代表任何能力已通过。
 - 与 `docs/v1.0-delivery-plan.md` M01–M15、`ROADMAP.md` 批次 C、`docs/verification.md` 交叉引用。
+- 执行手册与证据模板见 `docs/v1.0-development/batch-c-runbook.md`（PH-352）；本文件保留验收矩阵与五层证据定义，不记录通过结论。
 
 ## 1. 五层证据（严格区分，禁止互相冒充）
 

@@ -1,0 +1,46 @@
+{
+  "task_id": "PH-352",
+  "summary": "Landed the docs-only batch C acceptance runbook at docs/v1.0-development/batch-c-runbook.md (319 lines), aligning PH-332's acceptance matrix with PH-345's script contract. It provides per-item M01–M15 execution cards (prerequisites, steps, executable commands or explicit blocked/not_run, expected output, evidence template ids, pass criteria, failure handling, responsible role and current status), V1-OPS-01–06 execution procedures that reuse PH-345's JSON evidence envelope/exit codes/idempotency/dual-review/redaction rules for ops_preflight, ops_tls_probe, ops_upgrade, ops_backup_verify/ops_restore_rehearsal, ops_health_capacity and ops_pg_concurrency, a docs/verification.md evidence-backfill template with per-layer verdicts, batch C exit criteria (no not_run/blocked may be signed off) and a counterexample list (no pass without evidence, no config/deployment substitution, no SQLite for PG concurrency, no backup skipping, no sensitive data, no not_run counted as pass). The acceptance matrix and ROADMAP cross-reference the runbook. The file records zero execution results: every M/OPS item is marked not_run or blocked as appropriate; no code, scripts, migrations or contracts were changed and no deployment/recovery/concurrency/performance run was performed. M-item command lines were corrected to exact existing test modules; every test label in the document was verified against the repository and representative commands were spot-run successfully.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE db8ed47): {\"command\":\"check\",\"ok\":true,\"task_count\":278}, exit 0; PH-352 done with handoff."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph352-batch-c-runbook on main db8ed47 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base cbb84c2 --task PH-352",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-352 allowed_paths (review pass; post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-352 batch-C runbook reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 COMMAND BLOCKER RESOLVED AT 010a4c0: the M01–M15 commands no longer use nonexistent test labels; M02 uses tests.test_masterdata, M03 uses the actual close/acceptance modules, M04 uses actual contract modules, M05 uses billable/monthly-labor modules, M06 uses actual bank-charge/shared-cost/budget modules, M08/M09/M10/M11/M12 use actual settlement/cash/invoice/budget/close modules. I verified every `tests.test_*` label in the handbook resolves to an existing tests file; no literal wildcard remains as an executable command.",
+      "CONTENT RE-VERIFIED: five-layer evidence and PH-345 alignment (envelope/exit 0/2/3/4/5/checks/artifacts/redactions/roles/dual-control/idempotency) are carried through the execution protocol; M01–M15 have prerequisites/steps/commands/expected output/evidence templates/pass criteria/failure handling/roles and honest not_run/blocked statuses (M07/M13/M14 blocked, M15 blocked/not_run); V1-OPS-01–06 sections match the ops-runbook script contracts and mark scripts not implemented; evidence backfill template, batch-C exit criteria and counterexample list are actionable; no code/migration/script/CI-gate/schema change; 8 files match the PH-352 whitelist; no placeholders; check ok=278; governance 23 OK; verify-change --base db8ed47 --task PH-352 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: PASS (round 2; nonexistent test labels replaced with real modules). Reviewed HEAD 010a4c0 (BASE db8ed47) in /tmp/ph352-batch-c-runbook, worktree clean; 8 files within the PH-352 whitelist; no code/migration/script. All `tests.test_*` command labels in the handbook resolve to existing test files; five-layer/PH-345 envelope/V1-OPS execution/manual templates and honest not_run/blocked statuses otherwise complete; check ok=278; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): the M03/M06/M10/M11/M12/M14 command lines no longer reference wildcard or nonexistent test labels; they now list exact modules that exist at this BASE (verified: all 41 `tests.*` labels in the runbook resolve to real files). Spot-runs of the M03 (50 tests OK), M04 (36 OK/skipped 5), M06 (48 OK), M09 (79 OK), M10 (38 OK), M12 (39 OK) and M14 (15 OK) command sets all exit 0.",
+    "Every M and V1-OPS item is deliberately marked not_run or blocked where the implementation/script does not exist; the runbook defines method and templates only and records no pass. This is the required truthful state, not a partial execution.",
+    "The runbook reuses PH-345's envelope/exit-code/idempotency/redaction contract by reference instead of redefining it; M15/V1-OPS sections point at docs/engineering/ops-runbook.md, and no scripts/ops/* were created.",
+    "Roles are named placeholders (release owner, DBA, finance reviewer, support owner, security owner, independent acceptance reviewer); actual persons are filled at release time and are not committed.",
+    "Responsible commands for M items list the executable suite/scope as it exists at this BASE (some scoped test globs are written as `tests.test_v1_*` patterns because the exact modules vary by upcoming slices); where a capability is not delivered the item is blocked rather than given a fake command.",
+    "No code, migration, contract-schema, gate or acceptance-command change; no execution evidence is claimed.",
+    "Lead integration rebase (db8ed47 -> cbb84c2): ROADMAP conflict resolved keeping PH-356 batch-C section and runbook reference; verification/manifest merged; gates rerun green."
+  ],
+  "unverified": [
+    "No M01–M15 acceptance run was executed; all items are not_run or blocked.",
+    "No V1-OPS-01–06 script exists or was executed; deployment/upgrade/backup-restore/PG-concurrency/health-capacity evidence is absent (PH-347/348/349/350 own execution).",
+    "Browser 1440/390, real PG and production/试点 evidence do not exist for this docs-only slice.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
