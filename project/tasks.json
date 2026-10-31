@@ -10420,6 +10420,38 @@
       "owner": null,
       "blockers": [],
       "handoff": null
+    },
+    {
+      "id": "PH-325",
+      "title": "自我改进三回路：lessons/metrics 聚合与 brief 先例注入（EXP-1 合入）",
+      "kind": "infra",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [],
+      "spec": "project/specs/PH-325.md",
+      "allowed_paths": [
+        "scripts/projectctl.py",
+        "tests/test_projectctl_lessons.py",
+        "scripts/experiments/backtest_lessons.py",
+        "docs/engineering/experiment-exp1-self-improve-loop.md",
+        "project/tasks.json",
+        "project/specs/PH-325.md",
+        "project/reports/PH-325.json",
+        "project/handoffs/PH-325.md",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_projectctl_lessons tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
     }
   ]
 }
