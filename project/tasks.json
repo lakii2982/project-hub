@@ -10285,7 +10285,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-308（多币种/汇率契约冻结，ready 未 done）与 PH-150/PH-155（legacy 合同/结算）done；契约完成后由 PH-323 规划槽复核 DoR 再晋级。"
+        "缺 PH-308（多币种/汇率契约冻结，ready 未 done）、PH-324（canonical 币种字段/类型扩展与迁移，proposed）与 PH-150/PH-155（legacy 合同/结算）done；契约/扩展完成后由 PH-323 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10405,7 +10405,8 @@
         "project/handoffs/PH-324.md",
         "project/tasks.json",
         "project/manifest.json",
-        "docs/verification.md"
+        "docs/verification.md",
+        "docs/v1.0-development/contracts/*"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

@@ -743,3 +743,7 @@ BASE 15cf20c，docs-only：沿用 Lead 裁决 C，将契约冻结正文写入 `p
 ### PH-308 复核 round-1 阻断修复（canonical 币种扩展）
 
 复核阻断：契约要求功能币种+原币金额，但 canonical 实体仅 CNY-only `*CnyCents`，本片又不改 schema/无扩展任务。修复 option A：`project/specs/PH-308.md` 新增 §9A「所需 canonical 扩展」，登记 proposed **PH-324**（contracts/settlement/management_revenue/cash/invoicing 金额事实增加 currency+原币整数分或 Money 类型；加法迁移+CNY 回填+双读兼容+非 CNY 写入拒绝+显式迁移重算+PG 覆盖；发布顺序 PH-324→PH-321）；§1/§2/§5 明确 PH-324 完成前仅 CNY、非 CNY 写入不得开始；PH-321 depends_on 增加 PH-324。重跑 check ok=true/task_count=246、23 治理、verify-change 仅 review pending。PH-324 spec 暂复用 PH-308 §9A（白名单不含新 spec 文件，后续规划槽拆独立 spec）。
+
+### PH-308 复核 round-2 阻断修复
+
+阻断1：PH-321 blockers 文本未含新增 PH-324（与 depends_on 不一致）→ PH-321 blockers 补 PH-324。阻断2：PH-324 allowed_paths 缺 canonical 契约 schema → 增加 `docs/v1.0-development/contracts/*` 与 `docs/verification.md`，并在 spec §9A.3 明确需更新 entities.schema.json/relationships.json/source-registry.json/contract-bundle.schema.json/commands.schema.json/validate_contracts.py。重跑 check ok=true/task_count=246、23 治理 OK。
