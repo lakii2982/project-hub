@@ -14,16 +14,20 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 1c2c6ca --task PH-327",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 245d60b: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (close-runbook.md, PH-327 spec summary, tasks/manifest, docs/verification, report/handoff) inside BASE PH-327 allowed_paths."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-327 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (runbook coverage of PH-322 behavior, issue_code/exception handling, four-eyes/period rules, evidence template alignment and honest not_run status); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-327 close/reopen operations-runbook reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PH-322 ALIGNMENT VERIFIED: the runbook's signatures and canonical routes match the merged implementation (close_period/reopen_period/close_project/reopen_project with request_token/expected_version/dry_run/reason/allow_open_period; period_close_precheck/reopen_period_precheck/project_close_precheck/reopen_project_precheck; period-close/period-close-execute/period-reopen/project-close/project-close-execute/project-reopen); PeriodCloseRun/ProjectClose states closing/closed/reopened, sequence uniqueness, closing->closed pair, reopen only after closed, ProjectClose from_stage, and DeliveryReceipt idempotency match models/services. The verify_integrity error table covers sequence/action_state/closed_date/missing_closing_pair/dangling_closing/close_transition/reopen_transition/reopen_state/latest_*/reopened_state/reopen_stage and the runbook correctly forbids hand-editing/deleting rows, disabling triggers, or direct SQL repair.",
+      "OPERATIONS/EVIDENCE: exception handling stops work and preserves logs/receipts/audit/evidence; stale-version concurrent retry is one retry and no old token; permissions (owner/finance execute, auditor read-only, pm project summary/period denial, member denial, module-disabled history read) and four-eyes/company-lock/expected_version/request_token/dry_run are documented; the close/reopen steps, precheck blockers/warnings, browser 1440/390 keyboard/empty/error/disabled checklist, real-PG concurrency not_run, and PH-366 evidence template (SHA/precheck_digest/run_ref/L1-L5/gaps/signatures) are present; current status honestly says L1+L2 only, real rehearsal/browser/PG/production not_run and release gate blocked by PH-366.",
+      "CONTENT/GATES: docs-only, no product code/migration/route/schema/gate change; 7 changed files within the PH-327 whitelist; no placeholders; task_count 295; check ok=295; governance 23 OK; verify-change --base 1c2c6ca --task PH-327 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD f751152 (BASE 1c2c6ca) in /tmp/ph327-close-ops, worktree clean; 7 files within the PH-327 whitelist; docs-only, no code/migration/schema/gate change. Runbook matches PH-322 signatures/routes/models/state machine/verify_integrity codes, forbids destructive repair, documents permissions/dry_run/four-eyes/stale retry, browser checklist, honest not_run status and PH-366 evidence template; check ok=295; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
   },
   "deviations": [
     "The runbook is documentation/acceptance method only; no real close/reopen drill, browser walkthrough, PostgreSQL concurrency or production acceptance was executed, so those items are explicitly not_run and no pass is claimed.",

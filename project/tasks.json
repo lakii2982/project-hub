@@ -10548,7 +10548,7 @@
       "title": "关期/结项写侧验收与运维 runbook（浏览器/PG/恢复演练）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
