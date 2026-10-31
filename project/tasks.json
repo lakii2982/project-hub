@@ -9846,7 +9846,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-304（运营核对底稿 CSV 首片，ready 未 done）、PH-285/PH-181/PH-182（proposed）done；依赖完成后由 PH-311 规划槽复核 DoR 再晋级。"
+        "缺 PH-285（核对底稿导出）、PH-181/PH-182（proposed）done；PH-304 已 done 已满足；依赖完成后由 PH-315 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -9855,7 +9855,7 @@
       "title": "后续交付独立规划入口（接续 PH-307）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -9880,8 +9880,170 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-docs",
       "blockers": [],
+      "handoff": "project/handoffs/PH-311.md"
+    },
+    {
+      "id": "PH-312",
+      "title": "期间关期/项目结项实现前置：关期与结项命令边界、只读核对与通知联动",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-299",
+        "PH-300",
+        "PH-180",
+        "PH-181",
+        "PH-182",
+        "PH-185"
+      ],
+      "spec": "project/specs/PH-312.md",
+      "allowed_paths": [
+        "project/specs/PH-312.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-312.json",
+        "project/handoffs/PH-312.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-299（关期/预测契约冻结）、PH-300（项目关账/结项契约冻结）、PH-180/PH-181/PH-182/PH-185（期间预检/核对/项目关账）done（均 proposed）；依赖/契约就绪后由 PH-315 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-313",
+      "title": "共享费用分摊/预算 ETC 实现前置：分摊批次、预算版本与只读缺口核对",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-305",
+        "PH-306",
+        "PH-162",
+        "PH-255",
+        "PH-177",
+        "PH-261"
+      ],
+      "spec": "project/specs/PH-313.md",
+      "allowed_paths": [
+        "project/specs/PH-313.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-313.json",
+        "project/handoffs/PH-313.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-305/PH-306（分摊/预算契约冻结）、PH-162/PH-255/PH-177/PH-261（成本归集/分摊/合同行/预算）done（均 proposed）；依赖/契约就绪后由 PH-315 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-314",
+      "title": "通知中心/导出归档实现前置：提醒派生与导出归档落地边界",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-301",
+        "PH-310",
+        "PH-304",
+        "PH-285",
+        "PH-179",
+        "PH-183"
+      ],
+      "spec": "project/specs/PH-314.md",
+      "allowed_paths": [
+        "core/notification_services.py",
+        "core/notification_views.py",
+        "core/notification_forms.py",
+        "core/templates/core/notifications.html",
+        "pmo_plugins/delivery/operations_export_services.py",
+        "pmo_plugins/delivery/views.py",
+        "pmo_plugins/delivery/forms.py",
+        "pmo_plugins/delivery/domain_metadata.py",
+        "pmo_plugins/delivery/urls.py",
+        "pmo_plugins/delivery/templates/delivery/ops_export.html",
+        "tests/test_v1_notifications.py",
+        "tests/test_v1_notifications_http.py",
+        "tests/test_v1_ops_export_archive.py",
+        "tests/test_v1_ops_export_archive_http.py",
+        "project/reports/PH-314.json",
+        "project/handoffs/PH-314.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_notifications tests.test_v1_notifications_http tests.test_v1_ops_export_archive tests.test_v1_ops_export_archive_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-301（通知中心首片）、PH-310（导出归档后续）、PH-285/PH-179/PH-183（proposed）done；PH-304 已 done 但其余未满足；依赖完成后由 PH-315 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-315",
+      "title": "后续交付独立规划入口（接续 PH-311）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-311"
+      ],
+      "spec": "project/specs/PH-315.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-315.json",
+        "project/handoffs/PH-315.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "PH-311 done 后置 ready（当前 PH-311 为 in_review，待独立 S 复核 pass 的最终证据 commit 再置 done/ready）。"
+      ],
       "handoff": null
     }
   ]
