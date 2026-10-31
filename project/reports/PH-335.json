@@ -1,0 +1,68 @@
+{
+  "task_id": "PH-335",
+  "summary": "健康/容量/积压汇总验收（V1-OPS-05 汇总，执行由 PH-350 承担）on BASE ef13003. Adds `healthcheck.rollup_evidence` to scripts/ops/healthcheck.py: it consumes the PH-350 local/rehearsal evidence envelope (via the existing healthcheck CLI/facts path, not a reimplementation) and aggregates L1–L5 checks: L1 script/envelope exists, L2 local automated/rehearsal result (pass/fail/not_run), L3 CI/PostgreSQL capacity/backlog not_run, L4 browser 1440/390/keyboard not_run, L5 production/customer acceptance not_run; release_ready is always false and missing lists L3_ci_pg/L4_browser/L5_production. Local thresholds/numbers are never presented as production capacity or release qualification. Adds 11 scoped observability tests (local L1+L2 pass, missing environment => not_run not fake pass, L3–L5 not_run, release_ready=false) and documents the rollup matrix in docs/engineering/observability.md. No product code/migration/table/route/canonical/schema/CI-gate change; no real production/CI/browser execution. Existing PH-350 healthcheck behavior remains intact; rollup only aggregates its envelope.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":297}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1296 tests in 138.753s, 5 failures/3 errors/70 environment skips. The 8 failure/error names are exactly the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI authoritative."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_observability --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 11 tests, OK. Adds PH-335 rollup: local L1+L2 pass, L3–L5 not_run, release_ready=false, missing codes; missing facts => rollup not_run not fake pass; existing PH-350 envelope/exit/threshold/redaction/perf tests remain green."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode dry_run --env rehearsal --facts <complete-local-facts.json> --out /tmp/ph335-health.jsonl",
+      "result": "pass",
+      "evidence": "Actual local run exit 0; PH-350 envelope status pass; consumed by the PH-335 rollup helper, not reimplemented."
+    },
+    {
+      "command": "python -c 'healthcheck.rollup_evidence(...)'",
+      "result": "pass",
+      "evidence": "Actual rollup output: status pass, release_ready=false, L1 pass, L2 pass, L3/L4/L5 not_run, missing=[L3_ci_pg,L4_browser,L5_production]; source envelope checks preserved."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base b689485 --task PH-335",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-335 allowed_paths (post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-335 observability rollup reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROLLUP IS AGGREGATION, NOT RECOLLECTION: `rollup_evidence` consumes one existing PH-350 local/rehearsal envelope, maps L1 (script/envelope exists), L2 (local run status), and forces L3 CI/PG, L4 browser and L5 production/customer to not_run; release_ready is always false with missing L3_ci_pg/L4_browser/L5_production. It does not reimplement collection or promote local facts to production capacity.",
+      "HONESTY: a complete local facts run yields L1+L2 pass but the rollup still reports release_ready=false and L3-L5 not_run; a missing-facts run yields a not_run L2/source status and no fake pass; the rollup contract is explicitly local-only and the docs/observability §7 matrix matches. No real CI/PG/browser/production evidence is claimed.",
+      "CONTENT/GATES: scripts/ops/healthcheck.py was extended with the read-only rollup only; scoped observability tests are 11 OK; 7 files within the PH-335 whitelist; no product code/migration/schema/canonical/CI-gate change; no placeholders; task_count 297; check ok=297; makemigrations clean; full suite 1296/5F+3E/70 known baseline; fresh SQLite verify_integrity ok; verify-change --base ef13003 --task PH-335 only high_risk_review_required, no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD d0ebbf8 (BASE ef13003) in /tmp/ph335-observability-rollup, worktree clean; 7 files within PH-335 whitelist; no product code/migration/schema. `rollup_evidence` aggregates the existing PH-350 envelope into L1/L2 and hard-codes L3-L5 not_run, release_ready=false and the missing gap list; local/no-facts runs cannot fake a release pass. Independent runs: check ok=297; makemigrations clean; scoped 11 OK; full 1296/5F+3E/70 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope. Independent reviewer PASS (d0ebbf8): 7 files in whitelist, no product code/migration/schema; rollup aggregates existing PH-350 envelope into L1/L2 and hard-codes L3-L5 not_run, release_ready=false and the missing gap list; local/no-facts runs cannot fake release pass. Final evidence commit records the actual verify-change pass."
+  },
+  "deviations": [
+    "This is a rollup acceptance only: health/capacity/backlog collection remains PH-350; this slice adds an aggregation helper and tests, not a new collector.",
+    "Only L1 (code/envelope exists) + L2 (local rehearsal) are pass; L3 CI/PostgreSQL, L4 browser and L5 production/customer evidence are explicitly not_run; release_ready=false; no release qualification is claimed.",
+    "Local facts/thresholds are rehearsal defaults, not production SLO/capacity; no production access, customer data or real CI/PG/browser execution was performed.",
+    "The rollup helper is placed in the allowlisted scripts/ops/healthcheck.py and documented in docs/engineering/observability.md; no new script/contract/canonical change.",
+    "Lead integration rebase (ef13003 -> b689485) after PH-357 merged: manifest merged; gates rerun."
+  ],
+  "unverified": [
+    "L3 CI/PostgreSQL real capacity/backlog/performance evidence, L4 browser 1440/390/keyboard evidence and L5 production/customer acceptance are not_run.",
+    "Independent S review and CI/PR pending; no browser/product-surface or production execution in this slice."
+  ]
+}
