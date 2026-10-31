@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD d4349f0 (BASE db8ed47, PH-352 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":278}, exit 0; final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE db8ed47): {\"command\":\"check\",\"ok\":true,\"task_count\":278}, exit 0; PH-352 done with handoff."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -21,12 +21,12 @@
   "review": {
     "required": true,
     "reviewer": "independent PH-352 batch-C runbook reviewer (fresh context, read-only)",
-    "status": "pending",
+    "status": "pass",
     "findings": [
-      "BLOCKER - several '可执行命令' in the M01–M15 handbook reference nonexistent Django test labels: M03 uses `python manage.py test tests.test_v1_delivery* tests.test_v1_close*` but `tests/test_v1_delivery*` does not exist; M06 and M11 use `tests.test_v1_costing*` but no `tests/test_v1_costing*` file exists (actual costing tests are e.g. test_v1_bank_charge*, test_v1_shared_cost*); the shell wildcard will not expand and Django will fail on the literal label. This contradicts the document's own '命令均为可执行命令' rule and the task requirement that commands match repository reality. Fix: replace the wildcard labels with existing test modules (or mark those items not_run/blocked if no covering suite exists) and rerun/spot-check every M command; do not claim executability for a label that has no file.",
-      "OTHER CONTENT CHECKED: the five-layer evidence model and PH-345 alignment (envelope/exit 0/2/3/4/5/checks/artifacts/redactions/roles/dual-control/idempotency) are correctly carried into the execution protocol; the M01–M15 sections have prerequisites, steps, commands/expected outputs, evidence templates, pass criteria, failure handling, roles and honest not_run/blocked statuses (M07/M13/M14 blocked on undelivered implementations; M15 blocked/not_run on V1-OPS scripts/PH-347–350); V1-OPS-01–06 sections align with ops-runbook and mark scripts not implemented; the evidence backfill template/exit criteria/counterexample list are actionable; no code/migration/script/CI-gate/schema change; 8 files match the PH-352 whitelist; no placeholders; check 278; governance 23 OK; verify-change --base db8ed47 --task PH-352 only review/acceptance gates, no path_out_of_scope."
+      "ROUND-2 COMMAND BLOCKER RESOLVED AT 010a4c0: the M01–M15 commands no longer use nonexistent test labels; M02 uses tests.test_masterdata, M03 uses the actual close/acceptance modules, M04 uses actual contract modules, M05 uses billable/monthly-labor modules, M06 uses actual bank-charge/shared-cost/budget modules, M08/M09/M10/M11/M12 use actual settlement/cash/invoice/budget/close modules. I verified every `tests.test_*` label in the handbook resolves to an existing tests file; no literal wildcard remains as an executable command.",
+      "CONTENT RE-VERIFIED: five-layer evidence and PH-345 alignment (envelope/exit 0/2/3/4/5/checks/artifacts/redactions/roles/dual-control/idempotency) are carried through the execution protocol; M01–M15 have prerequisites/steps/commands/expected output/evidence templates/pass criteria/failure handling/roles and honest not_run/blocked statuses (M07/M13/M14 blocked, M15 blocked/not_run); V1-OPS-01–06 sections match the ops-runbook script contracts and mark scripts not implemented; evidence backfill template, batch-C exit criteria and counterexample list are actionable; no code/migration/script/CI-gate/schema change; 8 files match the PH-352 whitelist; no placeholders; check ok=278; governance 23 OK; verify-change --base db8ed47 --task PH-352 only review/acceptance gates, no path_out_of_scope."
     ],
-    "evidence": "VERDICT: REJECTED - 1 blocker: M03/M06/M11 explicitly list nonexistent test labels (`tests.test_v1_delivery*`, `tests.test_v1_costing*`) as executable commands, so the handbook's command-executability claim is false. Reviewed HEAD 5d1f620 (BASE db8ed47) in /tmp/ph352-batch-c-runbook, worktree clean; 8 files within the PH-352 whitelist; no code/migration/script. Five-layer/PH-345 envelope/V1-OPS execution/manual templates otherwise complete and honest; check ok=278; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope. Replace the test labels with real modules or mark not_run, then rerun."
+    "evidence": "VERDICT: PASS (round 2; nonexistent test labels replaced with real modules). Reviewed HEAD 010a4c0 (BASE db8ed47) in /tmp/ph352-batch-c-runbook, worktree clean; 8 files within the PH-352 whitelist; no code/migration/script. All `tests.test_*` command labels in the handbook resolve to existing test files; five-layer/PH-345 envelope/V1-OPS execution/manual templates and honest not_run/blocked statuses otherwise complete; check ok=278; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
   },
   "deviations": [
     "Review-blocker fix (old->new): the M03/M06/M10/M11/M12/M14 command lines no longer reference wildcard or nonexistent test labels; they now list exact modules that exist at this BASE (verified: all 41 `tests.*` labels in the runbook resolve to real files). Spot-runs of the M03 (50 tests OK), M04 (36 OK/skipped 5), M06 (48 OK), M09 (79 OK), M10 (38 OK), M12 (39 OK) and M14 (15 OK) command sets all exit 0.",
