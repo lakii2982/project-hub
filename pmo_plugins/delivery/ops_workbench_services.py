@@ -23,6 +23,12 @@ PARTITION_LABELS = {
     'fee_pairing': '手续费批准/成本/净额配对',
     'identity_access': '成员/项目范围与授权审计',
 }
+EXPORT_DATASETS = {
+    'ops_overview': 'ops_overview',
+    'settlement_coverage': 'settlement_coverage',
+    'cash_bridge': 'cash_bridge',
+    'fee_pairing': 'fee_pairing',
+}
 DRILL_URLS = {
     'ops_overview': '/modules/delivery/ops-reconciliation-overview/',
     'settlement_coverage': '/modules/settlement/settlement-coverage-issues/',
@@ -69,11 +75,23 @@ def _month(value):
     return start.strftime('%Y-%m')
 
 
-def _partition(key, *, issue_count, metrics, missing=None, available=True):
+def _partition(key, *, issue_count, metrics, missing=None, available=True,
+               as_of=None, period=None):
+    dataset = EXPORT_DATASETS.get(key) if available else None
+    export = None
+    export_missing = []
+    if dataset is None:
+        if key == 'identity_access':
+            export_missing.append('export_dataset_not_implemented')
+        elif not available:
+            export_missing.append('permission')
+    else:
+        export = {'dataset': dataset, 'as_of': as_of, 'period': period}
     return {'key': key, 'label': PARTITION_LABELS[key],
             'issue_count': issue_count, 'metrics': metrics,
             'missing': list(missing or []), 'available': available,
-            'drill_url': DRILL_URLS[key]}
+            'drill_url': DRILL_URLS[key],
+            'export': export, 'export_missing': export_missing}
 
 
 def _ops_partition(member, as_of, period):
@@ -85,7 +103,8 @@ def _ops_partition(member, as_of, period):
         'missing_count': len(data['missing']),
     }
     return _partition('ops_overview', issue_count=data['issue_count'],
-                      metrics=metrics, missing=data['missing'])
+                      metrics=metrics, missing=data['missing'],
+                      as_of=as_of, period=period)
 
 
 def _settlement_partition(member, as_of, period):
@@ -97,7 +116,7 @@ def _settlement_partition(member, as_of, period):
                'issue_count': data['issue_count'],
                'offset_implemented': data['offset_implemented']}
     return _partition('settlement_coverage', issue_count=data['issue_count'],
-                      metrics=metrics)
+                      metrics=metrics, as_of=as_of, period=period)
 
 
 def _cash_partition(member, as_of, period):
@@ -110,7 +129,7 @@ def _cash_partition(member, as_of, period):
                'issue_count': data['issue_count'],
                'offset_implemented': data['offset_implemented']}
     return _partition('cash_bridge', issue_count=data['issue_count'],
-                      metrics=metrics)
+                      metrics=metrics, as_of=as_of, period=period)
 
 
 def _fee_partition(member, as_of, period):
@@ -118,7 +137,8 @@ def _fee_partition(member, as_of, period):
     issues = pairing.bank_charge_pairing_issues(member, as_of=as_of)
     rows = pairing.bank_charge_pairing(member, as_of=as_of)
     metrics = {'charge_count': len(rows), 'issue_count': len(issues)}
-    return _partition('fee_pairing', issue_count=len(issues), metrics=metrics)
+    return _partition('fee_pairing', issue_count=len(issues), metrics=metrics,
+                      as_of=as_of, period=period)
 
 
 def _identity_partition(member, as_of, period):
@@ -129,7 +149,8 @@ def _identity_partition(member, as_of, period):
     metrics = {'member_count': snapshot['total'],
                'scope': snapshot['scope'],
                'issue_count': len(issues)}
-    return _partition('identity_access', issue_count=len(issues), metrics=metrics)
+    return _partition('identity_access', issue_count=len(issues), metrics=metrics,
+                      as_of=as_of, period=period)
 
 
 PARTITIONS = {
@@ -153,7 +174,8 @@ def ops_workbench_summary(member, *, as_of=None, period=None):
         except PermissionDenied:
             partition = _partition(
                 key, issue_count=None, metrics={}, missing=['permission'],
-                available=False)
+                available=False, as_of=day.isoformat() if day else None,
+                period=month)
         partitions.append(partition)
         missing.extend(partition['missing'])
     total_issues = sum(item['issue_count'] or 0 for item in partitions)

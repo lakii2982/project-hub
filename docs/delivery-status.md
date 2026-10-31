@@ -57,3 +57,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## PH-309 运营核对工作台聚合首片（2026-10-31）
 
 新增只读运营核对工作台：聚合 PH-291 跨域总览、PH-283 结算覆盖、PH-279 现金桥接、PH-280 手续费配对、PH-281 成员/授权五个分区的 issue 计数、关键合计、missing 与下钻链接；缺失 null+missing 不显示 0，不重算口径、不建第二 owner。canonical domain_metadata 声明 `ops-workbench/` history_read、urls 仅导入；owner/finance/auditor 全量、pm 管理项目摘要（cash_bridge 无项目归属不可用）、member 拒绝；无迁移/写/审计。偏差：五分区按 spec、合同/收入/银行余额经 PH-291 间接聚合、pm cash 分区不可用、missing 语义。未验证：浏览器 1440/390、独立复核、PG、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-309.json`。
+
+## PH-316 运营核对工作台导出联动首片（2026-10-31）
+
+工作台分区联动 PH-304 底稿导出：ops_overview/settlement_coverage/cash_bridge/fee_pairing 分区带 dataset/as_of/period 导出链接，复用既有 ops-export/ 服务与 history_read 路由；identity_access 无导出（PH-304 数据集不含身份敏感明细，export_dataset_not_implemented），pm cash_bridge 不可导出（无项目归属）。无新写通道/元数据副本/迁移/表/审计，零写、事实计数不变。未验证：浏览器 1440/390、独立复核、PG、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-316.json`。
