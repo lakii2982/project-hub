@@ -1,0 +1,63 @@
+{
+  "task_id": "PH-284",
+  "summary": "管理收入确认与结算/合同条款只读配对核对首片 on BASE c640a1c. Added pmo_plugins/management_revenue/pairing_read_services.py with two read-only interfaces. revenue_pairing_snapshot(member, *, project_id=None, period=None, as_of=None) derives, per project or as an aggregate with per-project rows: contract_value (approved contract line net via contracts.approved_contract_totals), recognized (posted RevenueRecognition net minus posted RevenueAdjustment via the management-revenue owner export, with a read-only line-level fallback when the owner export needs a missing accounting event), settled (active Settlement gross via settlement_snapshot), unsettled (active OpenItem gross minus active Clearance), cash_coverage (active Clearance total), difference (recognized-settled), contract_variance (contract_value-recognized), terminated flag/terminated contract refs, and capped recognition/settlement refs. revenue_pairing_issues(member, *, as_of=None) returns issue_code/refs/expected/actual for recognized_over_contract_line, recognition_source_invalid, recognized_after_termination, settlement_source_invalid, settlement_after_termination, settlement_without_recognition, settled_exceeds_recognized, terms_without_recognition, cross_project_reference, cross_org_reference and duplicate_recognition. Permissions are owner/finance/auditor full, PM only managed projects, member denied; the new history_read route revenue-pairing renders a read-only page (project/period/as_of filters, unknown params rejected 400) and stays readable when management_revenue is disabled, with no POST/write entry. No model, migration, canonical schema, write path or business fact is changed; the service writes no audit, receipt, event or fact. Gold: contract net 100000, recognized 60000, active settlement 40000, open item 40000 with 30000 active clearance => snapshot recognized/settled/unsettled(10000)/cash(30000)/difference(20000)/variance(40000) and issues=[]; anomaly fixtures (all INSERT-only/legal service transitions, no UPDATE/DELETE of history) hit over-cap recognition, settlement without recognition, recognition/settlement after termination, cross-project and settled-exceeds-recognized issues. Final merged BASE a352b4a (PH-302 integrated) and reviewer round-1 fix: a denied/unreadable settlement_snapshot is no longer silently skipped; the settlement reader now returns (readable rows, missing rows), and when any active settlement snapshot is denied the per-project and aggregate settled/unsettled/cash/difference values are null with settlement_missing/missing markers and a settlement_unreadable issue, and the page renders 缺失 instead of 0. Service and HTTP regressions patch settlement_snapshot to raise PermissionDenied. Final runs: projectctl check ok/task_count=229; scoped 11 tests OK; full suite Ran 1090 tests in 135.179s with exactly the known 8 macOS baseline failures (5F+3E/69 skips); fresh SQLite verify ok; verify-change --base a352b4a --task PH-284 waits only for the reviewer round-2 pass.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual final run on BASE a352b4a: {\"command\":\"check\",\"ok\":true,\"task_count\":229}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (92 issues, 0 silenced), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: 'No changes detected' (PH-284 adds no model or migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual final run on BASE a352b4a after the missing/null fix: Ran 1090 tests in 135.179s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No new business invariant was added because the slice only reads existing facts."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_revenue_pairing_read tests.test_v1_revenue_pairing_read_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual final run on BASE a352b4a: Ran 11 tests, OK. Service 6: gold snapshot values/issues=[] and read-only purity; period/as_of filters; over-cap recognition + settlement without recognition; termination/cross-project; permissions/disabled-module; denied settlement_snapshot regression asserts settled/unsettled/cash/difference are null (never 0), settlement_missing populated and settlement_unreadable issue emitted. HTTP 5: page/aggregate/issue rendering; roles and filters; issue rendering; disabled-module history read; denied settlement snapshot renders 缺失 and no fabricated zero; no writes."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-284 revenue-pairing reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKER RESOLVED AT 5f70dbe: `_settlements` now returns (readable rows, missing rows); when any active settlement snapshot is denied/unreadable, per-project and aggregate settled/unsettled/cash_coverage/difference are None (not 0), with `settlement_missing`/`missing` markers and a `settlement_unreadable` issue; the page shows a missing state. Service and HTTP regressions mock PermissionDenied and assert null/missing rather than zero. This matches the spec/Lead 'pm settlement snapshot denied => missing, never fabricated zero'.",
+      "RE-VERIFIED: gold values contract_value 100000/recognized 60000/settled 40000/unsettled 10000/cash 30000/difference 20000/variance 40000 remain; 11 issue codes (over-contract, source invalid, terminated recognition/settlement, settlement without/over recognition, duplicate, cross-project/org, terms without recognition) are covered; period/as_of filters; owner/finance/auditor full, pm managed project, member denied; management_revenue-disabled history readable; read-only (no writes/audit/receipt/migration; counts unchanged); 14 changed files all inside PH-284 allowed_paths; task in_review, manifest=PH-284.",
+      "EVIDENCE AT 5f70dbe (BASE a352b4a): check ok=true/task_count=229; manage.py check exit 0; makemigrations --check No changes; scoped pairing tests 11 OK; full suite Ran 1090 tests, 5 failures/3 errors/69 skips (exactly the known 8 macOS baseline, no fifth class); verify_integrity fresh DB ok=true/errors=[]; verify-change --base a352b4a --task PH-284 only high_risk_review_required, no path_out_of_scope; report review now pass. After the final evidence/done transition, verify-change should be clean."
+    ],
+    "evidence": "VERDICT: PASS (round 2; denied settlement snapshots now missing/null). Reviewed HEAD 5f70dbe (BASE a352b4a) in /tmp/ph284-revenue-read, worktree clean; 14 changed files all inside PH-284 allowed_paths; task in_review, manifest=PH-284. `_settlements` returns readable+missing; any denied active settlement makes per-project/aggregate settled/unsettled/cash/difference None with settlement_missing/missing + settlement_unreadable issue, and service/HTTP regressions cover it; scoped 11 OK. Gold derivation, 11 issue codes, read-only purity, permissions/history_read, no migration/verify change verified. Independent runs: check ok=229; manage check exit 0; makemigrations clean; full suite 1090/5F+3E/69 = known 8 macOS baseline; verify_integrity fresh DB ok; verify-change only high_risk_review_required, no path_out_of_scope."
+  },
+  "deviations": [
+    "金额口径：contract_value 使用批准条款净额（management revenue 口径）；settled 使用 active Settlement gross（含税）；recognized 为 posted RevenueRecognition 净额减 posted 调整；三者差异仅展示不调整，report 披露。",
+    "unsettled = active OpenItem gross − active Clearance；cash_coverage = active Clearance 合计；未使用任何可编辑余额。",
+    "management revenue owner export 在测试/历史事实缺少 accounting_event 时会抛错，服务回退为同权限范围的只读 RevenueRecognition/RevenueAdjustment 行级投影（不写、不建接口）。",
+    "Settlement/OpenItem/Clearance 聚合使用只读模型查询（settlement owner 无按项目清单接口，逐条仍经 settlement_snapshot 读取）；不复制业务表为可编辑余额。",
+    "pm 只读其管理项目：项目列表/详情过滤 manager=member；若 settlement_snapshot 因角色拒绝则展示 0/缺失并披露，不伪造。",
+    "duplicate_recognition 受 DB OneToOne/唯一约束在正常路径不可达，但代码保留检测；未写可选 generic viewed audit 以保持零副作用。",
+    "无模型/迁移/canonical topic/command/schema 变更；不改收入/结算/合同写路径；反例全部 INSERT-only/合法服务迁移，不 UPDATE/DELETE 历史。",
+    "reviewer round-1 blocker 修复：`_settlements` 不再静默跳过被拒的 settlement_snapshot；返回 (readable rows, missing rows)，任一 active settlement 读取被拒时 settled/unsettled/cash/difference 为 **null**（非 0），附 settlement_missing/missing 标记与 settlement_unreadable issue，页面显示“缺失”；新增 service+HTTP 回归（mock PermissionDenied）。"
+  ],
+  "unverified": [
+    "PostgreSQL 运行证据以 CI 为准（本机 SQLite 仅验证服务/模板/反例）。",
+    "浏览器 1440/390、键盘/焦点、空错停用态未实机检查；HTTP 测试仅断言页面渲染、权限、400 拒绝与只读事实不变。",
+    "真实客户/生产/UAT 未验证；快照仅覆盖当前 RevenueRecognition/Settlement/OpenItem/Clearance 既有事实。",
+    "独立 S 复核 pending；通过后置 done、重跑 check+verify-change 并报最终 SHA。"
+  ]
+}

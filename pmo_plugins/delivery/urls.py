@@ -13,6 +13,7 @@ def entry_point():
     from pmo_plugins.costing.domain_metadata import DOMAIN_METADATA as COSTING_METADATA
     from pmo_plugins.costing.plugin import Plugin as CostingPlugin
     from pmo_plugins.management_revenue.domain_metadata import DOMAIN_METADATA as REVENUE_METADATA
+    from pmo_plugins.management_revenue import views as revenue_views
     from pmo_plugins.management_revenue.plugin import Plugin as RevenuePlugin
     from pmo_plugins.settlement.domain_metadata import DOMAIN_METADATA as SETTLEMENT_METADATA
     from pmo_plugins.settlement.plugin import Plugin as SettlementPlugin
@@ -49,7 +50,7 @@ def entry_point():
             'contract_change_impact': views.contract_change_impact_detail,
             'contract_terms_snapshot': views.contract_terms_snapshot,
         },
-        'management_revenue': {},
+        'management_revenue': {'revenue_pairing': revenue_views.revenue_pairing_snapshot_page},
         'onboarding': {name: getattr(onboarding_views, name) for name in
                        ('import_preview_list', 'import_preview_run', 'import_preview_upload')},
         'settlement': {name: getattr(receivable_views, name) for name in ('settlement_list', 'settlement_detail', 'settlement_form', 'settlement_save', 'settlement_action', 'aging_list', 'clearance_create', 'clearance_reverse', 'clearance_list', 'offset_list', 'offset_save', 'settlement_coverage_snapshot', 'settlement_coverage_issues')},
