@@ -13,9 +13,9 @@
       "evidence": "Actual run in /tmp/ph375-batch-d on main ef13003 with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base ef13003 --task PH-375",
+      "command": "python scripts/projectctl.py verify-change --base b689485 --task PH-375",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD fa2a4eb: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"fa2a4ebeb85f2bbd790b0ef8e406333b823d7543\",\"count\":8,\"errors\":null}; all 8 files inside BASE PH-375 allowed_paths and review.status=pass with the reviewer's name."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-375 allowed_paths (post-rebase rerun)."
     }
   ],
   "review": {
@@ -33,7 +33,8 @@
     "D-01 (PH-370) implementation is merged but its batch D acceptance has not been executed, so it is marked not_run rather than pass; all other D items are blocked by undone dependencies and are labeled blocked.",
     "The matrix/runbook reuse PH-332 five-layer evidence, PH-352 execution templates, PH-366 release gate/envelope and PH-345 ops contract instead of introducing another verification standard.",
     "Release qualification is explicitly stated as blocked (batch C PH-357/367/372 incomplete; no L3/L4/L5 evidence); this document does not claim release readiness.",
-    "No code/scripts/migrations/gates/product behavior changed; D-11 multi-currency items remain a re-scope/close decision, not an implementation claim."
+    "No code/scripts/migrations/gates/product behavior changed; D-11 multi-currency items remain a re-scope/close decision, not an implementation claim.",
+    "Lead integration rebase (ef13003 -> b689485) after PH-357 merged: ROADMAP/verification/manifest merged keeping batch C/D sections; gates rerun."
   ],
   "unverified": [
     "No D-batch acceptance item was executed; D-01 is not_run and D-02–D-11 are blocked.",
