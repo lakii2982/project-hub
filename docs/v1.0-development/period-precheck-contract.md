@@ -32,6 +32,22 @@ period_precheck_snapshot(member, *, scope='company'|'project', project_id=None,
 - 请求参数不得携带金额/差额/状态；服务端从 owner 事实派生。
 - canonical 对应：`query-results.schema.json#/$defs/period.precheck.get/v1`（`contract=period.precheck.get/v1`, `as_of_date`, `watermark`, `data.precheck`）；本投影的扩展字段（§3）必须由后续 canonical 规划决定是否进入公共 query。
 
+## 2.1 canonical 字段/状态映射（冻结）
+
+| canonical `PeriodPrecheck` 字段 | 投影中的位置/语义 | 说明 |
+| --- | --- | --- |
+| id | `precheck.id` | canonical 预检实体 Id；只读派生快照使用当前实体 Id |
+| organization_id | `precheck.organization_id` | 公司边界；跨 org 拒绝 |
+| version | `precheck.version` | 实体版本；只读快照不修改 |
+| status | `precheck.status` | 完整枚举 `draft/pending/approved/rejected/superseded/closed`，不裁剪 |
+| period | `precheck.period` | PostingPeriod；与事实 posting_period 对照 |
+| blocking_codes | `precheck.blocking_codes` | string[]；预检 blocker code（与 issues 中 blocker 对应） |
+| last_event_ref | `precheck.last_event_ref` | SourceRef 或 null |
+| can_close | `precheck.can_close` | 服务端派生布尔；false 时不得提交关期/导入 |
+
+- 扩展字段（checks/differences/issues/missing/summary/precheck_digest）只存在于 envelope 顶层；`precheck` 内不允许出现 `warning_codes`/`checks` 等非 canonical 字段。
+- 若上游没有 canonical PeriodPrecheck 实体（历史数据缺口），返回 `precheck=null` + `missing` code `period_precheck_missing`，不得伪造 id/version/status。
+
 ## 3. 输出 envelope（只读投影 `period.precheck.snapshot/v1`）
 
 ```json
@@ -43,10 +59,14 @@ period_precheck_snapshot(member, *, scope='company'|'project', project_id=None,
   "watermark": {"namespace": "<owner>", "kind": "<kind>", "id": "<id>", "version": 1},
   "purpose": "period_close|import_submit|reconciliation_review",
   "precheck": {
-    "can_close": false,
+    "id": "<uuid>",
+    "organization_id": "<uuid>",
+    "version": 1,
+    "status": "draft|pending|approved|rejected|superseded|closed",
+    "period": "YYYY-MM",
     "blocking_codes": ["period_closed", "settlement_remaining_mismatch"],
-    "warning_codes": ["cash_unclassified", "tax_qualification_pending"],
-    "status": "pending|approved|closed"
+    "last_event_ref": null,
+    "can_close": false
   },
   "checks": [{
     "domain": "cash|settlement|revenue|cost",
@@ -74,7 +94,9 @@ period_precheck_snapshot(member, *, scope='company'|'project', project_id=None,
 }
 ```
 
-- `precheck` 字段与 canonical `PeriodPrecheck` 对齐（status/can_close/blocking_codes/last_event_ref 可映射）；扩展 `checks/differences/issues/missing` 为只读派生，**不落库**。
+- `precheck` **必须**是满足 `entities.schema.json#/$defs/PeriodPrecheck` 的 canonical 对象（`additionalProperties=false`）：必填 `id/organization_id/version/status/period/blocking_codes/last_event_ref/can_close` 全部存在，`status` 使用完整枚举 `draft|pending|approved|rejected|superseded|closed`；警告不放进 `precheck`（`warning_codes` 非法），统一在 envelope 的 `issues` 中按 `severity=warning` 表达。
+- `checks/differences/issues/missing/summary/precheck_digest` 是 **envelope 顶层只读扩展**，不得塞入 `precheck`；若未来把扩展公开为公共 query，须独立 canonical version-bump 规划。
+- canonical 校验：实现片/消费方（PH-353）必须用 `validate_contracts.py`/schema 校验 `precheck` 对象；不满足则拒绝使用该 snapshot，不得声称 canonical 对齐。
 - 返回行数上限与其他只读服务一致（≤200 明细、≤1000 issue）；超出标 `truncated=true` 并给 `missing` code `result_truncated`。
 
 ## 4. 四类核对与差额口径（复用既有 owner 接口）
@@ -151,7 +173,7 @@ python manage.py verify_integrity --json
 ```
 
 - 金样例（未来 PH-181/185/353 实现片）：四类核对各一条守恒/差额 + null/missing 反例；期间关闭/锁定/未来日期拒绝；pm/member/跨 org 拒绝；`precheck_digest` 稳定/变更检测；只读零写计数。
-- 反例：缺数据按 0 通过、客户端金额、复制 owner 规则、写业务事实、跨 org 泄露、跳过预检直接提交。
+- 反例：缺数据按 0 通过、客户端金额、复制 owner 规则、写业务事实、跨 org 泄露、跳过预检直接提交、`precheck` 含非 canonical 字段或裁剪 status/必填字段却声称对齐。
 - 本文为契约，**无实现/测试/运行结果**；当前状态：not implemented（PH-181/185 后续；PH-353 消费）。
 
 ## 11. 与既有任务/文档的边界
