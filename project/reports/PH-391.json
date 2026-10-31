@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=316; PH-391 in_review with owner/handoff; PH-388/PH-392 ready with all dependencies done; PH-389/390/393/394/395 proposed with precise blockers; PH-141 kept proposed for unclosed DoR."
+      "evidence": "Actual exit 0 at HEAD d02b6ff (BASE 5278c96): ok=true, task_count=316; PH-391 in_review with owner/handoff; PH-388/PH-392 ready with all dependencies done; PH-389/390/393/394/395 proposed with precise blockers; PH-141 kept proposed for unclosed DoR; specs now align (PH-391 v1.0 closure/no next slot; PH-388 ready)."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -31,6 +31,7 @@
     "evidence": "VERDICT: REJECTED - 2 blockers: (1) PH-391's frozen spec still requires a next planning slot and says the task is proposed, contradicting the declared milestone closure/no-next-slot (task in_review, report/ROADMAP say no next slot); (2) PH-388 is ready but its spec still says DoR-freeze-then-proposed and waits for a future planning slot. Fix both specs or register the required next slot. Reviewed HEAD e1e80ed (BASE 5278c96), worktree clean; PH-388 deps done; PH-372/387 ready; PH-389/390/393/394/395 proposed with precise blockers; PH-141 correctly stays proposed; PH-392 ready with all deps done; new spec whitelists exact; count 316; check ok=316; governance 23 OK; verify-change only high_risk_review_required (no path errors)."
   },
   "deviations": [
+    "Reviewer round-1 blockers fixed: PH-391 spec now states it is the v1.0-preparation closing planning slot (in_review, no next planning slot; execution/acceptance carried by PH-392–PH-395), removing the stale 'proposed/next slot' text; PH-388 spec now states DoR/range frozen in PH-391 and task promoted ready, removing the stale 'proposed/next planning slot promotion' text.",
     "PH-141 has all dependencies done but remains proposed because its DoR is explicitly unclosed (missing trusted source resolver/posting/period adapters and kernel tests); dependency completion alone is not promotion evidence.",
     "PH-388 is promoted ready after freezing its DoR/range in the spec (deps PH-321/PH-324 done, no duplicate of PH-321 delivered scope); its blocker is cleared.",
     "v1.0-preparation is declared closed for planning purposes: PH-391 is the last open task in that milestone; no new planning slot is registered. PH-392 is a ready docs-only D-batch acceptance ordering slice, not a planning slot.",
