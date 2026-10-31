@@ -150,7 +150,7 @@ def run_probes(dsn, app_sha=None):
         conn = _connect(dsn)
     except Exception as error:  # noqa: BLE001 - environment failure is a governed exit
         envelope = build_envelope(exit_code=EXIT_ENV, checks=[], started_at=started,
-                                  app_sha=app_sha,
+                                  app_sha=app_sha, mode='execute',
                                   notes='连接 PostgreSQL 失败：%s' % error.__class__.__name__)
         return EXIT_ENV, envelope
     try:
@@ -331,7 +331,7 @@ def run_probes(dsn, app_sha=None):
         conn.close()
     exit_code = EXIT_OK if checks and all(item['status'] == 'pass' for item in checks) else EXIT_FAIL
     envelope = build_envelope(exit_code=exit_code, checks=checks, artifacts=artifacts,
-                              started_at=started, app_sha=app_sha,
+                              started_at=started, app_sha=app_sha, mode='execute',
                               notes='真实 PostgreSQL 多连接并发；未触碰生产数据')
     return exit_code, envelope
 
@@ -478,6 +478,22 @@ class PgConcurrencyContractTests(TestCase):
             code = main(['--dsn', 'sqlite:///tmp/x.sqlite3'])
         self.assertEqual(code, EXIT_PREREQ)
         self.assertEqual(json.loads(output.getvalue())['mode'], 'dry_run')
+
+    def test_execute_cli_unreachable_pg_is_exit_4_mode_execute(self):
+        output = StringIO()
+        with redirect_stdout(output):
+            code = main(['--mode', 'execute', '--allow-execute', '--profile', 'ci',
+                         '--dsn', 'postgresql://127.0.0.1:1/never?connect_timeout=2'])
+        self.assertEqual(code, EXIT_ENV)
+        envelope = json.loads(output.getvalue())
+        self.assertEqual(envelope['mode'], 'execute')
+        self.assertEqual(envelope['status'], 'fail')
+        self.assertEqual(envelope['exit_code'], EXIT_ENV)
+
+    def test_run_probes_connection_failure_envelope_is_mode_execute(self):
+        code, envelope = run_probes('postgresql://127.0.0.1:1/never?connect_timeout=2')
+        self.assertEqual(code, EXIT_ENV)
+        self.assertEqual(envelope['mode'], 'execute')
 
     def test_dry_run_unreachable_postgres_is_exit_4(self):
         output = StringIO()
