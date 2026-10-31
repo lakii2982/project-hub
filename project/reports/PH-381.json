@@ -13,7 +13,7 @@
       "evidence": "Actual run: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 717324c --task PH-381",
+      "command": "python scripts/projectctl.py verify-change --base 36cdf00 --task PH-381",
       "result": "pass",
       "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-381 allowed_paths (post-rebase rerun)."
     }
