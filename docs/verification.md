@@ -817,3 +817,7 @@ BASE ab1845b，docs/governance-only：PH-324 CI 的 Preparation 域用 `docs/v1.
 3. 运维 runbook 骨架 V1-OPS-01–06（安装诊断/TLS/升级回退/备份恢复/健康容量积压/PG 多连接），含角色占位与证据路径；
 4. 批次 C 依赖顺序（PH-332→333→334→335）与 blocked/not_run 边界；与 ROADMAP 批次 C、docs/verification.md 交叉引用。
 未写代码/迁移/脚本、未执行部署/恢复/并发/性能、无虚构通过结论。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：批次 C 真实演练（PH-333/334/335）；review pending。
+
+## PH-336 规划槽：PH-321/PH-322 实现白名单与依赖再基线（2026-10-31）
+
+BASE 0281043，docs/governance-only：PH-321 白名单补 contracts `models.py`/`migrations/*`/`approval_services.py`/`change_services.py` + `pmo_plugins/delivery/urls.py`（FxRateSnapshot ORM、合同行非 CNY 写入与 FX 页面路由接线必需）；PH-322 白名单补 delivery `models.py`/`migrations/*` + `core/management/commands/verify_integrity.py` + `tests/test_v1_cash_book_bridge.py`（模型/迁移、verifier 五类分支必需；close 校验新增查询使该测试阈值 84→92，PH-269/274 先例）；PH-317 依赖去 stale legacy PH-150/155 并晋级 ready；PH-318 依赖基线为 PH-308/PH-321/PH-252（blocker 等 PH-321）；登记 PH-337 下一槽 ready。实际执行：check ok/task_count=259；治理 23 tests OK；verify-change pre-review 仅 review 门禁、无 path。无代码/迁移/UI 变更。

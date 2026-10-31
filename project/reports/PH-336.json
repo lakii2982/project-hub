@@ -1,0 +1,47 @@
+{
+  "task_id": "PH-336",
+  "task": "PH-336",
+  "title": "规划槽：补 PH-321/PH-322 实现白名单与依赖再基线",
+  "risk": "S",
+  "owner": "root",
+  "summary": "PH-321 白名单补 contracts models/migrations/approval/change 服务；PH-322 白名单补 delivery models/migrations；PH-317 依赖去 stale 并晋级 ready；PH-318 依赖基线为 PH-308/321/252；登记 PH-337 下一槽。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":259} exit 0"
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Ran 23 tests OK"
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 8208de7 --task PH-336",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — changed files inside BASE PH-336 allowed_paths (post-rebase gate rerun)."
+    }
+  ],
+  "deviations": [
+    "PH-321/PH-322 实现开工发现 BASE 契约缺必要路径（contracts models/migrations/approval/change 服务、delivery models/migrations）：实现 PR 不得自我扩权，本槽按 Lead 授权补白名单。",
+    "PH-317 的 depends_on 仍列 legacy PH-150/155（能力已由 PH-214/224/232/287 交付），本槽按 reviewer-b 建议去 stale 并晋级 ready。",
+    "reviewer-b 复核补充：PH-322 白名单加 core/management/commands/verify_integrity.py + tests/test_v1_cash_book_bridge.py（新增 close 校验查询使 verifier query-count 阈值需 84→92，PH-269/274 先例）；PH-321 白名单加 pmo_plugins/delivery/urls.py（FX 页面接线）；同步 PH-321/PH-322/PH-317 spec 白名单与行为（PH-321 合同行非 CNY 写入经 approval/change 服务）。",
+    "Lead integration rebase (0281043 -> 8208de7) after PH-332 merged: docs/verification.md kept main entries plus PH-336 entry; manifest.active_handoff -> PH-336."
+  ],
+  "unverified": [
+    "PH-321/PH-322 实现未完成",
+    "本槽 governance/docs-only，无浏览器/PG/生产证据"
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD c642188: PH-322 now adds core/management/commands/verify_integrity.py (PH-312 §9.2/§9.4 five verifier branches) plus tests/test_v1_cash_book_bridge.py for the verifier query-count guard; the PH-269 spec precedent explicitly allowed the same test file for the 80->84 bump, so adding it for the close branch is legitimate (the implementation should set the minimal value: the measured 88 or a documented 92, not an unjustified jump). PH-321 now adds pmo_plugins/delivery/urls.py for the business_v1 route binding, and its spec adds the contract-line non-CNY write behavior via the real `_normalize_lines`/`review_version`/`_apply_approved_change` paths (round-half-up once, persist original, reject no-rate, no nearest-rate fallback); PH-321/PH-322 spec exact whitelists now mirror their tasks (only the harmless migrations/* vs *.py wildcard wording differs). PH-317 spec now records the done deps (PH-293/252/214/224/232/287), PH-150/155 removal and ready promotion, matching tasks/blockers.",
+      "REQUIRED docs sync before merge (non-blocking implementation-wise): PH-336's own spec (items 1-2), the handoff change list, and the docs/verification.md PH-336 entry still enumerate only the initial additions and omit `pmo_plugins/delivery/urls.py`, `core/management/commands/verify_integrity.py` and `tests/test_v1_cash_book_bridge.py`; update them to match tasks/PH-321/PH-322 specs/report deviations. Also state the query-count threshold decision (prefer 88, or justify 92) in the PH-322 spec/handoff so the implementation keeps the guard meaningful.",
+      "OTHER CONTENT CHECKED: PH-317 promotion evidence is correct at BASE 0281043 (PH-293/252/214/224/232/287 all done; blockers empty; ready); PH-318 deps [PH-308/PH-321/PH-252] and blocker precisely wait on ready-not-done PH-321; PH-337 is registered ready and IDs 332-337 are continuous (count 259); 10 changed files all inside BASE PH-336 allowed paths; no code/migration/schema changes; no placeholders; projectctl check ok=true/task_count=259; governance 23 tests OK; verify-change --base 0281043 --task PH-336 pre-review only high_risk_review_required (no path/acceptance errors).",
+      "FINAL EVIDENCE: after committing this pass block, record the real verify-change run (--base 0281043 --task PH-336) as pass; at the reviewed HEAD it is blocked only by report.review."
+    ],
+    "evidence": "VERDICT: PASS - all prior blockers are fixed at HEAD c642188 (BASE 0281043): PH-322 has verify_integrity.py plus the precedent-based cash-book-bridge query-count test in its whitelist with the PH-322 spec synced; PH-321 has delivery/urls.py, its non-CNY contract-line write behavior added with the real service entry points and spec whitelist synced; PH-317 spec now matches its ready/deps-done task. Remaining items are doc sync nits (PH-336 spec/handoff/docs/verification omit the three follow-up paths; threshold 88-vs-92 justification). Reviewed HEAD c642188 in /tmp/ph336-plan, worktree clean; 10 files inside PH-336 allowlist; no code/migration/schema/placeholders. Independent runs: check ok=true/task_count=259; governance 23 tests OK; verify-change --base 0281043 --task PH-336 pre-review only report.review high-risk (no path/acceptance errors). PH-317 promotion evidence, PH-318 blocker, PH-337 numbering and PH-321/PH-322 spec-task whitelist equivalence were verified."
+  }
+}

@@ -10117,14 +10117,16 @@
       "title": "发票红冲/税额抵扣实现前置：红冲负值、税额拆分与抵扣边界",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-293",
         "PH-252",
-        "PH-150",
-        "PH-155"
+        "PH-214",
+        "PH-224",
+        "PH-232",
+        "PH-287"
       ],
       "spec": "project/specs/PH-317.md",
       "allowed_paths": [
@@ -10141,9 +10143,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-252（发票实现首片，ready 未 done）done；PH-293/150/155 的契约边界已由 PH-214/224/232/287 覆盖；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -10156,8 +10156,7 @@
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-308",
-        "PH-150",
-        "PH-155",
+        "PH-321",
         "PH-252"
       ],
       "spec": "project/specs/PH-318.md",
@@ -10176,7 +10175,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-321（多币种实现首片，ready 未 done）done；PH-308/324/214/224/232/287 已 done；PH-321 合入后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-321（多币种实现，ready 未 done）done；其余契约依赖 PH-308/PH-252 已 done。"
       ],
       "handoff": null
     },
@@ -10291,7 +10290,12 @@
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "pmo_plugins/contracts/models.py",
+        "pmo_plugins/contracts/migrations/*",
+        "pmo_plugins/contracts/approval_services.py",
+        "pmo_plugins/contracts/change_services.py",
+        "pmo_plugins/delivery/urls.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -10342,7 +10346,11 @@
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "pmo_plugins/delivery/models.py",
+        "pmo_plugins/delivery/migrations/*",
+        "core/management/commands/verify_integrity.py",
+        "tests/test_v1_cash_book_bridge.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -10872,7 +10880,7 @@
       "title": "后续交付独立规划入口（接续 PH-331）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -10892,6 +10900,39 @@
         "docs/v1.0-development/*",
         "project/reports/PH-336.json",
         "project/handoffs/PH-336.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "root",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-336.md"
+    },
+    {
+      "id": "PH-337",
+      "title": "后续交付独立规划入口（接续 PH-336）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [],
+      "spec": "project/specs/PH-337.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "docs/v1.0-development/*",
+        "project/reports/PH-337.json",
+        "project/handoffs/PH-337.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
