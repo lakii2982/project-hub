@@ -12051,7 +12051,7 @@
       "title": "批次 C 部署/恢复/并发汇总验收执行前置契约（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12080,7 +12080,7 @@
       "blockers": [],
       "github_issue": null,
       "owner": null,
-      "handoff": null
+      "handoff": "project/handoffs/PH-367.md"
     },
     {
       "id": "PH-368",
