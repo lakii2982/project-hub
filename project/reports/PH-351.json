@@ -1,0 +1,45 @@
+{
+  "task_id": "PH-351",
+  "summary": "Consumed the PH-351 planning slot on main d830929 (PH-346 merged; 278 tasks after registration). PH-330 is still ready and about to merge, so no early promotion was made: PH-347/PH-348/PH-349 (batch C drill execution slices) stay proposed with blockers refreshed to 'PH-330 done, promote in the next slot', PH-350 stays proposed on those three, and the original PH-333/PH-334/PH-335 were re-scoped in the dependency graph as umbrella acceptance slices whose execution is delegated to the drill splits (PH-333/334 wait for PH-330 then the split execution; PH-335 waits for 333/334 and 350). The relationship between umbrellas and splits is now explicit so the same work is not registered twice. Next batch registered: PH-352 batch C acceptance runbook (docs-only, ready because PH-332/PH-345 are done), PH-353 import-submission split (proposed; waits PH-181/PH-185), PH-354 insights period-precheck read slice (proposed; waits PH-272), PH-355 notification reminder-refs/scan skeleton (proposed; waits PH-179/183/151) and PH-356 as the next planning slot. ROADMAP gained a batch C status section recording PH-330 imminent, the umbrella/split relationship, the four new registrations and the runbook/acceptance method split. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":278} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph351-planning on main d830929 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 371e80f --task PH-351",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 14 files inside BASE PH-351 allowed_paths (reviewer-b pass; post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "Round-1 REJECTED: PH-354 depends_on missing PH-272; PH-333/334/335 aggregate-vs-execution relations not encoded in depends_on; report evidence referenced a stale HEAD.",
+      "Round-2 PASS (HEAD 5ce8310): PH-354 depends_on includes PH-272 and matches blocker/spec; PH-333 deps += PH-347/PH-348, PH-334 += PH-349, PH-335 += PH-350 with aggregate/execution split documented; PH-333/334 specs updated; no cycle and no premature promotion (PH-330 still ready-not-done at review BASE, PH-347-350 proposed); 14 files inside whitelist; no placeholders/code/migration/schema changes; check ok=278, governance 23 OK, verify-change only review/acceptance with no path errors.",
+      "Follow-up applied in final evidence: report check/verify evidence rerun against final HEAD after rebase; PH-351 done / PH-356 ready with blockers cleared."
+    ]
+  },
+  "deviations": [
+    "No promotion was made even though PH-330 is about to merge: per the slot instruction the drill slices PH-347/348/349 are promoted only in the next slot once PH-330 is done, so blockers now say 'PH-330 done, promote next slot' rather than pretending readiness.",
+    "PH-333/PH-334/PH-335 are retained as umbrella acceptance slices (proposed) while PH-347/348/349/350 own the executable drill work; the dependency graph and blockers state this relationship explicitly to avoid duplicate work or a false 'all done' claim.",
+    "New slices: PH-352 runbook (ready, docs-only), PH-353 import submission split (proposed; PH-181/185), PH-354 insights precheck (proposed; PH-272), PH-355 reminders/scans (proposed; PH-179/183/151), PH-356 next slot (proposed until PH-351 done). No slice claims implementation before its dependencies.",
+    "Numbering basis: BASE max PH-351; no >=PH-352 branch/PR exists, so PH-352..PH-356 are continuous and free.",
+    "No placeholder strings or non-executable acceptance commands; no code/migration/schema/gate changes.",
+    "Lead integration rebase (d830929 -> 371e80f) after PH-330 merged: docs/verification.md/manifest merged; gates rerun green."
+  ],
+  "unverified": [
+    "PH-330 implementation is still in progress; PH-333/334/335 and PH-347/348/349/350 remain without drill evidence.",
+    "PH-352 is docs-only and not yet written; PH-353/354/355 are registered proposed only.",
+    "Batch C real deployment/upgrade/backup-restore/PG-concurrency/performance execution remains unverified and not_run.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}

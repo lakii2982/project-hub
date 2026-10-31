@@ -141,3 +141,10 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - **仍 proposed（精确 blocker）**：PH-333/PH-334 等 PH-330；PH-335 等 PH-333/334；PH-338/PH-342 等 PH-289；PH-339/PH-343 等 PH-272；PH-340/PH-344 等 PH-301/314。
 - 下一规划槽：PH-351（PH-346 done 后置 ready）。
 - 验收矩阵仍以 `docs/v1.0-development/batch-c-acceptance.md` 为唯一方法；批次 C 真实演练/部署/并发/性能在执行前保持 not_run/blocked。
+
+## 批次 C 状态同步（PH-351 规划槽，2026-10-31，BASE d830929）
+
+- **PH-330（分摊/预算实现）ready、即将合入**：本槽不提前晋级；合入 done 后由下一规划槽先晋级 **PH-347/348/349**（安装升级/备份恢复/PG 并发执行片）。
+- **原片与拆片关系**：PH-333/334/335 保留为汇总验收（proposed），执行由 PH-347/348/349/350 承担；PH-335 等 PH-333/334 与 PH-350 done；不重复登记。
+- **新登记**：**PH-352** 批次 C 验收 runbook 落地（ready，docs-only，deps PH-332/345 done）；**PH-353** 导入提交拆分（proposed，等 PH-181/185）；**PH-354** insights 期间预检只读（proposed，等 PH-272）；**PH-355** 通知 reminder refs/扫描骨架（proposed，等 PH-179/183/151）；**PH-356** 下一规划槽（PH-351 done 后置 ready）。
+- 验收矩阵/runbook：`batch-c-acceptance.md`（方法）+ `batch-c-runbook.md`（PH-352 执行模板）；未执行项保持 not_run，禁止配置冒充运行证据。
