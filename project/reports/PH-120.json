@@ -10,7 +10,7 @@
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_delivery_gate -v",
       "result": "pass",
-      "evidence": "Actual exit 0: Ran 70 tests in 35.419s, OK. Includes BASE policy, S authorization digest, fail-closed identities, mergeable/test-merge fixtures, official Codex/Actions current-HEAD arbitration and existing controller gates."
+      "evidence": "Actual exit 0 after workflow anti-forgery fix: Ran 71 tests in 31.535s, OK. Includes BASE policy, S authorization digest, fail-closed identities, mergeable/test-merge fixtures, official Codex/Actions current-HEAD arbitration and existing controller gates."
     },
     {
       "command": "python manage.py check",

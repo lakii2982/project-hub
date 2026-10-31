@@ -567,6 +567,7 @@ class GitHubDelivery:
             test_merge_sha = self._test_merge_sha(number)
             arbitration = None
             if policy is not None and policy["bootstrap"]["remote_checks_enforced"]:
+                self._trusted_workflow(base_sha, head_sha, policy["remote_arbitration"]["workflow_path"])
                 arbitration = self._arbitration(number, head_sha, policy)
             self._threads(number)
             # Final immediate recheck: BASE, PR identity and head must still
@@ -649,6 +650,15 @@ class GitHubDelivery:
         merge_sha = data.get("merge_commit_sha") if isinstance(data, dict) else None
         return _sha(merge_sha, 40, "test_merge_missing")
 
+    def _trusted_workflow(self, base_sha, head_sha, path):
+        """A same-named candidate workflow is not trusted arbitration evidence."""
+        base = self._git(self.repo.root, ["cat-file", "blob", f"{base_sha}:{path}"],
+                         "arbitration_workflow")
+        head = self._git(self.repo.root, ["cat-file", "blob", f"{head_sha}:{path}"],
+                         "arbitration_workflow")
+        if not base or base != head:
+            _fail("arbitration_workflow_changed")
+
     def _arbitration(self, number, head_sha, policy):
         """Verify the official Codex result and trusted Actions event for HEAD."""
         remote = policy["remote_arbitration"]
@@ -656,7 +666,7 @@ class GitHubDelivery:
             ["api", "--hostname", "github.com", "apps/chatgpt-codex-connector"],
             "review_app",
         )
-        if app.get("id") != remote["codex_app_id"]:
+        if not isinstance(app, dict) or app.get("id") != remote["codex_app_id"]:
             _fail("review_app_identity")
         comments = []
         for page in range(1, 51):

@@ -437,6 +437,15 @@ class GitHubGuardTests(ControllerFixture):
                 with self.assertRaisesRegex(DeliveryError, "not_mergeable"):
                     self.delivery._open(data, None, self.head)
 
+    def test_candidate_same_named_workflow_must_match_base_bytes(self):
+        from tooling.ai_delivery.delivery.github import DeliveryError
+        with mock.patch.object(self.delivery, "_git", side_effect=[b"base", b"base"]):
+            self.assertIsNone(self.delivery._trusted_workflow(
+                "a" * 40, self.head, ".github/workflows/delivery.yml"))
+        with mock.patch.object(self.delivery, "_git", side_effect=[b"base", b"forged"]), \
+             self.assertRaisesRegex(DeliveryError, "workflow_changed"):
+            self.delivery._trusted_workflow("a" * 40, self.head, ".github/workflows/delivery.yml")
+
     def test_remote_arbitration_requires_official_current_head_and_actions_event(self):
         policy = json.loads((Path(__file__).resolve().parent.parent /
                              "project/delivery-policy.json").read_text())
