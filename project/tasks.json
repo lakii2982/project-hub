@@ -10230,20 +10230,21 @@
       ],
       "spec": "project/specs/PH-320.md",
       "allowed_paths": [
-        "pmo_plugins/delivery/invoice_services.py",
-        "pmo_plugins/delivery/invoice_views.py",
-        "pmo_plugins/delivery/invoice_forms.py",
-        "pmo_plugins/delivery/templates/delivery/invoices.html",
-        "pmo_plugins/delivery/domain_metadata.py",
+        "pmo_plugins/invoicing/services.py",
+        "pmo_plugins/invoicing/views.py",
+        "pmo_plugins/invoicing/forms.py",
+        "pmo_plugins/invoicing/domain_metadata.py",
+        "pmo_plugins/invoicing/templates/invoicing/invoice_tax.html",
+        "pmo_plugins/invoicing/migrations/*.py",
         "pmo_plugins/delivery/urls.py",
-        "tests/test_v1_invoice.py",
-        "tests/test_v1_invoice_http.py",
-        "project/reports/PH-320.json",
-        "project/handoffs/PH-320.md",
+        "tests/test_v1_invoice_tax.py",
+        "tests/test_v1_invoice_tax_http.py",
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "project/reports/PH-320.json",
+        "project/handoffs/PH-320.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -10471,15 +10472,15 @@
         "pmo_plugins/invoicing/forms.py",
         "pmo_plugins/invoicing/templates/invoicing/invoice_reconciliation.html",
         "pmo_plugins/invoicing/domain_metadata.py",
-        "pmo_plugins/invoicing/urls.py",
+        "pmo_plugins/delivery/urls.py",
         "tests/test_v1_invoice_reconciliation.py",
         "tests/test_v1_invoice_reconciliation_http.py",
-        "project/reports/PH-325.json",
-        "project/handoffs/PH-325.md",
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "project/reports/PH-325.json",
+        "project/handoffs/PH-325.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -11030,7 +11031,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-277（insights ADR 契约冻结，done？以 BASE 为准）、PH-272（insights 读模型实现前置，proposed）、PH-291/304/309（done）与 PH-272 的读模型实现 done；PH-272 完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-272（insights 读模型实现前置，proposed）done；PH-277（insights ADR 0014）已 done、PH-291/304/309 已 done；PH-272 完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
