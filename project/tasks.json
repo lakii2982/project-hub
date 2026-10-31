@@ -10455,7 +10455,7 @@
       "title": "发票-结算/收入只读对账与税额资格确认（发票写侧后续）",
       "kind": "feature",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10491,7 +10491,7 @@
         "python manage.py test tests.test_v1_invoice_reconciliation tests.test_v1_invoice_reconciliation_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": "worker-docs",
+      "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-325.md"
     },
