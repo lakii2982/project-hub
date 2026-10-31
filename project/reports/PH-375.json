@@ -1,0 +1,44 @@
+{
+  "task_id": "PH-375",
+  "summary": "Delivered the docs-only batch D acceptance matrix and execution runbook at BASE ef13003, reusing the existing verification standards instead of creating a second set. docs/v1.0-development/batch-d-acceptance.md defines the D-01–D-11 scope (PH-370 cross-owner orchestration, PH-371 tax-to-cost adjustment, PH-338/353 invoice batch/import, PH-339/354 insights, PH-340/355 notifications, PH-372 batch C closure gate, batch C summary/release qualification and multi-currency re-scope) mapped to M/V1-OPS acceptance points, required evidence layers (L2/L3/L4/L5 as applicable), executable commands or explicit blocked status, pass criteria, responsible roles, current not_run/blocked state, exit criteria and counterexamples. docs/v1.0-development/batch-d-runbook.md provides the generic execution protocol (prepare/execute/record/judge/backfill/exit), the docs/verification.md backfill template aligned with PH-366 (candidate SHA, environment, command, result, artifacts, L1–L5, gaps, four-eyes signature), per-slice execution cards with preconditions/steps/commands/expected output/pass criteria/failure handling/role/status, and the honest unverified/release-blocked statement. It cross-references batch-c-acceptance/batch-c-runbook/batch-c-release-evidence-contract and op-runbook. Current state: D-01 implementation (PH-370) is merged but its acceptance is not_run; D-02–D-11 are blocked by unimplemented/undone dependencies; release qualification remains blocked per PH-366. No code, scripts, migration, gate or product-behavior change and no acceptance result is claimed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE ef13003): {\"command\":\"check\",\"ok\":true,\"task_count\":297}, exit 0; PH-375 done with handoff."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph375-batch-d on main ef13003 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base de7073c --task PH-375",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-375 allowed_paths (post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-375 batch-D acceptance/runbook reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 STALE-PREREQUISITE BLOCKER RESOLVED AT f7c7224: the matrix D-03/D-04 rows and the runbook prerequisites now remove PH-362 from the not-done list (D-03 waits PH-289; D-04 waits PH-181/185/289) and explicitly say 'PH-362 契约已 done', consistent with tasks.json; the rows remain correctly blocked on the genuinely pending dependencies.",
+      "CONTENT RE-VERIFIED: D-01–D-11 covers PH-370/371, PH-338/353, PH-339/354, PH-340/355, PH-372, batch C rollup and multi-currency re-scope; each row has required layers/command-or-blocked/pass criteria/role/current status; D-01 (PH-370 merged) is honestly acceptance not_run, D-02–D-11 remain blocked, release eligibility remains blocked; the runbook's PH-366 evidence template (SHA/environment/command/artifacts/L1–L5/gaps/four-eyes signature), execution protocol, slice cards and failure handling are actionable; alignment with PH-332/352/366/345 and no second rule set; docs-only, no product code/migration/script/gate change; 8 files within the PH-375 whitelist; no placeholders; task_count 297; check ok=297; governance 23 OK; verify-change --base ef13003 --task PH-375 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: PASS (round 2; stale PH-362 prerequisites fixed). Reviewed HEAD f7c7224 (BASE ef13003) in /tmp/ph375-batch-d, worktree clean; 8 files within PH-375 whitelist; docs-only. D-03/D-04 now cite only PH-289/PH-181/PH-185 while noting PH-362 done; D-01 acceptance not_run, D-02–D-11 blocked, release blocked; PH-366 template/execution protocol otherwise complete; check ok=297; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): D-03/D-04 prerequisite text no longer claims PH-362 is not done; PH-362 contract is done at this BASE, so the rows/cards now cite only the genuinely pending PH-289/PH-181/PH-185 while remaining blocked.",
+    "D-01 (PH-370) implementation is merged but its batch D acceptance has not been executed, so it is marked not_run rather than pass; all other D items are blocked by undone dependencies and are labeled blocked.",
+    "The matrix/runbook reuse PH-332 five-layer evidence, PH-352 execution templates, PH-366 release gate/envelope and PH-345 ops contract instead of introducing another verification standard.",
+    "Release qualification is explicitly stated as blocked (batch C PH-357/367/372 incomplete; no L3/L4/L5 evidence); this document does not claim release readiness.",
+    "No code/scripts/migrations/gates/product behavior changed; D-11 multi-currency items remain a re-scope/close decision, not an implementation claim.",
+    "Lead integration rebase (ef13003 -> b689485) after PH-357 merged: ROADMAP/verification/manifest merged keeping batch C/D sections; gates rerun."
+  ],
+  "unverified": [
+    "No D-batch acceptance item was executed; D-01 is not_run and D-02–D-11 are blocked.",
+    "No CI(PG)/browser/production evidence exists for the batch D matrix; release qualification remains blocked.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}

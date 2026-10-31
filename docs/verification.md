@@ -1040,3 +1040,13 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - 证据层级：L1 有（脚本/测试存在）；L2 有（本地自动化/演练命令与计数）；L3 无（CI/PG/真实部署）；L4 无（浏览器 1440/390）；L5 无（生产/试点/客户验收）。
 - 缺口/未执行：L3 CI/PG/真实 staging 安装/升级/TLS/恢复/并发；L4 浏览器；L5 生产/客户验收；PH-367（部署/恢复/并发汇总）与 PH-372（D 批验收 runbook）未完成；PH-333/334/335 汇总不得以本回填替代执行证据。
 - 判定：**blocked（release_ready=false）**；L1+L2 证据可追溯，L3–L5 严格 not_run，不构成发布资格；双人复核/签名/14 天时效/不可挑选规则沿用 PH-366 §6，执行人不得自批豁免。
+
+## PH-375 批次 D 验收矩阵与执行 runbook（docs-only）（2026-10-31）
+
+基线 ef13003。新增：
+1. `docs/v1.0-development/batch-d-acceptance.md`：D-01–D-11 矩阵（PH-370/371、PH-338/353、PH-339/354、PH-340/355、PH-372、批次 C 汇总、多币种重定）→ M/V1-OPS 验收点、required 层（L2/L3/L4/L5 适用）、命令/证据、通过判据、责任角色、未验证/blocked 现状；退出标准与反例。
+2. `docs/v1.0-development/batch-d-runbook.md`：通用执行协议（准备→执行→记录→判定→回填→退出）、`docs/verification.md` 回填模板（对齐 PH-366：SHA/环境/命令/结果/artifacts/L1–L5/缺口/四眼签名）、D-01–D-11 切片执行卡（前置/步骤/命令/预期/判据/失败处置/角色/状态）、未验证与发布资格说明。
+3. 对齐：PH-332 五层证据、PH-352 执行模板、PH-366 envelope/发布 gate、PH-345 脚本契约；**不新增第二套验收规则**。
+4. 现状：D-01（PH-370 编排）实现已合入但验收 **not_run**；D-02–D-11 **blocked**（PH-371/338/353/339/354/340/355/372 等未 done）；发布资格仍按 PH-366 **blocked**，不得以文档/runbook 宣称就绪。
+5. 无实现/脚本/迁移/门禁/产品代码变更；未执行任何 D 批验收/演练。
+独立 S 复核首轮 1 阻断（D-03/D-04 stale PH-362 前置）已修；二轮 PASS。最终门禁：projectctl check ok=true/task_count=297；23 项治理 OK；verify-change --base ef13003 --task PH-375 ok=true、8 文件全白名单、无 errors。未验证：D-01 验收、D-02–D-11 全部、L3/L4/L5、发布资格。

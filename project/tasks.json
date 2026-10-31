@@ -12318,7 +12318,7 @@
       "title": "批次 D 验收矩阵与执行 runbook（docs-only：剩余 1.0 缺口方法论）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12345,7 +12345,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-375.md"
     },
     {
       "id": "PH-376",
