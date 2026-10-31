@@ -1,0 +1,31 @@
+{
+  "task_id": "PH-387",
+  "summary": "批次 D-02 税额→costing 开放期成本更正验收执行 on BASE 5278c96. Evidence-only acceptance of the merged PH-371 implementation (no reimplementation): L1 code exists; L2 local automated scoped tests pass (14 tests OK) covering not_recoverable→append-only cost batch, recoverable/pending no-cost, pending rejection, closed/locked period rejection, request_token replay/changed-input/duplicate rejection, permissions/cross-org/module disabled, multi-project weights/basis sum, company-level no-lines, future date rejection, reversal negative append-only once; fresh SQLite verify_integrity is ok, projectctl/manage/makemigrations/governance pass. L3 CI/PostgreSQL was not executed (no same-SHA CI run/PG evidence; SQLite does not count), L4 browser 1440/390/keyboard and L5 production/customer are not_run. D-02 requires L2+L3, so the overall D-02 judgment is false/not passed despite L2; no release qualification is claimed. Updated docs/verification.md with SHA/commands/exit/status/layers/gaps, batch-d-acceptance D-02 row and batch-d-runbook D-02 card, ROADMAP and delivery-status. No product code/migration/contract-schema/gate change.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run exit 0: {\"command\":\"check\",\"ok\":true,\"task_count\":312}."},
+    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."},
+    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual run exit 0: No changes detected."},
+    {"command": "python manage.py test tests.test_v1_tax_cost_adjustment tests.test_v1_tax_cost_adjustment_http --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 14 tests, OK (exit 0). Covers D-02 required L2 scenarios listed in the report."},
+    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual fresh SQLite (migrate then verify) run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. The first attempt on the unmigrated default DB raised no such table core_organization (environment prerequisite), so the valid fresh-DB run is recorded; not counted as a business failure."},
+    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 1310 tests in 146.295s, 5 failures/3 errors/70 environment skips. The 8 failure/error names are the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names."},
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests, OK."},
+    {"command": "python scripts/projectctl.py verify-change --base 5278c96 --task PH-387", "result": "not_run", "evidence": "Not run before report creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Independent S review pending. Verify D-02 evidence uses real outputs and no reimplementation, L1/L2 claims match scoped 14 tests/fresh verify, L3 CI/PG and L4 browser and L5 production are honestly not_run, required L2+L3 means overall D-02 false/not passed, gaps and required evidence are recorded, no product code/migration/schema/gate change, exact whitelist, and report/handoff honesty. Implementer does not self-pass."
+  },
+  "deviations": [
+    "D-02 is not passed: L2 local tests pass but required L3 CI/PostgreSQL evidence is not_run (and L4/L5 are not_run); the overall D-02 judgment is false.",
+    "The first verify_integrity attempt used the unmigrated default SQLite DB and failed with no such table core_organization; it was rerun on a freshly migrated isolated SQLite DB and passed. The environment prerequisite failure is disclosed, not hidden.",
+    "No product code, test, migration, contract schema, CI gate or canonical change; this is an evidence-only acceptance slice.",
+    "No real PG, browser, staging, production or customer data was used."
+  ],
+  "unverified": [
+    "L3 CI/PostgreSQL evidence for D-02, L4 browser 1440/390/keyboard/empty-error-disabled states, L5 production/customer acceptance.",
+    "Independent financial reviewer sign-off and CI/PR; release qualification remains false/blocked."
+  ]
+}

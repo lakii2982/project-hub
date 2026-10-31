@@ -282,3 +282,10 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - PH-370 跨 owner 编排：本地 L2 部分验收通过（cash-refund 真实 e2e、9 scoped tests OK；全量 1310/5F+3E 无新增）；
 - revenue/settlement 真实 owner e2e 未执行（仅 patch 契约测试）、L3 CI/PG、L4 浏览器、L5 生产 not_run；
 - **D-01 未通过**、release_ready=false；发布资格仍按 PH-366 blocked。
+
+
+## 批次 D-02 验收（PH-387，2026-10-31，BASE 5278c96）
+
+- PH-371 税额→costing 开放期成本更正：L1 代码存在、L2 scoped 14 tests OK、fresh SQLite verify_integrity ok；L3 CI/PG、L4 浏览器、L5 生产 **not_run**。
+- D-02 必需层为 L2+L3，L3 缺失 → **D-02 整体不通过（false）**；不冒充实测/生产。
+- 证据与缺口见 `docs/verification.md` 的 PH-387 条目；未修改产品代码/迁移/契约/门禁。
