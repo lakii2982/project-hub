@@ -148,3 +148,11 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - **原片与拆片关系**：PH-333/334/335 保留为汇总验收（proposed），执行由 PH-347/348/349/350 承担；PH-335 等 PH-333/334 与 PH-350 done；不重复登记。
 - **新登记**：**PH-352** 批次 C 验收 runbook 落地（ready，docs-only，deps PH-332/345 done）；**PH-353** 导入提交拆分（proposed，等 PH-181/185）；**PH-354** insights 期间预检只读（proposed，等 PH-272）；**PH-355** 通知 reminder refs/扫描骨架（proposed，等 PH-179/183/151）；**PH-356** 下一规划槽（PH-351 done 后置 ready）。
 - 验收矩阵/runbook：`batch-c-acceptance.md`（方法）+ `batch-c-runbook.md`（PH-352 执行模板）；未执行项保持 not_run，禁止配置冒充运行证据。
+
+## 批次 C 状态同步（PH-356 规划槽，2026-10-31，BASE db8ed47）
+
+- PH-330 分摊/预算 ETC 已合入 done；PH-345 演练契约 done。
+- **晋级 ready**：PH-347 安装/升级演练、PH-348 备份/恢复演练、PH-349 PG 并发验收（deps PH-330/PH-345 均 done；spec 状态/blockers 已同步）。
+- 保持 proposed：PH-350 健康/容量/积压基线（等 PH-347/348/349 done）；PH-333/334/335 汇总验收（依赖已含对应执行片，blockers 已刷新）。
+- **新登记**：PH-357 批次 C 演练证据回填/验收汇总（proposed，等 347–350/352）、PH-358 发票批量导入实现首片（proposed，等 PH-338/342）、PH-359 insights 差异单/工作台只读实现（proposed，等 PH-339/343）、PH-360 通知中心收件箱实现（proposed，等 PH-340/344）、PH-361 后续交付独立规划入口（ready，依赖 PH-356 done，接续 PH-356）。
+- 下一实现队列：PH-347/348/349 → PH-350 → PH-333/334/335；PH-352 runbook 先行支撑证据回填。

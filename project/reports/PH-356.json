@@ -1,0 +1,42 @@
+{
+  "task_id": "PH-356",
+  "summary": "后续交付独立规划入口（接续 PH-351）on BASE db8ed47. Planning-only slice: no product code, migration, contract schema, or engineering gate change. Promotes batch C execution slices PH-347 (install/upgrade drill), PH-348 (backup/restore drill), and PH-349 (PostgreSQL concurrency) from proposed to ready after PH-330 and PH-345 became done, with spec status/blockers/allowed paths/DoR checked. Keeps PH-350 proposed until PH-347/348/349 are done; confirms PH-333/PH-334/PH-335 summary acceptance dependencies already include PH-347/PH-348 and PH-349/PH-350 respectively and refreshes their blockers to wait for execution-slice completion rather than claiming execution. Registers five new continuous slices: PH-357 batch C drill evidence backfill/acceptance summary (proposed; waits for 347/348/349/350/352), PH-358 invoice batch import implementation (proposed; waits for PH-338/342), PH-359 insights reconciliation/dashboard read implementation (proposed; waits for PH-339/343), PH-360 notification center inbox implementation (proposed; waits for PH-340/344), and PH-361 next independent planning entry (depends_on=[PH-356]; PH-356 is now done, so the final evidence commit sets PH-361 ready and clears the blocker). Each new spec has concrete DoR, exact allowlist, executable acceptance, and honest blockers; proposed tasks are not treated as work authorization. Updated ROADMAP batch C status, delivery status, verification, manifest active handoff, and task state. Reviewer round-1 blocker fixed: PH-361 now genuinely depends on PH-356 and remains proposed with a PH-356-done blocker instead of being ready off already-done PH-351; its spec/ROADMAP/report wording was aligned. The final review-evidence commit will record the actual post-review verify-change pass at the final HEAD.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":283}. Includes 278 existing tasks plus PH-357–361; dependency/status/allowlist/spec checks pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 2.251s, OK. Covers projectctl task-contract validation and governance/release checks."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base db8ed47 --task PH-356",
+      "result": "pass",
+      "evidence": "Actual run after the round-2 reviewer pass and final status commit ea61d30: ok=true, head=ea61d30213bb0e2f91983019ff65e485ce693069, changes=18 files all inside the PH-356 allowlist, errors=[]."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-356 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PROMOTION EVIDENCE VERIFIED: PH-347/348/349 are promoted ready with deps PH-330 and PH-345 both done; their specs have synchronized status/risk/whitelist/DoR and executable acceptance commands. PH-350 remains proposed on ready-not-done 347/348/349 with an accurate blocker; PH-333/334/335 remain proposed with their deps refreshed to include the corresponding execution/summary slices (333->347/348, 334->349, 335->333/334/350) and no false readiness.",
+      "NO FALSE PROMOTION/NUMBERING: PH-357 (evidence backfill/summary, waits on 347-350/352), PH-358 (invoice batch/import, waits PH-338/342), PH-359 (insights read model, waits PH-339/343), PH-360 (notification inbox, waits PH-340/344) are all proposed with precise non-done dependency blockers; task_count 283 unique continuous PH-357..PH-361 (BASE max 356); PH-361 is now a genuine next slot depending on PH-356, proposed with 'PH-356 done then next slot re-evaluates DoR and sets ready' and no premature ready.",
+      "CONTENT/GATES: PH-356 is a planning/governance-only slice - ROADMAP batch-C status, docs/verification, delivery-status, tasks/manifest/specs updated; no code/migration/schema/contract/CI-gate change; 18 changed files are inside PH-356 allowed paths; no placeholder strings; PH-356 in_review/handoff, PH-361 proposed. At HEAD ec5b1b9 (BASE db8ed47): check ok=true/task_count=283; governance 23 tests OK; verify-change --base db8ed47 --task PH-356 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass. Final evidence must set PH-356 done/PH-361 ready and record the real verify-change pass."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD ec5b1b9 (BASE db8ed47) in /tmp/ph356-planning, worktree clean; 18 files within PH-356 allowed paths; task_count 283 unique continuous PH-357..PH-361; manifest=PH-356. PH-347/348/349 have all-done deps (PH-330/PH-345) and synchronized specs/whitelists; PH-350 stays proposed on those ready-not-done; PH-333/334/335 blockers refreshed; PH-357-360 proposed on real non-done deps; PH-361 now proposed on PH-356 as the genuine next slot (no PH-351 defense). No placeholders/code/migration/schema; check ok=283; governance 23 OK; verify-change only review gate, no path_out_of_scope. Final evidence sets PH-356 done/PH-361 ready. Round-2 reviewer PASS (ec5b1b9): PH-361 now depends on PH-356 and was proposed until this final evidence commit; after PH-356 is done, PH-361 is set ready with no blocker. Final evidence commit records the actual verify-change pass."
+  },
+  "deviations": [
+    "PH-361 (next planning slot) depends on PH-356 and is proposed with a \"PH-356 done -> ready\" blocker at this stage; it is not prematurely ready. After PH-356 closes, the final evidence commit may set PH-361 ready and clear the blocker, matching the PH-346->PH-351 / PH-351->PH-356 pattern.",
+    "PH-358/PH-359/PH-360 are downstream implementation slices of existing proposed prerequisites PH-338/342, PH-339/343 and PH-340/344 to avoid duplicating their scope; they remain proposed with exact blockers until those prerequisites are done.",
+    "PH-350 remains proposed and PH-333/334/335 remain proposed even though their execution slices are now ready; no execution or evidence was fabricated.",
+    "No code/migration/schema/engineering-gate changes; deliverables are specs, task board entries and planning/status docs only."
+  ],
+  "unverified": [
+    "Actual deployment/restore/PG concurrency/performance execution (belongs to PH-347/348/349/350; not this planning slice).",
+    "Independent S review pending; CI/PR not run in this worktree; no browser/product-surface verification applicable."
+  ]
+}
