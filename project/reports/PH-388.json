@@ -38,9 +38,9 @@
       "evidence": "Actual fresh SQLite (migrate then verify) run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base c931137 --task PH-388",
+      "command": "python scripts/projectctl.py verify-change --base 7748ea1 --task PH-388",
       "result": "pass",
-      "evidence": "Actual run after the reviewer pass and final status commit f2e64bf: ok=true, head=f2e64bf4f28ac5fd463262611d88b47c3cdc8deb, changes=11 files all inside the PH-388 allowlist, errors=[]."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 11 files inside BASE PH-388 allowed_paths (post-rebase rerun)."
     }
   ],
   "review": {
