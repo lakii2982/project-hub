@@ -10653,7 +10653,7 @@
     {
       "id": "PH-330",
       "title": "分摊/预算 ETC 实现首片（costing 0005/0006）",
-      "status": "in_review",
+      "status": "done",
       "risk": "S",
       "milestone": "v1.0.0",
       "depends_on": [

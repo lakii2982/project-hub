@@ -33,9 +33,9 @@
       "evidence": "Actual run after the round-1 fixes: Ran 12 tests, OK. Allocation/net-zero/reconciliation/reversal/append-only/verifier probes plus request_token replay; HTTP page/role/disabled; budget gold ETC/four-eyes/reject/supersede, request_token replay, and no-cost incurred=None/ETC/EAC/variance/remaining=None+incurred_cost_missing."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base de85caa --task PH-330",
+      "command": "python scripts/projectctl.py verify-change --base d830929 --task PH-330",
       "result": "pass",
-      "evidence": "Actual run after the committed round-2 reviewer pass and rebase onto de85caa (HEAD 090dd3a): ok=true, changes=21 files all inside the PH-330 allowlist, errors=[]."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 21 files inside BASE PH-330 allowed_paths (review pass; post-rebase rerun)."
     }
   ],
   "review": {
