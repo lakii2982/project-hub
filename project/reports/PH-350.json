@@ -48,14 +48,14 @@
       "evidence": "Actual run exit 3; envelope status fail with backlog.reminders fail; threshold enforcement confirmed."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-350",
+      "command": "python scripts/projectctl.py verify-change --base 5763f4a --task PH-350",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-350 allowed_paths (review pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-350 allowed_paths (review pass; post-rebase rerun)."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-350",
+      "command": "python scripts/projectctl.py verify-change --base 5763f4a --task PH-350",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-350 allowed_paths (review pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-350 allowed_paths (review pass; post-rebase rerun)."
     },
     {
       "command": "python scripts/ops/healthcheck.py --mode dry_run --env production --facts <complete-local-facts> --out /tmp/ph350-evidence/health-production-dry-notrun.jsonl",
@@ -90,7 +90,8 @@
     "Thresholds are frozen local rehearsal defaults, not production SLOs; local numbers must not be used to claim production capacity.",
     "Artifacts are written under /tmp/ph350-evidence and not committed; no product code/migration/schema/canonical/CI-gate changes.",
     "No browser/product UI, PG or customer data is exercised in this slice.",
-    "docs/engineering/ops-runbook.md is outside the PH-350 allowed_paths, so it was not modified; the V1-OPS-05 local/rehearsal status is recorded in the allowlisted docs/engineering/observability.md and report, with the runbook sync left to a later authorized slice."
+    "docs/engineering/ops-runbook.md is outside the PH-350 allowed_paths, so it was not modified; the V1-OPS-05 local/rehearsal status is recorded in the allowlisted docs/engineering/observability.md and report, with the runbook sync left to a later authorized slice.",
+    "Lead integration rebase (fe9c257 -> 5763f4a) after PH-366 merged: verification/manifest merged; gates rerun."
   ],
   "unverified": [
     "Real CI/deployment health/capacity/backlog/performance baselines and L4/L5 evidence",
