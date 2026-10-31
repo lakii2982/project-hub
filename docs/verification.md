@@ -855,3 +855,10 @@ BASE 9e0991f（PH-337/PH-317 之后；PH-336 已补白名单：contracts models/
 ## PH-341 后续交付独立规划入口（2026-10-31）
 
 基线20ffc12（PH-322 合入后）。docs-only 规划：PH-322 done 后 PH-330（deps PH-313/322）晋级 ready；PH-333/334 仍等 PH-330、PH-335 等 PH-333/334、PH-314 等 PH-301/310/285/179/183，保持 proposed 并刷新精确 blocker。新登记 PH-342 发票批量/导入实现前置（proposed，等 PH-320/289）、PH-343 insights 读模型实现前置（proposed，等 PH-272）、PH-344 通知中心契约前置（proposed，等 PH-301/314）、PH-345 批次 C 演练前置：部署/恢复/并发验收脚本契约（ready，deps PH-332/322/321/252 done）、PH-346 下一规划入口（ready）；编号从 PH-342 连续、已核无并行占用。ROADMAP 批次 C 表/进展同步；无产品代码/迁移/脚本/门禁/contract schema 变更。实际执行（最终HEAD）：projectctl check ok=true/task_count=268；23项治理OK；verify-change --base 20ffc12 --task PH-341在review pending时仅high_risk_review_required（预期）。未验证：独立S复核pending；PH-330/PH-345实现、批次C演练、PH-338/339/340及前置均未实现；部署/恢复/并发/性能环境未验证。
+
+## PH-325 发票-结算/收入/条款只读对账（2026-10-31）
+
+基线 863f946。只读派生（无 audit/写/迁移/收据），单据：`pmo_plugins/invoicing/invoice_reconciliation_services.py`（`invoice_pairing`）、视图/表单/模板、canonical 路由 `invoice-reconciliation/`（`history_read`，经 `pmo_plugins/delivery/urls.py` 绑定，无 `invoicing/urls.py`）、`tests/test_v1_invoice_reconciliation.py` + `_http.py`（14 tests）。
+- 能力：发票头/行/分配/红冲/税额资格 ↔ 结算 OpenItem/Clearance/Settlement ↔ 管理收入确认/调整 ↔ 合同条款只读聚合；派生已分配/未分配/已核销/未清/已确认收入/税额资格；issue 覆盖 source_missing/unsupported_source/unallocated/over_allocated/duplicate_pairing/revenue_invoice_mismatch/tax_unconfirmed/cross_org_source；missing 用 null+code（不显示 0）；权限 owner/finance/auditor 全量、pm 仅管理项目、member 拒绝、停用 history_read；GET 无写副作用、无收据。
+- 偏差：spec 行为 2 的“税额资格确认 pending→confirmed”按本片任务书（只读、无 audit/写/收据）**未实现**，留 PH-320；本片只读展示 TaxQualification 事实（tax_unconfirmed issue）。
+- 实跑：projectctl check ok/263；23 项治理 OK；manage.py check 103 既有 warning（基线 102 + 本片 1 条路由 W003）/0 error；makemigrations 无变更；全量 1175 tests=5F+3E+69（既有 macOS/DRF 基线，无新增）；scoped 14 tests OK；新库 verify_integrity ok。未验证：浏览器 1440/390 实机未截图（模板已实现但未人工走查）；PG 交 CI；税额确认未实现。

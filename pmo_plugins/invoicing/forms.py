@@ -74,3 +74,23 @@ class ReverseForm(forms.Form):
 
     def clean_allocation_reversals(self):
         return self._json('allocation_reversals')
+
+
+class InvoiceReconciliationFilterForm(forms.Form):
+    """Read-only filters for the PH-325 invoice pairing page."""
+
+    project = forms.CharField(required=False)
+    as_of = forms.DateField(required=False)
+    invoice = forms.CharField(required=False)
+
+    def __init__(self, *args, member=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.member = member
+        if member is not None:
+            from core.access import visible_projects
+            from core.models import Project
+            projects = (visible_projects(member) if member.role == 'pm'
+                        else Project.objects.filter(organization=member.organization))
+            self.fields['project'] = forms.ModelChoiceField(
+                queryset=projects.order_by('name'), required=False,
+                label='项目')

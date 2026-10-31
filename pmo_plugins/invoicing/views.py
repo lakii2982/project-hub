@@ -106,3 +106,32 @@ def invoice_reverse(context, payload):
     return render(context.request, 'invoicing/invoice_form.html', _base(
         member, form=form, submit_url=_url('invoice_reverse'), title='发票红冲'),
         status=400)
+
+
+def invoice_reconciliation(context, payload):
+    """PH-325 read-only invoice/settlement/revenue/terms pairing page."""
+    from . import invoice_reconciliation_services as reconciliation
+    from .forms import InvoiceReconciliationFilterForm
+    from django.core.exceptions import PermissionDenied
+    member = reconciliation._reader(context.member)
+    allowed = {'project', 'as_of', 'invoice'}
+    form = InvoiceReconciliationFilterForm(payload or None, member=member)
+    error = ''
+    snapshot = None
+    if set(payload) - allowed:
+        error = '包含不允许的查询参数，请刷新后重试'
+    else:
+        try:
+            snapshot = reconciliation.invoice_pairing(
+                member, invoice_id=payload.get('invoice') or None,
+                project_id=(payload.get('project') or None),
+                as_of=payload.get('as_of') or None)
+        except (PermissionDenied, ValueError) as exc:
+            error = '；'.join(getattr(exc, 'messages', [str(exc)]))
+    return render(context.request, 'invoicing/invoice_reconciliation.html',
+                  {'nav': 'invoicing', 'can_write': False, 'snapshot': snapshot,
+                   'issues': snapshot['issues'] if snapshot else [],
+                   'missing': snapshot['missing'] if snapshot else [],
+                   'filter_form': form, 'error': error,
+                   'reconciliation_url': _url('invoice_reconciliation')},
+                  status=400 if error else 200)

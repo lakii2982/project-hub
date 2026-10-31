@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}发票对账{% endblock %}
+{% block content %}
+<main class="page" data-page="invoice-reconciliation">
+  <header class="page-header">
+    <h1>发票对账</h1>
+    <p class="muted">只读派生：发票 ↔ 结算未清/核销 ↔ 管理收入 ↔ 合同条款。未实现或缺失的数据显示为空并列入 missing，不显示 0。</p>
+  </header>
+  {% if error %}<p class="message error" role="alert">{{ error }}</p>{% endif %}
+  <form method="get" action="{{ reconciliation_url }}" class="filter-form">
+    {% csrf_token %}
+    <label>项目 {{ filter_form.project }}</label>
+    <label>截止日 {{ filter_form.as_of }}</label>
+    <label>发票 {{ filter_form.invoice }}</label>
+    <button type="submit">查看</button>
+  </form>
+  {% if snapshot %}
+  <section class="panel">
+    <h2>范围 {{ snapshot.scope.kind }}{% if snapshot.scope.project_id %} · 项目 {{ snapshot.scope.project_id }}{% endif %} · 截止 {{ snapshot.as_of }}</h2>
+    {% if snapshot.scope.kind == 'invoice' %}
+      {% with invoice=snapshot.invoice %}
+      <h3>{{ invoice.invoice_number }} · {{ invoice.status }} · {{ invoice.invoice_date }}</h3>
+      <dl class="facts">
+        <dt>含税/不含税/税额（分）</dt><dd>{{ invoice.gross_cents }} / {{ invoice.net_cents }} / {{ invoice.tax_cents }}</dd>
+        <dt>已分配（分）</dt><dd>{{ invoice.allocated.gross_cents }}</dd>
+        <dt>未分配（分）</dt><dd>{{ invoice.unallocated_cents }}</dd>
+        <dt>已红冲（分）</dt><dd>{{ invoice.reversed_cents }}</dd>
+        <dt>已确认收入（分）</dt><dd>{% if invoice.recognized_net_cents is None %}<em class="missing">missing（未找到收入确认）</em>{% else %}{{ invoice.recognized_net_cents }}{% endif %}</dd>
+      </dl>
+      <h4>分配</h4>
+      <table class="data-table">
+        <thead><tr><th>来源</th><th>项目</th><th>含税/不含税/税额</th><th>来源快照</th></tr></thead>
+        <tbody>
+        {% for row in invoice.allocations %}
+          <tr><td>{{ row.business_source_ref.namespace }}.{{ row.business_source_ref.kind }}</td>
+              <td>{{ row.project_id|default:"—" }}</td>
+              <td>{{ row.gross_cents }} / {{ row.net_cents }} / {{ row.tax_cents }}</td>
+              <td>{% if row.source %}{{ row.source.kind }}{% if row.source.remaining_cents is not None %} · 未清 {{ row.source.remaining_cents }}{% endif %}{% if row.source.cleared_cents is not None %} · 已核销 {{ row.source.cleared_cents }}{% endif %}{% else %}<em class="missing">missing</em>{% endif %}</td></tr>
+        {% empty %}<tr><td colspan="4">无分配</td></tr>{% endfor %}
+        </tbody>
+      </table>
+      <h4>税额资格</h4>
+      {% if invoice.tax_qualifications %}
+        <ul>{% for row in invoice.tax_qualifications %}<li>{{ row.status }} / {{ row.qualification_status }} · {{ row.tax_cents }} 分</li>{% endfor %}</ul>
+      {% else %}<p class="missing">missing（无税额资格记录）</p>{% endif %}
+      {% endwith %}
+    {% else %}
+      <table class="data-table">
+        <thead><tr><th>发票</th><th>状态</th><th>日期</th><th>含税</th><th>不含税</th><th>税额</th><th>已分配</th><th>未分配</th><th>问题数</th></tr></thead>
+        <tbody>
+        {% for row in snapshot.invoices %}
+          <tr><td>{{ row.invoice_number }}</td><td>{{ row.status }}</td><td>{{ row.invoice_date }}</td>
+              <td>{{ row.gross_cents }}</td><td>{{ row.net_cents }}</td><td>{{ row.tax_cents }}</td>
+              <td>{{ row.allocated.gross_cents }}</td><td>{{ row.unallocated_cents }}</td><td>{{ row.issue_count }}</td></tr>
+        {% empty %}<tr><td colspan="9">无发票</td></tr>{% endfor %}
+        </tbody>
+      </table>
+      <h3>合计</h3>
+      <dl class="facts">
+        <dt>含税/不含税/税额（分）</dt><dd>{{ snapshot.totals.invoice_gross_cents }} / {{ snapshot.totals.invoice_net_cents }} / {{ snapshot.totals.invoice_tax_cents }}</dd>
+        <dt>已分配/未分配（分）</dt><dd>{{ snapshot.totals.allocated_gross_cents }} / {{ snapshot.totals.unallocated_gross_cents }}</dd>
+      </dl>
+    {% endif %}
+  </section>
+  {% if issues %}
+  <section class="panel">
+    <h2>问题</h2>
+    <ul class="issue-list">{% for issue in issues %}<li><code>{{ issue.code }}</code> · {{ issue.severity }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% if missing %}
+  <section class="panel">
+    <h2>缺失项</h2>
+    <ul class="missing-list">{% for row in missing %}<li><code>{{ row.code }}</code></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% endif %}
+</main>
+{% endblock %}
