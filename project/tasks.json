@@ -10698,9 +10698,7 @@
       "status": "ready",
       "priority": 3,
       "milestone": "v1.0-preparation",
-      "depends_on": [
-        "PH-329"
-      ],
+      "depends_on": [],
       "spec": "project/specs/PH-331.md",
       "allowed_paths": [
         "project/specs/*",
