@@ -1,0 +1,60 @@
+{
+  "task_id": "PH-349",
+  "summary": "Implemented the PH-349 PostgreSQL multi-connection concurrency acceptance slice at BASE a5ba2fd. tests/test_v1_pg_concurrency.py contains (a) a CLI/probe runner aligned with PH-345: --dsn/PMO_PG_DSN/DATABASE_URL resolution, JSON evidence envelope (script/contract_version/mode/profile/app_sha/started_at/finished_at/exit_code/status/checks/artifacts/redactions/notes), frozen exit-code mapping (0 pass, 2 not_run/prerequisite, 3 assertion fail, 4 environment fail, 5 security reject), and (b) real PostgreSQL probes that create a random isolated schema and drop it: company advisory-lock serialization (V1-OPS-06.1), concurrent unique receipt for the same org+request_token (06.2), append-only trigger rejection of UPDATE/DELETE (06.3), opposite-order locking deadlock detection plus rollback retry success (06.4). SQLite or non-PostgreSQL DSNs are rejected with exit 2 and never treated as concurrency evidence; missing DSN yields not_run; unreachable PG yields exit 4. The module also provides always-runnable contract tests (envelope shape/status mapping, missing/SQLite/non-PG DSN rejection, CLI exit 2 envelopes, unreachable PG exit 4) and a PG probe test class that skips with an explicit not_run reason when no real DSN is configured. docs/engineering/pg-concurrency.md documents invocation, probe matrix, envelope, exit codes, isolation/redaction rules, business-level PG suites and the honest current not_run status. No production data was touched; no business tables, migrations, code paths or contracts were changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD fc99230 (BASE a5ba2fd, PH-349 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":283}, exit 0; final entry recorded after the review pass."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run: System check identified 114 issues (0 silenced) — pre-existing warnings (baseline 113 plus this slice's one route-name W003), 0 errors."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_pg_concurrency --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run (no local PG DSN): Ran 8 tests, OK (skipped=1) — 7 contract tests pass (envelope/exit mapping, missing/SQLite/non-PG DSN rejection, CLI not_run, unreachable PG exit 4); the real PG probe test is skipped with an explicit not_run reason. Real PG evidence must come from CI/deployment."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1232 tests in 139.0s, FAILED (failures=5, errors=3, skipped=70) — the 5F+3E set matches clean main a5ba2fd (verified by running the same three failing modules on a clean worktree: 5F+3E) and skipped is baseline 69 plus this slice's PG probe not_run (+1); no new failures. A first full run showed one extra delivery_execution heartbeat failure, which passed alone and on rerun (pre-existing flakiness)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base a5ba2fd --task PH-349",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD fc99230: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (test module, pg-concurrency docs, tasks/manifest, docs/verification, report/handoff) inside BASE PH-349 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (real-PG-only probes, SQLite rejection/exit codes, envelope contract, isolation/no-production-data and honest not_run status); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Real PostgreSQL was not available locally, so the PG probe test is skipped with an explicit not_run reason; the slice delivers the executable probe/CLI and contract tests, not a local PG pass. Real PG evidence is delegated to CI/deployment and must not be replaced by SQLite.",
+    "No scripts/ops/* file was created because the BASE PH-349 allowed_paths only include tests/test_v1_pg_concurrency.py/docs; the executable runner is therefore the test module CLI (`python -m tests.test_v1_pg_concurrency --dsn ...`), which produces the same PH-345 envelope and exit codes.",
+    "The probe file uses psycopg3 (the installed PostgreSQL driver) directly with random throwaway schemas and no business tables; it does not modify applied migrations or production data.",
+    "Business-level concurrency (double approval, over-clearance, refunds, allocation, opening balances, close, invoice reversal, FX snapshots) is covered by existing owner concurrency suites on PG; this slice adds infrastructure probes (lock/idempotency/append-only/deadlock) and documents the business-set linkage rather than duplicating those suites.",
+    "Full-suite first run showed a transient delivery_execution heartbeat failure; it passed in isolation and in the rerun, and the stable full-run failure set equals the clean main baseline (5F+3E), so it is recorded as pre-existing flakiness, not a new regression."
+  ],
+  "unverified": [
+    "No real PostgreSQL probe matrix execution locally (not_run); CI/deployment PG evidence does not exist yet in this slice.",
+    "Business-level PG concurrency one-winner-one-rejection results, RPO/RTO, capacity/performance baselines and production L5 were not executed.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
