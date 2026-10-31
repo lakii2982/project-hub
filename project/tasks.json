@@ -10764,7 +10764,7 @@
       "title": "批次 C-2：M15 部署/升级/备份恢复演练（V1-OPS-01–04）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10773,7 +10773,8 @@
         "PH-330",
         "PH-252",
         "PH-347",
-        "PH-348"
+        "PH-348",
+        "PH-349"
       ],
       "spec": "project/specs/PH-333.md",
       "allowed_paths": [
@@ -10795,9 +10796,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-349（PG 并发执行片，ready 未 done）done；PH-347/PH-348 已 done、PH-322/321/330/252 已 done；执行片完成后由下一规划槽复核本汇总验收 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -10805,7 +10804,7 @@
       "title": "批次 C-3：PostgreSQL 多连接安全与并发验收（V1-OPS-06）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10832,9 +10831,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-349（PG 并发执行片，ready 未 done）done；PH-347/PH-348 已 done、PH-322/321/330/252 已 done；PH-349 done 后由下一规划槽复核本汇总验收 DoR 再晋级；真实 PG 交 CI/部署环境。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -10870,7 +10867,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-333/PH-334（汇总验收）与 PH-350（容量基线，ready 未 done）done；PH-347/348 done、PH-349 ready；依赖完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-333/PH-334（汇总验收）与 PH-350（容量基线，ready 未 done）done；PH-333/334 已 ready、PH-350 ready；依赖完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11407,7 +11404,7 @@
       "title": "批次 C-4a 健康/容量/积压基线执行（PH-335 拆分：V1-OPS-05）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11435,9 +11432,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-349（PG 多连接并发验收，ready 未 done）done；PH-347/PH-348 已 done；PH-349 完成后由下一规划槽复核 DoR 再晋级；健康/容量基线在 pg/部署环境执行。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -11716,7 +11711,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-349（PG 并发执行片，ready 未 done）与 PH-350（容量基线，等 PH-349）、PH-352（runbook，ready 未 done）done；PH-347/348 已 done；证据齐后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-350（容量基线，ready 未 done）done；PH-347/348/349/352 已 done；PH-350 完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11988,7 +11983,7 @@
       "title": "后续交付独立规划入口（接续 PH-361）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -12008,6 +12003,150 @@
         "docs/v1.0-development/*",
         "project/reports/PH-365.json",
         "project/handoffs/PH-365.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [],
+      "github_issue": null,
+      "owner": "root",
+      "handoff": "project/handoffs/PH-365.md"
+    },
+    {
+      "id": "PH-366",
+      "title": "批次 C 演练证据回填与发布资格清单契约（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-347",
+        "PH-348",
+        "PH-349",
+        "PH-352"
+      ],
+      "spec": "project/specs/PH-366.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-366.json",
+        "project/handoffs/PH-366.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-367",
+      "title": "批次 C 部署/恢复/并发汇总验收执行前置契约（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-333",
+        "PH-334",
+        "PH-357",
+        "PH-366"
+      ],
+      "spec": "project/specs/PH-367.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-367.json",
+        "project/handoffs/PH-367.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [
+        "缺 PH-357（证据回填，proposed）done 与 PH-366（证据/发布资格契约，ready 未 done）done；PH-333/334 已 ready；依赖完成后复核 DoR 再晋级。"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-368",
+      "title": "容量/健康/积压基线后续契约（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-350"
+      ],
+      "spec": "project/specs/PH-368.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-368.json",
+        "project/handoffs/PH-368.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [
+        "缺 PH-350（健康/容量/积压基线，ready 未 done）done；PH-350 完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-369",
+      "title": "后续交付独立规划入口（接续 PH-365）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-365"
+      ],
+      "spec": "project/specs/PH-369.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "docs/v1.0-development/*",
+        "project/reports/PH-369.json",
+        "project/handoffs/PH-369.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

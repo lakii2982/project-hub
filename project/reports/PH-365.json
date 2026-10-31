@@ -1,0 +1,47 @@
+{
+  "task_id": "PH-365",
+  "summary": "后续交付独立规划入口（BASE d81c11c，docs-only）：PH-347/348/349/352 均 done 后，PH-350 健康/容量/积压基线（deps 347/348/349）晋级 ready；PH-333/334 部署/恢复与 PG 并发汇总验收晋级 ready（执行片均 done，PH-333 deps 补 PH-349 保持一致）；PH-335 等 PH-333/334/PH-350、PH-357 等 PH-350，保持 proposed 并刷新精确 blocker。登记下一批 4 片（PH-366–PH-369，编号从 366 连续、已核）：PH-366 批次 C 演练证据回填与发布资格清单契约（ready，deps 347/348/349/352 done）、PH-367 部署/恢复/并发汇总验收执行前置（proposed，等 PH-357/PH-366）、PH-368 容量/健康/积压后续契约（proposed，等 PH-350）、PH-369 下一规划入口（proposed，depends_on PH-365，待 PH-365 done 后由下一规划槽置 ready）。ROADMAP 批次 C 状态同步（347/348/349/352 done、350/333/334 ready、335/357 blocked）；无产品代码/迁移/脚本/门禁/contract schema 变更。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=291; PH-365 in_review with owner/handoff; PH-350/PH-333/PH-334 ready with all dependencies done; PH-366/PH-369 ready; PH-367/PH-368 proposed with precise blockers; PH-335/PH-357 refreshed."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base d81c11c --task PH-365",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 files inside BASE PH-365 allowed_paths (reviewer-b pass recorded)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD ea3152b: PH-369 is now the sequential next planning entry with depends_on=[PH-365], status=proposed and blocker 'PH-365 done 后置 ready'; its spec was rewritten as '接续 PH-365' with normal planning scope/DoR/acceptance, and its 12-path whitelist matches the task (the only parser diff was a trailing punctuation artefact). PH-366/PH-367/PH-368 spec whitelists now exactly match their 10-path task allowed_paths.",
+      "PROMOTIONS/BLOCKERS VERIFIED: PH-347/348/349/352 are done at BASE d81c11c, so PH-350 is ready (deps 347/348/349 done) and PH-333/334 are ready (PH-333 deps include PH-349; all listed deps done). PH-335 keeps deps PH-333/334/PH-350 and precise blockers; PH-357 keeps PH-350 as blocker; PH-366 is ready with done deps 347/348/349/352; PH-367 (waits PH-357/PH-366) and PH-368 (waits PH-350) are proposed with precise blockers; PH-369 is proposed on PH-365.",
+      "GATES (HEAD ea3152b, BASE d81c11c): projectctl check ok=true/task_count=291; governance 23 tests OK; 13 changed files all inside BASE PH-365 allowed paths; no placeholders; no code/migration/script/gate/contract-schema changes; verify-change --base d81c11c --task PH-365 pre-review only high_risk_review_required (no path errors). The report now includes the verify-change pre-review entry (not_run).",
+      "MINOR final-evidence note: at the final evidence commit record the actual check pass/verify-change pass at the final HEAD and keep PH-365 in_review until that commit; PH-369 becomes ready only after PH-365 is done, per its blocker."
+    ],
+    "evidence": "VERDICT: PASS - the blocker and both required fixes are resolved at HEAD ea3152b (BASE d81c11c): PH-369 is a proposed sequential next slot depending on PH-365 with precise blocker/spec, and PH-366/367/368/369 spec whitelists match their task allowed_paths. PH-350/333/334 promotions rest on all-done deps; PH-335/357/367/368 blockers are precise; count 291, IDs 366-369 continuous, 13 files inside allowlist, no placeholders/code/schema changes; check ok=291; governance 23 OK; verify-change only high_risk_review_required (no path errors)."
+  },
+  "deviations": [
+    "PH-333 is promoted ready after adding PH-349 to its dependencies (its previous deps omitted the PG concurrency execution slice); all its dependencies are now done. PH-334 already depended on PH-349 and is ready.",
+    "PH-350 is promoted ready because PH-347/348/349 are all done; PH-335 remains proposed behind PH-333/PH-334/PH-350 and PH-357 behind PH-350 (PH-347/348/349/352 done).",
+    "Numbering checked against BASE: highest existing PH id was PH-365; PH-366..PH-369 are contiguous and free (no parallel EXP/number collision observed).",
+    "No product code, migration, table, route, script, CI gate, contract schema or acceptance command was changed; only specs/tasks/manifest/ROADMAP/governance docs.",
+    "Reviewer round-1 blocker fixed: PH-369 is now the sequential next planning entry (title '后续交付独立规划入口（接续 PH-365）', depends_on=['PH-365'], status=proposed, blocker 'PH-365 done 后置 ready'), matching the PH-346->351->356->361 convention; its spec now carries the full 12-path whitelist and the same general planning responsibilities as prior slots.",
+    "Reviewer required fix: PH-366/367/368 spec whitelists were expanded to the exact 10 task allowed_paths (specs/*, docs/adr/*, docs/engineering/*, docs/v1.0-development/*, tasks, manifest, delivery-status, verification, report, handoff); PH-369 spec now has an explicit 12-path whitelist matching its task."
+  ],
+  "unverified": [
+    "This slice is planning-only: no runtime, browser, PG or migration verification applies; implementation tasks must re-validate specs against the actual BASE.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PH-350/PH-333/PH-334/PH-335/PH-357/PH-366/PH-367/PH-368 implementations remain unimplemented (ready/proposed but not started).",
+    "No deployment/recovery/concurrency/performance evidence was executed; batch C evidence remains not_run/blocked as recorded."
+  ]
+}
