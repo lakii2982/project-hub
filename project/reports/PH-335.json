@@ -38,9 +38,9 @@
       "evidence": "Actual rollup output: status pass, release_ready=false, L1 pass, L2 pass, L3/L4/L5 not_run, missing=[L3_ci_pg,L4_browser,L5_production]; source envelope checks preserved."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base ef13003 --task PH-335",
+      "command": "python scripts/projectctl.py verify-change --base b689485 --task PH-335",
       "result": "pass",
-      "evidence": "Actual run after the reviewer pass and final status commit 4717496: ok=true, head=471749608bda6594c183cfc958aa6459daf80e80, changes=7 files all inside the PH-335 allowlist, errors=[]."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-335 allowed_paths (post-rebase rerun)."
     }
   ],
   "review": {
@@ -58,7 +58,8 @@
     "This is a rollup acceptance only: health/capacity/backlog collection remains PH-350; this slice adds an aggregation helper and tests, not a new collector.",
     "Only L1 (code/envelope exists) + L2 (local rehearsal) are pass; L3 CI/PostgreSQL, L4 browser and L5 production/customer evidence are explicitly not_run; release_ready=false; no release qualification is claimed.",
     "Local facts/thresholds are rehearsal defaults, not production SLO/capacity; no production access, customer data or real CI/PG/browser execution was performed.",
-    "The rollup helper is placed in the allowlisted scripts/ops/healthcheck.py and documented in docs/engineering/observability.md; no new script/contract/canonical change."
+    "The rollup helper is placed in the allowlisted scripts/ops/healthcheck.py and documented in docs/engineering/observability.md; no new script/contract/canonical change.",
+    "Lead integration rebase (ef13003 -> b689485) after PH-357 merged: manifest merged; gates rerun."
   ],
   "unverified": [
     "L3 CI/PostgreSQL real capacity/backlog/performance evidence, L4 browser 1440/390/keyboard evidence and L5 production/customer acceptance are not_run.",
