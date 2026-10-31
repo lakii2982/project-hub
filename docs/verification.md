@@ -954,4 +954,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 5. **期间/锁期**：引用既有 AccountingPeriod/PeriodCloseRun/ProjectClose 只读事实；未来 as_of、occurred_on>as_of 排除。
 6. **precheck_digest**：canonical JSON SHA256；PH-353 提交须服务端重算并拒绝 `precheck_stale`/`precheck_blocked`，客户端 digest 不作授权。
 7. **证据/验收/未验证/反例**：给出未来实现片命令与反例；本片无实现/迁移/表/产品代码，当前 not implemented（PH-181/185 后续、PH-353 消费）。
-实跑：projectctl check ok/287；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：四类核对聚合实现、digest 与 PH-353 联动、浏览器/CI/生产。
+独立 S 复核首轮 1 阻断（precheck 非 canonical）已修（真实 canonical PeriodPrecheck + 字段/状态映射 + 扩展字段置 envelope 顶层）；二轮 PASS。最终门禁：projectctl check ok=true/task_count=287；23 项治理 OK；verify-change --base d81c11c --task PH-363 ok=true、7 文件全白名单、无 errors。未验证：四类核对聚合实现、digest 与 PH-353 联动、浏览器/CI/生产。
