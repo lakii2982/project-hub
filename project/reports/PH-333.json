@@ -1,0 +1,60 @@
+{
+  "task_id": "PH-333",
+  "summary": "批次 C-2 部署/升级/回滚汇总验收（PH-347 执行片承担实现）：新增 scripts/ops/rollup_acceptance.py，调用 PH-347 install_drill/upgrade_drill 与 PH-348 backup_drill/restore_drill 的本地/隔离可执行路径，聚合 M15/V1-OPS-01–04 证据回填草稿（rollup envelope/checks/artifacts/redactions/release_ready=false）；新增 tests/test_v1_ops_recovery.py（6 项）覆盖 rollup L1+L2、V1-OPS-02/03/04、生产 execute 拒绝、缺迁移证据 not_run、缺备份 fail、幂等；docs/engineering/ops-runbook.md 与 upgrade-recovery.md 记录汇总状态。证据仅 L1 代码+L2 本地自动化：V1-OPS-01/03/04 本地通过，V1-OPS-02 真实 TLS not_run；L3 CI/PG、L4 浏览器、L5 生产/客户验收全部 not_run，不冒充发布资格；未执行真实 staging/production。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=291; PH-333 in_review with owner/handoff; scripts/ops/rollup_acceptance.py, tests/test_v1_ops_recovery.py and the two engineering docs are inside the PH-333 whitelist."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0; known W003/W342 system warnings only, no errors."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 on BASE fe9c257: Ran 1274 tests, FAILED (failures=5, errors=3, skipped=70) => 1196 passed. All 8 failures/errors are exactly the known macOS environment limits; no new failure class (the 70th skip is the pre-existing PG/environment skip, not a new pass claim)."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_recovery --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 6 tests, OK => 6 passed. Rollup emits L1/L2 checks (V1-OPS-01/03/04 pass, V1-OPS-02 not_run) and release.L3/L4/L5 not_run with release_ready=false; install production execute exit5 blocked; missing migration evidence not_run exit2; upgrade missing backup fail exit3; upgrade production execute exit5 blocked; rollup idempotent."
+    },
+    {
+      "command": "python scripts/ops/rollup_acceptance.py --out /tmp/ph333-rollup.json",
+      "result": "pass",
+      "evidence": "Actual local run exit 0: rollup status pass, release_ready=false, checks V1-OPS-01 pass(L2), V1-OPS-02 not_run(L3), V1-OPS-03 pass(L2), V1-OPS-04 pass(L2), release.L3/L4/L5 not_run; no staging/production operation performed."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-333",
+      "result": "not_run",
+      "evidence": "Actual exit 1: only high_risk_review_required (review pending); no task/path/report-shape errors. Final pass record will be written after reviewer pass."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-333 rollup-acceptance reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: PH-347 execution evidence referenced (not reimplemented), rollup envelope/L1+L2 vs L3-L5 not_run discipline, release_ready=false, no staging/production execution, no fabricated pass, scripts/tests/docs within the PH-333 whitelist. projectctl check, manage.py check, governance, full suite (known macOS baseline only) and scoped 6 tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "This slice is a rollup acceptance only: installation/upgrade/backup/restore implementations remain PH-347/PH-348 (both done); this slice adds a rollup runner, scoped tests and evidence docs, and does not reimplement the drills.",
+    "Only L1 (code exists) + L2 (local automated/rehearsal) evidence is produced. L3 CI/PG, L4 browser and L5 production/customer acceptance are explicitly not_run; release_ready=false and no release qualification is claimed.",
+    "V1-OPS-02 TLS is not_run because no real domain/TLS probe was executed; staging/production execute is refused by the PH-347 drills (exit 5), and the rollup only uses temporary isolated directories.",
+    "No real staging/production installation, upgrade, rollback, restore or customer data is used; no product code, migration, CI gate or contract-schema change is made."
+  ],
+  "unverified": [
+    "L3 CI/PG, L4 browser 1440/390, L5 production/customer acceptance are not_run and must be executed by the corresponding evidence/rollup tasks.",
+    "Real staging/production install/upgrade/TLS/restore/rollback and RPO/RTO in a real environment are not executed.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PH-350/PH-357 and the release-readiness evidence backfill remain unimplemented/unverified."
+  ]
+}

@@ -972,3 +972,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 6. **双人复核/签名/时间戳/证据 digest**；**失效与重跑**：绑定候选 SHA、环境/契约变化重跑、14 天时效、失败修复重跑、禁止挑选旧证据/手改 JSONL。
 7. 与 PH-357（回填）/PH-367（汇总验收）/PH-333/334/335 的边界；反例清单；无实现/脚本/迁移/门禁变更。
 独立 S 复核 PASS（含 PH-357/PH-367 边界、gate/豁免/失效规则检查）；最终门禁：projectctl check ok=true/task_count=291；23 项治理 OK；verify-change --base fe9c257 --task PH-366 ok=true、7 文件全白名单、无 errors。未验证：真实 staging/production、PG 备份/恢复/并发、PH-350、L3 CI、L4 浏览器、L5 客户验收。
+
+## PH-333 批次 C-2 部署/升级/回滚汇总验收（2026-10-31）
+
+基线fe9c257。汇总验收（实现由PH-347承担）：新增scripts/ops/rollup_acceptance.py调用PH-347 install_drill/upgrade_drill与PH-348 backup_drill/restore_drill本地/隔离路径，聚合M15/V1-OPS-01–04证据回填草稿（rollup envelope/checks/artifacts/redactions/release_ready=false）；新增tests/test_v1_ops_recovery.py 6项覆盖rollup L1+L2、V1-OPS-02 not_run、生产execute拒绝、缺迁移证据not_run、缺备份fail、幂等；docs/engineering/ops-runbook.md与upgrade-recovery.md记录汇总状态。证据仅L1代码+L2本地自动化：V1-OPS-01/03/04本地通过，V1-OPS-02真实TLS not_run；L3 CI/PG、L4浏览器、L5生产/客户验收全部not_run，不冒充发布资格；未执行真实staging/production。实际执行（最终HEAD）：projectctl check ok=true/task_count=291；manage.py check exit0；23项治理OK；全量1274项=1196 pass+70 skip+5F+3E（8项既有macOS，无新增失败类）；scoped 6项全通过；rollup exit0 status pass release_ready=false；verify-change --base fe9c257 --task PH-333在review pending时仅high_risk_review_required（预期）。未验证：L3 CI/PG、L4浏览器、L5生产/客户验收、真实staging/production安装升级TLS恢复回滚、PH-350/PH-357、独立S复核。
