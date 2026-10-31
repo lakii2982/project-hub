@@ -196,7 +196,13 @@ def tls_probe(profile, mode="dry_run", *, domain=None, certificate=None, handsha
 
 
 def _real_handshake(domain):
-    context = ssl.create_default_context()
+    # Explicit modern-only TLS client: refuse TLSv1/1.1 (CodeQL py/insecure-protocol).
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    context.maximum_version = ssl.TLSVersion.TLSv1_3
+    context.check_hostname = True
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.load_default_certs()
     with socket.create_connection((domain, 443), timeout=5) as raw:
         with context.wrap_socket(raw, server_hostname=domain) as tls:
             cert = tls.getpeercert() or {}

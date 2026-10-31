@@ -95,7 +95,8 @@
     "TLS probe CLI requires a real domain and uses a real socket; deterministic tests inject handshake facts. No domain was probed in this slice, so CLI evidence is not_run.",
     "Artifacts are written under /tmp/ph347-evidence and referenced from the report/handoff; they are not committed (runtime evidence, no customer/credential data).",
     "No product code, migration, canonical/schema or CI-gate changes.",
-    "Lead integration rebase (cbb84c2 -> a5ba2fd) after PH-352 merged: docs/verification + manifest merged; gates rerun."
+    "Lead integration rebase (cbb84c2 -> a5ba2fd) after PH-352 merged: docs/verification + manifest merged; gates rerun.",
+    "CodeQL PR gate flagged py/insecure-protocol on ssl.create_default_context in TLS handshake probe; replaced with explicit SSLContext(PROTOCOL_TLS_CLIENT) + minimum_version TLSv1_2/maximum TLSv1_3 + check_hostname/verify_mode (no behavioral change to drill evidence), scoped tests rerun 15 OK."
   ],
   "unverified": [
     "Real staging/production install/upgrade/TLS/rollback execution and L4/L5 evidence",
