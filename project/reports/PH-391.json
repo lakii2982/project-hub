@@ -1,0 +1,47 @@
+{
+  "task_id": "PH-391",
+  "summary": "v1.0 收尾规划入口（docs-only，BASE 5278c96）：复核 open 任务依赖并刷新 blocker；PH-388（deps PH-321/324 done、DoR 已冻结）晋级 ready；PH-372/PH-387 保持 ready（验收执行中）；PH-389/390 仍 proposed（等 PH-378/383、PH-379/384）；PH-377 blocker 刷新为等 PH-372；PH-141 保持 proposed（DoR 未闭合，不因 deps done 晋级）。登记 PH-392–PH-395（编号从 392 连续、已核）：PH-392 批次 D 验收执行顺序/证据回填编排（ready，deps 370/375/376/381/382/386 done）、PH-393 D-01 跨 owner L3/L4 补证（proposed）、PH-394 批次 D 发布资格 gate 终审（proposed）、PH-395 v1.0 发布资格阻塞/三方签批清单（proposed）。v1.0-preparation 规划收尾：PH-391 为该里程碑最后 open 任务，done 后无 open 任务可关闭；不再登记下一规划槽，执行/验收由 PH-392–395 承接。ROADMAP/batch-d-acceptance 更新；发布资格 release_ready=false（L3 CI/PG、L4 浏览器、L5 生产/客户验收未执行，PH-367/372/387/388/389/390/394/395 未完成，需真实环境与三方签批）。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at HEAD d02b6ff (BASE 5278c96): ok=true, task_count=316; PH-391 in_review with owner/handoff; PH-388/PH-392 ready with all dependencies done; PH-389/390/393/394/395 proposed with precise blockers; PH-141 kept proposed for unclosed DoR; specs now align (PH-391 v1.0 closure/no next slot; PH-388 ready)."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 3af39a8 --task PH-391",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 16 files inside BASE PH-391 allowed_paths (post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD a35ffae: PH-391's spec is now the v1.0-preparation closing planning entry — it states the slot completes the milestone with no open tasks, no next planning slot is registered, and execution/acceptance continues via PH-392–PH-395; the stale 'register a next slot / BASE proposed' text is gone and the status is in_review. PH-388's spec now states the DoR/range is frozen in PH-391, the task is ready for implementation, and the 'current proposed / wait for next slot' text is removed from both the scope paragraph and risk section.",
+      "PROMOTIONS/BLOCKERS/CLOSURE VERIFIED: PH-388 (deps PH-321/324 done, DoR frozen) is the only new implementation promotion; PH-372/PH-387 remain ready; PH-389/390 remain proposed behind PH-378/383 and PH-379/384; PH-141 correctly stays proposed with its explicitly unclosed DoR; PH-392 is ready with all deps PH-370/375/376/381/382/386 done; PH-393/394/395 remain proposed with precise blockers; count 316, IDs 392-395 continuous; PH-391 is the only open v1.0-preparation task (milestone closure consistent); release_ready=false/blocked wording remains in ROADMAP/batch-d/report.",
+      "GATES (HEAD a35ffae, BASE 5278c96): projectctl check ok=true/task_count=316; governance 23 tests OK; 13 changed files all inside BASE PH-391 allowed paths; no placeholders; no code/migration/script/schema/gate changes; new PH-392–395 spec whitelists match their 8-path tasks; verify-change --base 5278c96 --task PH-391 only high_risk_review_required (no path errors).",
+      "MINOR final-evidence sync: the report's check entry still cites HEAD d02b6ff while the reviewed HEAD is a35ffae (the evidence-only follow-up commit); record the final-HEAD check/verify pass after this pass block is committed. No substantive issue."
+    ],
+    "evidence": "VERDICT: PASS - the two spec contradictions are resolved at HEAD a35ffae (BASE 5278c96): PH-391 is the v1.0 closing slot with no next planning slot and PH-388 is frozen/ready for implementation. PH-388 promotion rests on done deps; PH-372/387 remain ready; PH-389/390/393/394/395 have precise blockers; PH-141 correctly stays proposed; PH-392 ready with done deps; count 316, IDs contiguous; milestone only PH-391 open; release blocked wording intact; check ok=316; governance 23 OK; verify-change only high_risk_review_required (no path errors)."
+  },
+  "deviations": [
+    "Reviewer round-1 blockers fixed: PH-391 spec now states it is the v1.0-preparation closing planning slot (in_review, no next planning slot; execution/acceptance carried by PH-392–PH-395), removing the stale 'proposed/next slot' text; PH-388 spec now states DoR/range frozen in PH-391 and task promoted ready, removing the stale 'proposed/next planning slot promotion' text.",
+    "PH-141 has all dependencies done but remains proposed because its DoR is explicitly unclosed (missing trusted source resolver/posting/period adapters and kernel tests); dependency completion alone is not promotion evidence.",
+    "PH-388 is promoted ready after freezing its DoR/range in the spec (deps PH-321/PH-324 done, no duplicate of PH-321 delivered scope); its blocker is cleared.",
+    "v1.0-preparation is declared closed for planning purposes: PH-391 is the last open task in that milestone; no new planning slot is registered. PH-392 is a ready docs-only D-batch acceptance ordering slice, not a planning slot.",
+    "PH-393/394/395 remain proposed behind real-environment evidence, unfinished D-batch dependencies and the PH-366 three-party sign-off discipline; release_ready=false is not upgraded by this planning slice.",
+    "Only docs/specs/tasks/manifest/ROADMAP/delivery-status/verification/report/handoff were changed; no product code, migration, schema, script, CI gate or contract change."
+  ],
+  "unverified": [
+    "L3 CI/PG, L4 browser 1440/390 and L5 production/customer acceptance remain not_run; no real-environment evidence was produced.",
+    "PH-389/390 depend on PH-378/383/379/384, which remain proposed; D-03–D-06 acceptance cannot start.",
+    "PH-393/394/395 are not executed; the release gate remains blocked and no three-party sign-off exists.",
+    "Independent S review is pending; verify-change is review-gated at this HEAD."
+  ]
+}
