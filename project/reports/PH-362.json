@@ -2,16 +2,32 @@
   "task_id": "PH-362",
   "summary": "导入提交实现前置契约冻结（docs-only）on BASE 64f94ad. Adds docs/v1.0-development/import-commit-contract.md: submission is accepted only through a persisted PH-274/PH-289 preview (preview_ref/rows_digest, no client business facts/normalized_commands/conflict resolutions); the server reruns the PH-363 period precheck for import_submit and recomputes precheck_digest (mismatch => precheck_stale; blockers/can_close=false => precheck_blocked; client digest is not authorization). Freezes stable import_key (org+kind+preview_id+rows_digest+source_batch_ref) and request_token idempotency, an append-only internal receipt schema/uniqueness, preview/conflict consistency (conflict_key dedupe, unresolved blocker rejection, warnings retained), row-level error envelope and issue_code registry, owner-service-only business writes and source-quota consumption/duplicate rejection, one company lock + one transaction all-or-nothing rollback, failure/no-partial/retry semantics, period/lock/close and owner/finance write/auditor read/pm/member deny/module-disabled rules, and PH-274/289/353/338/363 boundaries without new canonical models/topics/commands. Updates PH-362 spec summary and refreshes PH-289/PH-338/PH-353 blockers to wait for the remaining proposed prerequisites after this contract. No implementation/migration/table/route/product code; no canonical/schema change.",
   "tests": [
-    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":295}. Contract doc/spec/tasks/manifest/docs/report/handoff changes only."},
-    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests, OK."},
-    {"command": "python scripts/projectctl.py verify-change --base 64f94ad --task PH-362", "result": "not_run", "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."}
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":295}. Contract doc/spec/tasks/manifest/docs/report/handoff changes only."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 64f94ad --task PH-362",
+      "result": "pass",
+      "evidence": "Actual run after the reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-362 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
+    }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Independent S review pending. Verify the contract freezes preview-bound submission, server-side PH-363 precheck rerun/digest and stale/blocked rejection, stable import_key/token idempotency and append-only receipt, conflict resolution/dedupe, row error/issue_code registry, owner-service-only writes/source quota/duplicate rejection, all-or-nothing company-locked transaction/rollback/retry, permissions/periods/module gates, PH-274/289/353/338/363 boundaries, no implementation/migration/canonical/schema, exact whitelist, and honest not_run items. Implementer does not self-pass."
+    "reviewer": "independent PH-362 import-commit contract reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "CONTRACT COMPLETENESS: the contract freezes commit only through a persisted preview (preview_ref/rows_digest), server-side PH-363 precheck rerun and precheck_digest recomputation (stale -> precheck_stale, blocker/can_close=false -> precheck_blocked; client digest is not authorization), preview consistency/consumption, stable import_key + request_token idempotency and append-only receipt fields/unique constraints, unresolved-conflict rejection with append-only resolution, row-level error envelope/issue_code registry, owner-service-only writes and source-quota consumption, single company lock + single transaction all-or-nothing/zero-half-write, permissions/period/lock/module-disabled rejection, and no canonical/model/migration/table/route/product-code changes.",
+      "BOUNDARIES/ALIGNMENT: PH-274 preview and PH-363 period precheck/digest are referenced as the single sources; PH-289/PH-353/PH-338 are consumers/implementers and remain proposed; external sends/approval/payment/close triggers are explicitly out of scope; SQLite is not accepted as PG concurrency evidence; the digest formula matches PH-363 §8 (canonical JSON, excludes digest itself). PH-289 deps now include PH-362 and PH-289/338/353 blockers are refreshed without false promotion.",
+      "GATES: no implementation/migration/table/route/product code/canonical schema/CI-gate change; 7 changed files within the PH-362 whitelist; no placeholders; task_count 295; check ok=295; governance 23 OK; verify-change --base 64f94ad --task PH-362 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD bbc526a (BASE 64f94ad) in /tmp/ph362-import-commit, worktree clean; 7 files within PH-362 whitelist; docs-only. Preview binding/rows_digest, server-side PH-363 precheck/digest recompute and stale/blocked rejection, import_key/request_token idempotency and append-only receipt, conflict/source/row-error/owner-service/zero-half-write/permissions/period gates, and no canonical/schema/product changes are complete; PH-289/338/353 remain proposed with refreshed blockers; check ok=295; governance 23 OK; verify-change only review gate, no path_out_of_scope. Round-2/independent reviewer PASS (bbc526a): 7 files in whitelist, docs-only; preview binding/rows_digest, server-side precheck/digest stale/blocked rejection, import_key/token idempotency and append-only receipt, conflict/source/row-error/owner-service/zero-half-write/permissions/period gates, no canonical/schema change. Final evidence commit records the actual verify-change pass."
   },
   "deviations": [
     "This is a contract-only slice: no import commit, persistence, migration, route, table or product code is implemented; PH-289/PH-353/PH-338 remain proposed with refreshed blockers.",
