@@ -10057,7 +10057,7 @@
       "title": "运营核对工作台导出联动首片：分区下钻与底稿导出衔接",
       "kind": "feature",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
