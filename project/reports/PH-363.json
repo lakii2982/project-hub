@@ -1,0 +1,46 @@
+{
+  "task_id": "PH-363",
+  "summary": "Froze the docs-only contract for period precheck, the four reconciliations (cash, settlement, revenue, cost/fee) and difference semantics at BASE d81c11c. New docs/v1.0-development/period-precheck-contract.md defines the read-only projection period.precheck.snapshot/v1 aligned with canonical PeriodPrecheck/period.precheck.get/v1: input signature (member, scope company|project, project_id, period, as_of, sections; no client amounts/differences/status), output envelope (precheck + four domain checks/differences/issues/missing/summary + precheck_digest), reuse of the existing single-source read interfaces (cash_bridge_snapshot, open_item_coverage_snapshot, revenue_pairing_snapshot, bank_charge_pairing) with their owner issue codes, exact difference identities and null propagation, issue/missing schema with blocker-vs-warning mapping, period/lock/close boundaries referencing existing AccountingPeriod/PeriodCloseRun/ProjectClose facts, cross-owner read-only refs, permissions (owner/finance/auditor, pm project summary, member denied, history_read when disabled), precheck_digest definition and the PH-353 submission rule (server recompute; precheck_stale/precheck_blocked rejection; client digest is not authorization), evidence/acceptance commands and counterexamples. The PH-363 spec now carries a freeze summary. No code, migration, table, route, product behavior or canonical schema change was made; the capability remains unimplemented and is delegated to PH-181/PH-185 with PH-353 as consumer.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE d81c11c): {\"command\":\"check\",\"ok\":true,\"task_count\":287}, exit 0; PH-363 done with handoff."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph363-period-precheck on main d81c11c with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 43be7fe --task PH-363",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-363 allowed_paths (post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-363 period-precheck/reconciliation contract reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 CANONICAL BLOCKER RESOLVED AT bbd4dd7: `precheck` now requires id/organization_id/version/status/period/blocking_codes/last_event_ref/can_close, uses the complete canonical status enum draft|pending|approved|rejected|superseded|closed, and forbids warning_codes/checks and other non-canonical fields inside precheck; warnings move to top-level issues with severity=warning, and a missing canonical PeriodPrecheck returns precheck=null + period_precheck_missing. The document adds an explicit canonical field/status mapping and requires schema validation at implementation/PH-353.",
+      "CONTENT RE-VERIFIED: input is derived-only (scope/project/period/as_of/sections; no client amounts/differences/status); precheck_digest is canonical-JSON sha256 and PH-353 must recompute server-side and reject stale/blocked; the four domains reuse the existing owner read services (cash_bridge_snapshot/issues, open_item_coverage_snapshot/issues, revenue_pairing_snapshot, bank_charge_pairing/issues) instead of a second rule set; null+missing vs true zero, offset_implemented=false, period/lock/future/tenant boundaries, blocker-vs-warning, permissions (owner/finance/auditor, pm managed project, member denial, module-disabled history_read) and public-query version-bump control are documented; no implementation/migration/table/product code/canonical schema change; 7 files within the PH-363 whitelist (only contract/spec/report changes after the fix); no placeholders; task_count 287; check ok=287; governance 23 OK; verify-change --base d81c11c --task PH-363 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: PASS (round 2; canonical precheck alignment fixed). Reviewed HEAD bbd4dd7 (BASE d81c11c) in /tmp/ph363-period-precheck, worktree clean; 7 files within PH-363 whitelist; no code/migration/schema. The precheck object now has all canonical required fields and the full status enum with warning fields moved out; missing precheck is null+missing; input/digest/four-domain reuse/null-missing/offset/period/permission boundaries otherwise complete; check ok=287; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): the envelope's `precheck` is now a true canonical `entities.schema.json#/$defs/PeriodPrecheck` object — all required fields (id/organization_id/version/status/period/blocking_codes/last_event_ref/can_close), the full status enum, no warning_codes/non-canonical fields inside it, and additionalProperties=false — while checks/differences/issues/missing/summary/precheck_digest remain top-level envelope extensions. The contract adds a canonical field/status mapping table, requires schema validation by implementers/PH-353, and states that publishing extensions as a public query needs a canonical version bump. The report/docs no longer claim a partial/cropped canonical alignment.",
+    "The contract intentionally freezes a read-only projection (period.precheck.snapshot/v1) that extends canonical period.precheck.get/v1 with derived checks/differences/issues/missing; it explicitly states that publishing those fields as a public query requires a separate canonical version-bump planning slice, not this docs-only freeze.",
+    "The four reconciliation domains reuse existing owner read services and their issue_code vocabularies verbatim (cash bridge, settlement coverage, revenue pairing, bank charge pairing) instead of redefining rules; period precheck only aggregates and adds period/lock determination.",
+    "Cash offset (PH-241) and insights read models (PH-272) are not delivered; the contract represents them as offset_implemented=false/missing rather than treating them as zero or implemented.",
+    "precheck_digest binds a read-only precheck snapshot for PH-353 import submission; it is not an amount authorization and must be server-recomputed, with stale/blocked rejection. No persistence table is added by this contract; PH-353 owns storing the digest with its submission.",
+    "No code, migration, table, route, contract schema, gate or acceptance-command change; the capability remains not implemented (PH-181/PH-185 follow-up).",
+    "Lead integration rebase (d81c11c -> 43be7fe) after PH-365 merged: verification/manifest merged; gates rerun."
+  ],
+  "unverified": [
+    "No implementation of period precheck or the four reconciliation aggregation exists; all behavior is contract text only.",
+    "No PH-353 linkage (server-side digest recompute, precheck_stale/precheck_blocked rejection) exists yet.",
+    "No browser, CI or production evidence applies to this docs-only freeze; the underlying owner read services remain the evidence for their own behavior.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}

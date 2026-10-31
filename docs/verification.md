@@ -943,3 +943,15 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 ## PH-365 后续交付独立规划入口（2026-10-31）
 
 基线d81c11c。docs-only 规划：PH-347/348/349/352 done → PH-350健康/容量/积压基线（deps 347/348/349）晋级ready；PH-333/334部署/恢复与PG并发汇总验收晋级ready（PH-333 deps补PH-349，所有依赖done）；PH-335等PH-333/334/PH-350、PH-357等PH-350，保持proposed并刷新精确blocker。新登记PH-366批次C演练证据回填与发布资格清单契约（ready，deps347/348/349/352 done）、PH-367部署/恢复/并发汇总验收执行前置（proposed，等PH-357/PH-366）、PH-368容量/健康/积压后续契约（proposed，等PH-350）、PH-369下一规划入口（proposed，depends_on PH-365，待PH-365 done后置ready）；编号从PH-366连续、已核无并行占用；ROADMAP批次C状态同步；无产品代码/迁移/脚本/门禁/contract schema变更。实际执行（最终HEAD）：projectctl check ok=true/task_count=291；23项治理OK；verify-change --base d81c11c --task PH-365在review pending时仅high_risk_review_required（预期）。未验证：独立S复核pending；PH-350/333/334/335/357/366/367/368实现未开始；部署/恢复/并发/性能证据未执行。
+
+## PH-363 期间预检/四类核对/差额契约冻结（docs-only）（2026-10-31）
+
+基线 d81c11c。新增 `docs/v1.0-development/period-precheck-contract.md`（只读投影 `period.precheck.snapshot/v1`）并写 PH-363 spec 冻结摘要：
+1. **输入契约**：`period_precheck_snapshot(member, scope, project_id, period, as_of, sections)`；不携带金额/差额/状态；权限 owner/finance/auditor、pm 项目摘要、member 拒绝、停用 history_read。
+2. **输出 envelope**：canonical `PeriodPrecheck`/`period.precheck.get/v1` 对齐的 `precheck` + 四类 `checks`/`differences`/`issues`/`missing`/`summary` + `precheck_digest`；上限/truncated 语义。
+3. **四类核对唯一口径**（复用既有 owner 只读接口）：cash `cash_bridge_snapshot`、settlement `open_item_coverage_snapshot`、revenue `revenue_pairing_snapshot`、cost `bank_charge_pairing`；差额公式、issue_code 复用、不新增第二套规则；offset 未实现按 `offset_implemented=false` 而非 0。
+4. **issue/missing schema 与严重级**：blocker（关期/锁定/未来/跨 org/remaining 不守恒/超额确认/重复入账/缺期间）vs warning（未分类/offset 未实现/缺税额/缺费率/截断/不可读）；缺失 `null + missing code`，0 只表真实零值。
+5. **期间/锁期**：引用既有 AccountingPeriod/PeriodCloseRun/ProjectClose 只读事实；未来 as_of、occurred_on>as_of 排除。
+6. **precheck_digest**：canonical JSON SHA256；PH-353 提交须服务端重算并拒绝 `precheck_stale`/`precheck_blocked`，客户端 digest 不作授权。
+7. **证据/验收/未验证/反例**：给出未来实现片命令与反例；本片无实现/迁移/表/产品代码，当前 not implemented（PH-181/185 后续、PH-353 消费）。
+独立 S 复核首轮 1 阻断（precheck 非 canonical）已修（真实 canonical PeriodPrecheck + 字段/状态映射 + 扩展字段置 envelope 顶层）；二轮 PASS。最终门禁：projectctl check ok=true/task_count=287；23 项治理 OK；verify-change --base d81c11c --task PH-363 ok=true、7 文件全白名单、无 errors。未验证：四类核对聚合实现、digest 与 PH-353 联动、浏览器/CI/生产。
