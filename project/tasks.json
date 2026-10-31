@@ -12775,7 +12775,7 @@
       "title": "批次 D-02 税额→costing 开放期成本更正验收执行（PH-371 后续）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12799,9 +12799,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-387.md"
     },
     {
       "id": "PH-388",

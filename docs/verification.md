@@ -1111,3 +1111,20 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **层级/判定**：L1（代码已合入）有；L2 部分通过（cash-refund 真实 + revenue/settlement dispatch 契约）；L3/L4/L5 not_run。**D-01 整体验收不通过**：required 层（L3 + 财务复核）缺失，revenue/settlement 真实 e2e 未执行；`release_ready=false`，发布资格仍按 PH-366 **blocked**。
 - **财务复核结论（执行人角色记录，非独立 pass）**：本地证据支持 cash-refund 编排事实/引用链/幂等/失败零写；不支持收入反冲与结算调整的真实 owner e2e，也不支持生产/并发/浏览器验收；不得据此签署 D-01 通过。
 - 独立 S 复核 PASS（命令输出/partial e2e 诚实性/全量基线映射/未通过结论）。最终门禁：projectctl check ok=true/task_count=307；23 项治理 OK；verify-change --base 9830b37 --task PH-382 ok=true、8 文件全白名单、无 errors。
+
+
+## PH-387 批次 D-02 税额→costing 验收执行（2026-10-31，BASE 5278c96）
+
+- 候选 SHA：`5278c96`（本地工作树 feat/PH-387-d02-acceptance）；环境/profile：本地 SQLite/rehearsal；执行：worker-contract；复核：财务复核人（待独立 reviewer）。
+- **L1 代码存在**：PH-371 costing 税额成本更正实现/迁移/页面/测试已合入（main 5278c96）。
+- **L2 本地自动化 pass**：
+  - `python manage.py test tests.test_v1_tax_cost_adjustment tests.test_v1_tax_cost_adjustment_http --verbosity 1` → **Ran 14 tests, OK**（exit 0）。
+  - `python manage.py verify_integrity --json` 于 fresh SQLite（migrate 后）→ `{"ok": true, "errors": [], "organizations": 0, "entries": 0}`（exit 0）；未迁移 DB 的 verify 报 no such table，属环境前置缺失，不计业务失败。
+  - `python scripts/projectctl.py check` exit 0；`manage.py check` exit 0；`makemigrations --check` exit 0（No changes）；治理 23 tests OK。
+  - 覆盖：not_recoverable→append-only 成本批次；recoverable/pending 不生成；pending 拒绝；关期/锁期拒绝；token replay/改输入/重复拒绝；权限/跨 org/模块停用；多项目权重/bp 合计；无项目归属无行；未来日期拒绝；reversal 负镜像且仅一次。
+- **L3 CI/PG：not_run**（无同候选 SHA 的 CI run/PG 证据；SQLite 结果不作 PG 证据）。
+- **L4 浏览器：not_run**（未执行 1440/390/键盘/空错载/停用态截图）。
+- **L5 生产/客户：not_run**（未执行生产/试点/客户验收）。
+- **缺口/未执行**：L3/L4/L5；真实 PG 并发/CI 证据由 CI/部署环境另行回填；D-02 required 层为 L2+L3，L3 缺失。
+- **判定：D-02 整体不通过（false/not pass）**；L1+L2 可复核，但不得宣称 D-02 通过或发布就绪。
+- 反例核对：未修改 PH-371/产品代码/迁移/契约/门禁；未以 SQLite 冒充 PG、未以本地冒充生产。

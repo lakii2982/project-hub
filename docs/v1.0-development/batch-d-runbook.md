@@ -43,11 +43,11 @@
 - 状态：**部分执行（2026-10-31，PH-382）**：L2 cash-refund 真实 e2e pass、9 scoped tests OK；revenue/settlement 真实 e2e、L3/L4/L5 **not_run**；D-01 整体未通过（evidence: docs/verification.md PH-382 条）。
 
 ### D-02 PH-371 税额→costing 成本更正
-- 前置：PH-371 实现合入（当前未实现 → blocked）。
+- 前置：PH-371 实现已合入（done）。
 - 步骤：确认 not_recoverable 税额→开放期成本调整→期间/锁期/重复/权限反例→verify_integrity。
 - 命令：实现后 `python manage.py test tests.test_v1_tax_cost_adjustment tests.test_v1_tax_cost_adjustment_http --verbosity 1`。
 - 判据/失败处置：仅 confirmed/not_recoverable；跨期/锁期/重复拒绝；失败保留原资格/期间证据。
-- 状态：**blocked**（PH-371 未实现）。
+- 状态：**L2 已执行 pass（14 tests OK）；L3/L4/L5 not_run；D-02 整体不通过（false）**。真实 CI/PG、浏览器、生产需另行回填。
 
 ### D-03 PH-338 发票批量/导入
 - 前置：PH-289 done（当前未 done；PH-362 契约已 done）→ blocked。

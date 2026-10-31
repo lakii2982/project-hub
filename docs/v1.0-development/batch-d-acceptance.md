@@ -17,7 +17,7 @@
 | 编号 | 切片/任务 | 归属需求（M） | 当前状态 |
 | --- | --- | --- | --- |
 | D-01 | PH-370 跨 owner 编排执行（已合入） | M08/M09/M10/M12 | 实现 done；**L2 部分执行（2026-10-31）：cash-refund 真实 e2e pass；revenue/settlement 真实 e2e、L3/L4/L5 not_run → D-01 未通过** |
-| D-02 | PH-371 税额→costing 开放期成本更正 | M06/M10/M12 | ready 未实现 → **blocked** |
+| D-02 | PH-371 税额→costing 开放期成本更正 | M06/M10/M12 | L2 pass；L3/L4/L5 not_run → **不通过（false）** |
 | D-03 | PH-338 发票批量/导入后续 | M10/M14 | proposed（等 PH-289；PH-362 契约已 done）→ **blocked** |
 | D-04 | PH-353 导入提交拆分 | M03/M14 | proposed（等 PH-181/185/289；PH-362 契约已 done）→ **blocked** |
 | D-05 | PH-339 insights 读模型实现 | M12/M13 | proposed（等 PH-272）→ **blocked** |
@@ -57,7 +57,7 @@ python manage.py verify_integrity --json
 | 编号 | 验收点 | 命令/证据（可执行或 blocked） | 通过判据 | 责任角色 | 未验证/现状 |
 | --- | --- | --- | --- | --- | --- |
 | D-01 | 编排按 PH-320 引用链调用收入反冲/cash 退款/settlement 调整；失败项留引用+核对；不直接写其它 owner | `python manage.py test tests.test_v1_invoice_orchestration tests.test_v1_invoice_orchestration_http --verbosity 1` + 通用命令 + 财务复核输出 | 一胜一拒/无半笔；引用链完整；发票事实不被静默回滚；跨 owner 无直接写 | 财务复核人 + 发布负责人 | **L2 部分 pass（cash-refund 真实；9 tests OK；全量 1310/5F+3E 无新增）；revenue/settlement 真实 e2e/L3/L4/L5 not_run → D-01 未通过** |
-| D-02 | 仅 confirmed/not_recoverable 税额可生成开放期成本调整；引用完整、幂等、期间/锁期拒绝 | `python manage.py test tests.test_v1_tax_cost_adjustment tests.test_v1_tax_cost_adjustment_http --verbosity 1`（实现后） | pending/recoverable 拒绝；跨期/锁期拒绝；重复更正拒绝；金额/来源一致 | 财务复核人 | **blocked**（PH-371 未实现） |
+| D-02 | 仅 confirmed/not_recoverable 税额可生成开放期成本调整；引用完整、幂等、期间/锁期拒绝 | `python manage.py test tests.test_v1_tax_cost_adjustment tests.test_v1_tax_cost_adjustment_http --verbosity 1`（实际执行：14 tests OK）+ `verify_integrity` fresh DB ok | pending/recoverable 拒绝；跨期/锁期拒绝；重复更正拒绝；金额/来源一致 | 财务复核人 | L2 pass；L3 CI/PG、L4 浏览器、L5 生产 not_run；**D-02 整体不通过（false）** |
 | D-03 | 发票批量导入模板/预检/批量登记/分配；重排幂等、全有或全无 | `tests.test_v1_invoice_import`/`_http`（实现后）+ 通用命令 + L4 上传 | 错误行拒绝零半笔；重试幂等；金额守恒 | 财务复核人 + 支持负责人 | **blocked**（PH-289 未 done；PH-362 契约已 done） |
 | D-04 | 导入提交持久化/原子提交/冲突回滚；预览不留业务痕迹 | `tests.test_v1_import_submission`/`_http`（实现后）+ 通用命令 | 提交全有或全无；重复 token 幂等；冲突零业务事实 | 财务复核人 | **blocked**（PH-181/185/289；PH-362 已 done） |
 | D-05 | insights 差异单/工作台只读；同 case_key 至多一条有效；missing/缺口正确 | `tests.test_v1_insights`/`_http`（实现后）+ 只读零写计数 | 页面/导出/API 一致；空值不假零；不复制表 | 财务复核人 + PM | **blocked**（PH-272 未 done） |
