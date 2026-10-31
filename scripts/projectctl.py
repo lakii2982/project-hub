@@ -24,6 +24,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 MANIFEST_PATH = "project/manifest.json"
 TASKS_PATH = "project/tasks.json"
+REPORTS_DIRNAME = "project/reports"
 TASK_ID_RE = re.compile(r"^PH-[0-9]{3,6}$")
 MANIFEST_FIELDS = (
     "schema_version",
@@ -828,7 +829,7 @@ def _sanitized_repository_url(value: Any) -> Any:
     return value
 
 
-def command_brief(root: Path, task_id: str) -> dict[str, Any]:
+def command_brief(root: Path, task_id: str, precedents: bool = False) -> dict[str, Any]:
     if not root.is_dir():
         raise CliError("root_not_found", "root is not a directory", path=str(root))
     if TASK_ID_RE.fullmatch(task_id) is None:
@@ -865,7 +866,330 @@ def command_brief(root: Path, task_id: str) -> dict[str, Any]:
     }
     context["repository_url"] = _sanitized_repository_url(context["repository_url"])
     task = {field: matches[0].get(field) for field in TASK_FIELDS}
-    return {"manifest": context, "task": task}
+    payload: dict[str, Any] = {"manifest": context, "task": task}
+    if precedents:
+        tasks_by_id = {
+            entry["id"]: entry
+            for entry in tasks_document["tasks"]
+            if isinstance(entry, dict) and isinstance(entry.get("id"), str)
+        }
+        universal = _universal_paths(
+            [entry for entry in tasks_document["tasks"] if isinstance(entry, dict)]
+        )
+        universal_modules = _universal_modules(
+            [entry for entry in tasks_document["tasks"] if isinstance(entry, dict)],
+            universal,
+        )
+        payload["precedents"] = _precedent_entries(
+            root,
+            tasks_by_id,
+            _task_modules(matches[0], universal, universal_modules),
+            task_id,
+            universal,
+            universal_modules,
+        )
+    return payload
+
+
+LESSON_MAX_ENTRIES = 5
+LESSON_PER_TASK_MAX = 2
+LESSON_SNIPPET_MAX = 280
+UNIVERSAL_PATH_THRESHOLD = 0.5
+
+
+def _universal_paths(tasks: list[dict[str, Any]]) -> set[str]:
+    """Paths present in the whitelists of more than half the tasks carry no
+    module signal (governance boilerplate every task legitimately touches)."""
+    holders = 0
+    counts: dict[str, int] = {}
+    for task in tasks:
+        allowed = task.get("allowed_paths")
+        if not isinstance(allowed, list) or not allowed:
+            continue
+        holders += 1
+        for entry in allowed:
+            if isinstance(entry, str) and entry.strip():
+                normalized = entry.strip()
+                counts[normalized] = counts.get(normalized, 0) + 1
+    if holders == 0:
+        return set()
+    return {
+        path
+        for path, count in counts.items()
+        if count / holders > UNIVERSAL_PATH_THRESHOLD
+    }
+
+
+def _universal_modules(tasks: list[dict[str, Any]], path_universal: set[str]) -> set[str]:
+    """Module keys present for most tasks carry no discriminative signal either
+    (project/handoffs, project/reports, tests — every task legitimately writes
+    its own artifacts there)."""
+    holders = 0
+    counts: dict[str, int] = {}
+    for task in tasks:
+        allowed = task.get("allowed_paths")
+        if not isinstance(allowed, list) or not allowed:
+            continue
+        holders += 1
+        keys = set()
+        for entry in allowed:
+            if not isinstance(entry, str):
+                continue
+            normalized = entry.strip()
+            if not normalized or normalized in path_universal:
+                continue
+            key = _module_key(normalized)
+            if key:
+                keys.add(key)
+        for key in keys:
+            counts[key] = counts.get(key, 0) + 1
+    if holders == 0:
+        return set()
+    return {
+        key
+        for key, count in counts.items()
+        if count / holders > UNIVERSAL_PATH_THRESHOLD
+    }
+
+
+def _lesson_snippet(value: Any) -> str | None:
+    """Normalize one findings/deviations/unverified entry to bounded text."""
+    if isinstance(value, str):
+        text = " ".join(value.split())
+    elif isinstance(value, dict):
+        parts = []
+        for key in ("finding", "resolution", "description", "summary", "detail"):
+            piece = value.get(key)
+            if isinstance(piece, str) and piece.strip():
+                parts.append(" ".join(piece.split()))
+        text = " → ".join(parts) if parts else " ".join(
+            f"{key}:{' '.join(str(value[key]).split())}" for key in sorted(value)
+        )
+    else:
+        text = json.dumps(value, ensure_ascii=False, sort_keys=True)
+    text = text.strip()
+    if not text:
+        return None
+    if len(text) > LESSON_SNIPPET_MAX:
+        text = text[: LESSON_SNIPPET_MAX - 1] + "…"
+    return text
+
+
+def _report_lessons(task_id: str, report: dict[str, Any]) -> list[dict[str, str]]:
+    """Extract lesson candidates from one committed report."""
+    review = report.get("review") if isinstance(report.get("review"), dict) else {}
+    collected: list[tuple[str, Any]] = []
+    review_findings = review.get("findings")
+    if isinstance(review_findings, list):
+        collected.extend(("review", item) for item in review_findings)
+    deviations = report.get("deviations")
+    if isinstance(deviations, list):
+        collected.extend(("deviation", item) for item in deviations)
+    unverified = report.get("unverified")
+    if isinstance(unverified, list):
+        collected.extend(("unverified", item) for item in unverified)
+    lessons: list[dict[str, str]] = []
+    for source, item in collected:
+        snippet = _lesson_snippet(item)
+        if snippet is not None:
+            lessons.append({"task_id": task_id, "source": source, "text": snippet})
+    return lessons
+
+
+def _iter_reports(root: Path) -> tuple[list[tuple[int, str, dict[str, Any]]], int]:
+    """Return (parsable PH reports ordered oldest task first, skipped count)."""
+    reports_dir = root / REPORTS_DIRNAME
+    if not reports_dir.is_dir():
+        return [], 0
+    collected: list[tuple[int, str, dict[str, Any]]] = []
+    skipped = 0
+    for path in sorted(reports_dir.glob("PH-*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            skipped += 1
+            continue
+        if not isinstance(payload, dict):
+            skipped += 1
+            continue
+        digits = path.stem.split("-")[-1]
+        order = int(digits) if digits.isdigit() else 0
+        collected.append((order, path.stem, payload))
+    collected.sort(key=lambda item: (item[0], item[1]))
+    return collected, skipped
+
+
+def _module_key(path: str) -> str:
+    """Module key for one allowed path.
+
+    Root-level files key by filename (ROADMAP.md); a file directly under a
+    top-level directory keys by that directory (docs/standards.md → docs);
+    deeper paths key by their first two segments (docs/engineering/x.md →
+    docs/engineering, core/services/cash.py → core/services) so that unrelated
+    subtrees do not glue together.
+    """
+    normalized = path.strip()
+    if not normalized:
+        return ""
+    parts = [part for part in normalized.split("/") if part]
+    if not parts:
+        return ""
+    if len(parts) == 1:
+        return parts[0]
+    if "." in parts[1]:
+        return parts[0]
+    return f"{parts[0]}/{parts[1]}"
+
+
+def _task_modules(
+    task: dict[str, Any],
+    universal: set[str] | None = None,
+    universal_modules: set[str] | None = None,
+) -> set[str]:
+    allowed = task.get("allowed_paths")
+    if not isinstance(allowed, list):
+        return set()
+    keys: set[str] = set()
+    for entry in allowed:
+        if not isinstance(entry, str):
+            continue
+        normalized = entry.strip()
+        if not normalized:
+            continue
+        if universal is not None and normalized in universal:
+            continue
+        key = _module_key(normalized)
+        if not key:
+            continue
+        if universal_modules is not None and key in universal_modules:
+            continue
+        keys.add(key)
+    return keys
+
+
+def _precedent_entries(
+    root: Path,
+    tasks_by_id: dict[str, dict[str, Any]],
+    modules: set[str],
+    exclude_task_id: str,
+    universal: set[str],
+    universal_modules: set[str],
+) -> dict[str, Any]:
+    """Select same-module lessons from delivered reports, newest task first.
+
+    Recency is approximated by the numeric task id: ids are assigned in
+    planning order, so a larger id means a more recent delivery. The target
+    task's own report is never injected back into its brief. Injection is
+    bounded: at most LESSON_MAX_ENTRIES entries, LESSON_PER_TASK_MAX per task,
+    each snippet at most LESSON_SNIPPET_MAX characters.
+    """
+    if not modules:
+        return {"modules": [], "entries": [], "bytes": 0}
+    reports, _skipped = _iter_reports(root)
+    entries: list[dict[str, str]] = []
+    matched: set[str] = set()
+    for _order, task_id, payload in reversed(reports):
+        if len(entries) >= LESSON_MAX_ENTRIES:
+            break
+        if task_id == exclude_task_id:
+            continue
+        past = tasks_by_id.get(task_id)
+        if past is None:
+            continue
+        overlap = modules & _task_modules(past, universal, universal_modules)
+        if not overlap:
+            continue
+        module_label = sorted(overlap)[0]
+        taken = 0
+        for lesson in _report_lessons(task_id, payload):
+            if taken >= LESSON_PER_TASK_MAX or len(entries) >= LESSON_MAX_ENTRIES:
+                break
+            entries.append(
+                {
+                    "module": module_label,
+                    "source": lesson["source"],
+                    "task_id": task_id,
+                    "text": lesson["text"],
+                }
+            )
+            matched.update(overlap)
+            taken += 1
+    serialized = "".join(
+        json.dumps(entry, ensure_ascii=False, sort_keys=True) for entry in entries
+    )
+    return {
+        "modules": sorted(matched),
+        "entries": entries,
+        "bytes": len(serialized.encode("utf-8")),
+    }
+
+
+def command_lessons(root: Path, path: str | None = None) -> dict[str, Any]:
+    reports, skipped = _iter_reports(root)
+    tasks_by_id: dict[str, dict[str, Any]] = {}
+    if path is not None:
+        document = _read_root_json(root, TASKS_PATH)
+        if isinstance(document, dict) and isinstance(document.get("tasks"), list):
+            tasks_by_id = {
+                task["id"]: task
+                for task in document["tasks"]
+                if isinstance(task, dict) and isinstance(task.get("id"), str)
+            }
+    lessons: list[dict[str, str]] = []
+    for _order, task_id, payload in reports:
+        if path is not None:
+            task = tasks_by_id.get(task_id)
+            allowed = task.get("allowed_paths") if isinstance(task, dict) else None
+            candidates = (
+                [entry for entry in allowed if isinstance(entry, str)]
+                if isinstance(allowed, list)
+                else []
+            )
+            if not any(path in candidate for candidate in candidates):
+                continue
+        lessons.extend(_report_lessons(task_id, payload))
+    result: dict[str, Any] = {
+        "lessons": lessons,
+        "reports_scanned": len(reports),
+        "reports_skipped": skipped,
+    }
+    if path is not None:
+        result["path_filter"] = path
+    return result
+
+
+def command_metrics(root: Path) -> dict[str, Any]:
+    reports, skipped = _iter_reports(root)
+    per_task: list[dict[str, Any]] = []
+    totals = {"findings": 0, "blockers": 0, "deviations": 0, "unverified": 0}
+    for _order, task_id, payload in reports:
+        review = payload.get("review") if isinstance(payload.get("review"), dict) else {}
+        findings = review.get("findings") if isinstance(review.get("findings"), list) else []
+        deviations = payload.get("deviations") if isinstance(payload.get("deviations"), list) else []
+        unverified = payload.get("unverified") if isinstance(payload.get("unverified"), list) else []
+        blockers = 0
+        for item in findings:
+            snippet = _lesson_snippet(item)
+            if snippet is not None and "BLOCKER" in snippet:
+                blockers += 1
+        per_task.append(
+            {
+                "task_id": task_id,
+                "review_status": review.get("status"),
+                "findings": len(findings),
+                "blockers": blockers,
+                "deviations": len(deviations),
+                "unverified": len(unverified),
+            }
+        )
+        totals["findings"] += len(findings)
+        totals["blockers"] += blockers
+        totals["deviations"] += len(deviations)
+        totals["unverified"] += len(unverified)
+    return {
+        "metrics": per_task,
+        "summary": {"reports_scanned": len(reports), "reports_skipped": skipped, **totals},
+    }
 
 
 def _run_git(root: Path, arguments: Sequence[str]) -> bytes:
@@ -1256,6 +1580,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     brief_parser = subparsers.add_parser("brief", help="show minimal task context")
     brief_parser.add_argument("task_id")
+    brief_parser.add_argument(
+        "--precedents",
+        action="store_true",
+        help="inject same-module lessons from delivered reports (bounded, read-only)",
+    )
     brief_parser.add_argument("--root", default=".")
 
     orient_parser = subparsers.add_parser(
@@ -1270,6 +1599,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     draft_parser.add_argument("task_id")
     draft_parser.add_argument("--root", default=".")
+
+    lessons_parser = subparsers.add_parser(
+        "lessons",
+        help="aggregate lesson candidates from delivered reports (read-only)",
+    )
+    lessons_parser.add_argument(
+        "--path",
+        default=None,
+        help="only tasks whose allowed_paths contain this substring",
+    )
+    lessons_parser.add_argument("--root", default=".")
+
+    metrics_parser = subparsers.add_parser(
+        "metrics",
+        help="per-report quality counts: findings/blockers/deviations/unverified",
+    )
+    metrics_parser.add_argument("--root", default=".")
 
     verify_parser = subparsers.add_parser(
         "verify-change",
@@ -1298,7 +1644,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif command_name == "next":
             result = command_next(root, compact=arguments.compact)
         elif command_name == "brief":
-            result = command_brief(root, arguments.task_id)
+            result = command_brief(root, arguments.task_id, precedents=arguments.precedents)
+        elif command_name == "lessons":
+            result = command_lessons(root, path=arguments.path)
+        elif command_name == "metrics":
+            result = command_metrics(root)
         elif command_name == "orient":
             result = command_orient(root)
         elif command_name == "draft-report":

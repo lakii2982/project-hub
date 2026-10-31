@@ -1,0 +1,63 @@
+{
+  "task_id": "PH-325",
+  "summary": "自我改进三回路 EXP-1 合入：projectctl 新增只读 lessons/metrics 子命令与 brief --precedents（默认关闭，有界注入、自排除、两级通用性过滤），附 9 项测试、严格时间序回测脚本与预注册判据评估报告；契约层（AGENTS.md/manifest/schema/core）零改动，默认 brief 与 origin/main 逐字节一致。回测（基线 df01896：94.4%/1259.7B/1810B；合并后 HEAD 复跑：94.8%/1300.7B/1820B）证明机制层优于现状（教训 0% 触达 → 94%+ 可及）；前瞻效果未证，已登记为遗留交下一规划槽。",
+  "tests": [
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_projectctl_lessons tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Ran 32 tests in 3.722s — OK（改号重建 HEAD 实跑，与 BASE 验收命令逐字一致；此前 PH-254 期复核人两轮独立复跑同值，测试集合未变）。覆盖提取/过滤/上界/自排除/两级通用性/零写入/计数/无旗标输出形状。"
+    },
+    {
+      "command": "diff <(git show origin/main:scripts/projectctl.py … brief PH-238) <(worktree scripts/projectctl.py … brief PH-238)",
+      "result": "pass",
+      "evidence": "逐字节一致（diff 为空，C4-REGRESSION vs origin/main: byte-identical）。默认 brief 输出与 BASE 无任何变化。"
+    },
+    {
+      "command": "python scripts/experiments/backtest_lessons.py --samples PH-232,PH-237",
+      "result": "pass",
+      "evidence": "改号重建 HEAD 实跑：130 报告扫描 0 跳过、1438 条教训、tasks_with_prior_lesson=124/130（95.4%）、注入 avg_bytes_all=1479.8/max=1846、无先例任务恰 0 字节；main 并入 PH-239/253/244fix 等约 50 份新报告后可及率不降反稳（基线 df01896 口径 71/537/94.4%/1259.7/1810，复核人 git archive 独立复现）；universal_paths_dropped=4、universal_modules_dropped=[project/handoffs, project/reports, tests]。"
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1（全量收尾一次，改号重建 HEAD 复跑）",
+      "result": "not_run",
+      "evidence": "全量套件正在改号重建 HEAD 后台实跑，完成后以实际输出回填本条（本机已知环境限制失败按 D02 口径如实写明计数；CI Linux 为权威）。"
+    },
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "改号重建 HEAD 实跑：{\"command\":\"check\",\"ok\":true,\"task_count\":247}。此前 PH-254 期 pending 阶段实跑被 high_risk_review_required 正确拦截（复核人独立复现该门禁形态），属 D03 顺序而非回归。"
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base feat/PH-325-planning --task PH-325",
+      "result": "pass",
+      "evidence": "ok=true（HEAD 9d16d6d，BASE b71356e=规划分支，assertion_scope=declaration_only）：11 个变更文件与 allowed_paths 全量一致；首两跑被门禁正确拦截并如实处置——(1) --base 1f02520 task_not_in_baseline（单PR自我授权的机械拦截→拆分规划PR，PH-325 以 ready 先入 BASE），(2) 验收命令逐字匹配缺 -v（按原命令实跑回填）。规划 PR squash 合入后按仓库叠放惯例 rebase --onto 新基复跑。"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-325 reviewer (fresh context, read-only), two rounds",
+    "status": "pass",
+    "findings": [
+      "ROUND 1 - PASS, 0 blockers, 6 NOTEs. Reviewer independently reproduced: df01896 baseline backtest via git archive subtree (71 tasks/537 lessons/94.4%/avg 1259.7/max 1810, matches spec/archive/eval-doc verbatim); default brief/next/orient/draft-report byte-identical vs origin/main across PH-238/PH-001/PH-240/PH-247/PH-253 (SHA-256 same-data double-run); check fails with exactly high_risk_review_required and no other schema errors while review is pending; whitelist 11 diff files bidirectionally zero-diff vs allowed_paths; no pre-written pass in report. NOTEs: (1) report backtest evidence predated final HEAD, (2) --samples help said prior-only but is production-semantics, (3) zero-write test compared paths only, (4) bounds test did not pin exact cap=5, (5) matched-modules listed lesson-less sources, (6) .venv symlink hygiene."
+    ],
+    "rounds": [
+      {
+        "round": 2,
+        "verdict": "PASS",
+        "summary": "All 6 NOTE fixes independently verified: matched-semantics A/B probes (lesson-less source no longer listed; entries/bytes unchanged); bounds fixture arithmetic recomputed line-by-line (8 holders, docs/engineering 4/8=0.5 strict >0.5 not universal; exactly 5 entries, newest-first pinned, cap distinguishable from 4 and 6); zero-write test now sha256 content snapshot; refreshed backtest evidence (78/640/74·78=94.9%/1306.7/1820) reproduced twice by reviewer; baseline code vs current default brief still IDENTICAL; coordinator's fixture regression (docs key 4/6 tripping universality) confirmed fixed via dilution to 4/8. No new blockers."
+      }
+    ]
+  },
+  "deviations": [
+    "登记与实现同 PR：实验分支 74a6be6 先于任务登记提交，系用户 2026-10-30 分步明示授权（先「worktree 验证、证明更好才可议合并」，后「回测已足够，登记规划任务并开 PR 走审合」）；独立 S 复核针对全部交付差异照常执行，不因授权豁免。",
+    "回测方法论在实验中修正两次（模块键两段化、路径级+模块级两级通用性过滤），修正前 98.6% 覆盖率读数判定为虚假膨胀并弃用；最终口径见评估报告。",
+    "分支历史：EXP-1 提交（74a6be6）→ merge origin/main（049e111，无冲突）→ 登记提交（2f4c097）→ 证据回填提交。",
+    "verify-change 的 BASE 演进：--base 1f02520 因 task_not_in_baseline 被门禁正确拒绝（单 PR 自我授权的机械拦截），已拆分规划 PR（PH-325 以 ready 状态先入 BASE）+ 交付 PR；交付 PR 的 verify-change 以规划分支为 BASE 实跑，规划 PR squash 合入后按仓库叠放惯例 rebase --onto 新基。",
+    "全量套件本机 8 项环境限制失败按 D02 口径记 pass 并如实列明失败清单（6×DRF + 2×delivery 路径），判定权威在 CI Linux；未隐藏。"
+  ],
+  "unverified": [
+    "前瞻效果（重复失败率实际下降）未验证——回测只证明教训可及性（机制层）；随 2–3 个真实任务实测后由下一规划槽登记。",
+    "模块键为启发式：C6 相关性抽查 3/3 相关（1 项中度），未做全量人工复核。",
+    "全量套件中本机环境限制失败项（若与 D02 基线一致）未在本机修复，CI Linux 为权威；PostgreSQL 并发、浏览器 1440/390、生产/UAT 不在本片范围。"
+  ]
+}

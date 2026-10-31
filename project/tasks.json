@@ -10426,7 +10426,7 @@
       "title": "自我改进三回路：lessons/metrics 聚合与 brief 先例注入（EXP-1 合入）",
       "kind": "infra",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [],
@@ -10451,7 +10451,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-325.md"
     }
   ]
 }

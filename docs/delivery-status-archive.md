@@ -521,3 +521,7 @@ delivery-status拆分落地区：现状头1996字节，原文件全文逐字入a
 ## PH-237 文档收尾：失效链接修复与作用域测试指引（2026-10-30）
 
 PH-234遗留的两处ai-delivery-*旧路径链接（ROADMAP、execution-protocol）改指archive；CONTRIBUTING加作用域测试指引（开发中模块级并行快速反馈、收尾全量一次、CI兜底），验收四命令未动。效率改造实测：新会话开场+任务上下文阅读量280,956→15,760 字节（-94.4%，1−15760/280956）。见`docs/verification.md`与`project/reports/PH-237.json`。
+
+## PH-325 自我改进三回路：lessons/metrics 聚合与 brief 先例注入（2026-10-31）
+
+projectctl新增只读`lessons`（教训聚合，--path过滤）与`metrics`（逐报告质量计数），`brief`新增`--precedents`（默认关闭）：同模块历史教训注入，≤5条/来源任务≤2条/单条≤280字符、自排除、路径级+模块级两级通用性过滤。回测（基线df01896：71任务94.4%可及/均值1259.7B；改号重建HEAD：130报告1438教训95.4%可及/均值1479.8B/峰值1846B，main并入约50份新报告后可及率不降），默认brief与origin/main逐字节一致。原PH-254号位与PH-248槽的PH-244证据修正片撞车，改号重建。评估与复现见`docs/engineering/experiment-exp1-self-improve-loop.md`；前瞻验证遗留下一规划槽。见`docs/verification.md`与`project/reports/PH-325.json`。
