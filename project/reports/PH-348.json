@@ -28,9 +28,9 @@
       "evidence": "Actual exit 0: Ran 15 tests, OK => 15 passed. Adds restore production-execute refusal, non-empty target refusal, target-is-plain-file envelope handling, and fake-pg_restore PG execute honest not_run (no stub pass, tool not invoked) to the original 11."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base cbb84c2 --task PH-348",
+      "command": "python scripts/projectctl.py verify-change --base 2415cb7 --task PH-348",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — files inside BASE PH-348 allowed_paths (reviewer-b pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — files inside BASE PH-348 allowed_paths (reviewer-b pass; post-rebase rerun)."
     }
   ],
   "review": {
@@ -53,7 +53,8 @@
     "Evidence is L1 (code exists) + L2 (local automated tests) only; L3 CI/PG, L4 browser and L5 production/customer acceptance were not executed and are not claimed.",
     "Restore writes only to an empty isolated target directory; production execute is refused (exit 5), non-empty target is refused (exit 3), and the backup/source DB are never mutated.",
     "The scripts use stdlib sqlite3/subprocess and PH-345 envelope/exit-code semantics; no product code, migration, CI gate or contract schema is changed.",
-    "No real customer/payroll/credential data is included; PG URLs are redacted in evidence and tests assert the password is not present."
+    "No real customer/payroll/credential data is included; PG URLs are redacted in evidence and tests assert the password is not present.",
+    "Lead integration rebase (cbb84c2 -> 2415cb7) after PH-347 merged: upgrade-recovery/verification/manifest merged; gates rerun."
   ],
   "unverified": [
     "PostgreSQL restore execute is explicitly not_run in this slice (honest refusal, no stub pass); real isolated PG restore/verification and RPO/RTO remain for CI/PH-333/PH-349.",
