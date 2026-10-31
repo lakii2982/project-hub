@@ -1147,3 +1147,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 5. **必需集**：治理基线 pass（L2）；V1-OPS-01–06、M15、L4、L5 均 not_run；**无有效豁免**。
 6. **缺口 G1–G8**：真实 staging 部署/升级/TLS、PG 备份恢复/RPO-RTO、CI/PG 容量/并发、L4 浏览器、L5 生产/客户、独立复核签名；核心项不可豁免。
 7. **判定：blocked**；release_ready=false；未发布/未试点；签名 pending（执行人不得自批）。未执行任何真实环境；不得以本地/演练/文档宣称通过。
+- 独立 S 复核：首轮 2 阻断（PH-371 产品代码基线误述、digest 不可复现）已修（基线=PH-371/36cdf00；完整 canonical 记录嵌入，digest=3ee83650…可重算）；二轮 PASS。最终门禁：check ok=true/task_count=312；23 项治理 OK；verify-change --base 5278c96 --task PH-372 ok=true、7 文件全白名单、无 errors。
