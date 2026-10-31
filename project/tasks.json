@@ -9558,7 +9558,7 @@
       "title": "修复 PH-291 运营核对总览 HTTP 测试的随机 CSRF 误匹配（test-only）",
       "kind": "fix",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9581,7 +9581,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-303.md"
     },
     {
       "id": "PH-304",

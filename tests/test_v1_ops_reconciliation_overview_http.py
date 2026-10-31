@@ -54,17 +54,33 @@ class OpsOverviewHTTPTests(OpsOverviewFixture, TestCase):
 
     def test_pm_page_scope_and_cash_missing(self):
         finance_project = self.project2
-        hidden = self.direct_contract('C8', project=finance_project)
-        ContractChange.objects.create(
+        hidden_code = 'CT-HIDDEN-C8-9f3a'
+        hidden = self.direct_contract(hidden_code, project=finance_project)
+        hidden_change = ContractChange.objects.create(
             organization=self.org, contract=hidden, status='draft',
             change_type='price_change', requested_on=self.today, net_delta_cents=2,
             tax_delta_cents=0, gross_delta_cents=2, created_by_member=self.owner)
-        self.pending_change()
+        visible_change = self.pending_change()
         response = self.get(member=self.pm)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'cash_not_scoped_to_project')
-        self.assertContains(response, '1')  # the visible pending change count
-        self.assertNotContains(response, 'C8')
+        # Assert on the derived payload instead of a 1-2 character substring: short
+        # codes like 'C8' randomly collide with CSRF/hex tokens in the HTML and made
+        # this test flaky in CI.
+        overview = response.context['overview']
+        contracts = {section['key']: section for section in overview['sections']}['contracts']
+        self.assertEqual(contracts['counts']['pending_changes'], 1)
+        pm_refs = {ref['id'] for section in overview['sections'] for ref in section['refs']}
+        self.assertIn(str(visible_change.pk), pm_refs)
+        self.assertNotIn(str(hidden_change.pk), pm_refs)
+        self.assertNotContains(response, hidden_code)
+        owner_overview = self.get(member=self.owner).context['overview']
+        owner_contracts = {section['key']: section
+                           for section in owner_overview['sections']}['contracts']
+        self.assertEqual(owner_contracts['counts']['pending_changes'], 2)
+        owner_refs = {ref['id'] for section in owner_overview['sections']
+                      for ref in section['refs']}
+        self.assertIn(str(hidden_change.pk), owner_refs)
 
     def test_invalid_filters_return_400(self):
         future = (self.today + timedelta(days=1)).isoformat()
