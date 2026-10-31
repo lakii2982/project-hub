@@ -1,0 +1,26 @@
+{
+  "task_id": "PH-376",
+  "summary": "后续交付独立规划入口（接续 PH-373）on BASE 2f082a3. Planning-only slice: rechecked latest-main dependency facts and promoted PH-367 (batch C deployment/recovery/concurrency summary-acceptance precondition contract) from proposed to ready because PH-333/334/357/366 are all done, updating its spec status/blockers/whitelist/DoR. Keeps PH-372 proposed until PH-367 is done; keeps PH-338/353 blocked on PH-289/PH-181/PH-185, PH-339/354 on PH-272, PH-340/355 on PH-301/314/179/183/151; keeps PH-377 awaiting PH-372. Registers five continuous slices: PH-377 batch C release-gate follow-up (proposed), PH-378 invoice batch import implementation (proposed; waits PH-338/353), PH-379 insights difference/workbench implementation (proposed; waits PH-339/354), PH-380 notification inbox implementation (proposed; waits PH-340/355), and PH-381 next independent planning entry (proposed; depends on PH-376; to be set ready by the next planning slot after PH-376 closes). Each new spec has concrete DoR, exact allowlist, executable acceptance and honest blockers/not_run discipline. Updates ROADMAP batch C/D status, delivery-status, verification, manifest and task state; no product code, migration, contract schema, CI-gate or canonical change.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":302}. Includes PH-367 promotion and PH-377–381 additions; dependency/status/allowlist/spec checks pass."},
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests, OK."},
+    {"command": "python scripts/projectctl.py verify-change --base 2f082a3 --task PH-376", "result": "not_run", "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Independent S review pending. Verify only dependency-done tasks are promoted (PH-367), PH-372 and batch D tasks remain proposed with exact blockers, PH-377–381 are continuous/unique with specs/DoR/allowlists/executable acceptance, PH-381 is honestly proposed until PH-376 closes, ROADMAP/docs/tasks/manifest are consistent, and no code/migration/schema/gate change. Implementer does not self-pass."
+  },
+  "deviations": [
+    "PH-367 is the only task promoted ready; PH-372/PH-338/353/339/354/340/355/377 remain proposed with refreshed blockers, and PH-381 stays proposed until PH-376 is done.",
+    "PH-378/379/380 are downstream implementation slices of existing proposed prerequisites, registered to keep the planning chain continuous; they are not work authorization until their dependencies are done.",
+    "PH-381 next planning entry depends on PH-376 and is proposed at this stage; the final evidence commit after reviewer pass may set PH-376 done and PH-381 ready, matching the predecessor pattern.",
+    "No product code, migration, contract schema, engineering-gate or canonical change; deliverables are specs, task board entries and planning/status docs only."
+  ],
+  "unverified": [
+    "Actual batch D implementation, real CI/PG/browser/production acceptance and release qualification are not executed by this planning slice.",
+    "Independent S review and CI/PR pending."
+  ]
+}
