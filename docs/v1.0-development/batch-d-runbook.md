@@ -75,10 +75,10 @@
 - 状态：**blocked**。
 
 ### D-09/D-10 批次 C 收尾与发布资格
-- 前置：PH-335/357/367/372 done（当前 PH-335/357 ready、PH-367/372 proposed → blocked）。
+- 前置：PH-335/357/367/372 **均 done**（L1+L2 汇总已回填）。
 - 步骤：按 PH-366 §6 收集 V1-OPS-01–06 证据→回填 `docs/verification.md`→输出 gate/缺口/豁免→三方签批。
 - 命令：`python scripts/projectctl.py check` + `python -m unittest tests.test_projectctl tests.test_governance -v` + 各 ops 脚本/CI PG URL；判据：每项 pass/无 not_run 遗留；失败处置：blocked 不发布。
-- 状态：**blocked/not_run**（PH-357 证据回填未执行；发布资格 blocked）。
+- 状态：**blocked**（gate 原因：L3 CI/PG、L4 浏览器、L5 生产/客户验收 not_run；PH-394 终审未做；PH-377 后续 proposed）。
 
 ### D-11 多币种后续重定
 - 前置：PH-388（ready，汇率反查/对账）+ PH-318/326 范围重定决策（当前 blocked）。
