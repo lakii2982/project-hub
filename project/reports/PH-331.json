@@ -13,9 +13,9 @@
       "evidence": "Actual run in /tmp/ph331-planning on main c69c8ee with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base c69c8ee --task PH-331",
+      "command": "python scripts/projectctl.py verify-change --base 987ec1e --task PH-331",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD 521943a: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"521943a5d7aa4a50b76502ed282deecd65d0990f\",\"count\":20,\"errors\":null}, exit 0; all 20 changed files inside BASE PH-331 allowed_paths and review.status=pass with the reviewer's name."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 20 files inside BASE PH-331 allowed_paths (post-rebase gate rerun)."
     }
   ],
   "review": {
@@ -39,7 +39,8 @@
     "ROADMAP batch C route: added the M01–M15 mapping and the PH-332→333→334→335 dependency/sequence table; no product behavior or gate change.",
     "Planning-slot state convention: PH-331 is kept in_review with handoff and PH-336 is proposed with blocker 'PH-331 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-331 done and PH-336 ready and clear the blocker.",
     "Numbering basis: BASE max PH-331; checked remote branches/PRs (PH-252 feature branch and dependabot only) - no >=PH-332 ids exist, so PH-332..PH-336 are continuous and free.",
-    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands.",
+    "Lead integration rebase (c69c8ee -> 987ec1e) after PH-252 merged: docs/verification.md kept main entries plus PH-331 entry; manifest.active_handoff -> PH-331. Gates rerun green."
   ],
   "unverified": [
     "PH-321/PH-322 are now ready but not implemented/written; their FX/close write-side code does not exist yet.",
