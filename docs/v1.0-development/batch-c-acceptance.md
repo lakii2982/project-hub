@@ -86,3 +86,20 @@ python manage.py verify_integrity --json
 - 本文件为验收方法/骨架，不含任何通过结论；截至产出时：PH-321/322/330/252/320 等写侧与批次 C 演练均未全部合入，M03/M06/M10/M11/M12/M13/M14/M15 的相关行标 not_run/blocked。
 - 真实部署、升级、备份恢复、PG 并发、性能基线以 PH-333/334/335 及发布前演练为准；本文件不替代 CI/PR、浏览器实机或生产证据。
 - 责任人具体人员、环境清单、客户数据不进入本文件；按 `docs/engineering/` 与真实发布记录维护。
+
+## 6. 可执行验收脚本契约（PH-345 冻结，供 PH-333/334/335 实现）
+
+本文件 §4 的 V1-OPS-01–06 已由 PH-345 冻结为可执行脚本契约，详见：
+- `docs/engineering/ops-runbook.md`：通用 evidence envelope、退出码（0 pass/2 not_run/3 fail/4 环境/5 安全拒绝）、角色/前置/幂等/失败处置，以及 `ops_preflight`/`ops_tls_probe`/`ops_upgrade`/`ops_backup_verify`/`ops_restore_rehearsal`/`ops_health_capacity`/`ops_pg_concurrency` 的输入/输出/证据/判据。
+- `docs/engineering/upgrade-recovery.md`：升级前置、执行时序、结构兼容回退、备份/隔离恢复演练与 RPO/RTO 证据契约。
+
+| V1-OPS | 脚本 | 实现片 | 当前状态 |
+| --- | --- | --- | --- |
+| 01 安装/诊断 | `ops_preflight` | PH-333 | not_run |
+| 02 TLS/安全 | `ops_tls_probe` | PH-333 | not_run |
+| 03 升级/回退 | `ops_upgrade` | PH-333 | not_run |
+| 04 备份/恢复 | `ops_backup_verify`/`ops_restore_rehearsal` | PH-333 | not_run |
+| 05 健康/容量/积压 | `ops_health_capacity` | PH-335 | blocked（等 PH-333/334） |
+| 06 PG 多连接并发 | `ops_pg_concurrency` | PH-334 | blocked（等 PH-330） |
+
+纪律：本契约不记录任何通过；`not_run`/`blocked` 必须如实标注；脚本实现后只有真实执行才能产生 L2/L3/L5 证据，SQLite 不得冒充 PG 并发，演练/文档不得冒充生产。
