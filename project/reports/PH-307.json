@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Post-independent-review actual run (reviewed HEAD f668724, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":233}, exit 0; PH-307 done with handoff and PH-311 ready on PH-307 done."
+      "evidence": "Final Lead integration rerun after rebase onto 1250dbe: {\"command\":\"check\",\"ok\":true,\"task_count\":233} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -13,9 +13,9 @@
       "evidence": "Actual run in /tmp/ph307-planning on main a352b4a with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base a352b4a --task PH-307",
+      "command": "python scripts/projectctl.py verify-change --base 1250dbe --task PH-307",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD 4c7fac3: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"4c7fac3f9c04f5976152559f6824750d9b1c5a28\",\"count\":10,\"errors\":null}, exit 0; all 10 changed files inside BASE PH-307 allowed_paths and review.status=pass with the reviewer's name."
+      "evidence": "Final Lead integration rerun after rebase onto 1250dbe (PH-284 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 11 changed files all inside BASE PH-307 allowed_paths."
     }
   ],
   "review": {
@@ -36,7 +36,8 @@
     "Planning-slot state convention: PH-307 is kept in_review with handoff and PH-311 is proposed with blocker 'PH-307 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-307 done and PH-311 ready and clear the blocker.",
     "PH-309 is registered ready because all its read-only source slices are done; its spec includes the canonical pmo_plugins/delivery/domain_metadata.py route declaration up front. PH-308/PH-310 are proposed with explicit still-proposed upstream blockers.",
     "Numbering basis: BASE max PH-307; checked remote branches and open PRs (EXP-line #143/#144 etc.) - no >=PH-308 ids exist, so PH-308..PH-311 are continuous and free.",
-    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands.",
+    "Lead integration rebase (a352b4a -> 1250dbe) after PH-284 merged: docs/verification.md kept main entries plus the PH-307 entry; manifest.active_handoff -> PH-307. Gates rerun green."
   ],
   "unverified": [
     "PH-308/PH-309/PH-310 are registered only; no code/ADR/tests/CI evidence exists yet (PH-309 is ready for implementation, PH-308/310 proposed).",
