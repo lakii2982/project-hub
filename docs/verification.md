@@ -1021,6 +1021,6 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 基线 64f94ad（PH-370 合入；注册后 count 298）。纯规划/契约文字片：
 1. **晋级 3 项（依赖全 done）**：PH-335 健康/容量/积压汇总验收（deps PH-333/334/350 done）；PH-357 演练证据回填与验收汇总（deps PH-347/348/349/350/352 done）；PH-368 容量/健康后续契约（dep PH-350 done）。
 2. **保持 proposed（精确 blocker）**：PH-367/PH-372 等 PH-357；PH-338/353 等 PH-289/PH-362；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151；PH-318/326 保持重定/关闭待决。
-3. **新登记（PH-374–376 连续）**：PH-374 到期扫描/待办只读实现首片（ready，消费 PH-364 契约）；PH-375 批次 D 验收矩阵与执行 runbook（ready，docs-only）；PH-376 下一规划槽（proposed，待 PH-373 done）。count 295→298。
+3. **新登记/删除**：原 PH-374 reminder 只读实现因与 PH-355 重复且绕过 PH-179/183/151 blockers，按复核**删除**（PH-355 保持唯一 reminder 实现任务，proposed 不变）；保留 **PH-375**（ready，批次 D 验收矩阵与 runbook，deps PH-352/366/327 done）与 **PH-376**（proposed，下一规划槽）。count 295→297，编号 374 留空并说明。
 4. **ROADMAP** 新增批次 C 收尾/D 批规划节；发布资格仍按 PH-366（PH-357/367/372 未完成，不得宣称就绪）。
-5. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-335/357/368/374/375 未实现；PH-371/362 未 done；发布资格不完整。
+5. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-335/357/368/375 未实现；PH-355/371/362 未 done；发布资格不完整。

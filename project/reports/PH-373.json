@@ -1,11 +1,11 @@
 {
   "task_id": "PH-373",
-  "summary": "Consumed the PH-373 planning slot on main 64f94ad (PH-370 merged; 298 tasks after registration). With PH-333/PH-334/PH-350 now done, three batch C tasks were promoted ready because all dependencies are done and no capability is duplicated: PH-335 health/capacity/backlog summary acceptance (deps PH-333/334/350 done), PH-357 drill-evidence backfill and acceptance summary (deps PH-347/348/349/350/352 done) and PH-368 capacity/health follow-up contract (dep PH-350 done). Remaining blockers were refreshed precisely: PH-367/PH-372 wait on PH-357 (ready, not done); PH-338/353 wait on PH-289 (proposed) and PH-362 (ready, not done); PH-339/354 wait on PH-272; PH-340/355 wait on PH-301/314/179/183/151. PH-371 and PH-362 stay ready but unimplemented (PH-371 is being implemented; PH-362 contract task). Next batch registered continuously: PH-374 reminder/due-scan read-only implementation consuming the PH-364 contract (ready on done PH-364/291/304/309/281), PH-375 batch D acceptance matrix + execution runbook (ready, docs-only on done PH-352/366/327) and PH-376 as the next planning slot (proposed until PH-373 done). ROADMAP gained the batch C closure/batch D section including the honest release-status note (PH-357/367/372 incomplete; no release-readiness claim). No product code, migration, scaffold or contract-schema change was made.",
+  "summary": "Consumed the PH-373 planning slot on main 64f94ad (PH-370 merged; 298 tasks after first registration, then 297 after removing the duplicate PH-374). With PH-333/PH-334/PH-350 now done, three batch C tasks were promoted ready because all dependencies are done and no capability is duplicated: PH-335 health/capacity/backlog summary acceptance (deps PH-333/334/350 done), PH-357 drill-evidence backfill and acceptance summary (deps PH-347/348/349/350/352 done) and PH-368 capacity/health follow-up contract (dep PH-350 done). Remaining blockers were refreshed precisely: PH-367/PH-372 wait on PH-357 (ready, not done); PH-338/353 wait on PH-289 (proposed) and PH-362 (ready, not done); PH-339/354 wait on PH-272; PH-340/355 wait on PH-301/314/179/183/151. PH-371 and PH-362 stay ready but unimplemented. Next work registered: PH-375 batch D acceptance matrix + execution runbook (ready, docs-only on done PH-352/366/327) and PH-376 as the next planning slot (proposed until PH-373 done). The originally registered PH-374 reminder read-only implementation was removed by review because it duplicated PH-355's reminder-ref/scan implementation and bypassed PH-355's blockers (PH-179/183/151); PH-355 remains the single reminder task, untouched and proposed on its real chain. Task ids are 375/376 with a documented gap at 374 (no renumbering churn). ROADMAP gained the batch C closure/batch D section including the honest release-status note (PH-357/367/372 incomplete; no release-readiness claim). No product code, migration, scaffold or contract-schema change was made.",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
       "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 46ee78f (BASE 64f94ad, PH-373 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":298}, exit 0; final entry recorded after the review pass."
+      "evidence": "Pre-review actual run at candidate HEAD (BASE 64f94ad, PH-373 in_review after removing duplicate PH-374): {\"command\":\"check\",\"ok\":true,\"task_count\":297}, exit 0; final entry recorded after the review pass."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -15,26 +15,28 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 64f94ad --task PH-373",
       "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 46ee78f: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all changed files (spec syncs PH-335/357/368/367/372, new specs PH-374..376, tasks/manifest/ROADMAP/verification/report/handoff) inside BASE PH-373 allowed_paths."
+      "evidence": "Pre-review actual run: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all changed files (spec syncs PH-335/357/368/367/372, new specs PH-375/PH-376, deleted PH-374 spec, tasks/manifest/ROADMAP/verification/report/handoff) inside BASE PH-373 allowed_paths."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
+    "reviewer": "independent PH-373 next-planning-slot reviewer (fresh context, read-only)",
     "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (PH-335/357/368 promotions, blocker refreshes, PH-374/375/376 registration and ROADMAP status); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "findings": [
+      "BLOCKER - PH-374 duplicates the already-registered PH-355 implementation slice and bypasses its unmet dependencies: PH-355 is the reminder refs/scan skeleton implementation (scope: reminder_ref shape, read-only scan, dedupe, permissions/disabled; same core/reminder_services.py, core/reminder_scan.py, core/views.py, core/forms.py, reminders template, scan_due command, tests/test_v1_reminders*.py), but it remains proposed because PH-179/PH-183/PH-151 are not done. PH-374 is registered ready with nearly the same scope and whitelist and only PH-364/291/304/309/281 deps, so it lets the same implementation start while PH-355's blockers are bypassed and creates two tasks competing for the same files. This is not a true promotion. Fix: either (a) keep a single implementation task (fold PH-374 into PH-355 or remove PH-374) and do not mark ready until PH-355's real deps are done, or (b) narrow PH-374 to a strictly non-overlapping subset whose DoR does not require PH-179/183/151, give it a disjoint whitelist/acceptance, and rewrite PH-355 to avoid the duplicate scope; do not leave both ready/proposed implementations with the same files.",
+      "OTHER CONTENT CHECKED: PH-335 (deps PH-333/334/350 all done), PH-357 (deps PH-347/348/349/350/352 all done), PH-368 (dep PH-350 done) and PH-375 (deps PH-352/366/327 done) are genuine ready promotions with specs/whitelists/acceptance; PH-367/372 remain blocked on PH-357; PH-338/353 wait PH-289/PH-362, PH-339/354 wait PH-272, PH-340/PH-355 wait PH-301/314/179/183/151; PH-318/326 remain proposed with 'delivered by PH-321/324, re-scope or close next slot' blockers; PH-376 is proposed with dep PH-373 and an accurate blocker. Task count 298 is unique/continuous (PH-374..376 new); no placeholders; no product code/migration/schema/CI-gate change; 14 files within the PH-373 whitelist; check ok=298; governance 23 OK; verify-change --base 64f94ad --task PH-373 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: REJECTED - 1 blocker: PH-374 is a ready duplicate of PH-355's reminder-refs/scan implementation with the same whitelist/files, while PH-355 stays proposed on PH-179/183/151; this bypasses the real dependencies and creates overlapping implementation tasks. Reviewed HEAD cead4d7 (BASE 64f94ad) in /tmp/ph373-planning; task_count 298; genuine PH-335/357/368/375 promotions and PH-367/372/338/353/339/354/340/355 blockers are correct; PH-318/326 re-scope notes and PH-376 next-slot blocker present; 14 files within whitelist; no code/migration/schema; check ok=298; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope. Merge/narrow PH-374 and update PH-355/whitelist."
   },
   "deviations": [
+    "Review-blocker fix (old->new): the originally registered PH-374 reminder/due-scan implementation duplicated the existing PH-355 task (same core/reminder_services.py, reminder_scan.py, views/forms/template, scan_due and test_v1_reminders* whitelist) while bypassing PH-355's blockers PH-179/183/151. Per review, PH-374 was removed entirely; PH-355 remains the single reminder implementation task, proposed on its real chain, and no overlapping ready task/whitelist exists. Task count is 297 with a documented id gap at PH-374 (PH-375/PH-376 kept; no renumbering to avoid churn).",
     "PH-335/357/368 were promoted because all dependencies are done and their scope is not duplicative; PH-357 will perform the evidence backfill per PH-366, PH-335 is the V1-OPS-05 summary acceptance and PH-368 the capacity follow-up contract.",
     "No other promotion was made: PH-367/372 still wait on PH-357 (ready, not done), PH-338/353 wait on PH-289/PH-362, PH-339/354 wait on PH-272 and PH-340/355 on the notification chain. PH-318/326 remain intentionally blocked for re-scope because PH-321/324 delivered the multi-currency/FX capability.",
-    "PH-374 is a new ready read-only implementation slice consuming the frozen PH-364 reminder contract; PH-375 is a ready docs-only batch D acceptance/runbook; PH-376 is the next planning slot (proposed until PH-373 done).",
-    "PH-371 (ready) and PH-362 (ready) are not yet done; the slot does not assume their completion and leaves their tasks untouched.",
-    "Numbering basis: BASE max PH-373; no >=PH-374 branch/PR exists; PH-374..PH-376 are continuous and free.",
+    "PH-375 is a ready docs-only batch D acceptance/runbook; PH-376 is the next planning slot (proposed until PH-373 done).",
     "No placeholder strings or non-executable acceptance commands; no code/migration/schema/gate changes."
   ],
   "unverified": [
-    "PH-335/357/368/374/375 are ready but unimplemented; no behavior/tests/evidence exist yet for them.",
+    "PH-335/357/368/375 are ready but unimplemented; no behavior/tests/evidence exist yet for them.",
     "PH-371 and PH-362 are ready but not done; PH-367/372 and the invoice/import/insights/notification chains remain blocked.",
     "Batch C release qualification is still incomplete (PH-357/367/372 not done); no release-readiness claim is made.",
     "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."

@@ -12318,53 +12318,6 @@
       "handoff": "project/handoffs/PH-373.md"
     },
     {
-      "id": "PH-374",
-      "title": "到期扫描/待办只读实现首片（PH-364 契约消费：reminder refs/扫描/去重）",
-      "kind": "feature",
-      "risk": "S",
-      "status": "ready",
-      "priority": 2,
-      "milestone": "v1.0.0",
-      "depends_on": [
-        "PH-364",
-        "PH-291",
-        "PH-304",
-        "PH-309",
-        "PH-281"
-      ],
-      "spec": "project/specs/PH-374.md",
-      "allowed_paths": [
-        "core/reminder_services.py",
-        "core/reminder_scan.py",
-        "core/views.py",
-        "core/forms.py",
-        "core/templates/core/reminders.html",
-        "core/management/commands/scan_due.py",
-        "pmo_plugins/delivery/domain_metadata.py",
-        "pmo_plugins/delivery/urls.py",
-        "tests/test_v1_reminders.py",
-        "tests/test_v1_reminders_http.py",
-        "project/tasks.json",
-        "project/manifest.json",
-        "docs/delivery-status.md",
-        "docs/verification.md",
-        "project/reports/PH-374.json",
-        "project/handoffs/PH-374.md"
-      ],
-      "acceptance": [
-        "python scripts/projectctl.py check",
-        "python manage.py check",
-        "python manage.py makemigrations --check --dry-run",
-        "python manage.py test tests --verbosity 1",
-        "python manage.py verify_integrity --json",
-        "python manage.py test tests.test_v1_reminders tests.test_v1_reminders_http --verbosity 1"
-      ],
-      "github_issue": null,
-      "owner": null,
-      "blockers": [],
-      "handoff": null
-    },
-    {
       "id": "PH-375",
       "title": "批次 D 验收矩阵与执行 runbook（docs-only：剩余 1.0 缺口方法论）",
       "kind": "docs",
