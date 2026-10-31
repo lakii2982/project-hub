@@ -1,0 +1,35 @@
+{
+  "task_id": "PH-300",
+  "summary": "项目关账/结项前置契约冻结 ADR（docs-only）：新增 docs/adr/0017-project-close-contract.md，冻结项目结项状态机（active→closing→closed→reopened，append-only 结论、重复结项拒绝、公司锁/request_token/并发一胜）、结项前置核对清单（合同/变更终止、结算/未清与覆盖、收入配对、成本/手续费、现金对账、时间/导入、期间关期，引用 PH-275/283/284/280/288/269/274 与 ADR 0016）、未清项处理（必须经既有核销/退款/退回/关闭命令清零，不直接改 OpenItem；结项不代写）、结项后写拒绝与更正（owner 服务按项目状态拒绝；只走负值冲销/撤核/撤转/撤分类或明确重新开项）、只读结项核对投影（缺失 null+missing、不建第二 owner、history_read）、权限/幂等/审计与并发。同步更新 tasks.json 的 PH-322 blocker 指向 ADR 0016/0017；不写代码/迁移/schema/canonical topic/command。编号核验：ADR 叶 0014，0015 由 PH-293 发票 ADR 占用，0016/0017 为 PH-299/PH-300 冻结编号。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=245; PH-300 in_review with owner/handoff; ADR path inside the 8-path whitelist; no path/acceptance schema issues."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-300 project-close ADR reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: ADR 0017 freezes the project-close state machine, precondition checklist across contract/settlement/revenue/cost/cash/time/import/period (referencing PH-275/283/284/280/288/269/274 and ADR 0016), open-item handling via existing owner commands, post-close write rejection/correction paths, read-only close reconciliation with null+missing and no second owner, role/idempotency/concurrency matrix, numbering basis (0016/0017 with 0015 reserved by the invoice ADR) and the PH-322 blocker pointer. projectctl check and the 23-test governance suite pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "ADR file name follows the PH-300 spec exact whitelist (docs/adr/0017-project-close-contract.md), as confirmed by the Lead; no alternate shorthand is used.",
+    "Numbering basis: docs/adr leaf is 0014; 0015 is reserved by the PH-293 invoice tax/red-reversal ADR task; PH-299 freezes 0016 and PH-300 freezes 0017 per their specs.",
+    "The ADR is docs-only: no code, migration, table, contract schema, canonical topic/command, route or runtime behavior is added; PH-322 remains proposed and its blocker now points at ADR 0016/0017.",
+    "PH-300 spec itself was not edited (its whitelist allows it but no contract text needed changing); the ADR is the frozen deliverable and the tasks blocker is the only registry change besides governance files."
+  ],
+  "unverified": [
+    "This slice is docs-only: no runtime, browser, PG or migration verification applies; the implementation must re-validate the ADR against the actual BASE in PH-322.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "Project close implementation, project status writes, archive files/export, notification, multi-currency and customer portal remain unimplemented (PH-322 proposed).",
+    "PH-299 (period close/forecast ADR) is a separate slice and not covered here; PH-322 stays blocked until both ADRs and the implementation prerequisites are done."
+  ]
+}

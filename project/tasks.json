@@ -9449,7 +9449,7 @@
       "title": "项目关账（WP-PROJECT-CLOSE）首片：项目结项/关账前置与只读结项核对冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9478,7 +9478,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-300.md"
     },
     {
       "id": "PH-301",
