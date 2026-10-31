@@ -2,16 +2,32 @@
   "task_id": "PH-386",
   "summary": "后续交付独立规划入口 + 任务板卫生 on BASE 9830b37. Hygiene with evidence: (1) close stale merged slots PH-329 (PR #204), PH-336 (#208), PH-341 (#213), PH-367 (#243), PH-371 (#244) to done with report review pass/merged commits; (2) cancel multicurrency legacy PH-318/PH-326 as superseded by PH-324 canonical (#203) and PH-321 FX/implementation (#211), transferring remaining FX-history reverse-lookup/reconciliation scope to new PH-388; (3) promote PH-372 batch C release-gate judgment to ready now that PH-350/PH-357/PH-367 are done; (4) keep PH-141 proposed despite PH-140/PH-210 done because its DoR is unclosed (trusted source resolver/approval/permission/book/scope/stable consumption mapping, locked_through/posting_period/open-period adaptation, unique audit/outbox owner; core/plugin_sdk/{sources,posting,periods}.py and tests/test_v1_kernel.py do not exist), with an explicit blocker; (5) recheck legacy primary chain PH-179/PH-181/PH-183/PH-185/PH-151 and state their deps are not complete (PH-170–184 mostly proposed, PH-110 only ready), so they stay proposed; (6) cancel legacy v0.3.0 duplicates PH-006/PH-009/PH-011 (covered by current contracts/costing/time plugin implementations) and PH-014 (notification scope transferred to PH-301/PH-340/PH-355/PH-380/PH-385 chain). Registers continuous PH-387 batch D-02 tax→costing acceptance execution (ready; deps PH-371 done; evidence-only), PH-388 multicurrency FX-history reverse-lookup/reconciliation follow-up (proposed; first freeze DoR/remaining scope), PH-389 D-03/04 invoice/import acceptance execution (proposed), PH-390 D-05/06 insights acceptance execution (proposed), and PH-391 next independent planning entry (proposed; depends on PH-386; to be set ready after PH-386 closes). Updates ROADMAP/delivery-status/verification/specs/tasks/manifest; no product code, migration, contract-schema, CI-gate or canonical change.",
   "tests": [
-    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":312}. Includes closures/cancellations, PH-372 ready, PH-387 ready and PH-388–391 proposed; dependency/status/allowlist/spec checks pass."},
-    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests, OK."},
-    {"command": "python scripts/projectctl.py verify-change --base 9830b37 --task PH-386", "result": "not_run", "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after the independent review pass."}
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":312}. Includes closures/cancellations, PH-372 ready, PH-387 ready and PH-388–391 proposed; dependency/status/allowlist/spec checks pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 9830b37 --task PH-386",
+      "result": "pass",
+      "evidence": "Actual run after the reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-386 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
+    }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Independent S review pending. Verify each closure/cancellation has actual evidence (merged PR/commit/report or current implementation), no business task is closed without evidence, PH-372 is promoted only on all-done deps, PH-141 stays proposed with its concrete DoR blocker, legacy primary-chain deps are correctly described, PH-006/009/011/014 cancellations have transfer/coverage evidence, PH-387–391 are continuous/unique with concrete specs/DoR/allowlists/executable acceptance, PH-391 is proposed until PH-386 closes, ROADMAP/docs/tasks/manifest are consistent, and no code/migration/schema/gate/canonical change. Implementer does not self-pass."
+    "reviewer": "independent PH-386 task-board hygiene/next-planning reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "HYGIENE EVIDENCE: PH-329/336/341/367/371 are closed done only where their PRs are merged (#204/#208/#213/#243/#244) and their reports/verify-change evidence is present; PH-318/326 are cancelled with the delivered PH-324/#203 and PH-321/#211 coverage cited and the remaining FX history/reconciliation scope explicitly transferred to PH-388; legacy PH-006/009/011 are cancelled as covered by current contracts/costing/time plugins and PH-014 notification scope is transferred to PH-301/340/355/380/385. No delivered capability is claimed for cancelled proposals.",
+      "DEPENDENCY/PROMOTION CHECK: PH-372 is promoted ready only after PH-350/357/367 all done; PH-141 remains proposed with concrete DoR blockers (missing trusted source resolver/approval/book/scope mapping, locked_through/posting_period/open-period authority, unique audit/outbox owner, missing kernel files/tests); PH-179/181/183/185/151 remain proposed with refreshed non-done deps; PH-387 is ready only on PH-371 done as a D-02 evidence-only acceptance slice; PH-388/389/390 wait their exact predecessors; PH-391 is proposed on PH-386 and will only become ready after PH-386 done.",
+      "CONTENT/GATES: task_count 312 unique/continuous PH-387..PH-391; ROADMAP batch C/D status, docs/verification and delivery-status are consistent; no product code/migration/schema/CI-gate change; 16 changed files within PH-386 allowed paths; no placeholders; check ok=312; governance 23 OK; verify-change --base 9830b37 --task PH-386 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass. Final evidence must set PH-386 done/PH-391 ready."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD d24527f (BASE 9830b37) in /tmp/ph386-planning, worktree clean; 16 files within PH-386 allowed paths; task_count 312 unique continuous PH-387..PH-391. Closures cite merged PRs/reports; PH-318/326 cancellations transfer remaining scope to PH-388; PH-372 ready only on all-done deps; PH-141 and legacy deps kept proposed with precise blockers; PH-387 ready on PH-371 done; PH-388/389/390 proposed; PH-391 proposed on PH-386; no code/migration/schema; check ok=312; governance 23 OK; verify-change only review gate, no path_out_of_scope. Independent reviewer PASS (d24527f): 16 files within PH-386 allowlist, task_count 312 unique continuous PH-387..PH-391; closures cite merged PRs/reports; PH-318/326 transfers remaining scope to PH-388; PH-372 ready on all-done deps; PH-141/legacy deps kept proposed with precise blockers. Final evidence commit records the actual verify-change pass."
   },
   "deviations": [
     "PH-371 is marked done as extra hygiene because its implementation PR #244 is merged and its report review is pass with verify-change pass; the Lead note called it 'under fix review', so this closure is explicitly evidence-based and reversible if another fix is filed.",
