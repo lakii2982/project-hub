@@ -23,9 +23,9 @@
       "evidence": "Final rebased run at BASE 5361a09: Ran 1090 tests in ~128s, FAILED (failures=5, errors=3, skipped=69) — the known macOS/DRF environment baseline (5F+3E), no new failure and no PH-303 regression."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base a352b4a --task PH-303",
-      "result": "not_run",
-      "evidence": "Entry will be replaced after the independent review/record. Pre-review expected to pass path checks; acceptance declarations are already recorded."
+      "command": "python scripts/projectctl.py verify-change --base 5361a09 --task PH-303",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD d5f21bd: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"d5f21bd2f8420272b6e4316aa9d36009bb4940f1\",\"count\":6,\"errors\":null}, exit 0; all 6 changed files inside BASE PH-303 allowed_paths and review.status=pass with the reviewer's name."
     }
   ],
   "review": {

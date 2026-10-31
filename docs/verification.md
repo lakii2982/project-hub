@@ -689,4 +689,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 
 基线 5361a09（PH-307 合入后，PH-303 risk=S）。test-only 修复：`tests/test_v1_ops_reconciliation_overview_http.py::test_pm_page_scope_and_cash_missing` 原用 `assertNotContains(response, 'C8')` 断言 finance 项目合同编码不可见，但 `'C8'` 会随机命中 CSRF/十六进制文本（PH-281 PR 首次 CI 失败、二次通过）。修复：合同编码改为唯一长编码 `CT-HIDDEN-C8-9f3a`，并改为断言派生 payload（pm 计数=1、pm refs 含可见变更且不含隐藏变更、响应不含完整长编码；owner 计数=2 且含隐藏变更 ref）；保留 `cash_not_scoped_to_project` 与 pm 范围业务断言。未改产品代码/迁移/其它测试/门禁。risk=S 由 PH-307 规划槽修正（白名单含 tasks/manifest 治理关键路径）。
 
-实跑（候选 HEAD，BASE 5361a09）：同一 HTTP 测试连续运行 3 次均 OK；scoped 服务测试 10 tests OK；全量 1090 tests=5F+3E+69 skips（既有 macOS/DRF 环境失败，无新增）；projectctl check ok=true/task_count=233；23 项治理 OK；verify-change 待独立 S 复核后记录。未验证：PG/浏览器（test-only 无要求）；review pending。
+实跑（候选 HEAD，BASE 5361a09）：同一 HTTP 测试连续运行 3 次均 OK；scoped 服务测试 10 tests OK；全量 1090 tests=5F+3E+69 skips（既有 macOS/DRF 环境失败，无新增）；projectctl check ok=true/task_count=233；23 项治理 OK；独立 S 复核 PASS；verify-change --base 5361a09 --task PH-303 ok=true、6 文件全白名单、无 errors。未验证：PG/浏览器（test-only 无要求）；生产/UAT 不适用。
