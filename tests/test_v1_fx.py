@@ -3,7 +3,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import IntegrityError, connection, transaction
+from django.db import DatabaseError, connection, transaction
 from django.test import TestCase
 
 from pmo_plugins.contracts import fx_services
@@ -105,13 +105,16 @@ class FxRateSnapshotTests(FxFixture, TestCase):
             snapshot.save()
         with self.assertRaises(ValidationError):
             snapshot.delete()
-        with transaction.atomic():
-            with self.assertRaises(IntegrityError):
+        # PostgreSQL: the atomic block must be inside assertRaises so the rejected
+        # statement propagates through the savepoint and Django rolls it back;
+        # otherwise the outer TestCase transaction stays aborted.
+        with self.assertRaises(DatabaseError):
+            with transaction.atomic():
                 with connection.cursor() as cursor:
                     cursor.execute('UPDATE contracts_fxratesnapshot SET reference=%s WHERE id=%s',
                                    ['hacked', row['ref']['id'].replace('-', '')])
-        with transaction.atomic():
-            with self.assertRaises(IntegrityError):
+        with self.assertRaises(DatabaseError):
+            with transaction.atomic():
                 with connection.cursor() as cursor:
                     cursor.execute('DELETE FROM contracts_fxratesnapshot WHERE id=%s',
                                    [row['ref']['id'].replace('-', '')])
