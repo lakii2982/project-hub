@@ -1,0 +1,52 @@
+{
+  "task_id": "PH-348",
+  "summary": "批次 C-2b 备份/恢复演练执行（V1-OPS-04 首片）：实现 scripts/ops/backup_drill.py 与 scripts/ops/restore_drill.py，按 PH-345 契约产出 evidence envelope/退出码/幂等/脱敏。backup_drill：SQLite 只读快照（sqlite3.backup，源库 mode=ro）、PG pg_dump（客户端缺失则 not_run）、可选附件树复制与逐文件哈希、PRAGMA integrity_check/表行数/schema 哈希/页数、manifest（快照 SHA256/大小/保留/RPO-RTO 目标）；生产 profile 的 execute 拒绝（exit 5），dry_run 零快照。restore_drill：校验 manifest/快照 SHA256，仅在隔离空目标目录恢复（非空/生产 execute 拒绝），恢复后 integrity_check/表行数/schema/附件哈希对比，实测 RPO（manifest.created_at→完成）与 RTO（恢复耗时），备份与源库不变。测试 tests/test_v1_ops_backup_restore.py 11 项覆盖 dry_run 零写、execute manifest/hash/行数、附件、隔离恢复/RPO-RTO/源不变、缺库 not_run、生产拒绝、快照篡改 fail、缺 manifest not_run、幂等重跑、PG 工具缺失 not_run 且不泄露密码。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=283; PH-348 in_review with owner/handoff; scripts/ops/backup_drill.py, scripts/ops/restore_drill.py and tests/test_v1_ops_backup_restore.py are inside the PH-348 whitelist; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified pre-existing W003/W342 warnings only, 0 errors."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 on BASE cbb84c2: Ran 1235 tests, FAILED (failures=5, errors=3, skipped=69) => 1158 passed. All 8 failures/errors are exactly the known macOS environment limits; no new failure class after the manifest-stamp fix."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_backup_restore --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 11 tests, OK => 11 passed. Covers dry_run zero-write, execute snapshot/manifest/hash/row counts, attachments hash/restore, isolated restore with table/schema/RPO/RTO checks and source untouched, missing DB not_run, production execute refusal (exit 5), tampered snapshot fail (exit 3), missing manifest not_run, idempotent rerun, PG client-missing not_run without leaking credentials."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-348 backup/restore drill reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: PH-345 contract alignment (envelope/exit codes/roles/preconditions/idempotency/redaction), read-only SQLite snapshot and optional PG pg_dump not_run, attachments hashing, isolated restore with integrity/table/schema/attachment comparison and RPO/RTO, refusal of production execute and non-empty targets, source/backup immutability, no ledger replay/write, and the exact whitelist. projectctl check, manage.py check, full suite (known macOS baseline only), and scoped 11 tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "This slice implements only the V1-OPS-04 backup/restore drill scripts (backup_drill.py/restore_drill.py); installation/TLS/upgrade (PH-347), PG concurrency (PH-349), health/capacity (PH-335) and production operations remain out of scope.",
+    "SQLite snapshot/restore is fully exercised locally; PostgreSQL paths are contract-complete but only run when pg_dump/pg_restore are available (otherwise explicit not_run exit 2), and real PG restore is left to CI/PH-333/PH-349. SQLite is not presented as PG evidence.",
+    "Evidence is L1 (code exists) + L2 (local automated tests) only; L3 CI/PG, L4 browser and L5 production/customer acceptance were not executed and are not claimed.",
+    "Restore writes only to an empty isolated target directory; production execute is refused (exit 5), non-empty target is refused (exit 3), and the backup/source DB are never mutated.",
+    "The scripts use stdlib sqlite3/subprocess and PH-345 envelope/exit-code semantics; no product code, migration, CI gate or contract schema is changed.",
+    "No real customer/payroll/credential data is included; PG URLs are redacted in evidence and tests assert the password is not present."
+  ],
+  "unverified": [
+    "PostgreSQL backup/restore, real PG version/tooling and RPO/RTO in CI are not executed locally; PG paths are not_run unless client tools are present.",
+    "L3 CI/PG, L4 browser, L5 production/customer acceptance are not performed; only L1/L2 evidence exists.",
+    "Large attachment/object-storage/offsite copy, encryption/key management, backup retention enforcement and scheduled backup automation are not implemented.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD."
+  ]
+}
