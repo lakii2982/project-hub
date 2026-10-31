@@ -23,7 +23,7 @@
       "evidence": "Freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Probe tests create a malformed allocation batch and assert the verifier emits shared_allocation:; the shared-cost/project-budget verifier branches run in the full suite."
     },
     {
-      "command": "python manage.py test tests",
+      "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
       "evidence": "Actual final run: Ran 1204 tests in 128.753s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI authoritative."
     },
