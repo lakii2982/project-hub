@@ -104,7 +104,7 @@ def _totals(lines):
             for field in ('net_cents', 'tax_cents', 'gross_cents')}
 
 
-def _derive_deltas(contract, change_type, draft_content):
+def _derive_deltas(contract, change_type, draft_content, member, effective_on):
     previous = _approved_version(contract)
     if change_type == 'termination':
         if draft_content not in ({}, {'lines': []}):
@@ -112,7 +112,8 @@ def _derive_deltas(contract, change_type, draft_content):
         return {'net_delta_cents': 0, 'tax_delta_cents': 0, 'gross_delta_cents': 0}, []
     if not isinstance(draft_content, dict) or not isinstance(draft_content.get('lines'), list):
         _reject('变更草稿须包含完整的合同配置')
-    normalized = approval_services._normalize_lines(contract, draft_content['lines'])
+    normalized = approval_services._normalize_lines(
+        contract, draft_content['lines'], member=member, effective_on=effective_on)
     new = _totals(normalized)
     old = {field: sum(getattr(line, field) for line in previous.lines.all())
            for field in ('net_cents', 'tax_cents', 'gross_cents')}
@@ -185,7 +186,7 @@ def save_contract_change_draft(member, *, contract_id, change_type, requested_on
             _reject('新建变更不接受已有版本号')
     if existing is not None and (existing.change_type != kind or existing.requested_on != when):
         _reject('变更类型与生效日期创建后不可修改')
-    deltas, normalized = _derive_deltas(contract, kind, draft_content)
+    deltas, normalized = _derive_deltas(contract, kind, draft_content, member, when)
     if provided_deltas is not None:
         if not isinstance(provided_deltas, dict) or set(provided_deltas) != set(deltas):
             _reject('客户端变更差额字段无效')
@@ -285,7 +286,9 @@ def _apply_approved_change(member, change, note):
         contract.save(update_fields=['status', 'terminated_on', 'version'])
         _emit_change_event(member, change, [_change_ref(change), _ref(contract, 'contract')])
         return None
-    normalized = approval_services._normalize_lines(contract, change.draft_content.get('lines'))
+    normalized = approval_services._normalize_lines(
+        contract, change.draft_content.get('lines'), member=member,
+        effective_on=change.requested_on)
     new = _totals(normalized)
     previous = _approved_version(contract)
     old = {field: sum(getattr(line, field) for line in previous.lines.all())
@@ -298,9 +301,12 @@ def _apply_approved_change(member, change, note):
     for candidate in normalized:
         line = ContractLine.objects.create(
             organization=member.organization, contract_version=version,
-            **{key: candidate[key] for key in ('line_no', 'net_cents', 'tax_cents', 'gross_cents')})
+            **{key: candidate[key] for key in (
+                'line_no', 'net_cents', 'tax_cents', 'gross_cents', 'currency',
+                'original_net_cents', 'original_tax_cents', 'original_gross_cents',
+                'fx_rate_ref')})
         selection_id = uuid.uuid4()
-        config = {**candidate['pricing_configuration'], 'currency': 'CNY',
+        config = {**candidate['pricing_configuration'], 'currency': candidate['currency'],
                   'confirmed_by_customer_required': True,
                   'policy_ref': {'policy_id': str(selection_id), 'version': 1}}
         selection = MethodPolicySelection.objects.create(

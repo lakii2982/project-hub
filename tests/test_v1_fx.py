@@ -16,7 +16,7 @@ class FxFixture(ContractChangeFixture):
         super().setUp()
         self.auditor = self.member('auditor')
         self.approved = self.approved_contract()
-        self.line = self.approved.lines.first()
+        self.contract_line = self.approved.lines.first()
 
     def record(self, member=None, **changes):
         values = dict(quote_currency='USD', rate='7.20000000', effective_on=self.today,
@@ -112,7 +112,7 @@ class FxRateSnapshotTests(FxFixture, TestCase):
     def test_contract_line_read_only_original_book_and_missing(self):
         row = self.record()
         lines = fx_services.contract_line_fx_snapshots(self.owner)
-        cny = next(item for item in lines if item['line_ref']['id'] == str(self.line.pk))
+        cny = next(item for item in lines if item['line_ref']['id'] == str(self.contract_line.pk))
         self.assertEqual(cny['currency'], 'CNY')
         self.assertEqual(cny['missing'], [])
         self.assertEqual(cny['conversion']['algorithm_version'], 'legacy_cny_v1')
@@ -165,3 +165,60 @@ class FxWritePreparationTests(FxFixture, TestCase):
             fx_services.prepare_contract_line_fx(
                 self.owner, currency='EUR', original_net_cents=10000,
                 effective_on=self.today)
+
+
+class FxContractWriteIntegrationTests(FxFixture, TestCase):
+    def usd_line(self, fx_ref=None):
+        line = self.line()
+        line.update(currency='USD', original_net_cents=10000, original_tax_cents=600,
+                    net_cents=72000, tax_cents=4320, gross_cents=76320,
+                    fx_rate_ref=fx_ref)
+        line['pricing_configuration']['net_cap_cents'] = 72000
+        line['payment_terms'] = [{'key': 'due', 'condition_type': 'unconditional',
+                                  'gross_cents': 70000}]
+        line['warranty_terms'] = []
+        return line
+
+    def test_non_cny_contract_line_requires_rate_and_saves_original(self):
+        from pmo_plugins.contracts import approval_services
+        from pmo_plugins.contracts.models import ContractLine
+        other = self.make_contract(contract_code='FX1')
+        with self.assertRaises((ValidationError, PermissionDenied)):
+            approval_services.save_version(
+                self.owner, other.pk, lines=[self.usd_line()], effective_on=self.today,
+                contract_reference='无汇率不得写入', request_token=__import__('uuid').uuid4())
+        rate = self.record()
+        version = approval_services.save_version(
+            self.owner, other.pk, lines=[self.usd_line(rate['ref'])], effective_on=self.today,
+            contract_reference='USD 合同依据', request_token=__import__('uuid').uuid4())
+        submitted = approval_services.submit_version(
+            self.owner, version.pk, expected_version=version.version,
+            request_token=__import__('uuid').uuid4())
+        approved = approval_services.review_version(
+            self.finance, submitted.pk, expected_version=submitted.version,
+            request_token=__import__('uuid').uuid4(), decision='approve',
+            review_note='独立核对多币种合同')
+        line = ContractLine.objects.get(contract_version=approved)
+        self.assertEqual(line.currency, 'USD')
+        self.assertEqual(line.original_net_cents, 10000)
+        self.assertEqual(line.original_tax_cents, 600)
+        self.assertEqual(line.original_gross_cents, 10600)
+        self.assertEqual((line.net_cents, line.tax_cents, line.gross_cents),
+                         (72000, 4320, 76320))
+        self.assertEqual(line.fx_rate_ref, rate['ref'])
+
+    def test_change_version_saves_non_cny_line(self):
+        from pmo_plugins.contracts import change_services
+        from pmo_plugins.contracts.models import ContractVersion
+        rate = self.record()
+        change = self.draft_change(lines=[self.usd_line(rate['ref'])])
+        change_services.decide_contract_change(
+            self.finance, change.pk, decision='approved', note='多币种变更',
+            expected_version=change.version, request_token=__import__('uuid').uuid4(),
+            dry_run=False)
+        version = ContractVersion.objects.get(contract=self.contract, status='approved')
+        line = version.lines.get()
+        self.assertEqual(line.currency, 'USD')
+        self.assertEqual(line.original_net_cents, 10000)
+        self.assertEqual((line.net_cents, line.tax_cents, line.gross_cents),
+                         (72000, 4320, 76320))
