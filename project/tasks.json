@@ -10980,7 +10980,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-289（onboarding 导入提交，proposed）done；PH-252/274/320 已 done。PH-289 完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-289（导入提交，proposed）done；PH-252/PH-274/PH-320 已 done；PH-289 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
