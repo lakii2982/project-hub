@@ -1,0 +1,42 @@
+{
+  "task_id": "PH-373",
+  "summary": "Consumed the PH-373 planning slot on main 64f94ad (PH-370 merged; 298 tasks after registration). With PH-333/PH-334/PH-350 now done, three batch C tasks were promoted ready because all dependencies are done and no capability is duplicated: PH-335 health/capacity/backlog summary acceptance (deps PH-333/334/350 done), PH-357 drill-evidence backfill and acceptance summary (deps PH-347/348/349/350/352 done) and PH-368 capacity/health follow-up contract (dep PH-350 done). Remaining blockers were refreshed precisely: PH-367/PH-372 wait on PH-357 (ready, not done); PH-338/353 wait on PH-289 (proposed) and PH-362 (ready, not done); PH-339/354 wait on PH-272; PH-340/355 wait on PH-301/314/179/183/151. PH-371 and PH-362 stay ready but unimplemented (PH-371 is being implemented; PH-362 contract task). Next batch registered continuously: PH-374 reminder/due-scan read-only implementation consuming the PH-364 contract (ready on done PH-364/291/304/309/281), PH-375 batch D acceptance matrix + execution runbook (ready, docs-only on done PH-352/366/327) and PH-376 as the next planning slot (proposed until PH-373 done). ROADMAP gained the batch C closure/batch D section including the honest release-status note (PH-357/367/372 incomplete; no release-readiness claim). No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 46ee78f (BASE 64f94ad, PH-373 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":298}, exit 0; final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph373-planning on main 64f94ad with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 64f94ad --task PH-373",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 46ee78f: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all changed files (spec syncs PH-335/357/368/367/372, new specs PH-374..376, tasks/manifest/ROADMAP/verification/report/handoff) inside BASE PH-373 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (PH-335/357/368 promotions, blocker refreshes, PH-374/375/376 registration and ROADMAP status); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "PH-335/357/368 were promoted because all dependencies are done and their scope is not duplicative; PH-357 will perform the evidence backfill per PH-366, PH-335 is the V1-OPS-05 summary acceptance and PH-368 the capacity follow-up contract.",
+    "No other promotion was made: PH-367/372 still wait on PH-357 (ready, not done), PH-338/353 wait on PH-289/PH-362, PH-339/354 wait on PH-272 and PH-340/355 on the notification chain. PH-318/326 remain intentionally blocked for re-scope because PH-321/324 delivered the multi-currency/FX capability.",
+    "PH-374 is a new ready read-only implementation slice consuming the frozen PH-364 reminder contract; PH-375 is a ready docs-only batch D acceptance/runbook; PH-376 is the next planning slot (proposed until PH-373 done).",
+    "PH-371 (ready) and PH-362 (ready) are not yet done; the slot does not assume their completion and leaves their tasks untouched.",
+    "Numbering basis: BASE max PH-373; no >=PH-374 branch/PR exists; PH-374..PH-376 are continuous and free.",
+    "No placeholder strings or non-executable acceptance commands; no code/migration/schema/gate changes."
+  ],
+  "unverified": [
+    "PH-335/357/368/374/375 are ready but unimplemented; no behavior/tests/evidence exist yet for them.",
+    "PH-371 and PH-362 are ready but not done; PH-367/372 and the invoice/import/insights/notification chains remain blocked.",
+    "Batch C release qualification is still incomplete (PH-357/367/372 not done); no release-readiness claim is made.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
