@@ -39,16 +39,20 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 5763f4a --task PH-334",
-      "result": "not_run",
-      "evidence": "Actual exit 1: only high_risk_review_required (review pending); no task/path/report-shape errors. Final pass record after reviewer pass."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-334 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-334 concurrency rollup reviewer (fresh context, read-only)",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Awaiting independent S review at this HEAD: PH-349 execution referenced rather than reimplemented; V1-OPS-06 evidence matrix honestly marks real-PG/CI/business concurrency not_run; no-DSN/SQLite runs return not_run/exit 2 and never pass; release_ready=false; docs/tests within the PH-334 whitelist; no product code/migration/gate change. projectctl check, manage.py check, governance, full suite (known macOS baseline only) and scoped 16 tests (15 pass +1 PG skip) pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+    "reviewer": "independent PH-334 PG-concurrency rollup reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROLLUP NOT REIMPLEMENTATION: the slice adds only PH-334 rollup contract tests in tests/test_v1_pg_concurrency.py and §5 evidence matrix in docs/engineering/pg-concurrency.md; it calls the existing PH-349 CLI (--dsn/--out/--profile/--mode) and does not copy or alter the probes. The no-DSN run returns exit 2/status not_run with no pass checks, the SQLite DSN run returns exit 2/not_run with an explicit SQLite-rejection note, and the real-PG probe remains skipped with an explicit not_run.",
+      "HONEST BOUNDARY: only L1+L2 local contract evidence is claimed; real PG probe matrix, PG version/connection counts, one-winner-one-rejection, business-level PG concurrency, CI L3, RPO/RTO, capacity and L5 production remain not_run; release_ready=false; SQLite/local results are never presented as concurrency correctness. The §5 matrix matches the code/CLI behavior.",
+      "CONTENT/GATES: no product code/migration/schema/CI-gate change; 7 changed files are within the PH-334 whitelist; no placeholders; task_count 291; check ok=291; manage.py check exit0; governance 23 OK; scoped pg-concurrency tests 16 OK (15 pass + 1 real-PG skip); full suite 1270/5F+3E/70 = known macOS baseline; verify-change --base 5763f4a --task PH-334 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 25d4701 (BASE 5763f4a) in /tmp/ph334-concurrency-rollup, worktree clean; 7 files within the PH-334 whitelist; no product code/migration/schema/gate change. PH-349 CLI reused (not reimplemented); no-DSN and SQLite-DSN both honest not_run/exit2 with no pass; real PG/business concurrency/CI L3/L5 not_run; release_ready=false; check ok=291; governance 23 OK; scoped 16 OK (15 pass +1 skip); full 1270/5F+3E/70 known baseline; verify-change only review gate, no path_out_of_scope."
   },
   "deviations": [
     "This is a rollup acceptance slice only: the PG concurrency implementation/CLI remains PH-349 (done); PH-334 adds rollup contract tests and an evidence matrix, and does not reimplement probes.",
