@@ -107,8 +107,8 @@ PH217月度人工已合入。219拟交付固定节点合同客户验收、管理
 | 切片 | 内容 | 依赖/状态 |
 | --- | --- | --- |
 | PH-332 | M01–M15 验收矩阵与运维 runbook 骨架（docs-only） | deps PH-324/312/313/291/304/309/316 done → **ready** |
-| PH-333 | M15 部署/升级/备份恢复演练（V1-OPS-01–04） | 等 PH-322/321/252/330 done → proposed |
-| PH-334 | PG 多连接安全与并发验收（V1-OPS-06） | 等 PH-322/321/252/330 done → proposed |
+| PH-333 | M15 部署/升级/备份恢复演练（V1-OPS-01–04） | 等 PH-330 done → proposed（PH-322/321/252 已 done） |
+| PH-334 | PG 多连接安全与并发验收（V1-OPS-06） | 等 PH-330 done → proposed（PH-322/321/252 已 done） |
 | PH-335 | 健康/容量/任务积压可见性与性能基线（V1-OPS-05） | 等 PH-333/334 done → proposed |
 | PH-336 | 下一规划槽 | PH-331 done 后置 ready |
 
@@ -120,6 +120,15 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 
 - 批次 A（ADR/契约冻结）已完成合入；批次 B 已合入：PH-324 canonical 币种扩展、PH-252 发票实现首片、PH-312/313 实现前置、PH-317 发票红冲/税额边界收口、PH-332 M01–M15 验收矩阵/runbook 骨架。
 - **ready 实现队列**：PH-320（发票编排后续）、PH-321（多币种实现）、PH-322（关期/结项实现）、PH-325（发票-结算/收入只读对账）。
-- **保持 proposed（精确 blocker）**：PH-330（等 PH-322）、PH-333/334（等 PH-322/321/330）、PH-335（等 PH-333/334）、PH-314（等 PH-301/310/285/179/183）。
+- **保持 proposed（精确 blocker）**：PH-333/334（等 PH-330）、PH-335（等 PH-333/334）、PH-314（等 PH-301/310/285/179/183）。
 - **新登记**：PH-338 发票批量/导入（proposed，等 PH-320/289）、PH-339 insights 读模型实现（proposed，等 PH-272）、PH-340 通知中心实现（proposed，等 PH-301/314）、PH-341 下一规划槽（proposed，PH-337 done 后置 ready）。
+- 验收矩阵仍以 `docs/v1.0-development/batch-c-acceptance.md` 为唯一方法；批次 C 演练/部署/并发/性能在对应实现完成前保持 not_run/blocked。
+
+
+## 批次 B/C 进展（PH-341 规划槽，2026-10-31，BASE 20ffc12）
+
+- PH-322 关期/结项实现已合入 done，PH-330 依赖（PH-313/PH-322）全 done → **PH-330 分摊/预算 ETC 实现首片晋级 ready**（spec 状态/依赖已同步；白名单/DoR 完整）。
+- PH-333/334 依赖中 PH-322/321/252 已 done，仍等 PH-330 done → 保持 proposed（blocker 已刷新）；PH-335 等 PH-333/334 → proposed；PH-314 等 PH-301/310/285/179/183 → proposed。
+- **新登记**：PH-342 发票批量/导入实现前置（proposed，等 PH-320/289）、PH-343 insights 读模型实现前置（proposed，等 PH-272）、PH-344 通知中心契约前置（proposed，等 PH-301/314）、PH-345 批次 C 演练前置：部署/恢复/并发验收脚本契约（**ready**，deps PH-332/322/321/252 均 done）、PH-346 下一规划入口（**ready**）。
+- 下一实现队列：PH-330 → PH-345（并行 planning/ops 契约）→ PH-333/334（等 PH-330）→ PH-335；发票/insights/通知前置按依赖推进。
 - 验收矩阵仍以 `docs/v1.0-development/batch-c-acceptance.md` 为唯一方法；批次 C 演练/部署/并发/性能在对应实现完成前保持 not_run/blocked。

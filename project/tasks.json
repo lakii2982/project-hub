@@ -10653,16 +10653,14 @@
     {
       "id": "PH-330",
       "title": "分摊/预算 ETC 实现首片（costing 0005/0006）",
-      "status": "proposed",
+      "status": "ready",
       "risk": "S",
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-313",
         "PH-322"
       ],
-      "blockers": [
-        "缺 PH-322（关期/结项实现首片，ready 未 done）done；PH-313 已 done；PH-322 合入后由下一规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "allowed_paths": [
         "pmo_plugins/costing/*",
         "core/management/commands/verify_integrity.py",
@@ -10796,7 +10794,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-322（关期/结项实现首片，ready 未 done）、PH-321（多币种实现首片，ready 未 done）、PH-330（分摊/预算实现首片，proposed）done；PH-252 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-330（分摊/预算实现首片，ready 未 done）done；PH-322/PH-321/PH-252 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10832,7 +10830,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-322/PH-321/PH-330 done（同 PH-333）；PH-252 已 done；实现完成后由下一规划槽复核 DoR 再晋级；真实 PG 交 CI/部署环境。"
+        "缺 PH-330（分摊/预算实现首片，ready 未 done）done；PH-322/PH-321/PH-252 已 done；实现完成后由下一规划槽复核 DoR 再晋级；真实 PG 交 CI/部署环境。"
       ],
       "handoff": null
     },
@@ -11083,7 +11081,7 @@
       "title": "后续交付独立规划入口（接续 PH-337）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -11109,8 +11107,188 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
+      "handoff": "project/handoffs/PH-341.md"
+    },
+    {
+      "id": "PH-342",
+      "title": "发票批量/导入实现前置契约冻结（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-252",
+        "PH-274",
+        "PH-320",
+        "PH-289"
+      ],
+      "spec": "project/specs/PH-342.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-342.json",
+        "project/handoffs/PH-342.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [
+        "缺 PH-320（发票编排首片，ready 未 done）与 PH-289（导入提交，proposed）done；PH-252/PH-274 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-343",
+      "title": "insights 读模型实现前置契约冻结（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-277",
+        "PH-272",
+        "PH-291",
+        "PH-304",
+        "PH-309"
+      ],
+      "spec": "project/specs/PH-343.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-343.json",
+        "project/handoffs/PH-343.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [
+        "缺 PH-272（insights 读模型实现前置，proposed）done；PH-277/291/304/309 已 done；PH-272 完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-344",
+      "title": "通知中心契约前置（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-301",
+        "PH-314"
+      ],
+      "spec": "project/specs/PH-344.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-344.json",
+        "project/handoffs/PH-344.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [
+        "缺 PH-301（通知中心首片契约，proposed）与 PH-314（通知/导出实现前置，proposed）done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-345",
+      "title": "批次 C 演练前置：部署/恢复/并发验收脚本契约（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-332",
+        "PH-322",
+        "PH-321",
+        "PH-252"
+      ],
+      "spec": "project/specs/PH-345.md",
+      "allowed_paths": [
+        "docs/engineering/ops-runbook.md",
+        "docs/engineering/upgrade-recovery.md",
+        "docs/v1.0-development/batch-c-acceptance.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-345.json",
+        "project/handoffs/PH-345.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-346",
+      "title": "后续交付独立规划入口（接续 PH-341）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [],
+      "spec": "project/specs/PH-346.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "docs/v1.0-development/*",
+        "project/reports/PH-346.json",
+        "project/handoffs/PH-346.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [],
+      "github_issue": null,
+      "owner": null,
       "handoff": null
     }
   ]

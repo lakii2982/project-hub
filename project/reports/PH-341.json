@@ -1,0 +1,36 @@
+{
+  "task_id": "PH-341",
+  "summary": "后续交付独立规划入口（接续 PH-337，docs-only）：按 BASE 20ffc12 复核依赖并只晋级依赖全 done 的任务——PH-322 关期/结项实现 done 后，PH-330 分摊/预算 ETC 实现首片（deps PH-313/PH-322）晋级 ready（spec 状态/依赖同步，白名单/DoR 完整）；PH-333/334 依赖中 PH-322/321/252 已 done、仍等 PH-330 done，保持 proposed 并刷新 blocker；PH-335 等 PH-333/334、PH-314 等 PH-301/310/285/179/183，保持 proposed。登记下一批 5 个切片（编号从 PH-342 连续，已核号无并行占用）：PH-342 发票批量/导入实现前置（proposed，等 PH-320/PH-289）、PH-343 insights 读模型实现前置（proposed，等 PH-272）、PH-344 通知中心契约前置（proposed，等 PH-301/PH-314）、PH-345 批次 C 演练前置：部署/恢复/并发验收脚本契约（ready，deps PH-332/322/321/252 均 done）、PH-346 下一规划入口（ready）。ROADMAP 批次 C 进展与依赖状态同步；未实现产品代码/迁移/脚本/门禁变更。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=268; PH-341 in_review with owner/handoff; new PH-342..PH-346 specs/fields valid; PH-330 ready with no blockers; only dependency-complete tasks are ready."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-341 planning reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: dependency re-baseline facts (PH-322 done -> PH-330 ready; PH-333/334 still blocked by PH-330; PH-335/314 remain proposed with precise blockers), five new PH-342..PH-346 specs/contracts with executable acceptance and no placeholders, numbering checked against the BASE task set, ROADMAP batch C progress, and the docs-only scope/no code/migration/script/gate changes. projectctl check and the 23-test governance suite pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "PH-330 is promoted to ready only because both its dependencies (PH-313, PH-322) are done on BASE 20ffc12; its spec status/dependency header was synced to ready, and its existing whitelist/DoR were left unchanged.",
+    "PH-333/PH-334 remain proposed because PH-330 is ready but not done; their blockers were refreshed to the exact remaining dependency (PH-330). PH-335 remains blocked by PH-333/334 and PH-314 by PH-301/310/285/179/183.",
+    "New slices PH-342/PH-343/PH-344 are docs-only prerequisites for PH-338/PH-339/PH-340 and remain proposed with precise blockers; PH-345 (batch C exercise script contract) is ready because PH-332/PH-322/PH-321/PH-252 are all done; PH-346 is the next planning slot and is ready.",
+    "Numbering checked against the BASE task set: highest existing PH id was PH-341; PH-342..PH-346 are contiguous and free (no parallel EXP/number collision observed in the BASE tasks).",
+    "No product code, migration, table, route, script, CI gate, contract schema or acceptance command was changed; only specs/tasks/manifest/ROADMAP/governance docs."
+  ],
+  "unverified": [
+    "This slice is planning-only: no runtime, browser, PG or migration verification applies; implementation tasks must re-validate their specs against the actual BASE.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PH-330/PH-345 implementations, batch C exercises, PH-338/PH-339/PH-340 and their prerequisites remain unimplemented (proposed/ready but not started).",
+    "No verification of deployment/recovery/concurrency/performance environments was performed; batch C evidence remains not_run/blocked as recorded."
+  ]
+}
