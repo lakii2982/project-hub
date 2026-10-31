@@ -9671,7 +9671,7 @@
       "title": "预算/ETC（WP-BUDGET/ETC）首片：项目预算基线、ETC 派生与只读缺口核对冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9699,7 +9699,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-306.md"
     },
     {
       "id": "PH-307",

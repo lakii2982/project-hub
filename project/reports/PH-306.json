@@ -1,0 +1,44 @@
+{
+  "task_id": "PH-306",
+  "summary": "预算/ETC（WP-BUDGET/ETC）契约冻结首片 on BASE 15cf20c, docs-only. Per Lead ruling (same as PH-308; the BASE PH-306 exact allowlist has no docs/adr entry), the frozen budget/ETC contract is written into project/specs/PH-306.md. It covers: project budget baseline with append-only versions (project/period YYYY-MM/version number), draft->approved->superseded state machine (approved amounts/periods/effective dates immutable; replacement only by a new approved version with no overlapping/double-active version), effective_from frozen at approval, integer-cent lines >= 0 in frozen subjects labor/expense/procurement/other, per-version subject+contract-line uniqueness, four-eyes approval, request_token receipt + expected_version + company lock + audit, as_of latest approved effective version or missing; ETC frozen default method budget_residual_v1 (ETC=max(0, approved budget - posted incurred cost), EAC=incurred+ETC, budget_variance, over_budget/gap, remaining_budget), with missing/null whenever budget or cost is absent or unreadable (never zero), incurred cost only from costing owner posted book=cost/origin=current postings including negative reversals (explicitly excluding cash payments, settlements/revenue, unapproved fee drafts, budgets themselves and unposted costs), and optional remaining-workload/contract-remaining methods only via explicit new planning; gap/unallocated budget semantics including budget_lines_exceed_total issue; cross-owner boundaries (costing owns cost facts, time provides labor facts through costing, contracts owns contract lines, settlement/revenue are revenue-side and excluded from ETC, cash payments are not cost, budget owner cannot become a second cost/cash owner); read-only display/reconciliation requiring approved budget/incurred/ETC/EAC/gap/version/effective date/method/as_of plus missing/refs and no side effects; role rules owner/finance budget write, auditor read, pm managed project summary, member denied, disabled-module history read, unauth 403; canonical/API/migration boundaries (no new canonical/model/migration/route here, PH-313 plans the write implementation, migration leaf applied against real BASE, history recomputation only through explicit migration/backfill); 12 rejection cases; acceptance/completion and an explicit not-implemented list. No product code, model, migration, schema, route, canonical event or docs/adr file was written and no existing write path or business fact changed. Reviewer round-1 blocker fixed: the budget-version state machine now freezes the complete enum draft/approved/superseded/rejected with legal transitions draft->approved, draft->rejected (terminal, required reason, audited, never effective/as_of), approved->superseded only by approving a replacement, superseded/rejected as terminal states that cannot return to draft/approved.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto fa9725e: {\"command\":\"check\",\"ok\":true,\"task_count\":246} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run after state-machine fix: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fa9725e --task PH-306",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto fa9725e (PH-308 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-306 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-306 budget/ETC contract reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKER RESOLVED AT 67a762e: the budget-version state machine now freezes the full enum (draft/approved/superseded/rejected) and transitions: draft->approved, draft->rejected (terminal, reason required, audited), approved->superseded (only when a new version is approved); superseded/rejected are terminal and rejected versions do not take effect or participate in as_of. This is consistent with the earlier rejected-draft sentence and the single-effective-version/as_of rule.",
+      "CONTENT RE-VERIFIED: budget baseline fields/period/version/effective_from/subjects/CNY/append-only/four-eyes/request_token/expected_version/company-lock/audit, zero-budget-vs-missing, line uniqueness/contract-line references; ETC `budget_residual_v1` formulas (ETC=max(0,budget-incurred), EAC, variance, over_budget, remaining_budget), negative reversal by sign, missing/null no-guess; incurred cost boundary (LedgerPosting book=cost/status=posted/origin=current, cash/settlement/revenue excluded), subject attribution/missing, gap/unallocated/over-budget, cross-owner ownership, read-only projection/permissions/history-read, no canonical/route/migration change, no implicit historical recompute and 12 counterexamples are coherent. Docs-only spec within the 6-path whitelist (no docs/adr), PH-306 in_review/handoff and PH-313 write side remains proposed.",
+      "EVIDENCE AT 67a762e (BASE 15cf20c): check ok=true/task_count=245; governance 23 tests OK; verify-change --base 15cf20c --task PH-306 only high_risk_review_required + acceptance_not_passed (pre-review), no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS (round 2; budget-version state machine completed). Reviewed HEAD 67a762e (BASE 15cf20c) in /tmp/ph306-budget-contract, worktree clean; 6 files within the exact whitelist; no code/migration/schema/docs-adr. Enum draft/approved/superseded/rejected with draft->approved|rejected, approved->superseded, terminal rejected/superseded and rejected excluded from as_of/effective; budget/ETC formulas, cost-owner boundary, missing/null, permissions/history-read and no-historical-recompute otherwise coherent; PH-306 in_review, PH-313 proposed. Independent runs: check ok=245; governance 23 OK; verify-change --base 15cf20c --task PH-306 only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "reviewer round-1 blocker 修复：预算版本状态机补全 `rejected` 到枚举与合法迁移（draft→rejected 终态/必填 reason/保留审计/不生效不参与 as_of；approved→superseded 仅由新版本批准触发；superseded/rejected 不可回到 draft/approved），消除与“rejected 终止草稿”描述的不一致。",
+    "任务描述原写“新增/更新预算与 ETC 契约（登记 ADR/契约文档）”；核对 BASE 15cf20c 后 PH-306 的 tasks.json allowed_paths 与 spec 精确白名单均不含 docs/adr/，且实际 ADR 叶为 0014。经 Lead 裁决（与 PH-308 相同）将契约冻结正文写入 project/specs/PH-306.md，不新增 docs/adr 文件，避免 path_out_of_scope。",
+    "本片为 docs-only：无产品代码/模型/迁移/schema/路由/canonical 变更；未写 docs/delivery-status.md（不在白名单）。",
+    "PH-313 写侧实现仍 proposed；本片不解除任何 proposed，不预占 canonical topic/命令编号。",
+    "Lead integration rebase (15cf20c -> fa9725e) after PH-293/299/300/308 merged: docs/verification.md kept main entries plus the PH-306 entry; manifest.active_handoff -> PH-306. Gates rerun green."
+  ],
+  "unverified": [
+    "契约的写侧实现（PH-313）未实现/未测试；本片只冻结口径。",
+    "PG/浏览器/生产不适用（无代码/迁移/UI 变更）；docs-only 验收以 check + 23 治理 + verify-change 为准。",
+    "独立 S 复核 pending；通过后置 done、重跑 check/verify-change 并报最终 SHA。"
+  ]
+}
