@@ -710,4 +710,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 1. **核号**：BASE 最大 PH-315；远端分支/PR（EXP #143/#144 等）无 ≥316 占用 → PH-316 起连续。
 2. **新登记**：PH-316 工作台导出联动（proposed，缺 PH-309）、PH-317 发票红冲/税额抵扣实现前置（proposed，缺 PH-293/252/150/155）、PH-318 多币种实现前置（proposed，缺 PH-308/150/155/252）、PH-319 下一规划槽（proposed，待 PH-315 done 后置 ready）。count 237→241，编号 316-319 连续。
 3. **晋级**：无新增（PH-309 仍 ready 待合入；PH-292/293/295/296/297/299/300/301/305/306/308/310/312/313/314/316/317/318 保持 proposed，无虚假晋级）。
-4. blockers 按事实保留；无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-316/317/318 未实现；review由独立S复核。
+4. blockers 按事实保留；无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：编号/无虚假晋级/依赖事实核对通过）；最终证据 HEAD 9c0db33 按槽惯例置 PH-315 done / PH-319 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=241；23 项治理 OK；verify-change --base 81ec533 --task PH-315 ok=true、9 文件全白名单、无 errors。未验证：PH-316/317/318 未实现；PH-309 由实现 PR/CI 验证。
