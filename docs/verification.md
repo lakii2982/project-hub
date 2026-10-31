@@ -684,3 +684,9 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 ## PH-304 运营核对底稿授权只读 CSV 导出首片（2026-10-31）
 
 基线5361a09（PH-307合入后的main）。新增pmo_plugins/delivery/operations_export_services.py只读导出：按授权组合PH-291跨域总览、PH-283结算未清/核销/退款覆盖、PH-279现金分类/桥接/退款/互转、PH-280手续费批准/成本/净额配对四类数据集，生成UTF-8+BOM CSV（表头、refs/金额/状态、as_of/期间、生成时间、行数与#checksum sha256行）；dry_run返回计划不生成文件；request_token进程内幂等（plan/result分开缓存，按dry_run选择；同token同输入同content_id、改输入冲突；非持久已披露）。权限owner/finance/auditor全量；pm仅ops_overview/settlement_coverage/fee_pairing（有项目归属），cash_bridge拒绝；member拒绝；delivery停用后history_read历史可读。canonical pmo_plugins/delivery/domain_metadata.py声明ops-export/ history_read路由，delivery/urls.py仅导入；无POST写入口；无写/无迁移/无审计/零事实计数变化。浏览器ops_export页面+download=1 CSV响应，plan token带入下载URL保证同输入幂等。偏差披露：receipt进程内非持久（不建表）；pm cash_bridge拒绝（无项目归属）；单路由承载页面/下载；CSV布局与content_id=sha256；仅组合已交付只读服务不重算；无审计写、未改verify_integrity；反例/测试不UPDATE/DELETE历史行。实际执行（最终HEAD，BASE 5361a09）：projectctl check ok=true/task_count=233；manage.py check exit0（既有W003、0错误）；makemigrations无变更；全量1106项=1029 pass+69 skip+8项既有macOS失败（无新增）；verify_integrity全新迁移库ok=true；scoped 16项全通过；verify-change --base 5361a09 --task PH-304 ok=true。未验证：浏览器1440/390、独立S复核终审、PG/并发、生产/UAT、旧库升级；ZIP/外发/定时邮件/持久化导出收据/身份敏感明细未实现。
+
+## PH-303 修复 PH-291 运营核对总览 HTTP 测试随机 CSRF 误匹配（test-only）（2026-10-31）
+
+基线 5361a09（PH-307 合入后，PH-303 risk=S）。test-only 修复：`tests/test_v1_ops_reconciliation_overview_http.py::test_pm_page_scope_and_cash_missing` 原用 `assertNotContains(response, 'C8')` 断言 finance 项目合同编码不可见，但 `'C8'` 会随机命中 CSRF/十六进制文本（PH-281 PR 首次 CI 失败、二次通过）。修复：合同编码改为唯一长编码 `CT-HIDDEN-C8-9f3a`，并改为断言派生 payload（pm 计数=1、pm refs 含可见变更且不含隐藏变更、响应不含完整长编码；owner 计数=2 且含隐藏变更 ref）；保留 `cash_not_scoped_to_project` 与 pm 范围业务断言。未改产品代码/迁移/其它测试/门禁。risk=S 由 PH-307 规划槽修正（白名单含 tasks/manifest 治理关键路径）。
+
+实跑（候选 HEAD）：同一 HTTP 测试连续运行 3 次均 OK；scoped 服务测试 OK；全量（实际数以 5361a09 为准）/5F+3E/69；projectctl check ok；23 项治理 OK；verify-change 待独立复核后记录。未验证：PG/浏览器（test-only 无要求）；review pending。
