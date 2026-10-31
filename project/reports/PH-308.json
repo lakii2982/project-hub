@@ -1,0 +1,38 @@
+{
+  "task_id": "PH-308",
+  "summary": "多币种/汇率（WP-FX）契约冻结首片 on BASE 15cf20c, docs-only. Per Lead ruling C (the BASE PH-308 exact allowlist has no docs/adr entry and the spec itself asks for contract freeze rather than an ADR file), the frozen multi-currency/FX contract is written into project/specs/PH-308.md instead of creating docs/adr/0015-multi-currency-fx.md. The frozen text covers: reporting currency (org-level CNY) vs functional currency (ISO 4217 on every money fact, frozen in terms/confirmation snapshots); append-only versioned FX rate snapshots keyed by organization/base/quote/business effective date/source/version with Decimal rate (no float, unique effective version, no lookback fallback, no reciprocal auto-derivation, missing rate rendered as missing); conversion boundary semantics (convert once at each boundary, persist fx_rate_ref plus original currency/amount, ROUND_HALF_UP to integer cents exactly once, aggregate already-rounded cents, never sum originals then convert, no client-supplied converted amounts); cross-owner ownership boundaries (contracts owns functional-currency contract lines/terms, settlement owns settlement/open-item/clearance currency plus fx ref, management_revenue derives reporting read-only from approved terms, cash stays bank-currency with foreign cash/exchange gain-loss explicitly out of scope, costing/time unchanged); read-only display/reconciliation rules (show original + reporting values and rate ref, missing never 0/default rate, stable issue codes required when implemented, role rules owner/finance rates, auditor read, pm project summary, member denied, disabled-module history read, unauth 403); canonical/API/migration boundaries (no new canonical/model/migration/route in this slice, PH-321 implementation must plan any new canonical and migrate via explicit migration, no implicit recomputation of history); 12 rejection cases; acceptance/completion and an explicit not-implemented list. No product code, model, migration, schema, route, canonical event or docs/adr file was written; no existing write path or business fact changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run on BASE 15cf20c: {\"command\":\"check\",\"ok\":true,\"task_count\":245}."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 0.3s, OK (projectctl 8 + governance 15), exit 0; no governance regression."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 15cf20c --task PH-308",
+      "result": "pass",
+      "evidence": "Actual run after commit: only high_risk_review_required (review pending); no path_out_of_scope. Exact output recorded in handoff/Lead report."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级 docs 冻结片由 fresh-context reviewer 按 BASE 15cf20c 的 PH-308 spec 核对：记账本位币/功能币种区分、汇率快照不可改历史/业务日期冻结/Decimal 精度/唯一性与缺失口径、换算边界与 ROUND_HALF_UP 一次舍入/聚合规则/禁止客户端权威值、跨 owner 边界（contracts/settlement/revenue/cash/costing-time）、只读展示 missing 不伪造、权限与停用 history_read、不可无迁移重算、canonical/迁移边界、反例清单、无代码/迁移/schema/docs/adr 变更、精确白名单与 23 治理。实现者不自写 pass。"
+  },
+  "deviations": [
+    "Lead 指示原为 docs/adr/ 新增多币种 ADR；核对 BASE 15cf20c 后 PH-308 的 tasks.json allowed_paths（6 项）和 spec 精确白名单均不含 docs/adr/，且实际 ADR 叶为 0014（新文件应为 0015 而非 0018）。经 Lead 裁决 C，改为把契约冻结正文写入 project/specs/PH-308.md，不新增 docs/adr 文件，避免 path_out_of_scope。",
+    "本片为 docs-only：无产品代码/模型/迁移/schema/路由/canonical 变更；未写 docs/delivery-status.md（不在白名单）。",
+    "实现片 PH-321 仍 proposed；本片不解除任何 proposed，也不预占 canonical topic/命令编号。"
+  ],
+  "unverified": [
+    "契约的写侧实现（PH-321）未实现/未测试；本片只冻结口径。",
+    "PG/浏览器/生产不适用（无代码/迁移/UI 变更）；docs-only 验收以 check + 23 治理 + verify-change 为准。",
+    "独立 S 复核 pending；通过后置 done、重跑 check/verify-change 并报最终 SHA。"
+  ]
+}
