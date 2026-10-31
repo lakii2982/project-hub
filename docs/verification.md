@@ -1161,4 +1161,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 6. 同步 batch-d 矩阵 D-09/D-10 现状与 runbook 当前状态行；不新增验收口径。
 7. **追加登记 PH-396**（ready，deps=[]，docs，risk S，spec=`docs/v1.0-development/closure-reconciliation.md`）：v1.0 遗留任务对账/关闭/最终交付与阻塞清单；本片只登记，不执行对账；count 316→317。
 8. 无代码/脚本/迁移/契约/门禁变更；未执行任何真实 PG/浏览器/生产。
-实跑：projectctl check ok/317；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：D 批真实 L3–L5、PH-396 对账、PH-393–395。
+独立 S 复核：首轮 2 阻断+1 必改（D-09/D-10 卡状态、runbook 当前状态、D-11 漏 PH-388）已修；二轮 PASS。最终门禁：projectctl check ok=true/task_count=317；23 项治理 OK；verify-change --base c931137 --task PH-392 ok=true、10 文件全白名单、无 errors。未验证：D 批真实 L3–L5、PH-396 对账、PH-393–395。
