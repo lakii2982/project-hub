@@ -10218,7 +10218,7 @@
       "title": "发票实现首片：发票签发/价税分离/红冲负值（按 ADR 0015 落地）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10255,9 +10255,9 @@
         "python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-320.md"
     },
     {
       "id": "PH-321",

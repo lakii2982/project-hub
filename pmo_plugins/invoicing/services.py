@@ -521,3 +521,407 @@ def reverse_invoice(member, *, invoice_id, reason, reversal_date, line_reversals
                [row.reversal_ref, invoice.invoice_ref], row, result)
     _record_audit(member, 'plugin.invoicing.invoice.reversed', row, token, digest, result, payload)
     return result
+
+
+# ---------------------------------------------------------------------------
+# PH-320: tax qualification confirmation, cross-owner reference links and
+# read-only tax/orchestration projection. Reuses PH-252 models/services; does
+# not reimplement record/allocate/reverse and never writes revenue/cash/ledger.
+# ---------------------------------------------------------------------------
+
+TAX_ACTIONS = {
+    'opened': 'plugin.invoicing.tax_qualification_opened',
+    'confirmed': 'plugin.invoicing.tax_qualification_confirmed',
+    'superseded': 'plugin.invoicing.tax_qualification_superseded',
+    'linked': 'plugin.invoicing.orchestration_linked',
+}
+LINK_KINDS = {'revenue_reversal', 'cash_refund', 'cash_bank_return',
+              'settlement_adjustment'}
+QUALIFICATION_STATUSES = {'recoverable', 'not_recoverable'}
+
+
+def _json_list(value, label):
+    if not isinstance(value, list) or not value or len(value) > 1000:
+        _fail(f'{label}须为非空JSON数组且不超过1000项')
+    for item in value:
+        if not isinstance(item, dict) or not item:
+            _fail(f'{label}项须为非空对象')
+    return value
+
+
+def _source_invoice(member, source_ref):
+    """Resolve an invoicing source ref to its invoice, with tenant validation."""
+    if not isinstance(source_ref, dict) or set(source_ref) != {'namespace', 'kind', 'id', 'version'}:
+        _fail('税额来源引用无效')
+    if source_ref.get('namespace') != 'invoicing' or type(source_ref.get('version')) is not int:
+        _fail('税额来源引用无效')
+    kind, raw_id = source_ref.get('kind'), source_ref.get('id')
+    try:
+        if kind == 'invoice':
+            row = Invoice.objects.get(organization=member.organization, pk=raw_id)
+            return row, 'invoice', row.tax_cents
+        if kind == 'invoice_line':
+            row = InvoiceLine.objects.select_related('invoice').get(
+                organization=member.organization, pk=raw_id)
+            return row.invoice, 'invoice_line', row.tax_cents
+        if kind == 'invoice_allocation':
+            row = InvoiceAllocation.objects.select_related('invoice_line__invoice').get(
+                organization=member.organization, pk=raw_id)
+            return row.invoice_line.invoice, 'invoice_allocation', row.tax_cents
+        if kind == 'invoice_reversal':
+            row = InvoiceReversal.objects.select_related('invoice').get(
+                organization=member.organization, pk=raw_id)
+            return row.invoice, 'invoice_reversal', abs(row.tax_cents)
+    except (Invoice.DoesNotExist, InvoiceLine.DoesNotExist,
+            InvoiceAllocation.DoesNotExist, InvoiceReversal.DoesNotExist,
+            ValueError, TypeError):
+        raise PermissionDenied('税额来源发票不存在或无权访问')
+    _fail('税额来源类型未支持')
+
+
+def _qualification_ref(row):
+    return {'namespace': 'invoicing', 'kind': 'tax_qualification',
+            'id': str(row.pk), 'version': row.version}
+
+
+def _qualification_projection(row, *, source_ids=None):
+    return {
+        'ref': _qualification_ref(row), 'source_ref': row.source_ref,
+        'tax_cents': row.tax_cents, 'status': row.status,
+        'qualification_status': row.qualification_status,
+        'decided_on': row.decided_on.isoformat() if row.decided_on else None,
+        'evidence': row.evidence, 'version': row.version,
+        'created_at': row.created_at.isoformat(),
+        'effective': row.status == 'confirmed',
+    }
+
+
+@transaction.atomic
+def open_tax_qualification(member, *, source_ref, tax_cents, evidence, request_token,
+                           dry_run=False):
+    """Create one pending tax-qualification fact for an existing invoicing source."""
+    member = _fresh(member, write=True)
+    lock_company(member)
+    invoice, source_kind, source_tax = _source_invoice(member, source_ref)
+    _int(tax_cents, '税额', positive=False)
+    if tax_cents > source_tax:
+        _fail('税额资格金额不得超过来源税额')
+    evidence = _json_list(evidence, '证据')
+    payload = {'source_ref': source_ref, 'tax_cents': tax_cents, 'evidence': evidence}
+    digest = _digest(payload)
+    receipt, token = _receipt(member, TAX_ACTIONS['opened'], request_token, digest, dry_run)
+    if receipt is not None:
+        return receipt
+    if TaxQualification.objects.filter(
+            organization=member.organization, source_ref=source_ref,
+            status__in=('pending', 'confirmed')).exists():
+        _fail('同一来源已有待确认或已确认税额资格')
+    if dry_run:
+        return {'dry_run': True, 'source_ref': source_ref, 'tax_cents': tax_cents,
+                'status': 'pending'}
+    row = TaxQualification.objects.create(
+        organization=member.organization, source_ref=source_ref, tax_cents=tax_cents,
+        status='pending', qualification_status='unknown', evidence=evidence)
+    result = {'qualification_ref': _qualification_ref(row), 'source_ref': source_ref,
+              'tax_cents': tax_cents, 'status': 'pending', 'version': row.version,
+              'source_kind': source_kind, 'invoice_ref': invoice.invoice_ref}
+    _record_audit(member, TAX_ACTIONS['opened'], row, token, digest, result, payload)
+    return result
+
+
+@transaction.atomic
+def confirm_tax_qualification(member, qualification_id, *, qualification_status,
+                              decided_on, evidence, request_token, expected_version,
+                              dry_run=False):
+    """pending -> confirmed (recoverable/not_recoverable), append-only transition."""
+    member = _fresh(member, write=True)
+    lock_company(member)
+    try:
+        row = TaxQualification.objects.select_for_update().get(
+            organization=member.organization, pk=qualification_id)
+    except (TaxQualification.DoesNotExist, ValueError, TypeError):
+        raise PermissionDenied('税额资格不存在或无权访问')
+    if type(expected_version) is not int or expected_version != row.version:
+        _fail('税额资格版本已变化，请刷新后重试')
+    if row.status != 'pending' or row.qualification_status != 'unknown':
+        _fail('仅待确认税额资格可以确认')
+    if qualification_status not in QUALIFICATION_STATUSES:
+        _fail('税额资格确认结果无效')
+    try:
+        day = date.fromisoformat(str(decided_on))
+    except (TypeError, ValueError):
+        _fail('确认日期须为YYYY-MM-DD')
+    _period(member, day)
+    evidence = _json_list(evidence, '证据')
+    if TaxQualification.objects.filter(
+            organization=member.organization, source_ref=row.source_ref,
+            status='confirmed').exclude(pk=row.pk).exists():
+        _fail('同一来源已有有效税额资格，请使用更正/取代流程')
+    payload = {'qualification_id': str(row.pk), 'qualification_status': qualification_status,
+               'decided_on': day.isoformat(), 'evidence': evidence,
+               'expected_version': expected_version}
+    digest = _digest(payload)
+    receipt, token = _receipt(member, TAX_ACTIONS['confirmed'], request_token, digest, dry_run)
+    if receipt is not None:
+        return receipt
+    if dry_run:
+        return {'dry_run': True, 'qualification_ref': _qualification_ref(row),
+                'status': 'confirmed', 'qualification_status': qualification_status,
+                'decided_on': day.isoformat()}
+    updated = TaxQualification.objects.filter(
+        pk=row.pk, organization=member.organization, status='pending',
+        version=row.version).update(
+        status='confirmed', qualification_status=qualification_status,
+        decided_on=day, evidence=evidence, version=row.version + 1)
+    if updated != 1:
+        _fail('税额资格确认并发冲突，请刷新后重试')
+    row.refresh_from_db()
+    result = {'qualification_ref': _qualification_ref(row), 'source_ref': row.source_ref,
+              'status': 'confirmed', 'qualification_status': qualification_status,
+              'decided_on': day.isoformat(), 'version': row.version}
+    _record_audit(member, TAX_ACTIONS['confirmed'], row, token, digest, result, payload)
+    return result
+
+
+@transaction.atomic
+def supersede_tax_qualification(member, qualification_id, *, qualification_status,
+                                decided_on, evidence, request_token, expected_version,
+                                dry_run=False):
+    """Append a replacement confirmed fact and mark the old one superseded."""
+    member = _fresh(member, write=True)
+    lock_company(member)
+    try:
+        old = TaxQualification.objects.select_for_update().get(
+            organization=member.organization, pk=qualification_id)
+    except (TaxQualification.DoesNotExist, ValueError, TypeError):
+        raise PermissionDenied('税额资格不存在或无权访问')
+    if type(expected_version) is not int or expected_version != old.version:
+        _fail('税额资格版本已变化，请刷新后重试')
+    if old.status != 'confirmed':
+        _fail('仅已确认税额资格可以更正/取代')
+    if qualification_status not in QUALIFICATION_STATUSES:
+        _fail('税额资格确认结果无效')
+    try:
+        day = date.fromisoformat(str(decided_on))
+    except (TypeError, ValueError):
+        _fail('确认日期须为YYYY-MM-DD')
+    _period(member, day)
+    evidence = _json_list(evidence, '证据')
+    payload = {'qualification_id': str(old.pk), 'qualification_status': qualification_status,
+               'decided_on': day.isoformat(), 'evidence': evidence,
+               'expected_version': expected_version, 'supersedes': _qualification_ref(old)}
+    digest = _digest(payload)
+    receipt, token = _receipt(member, TAX_ACTIONS['superseded'], request_token, digest, dry_run)
+    if receipt is not None:
+        return receipt
+    if dry_run:
+        return {'dry_run': True, 'supersedes': _qualification_ref(old),
+                'qualification_status': qualification_status, 'decided_on': day.isoformat()}
+    updated = TaxQualification.objects.filter(
+        pk=old.pk, organization=member.organization, status='confirmed',
+        version=old.version).update(status='superseded', version=old.version + 1)
+    if updated != 1:
+        _fail('税额资格取代并发冲突，请刷新后重试')
+    replacement = TaxQualification.objects.create(
+        organization=member.organization, source_ref=old.source_ref,
+        tax_cents=old.tax_cents, status='confirmed',
+        qualification_status=qualification_status, decided_on=day,
+        evidence=evidence + [{'kind': 'tax_supersedes', 'supersedes': _qualification_ref(old)}])
+    result = {'qualification_ref': _qualification_ref(replacement),
+              'supersedes': _qualification_ref(old), 'source_ref': replacement.source_ref,
+              'status': 'confirmed', 'qualification_status': qualification_status,
+              'decided_on': day.isoformat(), 'version': replacement.version}
+    _record_audit(member, TAX_ACTIONS['superseded'], replacement, token, digest, result, payload)
+    return result
+
+
+def _owner_ref_value(member, link_kind, owner_ref):
+    if (not isinstance(owner_ref, dict)
+            or set(owner_ref) != {'namespace', 'kind', 'id', 'version'}):
+        _fail('跨 owner 引用无效')
+    namespace, kind, raw_id = owner_ref.get('namespace'), owner_ref.get('kind'), owner_ref.get('id')
+    try:
+        if link_kind == 'revenue_reversal':
+            from pmo_plugins.management_revenue.models import RevenueAdjustment
+            row = RevenueAdjustment.objects.get(
+                organization=member.organization, pk=raw_id, status='posted')
+        elif link_kind == 'cash_refund':
+            from pmo_plugins.cash.models import Refund
+            row = Refund.objects.get(organization=member.organization, pk=raw_id, status='active')
+        elif link_kind == 'cash_bank_return':
+            from pmo_plugins.cash.models import BankReturn
+            row = BankReturn.objects.get(organization=member.organization, pk=raw_id,
+                                         status='active')
+        else:
+            if kind == 'clearance':
+                from pmo_plugins.settlement.models import Clearance
+                row = Clearance.objects.get(organization=member.organization, pk=raw_id)
+            elif kind == 'open_item':
+                from pmo_plugins.settlement.models import OpenItem
+                row = OpenItem.objects.get(organization=member.organization, pk=raw_id)
+            else:
+                from pmo_plugins.settlement.models import Settlement
+                row = Settlement.objects.get(organization=member.organization, pk=raw_id)
+    except Exception:
+        _fail('跨 owner 引用不存在、不可读或不属于本公司')
+    return row
+
+
+@transaction.atomic
+def link_invoice_orchestration(member, *, invoice_id, link_kind, owner_ref, evidence,
+                               request_token, expected_version, reversal_id=None, dry_run=False):
+    """Record an append-only reference to an owner fact after that owner service acted.
+
+    This service does not mutate revenue/cash/settlement and does not claim a
+    single global transaction; it validates the target, records the link in the
+    invoicing audit stream, and the read projection exposes the reference chain.
+    """
+    member = _fresh(member, write=True)
+    lock_company(member)
+    try:
+        invoice = Invoice.objects.select_related('counterparty').get(
+            organization=member.organization, pk=invoice_id)
+    except (Invoice.DoesNotExist, ValueError, TypeError):
+        raise PermissionDenied('发票不存在或无权访问')
+    if type(expected_version) is not int or expected_version != invoice.version:
+        _fail('发票版本已变化，请刷新后重试')
+    if link_kind not in LINK_KINDS:
+        _fail('跨 owner 编排类型无效')
+    reversal = None
+    if reversal_id is not None:
+        try:
+            reversal = InvoiceReversal.objects.get(
+                organization=member.organization, invoice=invoice, pk=reversal_id)
+        except (InvoiceReversal.DoesNotExist, ValueError, TypeError):
+            raise PermissionDenied('发票红冲不存在或不属于该发票')
+    _owner_ref_value(member, link_kind, owner_ref)
+    if not isinstance(evidence, list) or not evidence:
+        _fail('编排证据须为非空JSON数组')
+    payload = {'invoice_id': str(invoice.pk), 'reversal_id': str(reversal.pk) if reversal else None,
+               'link_kind': link_kind, 'owner_ref': owner_ref, 'evidence': evidence,
+               'expected_version': expected_version}
+    digest = _digest(payload)
+    receipt, token = _receipt(member, TAX_ACTIONS['linked'], request_token, digest, dry_run)
+    if receipt is not None:
+        return receipt
+    existing = AuditEvent.objects.filter(
+        organization=member.organization, action=TAX_ACTIONS['linked'],
+        payload__invoice_ref__id=str(invoice.pk),
+        payload__link_kind=link_kind,
+        payload__owner_ref__id=str(owner_ref['id'])).exists()
+    if existing:
+        _fail('该发票与 owner 事实的编排引用已存在')
+    if dry_run:
+        return {'dry_run': True, 'invoice_ref': invoice.invoice_ref,
+                'reversal_ref': reversal.reversal_ref if reversal else None,
+                'link_kind': link_kind, 'owner_ref': owner_ref}
+    result = {'invoice_ref': invoice.invoice_ref,
+              'reversal_ref': reversal.reversal_ref if reversal else None,
+              'link_kind': link_kind, 'owner_ref': owner_ref, 'status': 'linked'}
+    _record_audit(member, TAX_ACTIONS['linked'], invoice, token, digest, result,
+                  {**payload, 'invoice_ref': invoice.invoice_ref,
+                   'reversal_ref': result['reversal_ref']})
+    return result
+
+
+def _invoice_tax_qualifications(member, invoice):
+    source_ids = {str(invoice.pk)}
+    source_ids.update(str(line.pk) for line in invoice.lines.all())
+    source_ids.update(str(item.pk) for item in invoice.reversals.all())
+    rows = []
+    for row in TaxQualification.objects.filter(
+            organization=member.organization).order_by('created_at', 'id'):
+        source = row.source_ref or {}
+        if source.get('namespace') == 'invoicing' and str(source.get('id')) in source_ids:
+            rows.append(row)
+    return rows
+
+
+def _orchestration_links(member, invoice):
+    links = []
+    for event in AuditEvent.objects.filter(
+            organization=member.organization,
+            action=TAX_ACTIONS['linked']).order_by('-id')[:500]:
+        payload = event.payload or {}
+        invoice_ref = payload.get('invoice_ref') or {}
+        ref = payload.get('invoice_id')
+        if str(invoice_ref.get('id') or ref) != str(invoice.pk):
+            continue
+        owner_ref = payload.get('owner_ref') or {}
+        exists = True
+        try:
+            _owner_ref_value(member, payload.get('link_kind'), owner_ref)
+        except (ValidationError, PermissionDenied):
+            exists = False
+        links.append({'link_kind': payload.get('link_kind'),
+                      'owner_ref': owner_ref, 'exists': exists,
+                      'reversal_ref': payload.get('reversal_ref'),
+                      'recorded_at': event.created_at.isoformat(),
+                      'actor_id': str(event.actor_id or '')})
+    return links
+
+
+def invoice_tax_snapshot(member, invoice_id):
+    member = _fresh(member)
+    if member.role == 'pm':
+        raise PermissionDenied('项目经理只能查看其管理项目摘要')
+    try:
+        invoice = Invoice.objects.select_related('counterparty').get(
+            organization=member.organization, pk=invoice_id)
+    except (Invoice.DoesNotExist, ValueError, TypeError):
+        raise PermissionDenied('发票不存在或无权访问')
+    qualifications = _invoice_tax_qualifications(member, invoice)
+    links = _orchestration_links(member, invoice)
+    confirmed = [row for row in qualifications if row.status == 'confirmed']
+    effective = confirmed[-1] if confirmed else None
+    issues = []
+    if invoice.tax_cents > 0 and not qualifications:
+        issues.append({'issue_code': 'tax_qualification_missing',
+                       'refs': [{'invoice_ref': invoice.invoice_ref}],
+                       'expected': 'pending/confirmed tax qualification',
+                       'actual': None})
+    if any(row.status == 'pending' for row in qualifications):
+        issues.append({'issue_code': 'tax_qualification_pending',
+                       'refs': [{'qualification_ref': _qualification_ref(row)}
+                                for row in qualifications if row.status == 'pending'],
+                       'expected': 'confirmed qualification', 'actual': 'pending'})
+    if any(row.status == 'superseded' for row in qualifications):
+        issues.append({'issue_code': 'tax_qualification_superseded',
+                       'refs': [{'qualification_ref': _qualification_ref(row)}
+                                for row in qualifications if row.status == 'superseded'],
+                       'expected': 'one effective confirmed qualification',
+                       'actual': 'superseded history present'})
+    for link in links:
+        if not link['exists']:
+            issues.append({'issue_code': 'orchestration_ref_missing',
+                           'refs': [{'owner_ref': link['owner_ref']}],
+                           'expected': 'readable owner fact', 'actual': 'missing'})
+    if effective is not None and effective.qualification_status == 'not_recoverable':
+        issues.append({'issue_code': 'not_recoverable_costing_review_required',
+                       'refs': [{'qualification_ref': _qualification_ref(effective)}],
+                       'expected': 'costing owner open-period correction/reference',
+                       'actual': 'not_recoverable'})
+    return {
+        'invoice': _invoice_projection(invoice),
+        'tax_qualifications': [_qualification_projection(row) for row in qualifications],
+        'effective_qualification': _qualification_projection(effective) if effective else None,
+        'orchestration_links': links,
+        'issues': issues,
+        'missing': [] if effective or invoice.tax_cents == 0 else ['effective_qualification'],
+    }
+
+
+def invoice_tax_list(member):
+    member = _fresh(member)
+    if member.role == 'pm':
+        raise PermissionDenied('项目经理只能查看其管理项目摘要')
+    rows = []
+    for invoice in Invoice.objects.filter(
+            organization=member.organization).select_related('counterparty').order_by(
+            '-invoice_date', '-created_at')[:200]:
+        qualification = invoice_tax_snapshot(member, invoice.pk)
+        rows.append({'invoice': qualification['invoice'],
+                     'effective_qualification': qualification['effective_qualification'],
+                     'orchestration_link_count': len(qualification['orchestration_links']),
+                     'issue_codes': [item['issue_code'] for item in qualification['issues']]})
+    return rows
