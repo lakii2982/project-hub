@@ -81,7 +81,7 @@ Dependabot提案没有Task行而被治理检查拒绝时，先评估升级必要
 
 1. 以执行时最新 main 为 BASE，用 `projectctl brief` 和已合并 Git/PR/report 证据复核任务，禁止把目标文档当作实现证据。
 2. 将 PH-241 按已合并 PR #150（merge commit `e8183ff34525abe0a0ea16c424835e2bd928229b`、12 项 checks 全绿）从遗留 `in_review` 收口为 done；不得重复实现 Offset。
-3. 对依赖已 done、DoR 已冻结的任务按现有 spec 晋级 ready；优先评估 PH-342、PH-343、PH-353、PH-354、PH-355。只刷新陈旧 blocker/依赖，不在规划 PR 自我扩大 allowed_paths、验收或业务口径。
+3. 对依赖已 done、DoR 已冻结的任务按现有 spec 晋级 ready；优先评估 PH-342、PH-343、PH-353、PH-354、PH-355。只刷新陈旧 blocker/依赖，不在规划 PR 自我扩大 allowed_paths、验收或业务口径。对本次用户明确授权的 v1.0 任务，可在 `project/delivery-policy.json` 登记其更新后的 contract_digest 与 `user-2026-10-31-complete-v1` 来源；不得登记里程碑外任务、EXP-1 或 PH-110，也不得修改既有仲裁规则。
 4. 为后续批次保留一个独立规划槽；按写域互斥安排导入/发票、insights、通知及运维验收。真实 PG、浏览器、staging/生产、UAT 缺口保持显式，不用本地或文档冒充。
 5. 逐项复核旧 legacy 主交付与已合并薄片的覆盖关系。只有直接满足原 DoR 且有合并/验收证据才可 cancelled；部分覆盖必须保留并写精确 gap。
 
