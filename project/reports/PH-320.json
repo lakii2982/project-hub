@@ -36,6 +36,11 @@
       "command": "python scripts/projectctl.py verify-change --base 863f946 --task PH-320",
       "result": "not_run",
       "evidence": "Actual run before review pass: only high_risk_review_required (review pending), no path_out_of_scope. Will be rerun and set pass after the independent reviewer status=pass."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual BASE acceptance run: Ran 18 tests, OK. Reused PH-252 invoice record/allocate/reverse suite remains green after the TaxQualification guard relaxation and the new tax/orchestration services."
     }
   ],
   "review": {
