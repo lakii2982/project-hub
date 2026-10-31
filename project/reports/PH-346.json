@@ -4,7 +4,7 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
+      "result": "pass",
       "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":273} exit 0."
     },
     {
@@ -14,21 +14,22 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base de85caa --task PH-346",
-      "result": "not_run",
-      "evidence": "Pre-review: {\"command\":\"verify-change\",\"ok\":false,\"errors\":[{\"code\":\"high_risk_review_required\"}]} — no path errors; pass run recorded after review."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — changed files inside BASE PH-346 allowed_paths (reviewer-b pass recorded)."
     }
   ],
   "review": {
     "required": true,
     "reviewer": "reviewer-b",
-    "status": "pending",
+    "status": "pass",
     "findings": [
-      "BLOCKER - PH-338 blocker is stale and contradicts the report/ROADMAP claim that 'PH-338/342 wait only on PH-289': at BASE de85caa PH-320 is done and PH-274 is done, but PH-338's task blocker still says '缺 PH-320（ready 未 done）与 PH-274/PH-289 ... done；PH-252 已 done' (only PH-289 is actually missing), and PH-338 spec's 风险与依赖 still says '依赖 PH-320（ready 未 done）、PH-274（done）、PH-289（proposed）'. Update PH-338 task blockers and spec dependency/risk section to the re-baselined facts (PH-252/274/320 done, only PH-289 proposed), matching PH-342 and the ROADMAP/docs claims, so blockers are precise and deps/blockers agree.",
-      "REQUIRED - the new PH-347/348/349/350 specs say '精确白名单' but use a '治理文件' shorthand and omit the exact governance paths that their tasks authorize (project/tasks.json, project/manifest.json, docs/delivery-status.md, docs/verification.md); enumerate those paths (or define 治理文件 exactly) so spec whitelist and task allowed_paths agree. PH-345/PH-351 style is otherwise acceptable.",
-      "MINOR - the PH-346 report check evidence references candidate HEAD 91ea34a, while the reviewed HEAD is ba85f11; record the final-HEAD actual runs in the final evidence commit. The current verify-change at this HEAD reports high_risk_review_required plus acceptance_not_passed because the report's check declaration is still not_run (expected pre-review; after the final check pass declaration it should clear; no path errors). Ensure the final evidence commit also sets PH-346 done / PH-351 ready (PH-351 is currently proposed with the explicit blocker) and verifies the report.",
-      "OTHER CONTENT CHECKED (no false promotion): PH-330 stays ready (implementation in progress, not done); PH-333/334 remain proposed on PH-330, PH-335 on 333/334, PH-339/343 on PH-272, PH-340/344 on PH-301/314; PH-342 now correctly waits only PH-289; new PH-347 install/upgrade, PH-348 backup/restore, PH-349 PG concurrency, PH-350 health/capacity all remain proposed on PH-330 (PH-350 on 347/348/349) and PH-351 is the next slot; IDs 347-351 continuous, count 273, no placeholders, no code/migration/schema/gate changes, all 14 changed files inside BASE PH-346 allowed paths; check ok=273 and governance 23 OK."
+      "RESOLVED at HEAD 45e4d07: PH-338's task blocker and spec dependency/risk section now state the re-baselined facts (PH-252/PH-274/PH-320 done; only PH-289 proposed), matching PH-342 and the report/ROADMAP/docs claims; PH-347/348/349/350 specs' '精确白名单（与 task allowed_paths 一致）' now lists exactly the same paths as their tasks (verified set equality: 11/10/8/9 paths).",
+      "NO FALSE PROMOTION: PH-330 remains ready (implementation in progress, not done); PH-333/334 stay proposed on PH-330, PH-335 on PH-333/334, PH-338/342 on PH-289, PH-339/343 on PH-272, PH-340/344 on PH-301/314; PH-347 install/upgrade, PH-348 backup/restore, PH-349 PG concurrency, PH-350 health/capacity are proposed on PH-330 (PH-350 additionally on 347/348/349); PH-351 is the next slot (proposed until the final evidence commit). count 273, PH-347..PH-351 continuous, no placeholders, no code/migration/schema/gate changes.",
+      "ROADMAP VERIFIED: the new batch B/C status section matches the merged facts (PH-320/321/322/325/345 done), the ready queue (PH-330), the four new drill splits, precise remaining blockers (333/334->330, 335->333/334, 338/342->289, 339/343->272, 340/344->301/314), PH-351 next slot, and the not_run/blocked evidence boundary.",
+      "FINAL EVIDENCE REQUIREMENT (expected, not blocking this review): the report's check declaration is still not_run, so at HEAD verify-change reports high_risk_review_required + acceptance_not_passed (no path errors); after this pass block is committed, record the real check pass (task_count 273) and the verify-change pass with --base de85caa, and set PH-346 done / PH-351 ready + clear its blocker (PH-351 is currently proposed with the explicit PH-346 blocker).",
+      "GATES: projectctl check ok=true/task_count=273; governance 23 tests OK; 15 changed files all inside BASE PH-346 allowed paths; no placeholders; docs/verification records the planning evidence. verify-change pre-review errors are only review + the not_run check declaration (no path/acceptance scope errors)."
     ],
-    "evidence": "VERDICT: REJECTED - 1 blocker: PH-338's task blocker and spec risk section still say PH-320 is ready-not-done and PH-274 is missing, contradicting the BASE facts (PH-320/PH-274 done; only PH-289 missing) and the report/ROADMAP claim that all blockers were refreshed precisely; fix both to the re-baselined blocker. Required: make PH-347/348/349/350 spec '精确白名单' list the governance paths its tasks authorize instead of the '治理文件' shorthand. Minor: final evidence commit must record ba85f11 runs/check pass and set PH-346 done / PH-351 ready+clear blocker (current verify-change shows acceptance_not_passed because the report check is not_run, expected pre-review). Reviewed HEAD ba85f11 (BASE de85caa) in /tmp/ph346-planning, clean; 14 files inside allowlist; count 273, IDs 347-351; check ok=273; governance 23 OK; verify-change only review/acceptance declaration errors, no path errors."
+    "evidence": "VERDICT: PASS - the prior blocker and required fix are resolved at HEAD 45e4d07 (BASE de85caa): PH-338 blocker/spec now match the done deps (only PH-289 left) and PH-347/348/349/350 spec whitelists are exactly equal to their task allowed_paths. No false promotion: PH-330 stays ready-in-progress, 333/334/335/338/339/340/342/343/344 keep precise blockers, the four new drill splits are proposed on PH-330 (350 on 347/348/349), PH-351 is the next slot; count 273, IDs 347-351 continuous, no placeholders/code/migration/schema changes, 15 files inside allowlist. check ok=273; governance 23 OK; verify-change at this HEAD only review + the pre-review not_run check declaration (no path errors) — final evidence commit should record the passing check and set PH-346 done / PH-351 ready."
   },
   "deviations": [
     "Review-blocker fix (old->new): PH-338's task blocker and spec were stale (claiming PH-320 ready-not-done and PH-274 missing) and were re-baselined to the BASE facts — PH-252/PH-274/PH-320 done, only PH-289 proposed. The PH-347/348/349/350 spec whitelists now enumerate the governance paths (project/tasks.json, project/manifest.json, docs/delivery-status.md, docs/verification.md) instead of the '治理文件' shorthand, matching their task allowed_paths.",
