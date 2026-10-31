@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 3c77653 --task PH-367",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD c895786: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (aggregate-acceptance contract, PH-367 spec summary, tasks/manifest, docs/verification, report/handoff) inside BASE PH-367 allowed_paths."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-367 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
