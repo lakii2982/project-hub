@@ -11844,11 +11844,11 @@
       "title": "后续交付独立规划入口（接续 PH-356）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "proposed",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
-        "PH-351"
+        "PH-356"
       ],
       "spec": "project/specs/PH-361.md",
       "allowed_paths": [
@@ -11871,7 +11871,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "PH-356 done 后由下一规划槽复核 DoR 并置 ready；本槽仅登记，不提前 ready。"
+      ],
       "handoff": null
     }
   ]
