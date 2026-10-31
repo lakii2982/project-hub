@@ -9158,15 +9158,6 @@
           "items": {
             "$ref": "./contract-bundle.schema.json#/$defs/EvidenceRef"
           }
-        },
-        "currency": {
-          "$ref": "./contract-bundle.schema.json#/$defs/CurrencyCode"
-        },
-        "original_gross_cents": {
-          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
-        },
-        "fx_rate_ref": {
-          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
         }
       },
       "x-owner": "costing",

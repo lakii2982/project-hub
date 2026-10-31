@@ -35,6 +35,13 @@ class CurrencySchemaTest(SimpleTestCase):
                 self.assertEqual(field.default, "CNY")
                 self.assertFalse(field.editable)
 
+    def test_fx_rate_ref_is_nullable_on_models(self):
+        for model, _entity, _originals in MODEL_FIELDS:
+            with self.subTest(model=model.__name__):
+                field = model._meta.get_field("fx_rate_ref")
+                self.assertTrue(field.null)
+                self.assertIsNone(field.default)
+
     def test_original_currency_fields_are_nullable(self):
         for model, _entity, originals in MODEL_FIELDS:
             for name in originals:
@@ -50,5 +57,7 @@ class CurrencySchemaTest(SimpleTestCase):
                 props = entities[entity]["properties"]
                 self.assertIn("currency", props)
                 self.assertEqual(props["currency"]["$ref"], "./contract-bundle.schema.json#/$defs/CurrencyCode")
+                self.assertIn("fx_rate_ref", props)
+                self.assertEqual(props["fx_rate_ref"]["$ref"], "./contract-bundle.schema.json#/$defs/SourceRef")
                 for name in originals:
                     self.assertIn(name, props)

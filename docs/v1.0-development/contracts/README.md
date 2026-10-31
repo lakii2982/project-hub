@@ -60,7 +60,8 @@ SourceConsumption.consumer新增cash内部用途，原七用途保留。稳定�
 
 - **范围**：为多币种事实增加 canonical 字段/类型，不实现业务写侧，不改已应用迁移。新增 `CurrencyCode`（ISO 4217 三字母）、`OriginalCents`/`OriginalSignedCents`（原币最小单位整数），并在以下实体增加 **可选** 扩展字段：`currency`（ISO 4217）、`original_*_cents`（原币最小单位；红冲/调整类为 signed）、`fx_rate_ref`（指向汇率快照事实的 SourceRef）。
   - 合同/结算/收入：`ContractLine`、`Settlement`、`OpenItem`、`RevenueRecognition`、`RevenueAdjustment`、`TaxQualification`。
-  - 现金/发票：`CashTransaction`、`BankCharge`、`Refund`、`BankReturn`、`Invoice`、`InvoiceLine`、`InvoiceAllocation`、`InvoiceReversal`。
+  - 现金/发票：`CashTransaction`、`Refund`、`BankReturn`、`Invoice`、`InvoiceLine`、`InvoiceAllocation`、`InvoiceReversal`。
+  - `BankCharge` 的模型/迁移不在 PH-324 白名单（costing 插件），其币种字段由 PH-321/后续 costing 切片承接；PH-324 不在 canonical 中提前声明未物化字段。
   - 客户端输入：`write-dtos.schema.json` 的 `ContractLine`/`Invoice`/`InvoiceLine`/`InvoiceAllocation`/`InvoiceReversal`/`SettlementDraft`/`CashTransaction` 与 `InvoiceLineInput` 增加同义可选字段；`invoicing.invoice.record/v1` 载荷增加 `currency/original_*_cents/fx_rate_ref`。
 - **兼容策略（冻结）**：旧 `*CnyCents`/`SignedCnyCents` 字段**保留**为 CNY 记账本位币兼容/展示口径；`currency` 缺省按 `CNY` 解释（历史事实不回溯改写）；`currency != CNY` 时既有 `*_cents` 仍存记账本位币（CNY）等值，`original_*_cents` 存原币最小单位；两者必须由服务端一致派生，禁止双写不一致。
 - **非 CNY 写入**：在 PH-321（汇率快照/换算实现）合入前，服务层必须**拒绝**非 CNY 业务写入（明确错误码），本 schema 扩展只允许 CNY 事实继续使用；不得以 schema 已扩展冒充多币种已实现。

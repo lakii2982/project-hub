@@ -30,6 +30,7 @@ class Settlement(models.Model):
     due_date = models.DateField()
     gross_cents = models.PositiveBigIntegerField()
     currency = models.CharField(max_length=3, default='CNY', editable=False)
+    fx_rate_ref = models.JSONField(null=True, default=None)
     original_gross_cents = models.PositiveBigIntegerField(null=True, default=None)
     net_cents = models.PositiveBigIntegerField()
     original_net_cents = models.PositiveBigIntegerField(null=True, default=None)
@@ -93,6 +94,7 @@ class OpenItem(models.Model):
     """Immutable receivable partition inherited from one approved settlement."""
 
     currency = models.CharField(max_length=3, default='CNY', editable=False)
+    fx_rate_ref = models.JSONField(null=True, default=None)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT, related_name='open_items')
     project = models.ForeignKey('core.Project', on_delete=models.PROTECT, related_name='open_items')

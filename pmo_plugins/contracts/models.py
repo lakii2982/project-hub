@@ -188,6 +188,7 @@ class ContractLine(models.Model):
     line_no = models.PositiveIntegerField()
     net_cents = models.PositiveBigIntegerField()
     currency = models.CharField(max_length=3, default='CNY', editable=False)
+    fx_rate_ref = models.JSONField(null=True, default=None)
     original_net_cents = models.PositiveBigIntegerField(null=True, default=None)
     tax_cents = models.PositiveBigIntegerField()
     original_tax_cents = models.PositiveBigIntegerField(null=True, default=None)
@@ -232,6 +233,7 @@ class PaymentTerm(models.Model):
         return {'unconditional': '无条件', 'conditional': '附条件', 'warranty': '质保款'}.get(self.condition_type, '')
 
     currency = models.CharField(max_length=3, default='CNY', editable=False)
+    fx_rate_ref = models.JSONField(null=True, default=None)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
     contract_line = models.ForeignKey(ContractLine, on_delete=models.PROTECT, related_name='payment_terms')
@@ -248,6 +250,7 @@ class PaymentTerm(models.Model):
 class WarrantyTerm(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     currency = models.CharField(max_length=3, default='CNY', editable=False)
+    fx_rate_ref = models.JSONField(null=True, default=None)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
     contract_line = models.ForeignKey(ContractLine, on_delete=models.PROTECT, related_name='warranty_terms')
     payment_term = models.ForeignKey(PaymentTerm, on_delete=models.PROTECT, related_name='warranty_terms')
@@ -296,6 +299,7 @@ CHANGE_DECISIONS = ('approved', 'rejected', 'withdrawn')
 class ContractChange(models.Model):
     """Append-only contract change request; approval creates or terminates a version."""
     currency = models.CharField(max_length=3, default='CNY', editable=False)
+    fx_rate_ref = models.JSONField(null=True, default=None)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='contract_changes')
     contract = models.ForeignKey(Contract, on_delete=models.PROTECT, related_name='changes')

@@ -16,16 +16,12 @@ class Migration(migrations.Migration):
             state_operations=[
         migrations.AddField(model_name='bankreturn', name='currency', field=models.CharField(default='CNY', editable=False, max_length=3)),
         migrations.AddField(model_name='bankreturn', name='original_gross_cents', field=models.BigIntegerField(default=None, null=True)),
-        migrations.AddField(model_name='internaltransfer', name='currency', field=models.CharField(default='CNY', editable=False, max_length=3)),
-        migrations.AddField(model_name='internaltransfer', name='original_gross_cents', field=models.BigIntegerField(default=None, null=True)),
         migrations.AddField(model_name='refund', name='currency', field=models.CharField(default='CNY', editable=False, max_length=3)),
         migrations.AddField(model_name='refund', name='original_gross_cents', field=models.BigIntegerField(default=None, null=True)),
             ],
             database_operations=[
         migrations.RunSQL("ALTER TABLE cash_bankreturn ADD COLUMN currency varchar(3) NOT NULL DEFAULT 'CNY'", reverse_sql="ALTER TABLE cash_bankreturn DROP COLUMN currency"),
         migrations.RunSQL("ALTER TABLE cash_bankreturn ADD COLUMN original_gross_cents bigint NULL", reverse_sql="ALTER TABLE cash_bankreturn DROP COLUMN original_gross_cents"),
-        migrations.RunSQL("ALTER TABLE cash_internaltransfer ADD COLUMN currency varchar(3) NOT NULL DEFAULT 'CNY'", reverse_sql="ALTER TABLE cash_internaltransfer DROP COLUMN currency"),
-        migrations.RunSQL("ALTER TABLE cash_internaltransfer ADD COLUMN original_gross_cents bigint NULL", reverse_sql="ALTER TABLE cash_internaltransfer DROP COLUMN original_gross_cents"),
         migrations.RunSQL("ALTER TABLE cash_refund ADD COLUMN currency varchar(3) NOT NULL DEFAULT 'CNY'", reverse_sql="ALTER TABLE cash_refund DROP COLUMN currency"),
         migrations.RunSQL("ALTER TABLE cash_refund ADD COLUMN original_gross_cents bigint NULL", reverse_sql="ALTER TABLE cash_refund DROP COLUMN original_gross_cents"),
             ],
