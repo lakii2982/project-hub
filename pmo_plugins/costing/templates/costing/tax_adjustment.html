@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% block title %}税额成本调整{% endblock %}{% block breadcrumb %}成本 / 税额成本调整{% endblock %}{% block content %}
+<section class="page-heading"><div><div class="eyebrow">COSTING · TAX ADJUSTMENT</div><h1>税额成本调整</h1><p>仅 confirmed/not_recoverable 税额可生成开放期成本追加；引用发票/税额资格事实，append-only，不直接改历史成本或发票。</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>调整记录</h2></div><div class="panel-body">{% if rows %}<div class="table-scroll"><table aria-label="税额成本调整"><thead><tr><th>期间</th><th>类型</th><th>金额(分)</th><th>状态</th><th>引用</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ row.period }}</td><td>{{ row.kind }}</td><td>{{ row.amount_cents }}</td><td>{{ row.status }}</td><td>{{ row.batch_ref.id }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="table-empty">暂无税额成本调整。</p>{% endif %}</div></section>
+{% if can_write %}<section class="panel"><div class="panel-heading"><h2>{% if mode == 'reverse' %}冲销{% else %}登记{% endif %}</h2></div><div class="panel-body">
+{% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<form method="post" action="{% if mode == 'reverse' %}{{ reverse_url }}{% else %}{{ execute_url }}{% endif %}">{% csrf_token %}{% include 'partials/form_fields.html' with form=form %}<button class="button primary" type="submit">提交</button></form>
+<p class="help-text">仅 confirmed/not_recoverable 税额可调整；已关期/锁期/重复调整拒绝；可抵扣税额不产生成本；冲销为负值 append-only。</p>
+</div></section>{% endif %}
+{% endblock %}
