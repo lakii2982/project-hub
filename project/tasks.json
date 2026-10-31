@@ -9935,7 +9935,7 @@
       "title": "共享费用分摊/预算 ETC 实现前置：分摊批次、预算版本与只读缺口核对",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9961,7 +9961,7 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": "worker-contract",
+      "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-313.md"
     },
