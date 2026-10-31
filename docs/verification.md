@@ -1185,6 +1185,6 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 
 - **L1 实现**：版本化 BASE delivery-policy；S 级授权来源 + task/spec contract_digest；离线 PR 元数据 gate 与只读 Delivery arbitration workflow；现有 GitHubDelivery 合并入口接入 BASE policy、mergeable/CLEAN、远端保护、test-merge SHA、最新 HEAD checks、讨论及官方 Codex/Actions 仲裁读取。
 - **L2 实际结果**：登记的 projectctl/governance/delivery 测试 **71 tests OK**（含 HEAD/BASE workflow 逐字节反伪造）；另 delivery controller 组合 119 tests OK；manage.py check exit 0（119 个既有警告）；makemigrations No changes；fresh SQLite verify_integrity ok/errors=[]。
-- **全量本地**：1331 tests，5F+3E/70 skips；8 个失败/错误逐项与 main 既有 macOS 基线一致，无新增；不据此声称 Linux/PG 通过。
+- **全量本地**：最终 HEAD 1332 tests，5F+3E/70 skips；8 个失败/错误逐项与 main 既有 macOS 基线一致，无新增；不据此声称 Linux/PG 通过。
 - **L3/L4/L5：not_run**。本片未做真实 Codex PASS、远端保护启用、浏览器、生产或客户 UAT；`remote_checks_enforced=false`，PH-122 必须做真实对抗验证。
 - 独立 S review：初轮 PASS；补充 HEAD/BASE workflow 逐字节反伪造后增量复核 PASS（a04e7fb）。最终 verify-change 待复核证据提交后重跑。
