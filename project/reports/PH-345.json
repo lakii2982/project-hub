@@ -1,0 +1,41 @@
+{
+  "task_id": "PH-345",
+  "summary": "批次 C 演练前置：部署/升级回退/备份恢复/健康容量/PG 多连接并发可执行验收脚本契约冻结（docs-only）。新增 docs/engineering/ops-runbook.md 与 docs/engineering/upgrade-recovery.md，并在 docs/v1.0-development/batch-c-acceptance.md 追加 §6 契约映射：统一 evidence envelope（script/contract_version/mode/profile/app_sha/started_at/finished_at/exit_code/status/checks/artifacts/redactions）、退出码（0 pass、2 not_run、3 fail、4 环境、5 安全拒绝）、角色/前置/幂等/失败处置；冻结 ops_preflight、ops_tls_probe、ops_upgrade、ops_backup_verify、ops_restore_rehearsal、ops_health_capacity、ops_pg_concurrency 的输入/输出/证据/通过判据/失败处置，对齐 PH-332 M01–M15/V1-OPS-01–06 五层证据纪律；明确当前状态 not_run/blocked（PH-333/334/335 未实现），不虚构运行结果、不执行生产操作、不改 CI 门禁或产品代码。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=268; PH-345 in_review with owner/handoff; docs/engineering/ops-runbook.md and docs/engineering/upgrade-recovery.md are inside the PH-345 whitelist; no path/acceptance schema issues."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-345 batch-C script-contract reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "EVIDENCE/EXIT CONTRACT COMPLETE: the common envelope freezes script/contract_version/mode/profile/app_sha/started_at/finished_at/exit_code/status/checks/artifacts/redactions/notes, with checks expected/actual/evidence_ref and artifact kind/path/sha256; exit codes 0 pass, 2 precondition/missing -> not_run, 3 assertion fail, 4 environment/connection/permission, 5 security refusal; roles, dual control, idempotency, evidence dedupe and failure handling are explicit.",
+      "V1-OPS-01–06 SCRIPT CONTRACTS: ops_preflight, ops_tls_probe, ops_upgrade (dry_run/execute, additive migrations, structure-compatible rollback only), ops_backup_verify/ops_restore_rehearsal (consistent DB+attachment snapshot, isolated restore, RPO/RTO), ops_health_capacity and ops_pg_concurrency (real PG, one-winner/no-half-write/verify_integrity, SQLite explicitly not concurrency evidence) all have inputs/preconditions/outputs/pass criteria/failure handling/current status; undelivered scripts are honestly marked not_run (PH-333/335) or blocked (PH-334 waiting PH-330), with no fabricated execution.",
+      "ALIGNMENT: §6 of batch-c-acceptance.md maps the script contracts to V1-OPS-01–06/PH-333/334/335 and preserves the PH-332 five-layer evidence discipline; upgrade-recovery.md freezes prechecks, execution order, structure-compatible rollback (no ledger/audit rollback, no destructive downgrade, isolated restore only) and RPO/RTO evidence; no product code/migration/scripts/CI-gate/contract-schema change; 8 files exactly match the PH-345 whitelist; no placeholders.",
+      "EVIDENCE AT 74a792c (BASE 4c0d309): check ok=true/task_count=268; governance 23 tests OK; verify-change --base 4c0d309 --task PH-345 only high_risk_review_required, no path_out_of_scope; report review now pass. This docs-only slice does not claim runtime/deployment/PG/customer evidence."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 74a792c (BASE 4c0d309) in /tmp/ph345-batch-c-scripts, worktree clean; 8 changed files exactly the PH-345 docs whitelist; no product code/migration/scripts/CI-gate/contract-schema change. Evidence envelope/exit-code semantics, V1-OPS-01–06 script input/output/pass/failure contracts, upgrade structure-compatible rollback, backup/isolated restore/RPO-RTO, health/capacity and real-PG concurrency contracts, PH-332 five-layer alignment and honest not_run/blocked statuses are complete; check ok=268; governance 23 OK; verify-change only review gate, no path_out_of_scope."
+  },
+  "deviations": [
+    "This is a docs/contract freeze only: it creates docs/engineering/ops-runbook.md and docs/engineering/upgrade-recovery.md and appends §6 to the existing batch-C acceptance matrix; no scripts/ops/* implementation, deployment, restore, PG concurrency or production operation was executed or claimed.",
+    "The scripts listed (ops_preflight, ops_tls_probe, ops_upgrade, ops_backup_verify, ops_restore_rehearsal, ops_health_capacity, ops_pg_concurrency) are frozen as contracts; their implementation belongs to PH-333/334/335. Current statuses are explicitly not_run (PH-333/PH-335) or blocked (PH-334 waiting PH-330).",
+    "The common envelope/exit codes are additive contract text; they do not alter existing CI gates, acceptance commands, product behavior or contract schemas.",
+    "No real customer/payroll/credential data is included; evidence examples are schema-only and redaction requirements are explicit.",
+    "Lead integration rebase (4c0d309 -> cc44124) after PH-325 merged: docs/verification.md kept main entries plus PH-345 entry; manifest.active_handoff -> PH-345."
+  ],
+  "unverified": [
+    "This slice is docs-only: no runtime, deployment, backup/restore, PG concurrency, browser or production verification applies; all V1-OPS statuses remain not_run/blocked.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PH-333/334/335 script implementations, real environment profiles, RPO/RTO measurements and CI PG evidence remain unimplemented/unverified.",
+    "No production/customer acceptance (L5) was performed or claimed."
+  ]
+}
