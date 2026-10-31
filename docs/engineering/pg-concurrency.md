@@ -67,3 +67,19 @@ CLI 输出并写入 `--out`：
 - 真实 PG 探针由 CI/部署环境执行（CI 若有 PG job 覆盖）；未执行前 `V1-OPS-06` 保持 not_run。
 - 未验证：业务级并发在 PG 的逐用例一胜一拒、RPO/RTO（PH-348）、容量基线（PH-350）、生产 L5。
 - 安全：不写生产业务事实、不改账本/审计、不删备份；执行需发布负责人/DBA 双人复核。
+
+## 5. PH-334 汇总验收（2026-10-31，V1-OPS-06）
+
+本片是汇总验收，执行由 PH-349 承担；本节只汇总证据，不重复实现探针。
+
+| 证据项 | 命令/来源 | 当前状态 |
+| --- | --- | --- |
+| 探针/CLI 契约 | `python -m tests.test_v1_pg_concurrency --help`；`tests/test_v1_pg_concurrency.py` 契约测试 | **L1+L2**：envelope/退出码/DSN 拒绝/安全门禁本地通过 |
+| 无 PG DSN | `python -m tests.test_v1_pg_concurrency --profile ci --out evidence.json` | **not_run / exit 2**（实测；不得写 pass） |
+| SQLite DSN | `... --dsn sqlite:///tmp/x.sqlite3` | **not_run / exit 2**（实测拒绝；SQLite 不作为并发证据） |
+| 真实 PG 探针矩阵 | CI/部署环境执行 `--dsn postgresql://... --mode execute --allow-execute --profile ci` | **L3 not_run**（本地无 PG，CI/部署待执行） |
+| 业务级 PG 并发 | 既有 owner concurrency suites（settlement/cash/revenue/service-period 等）在 PG 上 | **L3 not_run**（本地未执行） |
+
+- 汇总结论：`release_ready=false`；只有真实 PG 的 CI/部署证据可写 `V1-OPS-06 pass`，本地/契约测试不得冒充并发正确。
+- 证据落点：PH-349 CLI envelope（script/contract_version/mode/profile/app_sha/时间/exit_code/status/checks/artifacts/redactions/notes）+ `docs/verification.md` 条目 + 报告引用；CI PG job URL 作为 L3。
+- 未验证：真实 PG 版本/连接数、探针 06.1–06.4 一胜一拒、业务级并发、RPO/RTO、容量基线、生产 L5。
