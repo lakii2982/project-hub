@@ -1050,3 +1050,15 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 4. 现状：D-01（PH-370 编排）实现已合入但验收 **not_run**；D-02–D-11 **blocked**（PH-371/338/353/339/354/340/355/372 等未 done）；发布资格仍按 PH-366 **blocked**，不得以文档/runbook 宣称就绪。
 5. 无实现/脚本/迁移/门禁/产品代码变更；未执行任何 D 批验收/演练。
 独立 S 复核首轮 1 阻断（D-03/D-04 stale PH-362 前置）已修；二轮 PASS。最终门禁：projectctl check ok=true/task_count=297；23 项治理 OK；verify-change --base ef13003 --task PH-375 ok=true、8 文件全白名单、无 errors。未验证：D-01 验收、D-02–D-11 全部、L3/L4/L5、发布资格。
+
+
+## PH-368 容量/健康/积压后续契约冻结（docs-only）（2026-10-31）
+
+基线 2f082a3。新增 `docs/engineering/observability-followup-contract.md`：
+1. **SLO/阈值治理**：SLO 记录 schema（slo_id/scope/metric/environment/target/window/severity/owner/approved_by/status）；rehearsal 默认阈值≠生产 SLO；环境唯一+版本化+发布/支持（或安全）审批；缺失 SLO → not_run；变更 superseded 不重算历史。
+2. **告警/积压策略**：alert_key（env|metric|scope|window）去重/window 聚合/升级/ack/恢复证据；不自动扩缩容/重启/外部发送；积压按 queue/reminders/todos/unsettled，持续不降升级；与 PH-364 reminder 只读契约边界。
+3. **历史趋势/容量规划**：append-only 序列（environment/series 唯一、缺失 null+missing_sample、nearest-rank P50/P95、≥7 样本才预测、insufficient_samples 不猜）；容量规划 days_to_* null/assumptions/confidence/reviewer/action（人工，不自动执行）。
+4. **PH-366 映射**：V1-OPS-05 的 L2（rehearsal）/L3（CI PG）/L4（浏览器）/L5（生产）证据逐层映射；未执行不得 pass；rehearsal 不冒充生产；豁免按 PH-366 §6.2（核心不可豁免）。
+5. **角色/安全**：DBA/支持/安全/发布/独立复核；只读/最小权限/递归 redact（password/token/secret/credential/payroll/customer 等）；不发送外部消息；证据 `runtime/observability`（不入发布包）。
+6. **未实现/未验证**：SLO 存储、告警记录、趋势存储/聚合、容量预测、外部告警/自动扩缩容均未实现；PH-350 本地 L1+L2、PH-335 release_ready=false；L3/L4/L5 not_run；本片无脚本/表/迁移/门禁变更。
+实跑：projectctl check ok/297；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：SLO/告警/趋势/容量实现；L3/L4/L5；发布资格。
