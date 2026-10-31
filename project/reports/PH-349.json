@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD fc99230 (BASE a5ba2fd, PH-349 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":283}, exit 0; final entry recorded after the review pass."
+      "evidence": "Pre-review actual run at HEAD d57c7eb (BASE a5ba2fd, PH-349 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":283}, exit 0; final entry recorded after the review pass."
     },
     {
       "command": "python manage.py check",
@@ -35,7 +35,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base a5ba2fd --task PH-349",
       "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD fc99230: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (test module, pg-concurrency docs, tasks/manifest, docs/verification, report/handoff) inside BASE PH-349 allowed_paths."
+      "evidence": "Pre-review actual run at HEAD d57c7eb: exit 1, errors = high_risk_review_required + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope; all changed files inside BASE PH-349 allowed_paths."
     }
   ],
   "review": {
