@@ -806,4 +806,4 @@ BASE ab1845b，docs/governance-only：PH-324 CI 的 Preparation 域用 `docs/v1.
 2. **保持 proposed（精确 blocker）**：PH-320/317/325 等 PH-252 done；PH-318/326 等 PH-321 done；PH-330/327 等 PH-322 done；PH-314 等 PH-301/310/285/179/183；无虚假晋级。
 3. **批次 C 登记**：PH-332 M01–M15 验收矩阵/runbook 骨架（ready，deps done，docs-only）、PH-333 M15 部署/升级/备份恢复演练、PH-334 PG 多连接并发验收、PH-335 健康/容量/性能基线（均 proposed，精确 blocker）、PH-336 下一规划槽（proposed，待 PH-331 done）。count 253→258，编号 332-336 连续。
 4. **路线**：ROADMAP 新增批次 C 路线与 M01–M15 映射/顺序（PH-332→333→334→335）。
-5. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-321/322 未实现；批次 C 演练/部署/并发/性能未执行。
+5. 无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：晋级/blockers/批次 C 登记/编号事实核对通过）；最终证据 HEAD 521943a 按槽惯例置 PH-331 done / PH-336 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=258；23 项治理 OK；verify-change --base c69c8ee --task PH-331 ok=true、20 文件全白名单、无 errors。未验证：PH-321/322 未实现；批次 C 演练/部署/并发/性能未执行。
