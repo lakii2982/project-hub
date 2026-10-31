@@ -34,8 +34,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base a5ba2fd --task PH-349",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at HEAD d57c7eb: exit 1, errors = high_risk_review_required + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope; all changed files inside BASE PH-349 allowed_paths."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD 009e8d3: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"009e8d30345e1c4db2b29aa8867ac07e11badb46\",\"count\":7,\"errors\":null}; all 7 files inside BASE PH-349 allowed_paths and review.status=pass with reviewer-b."
     }
   ],
   "review": {
