@@ -1162,3 +1162,13 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 7. **追加登记 PH-396**（ready，deps=[]，docs，risk S，spec=`docs/v1.0-development/closure-reconciliation.md`）：v1.0 遗留任务对账/关闭/最终交付与阻塞清单；本片只登记，不执行对账；count 316→317。
 8. 无代码/脚本/迁移/契约/门禁变更；未执行任何真实 PG/浏览器/生产。
 独立 S 复核：首轮 2 阻断+1 必改（D-09/D-10 卡状态、runbook 当前状态、D-11 漏 PH-388）已修；二轮 PASS。最终门禁：projectctl check ok=true/task_count=317；23 项治理 OK；verify-change --base c931137 --task PH-392 ok=true、10 文件全白名单、无 errors。未验证：D 批真实 L3–L5、PH-396 对账、PH-393–395。
+
+## PH-388 多币种汇率反查/对账后续（2026-10-31，BASE c931137）
+
+- **实现（L1）**：在现有 `scripts`/contracts FX 能力上补齐：`fx_services.fx_rate_history`（按币种对/精确业务日/来源/版本反查，同日多版本全保留）、`trace_fx_ref`（引用+业务日校验，未来/晚于业务日拒绝）、`fx_reconciliation`（合同行/结算/发票的原币↔记账币↔rate ref 只读对账；缺失 null+missing，不猜 0）；现有 `/modules/contracts/fx-rates/` 页面增加历史查询/对账表单与表格，不新增路由、不改 core 迁移。
+- **权限/门控**：owner/finance/auditor 可读；pm 仅项目摘要（不展示全公司汇率历史）；member 拒绝；模块停用 history_read 仍可读历史。
+- **本地 L2 自动化 pass**：`python manage.py test tests.test_v1_fx_history tests.test_v1_fx_history_http --verbosity 1` → **Ran 10 tests, OK**（精确日期无回退/未来拒绝/同日多版本、合同换算一致/不一致、发票 CNY-only 字段缺失显式、结算 CNY 对账、pm/跨 org/member/停用）。
+- **L3 CI/PG、L4 浏览器、L5 生产：not_run**；SQLite 本地结果不作 PG 并发证据，浏览器 1440/390/键盘/空错载/停用态未执行截图。
+- **缺口/偏差**：发票当前 schema 无原币/汇率字段，对账以 `invoice_original_currency_fields_missing` 显式 missing，不伪造原币；结算非 CNY 反查未构造夹具（CNY 已覆盖）；真实 PG/CI 与浏览器由 CI/部署回填。
+- **整体判定**：本地 L1+L2 实现通过；L3–L5 not_run，产品级/发布级不宣称通过。
+- 实跑：check ok=true/task_count=316；manage check exit0；makemigrations No changes；治理 23 OK；全量 1320 tests/134.711s（5F+3E/70 环境跳过，已知 8 项 macOS 失败无新增）；fresh SQLite verify_integrity ok；verify-change 待 review pass。

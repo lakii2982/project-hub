@@ -339,3 +339,183 @@ def prepare_contract_line_fx(member, *, currency, original_net_cents,
     converted['fx_rate_ref'] = rate['ref']
     converted['rate_ref'] = rate['ref']
     return converted
+
+
+def fx_rate_history(member, *, quote_currency=None, effective_on=None, source=None,
+                    version=None, base_currency='CNY'):
+    """Read-only exact-date FX history; never falls back to another date.
+
+    Returns all versions for the exact requested date (or all dates when no
+    effective_on is supplied). Future effective dates are rejected because a
+    future rate must never be used for a historical fact.
+    """
+    member = _reader(member, roles=RATE_ROLES)
+    base = _currency(base_currency, '记账币种')
+    if base != 'CNY':
+        _fail('本片记账本位币固定为 CNY')
+    rows = FxRateSnapshot.objects.filter(organization=member.organization,
+                                         base_currency=base)
+    if quote_currency:
+        rows = rows.filter(quote_currency=_currency(quote_currency, '原币种'))
+    if effective_on is not None:
+        when = _day(effective_on) if not type(effective_on) is date else effective_on
+        if when > timezone.localdate():
+            _fail('不能查询未来生效汇率用于历史')
+        rows = rows.filter(effective_on=when)
+    if source:
+        if source not in SOURCES:
+            _fail('汇率来源无效')
+        rows = rows.filter(source=source)
+    if version is not None:
+        if type(version) is not int or version < 1:
+            _fail('汇率版本须为正整数')
+        rows = rows.filter(version=version)
+    ordered = rows.order_by('effective_on', 'quote_currency', 'version')
+    return {
+        'base_currency': base,
+        'exact_date_required': effective_on is not None,
+        'rows': [_snapshot_projection(row) for row in ordered[:500]],
+        'missing': [] if (effective_on is None or ordered.exists()) else ['fx_rate_exact_date_missing'],
+        'no_fallback': True,
+    }
+
+
+def trace_fx_ref(member, ref, *, business_date=None):
+    """Resolve one immutable fx_rate_ref and validate its effective date before use."""
+    member = _reader(member)
+    row = resolve_fx_ref(member, ref)
+    if business_date is not None:
+        when = _day(business_date) if not type(business_date) is date else business_date
+        if date.fromisoformat(row['effective_on']) > when:
+            _fail('汇率生效日期晚于业务日期，不能用于历史事实')
+    return row
+
+
+def _conversion_issues(*, currency, fx_rate_ref, book_net, book_tax, book_gross,
+                       original_net, original_tax, original_gross, member,
+                       business_date):
+    missing, issues = [], []
+    if currency == 'CNY':
+        return missing, issues
+    if not fx_rate_ref:
+        missing.append('fx_rate_ref')
+        issues.append({'issue_code': 'fx_rate_missing',
+                       'expected': 'frozen fx_rate_ref', 'actual': None})
+        return missing, issues
+    try:
+        rate = trace_fx_ref(member, fx_rate_ref, business_date=business_date)
+    except (ValidationError, PermissionDenied):
+        missing.append('fx_rate_ref')
+        issues.append({'issue_code': 'fx_rate_invalid_or_late',
+                       'expected': 'valid exact-date fx_rate_ref',
+                       'actual': fx_rate_ref})
+        return missing, issues
+    try:
+        expected_net = convert_cents(original_net, Decimal(rate['rate']))
+        expected_tax = convert_cents(original_tax or 0, Decimal(rate['rate']))
+    except ValidationError:
+        missing.append('fx_original_amounts')
+        issues.append({'issue_code': 'fx_original_amounts_invalid',
+                       'expected': 'valid original net/tax cents',
+                       'actual': {'net': original_net, 'tax': original_tax}})
+        return missing, issues
+    expected_gross = expected_net + expected_tax
+    if (book_net, book_tax, book_gross) != (expected_net, expected_tax, expected_gross):
+        missing.append('fx_conversion_mismatch')
+        issues.append({'issue_code': 'fx_conversion_mismatch',
+                       'expected': {'rate_ref': rate['ref'], 'source': rate['source']},
+                       'actual': {'book_net': book_net, 'book_tax': book_tax,
+                                  'book_gross': book_gross}})
+    return missing, issues
+
+
+def fx_reconciliation(member, *, project_id=None, as_of=None, limit=200):
+    """Read-only original/book/rate reconciliation for contracts, settlements, invoices."""
+    member = _reader(member)
+    day = _day(as_of) if as_of is not None else timezone.localdate()
+    if type(as_of) is date:
+        day = as_of
+    if day > timezone.localdate():
+        _fail('对账基准日不能未来')
+    projects = visible_projects(member)
+    if member.role == 'pm':
+        projects = projects.filter(manager=member)
+    if project_id is not None:
+        projects = projects.filter(pk=project_id)
+    project_ids = list(projects.values_list('pk', flat=True))
+    result = {'as_of': day.isoformat(), 'base_currency': 'CNY',
+              'contracts': [], 'settlements': [], 'invoices': [],
+              'missing': [], 'issues': []}
+    lines = ContractLine.objects.select_related(
+        'contract_version__contract__project').filter(
+        organization=member.organization,
+        contract_version__contract__project_id__in=project_ids,
+        contract_version__effective_on__lte=day)
+    for line in lines[:limit]:
+        business_date = line.contract_version.effective_on
+        missing, issues = _conversion_issues(
+            currency=line.currency, fx_rate_ref=line.fx_rate_ref,
+            book_net=line.net_cents, book_tax=line.tax_cents,
+            book_gross=line.gross_cents, original_net=line.original_net_cents,
+            original_tax=line.original_tax_cents,
+            original_gross=line.original_gross_cents, member=member,
+            business_date=business_date)
+        result['contracts'].append({
+            'source_ref': {'namespace': 'contracts', 'kind': 'contract_line',
+                           'id': str(line.pk), 'version': line.version},
+            'project_id': str(line.contract_version.contract.project_id),
+            'contract_code': line.contract_version.contract.contract_code,
+            'line_no': line.line_no, 'currency': line.currency,
+            'book_currency': 'CNY',
+            'original_net_cents': line.original_net_cents,
+            'original_tax_cents': line.original_tax_cents,
+            'original_gross_cents': line.original_gross_cents,
+            'book_net_cents': line.net_cents, 'book_tax_cents': line.tax_cents,
+            'book_gross_cents': line.gross_cents,
+            'fx_rate_ref': line.fx_rate_ref, 'missing': missing, 'issues': issues})
+        result['issues'].extend(issues); result['missing'].extend(missing)
+    from pmo_plugins.settlement.models import Settlement
+    settlements = Settlement.objects.select_related('contract_line').filter(
+        organization=member.organization, project_id__in=project_ids,
+        settled_on__lte=day, status='active')
+    for row in settlements[:limit]:
+        missing, issues = _conversion_issues(
+            currency=row.currency, fx_rate_ref=row.fx_rate_ref,
+            book_net=row.net_cents, book_tax=row.tax_cents, book_gross=row.gross_cents,
+            original_net=row.original_net_cents, original_tax=row.original_tax_cents,
+            original_gross=row.original_gross_cents, member=member,
+            business_date=row.settled_on)
+        result['settlements'].append({
+            'source_ref': row.settlement_ref, 'project_id': str(row.project_id),
+            'currency': row.currency, 'book_currency': 'CNY',
+            'original_net_cents': row.original_net_cents,
+            'original_tax_cents': row.original_tax_cents,
+            'original_gross_cents': row.original_gross_cents,
+            'book_net_cents': row.net_cents, 'book_tax_cents': row.tax_cents,
+            'book_gross_cents': row.gross_cents, 'fx_rate_ref': row.fx_rate_ref,
+            'missing': missing, 'issues': issues})
+        result['issues'].extend(issues); result['missing'].extend(missing)
+    from pmo_plugins.invoicing.models import Invoice
+    invoices = Invoice.objects.filter(
+        organization=member.organization, invoice_date__lte=day).select_related('counterparty')
+    if member.role == 'pm':
+        invoices = invoices.none()
+    for row in invoices[:limit]:
+        result['invoices'].append({
+            'source_ref': row.invoice_ref, 'currency': 'CNY', 'book_currency': 'CNY',
+            'book_net_cents': row.net_cents, 'book_tax_cents': row.tax_cents,
+            'book_gross_cents': row.gross_cents,
+            'fx_rate_ref': None,
+            'missing': ['invoice_original_currency_fields_missing'],
+            'issues': [{'issue_code': 'invoice_fx_fields_not_implemented',
+                        'expected': 'invoice original currency/fx fields',
+                        'actual': 'CNY-only invoice schema in this slice'}]})
+        result['missing'].append('invoice_original_currency_fields_missing')
+    result['summary'] = {
+        'contract_inconsistent': sum(1 for item in result['contracts'] if item['missing']),
+        'settlement_inconsistent': sum(1 for item in result['settlements'] if item['missing']),
+        'invoice_fx_unsupported': len(result['invoices']),
+        'issue_count': len(result['issues']),
+    }
+    result['missing'] = sorted(set(result['missing']))
+    return result

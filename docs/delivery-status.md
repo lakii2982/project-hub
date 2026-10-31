@@ -77,3 +77,4 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 - 批次 C/D 规划同步（PH-376）：PH-357 done 后晋级 PH-367 汇总验收前置契约；PH-372 等 PH-367；登记 PH-377 发布资格后续、PH-378 发票批量导入、PH-379 insights、PH-380 通知收件箱、PH-381 下一规划入口（依赖 PH-376）。
 - 批次 D 规划同步（PH-381）：登记 PH-382 D-01 编排验收执行（ready，deps PH-370 done）、PH-383 发票批量导入错误清单、PH-384 insights 性能/导出、PH-385 通知调度/已读后续（均 proposed）、PH-386 下一规划入口（等 PH-381 done）；PH-372/377 等 PH-367，其余批次 D 链保持精确 blockers。
 - 任务板卫生（PH-386）：PH-329/336/341/367/371 已合并 → done；PH-318/326 多币种旧片与 PH-006/009/011/014 legacy 重复片 → cancelled（证据/范围转 PH-388 或通知链）；PH-372 晋级 ready；登记 PH-387 D-02 验收（ready）、PH-388 多币种反查、PH-389/390 D 批验收、PH-391 下一规划入口。
+- PH-388 多币种汇率反查/对账：新增精确日期历史反查、fx ref 业务日校验、合同/结算/发票原币↔记账币对账（发票 CNY-only 显式 missing）；复用现有 FX 页面/路由，无 core 迁移；scoped 10 tests OK，L3 CI/PG、L4 浏览器、L5 生产 not_run。

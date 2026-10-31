@@ -1,5 +1,59 @@
 {% extends 'base.html' %}
-{% block title %}汇率与多币种核对{% endblock %}{% block breadcrumb %}合同 / 汇率与多币种核对{% endblock %}{% block content %}
+{% block title %}汇率与多币种核对
+<section class="panel"><div class="panel-heading"><h2>汇率历史反查（精确日期，不回退）</h2></div><div class="body">
+<form method="get" action="/modules/contracts/fx-rates/" aria-label="汇率历史查询" class="form-grid">
+<label>原币种 <input name="quote_currency" value="{{ filters.quote_currency }}" maxlength="3" placeholder="USD"></label>
+<label>业务生效日 <input type="date" name="effective_on" value="{{ filters.effective_on }}"></label>
+<label>来源 <select name="source"><option value="">全部</option><option value="manual"{% if filters.source == "manual" %} selected{% endif %}>手工</option><option value="bank"{% if filters.source == "bank" %} selected{% endif %}>银行</option><option value="provider"{% if filters.source == "provider" %} selected{% endif %}>供应商</option></select></label>
+<label>版本 <input type="number" min="1" name="version" value="{{ filters.version }}"></label>
+<button class="button" type="submit">查询</button>
+</form>
+{% if history.missing %}<div class="notice" role="alert">该精确业务日期无汇率（missing=fx_rate_exact_date_missing）；不采用相邻日期或未来汇率。</div>{% endif %}
+{% if history.rows %}<div class="table-scroll"><table aria-label="汇率历史"><thead><tr><th>生效日</th><th>币种对</th><th>汇率</th><th>版本</th><th>来源</th><th>参考</th><th>引用</th></tr></thead><tbody>
+{% for row in history.rows %}<tr><td>{{ row.effective_on }}</td><td>{{ row.quote_currency }}→{{ row.base_currency }}</td><td class="amount">{{ row.rate }}</td><td>{{ row.version }}</td><td>{{ row.source_display }}</td><td>{{ row.reference|default:"—" }}</td><td class="trace">{{ row.ref.id }} v{{ row.ref.version }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>无匹配汇率历史。</p>{% endif %}
+<p class="notice">同日多版本全部保留；纠错以新版本追加，旧版本不可修改/删除。</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>原币/记账币/汇率引用对账（只读）</h2></div><div class="body">
+<form method="get" action="/modules/contracts/fx-rates/" aria-label="对账基准" class="form-grid">
+<label>对账基准日 <input type="date" name="as_of" value="{{ filters.as_of }}"></label>
+<label>项目 ID <input name="project_id" value="{{ filters.project_id }}"></label>
+<button class="button" type="submit">对账</button>
+</form>
+{% if reconciliation.issues %}<div class="notice" role="alert">发现 {{ reconciliation.summary.issue_count }} 条缺失/不一致；详见各表“异常”列，不自动修数据。</div>{% endif %}
+<h3>合同行</h3>{% if reconciliation.contracts %}<div class="table-scroll"><table aria-label="合同行对账"><thead><tr><th>合同</th><th>行</th><th>币种</th><th>原币净额</th><th>记账净额</th><th>汇率引用</th><th>缺失/异常</th></tr></thead><tbody>
+{% for line in reconciliation.contracts %}<tr><td>{{ line.contract_code }}</td><td>{{ line.line_no }}</td><td>{{ line.currency }}→{{ line.book_currency }}</td><td class="amount">{{ line.original_net_cents|default:"—" }}</td><td class="amount">{{ line.book_net_cents }}</td><td class="trace">{% if line.fx_rate_ref %}{{ line.fx_rate_ref.id }} v{{ line.fx_rate_ref.version }}{% else %}—{% endif %}</td><td>{% for issue in line.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无合同行。</p>{% endif %}
+<h3>结算</h3>{% if reconciliation.settlements %}<div class="table-scroll"><table aria-label="结算对账"><thead><tr><th>结算</th><th>币种</th><th>原币净额</th><th>记账净额</th><th>汇率引用</th><th>缺失/异常</th></tr></thead><tbody>
+{% for row in reconciliation.settlements %}<tr><td class="trace">{{ row.source_ref.id }} v{{ row.source_ref.version }}</td><td>{{ row.currency }}→{{ row.book_currency }}</td><td class="amount">{{ row.original_net_cents|default:"—" }}</td><td class="amount">{{ row.book_net_cents }}</td><td class="trace">{% if row.fx_rate_ref %}{{ row.fx_rate_ref.id }} v{{ row.fx_rate_ref.version }}{% else %}—{% endif %}</td><td>{% for issue in row.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无已生效结算。</p>{% endif %}
+<h3>发票</h3>{% if reconciliation.invoices %}<div class="table-scroll"><table aria-label="发票对账"><thead><tr><th>发票</th><th>币种</th><th>记账净额</th><th>缺失/异常</th></tr></thead><tbody>
+{% for row in reconciliation.invoices %}<tr><td class="trace">{{ row.source_ref.id }} v{{ row.source_ref.version }}</td><td>{{ row.currency }}→{{ row.book_currency }}</td><td class="amount">{{ row.book_net_cents }}</td><td>{% for issue in row.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无可见发票。</p>{% endif %}
+<p class="notice">发票当前为 CNY-only schema，原始币种/汇率字段缺失按 missing 展示，不伪造原币或换算；真实 PG/CI 与浏览器验收另行回填。</p></div></section>
+{% endblock %}{% block breadcrumb %}合同 / 汇率与多币种核对
+<section class="panel"><div class="panel-heading"><h2>汇率历史反查（精确日期，不回退）</h2></div><div class="body">
+<form method="get" action="/modules/contracts/fx-rates/" aria-label="汇率历史查询" class="form-grid">
+<label>原币种 <input name="quote_currency" value="{{ filters.quote_currency }}" maxlength="3" placeholder="USD"></label>
+<label>业务生效日 <input type="date" name="effective_on" value="{{ filters.effective_on }}"></label>
+<label>来源 <select name="source"><option value="">全部</option><option value="manual"{% if filters.source == "manual" %} selected{% endif %}>手工</option><option value="bank"{% if filters.source == "bank" %} selected{% endif %}>银行</option><option value="provider"{% if filters.source == "provider" %} selected{% endif %}>供应商</option></select></label>
+<label>版本 <input type="number" min="1" name="version" value="{{ filters.version }}"></label>
+<button class="button" type="submit">查询</button>
+</form>
+{% if history.missing %}<div class="notice" role="alert">该精确业务日期无汇率（missing=fx_rate_exact_date_missing）；不采用相邻日期或未来汇率。</div>{% endif %}
+{% if history.rows %}<div class="table-scroll"><table aria-label="汇率历史"><thead><tr><th>生效日</th><th>币种对</th><th>汇率</th><th>版本</th><th>来源</th><th>参考</th><th>引用</th></tr></thead><tbody>
+{% for row in history.rows %}<tr><td>{{ row.effective_on }}</td><td>{{ row.quote_currency }}→{{ row.base_currency }}</td><td class="amount">{{ row.rate }}</td><td>{{ row.version }}</td><td>{{ row.source_display }}</td><td>{{ row.reference|default:"—" }}</td><td class="trace">{{ row.ref.id }} v{{ row.ref.version }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>无匹配汇率历史。</p>{% endif %}
+<p class="notice">同日多版本全部保留；纠错以新版本追加，旧版本不可修改/删除。</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>原币/记账币/汇率引用对账（只读）</h2></div><div class="body">
+<form method="get" action="/modules/contracts/fx-rates/" aria-label="对账基准" class="form-grid">
+<label>对账基准日 <input type="date" name="as_of" value="{{ filters.as_of }}"></label>
+<label>项目 ID <input name="project_id" value="{{ filters.project_id }}"></label>
+<button class="button" type="submit">对账</button>
+</form>
+{% if reconciliation.issues %}<div class="notice" role="alert">发现 {{ reconciliation.summary.issue_count }} 条缺失/不一致；详见各表“异常”列，不自动修数据。</div>{% endif %}
+<h3>合同行</h3>{% if reconciliation.contracts %}<div class="table-scroll"><table aria-label="合同行对账"><thead><tr><th>合同</th><th>行</th><th>币种</th><th>原币净额</th><th>记账净额</th><th>汇率引用</th><th>缺失/异常</th></tr></thead><tbody>
+{% for line in reconciliation.contracts %}<tr><td>{{ line.contract_code }}</td><td>{{ line.line_no }}</td><td>{{ line.currency }}→{{ line.book_currency }}</td><td class="amount">{{ line.original_net_cents|default:"—" }}</td><td class="amount">{{ line.book_net_cents }}</td><td class="trace">{% if line.fx_rate_ref %}{{ line.fx_rate_ref.id }} v{{ line.fx_rate_ref.version }}{% else %}—{% endif %}</td><td>{% for issue in line.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无合同行。</p>{% endif %}
+<h3>结算</h3>{% if reconciliation.settlements %}<div class="table-scroll"><table aria-label="结算对账"><thead><tr><th>结算</th><th>币种</th><th>原币净额</th><th>记账净额</th><th>汇率引用</th><th>缺失/异常</th></tr></thead><tbody>
+{% for row in reconciliation.settlements %}<tr><td class="trace">{{ row.source_ref.id }} v{{ row.source_ref.version }}</td><td>{{ row.currency }}→{{ row.book_currency }}</td><td class="amount">{{ row.original_net_cents|default:"—" }}</td><td class="amount">{{ row.book_net_cents }}</td><td class="trace">{% if row.fx_rate_ref %}{{ row.fx_rate_ref.id }} v{{ row.fx_rate_ref.version }}{% else %}—{% endif %}</td><td>{% for issue in row.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无已生效结算。</p>{% endif %}
+<h3>发票</h3>{% if reconciliation.invoices %}<div class="table-scroll"><table aria-label="发票对账"><thead><tr><th>发票</th><th>币种</th><th>记账净额</th><th>缺失/异常</th></tr></thead><tbody>
+{% for row in reconciliation.invoices %}<tr><td class="trace">{{ row.source_ref.id }} v{{ row.source_ref.version }}</td><td>{{ row.currency }}→{{ row.book_currency }}</td><td class="amount">{{ row.book_net_cents }}</td><td>{% for issue in row.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无可见发票。</p>{% endif %}
+<p class="notice">发票当前为 CNY-only schema，原始币种/汇率字段缺失按 missing 展示，不伪造原币或换算；真实 PG/CI 与浏览器验收另行回填。</p></div></section>
+{% endblock %}{% block content %}
 <section class="page-header"><div><h1 tabindex="-1">汇率快照与合同原币/记账币核对</h1><p>汇率事实只追加、按业务生效日冻结；换算一次性 ROUND_HALF_UP；无汇率显示缺失，不回退最近汇率、不改写历史。</p></div><a class="button" href="/modules/contracts/contracts/">返回合同</a></section>
 {% if error %}<div class="notice" role="alert">{{ error }}</div>{% endif %}
 {% if form %}<section class="panel"><div class="panel-heading"><h2>登记汇率（owner/finance）</h2></div><div class="body"><form method="post" action="{{ fx_rate_save_url }}" aria-label="登记汇率">{% csrf_token %}{{ form.as_p }}<div class="actions"><button class="button primary" type="submit">追加汇率</button></div></form><p class="notice">同一业务日期再次登记会追加新版本；历史版本不可修改/删除。</p></div></section>{% endif %}
@@ -7,4 +61,31 @@
 {% for row in rates %}<tr><td>{{ row.effective_on }}</td><td>{{ row.quote_currency }}→{{ row.base_currency }}</td><td class="amount">{{ row.rate }}</td><td>{{ row.version }}</td><td>{{ row.source_display }}</td><td>{{ row.reference|default:"—" }}</td><td class="trace">{{ row.ref.id }} v{{ row.ref.version }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无汇率快照{% if form %}；请先登记{% endif %}。</p>{% endif %}<p class="notice">缺少精确业务日期汇率时，非 CNY 金额显示缺失，不显示 0、不回退其他日期。</p></div></section>
 <section class="panel"><div class="panel-heading"><h2>合同行原币/记账币（只读）</h2></div><div class="body">{% if lines %}<div class="table-scroll"><table aria-label="合同行多币种核对"><thead><tr><th>合同</th><th>行</th><th>币种</th><th>原币净额</th><th>原币税额</th><th>记账净额</th><th>记账税额</th><th>汇率</th><th>缺失/异常</th></tr></thead><tbody>
 {% for line in lines %}<tr><td>{{ line.contract_code }}</td><td>{{ line.line_no }}</td><td>{{ line.currency }}→{{ line.book_currency }}</td><td class="amount">{{ line.original_net_cents|default:"—" }}</td><td class="amount">{{ line.original_tax_cents|default:"—" }}</td><td class="amount">{{ line.net_cents }}</td><td class="amount">{{ line.tax_cents }}</td><td>{% if line.conversion %}{{ line.conversion.rate }}{% else %}缺失{% endif %}</td><td>{% for issue in line.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无可展示的合同行。</p>{% endif %}<p class="notice">CNY 历史行按既有金额展示；非 CNY 行必须引用精确生效日汇率，缺失为 missing，不做最近汇率回退/重算历史。</p></div></section>
+
+<section class="panel"><div class="panel-heading"><h2>汇率历史反查（精确日期，不回退）</h2></div><div class="body">
+<form method="get" action="/modules/contracts/fx-rates/" aria-label="汇率历史查询" class="form-grid">
+<label>原币种 <input name="quote_currency" value="{{ filters.quote_currency }}" maxlength="3" placeholder="USD"></label>
+<label>业务生效日 <input type="date" name="effective_on" value="{{ filters.effective_on }}"></label>
+<label>来源 <select name="source"><option value="">全部</option><option value="manual"{% if filters.source == "manual" %} selected{% endif %}>手工</option><option value="bank"{% if filters.source == "bank" %} selected{% endif %}>银行</option><option value="provider"{% if filters.source == "provider" %} selected{% endif %}>供应商</option></select></label>
+<label>版本 <input type="number" min="1" name="version" value="{{ filters.version }}"></label>
+<button class="button" type="submit">查询</button>
+</form>
+{% if history.missing %}<div class="notice" role="alert">该精确业务日期无汇率（missing=fx_rate_exact_date_missing）；不采用相邻日期或未来汇率。</div>{% endif %}
+{% if history.rows %}<div class="table-scroll"><table aria-label="汇率历史"><thead><tr><th>生效日</th><th>币种对</th><th>汇率</th><th>版本</th><th>来源</th><th>参考</th><th>引用</th></tr></thead><tbody>
+{% for row in history.rows %}<tr><td>{{ row.effective_on }}</td><td>{{ row.quote_currency }}→{{ row.base_currency }}</td><td class="amount">{{ row.rate }}</td><td>{{ row.version }}</td><td>{{ row.source_display }}</td><td>{{ row.reference|default:"—" }}</td><td class="trace">{{ row.ref.id }} v{{ row.ref.version }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>无匹配汇率历史。</p>{% endif %}
+<p class="notice">同日多版本全部保留；纠错以新版本追加，旧版本不可修改/删除。</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>原币/记账币/汇率引用对账（只读）</h2></div><div class="body">
+<form method="get" action="/modules/contracts/fx-rates/" aria-label="对账基准" class="form-grid">
+<label>对账基准日 <input type="date" name="as_of" value="{{ filters.as_of }}"></label>
+<label>项目 ID <input name="project_id" value="{{ filters.project_id }}"></label>
+<button class="button" type="submit">对账</button>
+</form>
+{% if reconciliation.issues %}<div class="notice" role="alert">发现 {{ reconciliation.summary.issue_count }} 条缺失/不一致；详见各表“异常”列，不自动修数据。</div>{% endif %}
+<h3>合同行</h3>{% if reconciliation.contracts %}<div class="table-scroll"><table aria-label="合同行对账"><thead><tr><th>合同</th><th>行</th><th>币种</th><th>原币净额</th><th>记账净额</th><th>汇率引用</th><th>缺失/异常</th></tr></thead><tbody>
+{% for line in reconciliation.contracts %}<tr><td>{{ line.contract_code }}</td><td>{{ line.line_no }}</td><td>{{ line.currency }}→{{ line.book_currency }}</td><td class="amount">{{ line.original_net_cents|default:"—" }}</td><td class="amount">{{ line.book_net_cents }}</td><td class="trace">{% if line.fx_rate_ref %}{{ line.fx_rate_ref.id }} v{{ line.fx_rate_ref.version }}{% else %}—{% endif %}</td><td>{% for issue in line.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无合同行。</p>{% endif %}
+<h3>结算</h3>{% if reconciliation.settlements %}<div class="table-scroll"><table aria-label="结算对账"><thead><tr><th>结算</th><th>币种</th><th>原币净额</th><th>记账净额</th><th>汇率引用</th><th>缺失/异常</th></tr></thead><tbody>
+{% for row in reconciliation.settlements %}<tr><td class="trace">{{ row.source_ref.id }} v{{ row.source_ref.version }}</td><td>{{ row.currency }}→{{ row.book_currency }}</td><td class="amount">{{ row.original_net_cents|default:"—" }}</td><td class="amount">{{ row.book_net_cents }}</td><td class="trace">{% if row.fx_rate_ref %}{{ row.fx_rate_ref.id }} v{{ row.fx_rate_ref.version }}{% else %}—{% endif %}</td><td>{% for issue in row.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无已生效结算。</p>{% endif %}
+<h3>发票</h3>{% if reconciliation.invoices %}<div class="table-scroll"><table aria-label="发票对账"><thead><tr><th>发票</th><th>币种</th><th>记账净额</th><th>缺失/异常</th></tr></thead><tbody>
+{% for row in reconciliation.invoices %}<tr><td class="trace">{{ row.source_ref.id }} v{{ row.source_ref.version }}</td><td>{{ row.currency }}→{{ row.book_currency }}</td><td class="amount">{{ row.book_net_cents }}</td><td>{% for issue in row.issues %}{{ issue.issue_code }}{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>暂无可见发票。</p>{% endif %}
+<p class="notice">发票当前为 CNY-only schema，原始币种/汇率字段缺失按 missing 展示，不伪造原币或换算；真实 PG/CI 与浏览器验收另行回填。</p></div></section>
 {% endblock %}

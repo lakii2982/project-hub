@@ -1,0 +1,32 @@
+{
+  "task_id": "PH-388",
+  "summary": "多币种汇率反查/对账后续 on BASE c931137. Implements PH-388 on top of PH-321 FxRateSnapshot without a new owner/table or core migration: fx_rate_history returns exact business-date history by currency pair/source/version, keeps all same-date versions, reports fx_rate_exact_date_missing with no fallback, and rejects future rates for historical use; trace_fx_ref validates immutable refs and effective date against the business date; fx_reconciliation produces read-only original/book/rate consistency rows for contract lines, active settlements and invoices, with null+missing semantics, conversion mismatch/issue reporting, pm project scope and member denial. The existing /modules/contracts/fx-rates/ page is extended with history filters and reconciliation tables (no new route; route binding unchanged and remains inside the PH-388 allowlist). Tests (10) cover exact-date/versions/no fallback, future rejection, permissions/module-disabled history, contract conversion pass/mismatch, invoice CNY-only schema missing explicit, settlement CNY reconciliation, and pm/cross-org/member boundaries. L3 CI/PostgreSQL, L4 browser and L5 production are not_run; invoice has no original currency/FX fields so it is honestly reported missing rather than fabricated; no release/product-level pass is claimed. No core migration/table/route/product change beyond allowlisted contracts FX files/tests.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":316}."},
+    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."},
+    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual run exit 0: No changes detected; no core migration/table added."},
+    {"command": "python manage.py test tests.test_v1_fx_history tests.test_v1_fx_history_http --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 10 tests, OK. Covers exact-date/all versions/no fallback, future rejection, contract conversion consistent/mismatch, invoice CNY-only missing explicit, settlement CNY, permissions/pm/cross-org/disabled history."},
+    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 1320 tests in 134.711s, 5 failures/3 errors/70 environment skips. The 8 failure/error names are the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names."},
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests, OK."},
+    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual fresh SQLite (migrate then verify) run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."},
+    {"command": "python scripts/projectctl.py verify-change --base c931137 --task PH-388", "result": "not_run", "evidence": "Not run before report creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Independent S review pending. Verify exact-date/no-fallback/future-rejection semantics, immutable fx ref tracing, contract/settlement/invoice reconciliation with null+missing and no fabricated invoice FX, permissions/pm scope/module-disabled history, no core migration/table/route binding change, exact whitelist, real outputs for 10 scoped and 1320 full tests, and honest L3-L5 not_run. Implementer does not self-pass."
+  },
+  "deviations": [
+    "Invoice schema has no original-currency/FX fields, so invoice reconciliation reports invoice_original_currency_fields_missing and invoice_fx_fields_not_implemented instead of fabricating original/book/rate values; this is a recorded gap for a future invoice multi-currency slice.",
+    "Settlement reconciliation is implemented and CNY settlement coverage is tested; a non-CNY settlement fixture was not constructed, so non-CNY settlement conversion remains not_run locally.",
+    "The feature is exposed on the existing /modules/contracts/fx-rates/ page rather than a new route, keeping delivery route bindings unchanged and within the strict PH-388 allowlist.",
+    "L3 CI/PostgreSQL, L4 browser 1440/390/keyboard/empty-error-disabled and L5 production/customer evidence are not_run; SQLite is not presented as PG concurrency evidence.",
+    "No core migration, table, new route, contract-schema or other owner write is added."
+  ],
+  "unverified": [
+    "Real PostgreSQL/CI behavior, browser 1440/390/keyboard/empty-error/disabled states, staging and production/customer acceptance.",
+    "Non-CNY settlement reconciliation; invoice original-currency/FX fields (schema gap); independent S review and CI/PR."
+  ]
+}
