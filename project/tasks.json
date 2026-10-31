@@ -9169,7 +9169,7 @@
       "title": "发票/价税分离与红冲契约冻结（ADR 0015，docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9196,7 +9196,7 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": "worker-docs",
+      "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-293.md"
     },
