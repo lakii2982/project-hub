@@ -845,4 +845,4 @@ BASE 9e0991f（PH-337/PH-317 之后；PH-336 已补白名单：contracts models/
 2. **依赖再基线**：无新增晋级（全 done 依赖 open 任务仅 PH-141 legacy 需独立 DoR、PH-241 他人 in_review）；ready 队列 PH-320/321/322/325；PH-330 等 PH-322、PH-333/334 等 PH-322/321/330、PH-335 等 PH-333/334、PH-314 等 PH-301/310/285/179/183 保持 proposed 并刷新精确 blocker。
 3. **新登记**：PH-338 发票批量/导入（proposed）、PH-339 insights 读模型实现（proposed）、PH-340 通知中心实现（proposed）、PH-341 下一规划槽（proposed，待 PH-337 done）。count 259→263，编号 338-341 连续。
 4. **ROADMAP** 新增批次 B/C 进展节（ready 队列/精确 blockers/新登记/批次 C not_run 边界）。
-5. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-320/321/322/325 未实现；PH-338/339/340 未实现；批次 C 演练未执行。
+5. 独立 S 复核首轮 3 阻断（PH-339 blocker 歧义、PH-320 范围/白名单重复 PH-252、PH-325 不存在 urls.py）已修，二轮 PASS；最终证据 HEAD 3e0a7cd 按槽惯例置 PH-337 done / PH-341 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=263；23 项治理 OK；verify-change --base 9e0991f --task PH-337 ok=true、16 文件全白名单、无 errors。未验证：PH-320/321/322/325 未实现；PH-338/339/340 未实现；批次 C 演练未执行。
