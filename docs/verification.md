@@ -959,3 +959,16 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 ## PH-364 到期扫描/待办/通知契约冻结（2026-10-31，BASE d81c11c）
 
 在 `project/specs/PH-364.md` 冻结 reminder 只读契约：owner/来源 adapter 边界；`reminder_ref`/待办 item 形状；issue_code 注册表（结算逾期/核销、现金计划、合同变更/终止、可计费确认、发票税额、预算缺失/超支、关期预检、导入冲突、令牌临期、read_model_missing、module_disabled_history）；收件人矩阵（owner/finance/auditor 全 org、pm 管理项目、member 本人、停用/撤权拒绝、模块停用历史只读）；`reminder_key=sha256(org+source_ref+issue_code+recipient_scope+active)` 确定性去重（排除 as_of/token/渠道）；扫描 envelope `core.reminders.read/v1`（scan_key/scan_digest/read_only=true/notifications_sent=0/missing/issues/truncated，重复扫描同 digest、零写/零外发）；as_of/period/到期窗口/null+missing 语义；PH-301/301/314/PH-355 边界与变更控制。PH-355 depends_on 加入 PH-364，blocker 保留 PH-179/183/151 proposed；通知中心任务均保持 proposed。实跑：check ok=true/task_count=287；`python -m unittest tests.test_projectctl tests.test_governance -v` **23 OK**；无代码/迁移/表/canonical/schema 变更。verify-change 待 review pass；未验证 PH-355 实现/浏览器/PG/生产/独立 review。
+
+
+## PH-366 批次 C 演练证据回填与发布资格清单契约（docs-only）（2026-10-31）
+
+基线 fe9c257。新增 `docs/v1.0-development/batch-c-release-evidence-contract.md`：
+1. **证据来源冻结**：PH-347 `install_drill.py`/`upgrade_drill.py`、PH-348 `backup_drill.py`/`restore_drill.py`、PH-349 `test_v1_pg_concurrency` CLI、PH-350（未实现）、PH-352 runbook、PH-332/PH-345；证据落点 `runtime/evidence`（不入发布包）+ 脱敏摘要入 `docs/verification.md`。
+2. **Envelope 必需字段/退出码归一化**：0 pass、2 not_run、3 fail、4 environment_error fail、5 blocked；同一 script+mode+profile+started_at 去重、JSONL append-only、敏感字段 redactions。
+3. **回填条目格式**：候选 SHA/环境/命令/exit/status/checks 计数/artifacts+sha256/证据层级 L1–L5/缺口/判定；不得只凭脚本文本写 pass。
+4. **L1–L5 判定规则**：演练（rehearsal/staging）为 L2/L3，不冒充 L5；SQLite 不作 PG 并发证据；dry_run 不作 execute 证据。
+5. **发布资格 gate 清单**：治理基线、V1-OPS-01–06、M01–M15 required 层、浏览器 L4、发布包；缺口/豁免需产品+发布+独立复核三方签批（执行人不得自批）；当前 PH-350 未实现、L3/L4/L5 未执行 → **发布资格 blocked**，不得以文档/演练声称就绪。
+6. **双人复核/签名/时间戳/证据 digest**；**失效与重跑**：绑定候选 SHA、环境/契约变化重跑、14 天时效、失败修复重跑、禁止挑选旧证据/手改 JSONL。
+7. 与 PH-357（回填）/PH-367（汇总验收）/PH-333/334/335 的边界；反例清单；无实现/脚本/迁移/门禁变更。
+独立 S 复核 PASS（含 PH-357/PH-367 边界、gate/豁免/失效规则检查）；最终门禁：projectctl check ok=true/task_count=291；23 项治理 OK；verify-change --base fe9c257 --task PH-366 ok=true、7 文件全白名单、无 errors。未验证：真实 staging/production、PG 备份/恢复/并发、PH-350、L3 CI、L4 浏览器、L5 客户验收。
