@@ -50,12 +50,12 @@
     {
       "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-350",
       "result": "pass",
-      "evidence": "Actual run after the round-2 reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-350 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
+      "evidence": "Actual run after the round-2 reviewer pass and final status commit 20b7ac2: ok=true, head=20b7ac2bfd8dbf75f6330928dee2470c7909bba6, changes=8 files all inside the PH-350 allowlist, errors=[]."
     },
     {
       "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-350",
       "result": "pass",
-      "evidence": "Actual run after the round-2 reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-350 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
+      "evidence": "Actual run after the round-2 reviewer pass and final status commit 20b7ac2: ok=true, head=20b7ac2bfd8dbf75f6330928dee2470c7909bba6, changes=8 files all inside the PH-350 allowlist, errors=[]."
     },
     {
       "command": "python scripts/ops/healthcheck.py --mode dry_run --env production --facts <complete-local-facts> --out /tmp/ph350-evidence/health-production-dry-notrun.jsonl",
