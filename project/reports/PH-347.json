@@ -58,9 +58,9 @@
       "evidence": "Actual run exit 5; envelope status blocked with safety.production_execute fail; no production upgrade performed."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base cbb84c2 --task PH-347",
+      "command": "python scripts/projectctl.py verify-change --base a5ba2fd --task PH-347",
       "result": "pass",
-      "evidence": "Actual run after the round-2 reviewer pass and final status commit 839a311: ok=true, head=839a31184ab3f9b66b135f42049e6ce540615d03, changes=10 files all inside the PH-347 allowlist, errors=[]."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 10 files inside BASE PH-347 allowed_paths (review pass; post-rebase gate rerun)."
     },
     {
       "command": "python scripts/ops/install_drill.py --mode execute --env staging --facts '{\"compose_version\":\"2.29.0\",\"db_engine\":\"sqlite\",\"migrations_append_only\":true}' --out /tmp/ph347-evidence/install-staging-refused.jsonl",
@@ -94,7 +94,8 @@
     "Upgrade execute was performed only against a temporary copied SQLite DB; its smoke step was not executed, so the evidence status is not_run/exit 2 rather than a fabricated pass. PG/backup-restore/PG-concurrency are separate slices (PH-348/349).",
     "TLS probe CLI requires a real domain and uses a real socket; deterministic tests inject handshake facts. No domain was probed in this slice, so CLI evidence is not_run.",
     "Artifacts are written under /tmp/ph347-evidence and referenced from the report/handoff; they are not committed (runtime evidence, no customer/credential data).",
-    "No product code, migration, canonical/schema or CI-gate changes."
+    "No product code, migration, canonical/schema or CI-gate changes.",
+    "Lead integration rebase (cbb84c2 -> a5ba2fd) after PH-352 merged: docs/verification + manifest merged; gates rerun."
   ],
   "unverified": [
     "Real staging/production install/upgrade/TLS/rollback execution and L4/L5 evidence",
