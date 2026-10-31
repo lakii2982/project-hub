@@ -1471,7 +1471,7 @@ class Command(BaseCommand):
                     errors.append(f"period_close:{run.pk}:closed_date")
                 prev = runs[index - 1] if index else None
                 if run.action == 'close':
-                    if prev is not None and prev.state != 'reopened':
+                    if run.state == 'closing' and prev is not None and prev.state != 'reopened':
                         errors.append(f"period_close:{run.pk}:close_transition")
                     if run.state == 'closed':
                         if (prev is None or prev.action != 'close' or prev.state != 'closing'
@@ -1519,7 +1519,7 @@ class Command(BaseCommand):
                     errors.append(f"project_close:{run.pk}:from_stage")
                 prev = runs[index - 1] if index else None
                 if run.action == 'close':
-                    if prev is not None and prev.state != 'reopened':
+                    if run.state == 'closing' and prev is not None and prev.state != 'reopened':
                         errors.append(f"project_close:{run.pk}:close_transition")
                     if run.state == 'closed':
                         if (prev is None or prev.action != 'close' or prev.state != 'closing'

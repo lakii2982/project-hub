@@ -1,4 +1,5 @@
 """PH-322 period/project close append-only run invariants."""
+import json
 import uuid
 from datetime import timedelta
 from io import StringIO
@@ -16,6 +17,7 @@ from core.models import (AccountingEvent, AccountingPeriod, AuditEvent, DomainEv
 from pmo_plugins.contracts.models import Contract, Counterparty
 from pmo_plugins.delivery import close_services as services
 from pmo_plugins.delivery.models import DeliveryReceipt, PeriodCloseRun, ProjectClose
+from tests.test_v1_contract_change import ContractChangeFixture
 
 
 class CloseFixture(TestCase):
@@ -355,3 +357,58 @@ class ProjectCloseTests(CloseFixture, TestCase):
         with self.assertRaises(CommandError):
             call_command('verify_integrity', '--json', stdout=output)
         self.assertIn('project_close:', output.getvalue())
+
+
+class CleanPeriodVerifierTests(TestCase):
+    def setUp(self):
+        self.today = timezone.localdate()
+        self.org = Organization.objects.create(name='PH322 clean period')
+        user = get_user_model().objects.create_user(username='clean' + uuid.uuid4().hex)
+        self.owner = Membership.objects.create(organization=self.org, user=user, role='owner')
+        previous = self.today.replace(day=1) - timedelta(days=1)
+        self.period = previous.strftime('%Y-%m')
+        self.period_row = AccountingPeriod.objects.create(
+            organization=self.org, period=self.period, status='active')
+        from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'delivery', True)
+
+    def test_clean_close_and_reopen_history_verifies(self):
+        services.close_period(self.owner, self.period, request_token=uuid.uuid4(),
+                              expected_version=self.period_row.version, dry_run=False,
+                              reason='clean close')
+        self.period_row.refresh_from_db()
+        services.reopen_period(self.owner, self.period, request_token=uuid.uuid4(),
+                               expected_version=self.period_row.version, dry_run=False,
+                               reason='clean reopen')
+        output = StringIO()
+        call_command('verify_integrity', '--json', stdout=output)
+        payload = json.loads(output.getvalue())
+        self.assertTrue(payload['ok'])
+        self.assertEqual(payload['errors'], [])
+        self.assertNotIn('close_transition', output.getvalue())
+
+
+class CleanProjectVerifierTests(ContractChangeFixture):
+    def setUp(self):
+        super().setUp()
+        self.approved_contract()
+        AccountingPeriod.objects.create(
+            organization=self.org, period=self.today.strftime('%Y-%m'),
+            status='posted', closed_through=self.today)
+        from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'delivery', True)
+
+    def test_clean_project_close_and_reopen_history_verifies(self):
+        services.close_project(self.owner, self.project.pk, request_token=uuid.uuid4(),
+                               expected_version=self.project.version, dry_run=False,
+                               reason='clean close', allow_open_period=True)
+        self.project.refresh_from_db()
+        services.reopen_project(self.owner, self.project.pk, request_token=uuid.uuid4(),
+                                expected_version=self.project.version, dry_run=False,
+                                reason='clean reopen')
+        output = StringIO()
+        call_command('verify_integrity', '--json', stdout=output)
+        payload = json.loads(output.getvalue())
+        self.assertTrue(payload['ok'])
+        self.assertEqual(payload['errors'], [])
+        self.assertNotIn('close_transition', output.getvalue())
