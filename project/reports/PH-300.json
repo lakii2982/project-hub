@@ -1,0 +1,41 @@
+{
+  "task_id": "PH-300",
+  "summary": "项目关账/结项前置契约冻结 ADR（docs-only）：新增 docs/adr/0017-project-close-contract.md，冻结项目结项状态机（active→closing→closed→reopened，append-only 结论、重复结项拒绝、公司锁/request_token/并发一胜）、结项前置核对清单（合同/变更终止、结算/未清与覆盖、收入配对、成本/手续费、现金对账、时间/导入、期间关期，引用 PH-275/283/284/280/288/269/274 与 ADR 0016）、未清项处理（必须经既有核销/退款/退回/关闭命令清零，不直接改 OpenItem；结项不代写）、结项后写拒绝与更正（owner 服务按项目状态拒绝；只走负值冲销/撤核/撤转/撤分类或明确重新开项）、只读结项核对投影（缺失 null+missing、不建第二 owner、history_read）、权限/幂等/审计与并发。ADR 0017 新增「与既有模型映射」小节：冻结 active=Project.stage∉{closed,cancelled}、closed=Project.stage 为 closed 的旧→新映射，closing/reopened 明确为未来 schema 变更（方案 A 扩展 stage 或方案 B append-only ProjectClose），cancelled 为独立终态不作结项；写入 PH-322 前置的迁移/回填/约束/未实现标记要求；同步更新 tasks.json 的 PH-322 blocker 指向 ADR 0016/0017（含映射/迁移要求）；不写代码/迁移/schema/canonical topic/command。编号核验：ADR 叶 0014，0015 由 PH-293 发票 ADR 占用，0016/0017 为 PH-299/PH-300 冻结编号。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto 847f66b: {\"command\":\"check\",\"ok\":true,\"task_count\":245} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-300 project-close ADR reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKER RESOLVED AT e90b227: ADR 0017 now explicitly maps the contract close states to the merged `Project.stage` enum: active = stage ∉ {closed, cancelled} (initiation/planning/execution/acceptance/warranty/on_hold), closed = stage 'closed', cancelled is a separate terminal state not treated as close/reopen; closing/reopened are marked no-existing-mapping with a PH-322 migration/backfill/constraint plan (stage extension vs append-only ProjectClose, recommended), no historical rewrite, migration-number rules and `close_command_not_implemented`/`reopen_not_implemented` markers. This removes the incompatible-enum blocker.",
+      "OTHER CONTENT RE-VERIFIED: close precheck list covers contract/change (PH-275), settlement/open item/clearance (PH-283), revenue pairing (PH-284), fee cost (PH-280), cash (PH-288), time/import (PH-269/274) and period (ADR 0016) with null+missing; open-item handling/correction via owner commands; close-after write rejection; append-only conclusion; company lock/request_token/idempotency/repeat-close rejection; role matrix/history-read; docs-only, number 0017 correct, changed files within 8-path whitelist, no code/migration/schema/canonical topic; PH-300 in_review/handoff, PH-322 blocker points to ADRs 0016/0017.",
+      "EVIDENCE AT e90b227 (BASE 15cf20c): check ok=true/task_count=245; governance 23 tests OK; verify-change --base 15cf20c --task PH-300 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS (round 2; Project.stage mapping/migration plan added). Reviewed HEAD e90b227 (BASE 15cf20c) in /tmp/ph300-project-close-adr, worktree clean; ADR 0017 plus tasks/manifest/docs/verification/report/handoff within 8-path whitelist; no code/migration/schema. active maps to non-closed/cancelled stages, closed maps to Project.stage='closed', cancelled is separate, closing/reopened explicitly future with PH-322 migration/backfill/constraint plans and not-implemented markers; precheck list/open-item/correction/permissions/idempotency otherwise frozen; PH-300 in_review, PH-322 blocker points to 0016/0017. Independent runs: check ok=245; governance 23 OK; verify-change --base 15cf20c --task PH-300 only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "ADR file name follows the PH-300 spec exact whitelist (docs/adr/0017-project-close-contract.md), as confirmed by the Lead; no alternate shorthand is used.",
+    "Numbering basis: docs/adr leaf is 0014; 0015 is reserved by the PH-293 invoice tax/red-reversal ADR task; PH-299 freezes 0016 and PH-300 freezes 0017 per their specs.",
+    "The ADR is docs-only: no code, migration, table, contract schema, canonical topic/command, route or runtime behavior is added; PH-322 remains proposed and its blocker now points at ADR 0016/0017.",
+    "PH-300 spec itself was not edited (its whitelist allows it but no contract text needed changing); the ADR is the frozen deliverable and the tasks blocker is the only registry change besides governance files.",
+    "Reviewer round-1 blocker fixed: ADR 0017 now includes a 与既有模型映射 section mapping active->Project.stage in {initiation,planning,execution,acceptance,warranty,on_hold} (not closed/cancelled), closed->Project.stage='closed', with closing/reopened marked as not-yet-existing future schema changes and a PH-322 migration/backfill/constraint plan (extend stage or add append-only ProjectClose, recommended); cancelled is documented as an independent terminal state, not project close; no incompatible enum is described as an existing fact.",
+    "Lead integration rebase (15cf20c -> 847f66b) after PH-299 merged: docs/verification.md kept main entries plus the PH-300 entry; tasks/manifest merged with main (PH-322 blocker text preserved from main); manifest.active_handoff -> PH-300. Gates rerun green."
+  ],
+  "unverified": [
+    "This slice is docs-only: no runtime, browser, PG or migration verification applies; the implementation must re-validate the ADR against the actual BASE in PH-322.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "Project close implementation, project status writes, archive files/export, notification, multi-currency and customer portal remain unimplemented (PH-322 proposed).",
+    "PH-299 (period close/forecast ADR) is a separate slice and not covered here; PH-322 stays blocked until both ADRs and the implementation prerequisites are done."
+  ]
+}
