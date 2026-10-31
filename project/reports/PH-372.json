@@ -34,8 +34,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 5278c96 --task PH-372",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 81b416f: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — changed files (release-evidence-backfill.md, docs/verification, ROADMAP, tasks/manifest, report/handoff) inside BASE PH-372 allowed_paths; the PH-372 spec edit was reverted because the spec path is outside this task's whitelist."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-372 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
