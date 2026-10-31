@@ -1,0 +1,59 @@
+{
+  "task_id": "PH-120",
+  "summary": "交付版本化可信 PR 策略与受限 bootstrap，并登记下一独立规划槽 PH-397（仅规划、不实现新业务）：BASE policy/脚本读取、唯一 Task 行、8 项既有 checks + 4 项仲裁来源、S 级用户授权与任务/spec contract_digest 绑定；现有 GitHubDelivery 合并入口实际消费 BASE policy，并检查 mergeable/CLEAN、strict/admin/PR/讨论/线性历史保护、test-merge SHA 稳定、当前 HEAD checks 与未解决讨论。实现官方 Codex Connector App 1144995/bot 199175422、最新 HEAD 完整结果和 Actions workflow/event 仲裁读取路径；remote_checks_enforced=false，PH-122 才验证并启用远端强制。新增 Delivery arbitration workflow，引入前 BASE 仅作非强制 bootstrap，不执行候选代码。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 on candidate before report/task closeout: ok=true, task_count=317. Final PH-397 registration rerun: ok=true, task_count=318; governance 23 tests OK."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_delivery_gate -v",
+      "result": "pass",
+      "evidence": "Actual exit 0 after workflow anti-forgery fix: Ran 71 tests in 31.535s, OK. Includes BASE policy, S authorization digest, fail-closed identities, mergeable/test-merge fixtures, official Codex/Actions current-HEAD arbitration and existing controller gates."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0; 119 pre-existing warnings, 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual final-HEAD run: Ran 1332 tests in 142.576s; 5 failures + 3 errors + 70 environment skips. All 8 names match the established main macOS baseline (6 DRF Accept/codec/large-JSON and 2 delivery /private/var symlink cases); no new failure. Linux CI remains authoritative and is not claimed locally."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual fresh SQLite /tmp/ph120-verify-20261031.sqlite3 after migrate: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-120 reviewer (fresh Sonnet context, read-only; incremental anti-forgery re-review)",
+    "status": "pass",
+    "findings": [
+      "Initial final review at e15408b: PASS, no blocking defects. Reviewer independently recomputed all three S authorization contract digests from BASE b26c26f and verified BASE policy/script trust, mergeable/test-merge, official Codex/Actions current-HEAD checks, pagination/fail-closed behavior, bootstrap honesty and report scope.",
+      "Security follow-up at a04e7fb: PASS. The reviewer-identified same-named candidate workflow risk is closed by _trusted_workflow byte-for-byte BASE/HEAD comparison before remote arbitration, with positive and forgery tests (71 scoped tests OK). No blocking findings remain.",
+      "Planning continuation reviews through 9f3dc7d: PASS. PH-397 is limited to planning, bound to issue #255 and source user-2026-10-31-complete-v1; the reviewer independently recomputed its final digest 4c4a808045dddf5fc7d00b9d0dc989eb1600ea44dcfd92729e0715c6a1c79ac0. Scoped grant registration cannot modify arbitration rules or authorize out-of-milestone work, EXP-1 or PH-110.",
+      "Non-blocking limits reserved for PH-122 live verification: real Codex marker format/strict has_any_findings semantics, arbitration check-run pagination beyond 100, and availability of the PR head blob in the local clone; all fail closed rather than accept unknown evidence."
+    ],
+    "evidence": "VERDICT PASS at final HEAD 9f3dc7d (BASE b26c26f), including independent reviews of the arbitration implementation, workflow anti-forgery fix, PH-397 planning scope and final authorization digest. Remote enforcement remains disabled pending PH-122 live adversarial evidence."
+  },
+  "deviations": [
+    "The first retained WIP only declared 8+4 policy entries. This delivery connects the policy to GitHubDelivery and adds contract-bound S authorization, mergeable/test-merge verification and remote evidence readers instead of treating declarations as proof.",
+    "Full local suite retains exactly the eight documented macOS baseline failures; scoped PH-120 tests are fully green. No Linux/PG result is inferred from macOS SQLite.",
+    "The introducing PR has no delivery_gate.py in its BASE, so Delivery arbitration emits an explicit non-required bootstrap result. Subsequent PRs execute the BASE script and fail closed.",
+    "PH-397 is only a ready planning entry in agent-protocol §9, bound to issue #255 and contract digest 4c4a808045dddf5fc7d00b9d0dc989eb1600ea44dcfd92729e0715c6a1c79ac0 with source user-2026-10-31-complete-v1. It does not implement or authorize feature code in this PR; EXP-1 remains paused and PH-110 remains unpublished by user decision. A standalone planning-only attempt was not used because it could not satisfy PH-120's full BASE acceptance without the implementation test files."
+  ],
+  "unverified": [
+    "remote_checks_enforced=false: no claim that Delivery arbitration is a required branch-protection check or that a real current-HEAD Codex PASS exists; PH-122 must perform live adversarial verification before enablement.",
+    "No production deployment, release, tag, browser walkthrough, PostgreSQL concurrency run or customer UAT was performed by this governance slice.",
+    "The two remote-evidence compatibility limits recorded in review.findings require PH-122 live calibration; they fail closed and do not weaken current bootstrap behavior."
+  ]
+}

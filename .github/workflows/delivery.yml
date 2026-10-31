@@ -1,0 +1,35 @@
+name: Trusted PR delivery metadata
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+permissions:
+  contents: read
+concurrency:
+  group: delivery-metadata-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  metadata-gate:
+    name: Delivery arbitration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Read BASE policy and PR metadata only
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GIT_NO_REPLACE_OBJECTS: '1'
+        run: |
+          # The introducing PR predates the BASE gate and is an explicit,
+          # non-required bootstrap. Later PRs fail closed if BASE lacks it.
+          if git --no-replace-objects cat-file -e "$BASE_SHA:scripts/delivery_gate.py" 2>/dev/null; then
+            git --no-replace-objects show "$BASE_SHA:scripts/delivery_gate.py" > "$RUNNER_TEMP/delivery_gate.py"
+            python "$RUNNER_TEMP/delivery_gate.py" --root . --base "$BASE_SHA" --event "$GITHUB_EVENT_PATH"
+          else
+            printf '%s\n' '{"ok":true,"status":"bootstrap_base_gate_absent","remote_checks_enforced":false}'
+          fi

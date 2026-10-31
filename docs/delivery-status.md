@@ -80,3 +80,6 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 - PH-388 多币种汇率反查/对账：新增精确日期历史反查、fx ref 业务日校验、合同/结算/发票原币↔记账币对账（发票 CNY-only 显式 missing）；复用现有 FX 页面/路由，无 core 迁移；scoped 10 tests OK，L3 CI/PG、L4 浏览器、L5 生产 not_run。
 ## PH-396 v1.0 遗留对账（2026-10-31，BASE 7748ea1）
 - 对账表/交付清单/发布阻塞/收尾动作见 `docs/v1.0-development/closure-reconciliation.md`；release_ready=false（L3/L4/L5、三方签批未完成）。
+
+## PH-120 可信 PR 交付（rolling，2026-10-31）
+- BASE policy/离线元数据 gate 与真实合并入口已接线；S 授权绑定任务/spec 摘要，合并检查 mergeable/test-merge/远端保护，新增官方 Codex/Actions 仲裁读取路径。作用域 71 tests OK（含 workflow 反伪造）；全量仍仅既有 8 项 macOS 失败。`remote_checks_enforced=false`，远端强制与真实 Codex 对抗由 PH-122 验证，不能视为已启用。另登记 ready 的 PH-397 仅作后续 1.0 规划入口，不恢复 EXP-1、不发布 PH-110 设计参考。

@@ -1720,7 +1720,7 @@
       "title": "可信PR交付契约、独立审查与自动仲裁",
       "kind": "infra",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "rolling",
       "depends_on": [
@@ -1765,9 +1765,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/57",
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-120.md"
     },
     {
       "id": "PH-121",
@@ -13086,6 +13086,38 @@
       "owner": "root",
       "blockers": [],
       "handoff": "project/handoffs/PH-396.md"
+    },
+    {
+      "id": "PH-397",
+      "title": "v1.0 后续交付独立规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [],
+      "spec": "docs/engineering/agent-protocol.md",
+      "allowed_paths": [
+        "docs/engineering/agent-protocol.md",
+        "project/specs/*",
+        "docs/v1.0-development/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/delivery-policy.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-397.json",
+        "project/handoffs/PH-397.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/255",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
     }
   ]
 }
