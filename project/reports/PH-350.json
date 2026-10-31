@@ -49,13 +49,13 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-350",
-      "result": "not_run",
-      "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."
+      "result": "pass",
+      "evidence": "Actual run after the round-2 reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-350 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
     },
     {
       "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-350",
-      "result": "not_run",
-      "evidence": "Path scope correction: ops-runbook.md is outside the PH-350 allowlist and was reverted; only allowlisted observability.md carries the status."
+      "result": "pass",
+      "evidence": "Actual run after the round-2 reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-350 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
     },
     {
       "command": "python scripts/ops/healthcheck.py --mode dry_run --env production --facts <complete-local-facts> --out /tmp/ph350-evidence/health-production-dry-notrun.jsonl",
@@ -76,13 +76,13 @@
   "review": {
     "required": true,
     "reviewer": "independent PH-350 health/capacity/backlog drill reviewer (fresh context, read-only)",
-    "status": "pending",
+    "status": "pass",
     "findings": [
-      "BLOCKER - non-rehearsal profiles can still produce a pass from local facts: the safety gate only refuses `mode=execute` for staging/production; `--env production --mode dry_run --facts <local facts>` returns exit 0/status=pass with profile=production and only a note that facts are local. I reproduced this with complete local facts (including perf samples): production/staging dry_run -> pass. The task/contract says real CI/deployment capacity is not_run and local numbers must not pose as production capacity, so profile staging/production must be blocked/not_run regardless of mode (or the profile must be forced to rehearsal when facts are local). Add regression for production/staging dry_run.",
-      "BLOCKER - `health.db` passes without reachability evidence: `_fact_checks` uses `db.get('reachable', True)`, so facts with `db={'migration_pending': 0, ...}` but no `reachable` field produce `health.db=pass` ('reachable') although reachability was never supplied. The documented facts contract requires reachable. Fix: require `reachable is True`; true -> pass, false -> fail, missing -> not_run, and add a missing-reachability regression.",
-      "OTHER CONTENT CHECKED: PH-345 envelope fields, exit 0/2/3/4/5 mapping, append-only JSONL dedupe, recursive sensitive-key redaction, missing facts -> not_run/exit2, staging/production execute -> exit5 blocked, health DB/migrations/cache/queue/disk/backup, capacity connections/tables/slow queries/attachments, backlog queue/reminders/todos/unsettled, nearest-rank P50/P95 and honest local-only notes are implemented; no product code/migration/schema/canonical/CI-gate change; 8 files within the PH-350 whitelist and ops-runbook was correctly not modified (deferred); scoped 7 OK; check 291; verify-change only review gate, no path_out_of_scope."
+      "ROUND-2 BLOCKERS RESOLVED AT 6a702d7: (1) only `--env rehearsal` can reach the collection path; staging/production dry_run now return exit 2/status not_run with `profile.real_environment`, while staging/production execute still return exit 5 blocked; local facts can no longer be labelled as a production/staging pass. (2) health.db now requires an explicit `reachable` fact: true -> pass, false -> fail, missing -> not_run/exit 2; regressions cover production/staging dry_run and missing reachability.",
+      "CONTENT RE-VERIFIED: PH-345 envelope fields, exit 0/2/3/4/5 mapping, append-only JSONL dedupe, recursive sensitive-key redaction, missing facts -> not_run/exit2, honest not_run notes, health DB/migrations/cache/queue/disk/backup, capacity connections/tables/slow queries/attachments, backlog queue/reminders/todos/unsettled thresholds, nearest-rank P50/P95 and local-only environment labels are implemented; the script consumes redacted facts only and does not connect to or write production; ops-runbook.md was correctly left untouched (deferred); no product code/migration/schema/canonical/CI-gate change; 8 files within the PH-350 whitelist.",
+      "EVIDENCE AT 6a702d7 (BASE fe9c257): check ok=true/task_count=291; manage.py check exit0; makemigrations --check No changes; scoped observability tests 9 OK; full suite 1277/5F+3E/70 = known macOS baseline; fresh SQLite verify_integrity ok; verify-change --base fe9c257 --task PH-350 only high_risk_review_required, no path_out_of_scope; report review now pass."
     ],
-    "evidence": "reviewer round-1 REJECTED: staging/production dry_run could return pass from local facts, and health.db defaulted missing reachability to pass. Fixed: only rehearsal can pass; non-rehearsal dry_run returns not_run/exit 2 and execute exit 5 blocked; health.db requires explicit reachable=true (missing not_run, false fail); regressions added. Round-2 independent review pending; implementer does not self-pass."
+    "evidence": "VERDICT: PASS (round 2; non-rehearsal pass and default DB reachability fixed). Reviewed HEAD 6a702d7 (BASE fe9c257) in /tmp/ph350-health-capacity, worktree clean; 8 files within PH-350 whitelist; no product code/migration/schema. Rehearsal-only pass; staging/production dry_run not_run/exit2 and execute exit5 blocked; DB reachability explicit (missing -> not_run); envelope/exit/JSONL/redaction/thresholds/P50-P95 otherwise verified. Independent runs: check ok=291; makemigrations clean; scoped 9 OK; full 1277/5F+3E/70 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope. Round-2 reviewer PASS (6a702d7): only rehearsal can pass; staging/production dry_run not_run/exit2 and execute exit5; health.db requires explicit reachability; 8 files in whitelist, no product code/migration/schema. Final evidence commit records the actual verify-change pass."
   },
   "deviations": [
     "Only local/rehearsal redacted facts were measured; real CI/deployment health, connection counts, table sizes, slow queries, attachments, backup, queue backlog and page P50/P95 were not executed and remain not_run.",

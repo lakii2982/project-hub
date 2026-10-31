@@ -11404,7 +11404,7 @@
       "title": "批次 C-4a 健康/容量/积压基线执行（PH-335 拆分：V1-OPS-05）",
       "kind": "feature",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
