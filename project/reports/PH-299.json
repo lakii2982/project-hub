@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Final HEAD: {\"command\":\"check\",\"ok\":true,\"task_count\":245} exit 0 (PH-299 done)."
+      "evidence": "Final Lead integration rerun after rebase onto c2c76d8: {\"command\":\"check\",\"ok\":true,\"task_count\":245} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -29,7 +29,8 @@
     "Numbering basis: docs/adr currently ends at 0014; 0015 is already reserved by the registered invoice tax/red-reversal ADR task in tasks.json, so 0016 (as frozen by the PH-299 spec) is the next free number for this ADR.",
     "The ADR is docs-only: no code, migration, table, contract schema, canonical topic/command, route or runtime behavior is added; PH-322 remains proposed and its blocker now points at ADR 0016 and PH-300.",
     "PH-299 spec itself was not edited (its whitelist allows it but no contract text needed changing); the ADR is the frozen deliverable and the tasks blocker is the only registry change besides governance files.",
-    "Reviewer round-1 blocker fixed: ADR 0016 now includes a 与既有模型映射 section mapping open->AccountingPeriod.status='active' (closed_through NULL) and closed->'posted' (closed_through NOT NULL), marking closing/reopened as not-yet-existing future schema changes with a PH-322 migration/backfill/constraint plan (extend status or add append-only PeriodCloseRun) and an unimplemented marker; no incompatible enum is described as an existing fact."
+    "Reviewer round-1 blocker fixed: ADR 0016 now includes a 与既有模型映射 section mapping open->AccountingPeriod.status='active' (closed_through NULL) and closed->'posted' (closed_through NOT NULL), marking closing/reopened as not-yet-existing future schema changes with a PH-322 migration/backfill/constraint plan (extend status or add append-only PeriodCloseRun) and an unimplemented marker; no incompatible enum is described as an existing fact.",
+    "Lead integration rebase (15cf20c -> c2c76d8) after PH-293 merged: docs/verification.md kept main entries plus the PH-299 entry; manifest.active_handoff -> PH-299. Gates rerun green."
   ],
   "unverified": [
     "This slice is docs-only: no runtime, browser, PG or migration verification applies; the implementation must re-validate the ADR against the actual BASE in PH-322.",
