@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Post-independent-review actual run (reviewed HEAD 108dee0, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":241}, exit 0; PH-315 done with handoff and PH-319 ready on PH-315 done."
+      "evidence": "Final Lead integration rerun after rebase onto 6d8117e: {\"command\":\"check\",\"ok\":true,\"task_count\":241} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -13,9 +13,9 @@
       "evidence": "Actual run in /tmp/ph315-planning on main 81ec533 with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 81ec533 --task PH-315",
+      "command": "python scripts/projectctl.py verify-change --base 6d8117e --task PH-315",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD 9c0db33: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"9c0db33cf16a502a4b9fa49c55b7c58814b5fc2d\",\"count\":9,\"errors\":null}, exit 0; all 9 changed files inside BASE PH-315 allowed_paths and review.status=pass with the reviewer's name."
+      "evidence": "Final Lead integration rerun after rebase onto 6d8117e (PH-309 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 9 changed files inside BASE PH-315 allowed_paths."
     }
   ],
   "review": {
@@ -34,7 +34,8 @@
     "Planning-slot state convention: PH-315 is kept in_review with handoff and PH-319 is proposed with blocker 'PH-315 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-315 done and PH-319 ready and clear the blocker.",
     "No new ready task was created this slot: PH-316/317/318 all still have proposed/ready-not-done upstream dependencies (PH-309 ready-not-done; PH-293/252/150/155 and PH-308/150/155/252 proposed), so they are proposed with explicit blockers and no false promotion. PH-309 remains the ready implementation queue.",
     "Numbering basis: BASE max PH-315; checked remote branches and open PRs (EXP-line #143/#144 etc.) - no >=PH-316 ids exist, so PH-316..PH-319 are continuous and free.",
-    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands.",
+    "Lead integration rebase (81ec533 -> 6d8117e) after PH-309 merged: docs/verification.md kept main entries plus the PH-315 entry; manifest.active_handoff -> PH-315. Gates rerun green."
   ],
   "unverified": [
     "PH-316/317/318 are registered only; no code/ADR/tests/CI evidence exists yet (all proposed).",
