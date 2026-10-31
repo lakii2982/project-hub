@@ -5,12 +5,12 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run at candidate HEAD (BASE 094f61e, PH-324 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":250}, exit 0."
+      "evidence": "Actual run at final HEAD 0f36d91 (BASE e05adee): {\"command\":\"check\",\"ok\":true,\"task_count\":253}, exit 0."
     },
     {
       "command": ".agent-venv/bin/python -B docs/v1.0-development/contracts/validate_contracts.py",
       "result": "pass",
-      "evidence": "Actual run after the blocker fixes: {\"result\":\"pass\",\"kind\":\"offline_preparation_schema_only\",\"schemas\":9,\"resolved_refs\":3085,\"requirements\":137,\"commands\":71,\"queries\":25,\"events\":47,...} exit 0."
+      "evidence": "Actual run: {\"result\":\"pass\",\"kind\":\"offline_preparation_schema_only\",\"schemas\":9,\"resolved_refs\":3085,\"requirements\":137,\"commands\":71,\"queries\":25,\"events\":47,...} exit 0."
     },
     {
       "command": ".agent-venv/bin/python -B docs/v1.0-development/contracts/check_contract_cases.py",
@@ -20,7 +20,7 @@
     {
       "command": ".agent-venv/bin/python -B docs/v1.0-development/fixtures/check_fixture.py",
       "result": "pass",
-      "evidence": "Actual run after refreshing the four contract_artifact_sha256 values: {\"result\":\"pass\",\"kind\":\"fixture_structure_hash_arithmetic_and_schema_only\",\"positive_schema_samples\":99,\"negative_schema_samples\":8,\"sources\":92,\"uat_sequences\":18,\"requirements\":137,\"errors\":[]}; all fixture samples still validate against the extended canonical schemas."
+      "evidence": "Actual run after refreshing the four contract_artifact_sha256 values: {\"result\":\"pass\",\"kind\":\"fixture_structure_hash_arithmetic_and_schema_only\",\"positive_schema_samples\":99,\"negative_schema_samples\":8,\"sources\":92,\"uat_sequences\":18,\"requirements\":137,\"errors\":[]}; the extended schemas still accept all positive samples."
     },
     {
       "command": "python manage.py check",
@@ -40,22 +40,22 @@
     {
       "command": "python manage.py test tests.test_v1_currency_schema tests.test_v1_currency_backfill --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run: Ran 7 tests ... OK (model currency/default/editable/nullable, fx_rate_ref/model/canonical cross-check, CNY AddField, JSON/JSONB ADD COLUMN and real backfill SQL CNY-vs-USD semantics)."
+      "evidence": "Actual run: Ran 7 tests ... OK (model/default/editable/nullable, fx_rate_ref model+canonical, CNY AddField, JSON/JSONB ADD COLUMN, real backfill SQL CNY-vs-USD)."
     },
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual run: Ran 1132 tests in ~135s, FAILED (failures=5, errors=3, skipped=69) — exactly the known macOS/DRF environment set; no new failure."
+      "evidence": "Actual run at final HEAD (BASE e05adee): Ran 1132 tests in ~169s, FAILED (failures=5, errors=3, skipped=69) — exactly the known macOS/DRF environment set; no new failure."
     },
     {
       "command": "python manage.py verify_integrity --json",
       "result": "pass",
-      "evidence": "Fresh DB: migrate --noinput then verify_integrity --json -> {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+      "evidence": "Fresh DB at final HEAD: migrate --noinput then verify_integrity --json -> {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base ab1845b --task PH-324",
+      "command": "python scripts/projectctl.py verify-change --base e05adee --task PH-324",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — changed files inside BASE PH-324 allowed_paths (reviewer-b pass recorded; post-rebase gate rerun)."
+      "evidence": "Post-review actual run at final HEAD 0f36d91 (BASE e05adee): {\"command\":\"verify-change\",\"ok\":true,\"head\":\"0f36d913bb0ebdb9c5f2f0896e65e9be1d83b1d8\",\"count\":30,\"errors\":null}, exit 0; all 30 changed files inside BASE PH-324 allowed_paths and review.status=pass with reviewer-b."
     }
   ],
   "review": {
@@ -76,7 +76,8 @@
     "No business write side: services, views, runtime conversion and non-CNY acceptance remain PH-321; schema/model pass does not claim runtime multi-currency.",
     "Cross-whitelist: PH-328 merged as BASE 094f61e added promotion-draft/extension-freeze.json and project/specs/PH-324.md; the branch is rebased and verify-change now reports only the review gate.",
     "Lead integration rebase (094f61e -> ab1845b) after PH-328 planning PR merged: docs/verification.md kept main entries plus the PH-324 entry; manifest.active_handoff -> PH-324. Gates rerun green.",
-    "Fixture freeze refresh (post-review integration): fixture.json's contract_artifact_sha256 for commands.schema.json/contract-bundle.schema.json/entities.schema.json/write-dtos.schema.json were updated to the new canonical hashes; no business assertions or fixture scenario values were changed, and verification.json needed no change because its input_sha256 only binds build_legacy/seed_legacy/verify_legacy scripts. This requires the PH-329 fixture whitelist BASE; final verify-change must run after that BASE merges and this branch is rebased."
+    "Fixture freeze refresh (post-review integration): fixture.json's contract_artifact_sha256 for commands.schema.json/contract-bundle.schema.json/entities.schema.json/write-dtos.schema.json were updated to the new canonical hashes; no business assertions or fixture scenario values were changed, and verification.json needed no change because its input_sha256 only binds build_legacy/seed_legacy/verify_legacy scripts. This requires the PH-329 fixture whitelist BASE; final verify-change must run after that BASE merges and this branch is rebased.",
+    "Final BASE e05adee (PH-329 merged) contains the fixture whitelist; the branch was rebased with only PH-324 commits (no PH-329 planning commits carried) and all acceptance commands plus validate/check_fixture were re-run at the final HEAD."
   ],
   "unverified": [
     "No service/model/migration/runtime support for multi-currency exists; PH-321 must implement FX snapshots, conversion and non-CNY write rejection.",
