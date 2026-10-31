@@ -699,4 +699,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 2. **新登记**：PH-312 期间关期/项目结项实现前置（proposed，缺 PH-299/300/180/181/182/185）、PH-313 共享费用分摊/预算 ETC 实现前置（proposed，缺 PH-305/306/162/255/177/261）、PH-314 通知中心/导出归档实现前置（proposed，缺 PH-301/310/285/179/183）、PH-315 下一规划槽（proposed，待 PH-311 done 后置 ready）。count 233→237，编号 312-315 连续。
 3. **晋级**：无新增（PH-309/304/284 等 ready 保持；PH-292/293/295/296/297/299/300/301/305/306/308/310/312/313/314 保持 proposed，无虚假晋级）。
 4. blockers 刷新：PH-310 更新为“PH-304 done 已满足，仍缺 PH-285/181/182”；其余 proposed 按事实保留。
-5. 无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-312/313/314 未实现；review由独立S复核。
+5. 无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：编号/无虚假晋级/blockers 刷新核对通过）；最终证据 HEAD 78cc148 按槽惯例置 PH-311 done / PH-315 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=237；23 项治理 OK；verify-change --base fd0136a --task PH-311 ok=true、9 文件全白名单、无 errors。未验证：PH-312/313/314 未实现；PH-309/304 由各自实现 PR/CI 验证。
