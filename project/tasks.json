@@ -12545,7 +12545,7 @@
       "title": "后续交付独立规划入口（接续 PH-376）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -12565,6 +12565,185 @@
         "docs/verification.md",
         "project/reports/PH-381.json",
         "project/handoffs/PH-381.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "worker-contract",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-381.md"
+    },
+    {
+      "id": "PH-382",
+      "title": "批次 D-01 跨 owner 编排验收执行（PH-370 后续）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-370"
+      ],
+      "spec": "project/specs/PH-382.md",
+      "allowed_paths": [
+        "docs/verification.md",
+        "docs/v1.0-development/batch-d-acceptance.md",
+        "docs/v1.0-development/batch-d-runbook.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-382.json",
+        "project/handoffs/PH-382.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py test tests.test_v1_invoice_orchestration tests.test_v1_invoice_orchestration_http --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-383",
+      "title": "发票批量导入错误清单/来源覆盖后续（PH-378 后续）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-378"
+      ],
+      "spec": "project/specs/PH-383.md",
+      "allowed_paths": [
+        "pmo_plugins/invoicing/invoice_import_services.py",
+        "pmo_plugins/invoicing/views.py",
+        "pmo_plugins/invoicing/forms.py",
+        "pmo_plugins/invoicing/templates/invoicing/invoice_import.html",
+        "tests/test_v1_invoice_import_errors*.py",
+        "project/reports/PH-383.json",
+        "project/handoffs/PH-383.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py test tests.test_v1_invoice_import_errors --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-378（发票批量导入实现首片，proposed）done；PH-378 完成后复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-384",
+      "title": "insights 工作台/差异单性能与导出后续（PH-379 后续）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-379"
+      ],
+      "spec": "project/specs/PH-384.md",
+      "allowed_paths": [
+        "pmo_plugins/insights/*",
+        "tests/test_v1_insights_perf*.py",
+        "tests/test_v1_insights_export*.py",
+        "project/reports/PH-384.json",
+        "project/handoffs/PH-384.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py test tests.test_v1_insights_perf tests.test_v1_insights_export --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-379（insights 差异单/工作台实现首片，proposed）done；PH-379 完成后复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-385",
+      "title": "通知中心扫描调度/已读后续（PH-380 后续）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-380"
+      ],
+      "spec": "project/specs/PH-385.md",
+      "allowed_paths": [
+        "core/notification_services.py",
+        "core/notification_views.py",
+        "core/notification_forms.py",
+        "core/templates/core/notifications.html",
+        "core/management/commands/scan_due.py",
+        "tests/test_v1_notifications_scan*.py",
+        "tests/test_v1_notifications_read*.py",
+        "project/reports/PH-385.json",
+        "project/handoffs/PH-385.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py test tests.test_v1_notifications_scan tests.test_v1_notifications_read --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-380（通知中心收件箱实现首片，proposed）done；PH-380 完成后复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-386",
+      "title": "后续交付独立规划入口（接续 PH-381）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-381"
+      ],
+      "spec": "project/specs/PH-386.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-386.json",
+        "project/handoffs/PH-386.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
