@@ -1,0 +1,41 @@
+{
+  "task_id": "PH-368",
+  "summary": "Froze the docs-only capacity/health/backlog follow-up contract at BASE 2f082a3 on top of the merged PH-350 healthcheck implementation and PH-335 rollup acceptance. docs/engineering/observability-followup-contract.md defines: the current baseline (healthcheck.py facts/checks/exit codes, rehearsal-only pass, PH-335 L1+L2 rollup with release_ready=false) without reimplementing it; SLO/threshold governance (versioned environment-scoped SLO records with target/window/severity/owner/approvers, production SLOs approved by release+support or security, rehearsal defaults never treated as production SLO, missing SLO = not_run, superseded history not recomputed); alert/backlog policy (alert_key dedupe, window aggregation, warning/blocker escalation, acknowledgement/resolution evidence, no auto-scaling/restart/external sends, per-queue backlog thresholds and persistent-backlog escalation, PH-364 reminder boundary); historical trend and capacity planning (append-only series with environment/metric uniqueness, null+missing_sample for absent points, nearest-rank P50/P95, >=7 samples before any forecast, insufficient_samples instead of guessing, capacity-plan records with null days_to_* and human actions); the PH-366 release-gate evidence mapping (V1-OPS-05 L2 rehearsal / L3 CI-PG / L4 browser / L5 production, not_run discipline, core items not waivable); roles/redaction/no-external-send rules; and the honest not-implemented/not_run status (SLO store, alert records, trend store/aggregation, forecasting, external alerting and autoscaling are not implemented; L3/L4/L5 not_run; no release-readiness claim). No code, script, migration, gate or product-behavior change.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD d73c0b2 (BASE 2f082a3, PH-368 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":297}, exit 0; final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph368-observability-next on main 2f082a3 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 2f082a3 --task PH-368",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD d73c0b2: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (observability-followup-contract.md, PH-368 spec summary, tasks/manifest, docs/verification, report/handoff) inside BASE PH-368 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (SLO/threshold governance, alert/backlog policy, trend/capacity-planning rules, PH-366 mapping and honest not-implemented status); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "The contract deliberately reuses PH-350's checks/thresholds/exit codes and PH-335's L1/L2 rollup instead of redefining them; this slice only freezes the follow-up governance/policy/trend/evidence-mapping rules.",
+    "Production SLOs cannot use rehearsal default thresholds; they require environment-scoped, versioned records approved by release+support (or security for disk/backup). Missing SLO evidence is not_run, never a guessed default.",
+    "Alerting and capacity planning are policy-only here: no external alert platform, auto-scaling, auto-restart, auto-cleanup or message sending is implemented or implied; actions remain human/后续实现.",
+    "Trend forecasting requires at least 7 valid samples in the same series/environment and returns insufficient_samples/null otherwise; local SQLite or rehearsal data is never used as production trend evidence.",
+    "No code, scripts, migrations, gates or product behavior changed; SLO/alert/trend/capacity stores and L3/L4/L5 evidence remain unimplemented/not_run."
+  ],
+  "unverified": [
+    "SLO configuration storage, alert record/dedupe implementation, trend storage/aggregation, capacity forecasting and external alerting are not implemented.",
+    "PH-350 only provides local/rehearsal L1+L2 evidence; PH-335 release_ready=false; no CI-PG (L3), browser (L4) or production (L5) evidence exists.",
+    "No capacity/health/backlog acceptance run was executed by this docs-only slice; release qualification remains blocked per PH-366.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
