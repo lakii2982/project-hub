@@ -821,3 +821,12 @@ BASE ab1845b，docs/governance-only：PH-324 CI 的 Preparation 域用 `docs/v1.
 ## PH-336 规划槽：PH-321/PH-322 实现白名单与依赖再基线（2026-10-31）
 
 BASE 0281043，docs/governance-only：PH-321 白名单补 contracts `models.py`/`migrations/*`/`approval_services.py`/`change_services.py` + `pmo_plugins/delivery/urls.py`（FxRateSnapshot ORM、合同行非 CNY 写入与 FX 页面路由接线必需）；PH-322 白名单补 delivery `models.py`/`migrations/*` + `core/management/commands/verify_integrity.py` + `tests/test_v1_cash_book_bridge.py`（模型/迁移、verifier 五类分支必需；close 校验新增查询使该测试阈值 84→92，PH-269/274 先例）；PH-317 依赖去 stale legacy PH-150/155 并晋级 ready；PH-318 依赖基线为 PH-308/PH-321/PH-252（blocker 等 PH-321）；登记 PH-337 下一槽 ready。实际执行：check ok/task_count=259；治理 23 tests OK；verify-change pre-review 仅 review 门禁、无 path。无代码/迁移/UI 变更。
+
+
+## PH-317 发票红冲/税额抵扣实现前置收口（docs-only）（2026-10-31）
+
+基线 fcb7b17（PH-336 合入后）。docs-only 收口：依据 ADR 0015 与已合并 PH-252 `pmo_plugins/invoicing` 实现，冻结后续实现边界：
+1. **已实现（不得重复）**：Invoice/InvoiceLine/InvoiceAllocation/InvoiceReversal/TaxQualification 模型与 record/allocate/reverse 服务；红冲仅 active、部分/全额、负值精确镜像、append-only、禁重复/超冲、不写收入/现金/账本/未清；canonical route 在 invoicing/domain_metadata；测试 test_v1_invoice(_http)。
+2. **尚未实现（后续切片）**：TaxQualification 确认服务与抵扣成本开放期更正（costing owner）；红冲跨 owner 编排（管理收入反冲/cash 退款/settlement 调整）；红字发票独立实体（需 canonical 扩展与规划）；只读对账（PH-325）。
+3. **边界**：invoicing 只记录发票事实/引用，不直接改其它 owner；跨 owner 一致性用引用+核对报告，不虚假承诺单事务一致；权限/幂等/期间/锁期沿用既有模式。
+4. 后续映射：PH-320（编排后续，proposed）、PH-325（只读对账，proposed）、PH-321（多币种 ready）；本片无代码/迁移/schema 变更。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：税额确认/跨 owner 编排/红字实体/对账均未实现；review pending。

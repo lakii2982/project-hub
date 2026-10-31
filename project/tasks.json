@@ -10117,7 +10117,7 @@
       "title": "发票红冲/税额抵扣实现前置：红冲负值、税额拆分与抵扣边界",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10142,9 +10142,9 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-docs",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-317.md"
     },
     {
       "id": "PH-318",
@@ -10218,7 +10218,7 @@
       "title": "发票实现首片：发票签发/价税分离/红冲负值（按 ADR 0015 落地）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10255,9 +10255,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-252（发票实现首片，ready 未 done）done；PH-293/214/224/232 已 done；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -10456,7 +10454,7 @@
       "title": "发票-结算/收入只读对账与税额资格确认（发票写侧后续）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10493,9 +10491,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-252（发票实现首片，ready 未 done）done；PH-284/283/287/293 已 done；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {

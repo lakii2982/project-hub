@@ -1,0 +1,45 @@
+{
+  "task_id": "PH-317",
+  "summary": "Closed the invoice reversal/tax-credit implementation boundary as a docs-only slice grounded in ADR 0015 and the merged PH-252 invoicing implementation. The spec now records what PH-252 already delivers (Invoice/InvoiceLine/InvoiceAllocation/InvoiceReversal/TaxQualification append-only models; record/allocate/reverse services with request_token receipts, company lock, expected_version, period/lock checks, role matrix and history_read; reversal only for active invoices, partial/full, exact negative mirrors, no double/over reversal, and no revenue/cash/ledger/open-item writes) so later slices must not reimplement it. It freezes what remains unimplemented and must be delivered by follow-up slices: tax-qualification confirmation with open-period costing-owner adjustment (no invoicing direct ledger/cost write), reversal cross-owner orchestration (management-revenue reversal, cash refund, settlement adjustment) via named owner services with reference-based reconciliation rather than a false single-transaction guarantee, a possible standalone red-letter invoice entity requiring a canonical extension and its own planning, and read-only invoice/settlement/revenue/tax pairing owned by PH-325. It maps PH-320 (orchestration follow-up, now ready after its all-done dependencies), PH-325 (read-only pairing, now ready), PH-321 (multi-currency, ready) and this closure, and adds acceptance/counterexample rules. No code, migration, route, contract-schema or applied-migration change.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":259} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph317-invoice-followup on main fcb7b17 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fcb7b17 --task PH-317",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-317 allowed_paths (independent review pass recorded)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-317 invoice reversal/tax-credit boundary reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKERS RESOLVED AT 3d4352c: PH-320 and PH-325 are promoted to ready with blockers cleared because all their dependencies (PH-293/252/214/224/232 and PH-252/284/283/287/293) are done; the spec C table marks both ready and the report notes the remaining in-spec status prose is outside this task's whitelist and deferred to PH-337. The PH-317 header now uses the actual done sources (PH-293/PH-252; PH-150/155 boundaries covered by 214/224/232/287) and ready/in_review state, removing the stale proposed framing.",
+      "CONTENT RE-VERIFIED: implemented/unimplemented split is honest - PH-252's Invoice/Line/Allocation/Reversal/TaxQualification models, record/allocate/reverse services, partial/full reversal rules, permissions, idempotency/company lock/no-financial-write behavior are implemented; TaxQualification confirmation service, cross-owner reversal orchestration, independent red-invoice entity and PH-325 read-only pairing are explicitly not implemented; cross-owner boundaries (revenue/cash/settlement), negative-only reversal, tax snapshot/no recompute and permission/history_read rules are frozen; docs-only 6-path whitelist, no code/migration/schema/route; PH-317 in_review/handoff.",
+      "EVIDENCE AT 3d4352c (BASE fcb7b17): check ok=true/task_count=259; governance 23 tests OK; verify-change --base fcb7b17 --task PH-317 only high_risk_review_required + acceptance_not_passed (the check declaration is still pre-review not_run), no path_out_of_scope; report review now pass. Final evidence must set the check declaration pass and then rerun verify-change."
+    ],
+    "evidence": "VERDICT: PASS (round 2; stale downstream blockers and header fixed). Reviewed HEAD 3d4352c (BASE fcb7b17) in /tmp/ph317-invoice-followup, worktree clean; 6 files within the exact docs-only whitelist; no code/migration/schema/route. PH-320/PH-325 promoted ready with all-done deps/blockers cleared; PH-317 header/table now reflect 293/252/214/224/232/287 done and ready state; implemented/unimplemented split and cross-owner/tax rules are honest; check ok=259; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope. Final evidence must mark the check declaration pass and set PH-317 done."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): PH-320 and PH-325 were promoted to ready because all their dependencies are done in this BASE (PH-320: PH-293/PH-252/PH-214/PH-224/PH-232; PH-325: PH-252/PH-284/PH-283/PH-287/PH-293) and their stale '缺 PH-252' blocker text was removed; the PH-317 spec opening/table was corrected from the obsolete proposed framing to the actual done dependencies and ready/in_review closure status. No product code/schema change.",
+    "The closure cites the merged PH-252 implementation as evidence of what already exists (models/services/routes/tests) and explicitly refuses to reimplement or claim it; the remaining tax-confirmation/cross-owner/red-letter/pairing capabilities are recorded as unimplemented follow-up slices rather than passed work.",
+    "Cross-owner consistency is frozen as reference-based orchestration plus reconciliation reports, not a false all-domain single transaction; invoicing remains the invoice-fact owner and never writes revenue/cash/ledger/open-item facts.",
+    "A standalone red-letter invoice entity is explicitly deferred to a canonical-extension planning slice (ADR 0015 boundary); this slice does not modify contract schema.",
+    "No code/migration/route/schema change and no runtime/browser/PG execution; PH-252's own report/CI remain the evidence for the implemented reversal/tax-fact behavior.",
+    "reviewer round-1：PH-320/PH-325 的 blocker 事实已满足（deps 全 done）→ 本片任务板按 DoR 晋级 ready（PH-320/PH-325 spec 文件不在本任务白名单，其内部状态句子留待下一规划槽 PH-337 同步）；PH-317 spec 头部/风险段/C 表已改为实际 done 依赖与 ready/in_review 状态。"
+  ],
+  "unverified": [
+    "TaxQualification confirmation service, costing open-period adjustment, cross-owner reversal/refund/settlement orchestration, standalone red-letter invoice entity and read-only pairing are not implemented.",
+    "No runtime/browser/PostgreSQL verification applies to this docs-only closure; PH-252 implementation evidence is cited from its merged slice.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
