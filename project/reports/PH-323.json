@@ -1,0 +1,42 @@
+{
+  "task_id": "PH-323",
+  "summary": "Consumed the PH-323 planning slot on main 1ce48fc (batch A ADRs/contracts all merged; 250 tasks after registration) and re-baselined batch B dependencies. Four slices were promoted to ready after mapping their legacy dependencies to delivered done capabilities: PH-324 canonical currency extension (deps PH-308 done; whitelist includes docs/v1.0-development/contracts, spec PH-308 §9A), PH-252 invoice implementation first slice (deps remapped to PH-214/224/232/287/293, all done; ADR 0015 frozen), PH-312 close/project-close implementation prerequisite (deps remapped to PH-299/300 plus the done read-only sources PH-291/283/288/280/281/284/287/309/304), and PH-313 shared-cost/budget implementation prerequisite (deps remapped to PH-305/306 plus PH-217/244/250 and PH-214/287, all done). Slices whose missing capability is genuinely not delivered stay proposed with precise blockers: PH-320 waits on PH-252, PH-321 waits on PH-324, PH-322 waits on PH-312, PH-314 waits on the undelivered notification/export-archive capabilities (PH-301/PH-310 plus PH-285/PH-179/PH-183). The implementation order was frozen as PH-324 -> PH-321 -> PH-252 -> PH-320 -> PH-312 -> PH-322 -> PH-313 -> PH-314 and recorded in ROADMAP.md. Four new tasks were registered continuously: PH-325 invoice/settlement/revenue pairing plus tax-qualification confirmation, PH-326 FX snapshot history implementation follow-up, PH-327 close/close-out acceptance and runbook, and PH-328 as the next planning slot. No product code, migration, scaffold or contract-schema change was made; canonical-extension implementation is only authorized later under PH-324's own task.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 0408365 (BASE 1ce48fc, PH-323 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":250}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph323-planning on main 1ce48fc with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 1ce48fc --task PH-323",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 0408365: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 18 changed files (specs PH-252/308/312/313/314/320/321/322 + new PH-325..328, tasks.json, manifest.json, docs/verification.md, ROADMAP.md, PH-323 report/handoff) are inside BASE PH-323 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (batch B dependency re-baseline, promotions and registrations); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Batch B re-baseline (old->new): PH-252 deps PH-150/PH-155/PH-224/PH-232 -> PH-214/PH-224/PH-232/PH-287/PH-293 (ADR 0015); PH-312 deps PH-299/300/180/181/182/185 -> PH-299/300 + PH-291/283/288/280/281/284/287/309/304; PH-313 deps PH-305/306/162/255/177/261 -> PH-305/306 + PH-217/244/250 + PH-214/287; PH-324 deps PH-308 (already done); PH-321 deps PH-150/PH-155 -> PH-214/224/232/287 (done) but keeps PH-324; PH-322 keeps PH-312; PH-320 keeps PH-252. All four promoted slices have only done dependencies now.",
+    "Non-promoted slices keep precise blockers: PH-320 waits on PH-252 (ready, not done); PH-321 waits on PH-324 (ready, not done); PH-322 waits on PH-312 (ready, not done); PH-314 waits on PH-301/PH-310 and PH-285/PH-179/PH-183 which are still proposed (notification/export-archive capability not delivered). No false promotion.",
+    "Planning-slot state convention: PH-323 is kept in_review with handoff and PH-328 is proposed with blocker 'PH-323 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-323 done and PH-328 ready and clear the blocker.",
+    "Numbering basis: BASE max PH-324; checked remote branches and open PRs (EXP-line #143/#144 etc.) - no >=PH-325 ids exist, so PH-325..PH-328 are continuous and free.",
+    "The promoted canonical-extension task PH-324 is still only a planning contract (spec PH-308 §9A); this slot does not create code/migrations/schema changes, those remain PH-324's own whitelist and acceptance.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-324/PH-252/PH-312/PH-313 are now ready but not implemented/written; their code, contracts or migrations do not exist yet and are the next work items.",
+    "PH-325/PH-326/PH-327 are registered proposed only; no code/tests/CI evidence exists.",
+    "The implemented queue order is a planning recommendation based on BASE facts; actual sequencing still depends on CI/reviewer capacity and Lead priority.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
