@@ -33,9 +33,9 @@
       "evidence": "Actual run after the round-1 fixes: Ran 9 tests, OK. Service 6: pending->confirmed with preserved evidence/no owner writes; duplicate/supersede; permissions/period/DB trigger and direct INSERT probes; settlement link/duplicate/missing reversal; cross-project owner-ref rejection; reversal reference chain. HTTP 3: owner page+confirm; link with reversal/invalid posts; roles/disabled-module history read."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 20ffc12 --task PH-320",
+      "command": "python scripts/projectctl.py verify-change --base b50f5ca --task PH-320",
       "result": "pass",
-      "evidence": "Actual run after the committed round-2 reviewer pass and rebase onto 20ffc12 (HEAD ee10c64): ok=true, changes=15 files all inside the PH-320 allowlist, errors=[]."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 15 files inside BASE PH-320 allowed_paths (review pass; post-rebase rerun)."
     },
     {
       "command": "python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1",
