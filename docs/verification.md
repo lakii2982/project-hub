@@ -886,3 +886,7 @@ BASE 20ffc12（PH-322 合入后）。复用 PH-252 已交付 `pmo_plugins/invoic
 3. **下一规划槽**：PH-351（proposed，待 PH-346 done 置 ready）。count 268→273，编号 347-351 连续。
 4. **ROADMAP** 新增批次 B/C 状态同步节（已合入/ready 队列/拆片/精确 blocker/not_run 边界）。
 5. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-330/333/334/335/347/348/349/350 未实现；批次 C 演练未执行。
+
+## PH-330 分摊/预算 ETC 实现首片（2026-10-31）
+
+BASE 4c0d309。costing `0005_shared_cost_allocation`、`0006_project_budget`（实际叶 0004 后生成，不改已应用迁移）：SharedCostAllocationBatch/Line/Receipt、ProjectBudgetVersion/Line/Receipt；SQLite/PG append-only 触发器/函数，条件唯一有效正向、reversal OneToOne、行仅草稿可改。服务：pool 仅 costing posted current nonproject 来源（成对排除冲销来源、排除 PH-250 项目成本），bp 合计 10000，`basis_points_clamped_half_up_last_absorb_v1` 末项吸收且每项≥0；净零 AccountingEvent+claim 重归属（source 负/project 正），冲销精确镜像；预算 create/approve/reject/supersede（四眼、effective_from、唯一 approved、关期拒绝、append-only 收据）；`budget_residual_v1` ETC 派生（null+missing，不伪造 0；budget_missing/over_budget/budget_lines_exceed_total/subject_attribution_missing）。只读页面 shared-cost-reconciliation/budget-etc；verifier 分支；无 canonical/schema/core migration/其它 owner 写。实跑：check 268、manage.py check exit0、makemigrations 无变更、fresh SQLite verify ok、scoped 10 OK、全量 **1204 tests/128.753s，5F+3E/69=已知 8 项 macOS 基线无新增**。偏差：pm 公司共享池拒绝、pm 预算仅自己项目、ETC 无科目级实际归属、driver 仅 fixed_weights 反例、verifier COUNT 折入已加载列表保持在 88 查询预算；PG/浏览器/生产/独立 review 未验证。
