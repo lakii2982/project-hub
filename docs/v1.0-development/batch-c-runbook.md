@@ -61,7 +61,7 @@ python manage.py verify_integrity --json
 ### M02 统一基础资料（V1-MD-01–07）
 - 前置：PH-024/212/214/228 等 done。
 - 步骤：项目/员工/往来方/成本类别/资金账户唯一维护 → 合并/作废 → 引用一致性检查。
-- 命令：通用命令 + 对应 domain scoped tests（按实际存在）。
+- 命令：通用命令 + `python manage.py test tests.test_masterdata --verbosity 1`（主数据回归）。
 - 预期输出：同一 ID 被合同/收付/发票引用；旧 POST 不保留第二写规则；合并留审计。
 - 证据模板：`M02-E1` 命令输出；`M02-E2` 引用一致性查询；`M02-E3` 合并审计记录。
 - 通过判据：跨模块引用同一稳定 ID；历史引用不丢失；冲突人工确认。
@@ -72,7 +72,7 @@ python manage.py verify_integrity --json
 ### M03 项目、交付与结项（V1-PRO-01–10）
 - 前置：PH-219/222/265/275/312/322 done；迟到款/归档后处理按 PH-322 实现。
 - 步骤：建项目/团队/里程碑/验收 → 暂停/取消/恢复 → 结项预检/归档 → 归档后迟到款受限流程。
-- 命令：通用命令 + `python manage.py test tests.test_v1_delivery* tests.test_v1_close* --verbosity 1`（按实际存在）。
+- 命令：通用命令 + `python manage.py test tests.test_v1_close tests.test_v1_close_http tests.test_acceptance_revenue tests.test_acceptance_revenue_http --verbosity 1`。
 - 预期输出：交付完成不自动产生收入；结项不强制清零；归档后迟到款经授权并留审计。
 - 证据模板：`M03-E1` 命令输出；`M03-E2` 结项预检/blocker 清单；`M03-E3` 归档后处理审计。
 - 通过判据：结项/归档规则与例外路径均按 spec；无强制清零/删除未清。
@@ -83,7 +83,7 @@ python manage.py verify_integrity --json
 ### M04 合同、收费条件与变化（V1-CON-01–08）
 - 前置：PH-214/265/275/287 done。
 - 步骤：三模板合同 → 批准版本/上限 → 变更/终止 → 履约/结算/票据/收款联查。
-- 命令：通用命令 + contracts scoped tests（按实际存在）。
+- 命令：通用命令 + `python manage.py test tests.test_v1_contracts tests.test_v1_contract_change tests.test_v1_contract_change_http tests.test_v1_contract_terms_snapshot tests.test_v1_contract_terms_snapshot_http --verbosity 1`。
 - 预期输出：含税=不含税+税额；未批准增价不进有效价款；不以收款代应收。
 - 证据模板：`M04-E1` 命令输出；`M04-E2` 条款守恒反例；`M04-E3` 版本/上限拒绝记录。
 - 通过判据：门禁/守恒/版本规则全部满足。
@@ -94,7 +94,7 @@ python manage.py verify_integrity --json
 ### M05 工时与投入（V1-TIM-01–08）
 - 前置：PH-025/269/276 等 done。
 - 步骤：本人/周视图/非项目/代录 → 提交/审核/退回/更正 → 缺费率/可计费/导出。
-- 命令：通用命令 + time scoped tests。
+- 命令：通用命令 + `python manage.py test tests.test_v1_billable_confirmation tests.test_monthly_labor --verbosity 1`（工时/可计费/人工成本回归；其余 legacy tests 按实际补列）。
 - 预期输出：缺费率不按 0 计成本；审批绑定版本；导出不含工资/费率。
 - 证据模板：`M05-E1` 命令输出；`M05-E2` 缺费率/审批反例；`M05-E3` 导出字段清单。
 - 通过判据：工时/成本/权限边界全部满足。
@@ -105,7 +105,7 @@ python manage.py verify_integrity --json
 ### M06 人工、共享费用和项目成本（V1-CST-01–12）
 - 前置：PH-217/244/250/305/313/**PH-330（已合入）** done；批次 C 演练在 PH-347–350。
 - 步骤：工资池/政策/费率快照 → 成本计算一次 → 月度核对 → 共享费用分摊/预算 ETC → 工资支付/外包防重。
-- 命令：通用命令 + `python manage.py test tests.test_v1_costing* tests.test_v1_shared_cost* tests.test_v1_budget* --verbosity 1`（按实际存在）。
+- 命令：通用命令 + `python manage.py test tests.test_v1_bank_charge tests.test_v1_bank_charge_approval tests.test_v1_bank_charge_cost tests.test_v1_bank_charge_pairing tests.test_v1_shared_cost_allocation tests.test_v1_shared_cost_http tests.test_v1_budget_etc --verbosity 1`。
 - 预期输出：公司总成本一次；分摊净零重归属；历史不无痕重算；AC+ETC 命名分层。
 - 证据模板：`M06-E1` 命令输出；`M06-E2` 净零/重复成本反例；`M06-E3` 分摊/预算核对输出。
 - 通过判据：成本守恒/分摊净零/历史快照全部满足。
@@ -116,7 +116,7 @@ python manage.py verify_integrity --json
 ### M07 费用、采购和外包支出（V1-SPD-01–10）
 - 前置：费用/采购/预付/税额实现切片（尚未全部交付）。
 - 步骤：报销/费用 → 承诺/验收/审批 → 暂估/税额资格 → 借支/退货/共享/跨期预付。
-- 命令：通用命令 + 对应 scoped tests；**未实现项标 blocked**。
+- 命令：通用命令 + 对应 scoped tests（费用/采购实现交付后补列真实模块）；**未实现项标 blocked**。
 - 预期输出：同来源只确认一次成本；税额资格未知不默认抵扣；退款不自动反成本。
 - 证据模板：`M07-E1` 命令输出；`M07-E2` 重复成本/税额反例；`M07-E3` 未实现项 blocked 清单。
 - 通过判据：成本一次/税额/退款边界满足。
@@ -127,7 +127,7 @@ python manage.py verify_integrity --json
 ### M08 结算、应收应付与核销（V1-SET-01–10）
 - 前置：PH-224/232/249/283 done；PG 并发由 V1-OPS-06 验证。
 - 步骤：应收/应付来源 → 账龄 → 部分核销/预收抵扣 → 撤销/退回/折让 → 跨项目例外。
-- 命令：通用命令 + settlement scoped tests + 并发反例（V1-OPS-06）。
+- 命令：通用命令 + `python manage.py test tests.test_v1_settlement tests.test_v1_settlement_http tests.test_v1_settlement_coverage_read tests.test_v1_settlement_coverage_read_http --verbosity 1` + 并发反例（V1-OPS-06）。
 - 预期输出：期初+新增-核销守恒；不超额；撤销≠退款；跨企业拒绝。
 - 证据模板：`M08-E1` 命令输出；`M08-E2` 超额/并发反例；`M08-E3` 账龄/核销核对。
 - 通过判据：金额守恒/权限/并发边界满足。
@@ -138,7 +138,7 @@ python manage.py verify_integrity --json
 ### M09 实际现金、预收预付和预测（V1-CSH-01–12）
 - 前置：PH-228/230/239/240/244/245/250/288 done。
 - 步骤：银行事实/匹配/归属 → 预收预付/退款退票 → 公司收付/手续费净额/互转 → 计划/13 周预测/覆盖/更正。
-- 命令：通用命令 + cash scoped tests。
+- 命令：通用命令 + `python manage.py test tests.test_v1_cash tests.test_v1_cash_http tests.test_v1_cash_posting tests.test_v1_cash_refund tests.test_v1_cash_bridge_read tests.test_v1_cash_classification --verbosity 1`。
 - 预期输出：资金事实不重复；净额+费用守恒；预测≠利润/余额；更正留真实日期。
 - 证据模板：`M09-E1` 命令输出；`M09-E2` 净额/重复反例；`M09-E3` 预测与余额对照。
 - 通过判据：现金守恒/来源/期间规则满足。
@@ -149,7 +149,7 @@ python manage.py verify_integrity --json
 ### M10 发票与管理收入（V1-REV-01–10）
 - 前置：PH-252/320/321/284/293 done；只读对账 PH-325 done。
 - 步骤：发票登记/分配/红冲 → 收入方法/里程碑/工时/服务期 → 累计调整/配对/追溯/缺口。
-- 命令：通用命令 + `python manage.py test tests.test_v1_invoice* tests.test_v1_revenue* --verbosity 1`（按实际存在）。
+- 命令：通用命令 + `python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http tests.test_v1_invoice_tax tests.test_v1_invoice_tax_http tests.test_v1_revenue_pairing_read tests.test_v1_revenue_pairing_read_http --verbosity 1`。
 - 预期输出：发票不自动产生收入/成本/现金；红冲关联原票；收入口径唯一；只读对账 issue 可见。
 - 证据模板：`M10-E1` 命令输出；`M10-E2` 红冲/收入反例；`M10-E3` 对账 snapshot/issue 输出。
 - 通过判据：发票/收入/对账规则满足。
@@ -160,7 +160,7 @@ python manage.py verify_integrity --json
 ### M11 预算、剩余预计与报价复盘（V1-PLN-01–09）
 - 前置：PH-305/306/313/**PH-330（已合入）**。
 - 步骤：预算基线/变更 → 剩余投入 → 承诺/ETC/释放 → EAC/结余/情景/差异/复盘。
-- 命令：通用命令 + `python manage.py test tests.test_v1_budget* tests.test_v1_costing* --verbosity 1`（按实际存在）。
+- 命令：通用命令 + `python manage.py test tests.test_v1_budget_etc tests.test_v1_shared_cost_allocation --verbosity 1`。
 - 预期输出：AC+ETC 分层命名；同来源只覆盖一次；未批准变化不进基准。
 - 证据模板：`M11-E1` 命令输出；`M11-E2` ETC/覆盖反例；`M11-E3` 差异复盘输出。
 - 通过判据：预算/ETC 规则与来源唯一性满足。
@@ -171,7 +171,7 @@ python manage.py verify_integrity --json
 ### M12 月末核对、期间与纠错（V1-REC-01–09）
 - 前置：PH-283/284/288/291/304/309/312/**PH-322 done**。
 - 步骤：工资/费用/银行/合同收入核对 → 预检查（blocker/warning） → 关期 → 开放期冲销/补录 → 底稿导出/完整性。
-- 命令：通用命令 + `python manage.py test tests.test_v1_close* tests.test_v1_ops* --verbosity 1`（按实际存在）+ `verify_integrity`。
+- 命令：通用命令 + `python manage.py test tests.test_v1_close tests.test_v1_close_http tests.test_v1_ops_reconciliation_overview tests.test_v1_ops_workbench --verbosity 1` + `verify_integrity`。
 - 预期输出：只前移锁定；开期冲销保原始；导出与页面同口径；硬错误阻断。
 - 证据模板：`M12-E1` 命令输出；`M12-E2` 预检查/blocker 清单；`M12-E3` 冲销/导出一致性；`M12-E4` PG 锁竞争（V1-OPS-06）。
 - 通过判据：期间/纠错/导出规则满足。
@@ -182,7 +182,7 @@ python manage.py verify_integrity --json
 ### M13 工作台、提醒与查询（V1-INS-01–07）
 - 前置：PH-291/304/309 done；insights/通知实现片（PH-339/340 等）未交付。
 - 步骤：四角色工作台 → 通知/到期扫描 → 汇总穿透 → 缺口/滞后。
-- 命令：通用命令 + insights scoped tests（实现后）；未实现项 `blocked`。
+- 命令：通用命令 + `python manage.py test tests.test_v1_ops_workbench tests.test_v1_ops_reconciliation_overview --verbosity 1`（既有只读来源回归）；insights/通知实现未交付，相关项 `blocked`。
 - 预期输出：每条待办有原因/来源/责任人；空值不假零；页面/导出/API 一致。
 - 证据模板：`M13-E1` 命令输出；`M13-E2` 权限/缺口输出；`M13-E3` blocked 清单。
 - 通过判据：工作台/通知/缺口规则满足。
@@ -193,7 +193,7 @@ python manage.py verify_integrity --json
 ### M14 首次启用、期初与导入导出（V1-ONB-01–08）
 - 前置：PH-274 done；PH-289 导入提交 proposed。
 - 步骤：向导/从零或存量/期初 → 模板/映射/预览 → 原子提交/回退 → 开账核对/导出。
-- 命令：通用命令 + onboarding scoped tests（PH-274 已交付；提交片 blocked）。
+- 命令：通用命令 + `python manage.py test tests.test_v1_import_preview tests.test_v1_import_preview_http --verbosity 1`（PH-274 已交付；提交片 PH-289/PH-353 blocked）。
 - 预期输出：预览不留业务痕迹；提交全有或全无；期初不重复成本/收入。
 - 证据模板：`M14-E1` 命令输出；`M14-E2` 预览/提交幂等；`M14-E3` 期初核对。
 - 通过判据：导入/期初规则满足。
