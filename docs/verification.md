@@ -993,4 +993,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 3. **精确 blockers**：PH-350 ready 未 done → PH-335/357/368；PH-357 未 done → PH-367/372；PH-338/353 等 PH-289/PH-362；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151。
 4. **新登记（PH-370–373 连续）**：PH-370 跨 owner 编排执行首片（ready，基于 PH-320 引用链）；PH-371 税额→costing 开放期成本更正（ready）；PH-372 批次 C 收尾证据回填/gate 判定（proposed，deps PH-350/357/367）；PH-373 下一规划槽（proposed，待 PH-369 done）。count 291→295。
 5. **ROADMAP** 新增批次 C 收尾/D 批规划节；发布资格仍按 PH-366 blocked（PH-350 未实现、L3/L4/L5 未执行），不得宣称就绪。
-6. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-327/362/370/371/372 未实现；PH-350/335/357/367 未完成；发布资格仍 blocked。
+6. 独立 S 复核首轮 2 阻断（PH-327 spec 状态、PH-338/353 依赖图）+ 1 required（PH-362 白名单）已修，二轮 PASS（reviewer-b）；最终证据 HEAD c6d0e51 按槽惯例置 PH-369 done / PH-373 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=295；23 项治理 OK；verify-change --base 5763f4a --task PH-369 ok=true、12 文件全白名单、无 errors。未验证：PH-327/362/370/371/372 未实现；PH-350/335/357/367 未完成（main 后续已合入 PH-333/350，下一槽按新 BASE 复核）；发布资格仍 blocked。
