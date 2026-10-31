@@ -5,12 +5,12 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=233; PH-309 recorded in_review with owner/handoff; 14 allowed_paths match the changed files; no path/acceptance schema issues."
+      "evidence": "Actual exit 0 at this HEAD (BASE 81ec533): ok=true, task_count=237 (PH-311 done, PH-309 done with owner/handoff); 14 changed files all inside the PH-309 allowed_paths; no path/acceptance schema issues."
     },
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual exit 0: System check identified 93 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (delivery domain metadata validates the ops-workbench history_read route)."
+      "evidence": "Actual exit 0 on BASE 81ec533: System check identified 93 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (delivery domain metadata validates the ops-workbench history_read route)."
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1: Ran 1115 tests, FAILED (failures=5, errors=3, skipped=69) => 1038 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE fd0136a baseline (1106 + 9 new PH-309 tests); no new failure class. CI Linux (including the PG domain) is authoritative."
+      "evidence": "Actual local exit 1 on BASE 81ec533: Ran 1115 tests, FAILED (failures=5, errors=3, skipped=69) => 1038 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); the BASE 81ec533 total grows to 1115 with the 9 new PH-309 tests and no new failure class. CI Linux (including the PG domain) is authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -31,6 +31,11 @@
       "command": "python manage.py test tests.test_v1_ops_workbench tests.test_v1_ops_workbench_http --verbosity 1",
       "result": "pass",
       "evidence": "Actual exit 0: Ran 9 tests, OK => 9 passed (5 service + 4 HTTP). Covers partition key order/drill URLs, issue-count equality with each delivered read service, pm scope + cash partition unavailable/null+missing, member denial, as_of/period pass-through and validation, zero fact-count change, role pages, invalid params 400, POST 405 and module-disabled history_read 200."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 81ec533 --task PH-309",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=81ec533, 14 changed files all inside the PH-309 allowed_paths, no path_out_of_scope/report-shape errors; assertion_scope=declaration_only. The report review block is the independent reviewer's PASS at 06c5398."
     }
   ],
   "review": {
@@ -55,7 +60,7 @@
   ],
   "unverified": [
     "No browser 1440/390 check was run; the workbench UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
-    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "Independent S review recorded PASS at 06c5398; this HEAD carries the final BASE 81ec533 evidence and the done transition.",
     "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
     "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
     "Persisted workbench snapshots, export (PH-304), alerting/notifications, customer portal and new reconciliation rules remain unimplemented."
