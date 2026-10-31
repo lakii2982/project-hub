@@ -33,17 +33,23 @@
       "evidence": "Actual exit 0: Ran 14 tests, OK => 14 passed (10 service + 4 HTTP). Adds reversal same-token replay (receipt before already-reversed gate), negative mirror lines, multi-project weights/basis 10000, company-level no lines, future-date rejection, and RevenueRecognition/CashTransaction/OpenItem fact-count assertions."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base d38165a --task PH-371",
-      "result": "not_run",
-      "evidence": "Actual exit 1: only high_risk_review_required (review pending); no task/path/report-shape errors. Final pass record after reviewer pass."
+      "command": "python scripts/projectctl.py verify-change --base 3c77653 --task PH-371",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-371 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
     "required": true,
     "reviewer": "reviewer-b",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Awaiting reviewer-b re-review at this HEAD: the previous blockers (reversal idempotency order, missing negative mirror lines) and required fixes (multi-project/company-level weights, RevenueRecognition/CashTransaction/OpenItem fact counts, future-date, basis 10000/amount=tax, POOL_KINDS note) are addressed; no self-attested pass."
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD ed9bb35: reversal now looks up the request_token receipt before the already-reversed state gate, so a same-token replay returns the recorded reversal result (test asserts replay ref equality), while a new token on an already-reversed batch is still refused. The reversal now creates negated SharedCostAllocationLine rows mirroring the original targets/basis_points/allocated_cents (test asserts line count parity and negative amounts), so it is a true negative mirror in addition to the negative batch.",
+      "REQUIRED FOLLOW-UPS COVERED: new tests exercise multi-project contract-line weight attribution (basis sum 10000, amount exact), company-level/no-attribution batch with no project lines, RevenueRecognition/CashTransaction/OpenItem unchanged facts alongside LedgerEntry/AccountingEvent, and future-dated qualification rejection; the POOL_KINDS non-exhaustive note is documented in the service because models.py is outside this whitelist.",
+      "PRIOR INVARIANTS RE-VERIFIED: only confirmed/not_recoverable creates cost (recoverable/pending rejected); amount=qualification.tax_cents; source qualification/invoice org-scoped; open/locked/future period checks; company lock; adjust receipt replay/changed-input and duplicate-qualification rejection; owner/finance write, auditor read, member reject, module-disabled write reject; canonical delivery/urls routes; no ledger/revenue/cash/open-item writes, no invoice/tax mutation; reused existing costing models with no new model/migration; verifier branch omission disclosed.",
+      "GATES (HEAD ed9bb35, BASE d38165a): projectctl check ok=true/task_count=295; manage.py check 117 pre-existing warnings/0 errors; makemigrations --check no changes; full suite 1299 = 5F+3E+70 baseline (no new class); scoped 14 tests OK; fresh migrated SQLite verify_integrity ok=true; verify-change --base d38165a --task PH-371 pre-review only high_risk_review_required (no path errors); 12 changed files inside the PH-371 allowlist; no placeholders.",
+      "MINOR final-evidence note: the report's verify-change entry is still not_run (pre-review); after this pass block is committed record the actual final-HEAD verify-change pass and keep the report evidence consistent."
+    ],
+    "evidence": "VERDICT: PASS - the two blockers are fixed at HEAD ed9bb35 (BASE d38165a): reversal receipt-first idempotency (same-token replay returns the recorded result) and a true negative mirror with negated project lines; required attribution/company-level/fact-count/future-date regressions and the POOL_KINDS non-exhaustive note are in place. Reviewed HEAD ed9bb35, worktree clean; 12 files inside allowlist; check ok=295; manage 0 errors; makemigrations clean; full suite 1299 = 5F+3E+70 baseline; scoped 14 OK; fresh verify_integrity ok; verify-change only high_risk_review_required (no path errors)."
   },
   "deviations": [
     "Reviewer round-1 blockers fixed: (1) reverse_tax_cost_adjustment computes the receipt/digest and returns the stored result before the already-reversed check, so same-token replay succeeds; (2) reversal now creates negative mirror SharedCostAllocationLine rows (same target/basis, allocated_cents negated) and tests assert the mirror. Required fixes: multi-project weight attribution (sum basis 10000, amount=tax), company-level no-lines case, RevenueRecognition/CashTransaction/OpenItem fact-count stability, future-date rejection, and a POOL_KINDS non-exhaustive note in the service (models.py is outside the PH-371 whitelist).",
