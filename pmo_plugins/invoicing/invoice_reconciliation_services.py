@@ -85,12 +85,13 @@ def _issue(code, severity='blocker', **details):
     return row
 
 
-def _missing(code, ref=None, summary=None):
+def _missing(code, ref=None, summary=None, **details):
     row = {'code': code}
     if ref is not None:
         row['ref'] = ref
     if summary is not None:
         row['summary'] = summary
+    row.update({key: value for key, value in details.items() if value is not None})
     return row
 
 
@@ -164,14 +165,19 @@ def _tax_qualifications(member, invoice):
 
 
 def _revenue_for_project(member, project_id, as_of=None):
-    rows = RevenueRecognition.objects.filter(
-        organization=member.organization, project_id=project_id, status='posted')
+    """Posted recognition total for a project; None when no posted fact exists."""
+    rows = list(RevenueRecognition.objects.filter(
+        organization=member.organization, project_id=project_id, status='posted'))
     if as_of is not None:
-        rows = rows.filter(occurred_on__lte=as_of)
+        rows = [row for row in rows if row.occurred_on <= as_of]
+    if not rows:
+        return None
     totals = 0
     for row in rows:
-        adjustment = RevenueAdjustment.objects.filter(
-            recognition=row, status='posted').aggregate(total=Sum('adjustment_cents'))['total'] or 0
+        adjustments = RevenueAdjustment.objects.filter(recognition=row, status='posted')
+        if as_of is not None:
+            adjustments = adjustments.filter(occurred_on__lte=as_of)
+        adjustment = adjustments.aggregate(total=Sum('adjustment_cents'))['total'] or 0
         totals += row.recognized_net_cents + adjustment
     return totals
 
@@ -232,14 +238,23 @@ def _invoice_detail(member, invoice, as_of):
     if any(row['status'] == 'pending' or row['qualification_status'] == 'unknown'
            for row in tax_rows):
         issues.append(_issue('tax_unconfirmed', invoice_ref=invoice.invoice_ref))
-    project_id = next(iter(projects), None)
-    recognized = _revenue_for_project(member, project_id, as_of) if project_id else None
-    if project_id and recognized is None:
-        missing.append(_missing('revenue_missing', project_id=project_id))
-    net_allocated = allocated['net_cents']
-    if recognized is not None and recognized not in (0, net_allocated):
-        issues.append(_issue('revenue_invoice_mismatch', project_id=project_id,
-                             recognized_net_cents=recognized, allocated_net_cents=net_allocated))
+    net_by_project = {}
+    for row in rows:
+        if row['project_id']:
+            net_by_project[row['project_id']] = (
+                net_by_project.get(row['project_id'], 0) + row['net_cents'])
+    recognized_by_project = {}
+    for project_id, net_allocated in sorted(net_by_project.items()):
+        recognized = _revenue_for_project(member, project_id, as_of)
+        recognized_by_project[project_id] = recognized
+        if recognized is None:
+            missing.append(_missing('revenue_missing', project_id=project_id))
+        elif recognized != 0 and recognized != net_allocated:
+            issues.append(_issue('revenue_invoice_mismatch', project_id=project_id,
+                                 recognized_net_cents=recognized,
+                                 allocated_net_cents=net_allocated))
+    known = [value for value in recognized_by_project.values() if value is not None]
+    recognized = sum(known) if known else None
     detail = {
         'invoice_ref': invoice.invoice_ref,
         'invoice_number': invoice.invoice_number,
@@ -259,10 +274,11 @@ def _invoice_detail(member, invoice, as_of):
         'reversed_cents': reversed_total,
         'tax_qualifications': tax_rows,
         'recognized_net_cents': recognized,
+        'recognized_by_project': recognized_by_project,
         'issues': issues,
         'missing': missing,
     }
-    return detail, project_id, issues, missing
+    return detail, (sorted(projects)[0] if projects else None), issues, missing
 
 
 def _summary(row):
@@ -287,8 +303,12 @@ def invoice_pairing(member, *, invoice_id=None, project_id=None, as_of=None):
         except (Invoice.DoesNotExist, ValueError):
             raise PermissionDenied('发票不存在或无权访问')
         detail, invoice_project, issues, missing = _invoice_detail(member, invoice, day)
-        if member.role == 'pm' and (invoice_project is None or not _scoped_projects(member).filter(pk=invoice_project).exists()):
-            raise PermissionDenied('无权查看该发票的对账')
+        if project is not None and str(project.pk) not in detail['project_ids']:
+            raise PermissionDenied('发票不属于所选项目')
+        if member.role == 'pm':
+            visible = {str(pk) for pk in _scoped_projects(member).values_list('pk', flat=True)}
+            if not (set(detail['project_ids']) & visible):
+                raise PermissionDenied('无权查看该发票的对账')
         return {'as_of': day.isoformat(), 'scope': {'kind': 'invoice', 'invoice_id': str(invoice.pk)},
                 'invoice': detail, 'issues': issues, 'missing': missing, 'truncated': False}
     rows, org_issues, org_missing, project_ids = [], [], [], set()

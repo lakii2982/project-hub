@@ -11,6 +11,7 @@ from core.models import (AccountingEvent, AuditEvent, DomainEvent, LedgerEntry,
 from pmo_plugins.invoicing import invoice_reconciliation_services as reconciliation
 from pmo_plugins.invoicing.models import Invoice, InvoiceAllocation, TaxQualification
 from tests.test_v1_invoice import InvoiceFixture
+from tests.test_v1_revenue_pairing_read import RevenuePairingFixture
 
 
 class ReconciliationFixture(InvoiceFixture):
@@ -160,3 +161,95 @@ class InvoiceReconciliationReadTests(ReconciliationFixture, TestCase):
                                        end_date=self.today + timedelta(days=30))
         empty = reconciliation.invoice_pairing(self.owner, project_id=other.pk)
         self.assertEqual(empty['invoices'], [])
+
+
+class InvoiceReconciliationRegressionTests(ReconciliationFixture, TestCase):
+    def _invoice_allocated_to(self, allocations, total=10000):
+        from pmo_plugins.invoicing import services
+        invoice = self.record(gross_cents=total, net_cents=total - total // 10,
+                              tax_cents=total // 10)
+        services.allocate_invoice_lines(
+            self.owner, invoice_id=invoice['invoice_ref']['id'],
+            lines=[{'line_no': 1, 'gross_cents': total,
+                    'net_cents': total - total // 10, 'tax_cents': total // 10,
+                    'allocations': allocations}],
+            expected_version=1, request_token=uuid.uuid4(), dry_run=False)
+        return invoice
+
+    def test_no_posted_revenue_is_null_plus_missing(self):
+        invoice, _ = self.allocated()
+        snapshot = reconciliation.invoice_pairing(
+            self.owner, invoice_id=invoice['invoice_ref']['id'])
+        self.assertIsNone(snapshot['invoice']['recognized_net_cents'])
+        self.assertIn('revenue_missing',
+                      [item['code'] for item in snapshot['invoice']['missing']])
+        self.assertNotIn('revenue_invoice_mismatch',
+                         [issue['code'] for issue in snapshot['invoice']['issues']])
+
+    def test_as_of_bounds_future_revenue_adjustment(self):
+        from pmo_plugins.invoicing import services
+        invoice = self.record(gross_cents=6000, net_cents=5400, tax_cents=600)
+        services.allocate_invoice_lines(
+            self.owner, invoice_id=invoice['invoice_ref']['id'],
+            lines=[{'line_no': 1, 'gross_cents': 6000, 'net_cents': 5400, 'tax_cents': 600,
+                    'allocations': [{'business_source_ref': {
+                        'namespace': 'contracts', 'kind': 'contract_line',
+                        'id': str(self.line.pk), 'version': 1},
+                        'gross_cents': 6000, 'net_cents': 5400, 'tax_cents': 600}]}],
+            expected_version=1, request_token=uuid.uuid4(), dry_run=False)
+        recognition = self.recognition(amount=5400)
+        from pmo_plugins.management_revenue.models import RevenueAdjustment
+        RevenueAdjustment.objects.create(
+            organization=self.org, project=self.project, recognition=recognition,
+            adjustment_cents=-1000, reason='未来调整', occurred_on=self.today + timedelta(days=10),
+            posting_period=(self.today + timedelta(days=10)).strftime('%Y-%m'),
+            status='posted', created_by=self.owner)
+        today_snapshot = reconciliation.invoice_pairing(
+            self.owner, invoice_id=invoice['invoice_ref']['id'])
+        self.assertEqual(today_snapshot['invoice']['recognized_by_project'][str(self.project.pk)],
+                         5400)
+        future_snapshot = reconciliation.invoice_pairing(
+            self.owner, invoice_id=invoice['invoice_ref']['id'],
+            as_of=self.today + timedelta(days=30))
+        self.assertEqual(future_snapshot['invoice']['recognized_by_project'][str(self.project.pk)],
+                         4400)
+
+    def test_multi_project_invoice_compares_per_project(self):
+        from core.models import Project
+        other = Project.objects.create(
+            organization=self.org, name='跨项目', client='客户',
+            code='P-MULTI-' + uuid.uuid4().hex[:6], manager=self.owner,
+            start_date=self.today, end_date=self.today + timedelta(days=30))
+        other_settlement = RevenuePairingFixture.settlement(
+            self, amount=4000, project=other)
+        other_item = other_settlement.items.first()
+        invoice = self._invoice_allocated_to([
+            {'business_source_ref': {'namespace': 'contracts', 'kind': 'contract_line',
+                                     'id': str(self.line.pk), 'version': 1},
+             'gross_cents': 6000, 'net_cents': 5400, 'tax_cents': 600},
+            {'business_source_ref': {'namespace': 'settlement', 'kind': 'open_item',
+                                     'id': str(other_item.pk), 'version': 1},
+             'gross_cents': 4000, 'net_cents': 3600, 'tax_cents': 400},
+        ])
+        self.recognition(amount=5400)
+        snapshot = reconciliation.invoice_pairing(
+            self.owner, invoice_id=invoice['invoice_ref']['id'])
+        self.assertEqual(snapshot['invoice']['project_ids'],
+                         sorted([str(self.project.pk), str(other.pk)]))
+        self.assertNotIn('revenue_invoice_mismatch',
+                         [issue['code'] for issue in snapshot['invoice']['issues']])
+        self.assertIn(str(other.pk), snapshot['invoice']['recognized_by_project'])
+        self.assertIsNone(snapshot['invoice']['recognized_by_project'][str(other.pk)])
+        self.assertIn('revenue_missing',
+                      [item['code'] for item in snapshot['invoice']['missing']])
+
+    def test_project_filter_mismatch_denied(self):
+        from core.models import Project
+        invoice, _ = self.allocated()
+        other = Project.objects.create(
+            organization=self.org, name='错项目', client='客户',
+            code='P-DENY-' + uuid.uuid4().hex[:6], manager=self.owner,
+            start_date=self.today, end_date=self.today + timedelta(days=30))
+        with self.assertRaises(PermissionDenied):
+            reconciliation.invoice_pairing(
+                self.owner, invoice_id=invoice['invoice_ref']['id'], project_id=other.pk)
