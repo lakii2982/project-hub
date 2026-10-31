@@ -1,6 +1,6 @@
 {
   "task_id": "PH-348",
-  "summary": "批次 C-2b 备份/恢复演练执行（V1-OPS-04 首片）：实现 scripts/ops/backup_drill.py 与 scripts/ops/restore_drill.py，按 PH-345 契约产出 evidence envelope/退出码/幂等/脱敏。backup_drill：SQLite 只读快照（sqlite3.backup，源库 mode=ro）、PG pg_dump（客户端缺失则 not_run）、可选附件树复制与逐文件哈希、PRAGMA integrity_check/表行数/schema 哈希/页数、manifest（快照 SHA256/大小/保留/RPO-RTO 目标）；生产 profile 的 execute 拒绝（exit 5），dry_run 零快照。restore_drill：校验 manifest/快照 SHA256，仅在隔离空目标目录恢复（非空/生产 execute 拒绝），恢复后 integrity_check/表行数/schema/附件哈希对比，实测 RPO（manifest.created_at→完成）与 RTO（恢复耗时），备份与源库不变。测试 tests/test_v1_ops_backup_restore.py 11 项覆盖 dry_run 零写、execute manifest/hash/行数、附件、隔离恢复/RPO-RTO/源不变、缺库 not_run、生产拒绝、快照篡改 fail、缺 manifest not_run、幂等重跑、PG 工具缺失 not_run 且不泄露密码。",
+  "summary": "批次 C-2b 备份/恢复演练执行（V1-OPS-04 首片）：实现 scripts/ops/backup_drill.py 与 scripts/ops/restore_drill.py，按 PH-345 契约产出 evidence envelope/退出码/幂等/脱敏。backup_drill：SQLite 只读快照（sqlite3.backup，源库 mode=ro）、PG pg_dump（客户端缺失则 not_run）、可选附件树复制与逐文件哈希、PRAGMA integrity_check/表行数/schema 哈希/页数、manifest（快照 SHA256/大小/保留/RPO-RTO 目标）；生产 profile 的 execute 拒绝（exit 5），dry_run 零快照。restore_drill：校验 manifest/快照 SHA256，仅在隔离空目标目录恢复（非空/普通文件/生产 execute 拒绝），恢复后 integrity_check/表行数/schema/附件哈希对比，实测 RPO（manifest.created_at→完成）与 RTO（恢复耗时），备份与源库不变；**PG execute 诚实返回 not_run/exit 2**（本片不实现隔离 PG 恢复/核对，禁止 stub pass，交 CI/PH-333/PH-349）。测试 tests/test_v1_ops_backup_restore.py 11 项覆盖 dry_run 零写、execute manifest/hash/行数、附件、隔离恢复/RPO-RTO/源不变、缺库 not_run、生产拒绝、快照篡改 fail、缺 manifest not_run、幂等重跑、PG 工具缺失 not_run 且不泄露密码。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
@@ -20,22 +20,34 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1 on BASE cbb84c2: Ran 1235 tests, FAILED (failures=5, errors=3, skipped=69) => 1158 passed. All 8 failures/errors are exactly the known macOS environment limits; no new failure class after the manifest-stamp fix."
+      "evidence": "Actual local exit 1 on BASE cbb84c2: Ran 1239 tests, FAILED (failures=5, errors=3, skipped=69) => 1162 passed. All 8 failures/errors are exactly the known macOS environment limits; no new failure class."
     },
     {
       "command": "python manage.py test tests.test_v1_ops_backup_restore --verbosity 1",
       "result": "pass",
-      "evidence": "Actual exit 0: Ran 11 tests, OK => 11 passed. Covers dry_run zero-write, execute snapshot/manifest/hash/row counts, attachments hash/restore, isolated restore with table/schema/RPO/RTO checks and source untouched, missing DB not_run, production execute refusal (exit 5), tampered snapshot fail (exit 3), missing manifest not_run, idempotent rerun, PG client-missing not_run without leaking credentials."
+      "evidence": "Actual exit 0: Ran 15 tests, OK => 15 passed. Adds restore production-execute refusal, non-empty target refusal, target-is-plain-file envelope handling, and fake-pg_restore PG execute honest not_run (no stub pass, tool not invoked) to the original 11."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base cbb84c2 --task PH-348",
+      "result": "not_run",
+      "evidence": "Actual exit 1: only high_risk_review_required (review pending); no task/path/report-shape errors. Final pass record will be written after reviewer-b re-review."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-348 backup/restore drill reviewer (fresh context, read-only)",
+    "reviewer": "reviewer-b",
     "status": "pending",
-    "findings": [],
-    "evidence": "Awaiting independent S review at this HEAD: PH-345 contract alignment (envelope/exit codes/roles/preconditions/idempotency/redaction), read-only SQLite snapshot and optional PG pg_dump not_run, attachments hashing, isolated restore with integrity/table/schema/attachment comparison and RPO/RTO, refusal of production execute and non-empty targets, source/backup immutability, no ledger replay/write, and the exact whitelist. projectctl check, manage.py check, full suite (known macOS baseline only), and scoped 11 tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+    "findings": [
+      "BLOCKER - PostgreSQL restore is a fake pass: when `pg_restore` is present, `restore_drill.py` copies the dump file to the target and records `V1-OPS-04.restore=pass` with `ok=True`, without invoking pg_restore, creating/connecting to an isolated database, or verifying restored tables/schema/rows/attachments; RPO/RTO are then marked pass from that non-restore. I probed with stub pg_dump/pg_restore binaries on PATH: backup exit 0/pass, restore exit 0/pass, and the pg_restore stub was never invoked. This violates PH-345 V1-OPS-04 ('isolated restore success and login/report/attachment consistency') and the explicit rule 'do not fake pass'; the report's claim that PG restore is left to CI is not implemented by this script. Fix: either implement a real isolated `pg_restore`/psql verification path (and record it), or return status=not_run/exit 2 for PG execute until the real restore is implemented; add a test with pg_restore present that proves invocation/verification or an honest not_run.",
+      "REQUIRED - restore safety tests are incomplete relative to the frozen requirements: there is no test that execute refuses a non-empty target directory and no test that production execute is refused for restore_drill (only backup production refusal is tested). Add both. Also `target` being an existing regular file currently crashes on `target.iterdir()` (unhandled NotADirectoryError) instead of returning a controlled fail/env envelope; handle file/symlink targets with the normal exit-code path.",
+      "REQUIRED evidence completeness: the PH-348 report has no verify-change entry (we ran it: exit 1, only high_risk_review_required, no path errors at this HEAD); add the pre-review/pass verify-change command to the report and record the final-HEAD actual run after this pass.",
+      "OTHER CONTENT CHECKED (no other blocker): SQLite backup is a read-only snapshot (`mode=ro`, sqlite3.backup), records SHA256/size/table row counts/schema hash/integrity_check/page counts, attachments hashes, manifest, and source bytes remain unchanged; backup dry_run writes no snapshot; missing DB/PG tools are not_run; production backup execute and non-empty target restore are refused (backup tested); tampered snapshot fails; missing manifest is not_run; RPO/RTO are measured for SQLite; envelope fields/exit codes 0/2/3/4/5 match PH-345; redaction/password leakage test passes. Local isolated dry_run/execute backup + dry_run/execute restore all returned 0/pass on a temp SQLite DB; scoped 11 tests OK; full suite 1235 = 5F+3E+69 baseline (no new class); manage.py check 0 errors; projectctl check ok=283; 9 changed files all inside PH-348 allowed paths; no placeholders; no mig/schema/gate changes."
+    ],
+    "evidence": "VERDICT: REJECTED - 1 blocker: the PG restore execute path marks pass without running pg_restore or verifying any restored database/attachments (stub-tool probe: restore exit 0/pass, pg_restore never invoked), which is a fake pass against PH-345 V1-OPS-04. Required: add non-empty-target and restore-production refusal tests, handle file/symlink target without a traceback, and record verify-change in the report. Reviewed HEAD fb1a08a (BASE cbb84c2), worktree clean; 9 files inside allowlist; SQLite backup/restore path works (local dry_run/execute probe), scoped 11 OK, full suite 1235 = 5F+3E+69 baseline, check ok=283, manage 0 errors, verify-change only high_risk_review_required (no path errors)."
   },
   "deviations": [
+    "Reviewer round-1 blocker fixed: restore_drill no longer copies a PG dump and records a stub pass. PG execute now returns status not_run / exit 2 with an explicit pg_execute check (no pg_restore call, no target creation) until an isolated PG restore+verification harness exists (CI/PH-333/PH-349); a with-fake-pg_restore test proves the tool is not invoked. SQLite restore remains fully verified.",
+    "Reviewer required fixes: added restore production-execute refusal, non-empty target refusal, and target-path-is-a-plain-file handling (normal exit 3 envelope, no traceback); report now includes the verify-change entry (exit 1 high_risk only, result not_run).",
     "This slice implements only the V1-OPS-04 backup/restore drill scripts (backup_drill.py/restore_drill.py); installation/TLS/upgrade (PH-347), PG concurrency (PH-349), health/capacity (PH-335) and production operations remain out of scope.",
     "SQLite snapshot/restore is fully exercised locally; PostgreSQL paths are contract-complete but only run when pg_dump/pg_restore are available (otherwise explicit not_run exit 2), and real PG restore is left to CI/PH-333/PH-349. SQLite is not presented as PG evidence.",
     "Evidence is L1 (code exists) + L2 (local automated tests) only; L3 CI/PG, L4 browser and L5 production/customer acceptance were not executed and are not claimed.",
@@ -44,7 +56,7 @@
     "No real customer/payroll/credential data is included; PG URLs are redacted in evidence and tests assert the password is not present."
   ],
   "unverified": [
-    "PostgreSQL backup/restore, real PG version/tooling and RPO/RTO in CI are not executed locally; PG paths are not_run unless client tools are present.",
+    "PostgreSQL restore execute is explicitly not_run in this slice (honest refusal, no stub pass); real isolated PG restore/verification and RPO/RTO remain for CI/PH-333/PH-349.",
     "L3 CI/PG, L4 browser, L5 production/customer acceptance are not performed; only L1/L2 evidence exists.",
     "Large attachment/object-storage/offsite copy, encryption/key management, backup retention enforcement and scheduled backup automation are not implemented.",
     "Independent S review is still pending; verify-change is review-gated at this HEAD."

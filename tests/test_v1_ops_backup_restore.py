@@ -1,4 +1,5 @@
 """PH-348 V1-OPS-04 backup/restore drill script contracts."""
+import hashlib
 import json
 import os
 import sqlite3
@@ -165,6 +166,70 @@ class BackupRestoreDrillTests(unittest.TestCase):
         self.assertEqual(self.db.read_bytes(), before)
         manifests = list(self.backup_dir.glob('manifest-*.json'))
         self.assertGreaterEqual(len(manifests), 2)
+
+    def test_restore_production_execute_refused(self):
+        self.backup()
+        code, payload = run(RESTORE, '--mode', 'execute', '--profile', 'production',
+                            '--backup-dir', str(self.backup_dir),
+                            '--target-dir', str(self.root / 'restored'), '--out', str(self.out))
+        self.assertEqual(code, 5)
+        self.assertEqual(payload['status'], 'blocked')
+        self.assertFalse((self.root / 'restored').exists())
+
+    def test_restore_non_empty_target_refused(self):
+        self.backup()
+        target = self.root / 'restored'
+        target.mkdir()
+        (target / 'existing.txt').write_text('keep', encoding='utf-8')
+        code, payload = run(RESTORE, '--mode', 'execute', '--profile', 'rehearsal',
+                            '--backup-dir', str(self.backup_dir),
+                            '--target-dir', str(target), '--out', str(self.out))
+        self.assertEqual(code, 3)
+        self.assertEqual(payload['status'], 'fail')
+        self.assertEqual((target / 'existing.txt').read_text(encoding='utf-8'), 'keep')
+
+    def test_restore_target_is_plain_file(self):
+        self.backup()
+        target = self.root / 'target-file'
+        target.write_text('not a directory', encoding='utf-8')
+        code, payload = run(RESTORE, '--mode', 'execute', '--profile', 'rehearsal',
+                            '--backup-dir', str(self.backup_dir),
+                            '--target-dir', str(target), '--out', str(self.out))
+        self.assertEqual(code, 3)
+        self.assertEqual(payload['status'], 'fail')
+        self.assertEqual(target.read_text(encoding='utf-8'), 'not a directory')
+
+    def test_pg_restore_execute_is_honest_not_run(self):
+        pg_dir = self.root / 'pgbackup'
+        pg_dir.mkdir()
+        snapshot = pg_dir / 'database.dump'
+        snapshot.write_bytes(b'fake pg dump')
+        manifest = {
+            'manifest_version': 1, 'script': 'ops_backup_verify', 'profile': 'rehearsal',
+            'created_at': '2026-10-31T00:00:00+00:00',
+            'source': {'kind': 'postgresql', 'path': 'postgres://user:***@localhost/db'},
+            'snapshot': {'path': 'database.dump', 'sha256': hashlib.sha256(b'fake pg dump').hexdigest(),
+                         'size': 12},
+            'database': None, 'attachments': None, 'retention_days': 7,
+            'rpo_target_minutes': 60, 'rto_target_minutes': 60,
+            'app_sha': 'test', 'redactions': ['password']}
+        (pg_dir / 'manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+        bin_dir = self.root / 'bin'
+        bin_dir.mkdir()
+        marker = self.root / 'pg-restore-called'
+        fake = bin_dir / 'pg_restore'
+        fake.write_text(f'#!/bin/sh\ntouch {marker}\nexit 0\n', encoding='utf-8')
+        fake.chmod(0o755)
+        target = self.root / 'restored'
+        code, payload = run(RESTORE, '--mode', 'execute', '--profile', 'rehearsal',
+                            '--backup-dir', str(pg_dir), '--target-dir', str(target),
+                            '--out', str(self.out),
+                            env={'PATH': str(bin_dir) + os.pathsep + os.environ.get('PATH', '')})
+        self.assertEqual(code, 2)
+        self.assertEqual(payload['status'], 'not_run')
+        self.assertFalse(marker.exists())
+        self.assertFalse(target.exists())
+        self.assertIn('not implemented', payload['notes'])
 
     def test_pg_dry_run_not_run_without_client_tools(self):
         env = {'PATH': '/nonexistent'}

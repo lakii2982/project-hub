@@ -109,6 +109,13 @@ def main(argv=None):
                                    'pg_restore not installed'))
             return _fail(args, checks, 'not_run', bd.EXIT_NOT_RUN,
                            'PostgreSQL restore tools unavailable; PG restore not_run')
+        if args.mode == 'execute':
+            checks.append(bd.check('V1-OPS-04.pg_execute', 'not_run',
+                                   'isolated PG restore + verification',
+                                   'not implemented in this slice; CI/PH-333/PH-349 harness required'))
+            return _fail(args, checks, 'not_run', bd.EXIT_NOT_RUN,
+                         'PG restore execute is not implemented in this slice; refusing to '
+                         'record a stub pass. Use the isolated PG harness (CI/PH-333/PH-349).')
     if args.mode == 'dry_run':
         target = Path(args.target_dir or tempfile.mkdtemp(prefix='ops-restore-dry-'))
         checks.append(bd.check('V1-OPS-04.preconditions', 'pass', 'writable isolated target',
@@ -124,6 +131,11 @@ def main(argv=None):
         return _fail(args, checks, 'not_run', bd.EXIT_NOT_RUN,
                        'execute requires an isolated --target-dir')
     target = Path(args.target_dir)
+    if target.exists() and not target.is_dir():
+        checks.append(bd.check('V1-OPS-04.target', 'fail', 'empty isolated target directory',
+                               f'{target} is not a directory'))
+        return _fail(args, checks, 'fail', bd.EXIT_FAIL,
+                     'target path exists but is not a directory; refusing to overwrite')
     if target.exists() and any(target.iterdir()):
         checks.append(bd.check('V1-OPS-04.target', 'fail', 'empty isolated target',
                                str(target)))

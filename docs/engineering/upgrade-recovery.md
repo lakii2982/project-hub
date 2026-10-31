@@ -56,4 +56,4 @@
   - `scripts/ops/restore_drill.py`（对应契约 `ops_restore_rehearsal`）：只从 manifest 读取，校验快照 SHA256；恢复到**隔离空目标目录**（非空拒绝、生产 execute 拒绝），恢复后 `integrity_check`/表行数/schema/附件哈希与 manifest 对比，实测 RPO（manifest.created_at→完成）与 RTO（恢复耗时）并对照目标；备份与源库只读/不变。
 - 证据：脚本 envelope 含 script/contract_version/mode/profile/app_sha/时间/exit_code/status/checks/artifacts/redactions；退出码 0 pass、2 not_run、3 fail、4 环境、5 安全拒绝；测试 `tests/test_v1_ops_backup_restore.py`（11 项）覆盖 dry_run 零写、execute manifest/hash/行数、附件、隔离恢复/RPO-RTO/源不变、缺库 not_run、生产拒绝、快照篡改 fail、缺 manifest not_run、幂等重跑、PG 工具缺失 not_run 且不泄露密码。
 - **层级别**：本实现只产生 L1（代码存在）+ L2（本地自动化）证据；L3（CI/PG 真实环境）、L4（浏览器）、L5（生产/客户验收）均未执行，必须另行演练并记录，不得用本片本地测试冒充。
-- 未实现/边界：真实 PG 备份/恢复（仅当 CI/环境提供 pg_dump/pg_restore 时由 PH-333/CI 执行）、对象存储/异地副本、附件大文件校验、生产恢复（禁止）、安装/升级/并发/容量（PH-347/349/335）。
+- 未实现/边界：PG 备份可在 pg_dump 存在时执行；**PG 恢复 execute 本片诚实返回 not_run/exit 2**（不调用 pg_restore、不建目标库、不记 stub pass），真实隔离 PG 恢复/核对由 CI/PH-333/PH-349 执行、对象存储/异地副本、附件大文件校验、生产恢复（禁止）、安装/升级/并发/容量（PH-347/349/335）。
