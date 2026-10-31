@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Post-independent-review actual run (reviewed HEAD 0fc3411, then final evidence commit): {\"command\":\"check\",\"ok\":true,\"task_count\":245}, exit 0; PH-305 done with handoff."
+      "evidence": "Final Lead integration rerun after rebase onto f436e2c: {\"command\":\"check\",\"ok\":true,\"task_count\":246} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -13,9 +13,9 @@
       "evidence": "Actual run at the rebased pre-review candidate HEAD ad2bc43 (BASE 847f66b): Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 847f66b --task PH-305",
+      "command": "python scripts/projectctl.py verify-change --base f436e2c --task PH-305",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD 15000fb: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"15000fbec1bf33c3ba481ddef6a501605aea329e\",\"count\":6,\"errors\":null}, exit 0; all 6 changed files inside BASE PH-305 allowed_paths and review.status=pass with reviewer-b's name (second round after the four contract fixes)."
+      "evidence": "Final Lead integration rerun after rebase onto f436e2c (PH-306 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-305 allowed_paths."
     }
   ],
   "review": {
@@ -35,7 +35,8 @@
     "Contract-freeze location: the Lead's BASE correction states PH-305's spec/whitelist does not include docs/adr/, so the freeze is written as a dedicated section inside project/specs/PH-305.md instead of a new ADR file; no ADR was created or modified and no docs/adr/ path was touched.",
     "The freeze keeps the implementation deferred: PH-313 remains the write-side implementation prerequisite and stays proposed; PH-305 adds no canonical topic/command and does not modify contract schema.",
     "Rebased to new main c2c76d8 after PH-293 merged (the original candidate was based on 15cf20c); only tasks/manifest/docs-verification context conflicts were resolved and the frozen spec content stayed semantically unchanged before the blocker fixes.",
-    "Historical recomputation is explicitly forbidden: corrections must append a negative reversal batch plus a new batch in an open period, with algorithm_version recorded; the contract is a docs-only freeze with no code/migration/runtime evidence."
+    "Historical recomputation is explicitly forbidden: corrections must append a negative reversal batch plus a new batch in an open period, with algorithm_version recorded; the contract is a docs-only freeze with no code/migration/runtime evidence.",
+    "Lead integration rebase (847f66b -> f436e2c) after PH-299/300/308/306 merged: docs/verification.md kept main entries plus the PH-305 entry; manifest.active_handoff -> PH-305. Gates rerun green."
   ],
   "unverified": [
     "PH-313/PH-320 write-side implementation is not done; the contract is frozen but no allocator, model, migration or read-only endpoint exists yet.",
