@@ -61,3 +61,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## PH-316 运营核对工作台导出联动首片（2026-10-31）
 
 工作台分区联动 PH-304 底稿导出：ops_overview/settlement_coverage/cash_bridge/fee_pairing 分区带 dataset/as_of/period 导出链接，复用既有 ops-export/ 服务与 history_read 路由；identity_access 无导出（PH-304 数据集不含身份敏感明细，export_dataset_not_implemented），pm cash_bridge 不可导出（无项目归属）。无新写通道/元数据副本/迁移/表/审计，零写、事实计数不变。未验证：浏览器 1440/390、独立复核、PG、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-316.json`。
+
+## PH-252 发票实现首片（invoicing 插件）（2026-10-31）
+
+新建 invoicing 插件：Invoice/InvoiceLine/InvoiceAllocation/InvoiceReversal/TaxQualification + 自有迁移 0001 + vendor-aware append-only 触发器；record/allocate/reverse 服务（公司锁、request_token 幂等、期间/锁期、整数分价税分离、来源额度只读派生、部分/全额红冲、append-only 负值冲销、红票≠退款），不写收入/现金/账本/未清；浏览器表单/列表/详情、verify_integrity 发票分支、generic audit + canonical events。插件默认停用（opt-in，避免反向依赖阻断模块停用）；分配首片仅 sales 合同明细/结算未清项/结算。未验证：浏览器 1440/390、独立复核、PG 触发器/并发、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-252.json`。

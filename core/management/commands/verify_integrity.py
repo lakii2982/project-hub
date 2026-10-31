@@ -1334,6 +1334,81 @@ class Command(BaseCommand):
                     pk=ref.get('id'), organization_id=receipt.organization_id,
                     status='reversed').exists():
                 errors.append(f"billable_receipt:{receipt.pk}:reverse_state")
+        from pmo_plugins.invoicing.models import (Invoice, InvoiceAllocation, InvoiceLine,
+                                                  InvoiceReversal)
+        from pmo_plugins.contracts.models import ContractLine as _InvoiceContractLine
+        from pmo_plugins.settlement.models import OpenItem as _InvoiceOpenItem
+        for invoice in Invoice.objects.all().order_by('pk'):
+            if invoice.gross_cents != invoice.net_cents + invoice.tax_cents:
+                errors.append(f"invoice:{invoice.pk}:header_tax_split")
+            if invoice.status not in {'active', 'reversed'}:
+                errors.append(f"invoice:{invoice.pk}:status")
+            lines = list(InvoiceLine.objects.filter(invoice_id=invoice.pk))
+            if sum(line.gross_cents for line in lines) != invoice.gross_cents:
+                errors.append(f"invoice:{invoice.pk}:line_total")
+            if sum(line.net_cents for line in lines) != invoice.net_cents:
+                errors.append(f"invoice:{invoice.pk}:line_net_total")
+            if sum(line.tax_cents for line in lines) != invoice.tax_cents:
+                errors.append(f"invoice:{invoice.pk}:line_tax_total")
+            for line in lines:
+                if line.gross_cents != line.net_cents + line.tax_cents:
+                    errors.append(f"invoice_line:{line.pk}:tax_split")
+                allocations = list(InvoiceAllocation.objects.filter(invoice_line_id=line.pk))
+                if allocations and sum(row.gross_cents for row in allocations) != line.gross_cents:
+                    errors.append(f"invoice_line:{line.pk}:allocation_total")
+                for row in allocations:
+                    if row.gross_cents != row.net_cents + row.tax_cents:
+                        errors.append(f"invoice_allocation:{row.pk}:tax_split")
+                    if row.organization_id != invoice.organization_id:
+                        errors.append(f"invoice_allocation:{row.pk}:organization")
+                    source = row.business_source_ref or {}
+                    kind = (source.get('namespace'), source.get('kind'))
+                    if kind == ('contracts', 'contract_line'):
+                        target = _InvoiceContractLine.objects.filter(
+                            pk=source.get('id'), organization_id=invoice.organization_id).first()
+                        if target is None or target.status != 'approved':
+                            errors.append(f"invoice_allocation:{row.pk}:source_missing")
+                        elif str(target.contract_version.contract.party_id) != str(invoice.counterparty_id):
+                            errors.append(f"invoice_allocation:{row.pk}:counterparty")
+                    elif kind == ('settlement', 'open_item'):
+                        target = _InvoiceOpenItem.objects.filter(
+                            pk=source.get('id'), organization_id=invoice.organization_id).first()
+                        if target is None:
+                            errors.append(f"invoice_allocation:{row.pk}:source_missing")
+                        elif str(target.counterparty_id) != str(invoice.counterparty_id):
+                            errors.append(f"invoice_allocation:{row.pk}:counterparty")
+                    else:
+                        errors.append(f"invoice_allocation:{row.pk}:source_kind")
+            reversals = list(InvoiceReversal.objects.filter(invoice_id=invoice.pk))
+            reversed_total = sum(-row.gross_cents for row in reversals)
+            if reversed_total > invoice.gross_cents:
+                errors.append(f"invoice:{invoice.pk}:over_reversed")
+            if invoice.status == 'reversed' and reversed_total != invoice.gross_cents:
+                errors.append(f"invoice:{invoice.pk}:reversed_without_full_reversal")
+            if invoice.status == 'active' and reversed_total >= invoice.gross_cents and reversals:
+                errors.append(f"invoice:{invoice.pk}:full_reversal_but_active")
+            for row in reversals:
+                if row.gross_cents >= 0 or row.net_cents > 0 or row.tax_cents > 0:
+                    errors.append(f"invoice_reversal:{row.pk}:signed")
+                if row.gross_cents != row.net_cents + row.tax_cents:
+                    errors.append(f"invoice_reversal:{row.pk}:tax_split")
+            events = _ContractEvent.objects.filter(
+                organization_id=invoice.organization_id, topic='invoicing.recorded.v1',
+                data__source__id=str(invoice.pk))
+            if events.count() != 1:
+                errors.append(f"invoice:{invoice.pk}:recorded_event_count")
+            if _ContractEvent.objects.filter(
+                    organization_id=invoice.organization_id, topic='invoicing.lines_allocated.v1',
+                    data__source__id=str(invoice.pk)).count() > 1:
+                errors.append(f"invoice:{invoice.pk}:allocated_event_count")
+            if AccountingEvent.objects.filter(
+                    organization_id=invoice.organization_id,
+                    source__namespace='invoicing').exists():
+                errors.append(f"invoice:{invoice.pk}:financial_event")
+            if SourceConsumption.objects.filter(
+                    organization_id=invoice.organization_id,
+                    source__kind='invoice').exists():
+                errors.append(f"invoice:{invoice.pk}:source_consumption")
         result = {"ok": not errors, "errors": errors, "organizations": Organization.objects.count(), "entries": LedgerEntry.objects.count()}
         self.stdout.write(json.dumps(result, ensure_ascii=False) if options["json"] else ("完整性检查通过" if not errors else "\n".join(errors)))
         if errors: raise CommandError("项目账完整性检查未通过")

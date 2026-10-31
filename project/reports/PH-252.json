@@ -1,0 +1,60 @@
+{
+  "task_id": "PH-252",
+  "summary": "发票实现首片（invoicing 插件，按 ADR 0015）：新建 pmo_plugins/invoicing 插件（manifest 8 字段、requires contracts/settlement/cash/management_revenue/costing、自有迁移 0001、domain_metadata canonical 路由、delivery urls root 单写绑定），实现 Invoice/InvoiceLine/InvoiceAllocation/InvoiceReversal/TaxQualification 五个 owned fact 模型与 vendor-aware append-only 触发器（PG 函数 + SQLite 触发器；仅 Invoice 允许 active→reversed 状态位，其余 UPDATE/DELETE 拒绝）。服务层 record_invoice/allocate_invoice_lines/reverse_invoice：公司锁、request_token 审计收据幂等、期间/锁期、整数分 gross=net+tax、行合计=头、分配合计=行、业务来源（合同批准明细/结算未清项/结算）同 org/同往来方/额度只读派生、部分红冲保 active、全额→reversed、append-only 负值冲销、红票≠退款；不写收入/现金/账本/未清。浏览器列表/详情/登记/分配/红冲表单走具名服务；verify_integrity 新增发票分支（头行合计、分配守恒与来源、红冲 signed/状态机、规范事件、无财务事件/来源消费）；generic audit + canonical DomainEvent（recorded/lines_allocated/reversed）。默认停用（default_enabled=False）以避免新增反向依赖阻断既有模块停用测试；启用后写入口可用、停用后 history_read 历史只读。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=250; PH-252 in_review with owner/handoff; 16 changed files all inside the PH-252 whitelist (invoicing plugin/migrations/tests plus root-only settings/delivery urls/verify_integrity/governance); plugin registry accepts the manifest/migration_dependencies and the new migration leaf."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 99 issues (0 silenced), all pre-existing W003/W342 warnings; 0 errors (invoicing domain metadata/routes/registry validate)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected; the invoicing migration 0001_initial matches the models and is the new leaf in its own plugin chain (no core migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1: Ran 1140 tests, FAILED (failures=5, errors=3, skipped=69) => 1063 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); the BASE 2659317 baseline (1125) grows by the 15 new PH-252 tests with no new failure class. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Probe regression creates a malformed invoice header (no lines/events) and asserts verify_integrity fails with invoice:* errors, proving the new branch is exercised."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 15 tests, OK => 15 passed (10 service + 5 HTTP). Covers record active/canonical event/zero financial writes, duplicate number/tax split/future/locked/closed period, member denial/auditor read-only, token replay/changed input, allocate lines/allocations and over-allocation/line-total refusals, allocation idempotency/no double allocate, partial reversal keeps active/full -> reversed/repeat refusal, append-only DB trigger UPDATE/DELETE rejection, verify_integrity probe, owner record/list/detail, allocate/reverse pages, member/auditor denial and module-disabled write refusal with history read kept."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-252 invoicing implementation reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: ADR 0015 contract alignment (entities/status machine/append-only reversal/negative signed amounts), plugin ownership/manifest/migration leaf and canonical routes, record/allocate/reverse service invariants (integer cents, gross=net+tax, line/header/allocation totals, source quota read-only derivation, company lock, request_token idempotency, period/lock checks, role matrix, no revenue/cash/ledger writes), generic audit/canonical events, verify_integrity invoice branch and probe, vendor-aware triggers (PG/SQLite), default-disabled dependency-guard rationale, append-only counterexamples, and the 16-path whitelist. projectctl check, manage.py check, makemigrations, verify_integrity and scoped tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "Reverse is implemented in this slice (InvoiceReversal + reverse_invoice + verify branch) per the Lead task instruction and ADR 0015; the older PH-252 spec text said reversal was deferred, but ADR 0015 freezes invoicing.invoice.reverse/v1 and the Lead explicitly required record/allocate/reverse. No posted/superseded status is produced.",
+    "invoicing default_enabled=False: making it enabled by default would add a reverse dependency on contracts/settlement/cash/management_revenue/costing and block existing tests/flows that disable those modules without first disabling invoicing (the dependency guard is correct). The plugin is opt-in; invoice tests explicitly enable it, and module-disabled history_read remains readable.",
+    "request_token receipts are stored in generic AuditEvent payload (request_token/input_digest/result) rather than a new receipt table, matching the spec's five-model list and avoiding an extra table; replay/changed-input semantics are covered by tests.",
+    "Business-source allocation first slice supports contract approved lines, settlement open items and settlement sources (sales direction only); purchase invoice allocation to other source kinds and service/acceptance sources are rejected as unsupported rather than guessed, to be extended by a later slice.",
+    "TaxQualification model is created per ADR/spec but no qualification write service/UI is exposed in this slice (ADR leaves qualification confirmation to a later slice); tax treatment remains a snapshot fact only.",
+    "The plugin requires all five owner plugins in its manifest (per ADR 0015) but its migration_dependencies are core/contracts/settlement to keep the migration graph acyclic; cash/management_revenue/costing are runtime read dependencies.",
+    "No core model/migration is modified; invoicing owns its own migration chain (0001_initial) and root-only files (settings, delivery urls, verify_integrity, governance) are the integrator-owned wiring explicitly allowed by the spec.",
+    "Counterexamples/tests never UPDATE/DELETE historical rows through supported paths; DB triggers and model guards are asserted with savepoint-contained IntegrityError checks."
+  ],
+  "unverified": [
+    "Browser 1440/390 visual/keyboard/focus/overflow/empty-error-disabled states were not manually checked; only HTTP tests were run.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PostgreSQL trigger/function behaviour and true multi-connection concurrency were not exercised locally (SQLite cannot prove production concurrency); CI including the PG domain remains authoritative. SQLite tests do not claim production concurrency correctness.",
+    "Production/UAT and legacy database upgrades are not verified; only freshly migrated SQLite databases were exercised.",
+    "Tax qualification confirmation, purchase-side source kinds, tax deduction/reporting, e-invoicing, PDF/email, multi-currency, batch/import, and invoice-to-cash/revenue settlement binding remain unimplemented."
+  ]
+}
