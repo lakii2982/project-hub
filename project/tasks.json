@@ -13103,6 +13103,7 @@
         "docs/v1.0-development/*",
         "ROADMAP.md",
         "project/tasks.json",
+        "project/delivery-policy.json",
         "project/manifest.json",
         "docs/delivery-status.md",
         "docs/verification.md",
