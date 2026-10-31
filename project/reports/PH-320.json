@@ -34,8 +34,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 20ffc12 --task PH-320",
-      "result": "not_run",
-      "evidence": "Actual run before review pass: only high_risk_review_required (review pending), no path_out_of_scope/acceptance errors. Will be rerun and set pass after reviewer status=pass."
+      "result": "pass",
+      "evidence": "Actual run after the committed round-2 reviewer pass and rebase onto 20ffc12 (HEAD ee10c64): ok=true, changes=15 files all inside the PH-320 allowlist, errors=[]."
     },
     {
       "command": "python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1",
