@@ -1,11 +1,11 @@
 {
   "task_id": "PH-120",
-  "summary": "交付版本化可信 PR 策略与受限 bootstrap：BASE policy/脚本读取、唯一 Task 行、8 项既有 checks + 4 项仲裁来源、S 级用户授权与任务/spec contract_digest 绑定；现有 GitHubDelivery 合并入口实际消费 BASE policy，并检查 mergeable/CLEAN、strict/admin/PR/讨论/线性历史保护、test-merge SHA 稳定、当前 HEAD checks 与未解决讨论。实现官方 Codex Connector App 1144995/bot 199175422、最新 HEAD 完整结果和 Actions workflow/event 仲裁读取路径；remote_checks_enforced=false，PH-122 才验证并启用远端强制。新增 Delivery arbitration workflow，引入前 BASE 仅作非强制 bootstrap，不执行候选代码。",
+  "summary": "交付版本化可信 PR 策略与受限 bootstrap，并登记下一独立规划槽 PH-397（仅规划、不实现新业务）：BASE policy/脚本读取、唯一 Task 行、8 项既有 checks + 4 项仲裁来源、S 级用户授权与任务/spec contract_digest 绑定；现有 GitHubDelivery 合并入口实际消费 BASE policy，并检查 mergeable/CLEAN、strict/admin/PR/讨论/线性历史保护、test-merge SHA 稳定、当前 HEAD checks 与未解决讨论。实现官方 Codex Connector App 1144995/bot 199175422、最新 HEAD 完整结果和 Actions workflow/event 仲裁读取路径；remote_checks_enforced=false，PH-122 才验证并启用远端强制。新增 Delivery arbitration workflow，引入前 BASE 仅作非强制 bootstrap，不执行候选代码。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 on candidate before report/task closeout: ok=true, task_count=317. Final task/report closeout rerun is recorded in handoff/final evidence."
+      "evidence": "Actual exit 0 on candidate before report/task closeout: ok=true, task_count=317. Final PH-397 registration rerun: ok=true, task_count=318; governance 23 tests OK."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_delivery_gate -v",
@@ -47,7 +47,8 @@
   "deviations": [
     "The first retained WIP only declared 8+4 policy entries. This delivery connects the policy to GitHubDelivery and adds contract-bound S authorization, mergeable/test-merge verification and remote evidence readers instead of treating declarations as proof.",
     "Full local suite retains exactly the eight documented macOS baseline failures; scoped PH-120 tests are fully green. No Linux/PG result is inferred from macOS SQLite.",
-    "The introducing PR has no delivery_gate.py in its BASE, so Delivery arbitration emits an explicit non-required bootstrap result. Subsequent PRs execute the BASE script and fail closed."
+    "The introducing PR has no delivery_gate.py in its BASE, so Delivery arbitration emits an explicit non-required bootstrap result. Subsequent PRs execute the BASE script and fail closed.",
+    "PH-397 is only a ready planning entry in agent-protocol §9. It does not implement or authorize feature code in this PR; EXP-1 remains paused and PH-110 remains unpublished by user decision. A standalone planning-only attempt was not used because it could not satisfy PH-120's full BASE acceptance without the implementation test files."
   ],
   "unverified": [
     "remote_checks_enforced=false: no claim that Delivery arbitration is a required branch-protection check or that a real current-HEAD Codex PASS exists; PH-122 must perform live adversarial verification before enablement.",
