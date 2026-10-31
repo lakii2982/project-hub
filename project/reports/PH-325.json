@@ -38,9 +38,9 @@
       "evidence": "Actual run: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 20ffc12 --task PH-325",
+      "command": "python scripts/projectctl.py verify-change --base b50f5ca --task PH-325",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at the final evidence HEAD: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"a59b43aff40148c34cf0f51ef006c0ec4020292b\",\"count\":13,\"errors\":null}; all 13 files inside BASE PH-325 allowed_paths and review.status=pass with the reviewer's name (round-2 PASS after the four fixes)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 files inside BASE PH-325 allowed_paths (review pass; post-rebase rerun)."
     }
   ],
   "review": {
