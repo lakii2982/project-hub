@@ -1,0 +1,57 @@
+{
+  "task_id": "PH-312",
+  "summary": "期间关期/项目结项实现前置（docs-only）on BASE 2659317. Per the exact PH-312 allowlist (only project/specs/PH-312.md, tasks/manifest, docs/verification, report/handoff), the implementation-prep decision and the executable PH-322 slice spec are frozen in project/specs/PH-312.md; no code/schema/migration/route/docs-adr is landed and no migration number is reserved. Decision: both period close (closing/reopened vs AccountingPeriod.status) and project close (closing/reopened vs Project.stage) use option B, append-only runs in the delivery plugin (PeriodCloseRun/ProjectClose) in one migration delivery/0005 (actual leaf re-checked at construction; BASE leaf 0004). Rationale recorded: AccountingPeriod only has active/posted with a strict CheckConstraint tied to closed_through and all owner services rely on that boundary; extending status would change every owner's write-rejection semantics and still require an append-only conclusion table, so A is strictly worse. Period close keeps AccountingPeriod active/posted unchanged: open maps active, closed maps posted+closed_through; closing is only a transient state inside the company-locked close transaction (closing+closed runs appended atomically), so owners keep their existing checks and no durable closing/dangling state exists after commit; reopen appends a reopened run and restores active/closed_through=null. Project close keeps Project.stage unchanged (closed for closed; cancelled is a separate terminal state): closing is transient inside the transaction, close sets stage=closed and previous_stage=from_stage, reopen restores the recorded from_stage; no run exists for historical closed/cancelled projects, read-only projections mark historical_close_without_run rather than fabricating runs. The frozen schema includes exact PeriodCloseRun/ProjectClose fields, uniqueness/checks (sequence per org+period/project, action/state combinations, closed_through requirements), delivery 0005 CreateModel+constraints+indexes+vendor-aware append-only SQLite/PG guards, no data backfill and no core migration; state derivation and invariants are specified; all writes are atomic with lock_company, request_token receipts (reusing DeliveryReceipt), expected_version optimistic checks, duplicate close/reopen rejection, plugin-prefixed audit actions that avoid new canonical DomainEvent topics, dry_run zero side effects, and owner write rejection remains with each owner's existing period/project checks. The read-only precheck contract reuses PH-291/283/284/280/288/275/287/274/269/281/309 owner reads, with frozen blocker/warning issue_code lists, precheck_digest change detection, null+missing semantics and no second reconciliation logic. Reopen is the only correction path besides existing negative reversals; notification linkage is limited to deterministic read-only reminder_refs (no notification center yet, no auto approval/payment/close). The executable PH-322 slice covers the required delivery models/migrations/verify_integrity whitelist expansion to be granted by the planning slot (not self-authorized here), services/views/routes/template, verify_integrity branches, tests, acceptance commands, gold flow and rejection matrix. Reviewer round-1 blocker fixed: the PH-322 verifier rule that any closing row after commit is corruption contradicted the two-row append-only close design. The spec now requires closing->closed pairs with contiguous sequence: successful closes retain both the closing and closed historical rows; corruption is only a closing row missing its immediately following closed pair (and not being the latest run) or a latest run still in closing state outside the transaction. The verifier must check pairing/sequence continuity, not forbid all closing rows.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":250} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK (projectctl 8 + governance 15), exit 0; no governance regression."
+    },
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":250} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run after verifier-rule fix: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 5a86124 --task PH-312",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-312 allowed_paths (independent review pass recorded)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "VERIFIED - decision B/B is correct and consistent with BASE: core.AccountingPeriod has only active/posted plus CheckConstraint labor_period_closed_date (active<->closed_through NULL, posted<->non-NULL), and every owner period check uses 'status != active or closed_through is not None' (labor/revenue/cash/settlement/time/management_revenue/costing), so option A would rewrite the constraint and all owner write-rejection semantics while still needing an append-only conclusion table; core.Project.Stage is initiation/planning/execution/acceptance/warranty/closed/on_hold/cancelled with previous_stage and no closing/reopened; delivery migration leaf at BASE is 0004 and DeliveryReceipt already exists (org+request_token unique, action/digest/result_id), so the planned delivery/0005 + receipt reuse is executable. ADR 0016 permits B and ADR 0017 recommends B; no backfill/core migration needed.",
+      "VERIFIED - spec §1-§10 and the PH-322 slice are implementable: two models with fields/unique(org+period/project+sequence)/action-state/closed_through/from_stage checks, indexes and vendor-aware append-only guards; 8 command signatures incl. allow_open_period; dry_run zero-write, request_token+DeliveryReceipt idempotency, expected_version, lock_company concurrency, plugin.-prefixed generic audit (core.services.audit skips DomainEvent for plugin. actions), owner/finance execute + auditor/pm read-only + member deny + history_read on disable; precheck reuses existing read services confirmed at BASE (delivery.operations_read_services.ops_reconciliation_overview, settlement.coverage_read_services.open_item_coverage_snapshot/issues, management_revenue.pairing_read_services.revenue_pairing_snapshot/issues, costing.bank_charge_pairing, cash.bank_balance_services.bank_account_balance_snapshot/bank_account_issues), frozen blocker/warning issue codes, precheck_digest/precheck_changed/missing, reopen-only correction path, deterministic reminder_ref; PH-322 executable spec covers delivery models/0005, close_services/views/forms/template/routes, verify_integrity 5 branches (pairing rule fixed), tests/gold/rejections/PG CI and explicitly leaves models/migrations/verify_integrity whitelist expansion to the planning slot (no self-authorization). 6 files exactly inside the 6-path docs-only allowlist and the spec whitelist; no code/migration/schema/docs-adr; no placeholders.",
+      "NON-BLOCKING (doc hygiene): the top '开工资格/范围' section still says PH-299/PH-300 are proposed and '依赖未 done，故 proposed', while both are done and PH-312 is now done (the later §风险与依赖 correctly records the remapped done deps); docs/verification.md records check ok=249 while the actual run at HEAD is task_count=250. Fix in a later planning/doc touch-up; body §1-§10 is authoritative and correct.",
+      "NON-BLOCKING (PH-322 construction notes): §3's request_token bullet narrates alternatives before freezing the final rule (request_token null=True on the command's first row, DeliveryReceipt for idempotency) and the run (org, request_token) constraint is redundant with DeliveryReceipt uniqueness; §9.3 'Elidable?' and §9.4 'business_write?' remain open style tokens (existing migration/route conventions resolve them); the frozen precheck issue codes are category-level, so PH-322 must map them explicitly to existing owner issue codes (e.g. ops overview timesheet_unapproved/pending_change_approval, coverage/pairing issues), especially unapproved_documents and future_dated_fact which have no named source function. None blocks the freeze."
+    ],
+    "evidence": "VERDICT: PASS - no blocker. Reviewed final HEAD 7a11e1f (BASE 2659317); note the worktree advanced beyond the briefed 2f26478 to 7a11e1f during review (round-4 verifier/report fixes, task done, prior independent pass), and reviewer-b independently re-verified the final state. Runs at 7a11e1f: projectctl check => {\"ok\":true,\"task_count\":250}; tests.test_projectctl+tests.test_governance => 23 tests OK; verify-change --base 2659317 --task PH-312 => ok=true, head 7a11e1f, changes=6 files all inside the 6-path PH-312 allowlist, errors=[]. Decision B/B matches BASE schema/ADR facts; PH-322 executable slice, precheck reuse, idempotency/lock/dry_run/permissions/audit, correction/reminder and migration/verifier/test plan are coherent. No docs/adr/code/migration/schema changes; no placeholders. Only non-blocking doc-hygiene and PH-322 mapping notes above."
+  },
+  "deviations": [
+    "reviewer round-1 blocker 修复：PH-322 verifier 原写“提交后存在 closing 即 corruption”，与一次成功关期追加 closing+closed 两行的 append-only 设计矛盾。改为：允许成对 closing→closed 历史行（sequence 连续）；仅 closing 缺紧邻 closed 且非 latest、或 latest=closing（事务外可见）才是 dangling/corruption；verifier 校验配对与序列连续性。",
+    "本片白名单仅 6 个 docs 路径，不含代码/迁移/schema/docs/adr，与任务描述“如需代码仅限 spec 白名单内最小 schema/迁移骨架”存在张力；为不 path_out_of_scope，本片不落地任何骨架/迁移，把可执行 schema/迁移计划全部冻结在 project/specs/PH-312.md §9，并在 §9.2 明确 PH-322 白名单需由规划槽扩 delivery models/migrations/verify_integrity。",
+    "两实体落点选 delivery 插件而非 core：避免 core 迁移抢号、避免改 core schema；PeriodCloseRun 仅引用 core.AccountingPeriod 并由命令更新既有 current 行，ProjectClose 仅引用 core.Project 并更新既有 stage/version。",
+    "项目结项 closing/reopened 选 B（ADR 0017 推荐）；期间关期同样选 B（ADR 0016 允许 A/B），A 的取舍与拒绝理由已写入 spec（会破坏 active/posted CheckConstraint 与全部 owner 期间校验，且仍需 append-only 结论表）。",
+    "无数据回填：既有 active/posted 与 Project.stage closed 视为历史映射；历史关期/结项无 run 时读模型给 historical_close_without_run warning，不伪造 run、不改历史行。",
+    "通知中心 PH-301 未实现，本片只冻结确定性 reminder_ref 只读形状；不建通知队列/推送、不自动审批/支付/关期/结项。",
+    "Lead integration rebase (2659317 -> 5a86124) after PH-328 merged: manifest.active_handoff -> PH-312; gates rerun green."
+  ],
+  "unverified": [
+    "PH-322 实现未落地：两模型/迁移/命令/页面/verify_integrity 仅有可执行 spec，未运行代码或 PG 并发。",
+    "PG/浏览器/生产不适用（docs-only）；docs-only 验收以 check + 23 治理 + verify-change 为准。",
+    "独立 S 复核 pending；通过后置 done、重跑 check/verify-change 并报最终 SHA。"
+  ]
+}

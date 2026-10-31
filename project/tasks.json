@@ -9896,7 +9896,7 @@
       "title": "期间关期/项目结项实现前置：关期与结项命令边界、只读核对与通知联动",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9928,7 +9928,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-312.md"
     },
     {
       "id": "PH-313",
