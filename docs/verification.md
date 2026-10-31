@@ -807,3 +807,13 @@ BASE ab1845b，docs/governance-only：PH-324 CI 的 Preparation 域用 `docs/v1.
 3. **批次 C 登记**：PH-332 M01–M15 验收矩阵/runbook 骨架（ready，deps done，docs-only）、PH-333 M15 部署/升级/备份恢复演练、PH-334 PG 多连接并发验收、PH-335 健康/容量/性能基线（均 proposed，精确 blocker）、PH-336 下一规划槽（proposed，待 PH-331 done）。count 253→258，编号 332-336 连续。
 4. **路线**：ROADMAP 新增批次 C 路线与 M01–M15 映射/顺序（PH-332→333→334→335）。
 5. 无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：晋级/blockers/批次 C 登记/编号事实核对通过）；最终证据 HEAD 521943a 按槽惯例置 PH-331 done / PH-336 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=258；23 项治理 OK；verify-change --base c69c8ee --task PH-331 ok=true、20 文件全白名单、无 errors。未验证：PH-321/322 未实现；批次 C 演练/部署/并发/性能未执行。
+
+
+## PH-332 M01–M15 验收矩阵与运维 runbook 骨架（docs-only）（2026-10-31）
+
+基线 0281043（PH-331 合入后）。docs-only：新增 `docs/v1.0-development/batch-c-acceptance.md`，含
+1. 五层证据定义（代码存在/自动化通过/CI(PG)/浏览器/生产）与“低层不得冒充高层、未执行标 not_run”规则；
+2. M01–M15 逐项矩阵（范围/验收目标/前置/可执行命令或明确 not_run/通过标准/未验证边界），需求组映射 V1-ORG/MD/PRO/CON/TIM/CST/SPD/SET/CSH/REV/PLN/REC/INS/ONB/OPS；
+3. 运维 runbook 骨架 V1-OPS-01–06（安装诊断/TLS/升级回退/备份恢复/健康容量积压/PG 多连接），含角色占位与证据路径；
+4. 批次 C 依赖顺序（PH-332→333→334→335）与 blocked/not_run 边界；与 ROADMAP 批次 C、docs/verification.md 交叉引用。
+未写代码/迁移/脚本、未执行部署/恢复/并发/性能、无虚构通过结论。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：批次 C 真实演练（PH-333/334/335）；review pending。

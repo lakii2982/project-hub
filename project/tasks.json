@@ -10724,7 +10724,7 @@
       "title": "批次 C-1：M01–M15 验收矩阵与运维 runbook 骨架（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10752,9 +10752,9 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-docs",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-332.md"
     },
     {
       "id": "PH-333",
