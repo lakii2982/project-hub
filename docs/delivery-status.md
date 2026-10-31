@@ -75,3 +75,4 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 - 批次 C 规划同步（PH-356）：PH-330 done 后晋级 PH-347/348/349 演练执行；PH-350 与 PH-333/334/335 保持 proposed 并刷新 blockers；登记 PH-357 证据回填、PH-358 发票批量导入、PH-359 insights、PH-360 通知后续与 PH-361 下一规划入口。
 - 跨 owner 编排执行首片（PH-370）：复用 PH-320 引用链，按管理收入反冲/cash 退款/银行退回/settlement 核销调用具名 owner 服务；invoicing 只记录事实/引用，收据幂等、失败零链接，不声称单事务；只读执行页。
 - 批次 C/D 规划同步（PH-376）：PH-357 done 后晋级 PH-367 汇总验收前置契约；PH-372 等 PH-367；登记 PH-377 发布资格后续、PH-378 发票批量导入、PH-379 insights、PH-380 通知收件箱、PH-381 下一规划入口（依赖 PH-376）。
+- 批次 D 规划同步（PH-381）：登记 PH-382 D-01 编排验收执行（ready，deps PH-370 done）、PH-383 发票批量导入错误清单、PH-384 insights 性能/导出、PH-385 通知调度/已读后续（均 proposed）、PH-386 下一规划入口（等 PH-381 done）；PH-372/377 等 PH-367，其余批次 D 链保持精确 blockers。

@@ -1079,3 +1079,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 6. **执行顺序/回滚**：05→01→02→03→04→06→合并；每步 checkpoint、失败停止、备份回滚、失败最多重试一次的边界、`verify_integrity`。
 7. **映射/现状**：V1-OPS-01–06/M15 的 L2 现况/L3–L5 not_run；PH-333/334/335/357/366 done 但 `release_ready=false`，真实 L3/L4/L5 未执行 → gate blocked；本片无脚本/表/迁移/门禁/产品代码变更。
 实跑：projectctl check ok/302；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：真实 staging/production、真实 PG、TLS、L3/L4/L5、发布资格。
+
+## PH-381 后续交付独立规划入口（2026-10-31，BASE 3c77653）
+
+按最新 main 复核：PH-367/PH-371 保持 ready（未 done，不重复晋级）；PH-372 等 PH-367，PH-338/353 等 PH-289/181/185，PH-339/354 等 PH-272，PH-340/355 等 PH-301/314/179/183/151；无新的依赖全 done 既有任务可晋级。新登记连续切片 **PH-382** 批次 D-01 跨 owner 编排验收执行（**ready**，deps PH-370 done，只回填验收证据/不重实现）、**PH-383** 发票批量导入错误清单/来源覆盖后续（proposed，等 PH-378）、**PH-384** insights 工作台/差异单性能与导出后续（proposed，等 PH-379）、**PH-385** 通知中心扫描调度/已读后续（proposed，等 PH-380）、**PH-386** 后续交付独立规划入口（proposed，deps PH-381；PH-381 done 后置 ready）。批次 D 状态/blockers 与 PH-375 矩阵一致；未执行 D-01 验收/L3 CI/PG/L4/L5，不冒充通过。实跑：check ok=true/task_count=307；`python -m unittest tests.test_projectctl tests.test_governance -v` 23 OK；无代码/迁移/schema/门禁变更；verify-change 待 review pass。

@@ -1,0 +1,27 @@
+{
+  "task_id": "PH-381",
+  "summary": "后续交付独立规划入口（接续 PH-376）on BASE 3c77653. Planning-only slice: latest-main dependency recheck finds PH-367/PH-371 still ready (not done, so no duplicate promotion), PH-372 waiting PH-367, PH-338/353 waiting PH-289/PH-181/PH-185, PH-339/354 waiting PH-272, PH-340/355 waiting PH-301/314/179/183/151; no existing proposed task has all dependencies done, so no existing task is falsely promoted. Registers continuous PH-382–PH-386: PH-382 batch D-01 cross-owner orchestration acceptance execution (ready; deps PH-370 done; evidence-only, does not reimplement), PH-383 invoice batch import error-list/source-coverage follow-up (proposed; waits PH-378), PH-384 insights workbench/difference performance/export follow-up (proposed; waits PH-379), PH-385 notification scan/read follow-up (proposed; waits PH-380), and PH-386 next independent planning entry (proposed; depends on PH-381; to be set ready after PH-381 closes). Updates ROADMAP batch D, delivery-status, verification, manifest and task state; each new spec has concrete DoR/exact allowlist/executable acceptance/honest blockers; no product code/migration/schema/CI-gate/canonical change.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":307}. Includes PH-382 ready and PH-383–386 proposed; dependency/status/allowlist/spec checks pass."},
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests, OK."},
+    {"command": "python scripts/projectctl.py verify-change --base 3c77653 --task PH-381", "result": "not_run", "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Independent S review pending. Verify no false promotion (PH-367/371 untouched ready; PH-372/batch D blockers precise), PH-382 ready only on done PH-370 and evidence-only scope, PH-383–386 continuous/unique with specs/DoR/allowlists/executable acceptance, PH-386 honestly proposed until PH-381 closes, ROADMAP/docs/tasks/manifest consistent, no code/migration/schema/gate change. Implementer does not self-pass."
+  },
+  "deviations": [
+    "No existing proposed task was promoted because no remaining proposed task has all dependencies done at this BASE; PH-367/PH-371 already ready and are not duplicated.",
+    "PH-382 is newly registered ready because its sole dependency PH-370 is done; it is an acceptance-evidence slice and must not reimplement PH-370.",
+    "PH-383/384/385 are downstream follow-ups of proposed PH-378/379/380; they are not work authorization until those prerequisites are done.",
+    "PH-386 next planning entry depends on PH-381 and is proposed at this stage; the final evidence commit after reviewer pass may set PH-381 done and PH-386 ready.",
+    "No product code, migration, contract schema, engineering gate or canonical change."
+  ],
+  "unverified": [
+    "Batch D implementation, D-01 acceptance execution, real CI/PG/browser/production and release qualification are not executed by this planning slice.",
+    "Independent S review and CI/PR pending."
+  ]
+}
