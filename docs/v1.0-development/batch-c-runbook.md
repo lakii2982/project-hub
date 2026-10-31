@@ -317,3 +317,23 @@ M 项与 V1-OPS 的 subject 对应：M15 包含 V1-OPS-01–08；其他 M 项涉
 - 升级/恢复契约：`docs/engineering/upgrade-recovery.md`。
 - 批次 C 路线：`ROADMAP.md`「批次 C 状态同步」；演练依赖：PH-330（done）/PH-345（done）→ PH-347/348/349 → PH-350。
 - **未验证**：本片为 docs-only，未执行任何 M 项/V1-OPS 脚本；所有项状态为本章标注的 `not_run`/`blocked`，无通过结论。
+
+## 10. PH-357 演练证据回填（2026-10-31，BASE ef13003）
+
+> 本节只回填 PH-347/348/349/350/352 已实际执行并记录在报告中的本地证据；未重跑脚本、未执行真实环境。L3–L5 严格 not_run，发布资格 gate **release_ready=false**。
+
+| V1-OPS | 执行片 | 实际本地证据（来源报告） | 层级 | 判定/缺口 |
+| --- | --- | --- | --- | --- |
+| 01 安装/诊断 | PH-347 | `install_drill.py --mode dry_run --env rehearsal`（报告 BASE cbb84c2）envelope pass；staging/production execute exit 5 拒绝 | L1+L2 | 本地预检 pass；L3 真实安装 not_run |
+| 02 TLS/安全 | PH-347 | `install_drill.py --step tls`：无真实域名/证书 → not_run；错误配置拒绝有契约测试 | L1+L2（契约） | 真实 TLS L3 not_run；不得以配置冒充 |
+| 03 升级/回退 | PH-347 | `upgrade_drill.py --mode dry_run --env rehearsal`：备份证据/迁移前缀/重复/破坏性/结构兼容回退检查 pass；生产 execute exit 5 | L1+L2 | 本地 dry_run pass；真实升级/回退 L3/L5 not_run |
+| 04 备份/恢复 | PH-348 | `backup_drill.py` SQLite 快照/哈希/行数/integrity/manifest pass；`restore_drill.py` 隔离恢复/表/schema/附件/RPO-RTO pass；PG execute 诚实 not_run | L1+L2（SQLite） | 本地 SQLite pass；真实 PG 恢复 L3 not_run，不得冒充 |
+| 05 健康/容量/积压 | PH-350 | `healthcheck.py --mode dry_run --env rehearsal --facts <complete-local>` envelope pass；缺 facts not_run；生产/staging execute exit 5；backlog 阈值 fail 探针 | L1+L2 | 本地阈值/脱敏 pass；真实容量/性能 L3/L5 not_run |
+| 06 PG 并发 | PH-349 | 无 PG DSN → not_run/exit 2；SQLite DSN 拒绝；真实 PG 探针矩阵 L3 not_run | L1+L2（契约） | 真实 PG 一胜一拒 L3 not_run；SQLite 不冒充 |
+
+### 10.1 发布资格 gate 判定
+
+- **release_ready=false**：L1/L2 证据齐，但 L3（CI/PG/真实部署）、L4（浏览器 1440/390）、L5（生产/试点/客户验收）均未执行。
+- **缺口清单**：L3 CI/PG 与真实 staging 安装/升级/TLS/恢复/并发；L4 浏览器；L5 生产/客户验收；PH-367（部署/恢复/并发汇总验收）与 PH-372（D 批验收 runbook）尚未完成；PH-333/334/335 汇总片不得以本回填替代执行证据。
+- **双人复核/签名纪律**：回填条目须执行人+独立复核人确认；豁免/缺口需产品/发布/独立复核三方签批，执行人不得自批；证据绑定 SHA、14 天时效、变更重跑，不可挑选/覆盖（PH-366 §6）。
+- 失败项保留原始错误摘要与处置；未执行项继续 not_run，不清零、不伪造 pass。

@@ -104,3 +104,10 @@ python manage.py verify_integrity --json
 | 06 PG 多连接并发 | `ops_pg_concurrency` | PH-334 | blocked（等 PH-330） |
 
 纪律：本契约不记录任何通过；`not_run`/`blocked` 必须如实标注；脚本实现后只有真实执行才能产生 L2/L3/L5 证据，SQLite 不得冒充 PG 并发，演练/文档不得冒充生产。
+
+## 7. PH-357 证据回填与发布资格（2026-10-31）
+
+- 回填来源：PH-347/348/349/350/352 报告中的**实际本地执行证据**；本节不重跑脚本、不执行真实环境。
+- 逐项证据/缺口见 `docs/v1.0-development/batch-c-runbook.md` §10；V1-OPS-01–06 本地 L1+L2 证据已回填，L3–L5 严格 **not_run**。
+- **发布资格 gate：release_ready=false**；缺口：L3 CI/PG/真实部署、L4 浏览器、L5 生产/客户验收、PH-367/PH-372；PH-333/334/335 汇总不得以文档替代执行证据。
+- 双人复核/签名/时效/不可挑选规则沿用 PH-366 契约 §6；执行人不得自批豁免。
