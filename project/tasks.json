@@ -9169,13 +9169,16 @@
       "title": "发票/价税分离与红冲契约冻结（ADR 0015，docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-150",
-        "PH-155",
-        "PH-252"
+        "PH-214",
+        "PH-224",
+        "PH-232",
+        "PH-265",
+        "PH-284",
+        "PH-287"
       ],
       "spec": "project/specs/PH-293.md",
       "allowed_paths": [
@@ -9194,9 +9197,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-150（合同行/收费模板，proposed）、PH-155（结算实现，proposed）与 PH-252（发票实现，proposed）done；依赖/契约就绪后由后续规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -9408,13 +9409,20 @@
       "title": "期间关期与预测覆盖（WP-FORECAST/CLOSE）首片：关期前置与预测覆盖契约冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-180",
-        "PH-181",
-        "PH-182"
+        "PH-219",
+        "PH-224",
+        "PH-232",
+        "PH-265",
+        "PH-269",
+        "PH-274",
+        "PH-277",
+        "PH-283",
+        "PH-288",
+        "PH-291"
       ],
       "spec": "project/specs/PH-299.md",
       "allowed_paths": [
@@ -9433,9 +9441,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-180（期间预检/锁定）、PH-181（四类核对/差额）、PH-182（经营指标/缺口）done（均 proposed）；依赖/契约就绪后由 PH-302 规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -9443,13 +9449,16 @@
       "title": "项目关账（WP-PROJECT-CLOSE）首片：项目结项/关账前置与只读结项核对冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-180",
-        "PH-181",
-        "PH-185"
+        "PH-275",
+        "PH-283",
+        "PH-284",
+        "PH-287",
+        "PH-288",
+        "PH-291"
       ],
       "spec": "project/specs/PH-300.md",
       "allowed_paths": [
@@ -9468,9 +9477,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-180（期间预检/锁定）、PH-181（四类核对/差额）、PH-185（项目关账/结项）done（均 proposed）；依赖/契约就绪后由 PH-302 规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -9633,12 +9640,13 @@
       "title": "共享费用分摊（WP-SHARED-COST）首片：跨项目分摊规则与只读摊回核对冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-162",
-        "PH-255"
+        "PH-217",
+        "PH-244",
+        "PH-250"
       ],
       "spec": "project/specs/PH-305.md",
       "allowed_paths": [
@@ -9655,9 +9663,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-162（成本归集/项目成本）与 PH-255（共享费用分摊）done（均 proposed）；依赖/契约就绪后由 PH-307 规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -9665,12 +9671,17 @@
       "title": "预算/ETC（WP-BUDGET/ETC）首片：项目预算基线、ETC 派生与只读缺口核对冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-177",
-        "PH-261"
+        "PH-214",
+        "PH-217",
+        "PH-224",
+        "PH-232",
+        "PH-244",
+        "PH-250",
+        "PH-287"
       ],
       "spec": "project/specs/PH-306.md",
       "allowed_paths": [
@@ -9687,9 +9698,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-177（合同行/收费模板）与 PH-261（预算/ETC）done（均 proposed）；依赖/契约就绪后由 PH-307 规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -9731,13 +9740,14 @@
       "title": "多币种/汇率（WP-FX）首片：币种/汇率快照与只读换算口径冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-150",
-        "PH-155",
-        "PH-252"
+        "PH-214",
+        "PH-224",
+        "PH-232",
+        "PH-287"
       ],
       "spec": "project/specs/PH-308.md",
       "allowed_paths": [
@@ -9754,9 +9764,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-150（合同行/收费模板）、PH-155（结算实现）、PH-252（发票实现）done（均 proposed）；依赖/契约就绪后由 PH-311 规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -9846,7 +9854,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-285（核对底稿导出）、PH-181/PH-182（proposed）done；PH-304 已 done 已满足；依赖完成后由 PH-315 规划槽复核 DoR 再晋级。"
+        "缺 PH-285（核对底稿导出，proposed）与 PH-181/PH-182（proposed）done；PH-304 已 done 已满足；依赖完成后由 PH-323 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -9916,7 +9924,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-299（关期/预测契约冻结）、PH-300（项目关账/结项契约冻结）、PH-180/PH-181/PH-182/PH-185（期间预检/核对/项目关账）done（均 proposed）；依赖/契约就绪后由 PH-315 规划槽复核 DoR 再晋级。"
+        "缺 PH-299/PH-300（关期/结项契约冻结，ready 未 done）与 PH-180/PH-181/PH-182/PH-185（proposed）done；契约合入 done 后由 PH-323 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -9952,7 +9960,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-305/PH-306（分摊/预算契约冻结）、PH-162/PH-255/PH-177/PH-261（成本归集/分摊/合同行/预算）done（均 proposed）；依赖/契约就绪后由 PH-315 规划槽复核 DoR 再晋级。"
+        "缺 PH-305/PH-306（分摊/预算契约冻结，ready 未 done）与 PH-162/PH-255/PH-177/PH-261（legacy proposed）done；契约合入 done 后由 PH-323 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10006,7 +10014,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-301（通知中心首片）、PH-310（导出归档后续）、PH-285/PH-179/PH-183（proposed）done；PH-304 已 done 但其余未满足；依赖完成后由 PH-315 规划槽复核 DoR 再晋级。"
+        "缺 PH-301（通知中心首片）、PH-310（导出归档后续）与 PH-285/PH-179/PH-183（proposed）done；PH-304/PH-316 已 ready/done 但不满足全部契约；依赖完成后由 PH-323 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10049,7 +10057,7 @@
       "title": "运营核对工作台导出联动首片：分区下钻与底稿导出衔接",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10084,9 +10092,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-309（运营核对工作台聚合，ready 未 done）done；PH-304 已 done 已满足；PH-309 完成后由 PH-319 规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -10119,7 +10125,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-293（发票/价税分离/红冲契约冻结）、PH-252/PH-150/PH-155（发票/合同/结算）done（均 proposed）；依赖/契约就绪后由 PH-319 规划槽复核 DoR 再晋级。"
+        "缺 PH-293（发票/价税分离/红冲契约冻结，ready 未 done）、PH-252（发票实现，proposed）与 PH-150/PH-155（合同/结算 legacy）done；PH-293 合入 done 后由 PH-323 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10153,7 +10159,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-308（多币种/汇率契约冻结）、PH-150/PH-155/PH-252（合同/结算/发票）done（均 proposed）；依赖/契约就绪后由 PH-319 规划槽复核 DoR 再晋级。"
+        "缺 PH-308（多币种/汇率契约冻结，ready 未 done）与 PH-150/PH-155/PH-252（proposed）done；PH-308 合入 done 后由 PH-323 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10162,7 +10168,7 @@
       "title": "后续交付独立规划入口（接续 PH-315）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -10181,6 +10187,181 @@
         "docs/verification.md",
         "project/reports/PH-319.json",
         "project/handoffs/PH-319.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-319.md"
+    },
+    {
+      "id": "PH-320",
+      "title": "发票实现首片：发票签发/价税分离/红冲负值（按 ADR 0015 落地）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-293",
+        "PH-252",
+        "PH-214",
+        "PH-224",
+        "PH-232"
+      ],
+      "spec": "project/specs/PH-320.md",
+      "allowed_paths": [
+        "pmo_plugins/delivery/invoice_services.py",
+        "pmo_plugins/delivery/invoice_views.py",
+        "pmo_plugins/delivery/invoice_forms.py",
+        "pmo_plugins/delivery/templates/delivery/invoices.html",
+        "pmo_plugins/delivery/domain_metadata.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_invoice.py",
+        "tests/test_v1_invoice_http.py",
+        "project/reports/PH-320.json",
+        "project/handoffs/PH-320.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-293（发票契约冻结，ready 未 done）与 PH-252（发票实现，proposed）done；PH-214/PH-224/PH-232 已 done；契约/实现前置完成后由 PH-323 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-321",
+      "title": "多币种实现首片：汇率快照/换算与只读展示（按 ADR 落地）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-308",
+        "PH-150",
+        "PH-155"
+      ],
+      "spec": "project/specs/PH-321.md",
+      "allowed_paths": [
+        "pmo_plugins/contracts/fx_services.py",
+        "pmo_plugins/contracts/views.py",
+        "pmo_plugins/contracts/forms.py",
+        "pmo_plugins/contracts/domain_metadata.py",
+        "pmo_plugins/contracts/templates/contracts/fx_rates.html",
+        "tests/test_v1_fx.py",
+        "tests/test_v1_fx_http.py",
+        "project/reports/PH-321.json",
+        "project/handoffs/PH-321.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_fx tests.test_v1_fx_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-308（多币种/汇率契约冻结，ready 未 done）与 PH-150/PH-155（legacy 合同/结算）done；契约完成后由 PH-323 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-322",
+      "title": "关期/结项实现首片：期间预检、关期与项目结项写侧（按 ADR 落地）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-299",
+        "PH-300",
+        "PH-312",
+        "PH-180",
+        "PH-181",
+        "PH-182",
+        "PH-185"
+      ],
+      "spec": "project/specs/PH-322.md",
+      "allowed_paths": [
+        "pmo_plugins/delivery/close_services.py",
+        "pmo_plugins/delivery/close_views.py",
+        "pmo_plugins/delivery/close_forms.py",
+        "pmo_plugins/delivery/templates/delivery/close.html",
+        "pmo_plugins/delivery/domain_metadata.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_close.py",
+        "tests/test_v1_close_http.py",
+        "project/reports/PH-322.json",
+        "project/handoffs/PH-322.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_close tests.test_v1_close_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-299/PH-300（关期/结项契约冻结，ready 未 done）、PH-312（实现前置，proposed）与 PH-180/PH-181/PH-182/PH-185（proposed）done；契约/前置完成后由 PH-323 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-323",
+      "title": "后续交付独立规划入口（接续 PH-319）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-319"
+      ],
+      "spec": "project/specs/PH-323.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "docs/v1.0-development/*",
+        "project/reports/PH-323.json",
+        "project/handoffs/PH-323.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

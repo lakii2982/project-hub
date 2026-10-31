@@ -1,0 +1,48 @@
+{
+  "task_id": "PH-319",
+  "summary": "Consumed the PH-319 planning slot on main 2ec2232 (PH-309/PH-315 merged; 241 tasks, 120 done, 99 open v1.0.0 tasks) and performed the Lead-requested dependency-baseline audit. Stale dependencies were measured (top: PH-110 49, PH-181 19, PH-150 15, PH-142 11, PH-180 9, PH-185 9, PH-155 8, PH-162 8, PH-182 8) and mapped against delivered capabilities. Seven tasks were honestly promoted to ready after remapping their dependencies to done evidence: PH-293 invoice ADR (PH-214/224/232/265/284/287), PH-308 FX ADR (PH-214/224/232/287), PH-299 close/forecast ADR (PH-219/224/232/265/269/274/277/283/288/291), PH-300 project-close ADR (PH-275/283/284/287/288/291), PH-305 shared-cost contract (PH-217/244/250), PH-306 budget/ETC contract (PH-214/217/224/232/244/250/287) and PH-316 workbench export (PH-309/PH-304 both done). Each ADR/contract spec dependency/risk paragraph was updated with the old->new mapping and the write-side implementation tasks remain proposed; blockers were cleared only for the promoted tasks. Tasks whose missing capability is genuinely not delivered stay proposed with precise blockers (PH-317/318 wait on PH-293/308; PH-312/313/314 on ADR/prereqs; PH-310 on PH-285/181/182; PH-292 on PH-289/181/185). The remaining-1.0 implementation route was added as ROADMAP.md（剩余 1.0 实现路线节） (Batch A ADR freeze -> Batch B write-side first slices -> Batch C acceptance/ops and remaining gaps), and four tasks were registered continuously: PH-320 invoice implementation, PH-321 FX implementation, PH-322 close/project-close implementation (all proposed with explicit blockers) and PH-323 as the next planning slot. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run (reviewed HEAD 04d810e, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":245}, exit 0; PH-319 done with handoff and PH-323 ready on PH-319 done."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph319-planning on main 2ec2232 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 2ec2232 --task PH-319",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD 9fc38a8: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"9fc38a86bcf4ec05f042d5e18fdb0a44439b9e71\",\"count\":17,\"errors\":null}, exit 0; all 17 changed files inside BASE PH-319 allowed_paths and review.status=pass with the reviewer's name (second-round PASS after the PH-305/306 write-side mapping fix)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-319 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKER RESOLVED AT 04d810e: the PH-305/PH-306 spec risk lines and the ROADMAP batch-A table now both point their write side to PH-313 (the registered allocation/budget/ETC implementation prerequisite); grep finds no residual `PH-313/PH-320` or `PH-313/PH-323` references. Neither PH-320 (invoice implementation) nor PH-323 (next planning slot) is misused as the shared-cost/budget write side; no history was rewritten and the promotion/whitelist/acceptance content is otherwise unchanged.",
+      "PROMOTION EVIDENCE VERIFIED: all seven promoted tasks have only done dependencies in BASE 2ec2232 - PH-293 (214/224/232/265/284/287), PH-308 (214/224/232/287), PH-299 (219/224/232/265/269/274/277/283/288/291), PH-300 (275/283/284/287/288/291), PH-305 (217/244/250), PH-306 (214/217/224/232/244/250/287), PH-316 (309/304) all done. Their specs record the old->new dependency rationale and remain docs/contract freezes with unchanged whitelists/acceptance; the remapped done capabilities are sufficient for the contracts themselves while the write-side legacy tasks remain proposed.",
+      "NON-PROMOTED BLOCKERS ACCURATE: PH-317/318 wait on ready-not-done PH-293/308 plus proposed write deps; PH-312/313/314 wait on ready-not-done ADR slices and proposed implementation prerequisites; PH-310 waits on PH-285/181/182 with PH-304 done; PH-292 waits on PH-289/181/185; PH-320/321/322 proposed on ready/proposed deps; PH-323 proposed on PH-319 in_review. New tasks 320..323 are continuous/unique (count=245) with executable acceptance/whitelists; no placeholders/code/schema; 17 changed files are inside PH-319 allowed paths (project/specs/*, ROADMAP, tasks/manifest/docs/report/handoff); PH-319 in_review and PH-323 proposed.",
+      "SLOT CONVENTION/GATES: PH-319 remains in_review and PH-323 proposed; after this pass the final evidence commit must set PH-319 done/PH-323 ready and clear the blocker, then rerun check/verify-change. At HEAD 04d810e (BASE 2ec2232): check ok=true/task_count=245; governance 23 tests OK; verify-change --base 2ec2232 --task PH-319 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; manifest=PH-319."
+    ],
+    "evidence": "VERDICT: PASS (round 2; PH-305/PH-306 write-side mapping corrected). Reviewed HEAD 04d810e (BASE 2ec2232) in /tmp/ph319-planning, worktree clean; 17 changed files all inside PH-319 allowed paths; task_count 245 unique continuous PH-320..PH-323; manifest=PH-319. PH-305/PH-306 specs and ROADMAP now map the write side to PH-313 with no residual PH-313/PH-320 or PH-313/PH-323 references. All seven promotions have all-done deps (293/308/299/300/305/306/316), old->new dependency rationale and unchanged whitelists/acceptance; non-promoted blockers accurate; new tasks 320-323 complete DoR/whitelists/acceptance; no placeholders/code/schema. Gates: check ok=true/245; governance 23 OK; verify-change --base 2ec2232 --task PH-319 only review/acceptance gates, no path_out_of_scope. Final evidence sets PH-319 done/PH-323 ready."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): PH-305/PH-306 write-side mapping corrected from 'PH-313/PH-320' (PH-305) and 'PH-313/PH-323' (PH-306) to PH-313 only, in both spec risk lines, the ROADMAP batch-A table and the handoff; PH-320 is the invoice implementation and PH-323 is the next planning slot, so neither is a shared-cost/budget implementation. No new dedicated allocation/budget implementation task was needed because PH-313 already covers allocation/budget/ETC implementation prerequisites. Only these four mapping locations changed; promotion evidence, whitelists and acceptance are untouched.",
+    "Promotion rationale (old->new dependency): the six ADR/contract-freeze tasks originally depended on legacy proposed implementation tasks (PH-150/155/162/177/180-185/252/255/261). Their contract-freeze scope only needs existing canonical contracts plus delivered owner facts; each was remapped to concrete done tasks (listed in summary/spec) and promoted ready. Write-side implementation tasks (PH-252, PH-317/318/320/321/322, PH-312/313/314) remain proposed, so this does not claim any implementation is delivered.",
+    "PH-316 was promoted because both of its dependencies (PH-309, PH-304) are now done; no other non-ADR task was promoted. PH-141 and PH-241 were inspected but not promoted by this slot: PH-141 needs its own DoR review and PH-241 is already in_review under another worker.",
+    "Every non-promoted open task keeps its proposed status with a refreshed precise blocker naming the missing done dependency; no false promotion was made. Stale dependency counts are documented in the report for future slots.",
+    "Planning-slot state convention: PH-319 is kept in_review with handoff and PH-323 is proposed with blocker 'PH-319 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-319 done and PH-323 ready and clear the blocker.",
+    "Numbering basis: BASE max PH-319; checked remote branches and open PRs (EXP-line #143/#144 etc.) - no >=PH-320 ids exist, so PH-320..PH-323 are continuous and free.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-293/299/300/305/306/308/316 are now ready but not implemented/written; their ADR/contract documents do not exist yet and are the next work items.",
+    "PH-320/321/322 are only registered proposed; no write-side code/migration/tests/CI evidence exists.",
+    "The route document is a planning recommendation derived from BASE facts; actual sequencing still depends on CI/reviewer capacity and Lead priority.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}

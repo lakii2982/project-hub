@@ -711,3 +711,14 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 2. **新登记**：PH-316 工作台导出联动（proposed，缺 PH-309）、PH-317 发票红冲/税额抵扣实现前置（proposed，缺 PH-293/252/150/155）、PH-318 多币种实现前置（proposed，缺 PH-308/150/155/252）、PH-319 下一规划槽（proposed，待 PH-315 done 后置 ready）。count 237→241，编号 316-319 连续。
 3. **晋级**：无新增（PH-309 仍 ready 待合入；PH-292/293/295/296/297/299/300/301/305/306/308/310/312/313/314/316/317/318 保持 proposed，无虚假晋级）。
 4. blockers 按事实保留；无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：编号/无虚假晋级/依赖事实核对通过）；最终证据 HEAD 9c0db33 按槽惯例置 PH-315 done / PH-319 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=241；23 项治理 OK；verify-change --base 81ec533 --task PH-315 ok=true、9 文件全白名单、无 errors。未验证：PH-316/317/318 未实现；PH-309 由实现 PR/CI 验证。
+
+
+## PH-319 下一规划槽：依赖基线审计 + 剩余 1.0 路线（2026-10-31）
+
+基线 2ec2232（PH-309/PH-315 合入后；241 tasks，120 done，99 个 v1.0.0 open）。纯规划/契约文字片：
+1. **依赖基线审计**：统计 99 个 open 任务的 depends_on/blockers，高频 stale 依赖 PH-110(49)/PH-181(19)/PH-150(15)/PH-142(11)/PH-180(9)/PH-185(9)/PH-155(8)/PH-162(8)/PH-182(8) 等；逐项对照既有 done 能力与 canonical 契约。
+2. **晋级（7 项，均有 done 证据）**：PH-293 发票 ADR（deps→PH-214/224/232/265/284/287）、PH-308 多币种 ADR（→PH-214/224/232/287）、PH-299 关期 ADR（→PH-219/224/232/265/269/274/277/283/288/291）、PH-300 结项 ADR（→PH-275/283/284/287/288/291）、PH-305 分摊契约（→PH-217/244/250）、PH-306 预算契约（→PH-214/217/224/232/244/250/287）、PH-316 工作台导出（→PH-309/PH-304 均 done）。spec 依赖/风险段同步 old→new 理由，blockers 清空，status ready。
+3. **不晋级**：PH-317/318（等 PH-293/308 done）、PH-312/313/314（等 ADR/实现前置）、PH-310（等 PH-285/181/182）、PH-292（等 PH-289/181/185）等保持 proposed + 精确 blocker，无虚假晋级。
+4. **实现路线**：新增 `ROADMAP.md（剩余 1.0 实现路线节）`（批次 A ADR 冻结 → 批次 B 写侧首片 → 批次 C 验收/运维与剩余缺口）。
+5. **登记**：PH-320 发票实现（proposed，deps PH-293/252/214/224/232）、PH-321 多币种实现（proposed，deps PH-308/150/155）、PH-322 关期/结项实现（proposed，deps PH-299/300/312/180-185）、PH-323 下一规划槽（proposed，待 PH-319 done 后置 ready）。count 241→245，编号 320-323 连续。
+6. 独立 S 复核首轮 1 阻断（PH-305/306 写侧误指 PH-320/PH-323）已修为 PH-313，二轮 PASS；最终证据 HEAD 9fc38a8 按槽惯例置 PH-319 done / PH-323 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=245；23 项治理 OK；verify-change --base 2ec2232 --task PH-319 ok=true、17 文件全白名单、无 errors。未验证：PH-293/299/300/305/306/308/316 的 ADR/契约文档本身与 PH-320/321/322 实现尚未交付；review 二轮 PASS。
