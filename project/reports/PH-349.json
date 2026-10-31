@@ -33,9 +33,9 @@
       "evidence": "Actual run: Ran 1238 tests in 135.4s, FAILED (failures=5, errors=3, skipped=70) — the 5F+3E set matches clean main a5ba2fd (verified on a clean worktree) and skipped is baseline 69 plus this slice's PG probe not_run (+1); no new failures."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base a5ba2fd --task PH-349",
+      "command": "python scripts/projectctl.py verify-change --base ea8e765 --task PH-349",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD 009e8d3: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"009e8d30345e1c4db2b29aa8867ac07e11badb46\",\"count\":7,\"errors\":null}; all 7 files inside BASE PH-349 allowed_paths and review.status=pass with reviewer-b."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — files inside BASE PH-349 allowed_paths (reviewer-b pass; post-rebase rerun)."
     }
   ],
   "review": {
@@ -58,7 +58,8 @@
     "No scripts/ops/* file was created because the BASE PH-349 allowed_paths only include tests/test_v1_pg_concurrency.py/docs; the executable runner is therefore the test module CLI (`python -m tests.test_v1_pg_concurrency --dsn ...`), which produces the same PH-345 envelope and exit codes.",
     "The probe file uses psycopg3 (the installed PostgreSQL driver) directly with random throwaway schemas and no business tables; it does not modify applied migrations or production data.",
     "Business-level concurrency (double approval, over-clearance, refunds, allocation, opening balances, close, invoice reversal, FX snapshots) is covered by existing owner concurrency suites on PG; this slice adds infrastructure probes (lock/idempotency/append-only/deadlock) and documents the business-set linkage rather than duplicating those suites.",
-    "Full-suite first run showed a transient delivery_execution heartbeat failure; it passed in isolation and in the rerun, and the stable full-run failure set equals the clean main baseline (5F+3E), so it is recorded as pre-existing flakiness, not a new regression."
+    "Full-suite first run showed a transient delivery_execution heartbeat failure; it passed in isolation and in the rerun, and the stable full-run failure set equals the clean main baseline (5F+3E), so it is recorded as pre-existing flakiness, not a new regression.",
+    "Lead integration rebase (a5ba2fd -> ea8e765) after PH-347/348 merged: verification/manifest merged; gates rerun."
   ],
   "unverified": [
     "No real PostgreSQL probe matrix execution locally (not_run); CI/deployment PG evidence does not exist yet in this slice.",
