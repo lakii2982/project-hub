@@ -33,9 +33,9 @@
       "evidence": "Actual local run exit 0: rollup status pass, release_ready=false, checks V1-OPS-01 pass(L2), V1-OPS-02 not_run(L3), V1-OPS-03 pass(L2), V1-OPS-04 pass(L2), release.L3/L4/L5 not_run; no staging/production operation performed."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-333",
+      "command": "python scripts/projectctl.py verify-change --base 5763f4a --task PH-333",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 9 files inside BASE PH-333 allowed_paths (review pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 9 files inside BASE PH-333 allowed_paths (review pass; post-rebase rerun)."
     }
   ],
   "review": {
@@ -54,7 +54,8 @@
     "This slice is a rollup acceptance only: installation/upgrade/backup/restore implementations remain PH-347/PH-348 (both done); this slice adds a rollup runner, scoped tests and evidence docs, and does not reimplement the drills.",
     "Only L1 (code exists) + L2 (local automated/rehearsal) evidence is produced. L3 CI/PG, L4 browser and L5 production/customer acceptance are explicitly not_run; release_ready=false and no release qualification is claimed.",
     "V1-OPS-02 TLS is not_run because no real domain/TLS probe was executed; staging/production execute is refused by the PH-347 drills (exit 5), and the rollup only uses temporary isolated directories.",
-    "No real staging/production installation, upgrade, rollback, restore or customer data is used; no product code, migration, CI gate or contract-schema change is made."
+    "No real staging/production installation, upgrade, rollback, restore or customer data is used; no product code, migration, CI gate or contract-schema change is made.",
+    "Lead integration rebase (fe9c257 -> 5763f4a) after PH-366 merged: verification/manifest merged; gates rerun. Non-blocking reviewer note: rollup artifacts temp dir cleaned at exit — deferred to PH-357 backfill (out file referenced)."
   ],
   "unverified": [
     "L3 CI/PG, L4 browser 1440/390, L5 production/customer acceptance are not_run and must be executed by the corresponding evidence/rollup tasks.",
