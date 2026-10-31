@@ -10949,7 +10949,8 @@
         "PH-252",
         "PH-274",
         "PH-320",
-        "PH-289"
+        "PH-289",
+        "PH-362"
       ],
       "spec": "project/specs/PH-338.md",
       "allowed_paths": [
@@ -11512,7 +11513,9 @@
       "depends_on": [
         "PH-274",
         "PH-181",
-        "PH-185"
+        "PH-185",
+        "PH-289",
+        "PH-362"
       ],
       "spec": "project/specs/PH-353.md",
       "allowed_paths": [
