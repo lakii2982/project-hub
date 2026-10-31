@@ -14,16 +14,21 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-366",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD f9daca7: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (release-evidence contract, PH-366 spec summary, tasks/manifest, docs/verification, report/handoff) inside BASE PH-366 allowed_paths."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-366 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (evidence sources/envelope normalization, backfill/L1–L5 rules, release gate completeness, waiver/sign-off/freshness rules and honest current status); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-366 batch-C release-evidence/release-gate contract reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "EVIDENCE NORMALIZATION: the contract correctly enumerates PH-347 install/TLS/upgrade scripts, PH-348 backup/restore scripts, PH-349 PG concurrency CLI (verified in tests/test_v1_pg_concurrency.py: argparse --dsn/--out/--profile, envelope v1, exit mapping), PH-350 unimplemented, PH-352 runbook and PH-332/PH-345 sources; envelope fields match PH-345, exit 0/2/3/4/5 maps to pass/not_run/fail/fail(environment)/blocked, same-run dedupe and append-only JSONL are frozen, and normalization requires the strictest status when duplicate evidence conflicts.",
+      "LAYER/GATE DISCIPLINE: L1-L5 table distinguishes script/config/docs existence (L1) from automation (L2), CI+PG (L3), browser (L4) and production/pilot (L5); rehearsal/staging cannot become L5, SQLite cannot prove PG, dry_run cannot prove execute; the release gate requires governance baseline + V1-OPS-01-06 + M01-M15 required layers + L4 + release package; missing/blocked/fail items must be registered and only non-core items can be waived with product/release/independent three-party approval (executor cannot self-approve); evidence is SHA-bound, 14-day valid, re-run on change, non-selectable/overwrite-protected.",
+      "CURRENT-STATE HONESTY: §10 correctly records PH-347 L1+L2 local rehearsal only (real staging/production/TLS renewal/upgrade rollback not_run), PH-348 local SQLite backup/restore only (PG backup/restore not_run, L3/L5 absent), PH-349 contract tests L2 with real PG probes skipped/not_run and L3 pending, PH-350 ready/unimplemented (V1-OPS-05 missing), and concludes the current candidate is not releasable with release blocked; no document/script existence is counted as execution evidence. Boundaries with PH-357/PH-367/PH-333/334/335 are explicit and do not replace execution evidence.",
+      "CONTENT/GATES: no implementation/migration/script/CI-gate/product-code change; 7 changed files within the PH-366 whitelist (contract/spec/report/handoff/tasks/manifest/verification); no placeholders; task_count 291; check ok=291; governance 23 OK; verify-change --base fe9c257 --task PH-366 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 11344c7 (BASE fe9c257) in /tmp/ph366-evidence-release, worktree clean; 7 files within the PH-366 whitelist; docs-only, no implementation/migration/script/CI-gate/product code. Evidence sources/envelope/exit normalization/append-only dedupe, L1-L5 discipline, release gate and waiver approval, SHA/14-day/re-run rules, and the honest current release-blocked conclusion are complete and aligned with PH-345/PH-332; PH-349 CLI claim verified; check ok=291; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
   },
   "deviations": [
     "The contract deliberately records the current release qualification as blocked: PH-350/V1-OPS-05 is not implemented, real PG backup/restore and PG concurrency evidence are not_run, and L3/L4/L5 are not executed. It does not claim release readiness.",

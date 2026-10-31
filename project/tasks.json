@@ -12019,7 +12019,7 @@
       "title": "批次 C 演练证据回填与发布资格清单契约（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
