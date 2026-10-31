@@ -1469,6 +1469,24 @@ class Command(BaseCommand):
                     errors.append(f"period_close:{run.pk}:action_state")
                 if run.state == 'closed' and run.closed_through is None:
                     errors.append(f"period_close:{run.pk}:closed_date")
+                prev = runs[index - 1] if index else None
+                if run.action == 'close':
+                    if prev is not None and prev.state != 'reopened':
+                        errors.append(f"period_close:{run.pk}:close_transition")
+                    if run.state == 'closed':
+                        if (prev is None or prev.action != 'close' or prev.state != 'closing'
+                                or prev.sequence + 1 != run.sequence):
+                            errors.append(f"period_close:{run.pk}:missing_closing_pair")
+                if run.action == 'reopen':
+                    if prev is None or prev.state != 'closed':
+                        errors.append(f"period_close:{run.pk}:reopen_transition")
+                    if run.state != 'reopened':
+                        errors.append(f"period_close:{run.pk}:reopen_state")
+                if prev is not None:
+                    if prev.state == 'closed' and run.action != 'reopen':
+                        errors.append(f"period_close:{run.pk}:closed_followup")
+                    if prev.state == 'reopened' and run.action != 'close':
+                        errors.append(f"period_close:{run.pk}:reopened_followup")
                 if run.state == 'closing':
                     nxt = runs[index + 1] if index + 1 < len(runs) else None
                     if nxt is None or nxt.sequence != run.sequence + 1 or nxt.state != 'closed':
@@ -1499,6 +1517,24 @@ class Command(BaseCommand):
                 if run.action == 'close' and run.from_stage not in {
                         choice[0] for choice in Project.Stage.choices}:
                     errors.append(f"project_close:{run.pk}:from_stage")
+                prev = runs[index - 1] if index else None
+                if run.action == 'close':
+                    if prev is not None and prev.state != 'reopened':
+                        errors.append(f"project_close:{run.pk}:close_transition")
+                    if run.state == 'closed':
+                        if (prev is None or prev.action != 'close' or prev.state != 'closing'
+                                or prev.sequence + 1 != run.sequence):
+                            errors.append(f"project_close:{run.pk}:missing_closing_pair")
+                if run.action == 'reopen':
+                    if prev is None or prev.state != 'closed':
+                        errors.append(f"project_close:{run.pk}:reopen_transition")
+                    if run.state != 'reopened':
+                        errors.append(f"project_close:{run.pk}:reopen_state")
+                if prev is not None:
+                    if prev.state == 'closed' and run.action != 'reopen':
+                        errors.append(f"project_close:{run.pk}:closed_followup")
+                    if prev.state == 'reopened' and run.action != 'close':
+                        errors.append(f"project_close:{run.pk}:reopened_followup")
                 if run.state == 'closing':
                     nxt = runs[index + 1] if index + 1 < len(runs) else None
                     if nxt is None or nxt.sequence != run.sequence + 1 or nxt.state != 'closed':

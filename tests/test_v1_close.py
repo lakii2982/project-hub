@@ -11,7 +11,8 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
 
-from core.models import AccountingPeriod, AuditEvent, DomainEvent, Membership, Organization, Project
+from core.models import (AccountingEvent, AccountingPeriod, AuditEvent, DomainEvent,
+                         LedgerEntry, Membership, Organization, Project)
 from pmo_plugins.contracts.models import Contract, Counterparty
 from pmo_plugins.delivery import close_services as services
 from pmo_plugins.delivery.models import DeliveryReceipt, PeriodCloseRun, ProjectClose
@@ -55,6 +56,15 @@ class CloseFixture(TestCase):
                       dry_run=False, reason='月末关期')
         values.update(changes)
         return services.close_period(self.owner, self.period, **values)
+
+    def facts(self):
+        from pmo_plugins.cash.models import CashTransaction
+        from pmo_plugins.costing.models import SalaryPool
+        from pmo_plugins.management_revenue.models import RevenueRecognition
+        from pmo_plugins.settlement.models import OpenItem
+        return (LedgerEntry.objects.count(), AccountingEvent.objects.count(),
+                RevenueRecognition.objects.count(), SalaryPool.objects.count(),
+                CashTransaction.objects.count(), OpenItem.objects.count())
 
     def close_project(self, **changes):
         values = dict(request_token=uuid.uuid4(), expected_version=self.project.version,
@@ -146,6 +156,78 @@ class PeriodCloseTests(CloseFixture, TestCase):
         with self.assertRaises(PermissionDenied):
             self.close_period()
 
+    def test_reopen_precheck_is_usable_for_closed_period(self):
+        self.close_period()
+        result = services.reopen_period_precheck(self.owner, self.period)
+        self.assertEqual(result['mode'], 'reopen')
+        self.assertEqual(result['state'], 'closed')
+        self.assertTrue(result['eligible'])
+        self.assertEqual(result['blockers'], [])
+        self.assertEqual(len(result['precheck_digest']), 64)
+        self.period_row.refresh_from_db()
+        self.assertEqual(result['period_version'], self.period_row.version)
+
+    def test_pm_period_precheck_and_page_denied(self):
+        with self.assertRaises(PermissionDenied):
+            services.period_close_precheck(self.pm, self.period)
+        with self.assertRaises(PermissionDenied):
+            services.reopen_period_precheck(self.pm, self.period)
+
+    def test_business_fact_counts_period_close_and_reopen(self):
+        before = self.facts()
+        self.close_period(dry_run=True)
+        self.assertEqual(self.facts(), before)
+        self.close_period()
+        self.assertEqual(self.facts(), before)
+        self.period_row.refresh_from_db()
+        services.reopen_period(self.owner, self.period, request_token=uuid.uuid4(),
+                               expected_version=self.period_row.version, dry_run=True,
+                               reason='核对')
+        self.assertEqual(self.facts(), before)
+        services.reopen_period(self.owner, self.period, request_token=uuid.uuid4(),
+                               expected_version=self.period_row.version, dry_run=False,
+                               reason='核对')
+        self.assertEqual(self.facts(), before)
+
+    def test_verifier_rejects_double_reopen_and_gap(self):
+        self.close_period()
+        latest = PeriodCloseRun.objects.order_by('sequence').last()
+        PeriodCloseRun.objects.create(
+            organization=self.org, accounting_period=self.period_row,
+            period=self.period, sequence=latest.sequence + 1, action='reopen',
+            state='reopened', from_period_version=self.period_row.version,
+            closed_through=None, blockers=[], warnings=[], precheck_digest='0' * 64,
+            reason='伪造重开', actor=self.owner, request_token=uuid.uuid4())
+        PeriodCloseRun.objects.create(
+            organization=self.org, accounting_period=self.period_row,
+            period=self.period, sequence=latest.sequence + 2, action='reopen',
+            state='reopened', from_period_version=self.period_row.version,
+            closed_through=None, blockers=[], warnings=[], precheck_digest='0' * 64,
+            reason='重复重开', actor=self.owner, request_token=uuid.uuid4())
+        output = StringIO()
+        with self.assertRaises(CommandError):
+            call_command('verify_integrity', '--json', stdout=output)
+        self.assertIn('reopen_transition', output.getvalue())
+        PeriodCloseRun.objects.create(
+            organization=self.org, accounting_period=self.period_row,
+            period=self.period, sequence=latest.sequence + 9, action='close',
+            state='closing', from_period_version=self.period_row.version,
+            closed_through=None, blockers=[], warnings=[], precheck_digest='0' * 64,
+            actor=self.owner, request_token=uuid.uuid4())
+        output = StringIO()
+        with self.assertRaises(CommandError):
+            call_command('verify_integrity', '--json', stdout=output)
+        self.assertIn('sequence', output.getvalue())
+
+    def test_verifier_rejects_receipt_result_mismatch(self):
+        DeliveryReceipt.objects.create(
+            organization=self.org, request_token=uuid.uuid4(), action='period.close',
+            digest='0' * 64, result_id=uuid.uuid4())
+        output = StringIO()
+        with self.assertRaises(CommandError):
+            call_command('verify_integrity', '--json', stdout=output)
+        self.assertIn('close_receipt:', output.getvalue())
+
     def test_append_only_trigger_and_verify_probe(self):
         self.close_period()
         run = PeriodCloseRun.objects.first()
@@ -215,6 +297,52 @@ class ProjectCloseTests(CloseFixture, TestCase):
             services.project_close_precheck(self.pm, self.project.pk)
         self.assertEqual(services.project_close_precheck(self.owner, self.project.pk)['scope'],
                          'project')
+
+    def test_project_business_fact_counts_dry_run_and_replay(self):
+        before = self.facts()
+        self.close_project(dry_run=True)
+        self.assertEqual(self.facts(), before)
+        self.assertEqual(ProjectClose.objects.count(), 0)
+        token = uuid.uuid4()
+        first = self.close_project(request_token=token)
+        replay = self.close_project(request_token=token)
+        self.assertTrue(replay['replayed'])
+        self.assertEqual(replay['run_ref'], first['run_ref'])
+        self.assertEqual(self.facts(), before)
+        with self.assertRaises(ValidationError):
+            self.close_project(request_token=token, reason='改输入')
+        self.project.refresh_from_db()
+        services.reopen_project(self.owner, self.project.pk, request_token=uuid.uuid4(),
+                                expected_version=self.project.version, dry_run=True,
+                                reason='核对')
+        self.assertEqual(self.facts(), before)
+        services.reopen_project(self.owner, self.project.pk, request_token=uuid.uuid4(),
+                                expected_version=self.project.version, dry_run=False,
+                                reason='核对')
+        self.assertEqual(self.facts(), before)
+
+    def test_project_trigger_guard_and_cancelled_run_probe(self):
+        self.close_project()
+        run = ProjectClose.objects.first()
+        for operation in (
+                lambda: ProjectClose.objects.filter(pk=run.pk).update(sequence=99),
+                lambda: ProjectClose.objects.filter(pk=run.pk).delete()):
+            with transaction.atomic():
+                with self.assertRaises(IntegrityError):
+                    operation()
+        cancelled = Project.objects.create(
+            organization=self.org, code='P322R', name='取消有run', client='客户',
+            manager=self.owner, start_date=self.today, end_date=self.today,
+            stage='cancelled')
+        ProjectClose.objects.create(
+            organization=self.org, project=cancelled, sequence=1, action='close',
+            state='closed', from_stage='execution', from_project_version=cancelled.version,
+            blockers=[], warnings=[], precheck_digest='0' * 64,
+            actor=self.owner, request_token=uuid.uuid4())
+        output = StringIO()
+        with self.assertRaises(CommandError):
+            call_command('verify_integrity', '--json', stdout=output)
+        self.assertIn('cancelled_with_run', output.getvalue())
 
     def test_verify_probe_dangling_project_closing(self):
         self.close_project()

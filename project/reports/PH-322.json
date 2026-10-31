@@ -1,6 +1,6 @@
 {
   "task_id": "PH-322",
-  "summary": "关期/结项实现首片（delivery append-only run，按 ADR 0016/0017 + PH-312 spec）：新增 delivery.models.PeriodCloseRun/ProjectClose 与迁移 0005（唯一序列、action/state 组合、closed 日期、vendor-aware UPDATE/DELETE 守护），命令 close_period/reopen_period/close_project/reopen_project（owner/finance、公司锁、expected_version、DeliveryReceipt request_token 幂等、dry_run 零写、closing+closed 成对追加、plugin. 审计、不写账本/收入/成本/现金/未清）；只读预检 period_close_precheck/reopen_period_precheck/project_close_precheck/reopen_project_precheck 复用 PH-291/283/284/280/288/275/287/274/269/281/309 等既有 owner 只读接口，冻结 blocker/warning issue_code + reminder_ref + precheck_digest；close 页面/执行 POST/重开表单（history_read 预检、business_write 执行、停用历史只读）；verify_integrity 新增期间/项目 close 分支（序列连续、closing→closed 成对、无 dangling closing、latest 与 AccountingPeriod/Project 当前状态一致、cancelled 无 run、重开链、收据结果引用）；新增 15 项 scoped 测试（服务+HTTP+trigger/verifier 探针）。",
+  "summary": "关期/结项实现首片（delivery append-only run，按 ADR 0016/0017 + PH-312 spec）：新增 delivery.models.PeriodCloseRun/ProjectClose 与迁移 0005（唯一序列、action/state 组合、closed 日期、vendor-aware UPDATE/DELETE 守护），命令 close_period/reopen_period/close_project/reopen_project（owner/finance、公司锁、expected_version、DeliveryReceipt request_token 幂等、dry_run 零写、closing+closed 成对追加、plugin. 审计、不写账本/收入/成本/现金/未清）；只读预检 period_close_precheck/reopen_period_precheck/project_close_precheck/reopen_project_precheck 复用 PH-291/283/284/280/288/275/287/274/269/281/309 等既有 owner 只读接口，冻结 blocker/warning issue_code + reminder_ref + precheck_digest；close 页面/执行 POST/重开表单（history_read 预检、business_write 执行、停用历史只读）；verify_integrity 新增期间/项目 close 分支（序列连续、closing→closed 成对、无 dangling closing、latest 与 AccountingPeriod/Project 当前状态一致、cancelled 无 run、重开链、收据结果引用）；新增 23 项 scoped 测试（服务+HTTP+trigger/verifier 探针）；reviewer-b 首轮 2 阻断+4 必改已修：reopen 专用预检、verify_integrity 状态机/重开链校验、业务事实计数断言、pm period 预检/页面拒绝、ProjectClose trigger/项目 dry_run/replay 测试、report/handoff 证据纠正。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1 on BASE fcb7b17: Ran 1165 tests, FAILED (failures=5, errors=3, skipped=69) => 1088 passed. All 8 failures/errors are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); no new failure class. The PH-322 verifier query-count regression is resolved by the PH-336 whitelist threshold bump 84 -> 88 (measured, evidence below). CI Linux (including the PG domain) is authoritative."
+      "evidence": "Actual local exit 1 on BASE fcb7b17: Ran 1173 tests, FAILED (failures=5, errors=3, skipped=69) => 1096 passed. All 8 failures/errors are exactly the known macOS environment limits; the PH-322 verifier query-count regression is resolved by the measured 84 -> 88 ceiling (4 fixed bulk queries; no per-row queries). No new failure class."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -30,30 +30,20 @@
     {
       "command": "python manage.py test tests.test_v1_close tests.test_v1_close_http --verbosity 1",
       "result": "pass",
-      "evidence": "Actual exit 0: Ran 15 tests, OK => 15 passed (10 service + 5 HTTP). Covers precheck shape/digest, dry_run zero writes, closing+closed pair, period posted/closed_through, owner write refusal, reopen append/requires reason, stale version, token replay/changed input, permissions/module disabled, append-only triggers, dangling-closing verifier probes, project close blocker/zero writes, close/reopen stage restore, cancelled rejection, pm scope, HTTP pages/execute/reopen/member denial/module-disabled read kept."
-    },
-    {
-      "command": "python scripts/projectctl.py verify-change --base fcb7b17 --task PH-322",
-      "result": "pass",
-      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=fcb7b17, changed files all inside the PH-322 allowed_paths (18 paths after PH-336), no task_not_executable/path_out_of_scope or report-shape errors; assertion_scope=declaration_only. The report review block still awaits the independent reviewer PASS."
+      "evidence": "Actual exit 0: Ran 23 tests, OK => 23 passed (17 service + 6 HTTP). Adds closed-period reopen precheck usability, pm period denial, business-fact counts for period/project close+reopen dry_run/real, double-reopen/sequence-gap/receipt-mismatch verifier probes, ProjectClose trigger UPDATE/DELETE probes, project dry_run/replay/changed-input coverage."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-322 period/project close implementation reviewer (fresh context, read-only)",
+    "reviewer": "reviewer-b",
     "status": "pending",
-    "findings": [
-      "BLOCKER - the branch is based on stale 987ec1e, not the requested BASE 0281043: the diff 0281043..HEAD deletes merged PH-331 artifacts (`project/specs/PH-332..336.md`, `project/reports/PH-331.json`, `project/handoffs/PH-331.md`, PH-331/PH-332 task entries) and reverts the task board to 253 tasks (BASE has 258). This would destroy merged planning work; rebase onto 0281043 (or the current main) before any review/merge, then re-run the gates.",
-      "BLOCKER - PH-322's BASE whitelist is still only 14 paths and does not include `pmo_plugins/delivery/models.py`, `pmo_plugins/delivery/migrations/*` or `core/management/commands/verify_integrity.py`; the implementation adds all three and verify-change reports path_out_of_scope for them. PH-312 §9.2 requires a planning slot to expand PH-322's allowed_paths before implementation; the implementation cannot self-expand via this PR. Fix: land the planning-slot whitelist expansion first, then rebase PH-322 and rerun.",
-      "BLOCKER - a new full-suite failure beyond the known baseline: independent run is `Ran 1165 tests, 5F+3E...` plus `test_verify_query_count_stays_constant_with_more_classifications` failing (88 captured queries > 84), so the run is 6F+3E/69 rather than the known 5F+3E/69. Identify/fix the added query (or update the threshold only if the query increase is intentional and justified per the test contract), and restore the exact baseline before PASS.",
-      "CODE CONTENT (pending a clean rebase) is substantial: PeriodCloseRun/ProjectClose append-only models + delivery 0005 migration with constraints/guards, close services/views/forms/template/routes, 15 scoped close tests passing, verify_integrity branches, docs/status updates. These cannot be accepted while the branch deletes merged planning files, is outside the BASE whitelist, and has a new full-suite failure."
-    ],
-    "evidence": "VERDICT: REJECTED - 3 blockers: (1) based on stale 987ec1e, deleting merged PH-331/PH-332..336 specs/reports/handoffs and reverting task_count 253 vs BASE 258; (2) PH-322 BASE whitelist (14 paths) lacks delivery models/migrations and verify_integrity, yielding path_out_of_scope; (3) full suite is 1165/6F+3E/69 with a new cash query-count failure (88>84) beyond the known 8 baseline. Reviewed HEAD 5f376df (merge-base with 0281043 is 987ec1e) in /tmp/ph322-close-impl; scoped close tests 15 OK; check 253 not 258; makemigrations clean. Rebase onto 0281043, land the PH-322 whitelist expansion via a planning slot, fix the query regression, then rerun check/verify/full suite."
+    "findings": [],
+    "evidence": "Awaiting reviewer-b re-review at this HEAD: the previous rejection (reopen precheck unusable; missing verifier transition/reopen-chain validation) and the four required fixes (fact-count assertions, pm period permission, ProjectClose trigger/project dry-run/replay coverage, report/handoff accuracy) are addressed; no self-attested pass is recorded."
   },
   "deviations": [
+    "Reviewer-b round-1 fixes applied: (1) reopen_period_precheck is now a dedicated reopen precheck (state closed/eligible, no close blockers, independent digest) instead of calling the close precheck; (2) verify_integrity validates legal transitions and the reopen chain (close only initial or after reopened; reopen only immediately after closed; closing(n)->closed(n+1); reject duplicate close/reopen/orphan transitions) with sequence-gap/double-reopen/latest-state/cancelled-with-run/receipt-mismatch probes; (3) scoped tests assert LedgerEntry/AccountingEvent/revenue/cost/cash/OpenItem counts unchanged for period/project close+reopen dry_run and real; (4) pm is denied period precheck/page (pm remains limited to managed-project project precheck); (5) ProjectClose UPDATE/DELETE trigger probes and project dry_run/token replay/changed-input tests added; (6) report/handoff BASE/threshold/full-suite text corrected and the superseded rejection review block cleared.",
     "PH-336 planning slot applied: BASE fcb7b17 sets PH-322 ready and adds pmo_plugins/delivery/models.py, pmo_plugins/delivery/migrations/*, core/management/commands/verify_integrity.py and tests/test_v1_cash_book_bridge.py to allowed_paths; this branch was rebased onto fcb7b17 (old 987ec1e base not kept) and verify-change is green.",
     "Query-count threshold evidence: the close verifier uses 4 fixed bulk queries (AccountingPeriod list, PeriodCloseRun list, ProjectClose list, close DeliveryReceipt list) and does not add per-row queries; the measured total is 88 vs the previous frozen ceiling 84 (baseline 84 + 4 fixed). The PH-336 whitelist allowed the test file, and its ceiling was bumped to exactly 88 with an explanatory comment (PH-269/274 precedent), not an arbitrary larger value.",
-    "Full suite adds one out-of-whitelist failure: tests/test_v1_cash_book_bridge.py's verifier query-count ceiling (84) is exceeded by 4 fixed close-verification queries (88). The test file is outside the PH-322 whitelist; the planning slot should bump the threshold (e.g. 92) as done for earlier verifier branches (PH-269/PH-274 precedent).",
     "closing is a transactional phase, not a durable observable state: the committed history contains the pair closing(n)+closed(n+1); reads/verifier treat a dangling closing as corruption. This follows PH-312's frozen decision B and does not add a closing branch to owner period/project checks.",
     "Period precheck/project precheck reuse existing owner read services with conservative issue-code mapping; unsupported read sources are reported as missing (not as 0) and no second reconciliation rule is created. Cash bank issues are read via bank_account_issues dict issue_count, not treated as a list.",
     "request_token idempotency uses DeliveryReceipt (action/digest/result_id); run request_token is stored only on the first (closing/reopened) row and is null on the paired closed row, matching the frozen PH-312 model constraint.",
@@ -61,6 +51,7 @@
     "No automatic correction, export, notification push, PAT/MCP close tool or customer portal is added; no business fact is written by close/reopen."
   ],
   "unverified": [
+    "Independent reviewer-b re-review is pending; verify-change remains review-gated until that PASS. Full suite is the known 8 macOS environment failures only (5 failures + 3 errors) with 69 skips.",
     "Independent S review is still pending; full suite is back to the known 8 macOS environment failures only (5 failures + 3 errors) with 69 skips.",
     "Independent S review is still pending.",
     "PostgreSQL trigger/function behaviour and true multi-connection concurrency (company lock, concurrent close one-winner) are not exercised locally; CI including the PG domain is authoritative. SQLite does not prove production concurrency correctness.",

@@ -69,4 +69,4 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 
 ## PH-322 关期/结项实现首片（2026-10-31）
 
-delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aware append-only 守护）；close/reopen period/project 命令（公司锁、expected_version、DeliveryReceipt 幂等、dry_run 零写、closing+closed 成对、plugin. 审计，仅更新既有期间/项目当前行，不写业务事实）；只读预检复用既有 owner 接口（issue_code/reminder_ref/precheck_digest/missing）；close 页面/执行/重开表单；verify_integrity 五类 close 分支。偏差：BASE 白名单缺 models/migrations/verify_integrity（PH-336 规划槽补），全量新增 1 项白名单外 query-count 阈值失败（84→88，需调 92）。未验证：独立复核、PG trigger/并发、浏览器 1440/390、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-322.json`。
+delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aware append-only 守护）；close/reopen period/project 命令（公司锁、expected_version、DeliveryReceipt 幂等、dry_run 零写、closing+closed 成对、plugin. 审计，仅更新既有期间/项目当前行，不写业务事实）；只读预检复用既有 owner 接口（issue_code/reminder_ref/precheck_digest/missing）；close 页面/执行/重开表单；verify_integrity 五类 close 分支。偏差：PH-336 已补 models/migrations/verify_integrity/test 白名单；query-count 阈值按实测 84→88（4 条固定 bulk 查询）。未验证：reviewer-b 复审、PG trigger/并发、浏览器 1440/390、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-322.json`。

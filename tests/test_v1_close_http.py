@@ -61,6 +61,10 @@ class CloseHTTPTests(CloseFixture, TestCase):
         self.assertEqual(self.period_row.status, 'active')
         self.assertEqual(PeriodCloseRun.objects.order_by('sequence').last().state, 'reopened')
 
+    def test_pm_period_page_denied(self):
+        self.login(self.pm)
+        self.assertEqual(self.client.get(PERIOD_URL, {'period': self.period}).status_code, 403)
+
     def test_member_denied_auditor_read_only(self):
         self.login(self.plain)
         self.assertEqual(self.client.get(PERIOD_URL, {'period': self.period}).status_code, 403)

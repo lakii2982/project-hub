@@ -95,6 +95,8 @@ def _period_state(member, period):
 
 
 def _period_precheck(member, period, as_of=None):
+    if member.role == 'pm':
+        raise PermissionDenied('项目经理只能查看其管理项目的结项摘要')
     period, period_end = _period(period)
     row, runs, latest, state = _period_state(member, period)
     blockers, warnings, missing = [], [], []
@@ -273,13 +275,28 @@ def period_close_precheck(member, period, *, as_of=None):
     return _period_precheck(_fresh(member), period, as_of=as_of)
 
 
-def reopen_period_precheck(member, period, *, as_of=None):
-    member = _fresh(member)
+def _reopen_period_precheck(member, period, as_of=None):
+    if member.role == 'pm':
+        raise PermissionDenied('项目经理只能查看其管理项目的结项摘要')
     period, _ = _period(period)
     row, runs, latest, state = _period_state(member, period)
     if latest is None or latest.state != 'closed':
         _fail('仅已关期期间可以重开')
-    return _period_precheck(member, period, as_of=as_of)
+    missing = []
+    if row is None:
+        missing.append('accounting_period')
+    digest = _canonical_digest({'scope': 'period_reopen', 'period': period,
+                                'expected_version': row.version if row else None,
+                                'latest_run': str(latest.pk)})
+    return {'scope': 'period', 'mode': 'reopen', 'period': period,
+            'state': 'closed', 'eligible': True,
+            'period_version': row.version if row else None,
+            'blockers': [], 'warnings': [], 'missing': missing,
+            'precheck_digest': digest}
+
+
+def reopen_period_precheck(member, period, *, as_of=None):
+    return _reopen_period_precheck(_fresh(member), period, as_of=as_of)
 
 
 def project_close_precheck(member, project_id, *, as_of=None, allow_open_period=False):
