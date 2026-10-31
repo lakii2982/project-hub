@@ -13,9 +13,9 @@
       "evidence": "Actual run in /tmp/ph337-planning on main 9e0991f with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 9e0991f --task PH-337",
+      "command": "python scripts/projectctl.py verify-change --base ce29ab2 --task PH-337",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD 3e0a7cd: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"3e0a7cddb7685f8829fb7dbbc787e372b2386b05\",\"count\":16,\"errors\":null}, exit 0; all 16 changed files inside BASE PH-337 allowed_paths and review.status=pass with the reviewer's name."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 16 changed files inside BASE PH-337 allowed_paths (review pass; post-rebase gate rerun)."
     }
   ],
   "review": {
@@ -38,7 +38,8 @@
     "Planning-slot state convention: PH-337 is kept in_review with handoff and PH-341 is proposed with blocker 'PH-337 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-337 done and PH-341 ready and clear the blocker.",
     "Numbering basis: BASE max PH-337; checked remote branches/PRs (PH-322 feature branch and dependabot only) - no >=PH-338 ids exist, so PH-338..PH-341 are continuous and free.",
     "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands.",
-    "reviewer round-1：PH-339 blocker 改为「PH-277 done、缺 PH-272 proposed」；PH-320 白名单纠正为真实 invoicing 插件路径（`pmo_plugins/invoicing/services.py/views.py/forms.py/domain_metadata.py/templates/invoicing/invoice_tax.html/migrations/*` + `delivery/urls.py`）并把范围收窄为 TaxQualification 确认+跨 owner 编排（不重复 PH-252 record/税分/红冲）；PH-325 白名单去不存在的 `invoicing/urls.py`，改为 `delivery/urls.py` 绑定。"
+    "reviewer round-1：PH-339 blocker 改为「PH-277 done、缺 PH-272 proposed」；PH-320 白名单纠正为真实 invoicing 插件路径（`pmo_plugins/invoicing/services.py/views.py/forms.py/domain_metadata.py/templates/invoicing/invoice_tax.html/migrations/*` + `delivery/urls.py`）并把范围收窄为 TaxQualification 确认+跨 owner 编排（不重复 PH-252 record/税分/红冲）；PH-325 白名单去不存在的 `invoicing/urls.py`，改为 `delivery/urls.py` 绑定。",
+    "Lead integration rebase (9e0991f -> ce29ab2) after PH-321 merged: docs/verification.md kept main entries plus PH-337 entry; manifest.active_handoff -> PH-337. Gates rerun green."
   ],
   "unverified": [
     "PH-320/PH-321/PH-322/PH-325 remain ready but unimplemented; their write-side code and tests do not exist yet.",
