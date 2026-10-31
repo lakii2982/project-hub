@@ -14,16 +14,20 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base ef13003 --task PH-357",
-      "result": "not_run",
-      "evidence": "Actual exit 1: only high_risk_review_required (review pending); no task/path/report-shape errors. Final pass record after reviewer pass."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 8 files inside BASE PH-357 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-357 evidence-backfill reviewer (fresh context, read-only)",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Awaiting independent S review at this HEAD: backfilled items are traceable to PH-347/348/349/350/352 reports; no scripts rerun or fabricated runs; L1/L2 vs L3-L5 separation; release_ready=false with explicit gaps (L3 CI/PG/real staging, L4 browser, L5 production, PH-367/372); dual-review/signature/14-day/no-selection discipline per PH-366 §6; runbook/acceptance/ROADMAP/verification consistent. projectctl check and governance 23 tests pass; verify-change is review-gated until reviewer pass. No self-attested pass."
+    "reviewer": "independent PH-357 batch-C evidence backfill reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "EVIDENCE BACKFILL IS TRUTHFUL: §10 and docs/verification.md correctly source the actual local L1+L2 evidence from PH-347 (install/upgrade drrills; staging/production execute exit 5; TLS no real domain not_run), PH-348 (SQLite backup/restore plus manifest/hash/RPO-RTO; PG execute explicitly not_run), PH-349 (PG CLI contract tests + no-DSN/SQLite refusal; real PG probe not_run), PH-350 (healthcheck local facts pass; missing facts not_run; production/staging execute refused; backlog threshold fail probe) and PH-352 (runbook L1). The text explicitly says no scripts were rerun and no real environment was executed, matching the source reports.",
+      "LAYER/GATE DISCIPLINE: L3 (CI/PG/real staging install-upgrade-TLS-restore-concurrency), L4 (browser 1440/390) and L5 (production/customer) remain not_run; release_ready=false with the full gap list (L3/L4/L5, PH-367 and PH-372, PH-333/334/335 not substituting documents); dual review/signature, 14-day validity and non-selective evidence rules follow PH-366 §6 with no executor self-approval; ROADMAP/batch-c-runbook/batch-c-acceptance/verification statements are consistent.",
+      "CONTENT/GATES: docs-only, no product code/migration/script/CI-gate change; 8 files within the PH-357 whitelist; no placeholders; task_count 297; check ok=297; governance 23 OK; verify-change --base ef13003 --task PH-357 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD bbab347 (BASE ef13003) in /tmp/ph357-evidence-backfill, worktree clean; 8 files within PH-357 whitelist; docs-only. PH-347/348/349/350/352 local L1+L2 evidence is accurately backfilled from their reports; no rerun/production claims; L3-L5 strictly not_run; release_ready=false with complete gaps and PH-366 review/signature/14-day rules; check ok=297; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
   },
   "deviations": [
     "This slice is docs-only evidence backfill: it does not rerun any drill and does not execute staging/production, TLS, PG concurrency, recovery or performance. Evidence is quoted from the execution slices' reports (PH-347/348/349/350/352) with their BASE SHAs and local commands.",
