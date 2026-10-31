@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 245d60b (BASE 1c2c6ca, PH-327 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":295}, exit 0; final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE 1c2c6ca): {\"command\":\"check\",\"ok\":true,\"task_count\":295}, exit 0; PH-327 done with handoff."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
