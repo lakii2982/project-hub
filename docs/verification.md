@@ -1128,3 +1128,11 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **缺口/未执行**：L3/L4/L5；真实 PG 并发/CI 证据由 CI/部署环境另行回填；D-02 required 层为 L2+L3，L3 缺失。
 - **判定：D-02 整体不通过（false/not pass）**；L1+L2 可复核，但不得宣称 D-02 通过或发布就绪。
 - 反例核对：未修改 PH-371/产品代码/迁移/契约/门禁；未以 SQLite 冒充 PG、未以本地冒充生产。
+
+## PH-391 v1.0 收尾规划（2026-10-31，BASE 5278c96）
+
+- 依赖复核：PH-388（deps PH-321/324 done、DoR 已冻结）晋级 ready；PH-372/PH-387 保持 ready；PH-389/390 仍 proposed（等 PH-378/383、PH-379/384）；PH-377 blocker 刷新为等 PH-372；PH-141 保持 proposed（DoR 未闭合）。
+- 新登记 PH-392–PH-395（编号连续、已核）：PH-392 批次 D 验收执行顺序/证据回填编排（ready，deps 370/375/376/381/382/386 done）、PH-393 D-01 跨 owner L3/L4 补证（proposed）、PH-394 批次 D 发布资格 gate 终审（proposed）、PH-395 v1.0 发布资格阻塞/三方签批清单（proposed）。
+- v1.0-preparation 规划收尾：PH-391 为该 milestone 最后 open 任务，done 后无 open 任务可关闭；不再登记下一规划槽，执行/验收由 PH-392–395 承接。
+- 发布资格：release_ready=false；缺口 L3 CI/PG/真实部署、L4 浏览器、L5 生产/客户验收、PH-367/372/387/388/389/390/394/395；需真实环境与产品/发布/独立复核三方签批。
+- 实际执行（最终 HEAD）：projectctl check ok=true/task_count=316；23 项治理 OK；verify-change --base 5278c96 --task PH-391 在 review pending 时仅 high_risk_review_required（预期）。未验证：L3/L4/L5、PH-389/390 上游、PH-393/394/395、三方签批、独立 S 复核。

@@ -289,3 +289,93 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - PH-371 税额→costing 开放期成本更正：L1 代码存在、L2 scoped 14 tests OK、fresh SQLite verify_integrity ok；L3 CI/PG、L4 浏览器、L5 生产 **not_run**。
 - D-02 必需层为 L2+L3，L3 缺失 → **D-02 整体不通过（false）**；不冒充实测/生产。
 - 证据与缺口见 `docs/verification.md` 的 PH-387 条目；未修改产品代码/迁移/契约/门禁。
+
+## 批次 D 验收矩阵与 runbook（PH-375，2026-10-31，BASE ef13003）
+
+- 新增 `docs/v1.0-development/batch-d-acceptance.md`（D-01–D-11 矩阵：需求映射/required 层/命令/证据/判据/角色/blocked 现状）与 `docs/v1.0-development/batch-d-runbook.md`（执行协议/回填模板/切片执行卡/退出标准）。
+- 现状：D-01（PH-370 编排执行）实现已合入但验收 **not_run**；D-02–D-11 **blocked**（PH-371/338/353/339/354/340/355/372 等未 done）；发布资格仍按 PH-366 **blocked**。
+- 不新增验收口径；五层证据/PH-345 envelope/PH-366 release gate 为唯一口径。
+
+## 批次 C/D 状态复核（PH-376 规划槽，2026-10-31，BASE 2f082a3）
+
+- **晋级 ready（依赖全 done）**：**PH-367** 批次 C 部署/恢复/并发汇总验收执行前置契约（deps PH-333/334/357/366 均 done；spec 状态/blockers/白名单已同步）。
+- **保持 proposed（精确 blocker）**：PH-372 等 PH-367 done；PH-338/353 等 PH-289/PH-181/PH-185；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151；PH-377 等 PH-372。
+- **新登记（PH-377–PH-381，编号已核）**：
+  - PH-377 批次 C 发布资格 gate 判定后续（proposed，等 PH-372）；
+  - PH-378 发票批量导入实现首片（proposed，等 PH-338/353）；
+  - PH-379 insights 差异单/工作台实现首片（proposed，等 PH-339/354）；
+  - PH-380 通知中心收件箱实现首片（proposed，等 PH-340/355）；
+  - PH-381 后续交付独立规划入口（proposed，依赖 PH-376；PH-376 done 后由下一规划槽置 ready）。
+- 下一实现/规划队列：PH-367（汇总验收前置契约）→ PH-372（发布资格 gate 判定）→ PH-377；发票/insights/通知实现按各自前置完成推进；PH-381 等 PH-376 done。
+- 真实 L3 CI/PG、L4 浏览器、L5 生产仍 not_run；不得以本地/文档证据宣称发布就绪。
+
+## 批次 D 状态与后续规划（PH-381 规划槽，2026-10-31，BASE 3c77653）
+
+- **依赖复核**：PH-367/PH-371 保持 ready（契约/修复复审中，未 done，不重复晋级）；PH-372 等 PH-367；PH-338/353 等 PH-289/181/185；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151。无新的依赖全 done 既有任务可晋级。
+- **新登记（PH-382–PH-386，编号已核）**：
+  - **PH-382**（ready）批次 D-01 跨 owner 编排验收执行（deps PH-370 done；只回填验收证据，不重实现）；
+  - **PH-383**（proposed）发票批量导入错误清单/来源覆盖后续（等 PH-378）；
+  - **PH-384**（proposed）insights 工作台/差异单性能与导出后续（等 PH-379）；
+  - **PH-385**（proposed）通知中心扫描调度/已读后续（等 PH-380）；
+  - **PH-386**（proposed）后续交付独立规划入口（deps PH-381；PH-381 done 后置 ready）。
+- 批次 D 矩阵仍以 `batch-d-acceptance.md`/`batch-d-runbook.md` 为唯一方法；PH-382 只执行 D-01 验收，不改变未实现项的 blocked/not_run。
+- 发布资格仍按 PH-366 gate：L3 CI/PG、L4 浏览器、L5 生产未执行；不得以本地/演练冒充。
+
+## 任务板卫生与批次 D 验收（PH-386 规划槽，2026-10-31，BASE 9830b37）
+
+- **关闭已合并陈旧规划槽**：PH-329（PR #204）、PH-336（PR #208）、PH-341（PR #213）→ done；PH-367 汇总验收前置契约（PR #243）→ done；PH-371 税额→costing 修正（PR #244）→ done（report review pass/verify-change pass）。
+- **关闭/重定多币种旧片**：PH-318/PH-326 已由 PH-324（PR #203）/PH-321（PR #211）覆盖，置 **cancelled**；剩余汇率历史反查/对账范围转 **PH-388**（proposed）。
+- **关闭 legacy v0.3.0 重复片**：PH-006/PH-009/PH-011 已由现 contracts/costing/time 插件实现覆盖，PH-014 通知范围由 PH-301/PH-340/PH-355/PH-380/PH-385 链承接 → 均 **cancelled**。
+- **晋级 ready**：PH-372 批次 C 收尾 gate 判定（deps PH-350/357/367 done）。
+- **保持 proposed（精确 blocker）**：PH-141 依赖 done 但 DoR 未闭合；PH-179/181/183/185/151 等 legacy 主交付链依赖的 PH-170–184 等仍 proposed/ready 未 done，不晋级。
+- **新登记（PH-387–391，编号已核）**：
+  - PH-387（ready）批次 D-02 税额→costing 验收执行（deps PH-371 done）；
+  - PH-388（proposed）多币种汇率反查/对账后续（接收 PH-318/326 剩余；先冻结 DoR）；
+  - PH-389（proposed）批次 D-03/04 发票/导入验收执行；
+  - PH-390（proposed）批次 D-05/06 insights 验收执行；
+  - PH-391（proposed）下一规划入口（依赖 PH-386；PH-386 done 后置 ready）。
+- 发布资格仍按 PH-366 gate；未执行 L3 CI/PG、L4 浏览器、L5 生产，不冒充。
+
+## 批次 D 验收矩阵与 runbook（PH-375，2026-10-31，BASE ef13003）
+
+- 新增 `docs/v1.0-development/batch-d-acceptance.md`（D-01–D-11 矩阵：需求映射/required 层/命令/证据/判据/角色/blocked 现状）与 `docs/v1.0-development/batch-d-runbook.md`（执行协议/回填模板/切片执行卡/退出标准）。
+- 现状：D-01（PH-370 编排执行）实现已合入但验收 **not_run**；D-02–D-11 **blocked**（PH-371/338/353/339/354/340/355/372 等未 done）；发布资格仍按 PH-366 **blocked**。
+- 不新增验收口径；五层证据/PH-345 envelope/PH-366 release gate 为唯一口径。
+
+## 批次 C/D 状态复核（PH-376 规划槽，2026-10-31，BASE 2f082a3）
+
+- **晋级 ready（依赖全 done）**：**PH-367** 批次 C 部署/恢复/并发汇总验收执行前置契约（deps PH-333/334/357/366 均 done；spec 状态/blockers/白名单已同步）。
+- **保持 proposed（精确 blocker）**：PH-372 等 PH-367 done；PH-338/353 等 PH-289/PH-181/PH-185；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151；PH-377 等 PH-372。
+- **新登记（PH-377–PH-381，编号已核）**：
+  - PH-377 批次 C 发布资格 gate 判定后续（proposed，等 PH-372）；
+  - PH-378 发票批量导入实现首片（proposed，等 PH-338/353）；
+  - PH-379 insights 差异单/工作台实现首片（proposed，等 PH-339/354）；
+  - PH-380 通知中心收件箱实现首片（proposed，等 PH-340/355）；
+  - PH-381 后续交付独立规划入口（proposed，依赖 PH-376；PH-376 done 后由下一规划槽置 ready）。
+- 下一实现/规划队列：PH-367（汇总验收前置契约）→ PH-372（发布资格 gate 判定）→ PH-377；发票/insights/通知实现按各自前置完成推进；PH-381 等 PH-376 done。
+- 真实 L3 CI/PG、L4 浏览器、L5 生产仍 not_run；不得以本地/文档证据宣称发布就绪。
+
+## 批次 D 状态与后续规划（PH-381 规划槽，2026-10-31，BASE 3c77653）
+
+- **依赖复核**：PH-367/PH-371 保持 ready（契约/修复复审中，未 done，不重复晋级）；PH-372 等 PH-367；PH-338/353 等 PH-289/181/185；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151。无新的依赖全 done 既有任务可晋级。
+- **新登记（PH-382–PH-386，编号已核）**：
+  - **PH-382**（ready）批次 D-01 跨 owner 编排验收执行（deps PH-370 done；只回填验收证据，不重实现）；
+  - **PH-383**（proposed）发票批量导入错误清单/来源覆盖后续（等 PH-378）；
+  - **PH-384**（proposed）insights 工作台/差异单性能与导出后续（等 PH-379）；
+  - **PH-385**（proposed）通知中心扫描调度/已读后续（等 PH-380）；
+  - **PH-386**（proposed）后续交付独立规划入口（deps PH-381；PH-381 done 后置 ready）。
+- 批次 D 矩阵仍以 `batch-d-acceptance.md`/`batch-d-runbook.md` 为唯一方法；PH-382 只执行 D-01 验收，不改变未实现项的 blocked/not_run。
+- 发布资格仍按 PH-366 gate：L3 CI/PG、L4 浏览器、L5 生产未执行；不得以本地/演练冒充。
+
+## 批次 D-01 验收执行（PH-382，2026-10-31，BASE 9830b37）
+
+- PH-370 跨 owner 编排：本地 L2 部分验收通过（cash-refund 真实 e2e、9 scoped tests OK；全量 1310/5F+3E 无新增）；
+- revenue/settlement 真实 owner e2e 未执行（仅 patch 契约测试）、L3 CI/PG、L4 浏览器、L5 生产 not_run；
+- **D-01 未通过**、release_ready=false；发布资格仍按 PH-366 blocked。
+
+## v1.0 收尾规划（PH-391，2026-10-31，BASE 5278c96）
+
+- 依赖复核：PH-388（多币种反查/对账后续，deps PH-321/324 均 done，DoR 已冻结）晋级 **ready**；PH-372/PH-387 保持 ready（验收执行中）；PH-389/390 仍 proposed（等 PH-378/383、PH-379/384）；PH-377 blocker 刷新为等 PH-372。
+- **新登记 PH-392–PH-395（编号连续、已核）**：PH-392 批次 D 验收执行顺序与证据回填编排（**ready**，deps PH-370/375/376/381/382/386 done）；PH-393 D-01 跨 owner 编排 L3/L4 补证（proposed）；PH-394 批次 D 发布资格 gate 终审（proposed）；PH-395 v1.0 发布资格阻塞/三方签批清单（proposed）。
+- **v1.0-preparation 规划收尾**：PH-391 是该里程碑最后 open 任务；完成后该 milestone 无 open 任务，可关闭。不再登记下一规划槽，后续执行/验收由 PH-392–395 承接。
+- 发布资格阻塞：L3 CI/PG/真实部署、L4 浏览器、L5 生产/客户验收、PH-367/372/387/388/389/390/394/395；release_ready=false，需真实环境与三方签批。

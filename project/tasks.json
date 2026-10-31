@@ -12426,7 +12426,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-372（发布资格 gate 判定执行，proposed）done；PH-372 完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-372（发布资格 gate 判定执行，ready 未 done）done；PH-372 完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -12808,7 +12808,7 @@
       "title": "多币种汇率反查/对账后续（接收 PH-318/326 剩余范围）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12841,9 +12841,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-321/PH-324 已 done，但本片先冻结反查/对账 DoR 与范围；确认不重复 PH-321 已交付能力后由下一规划槽复核再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -12878,7 +12876,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-378/PH-383（发票批量导入实现与错误清单后续，均 proposed）done；依赖完成后复核 DoR 再晋级。"
+        "缺 PH-378（发票批量导入实现，proposed）与 PH-383（错误清单/来源覆盖，proposed）done；PH-362/PH-353 等上游未齐；依赖完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -12914,7 +12912,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-379/PH-384（insights 实现与性能/导出后续，均 proposed）done；依赖完成后复核 DoR 再晋级。"
+        "缺 PH-379（insights 实现，proposed）与 PH-384（性能/导出后续，proposed）done；依赖完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -12923,7 +12921,7 @@
       "title": "后续交付独立规划入口（接续 PH-386）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -12949,8 +12947,154 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
+      "handoff": "project/handoffs/PH-391.md"
+    },
+    {
+      "id": "PH-392",
+      "title": "批次 D 验收执行顺序与证据回填编排（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-370",
+        "PH-375",
+        "PH-376",
+        "PH-381",
+        "PH-382",
+        "PH-386"
+      ],
+      "spec": "project/specs/PH-392.md",
+      "allowed_paths": [
+        "docs/v1.0-development/*",
+        "docs/verification.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-392.json",
+        "project/handoffs/PH-392.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-393",
+      "title": "D-01 跨 owner 编排 L3/L4 验收补证（PG/浏览器）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-382",
+        "PH-334",
+        "PH-349",
+        "PH-392"
+      ],
+      "spec": "project/specs/PH-393.md",
+      "allowed_paths": [
+        "docs/v1.0-development/*",
+        "docs/verification.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-393.json",
+        "project/handoffs/PH-393.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [
+        "缺真实 PostgreSQL/浏览器环境与 PH-334/PH-349 的 L3 证据；PH-382/PH-392 需先 done；L3/L4 不得用本地 SQLite 冒充。"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-394",
+      "title": "批次 D 发布资格 gate 终审（PH-366 契约）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-372",
+        "PH-387",
+        "PH-388",
+        "PH-389",
+        "PH-390",
+        "PH-392"
+      ],
+      "spec": "project/specs/PH-394.md",
+      "allowed_paths": [
+        "docs/v1.0-development/*",
+        "docs/verification.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-394.json",
+        "project/handoffs/PH-394.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [
+        "缺 PH-372/PH-387/PH-388/PH-389/PH-390/PH-392 done；L3 CI/PG、L4 浏览器、L5 生产/客户验收未执行；不得自批豁免。"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-395",
+      "title": "v1.0 发布资格阻塞清单与三方签批清单（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-372",
+        "PH-387",
+        "PH-388",
+        "PH-394"
+      ],
+      "spec": "project/specs/PH-395.md",
+      "allowed_paths": [
+        "docs/v1.0-development/*",
+        "docs/verification.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-395.json",
+        "project/handoffs/PH-395.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [
+        "缺 PH-372/PH-387/PH-388/PH-394 done；L3/L4/L5 与三方签批未完成；只登记缺口，不得宣称发布就绪。"
+      ],
+      "github_issue": null,
+      "owner": null,
       "handoff": null
     }
   ]
