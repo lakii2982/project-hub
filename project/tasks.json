@@ -8782,7 +8782,7 @@
       "title": "管理收入确认与结算/合同条款只读配对核对首片（无写入口、无迁移）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -8818,9 +8818,9 @@
         "python manage.py test tests.test_v1_revenue_pairing_read tests.test_v1_revenue_pairing_read_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-284.md"
     },
     {
       "id": "PH-285",

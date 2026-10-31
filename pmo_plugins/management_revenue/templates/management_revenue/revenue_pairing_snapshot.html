@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}管理收入配对核对{% endblock %}{% block breadcrumb %}项目财务 / 管理收入配对核对{% endblock %}{% block content %}
+<section class="page-header"><div><h1 tabindex="-1">管理收入确认与结算/合同条款只读配对</h1><p>只读聚合 RevenueRecognition、active Settlement/OpenItem/核销与批准合同条款快照；不写收入、结算、账本或现金，不重算历史。</p></div><a class="button" href="/finance/">返回项目财务</a></section>
+{% if error %}<div class="notice" role="alert">{{ error }}</div>{% endif %}
+<form class="filter-bar panel" method="get" action="{{ pairing_url }}" aria-label="筛选收入配对">
+<div class="body"><div class="form-field"><label for="{{ filter_form.project.id_for_label }}">项目</label>{{ filter_form.project }}</div><div class="form-field"><label for="{{ filter_form.period.id_for_label }}">期间</label>{{ filter_form.period }}</div><div class="form-field"><label for="{{ filter_form.as_of.id_for_label }}">基准日</label>{{ filter_form.as_of }}</div><div class="actions"><button type="submit" class="button primary">查看快照</button><a class="button subtle" href="{{ pairing_url }}">重置</a></div></div></form>
+{% if snapshot %}
+<section class="panel"><div class="panel-heading"><h2>收入/结算/合同配对（只读）</h2></div><div class="body"><dl class="detail-grid">
+<div><dt>合同价值（净额，分）</dt><dd class="amount">{{ snapshot.contract_value_cents }}</dd></div>
+<div><dt>已确认收入（净额，分）</dt><dd class="amount">{{ snapshot.recognized_cents }}</dd></div>
+<div><dt>已生效结算（含税，分）</dt><dd class="amount">{{ snapshot.settled_cents }}</dd></div>
+<div><dt>未结清（分）</dt><dd class="amount">{{ snapshot.unsettled_cents }}</dd></div>
+<div><dt>现金覆盖/核销（分）</dt><dd class="amount">{{ snapshot.cash_coverage_cents }}</dd></div>
+<div><dt>确认−结算差额（分）</dt><dd class="amount">{{ snapshot.difference_cents }}</dd></div>
+<div><dt>合同价值−确认差额（分）</dt><dd class="amount">{{ snapshot.contract_variance_cents }}</dd></div>
+<div><dt>终止合同</dt><dd>{% if snapshot.terminated %}是{% else %}否{% endif %}</dd></div>
+</dl><p class="notice">金额单位为分，全部由服务端只读派生；不生成新收入/结算/未清，不调整历史。终止合同历史确认与结算保留展示。</p>
+{% if snapshot.projects %}<div class="table-scroll"><table aria-label="项目收入配对汇总"><thead><tr><th>项目</th><th class="amount">合同价值</th><th class="amount">已确认</th><th class="amount">已结算</th><th class="amount">未结清</th><th class="amount">现金覆盖</th><th class="amount">差额</th><th>异常数</th></tr></thead><tbody>
+{% for row in snapshot.projects %}<tr><td>{{ row.project_code }} · {{ row.project_name }}</td><td class="amount">{{ row.contract_value_cents }}</td><td class="amount">{{ row.recognized_cents }}</td><td class="amount">{{ row.settled_cents }}</td><td class="amount">{{ row.unsettled_cents }}</td><td class="amount">{{ row.cash_coverage_cents }}</td><td class="amount">{{ row.difference_cents }}</td><td>{{ row.issues_count }}</td></tr>
+{% endfor %}</tbody></table></div>{% endif %}</div></section>
+{% endif %}
+<section class="panel"><div class="panel-heading"><h2>配对异常（只读）</h2></div><div class="body">{% if issues %}<div class="table-scroll"><table aria-label="收入配对异常"><thead><tr><th>异常码</th><th>项目</th><th>引用</th><th>期望</th><th>实际</th></tr></thead><tbody>
+{% for issue in issues %}<tr><td><span class="badge warning">{{ issue.issue_code }}</span></td><td class="trace">{{ issue.project_id }}</td><td class="trace">{% for ref in issue.refs %}{{ ref }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</td><td>{{ issue.expected }}</td><td>{{ issue.actual }}</td></tr>
+{% endfor %}</tbody></table></div>{% else %}<p>未发现收入/结算/合同条款配对异常。</p>{% endif %}<p class="notice">异常为只读对账结果：不自动冲销、不补确认、不改历史事实。</p></div></section>
+{% endblock %}
