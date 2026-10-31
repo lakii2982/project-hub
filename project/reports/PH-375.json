@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base ef13003 --task PH-375",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 2bca849: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — changed files (batch-d-acceptance.md, batch-d-runbook.md, ROADMAP.md, tasks/manifest, docs/verification, PH-375 report/handoff) inside BASE PH-375 allowed_paths; the PH-375 spec edit was reverted because the spec path is outside this task's whitelist."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD fa2a4eb: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"fa2a4ebeb85f2bbd790b0ef8e406333b823d7543\",\"count\":8,\"errors\":null}; all 8 files inside BASE PH-375 allowed_paths and review.status=pass with the reviewer's name."
     }
   ],
   "review": {

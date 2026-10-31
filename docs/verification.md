@@ -1049,4 +1049,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 3. 对齐：PH-332 五层证据、PH-352 执行模板、PH-366 envelope/发布 gate、PH-345 脚本契约；**不新增第二套验收规则**。
 4. 现状：D-01（PH-370 编排）实现已合入但验收 **not_run**；D-02–D-11 **blocked**（PH-371/338/353/339/354/340/355/372 等未 done）；发布资格仍按 PH-366 **blocked**，不得以文档/runbook 宣称就绪。
 5. 无实现/脚本/迁移/门禁/产品代码变更；未执行任何 D 批验收/演练。
-实跑：projectctl check ok/297；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：D-01 验收、D-02–D-11 全部、L3/L4/L5、发布资格。
+独立 S 复核首轮 1 阻断（D-03/D-04 stale PH-362 前置）已修；二轮 PASS。最终门禁：projectctl check ok=true/task_count=297；23 项治理 OK；verify-change --base ef13003 --task PH-375 ok=true、8 文件全白名单、无 errors。未验证：D-01 验收、D-02–D-11 全部、L3/L4/L5、发布资格。
