@@ -1,11 +1,11 @@
 {
   "task_id": "PH-351",
-  "summary": "Consumed the PH-351 planning slot on main d830929 (PH-346 merged; 278 tasks after registration). PH-330 is still ready and about to merge, so no early promotion was made: PH-347/PH-348/PH-349 (batch C drill execution slices) stay proposed with blockers refreshed to 'PH-330 done, promote in the next slot', PH-350 stays proposed on those three, and the original PH-333/PH-334/PH-335 were re-scoped in the dependency graph as umbrella acceptance slices whose execution is delegated to the drill splits (PH-333/334 wait for PH-330 then the split execution; PH-335 waits for 333/334 and 350). The relationship between umbrellas and splits is now explicit so the same work is not registered twice. Next batch registered: PH-352 batch C acceptance runbook (docs-only, ready because PH-332/PH-345 are done), PH-353 import-submission split (proposed; waits PH-181/PH-185), PH-354 insights period-precheck read slice (proposed; waits PH-272), PH-355 notification reminder-refs/scan skeleton (proposed; waits PH-179/183/151) and PH-356 as the next planning slot. ROADMAP gained a batch C status section recording PH-330 imminent, the umbrella/split relationship, the four new registrations and the runbook/acceptance method split. No product code, migration, scaffold or contract-schema change was made.",
+  "summary": "Consumed the PH-351 planning slot on main d830929 (PH-346 merged; 278 tasks after registration). PH-330 is still ready and about to merge, so no early promotion was made: PH-347/PH-348/PH-349 (batch C drill execution slices) stay proposed with blockers refreshed to 'PH-330 done, promote in the next slot', PH-350 stays proposed on those three, and the original PH-333/PH-334/PH-335 were re-scoped in the dependency graph as umbrella acceptance slices whose execution is delegated to the drill splits (PH-333/334 wait for PH-330 then the split execution; PH-335 waits for 333/334 and 350). The relationship between umbrellas and splits is now explicit so the same work is not registered twice. Next batch registered: PH-352 batch C acceptance runbook (docs-only, ready because PH-332/PH-345 are done), PH-353 import-submission split (proposed; waits PH-181/PH-185), PH-354 insights period-precheck read slice (proposed; waits PH-272), PH-355 notification reminder-refs/scan skeleton (proposed; waits PH-179/183/151) and PH-356 as the next planning slot. ROADMAP gained a batch C status section recording PH-330 imminent, the umbrella/split relationship, the four new registrations and the runbook/acceptance method split. No product code, migration, scaffold or contract-schema change was made. The branch was then rebased onto main 371e80f (PH-330 merged); final gates were re-run at the rebased HEAD.",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":278} exit 0."
+      "evidence": "Post-independent-review actual run at final HEAD ecc7a18 (rebased onto main 371e80f): {\"command\":\"check\",\"ok\":true,\"task_count\":278}, exit 0; PH-351 done with handoff and PH-356 ready."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -15,7 +15,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 371e80f --task PH-351",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 14 files inside BASE PH-351 allowed_paths (reviewer-b pass; post-rebase rerun)."
+      "evidence": "Post-independent-review actual run at final HEAD ecc7a18: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"ecc7a18f945744a08bc4869b2ccf7d49b1d1d066\",\"count\":14,\"errors\":null}; all 14 files inside BASE 371e80f PH-351 allowed_paths and review.status=pass with reviewer-b."
     }
   ],
   "review": {
