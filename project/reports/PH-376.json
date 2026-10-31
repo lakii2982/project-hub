@@ -15,7 +15,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 2f082a3 --task PH-376",
       "result": "pass",
-      "evidence": "Actual run after the reviewer pass and final status commit 273c78b: ok=true, head=273c78b29c2821b57352c4d3e3f1c41184dc1161, changes=13 files all inside the PH-376 allowlist, errors=[]."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 files inside BASE PH-376 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
