@@ -5,12 +5,12 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=229; PH-304 recorded in_review with owner/handoff; 14 allowed_paths match the changed files; no path/acceptance schema issues."
+      "evidence": "Actual exit 0 at this HEAD (BASE 5361a09): ok=true, task_count=233 (PH-307 done, PH-304 done with owner/handoff); 14 changed files all inside the PH-304 allowed_paths; no path/acceptance schema issues."
     },
     {
       "command": "python manage.py check",
       "result": "pass",
-      "evidence": "Actual exit 0: System check identified 91 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (delivery domain metadata validates the ops-export history_read route)."
+      "evidence": "Actual exit 0 on BASE 5361a09: System check identified 92 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (delivery domain metadata validates the ops-export history_read route)."
     },
     {
       "command": "python manage.py makemigrations --check --dry-run",
@@ -20,7 +20,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual local exit 1: Ran 1095 tests, FAILED (failures=5, errors=3, skipped=69) => 1018 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases), identical to the BASE a352b4a baseline (1079 + 16 new PH-304 tests); no new failure class. CI Linux (including the PG domain) is authoritative."
+      "evidence": "Actual local exit 1 on BASE 5361a09: Ran 1106 tests, FAILED (failures=5, errors=3, skipped=69) => 1029 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); the BASE 5361a09 total grows to 1106 with the 16 new PH-304 tests and no new failure class. CI Linux (including the PG domain) is authoritative."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -31,6 +31,11 @@
       "command": "python manage.py test tests.test_v1_ops_export tests.test_v1_ops_export_http --verbosity 1",
       "result": "pass",
       "evidence": "Actual exit 0: Ran 16 tests, OK => 16 passed (10 service + 6 HTTP). Covers dry_run plan, UTF-8 BOM/header/checksum/row-count consistency, token replay + changed-input conflict, dry_run->real and real->dry_run same-token cache separation (real returns csv/content_id, dry_run returns plan without csv), plan-token download idempotency (same X-Content-SHA256), invalid dataset/date/period/token, settlement/cash/fee derived CSV values, member/pm dataset denials, zero fact-count change, page/download, invalid query params 400, POST 405 and module-disabled history_read 200."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 5361a09 --task PH-304",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=5361a09, 14 changed files all inside the PH-304 allowed_paths, no path_out_of_scope/report-shape errors; assertion_scope=declaration_only. The report review block is the independent reviewer's round-2 PASS at e018615."
     }
   ],
   "review": {
@@ -57,7 +62,7 @@
   ],
   "unverified": [
     "No browser 1440/390 check was run; the export page/download was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
-    "Independent S review recorded round-1 token/HTTP blockers (dry_run/real cache collision, download token not reused); the fixes and regressions are in this HEAD, awaiting round-2 PASS. verify-change remains review-gated.",
+    "Independent S review recorded round-2 PASS at e018615; this HEAD carries the final BASE 5361a09 evidence and the done transition.",
     "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
     "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
     "ZIP/manifest/encrypted external delivery, scheduled/emailed exports, persisted export receipts and identity-sensitive token/password/payroll fields remain unimplemented."
