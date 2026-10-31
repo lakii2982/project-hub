@@ -29,6 +29,7 @@
     ]
   },
   "deviations": [
+    "Review-blocker fix (old->new): PH-354 now lists PH-272 in depends_on (matching its blocker/spec wait); the umbrella/summary slices encode the execution graph in depends_on — PH-333 += PH-347/PH-348, PH-334 += PH-349, PH-335 += PH-350 — and the PH-333/PH-334 specs now state they are summary acceptance slices executed by the drill splits, so a future promotion cannot skip the drill evidence. Final evidence records the a0d95d9 check/verify-change and sets PH-351 done / PH-356 ready.",
     "No promotion was made even though PH-330 is about to merge: per the slot instruction the drill slices PH-347/348/349 are promoted only in the next slot once PH-330 is done, so blockers now say 'PH-330 done, promote next slot' rather than pretending readiness.",
     "PH-333/PH-334/PH-335 are retained as umbrella acceptance slices (proposed) while PH-347/348/349/350 own the executable drill work; the dependency graph and blockers state this relationship explicitly to avoid duplicate work or a false 'all done' claim.",
     "New slices: PH-352 runbook (ready, docs-only), PH-353 import submission split (proposed; PH-181/185), PH-354 insights precheck (proposed; PH-272), PH-355 reminders/scans (proposed; PH-179/183/151), PH-356 next slot (proposed until PH-351 done). No slice claims implementation before its dependencies.",
