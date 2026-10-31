@@ -10015,7 +10015,7 @@
       "title": "后续交付独立规划入口（接续 PH-311）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -10040,8 +10040,157 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-docs",
       "blockers": [],
+      "handoff": "project/handoffs/PH-315.md"
+    },
+    {
+      "id": "PH-316",
+      "title": "运营核对工作台导出联动首片：分区下钻与底稿导出衔接",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-309",
+        "PH-304"
+      ],
+      "spec": "project/specs/PH-316.md",
+      "allowed_paths": [
+        "pmo_plugins/delivery/ops_workbench_services.py",
+        "pmo_plugins/delivery/views.py",
+        "pmo_plugins/delivery/forms.py",
+        "pmo_plugins/delivery/templates/delivery/ops_workbench.html",
+        "pmo_plugins/delivery/templates/delivery/ops_export.html",
+        "pmo_plugins/delivery/domain_metadata.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_ops_workbench_export.py",
+        "tests/test_v1_ops_workbench_export_http.py",
+        "project/reports/PH-316.json",
+        "project/handoffs/PH-316.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_ops_workbench_export tests.test_v1_ops_workbench_export_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-309（运营核对工作台聚合，ready 未 done）done；PH-304 已 done 已满足；PH-309 完成后由 PH-319 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-317",
+      "title": "发票红冲/税额抵扣实现前置：红冲负值、税额拆分与抵扣边界",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-293",
+        "PH-252",
+        "PH-150",
+        "PH-155"
+      ],
+      "spec": "project/specs/PH-317.md",
+      "allowed_paths": [
+        "project/specs/PH-317.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-317.json",
+        "project/handoffs/PH-317.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-293（发票/价税分离/红冲契约冻结）、PH-252/PH-150/PH-155（发票/合同/结算）done（均 proposed）；依赖/契约就绪后由 PH-319 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-318",
+      "title": "多币种实现前置：币种/汇率快照落地、换算边界与只读展示",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-308",
+        "PH-150",
+        "PH-155",
+        "PH-252"
+      ],
+      "spec": "project/specs/PH-318.md",
+      "allowed_paths": [
+        "project/specs/PH-318.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-318.json",
+        "project/handoffs/PH-318.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-308（多币种/汇率契约冻结）、PH-150/PH-155/PH-252（合同/结算/发票）done（均 proposed）；依赖/契约就绪后由 PH-319 规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-319",
+      "title": "后续交付独立规划入口（接续 PH-315）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-315"
+      ],
+      "spec": "project/specs/PH-319.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-319.json",
+        "project/handoffs/PH-319.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "PH-315 done 后置 ready（当前 PH-315 为 in_review，待独立 S 复核 pass 的最终证据 commit 再置 done/ready）。"
+      ],
       "handoff": null
     }
   ]

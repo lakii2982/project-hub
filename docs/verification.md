@@ -703,3 +703,11 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 ## PH-309 运营核对工作台聚合首片（2026-10-31）
 
 基线81ec533（PH-311合入后的main）。新增pmo_plugins/delivery/ops_workbench_services.py只读聚合：ops_overview（PH-291，含合同/结算/收入/时间/导入/现金）、settlement_coverage（PH-283）、cash_bridge（PH-279）、fee_pairing（PH-280）、identity_access（PH-281）五分区，每分区返回issue计数、关键合计、missing、available与下钻URL；缺失null+missing不显示0；不重算口径、不建第二owner、无写/无迁移/无审计/无收据。权限owner/finance/auditor全量；pm仅管理项目摘要（cash_bridge无项目归属→available=false+missing=permission）；member拒绝；delivery停用后history_read历史可读。canonical domain_metadata声明ops-workbench/ history_read路由，delivery/urls.py仅导入；浏览器只读工作台页面+as_of/期间筛选，无POST。偏差披露：五分区按spec、合同/收入/银行余额经PH-291间接聚合；pm cash_bridge不可用（无项目归属）；missing/null语义；无审计写、未改verify_integrity；反例/测试不UPDATE/DELETE历史行。实际执行（最终HEAD，BASE 81ec533）：projectctl check ok=true/task_count=237；manage.py check exit0（既有W003、0错误）；makemigrations无变更；全量1115项=1038 pass+69 skip+8项既有macOS失败（无新增）；verify_integrity全新迁移库ok=true；scoped 9项全通过；verify-change --base 81ec533 --task PH-309 ok=true。未验证：浏览器1440/390、独立S复核终审、PG/并发、生产/UAT、旧库升级；持久化工作台快照/导出/告警/客户门户/新核对规则未实现。
+
+## PH-315 后续交付独立规划入口（接续 PH-311）（2026-10-31）
+
+基线 81ec533（PH-311 合入后，count 237）。纯规划/契约文字片：
+1. **核号**：BASE 最大 PH-315；远端分支/PR（EXP #143/#144 等）无 ≥316 占用 → PH-316 起连续。
+2. **新登记**：PH-316 工作台导出联动（proposed，缺 PH-309）、PH-317 发票红冲/税额抵扣实现前置（proposed，缺 PH-293/252/150/155）、PH-318 多币种实现前置（proposed，缺 PH-308/150/155/252）、PH-319 下一规划槽（proposed，待 PH-315 done 后置 ready）。count 237→241，编号 316-319 连续。
+3. **晋级**：无新增（PH-309 仍 ready 待合入；PH-292/293/295/296/297/299/300/301/305/306/308/310/312/313/314/316/317/318 保持 proposed，无虚假晋级）。
+4. blockers 按事实保留；无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-316/317/318 未实现；review由独立S复核。
