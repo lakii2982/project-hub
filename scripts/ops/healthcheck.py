@@ -105,11 +105,11 @@ def _redact(value):
 def _fact_checks(facts):
     checks = []
     db = facts.get("db") or {}
-    if not db:
-        checks.append(_check("health.db", "not_run", "DB connectivity facts", "missing"))
+    if not db or db.get("reachable") is None:
+        checks.append(_check("health.db", "not_run", "explicit DB reachability fact", "missing"))
     else:
-        checks.append(_check("health.db", "pass" if db.get("reachable", True) else "fail",
-                             "database reachable", "reachable" if db.get("reachable", True) else "unreachable"))
+        checks.append(_check("health.db", "pass" if db.get("reachable") is True else "fail",
+                             "database reachable", "reachable" if db.get("reachable") is True else "unreachable"))
         pending = db.get("migration_pending")
         if pending is None:
             checks.append(_check("health.migrations", "not_run",
@@ -235,12 +235,18 @@ def run_healthcheck(profile="rehearsal", mode="dry_run", *, facts=None,
         return EXIT["fail"], _envelope("ops_health_capacity", mode, profile, [
             _check("mode.valid", "fail", "dry_run|execute", mode)
         ], EXIT["fail"])
-    if mode == "execute" and profile != "rehearsal":
-        return EXIT["refused"], _envelope("ops_health_capacity", mode, profile, [
-            _check("safety.execute_profile", "fail",
-                   "execute only in isolated rehearsal", profile)
-        ], EXIT["refused"], status="blocked",
-            notes="Execute is restricted to the rehearsal profile; real CI/deployment capacity remains not_run.")
+    if profile != "rehearsal":
+        if mode == "execute":
+            return EXIT["refused"], _envelope("ops_health_capacity", mode, profile, [
+                _check("safety.execute_profile", "fail",
+                       "execute only in isolated rehearsal", profile)
+            ], EXIT["refused"], status="blocked",
+                notes="Execute is restricted to the rehearsal profile; real CI/deployment capacity remains not_run.")
+        return EXIT["not_run"], _envelope("ops_health_capacity", mode, profile, [
+            _check("profile.real_environment", "not_run",
+                   "real CI/deployment collection requires CI/deployment evidence", profile)
+        ], EXIT["not_run"], status="not_run",
+            notes="Local facts cannot represent staging/production capacity; real capacity remains not_run.")
     checks.append(_check("profile.known", "pass", "rehearsal|staging|production", profile))
     if not facts:
         checks.append(_check("environment.supplied", "not_run",

@@ -11,7 +11,7 @@ python scripts/ops/healthcheck.py --mode dry_run --env rehearsal \
 ```
 
 - `--facts`：脱敏后的本地/测试环境事实 JSON（结构见 §2）；缺省或空 → `exit 2/not_run`，不自动探测生产。
-- `--mode`：默认 `dry_run`；`execute` 仅允许 `--env rehearsal`；staging/production execute → **exit 5 blocked**（安全拒绝）。
+- `--mode`：默认 `dry_run`；只有 `--env rehearsal` 可以产生 pass；staging/production dry_run → **not_run/exit 2**（本地 facts 不能代表真实容量），execute → **exit 5 blocked**。
 - `--out`：append-only JSONL evidence envelope（PH-345 字段：script/contract_version/mode/profile/app_sha/started_at/finished_at/exit_code/status/checks/artifacts/redactions/notes）；按 script+profile+started_at 去重。
 - 退出码：0 全部检查通过；2 前置/事实缺失 not_run；3 检查失败；4 环境异常；5 安全拒绝。证据只记录 status，不把配置存在当运行证据。
 
@@ -30,7 +30,7 @@ python scripts/ops/healthcheck.py --mode dry_run --env rehearsal \
 }
 ```
 
-- 事实由采集者/部署环境提供；脚本不读取生产凭据、不连生产库、不爬客户数据。
+- 事实由采集者/部署环境提供；脚本不读取生产凭据、不连生产库、不爬客户数据。`db.reachable` 必须显式提供：true=pass、false=fail、缺失=not_run，不得默认 true。
 - 敏感键（password/token/secret/credential/payroll/customer/private_key/api_key/authorization）递归替换为 `[redacted]`，且不会写入 checks/artifacts。
 - 缺失字段 = `not_run`；0 只在真实计数为 0 时使用，不用 0 冒充缺失。
 
@@ -80,5 +80,5 @@ python manage.py test tests.test_v1_ops_observability --verbosity 1
 
 ## 6. PH-350 状态
 
-- V1-OPS-05 新状态：本地/隔离已实现（`healthcheck.py`）；真实 staging/production/CI 容量未执行，统一 `not_run`。
+- V1-OPS-05 新状态：本地/隔离已实现（`healthcheck.py`）；只有 rehearsal 可 pass；staging/production dry_run=not_run、execute=exit5，真实 CI/部署容量统一 `not_run`。
 - 本片只改 `docs/engineering/observability.md`（白名单），未改 `ops-runbook.md`；ops-runbook 的 V1-OPS-05 状态由后续获授权规划/实现片按实际 BASE 同步。

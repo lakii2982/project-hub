@@ -79,6 +79,25 @@ class HealthCapacityTests(unittest.TestCase):
             self.assertIn('safety.execute_profile',
                           [c['id'] for c in evidence['checks']])
 
+    def test_non_rehearsal_dry_run_cannot_pass(self):
+        for profile in ('staging', 'production'):
+            code, evidence = self.collect(profile=profile, mode='dry_run')
+            self.assertEqual(code, 2)
+            self.assertEqual(evidence['status'], 'not_run')
+            self.assertEqual(evidence['profile'], profile)
+            self.assertIn('profile.real_environment',
+                          [c['id'] for c in evidence['checks'] if c['status'] == 'not_run'])
+
+    def test_missing_db_reachability_not_run(self):
+        facts = self.facts()
+        facts['db'] = {'migration_pending': 0, 'connections': 5, 'max_connections': 100}
+        code, evidence = self.collect(facts=facts)
+        self.assertEqual(code, 2)
+        self.assertEqual(evidence['status'], 'not_run')
+        db_check = [c for c in evidence['checks'] if c['id'] == 'health.db'][0]
+        self.assertEqual(db_check['status'], 'not_run')
+        self.assertEqual(db_check['actual'], 'missing')
+
     def test_backlog_disk_backup_and_migration_failures(self):
         facts = self.facts(); facts['backlog']['reminders'] = 200
         code, evidence = self.collect(facts=facts)
