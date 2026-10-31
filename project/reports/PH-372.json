@@ -1,0 +1,61 @@
+{
+  "task_id": "PH-372",
+  "summary": "Executed the batch C release-qualification gate decision at BASE/candidate SHA 5278c96 per PH-366/PH-367, without executing any real drill or changing code/contracts. docs/v1.0-development/release-evidence-backfill.md records: the source register (PH-333 rollup, PH-334 PG contract rollup, PH-335 health rollup, PH-357 backfill — all local L1+L2 — plus PH-366/PH-367 contracts); normalized exit→status and the most-severe merge (fail>blocked>not_run>pass, layers kept separate, no conflicts) with evidence_digest 0b9f1cd924eab535132f76a21899f6c194f6475f28d6b9b7fdd0d6d651ae0c68; the actual governance baseline at this BASE (projectctl check ok/312; 23 governance OK; manage.py check 119 known warnings/0 errors; makemigrations clean; fresh-DB verify_integrity ok; full suite 1310 tests 5F+3E+70skip with exactly the known macOS baseline names, no new failures); the merged gate matrix where V1-OPS-01–06/M15/L4/L5 remain not_run at L3–L5; the required-evidence-set check; gap register G1–G8 (real staging deploy/upgrade/TLS, PG backup/restore+RPO/RTO, CI/PG capacity/concurrency, browser L4, production/customer L5, independent reviewer signature); the empty waiver register with core items not waivable; the signature block (execution submitted-for-review, no self-approval); and the honest verdict **blocked, release_ready=false, not released/piloted**. No code, script, migration, gate or contract-schema change; no real environment result is fabricated.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 81b416f (BASE 5278c96, PH-372 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":312}, exit 0; final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run on BASE 5278c96: Ran 23 tests, OK."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run: 119 known URL/field warnings, 0 errors, exit 0."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: No changes detected."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "After a fresh local migrate: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}, exit 0 (empty data)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual full run: Ran 1310 tests in 141.269s, FAILED (failures=5, errors=3, skipped=70). The 8 failure/error names are exactly the known macOS baseline (drf_security_compatibility 4F+3E, delivery_execution 1F, delivery_execution_sandbox 1F); no new failures. Not green; used only as a no-new-failures baseline."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 5278c96 --task PH-372",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 81b416f: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — changed files (release-evidence-backfill.md, docs/verification, ROADMAP, tasks/manifest, report/handoff) inside BASE PH-372 allowed_paths; the PH-372 spec edit was reverted because the spec path is outside this task's whitelist."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (source register, most-severe merge/digest, required-set check, gap register, no-waiver/self-approval discipline and blocked verdict); finalized to pass with the reviewer's name and a signed digest after the fresh-context review lands."
+  },
+  "deviations": [
+    "The gate verdict is deliberately blocked: L3 CI/PG, L4 browser and L5 production/customer evidence are not_run, V1-OPS-02 real TLS and V1-OPS-04 real PG restore remain not_run, and no valid waiver exists; release_ready=false and the slice does not claim release readiness.",
+    "No drill/deployment/recovery/concurrency was executed by this slice; evidence is merged from the already-recorded local L1+L2 sources only.",
+    "The full suite is not green (5F+3E known macOS baseline); it is reported as exactly the declared 8 baseline failure names with no new failures, not as a passing suite.",
+    "verify_integrity ran on a freshly migrated empty local DB, so it proves schema/integrity on empty data only.",
+    "The execution signature is submitted-for-review only; no executor self-approval, no waiver approval, and the independent reviewer signature is pending.",
+    "No code, scripts, migrations, gates or contract-schema changes."
+  ],
+  "unverified": [
+    "Real staging/production install/upgrade/rollback, real TLS, real PG backup/restore with RPO/RTO, real PG concurrency, CI/PG capacity, browser 1440/390 and production/customer acceptance are all not_run.",
+    "No waiver has been requested/approved; independent reviewer signature pending.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
