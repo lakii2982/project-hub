@@ -1,0 +1,18 @@
+{
+ "task_id": "PH-329",
+ "task": "PH-329",
+ "title": "PH-329 规划槽：补 PH-324 契约冻结夹具白名单",
+ "risk": "S",
+ "owner": "root",
+ "summary": "PH-324 在 CI 暴露第二层冻结：docs/v1.0-development/fixtures/fixture.json 的 contract_artifact_sha256 与 verification.json 也锁定 canonical 契约哈希。本槽把 fixtures 三件套加入 PH-324 allowed_paths，使其可在同一实现 PR 内合法更新冻结哈希；本槽同时为后续规划（PH-330 等）保留入口。",
+ "tests": [
+  {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":252} exit 0"},
+  {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Ran 23 tests OK"},
+  {"command": "python scripts/projectctl.py verify-change --base ab1845b --task PH-329", "result": "pass", "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — changed files inside BASE PH-329 allowed_paths."}
+ ],
+ "deviations": [
+  "PH-324 首轮 CI 失败：Preparation 夹具 test_v1_preparation 校验 docs/v1.0-development/fixtures/fixture.json 的 contract_artifact_sha256（canonical 文件哈希），该路径不在 PH-324 白名单。按 Lead 授权把 fixture.json / verification.json / check_fixture.py 加入 PH-324 allowed_paths；实现者在 PH-324 内只更新哈希与服务端夹具结构，不改业务断言。"
+ ],
+ "unverified": ["PH-324 未实现完成", "本槽 governance/docs-only，无浏览器/PG/生产证据"],
+ "review": {"required": true, "reviewer": null, "status": "pending", "findings": [], "verdict": null}
+}

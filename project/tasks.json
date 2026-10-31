@@ -10431,7 +10431,10 @@
         "docs/verification.md",
         "docs/v1.0-development/contracts/*",
         "docs/v1.0-development/promotion-draft/extension-freeze.json",
-        "project/specs/PH-324.md"
+        "project/specs/PH-324.md",
+        "docs/v1.0-development/fixtures/fixture.json",
+        "docs/v1.0-development/fixtures/verification.json",
+        "docs/v1.0-development/fixtures/check_fixture.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -10615,7 +10618,7 @@
     {
       "id": "PH-329",
       "title": "后续交付独立规划入口（接续 PH-328）",
-      "status": "ready",
+      "status": "in_review",
       "risk": "S",
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -10641,8 +10644,8 @@
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
-      "handoff": null,
-      "owner": null,
+      "handoff": "project/handoffs/PH-329.md",
+      "owner": "root",
       "kind": "docs",
       "priority": 3,
       "spec": "project/specs/PH-329.md",
