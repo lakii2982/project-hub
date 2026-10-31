@@ -1,0 +1,70 @@
+{
+  "task_id": "PH-334",
+  "summary": "批次 C-3 PostgreSQL 多连接并发汇总验收（执行由 PH-349 承担）：在 tests/test_v1_pg_concurrency.py 增加 PH-334 rollup 契约测试，调用 PH-349 CLI（--dsn/--out/--profile/--mode）验证无 PG DSN 时诚实 not_run/exit 2、SQLite DSN 被拒绝为并发证据（not_run/exit 2）、不把本地/SQLite 结果写成 pass；docs/engineering/pg-concurrency.md 追加 §5 PH-334 汇总验收，记录 V1-OPS-06 证据矩阵（L1+L2 契约通过；真实 PG 探针/业务级并发/CI L3 not_run；release_ready=false）。本地无 PG，真实并发以 CI/部署环境为准；未执行真实 PG 探针矩阵、业务级并发、RPO/RTO/容量/生产 L5。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=291; PH-334 in_review with owner/handoff; tests/test_v1_pg_concurrency.py and docs/engineering/pg-concurrency.md are inside the PH-334 whitelist."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0; known pre-existing W003/W342 warnings only, no errors."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 on BASE 5763f4a: Ran 1270 tests, FAILED (failures=5, errors=3, skipped=70) => 1192 passed. All 8 failures/errors are exactly the known macOS environment limits; the 70th skip is the pre-existing real-PG probe not_run, not a pass claim."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_pg_concurrency --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 16 tests, OK (skipped=1) => 15 contract tests pass + 1 real-PG probe skipped with explicit not_run. Adds PH-334 rollup tests: no-DSN not_run/exit2 with no pass checks, SQLite DSN rejected not_run."
+    },
+    {
+      "command": "python -m tests.test_v1_pg_concurrency --profile ci --out /tmp/ph334-nopg.json",
+      "result": "pass",
+      "evidence": "Actual run exit 2; envelope status=not_run, exit_code=2, notes='缺少 PostgreSQL DSN（PMO_PG_DSN/DATABASE_URL）；不以 SQLite 作为并发证据'. No concurrency pass claimed."
+    },
+    {
+      "command": "python -m tests.test_v1_pg_concurrency --dsn sqlite:///tmp/x.sqlite3 --out /tmp/ph334-sqlite.json",
+      "result": "pass",
+      "evidence": "Actual run exit 2; envelope status=not_run with SQLite-rejection note; SQLite is not accepted as concurrency evidence."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base f1eeac3 --task PH-334",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-334 allowed_paths (post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-334 PG-concurrency rollup reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROLLUP NOT REIMPLEMENTATION: the slice adds only PH-334 rollup contract tests in tests/test_v1_pg_concurrency.py and §5 evidence matrix in docs/engineering/pg-concurrency.md; it calls the existing PH-349 CLI (--dsn/--out/--profile/--mode) and does not copy or alter the probes. The no-DSN run returns exit 2/status not_run with no pass checks, the SQLite DSN run returns exit 2/not_run with an explicit SQLite-rejection note, and the real-PG probe remains skipped with an explicit not_run.",
+      "HONEST BOUNDARY: only L1+L2 local contract evidence is claimed; real PG probe matrix, PG version/connection counts, one-winner-one-rejection, business-level PG concurrency, CI L3, RPO/RTO, capacity and L5 production remain not_run; release_ready=false; SQLite/local results are never presented as concurrency correctness. The §5 matrix matches the code/CLI behavior.",
+      "CONTENT/GATES: no product code/migration/schema/CI-gate change; 7 changed files are within the PH-334 whitelist; no placeholders; task_count 291; check ok=291; manage.py check exit0; governance 23 OK; scoped pg-concurrency tests 16 OK (15 pass + 1 real-PG skip); full suite 1270/5F+3E/70 = known macOS baseline; verify-change --base 5763f4a --task PH-334 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 25d4701 (BASE 5763f4a) in /tmp/ph334-concurrency-rollup, worktree clean; 7 files within the PH-334 whitelist; no product code/migration/schema/gate change. PH-349 CLI reused (not reimplemented); no-DSN and SQLite-DSN both honest not_run/exit2 with no pass; real PG/business concurrency/CI L3/L5 not_run; release_ready=false; check ok=291; governance 23 OK; scoped 16 OK (15 pass +1 skip); full 1270/5F+3E/70 known baseline; verify-change only review gate, no path_out_of_scope."
+  },
+  "deviations": [
+    "This is a rollup acceptance slice only: the PG concurrency implementation/CLI remains PH-349 (done); PH-334 adds rollup contract tests and an evidence matrix, and does not reimplement probes.",
+    "No real PostgreSQL is available locally, so the PG probe is skipped with an explicit not_run and the CLI returns exit 2 for missing/SQLite DSN. SQLite or local contract tests are never presented as concurrency evidence.",
+    "Only L1 (code exists) + L2 (local contract tests) are produced; L3 CI/PG real probes, business-level PG concurrency, RPO/RTO/capacity and L5 production are not_run; release_ready=false.",
+    "No product code, migration, CI gate or contract-schema change is made; the added tests live in the whitelisted tests/test_v1_pg_concurrency.py and the rollup status is documented in docs/engineering/pg-concurrency.md.",
+    "Lead integration rebase (5763f4a -> f1eeac3) after PH-333/350 merged: verification/manifest merged; gates rerun."
+  ],
+  "unverified": [
+    "Real PostgreSQL probe matrix (V1-OPS-06.1–06.4), PG version/connection counts and one-winner-one-rejection evidence are not_run locally; CI/deployment must execute them.",
+    "Business-level PG concurrency (double approval, over-clearance, refund, allocation, opening balances, close, invoice reversal, FX snapshots) is not executed in this rollup.",
+    "L3 CI/PG, L4 browser, L5 production/customer acceptance, RPO/RTO and capacity baselines remain not_run.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD."
+  ]
+}

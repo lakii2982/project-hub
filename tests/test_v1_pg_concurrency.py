@@ -536,3 +536,30 @@ class PostgresConcurrencyProbeTests(TestCase):
 # unittest.skipUnless is evaluated at import time; the DSN check is repeated
 # inside setUpClass via the environment so a DSN exported after import still
 # works in CI shells.
+
+
+class PH334RollupAcceptanceTests(TestCase):
+    """PH-334 rollup: local evidence must be honest not_run, never SQLite pass."""
+
+    def test_rollup_no_pg_dsn_is_not_run_and_release_not_ready(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            out = os.path.join(tmp, 'evidence.json')
+            output = StringIO()
+            with redirect_stdout(output):
+                code = main(['--profile', 'ci', '--out', out])
+            self.assertEqual(code, EXIT_PREREQ)
+            envelope = json.loads(output.getvalue())
+            self.assertEqual(envelope['status'], 'not_run')
+            self.assertEqual(envelope['exit_code'], EXIT_PREREQ)
+            self.assertFalse(any(item.get('status') == 'pass' for item in envelope['checks']))
+            self.assertTrue(os.path.exists(out))
+
+    def test_rollup_sqlite_is_rejected_as_concurrency_evidence(self):
+        output = StringIO()
+        with redirect_stdout(output):
+            code = main(['--dsn', 'sqlite:///tmp/ph334.sqlite3', '--profile', 'ci'])
+        self.assertEqual(code, EXIT_PREREQ)
+        envelope = json.loads(output.getvalue())
+        self.assertEqual(envelope['status'], 'not_run')
+        self.assertIn('SQLite', envelope['notes'])
