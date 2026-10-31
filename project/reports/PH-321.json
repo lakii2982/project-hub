@@ -35,7 +35,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 9e0991f --task PH-321",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 18 files inside BASE PH-321 allowed_paths (independent review pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 18 files inside BASE PH-321 allowed_paths (review pass; post-rebase gate rerun)."
     }
   ],
   "review": {
@@ -54,7 +54,8 @@
     "FxRateSnapshot 已从 unmanaged 模型改为 contracts/models.py 真实 managed ORM；migration 0007 为正常 CreateModel + vendor-aware trigger，makemigrations 无变更、无 core 迁移。",
     "合同行写入只覆盖首次批准与变更生效的 ContractLine 级 currency/original/fx_rate_ref；付款/质保条款的原始币种持久化、合同配置 UI 的币种/原币输入未在本片接入（服务/API 已支持 lines 输入，UI 后续切片）。",
     "仅新增 contracts/0007_fxratesnapshot.py；未改已应用迁移/core 迁移。",
-    "PH-308 future-rate registration is supported by record_fx_rate (no future-date rejection); however conversion never uses a rate whose effective_on is later than the contract-line business date, and the exact-date resolver still does not fall back to another date. Read-only contract-line display applies the same effective-date rule to frozen refs."
+    "PH-308 future-rate registration is supported by record_fx_rate (no future-date rejection); however conversion never uses a rate whose effective_on is later than the contract-line business date, and the exact-date resolver still does not fall back to another date. Read-only contract-line display applies the same effective-date rule to frozen refs.",
+    "Lead integration: rebase onto 9e0991f (PH-317 merged); gates rerun green; manifest.active_handoff -> PH-321."
   ],
   "unverified": [
     "PostgreSQL 运行证据以 CI 为准；本机 SQLite vendor-aware trigger/迁移通过。",
