@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual run on BASE 15cf20c after state-machine fix: {\"command\":\"check\",\"ok\":true,\"task_count\":245}."
+      "evidence": "Final Lead integration rerun after rebase onto fa9725e: {\"command\":\"check\",\"ok\":true,\"task_count\":246} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -13,9 +13,9 @@
       "evidence": "Actual run after state-machine fix: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 15cf20c --task PH-306",
+      "command": "python scripts/projectctl.py verify-change --base fa9725e --task PH-306",
       "result": "pass",
-      "evidence": "Actual run after commit: only high_risk_review_required (review pending); no path_out_of_scope. Exact output recorded in handoff/Lead report."
+      "evidence": "Final Lead integration rerun after rebase onto fa9725e (PH-308 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-306 allowed_paths."
     }
   ],
   "review": {
@@ -33,7 +33,8 @@
     "reviewer round-1 blocker 修复：预算版本状态机补全 `rejected` 到枚举与合法迁移（draft→rejected 终态/必填 reason/保留审计/不生效不参与 as_of；approved→superseded 仅由新版本批准触发；superseded/rejected 不可回到 draft/approved），消除与“rejected 终止草稿”描述的不一致。",
     "任务描述原写“新增/更新预算与 ETC 契约（登记 ADR/契约文档）”；核对 BASE 15cf20c 后 PH-306 的 tasks.json allowed_paths 与 spec 精确白名单均不含 docs/adr/，且实际 ADR 叶为 0014。经 Lead 裁决（与 PH-308 相同）将契约冻结正文写入 project/specs/PH-306.md，不新增 docs/adr 文件，避免 path_out_of_scope。",
     "本片为 docs-only：无产品代码/模型/迁移/schema/路由/canonical 变更；未写 docs/delivery-status.md（不在白名单）。",
-    "PH-313 写侧实现仍 proposed；本片不解除任何 proposed，不预占 canonical topic/命令编号。"
+    "PH-313 写侧实现仍 proposed；本片不解除任何 proposed，不预占 canonical topic/命令编号。",
+    "Lead integration rebase (15cf20c -> fa9725e) after PH-293/299/300/308 merged: docs/verification.md kept main entries plus the PH-306 entry; manifest.active_handoff -> PH-306. Gates rerun green."
   ],
   "unverified": [
     "契约的写侧实现（PH-313）未实现/未测试；本片只冻结口径。",
