@@ -77,6 +77,9 @@ class CashTransaction(models.Model):
     transaction_date = models.DateField()
     direction = models.CharField(max_length=3)
     gross_cents = models.PositiveBigIntegerField()
+    currency = models.CharField(max_length=3, default='CNY', editable=False)
+    fx_rate_ref = models.JSONField(null=True, default=None)
+    original_gross_cents = models.PositiveBigIntegerField(null=True, default=None)
     external_source_key = models.CharField(max_length=200)
     payee = models.JSONField()
     # Deliberately no cross-owner FK: same-company existence/status is verified through
@@ -191,6 +194,8 @@ class CashReceipt(models.Model):
 class Refund(models.Model):
     """Append-only refund fact: posted incoming cash actually flowed back out."""
 
+    currency = models.CharField(max_length=3, default='CNY', editable=False)
+    fx_rate_ref = models.JSONField(null=True, default=None)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
                                      related_name='cash_refunds')
@@ -201,6 +206,7 @@ class Refund(models.Model):
     original_cash_ref = models.JSONField()
     refund_date = models.DateField()
     gross_cents = models.PositiveBigIntegerField()
+    original_gross_cents = models.BigIntegerField(null=True, default=None)
     reason = models.CharField(max_length=500)
     status = models.CharField(max_length=16, default='active')
     version = models.PositiveIntegerField(default=1)
@@ -235,6 +241,8 @@ class Refund(models.Model):
 class BankReturn(models.Model):
     """Append-only bank return fact: the original bank flow came back in reverse."""
 
+    currency = models.CharField(max_length=3, default='CNY', editable=False)
+    fx_rate_ref = models.JSONField(null=True, default=None)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
                                      related_name='cash_bank_returns')
@@ -245,6 +253,7 @@ class BankReturn(models.Model):
     original_cash_ref = models.JSONField()
     return_date = models.DateField()
     gross_cents = models.PositiveBigIntegerField()
+    original_gross_cents = models.BigIntegerField(null=True, default=None)
     status = models.CharField(max_length=16, default='active')
     version = models.PositiveIntegerField(default=1)
     created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')

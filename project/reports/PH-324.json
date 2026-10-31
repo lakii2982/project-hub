@@ -1,0 +1,88 @@
+{
+  "task_id": "PH-324",
+  "summary": "Extended the canonical preparation contracts for multi-currency facts per PH-308 §9A and materialized the agreed subset in Django models, without implementing business write paths or changing applied migrations. Canonical: CurrencyCode (ISO 4217), OriginalCents/OriginalSignedCents, Money.currency; optional currency/original_*_cents/fx_rate_ref on Invoice, InvoiceLine, InvoiceAllocation, InvoiceReversal, ContractLine, PaymentTerm, WarrantyTerm, ContractChange, Settlement, OpenItem, RevenueRecognition, RevenueAdjustment, TaxQualification, CashTransaction, Refund, BankReturn; matching optional fields in write DTOs and the invoicing.invoice.record/v1 payload; README freezes CNY-compat, non-CNY rejection until PH-321 and no historical recomputation. Model layer (whitelisted contracts/settlement/management_revenue/cash): currency (CNY default, non-editable), nullable original_*_cents and nullable JSON fx_rate_ref on ContractLine/PaymentTerm/WarrantyTerm/ContractChange, Settlement/OpenItem, RevenueRecognition/RevenueAdjustment and CashTransaction/Refund/BankReturn; new migrations use SeparateDatabaseAndState with raw ADD COLUMN (avoiding SQLite trigger-breaking table rebuilds) and a real RunPython backfill that sets original_*_cents from the existing *_cents for CNY rows while leaving non-CNY rows untouched. BankCharge was intentionally removed from this slice's canonical target (its model/migration is not in the PH-324 whitelist) and is deferred to PH-321/后续 costing slice. Tests cover model/schema consistency, fx_rate_ref nullability, migration AddField CNY defaults, JSON/JSONB ADD COLUMN behavior and the actual backfill SQL semantics on CNY vs USD rows. The branch is rebased to the corrected BASE 094f61e; verify-change reports only the review gate. Post-review integration layer: the preparation fixture's contract_artifact_sha256 values for commands/contract-bundle/entities/write-dtos were refreshed to the new canonical hashes (fixture.json is whitelisted by the PH-329 BASE correction); check_fixture.py now passes (99 positive/8 negative samples, 92 sources, 18 UAT sequences, 137 requirements, errors=[]). verification.json's input_sha256 only binds build/seed/verify legacy scripts and did not change.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run at final HEAD 0f36d91 (BASE e05adee): {\"command\":\"check\",\"ok\":true,\"task_count\":253}, exit 0."
+    },
+    {
+      "command": ".agent-venv/bin/python -B docs/v1.0-development/contracts/validate_contracts.py",
+      "result": "pass",
+      "evidence": "Actual run: {\"result\":\"pass\",\"kind\":\"offline_preparation_schema_only\",\"schemas\":9,\"resolved_refs\":3085,\"requirements\":137,\"commands\":71,\"queries\":25,\"events\":47,...} exit 0."
+    },
+    {
+      "command": ".agent-venv/bin/python -B docs/v1.0-development/contracts/check_contract_cases.py",
+      "result": "pass",
+      "evidence": "Actual run: {\"result\":\"pass\",\"kind\":\"schema_examples_only\",\"positive_examples\":19,\"rejected_examples\":37,...} exit 0."
+    },
+    {
+      "command": ".agent-venv/bin/python -B docs/v1.0-development/fixtures/check_fixture.py",
+      "result": "pass",
+      "evidence": "Actual run after refreshing the four contract_artifact_sha256 values: {\"result\":\"pass\",\"kind\":\"fixture_structure_hash_arithmetic_and_schema_only\",\"positive_schema_samples\":99,\"negative_schema_samples\":8,\"sources\":92,\"uat_sequences\":18,\"requirements\":137,\"errors\":[]}; the extended schemas still accept all positive samples."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run: System check identified 94 issues (0 silenced) — pre-existing warnings, 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: No changes detected."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_currency_schema tests.test_v1_currency_backfill --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 7 tests ... OK (model/default/editable/nullable, fx_rate_ref model+canonical, CNY AddField, JSON/JSONB ADD COLUMN, real backfill SQL CNY-vs-USD)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run at final HEAD (BASE e05adee): Ran 1132 tests in ~169s, FAILED (failures=5, errors=3, skipped=69) — exactly the known macOS/DRF environment set; no new failure."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Fresh DB at final HEAD: migrate --noinput then verify_integrity --json -> {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base e05adee --task PH-324",
+      "result": "pass",
+      "evidence": "Post-review actual run at final HEAD 0f36d91 (BASE e05adee): {\"command\":\"verify-change\",\"ok\":true,\"head\":\"0f36d913bb0ebdb9c5f2f0896e65e9be1d83b1d8\",\"count\":30,\"errors\":null}, exit 0; all 30 changed files inside BASE PH-324 allowed_paths and review.status=pass with reviewer-b."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "VERIFIED - the three round-1/round-2 blockers are fixed at HEAD f48ac38 (BASE 094f61e): (1) 11 whitelisted target models now carry nullable `fx_rate_ref = JSONField(null=True)` (ContractLine/PaymentTerm/WarrantyTerm/ContractChange, Settlement/OpenItem, RevenueRecognition/RevenueAdjustment, CashTransaction/Refund/BankReturn) with a JSON/JSONB `ADD COLUMN` RunPython migration per plugin, and `test_v1_currency_schema.py` cross-checks the model field plus the canonical `./contract-bundle.schema.json#/$defs/SourceRef` reference; (2) BankCharge is removed from the PH-324 canonical target and README/spec, explicitly deferred to PH-321/后续 costing slice, so no un-materialized canonical field is advertised; (3) the backfill is a real `RunPython` UPDATE `original_* = *_cents WHERE currency='CNY' AND original_* IS NULL` (non-CNY rows untouched), and `test_v1_currency_backfill.py` executes the generated SQL against temp CNY/USD rows, asserting CNY=100 and USD NULL; (4) report verify-change entry is recorded for the rebased branch. Independent runs: validate_contracts pass (9 schemas/3085 refs), check_contract_cases 19 positive/37 rejected, manage.py check 94 pre-existing warnings/0 errors, makemigrations --check no changes, scoped 7 tests OK, full suite 1132 tests = 5F+3E+69 known baseline, check ok=250, governance 23 OK, verify-change --base 094f61e --task PH-324 only high_risk_review_required (no path/acceptance errors); 29 files all inside BASE PH-324 allowed_paths; no placeholders.",
+      "NON-BLOCKING (record for PH-321/follow-up): canonical ContractLine still declares `original_cap_cents` (its base `cap_cents` is a pre-existing canonical-only property; the Django ContractLine model has only net/tax/gross and this slice adds no cap/original_cap model field, migration, backfill or schema-test entry). It is therefore the same 'canonical field not materialized' class as the removed BankCharge field; either add `cap_cents`/`original_cap_cents` model+migration in the costing/contracts follow-up (PH-321 or planning slot) and state it, or narrow the report wording 'original_*_cents on all whitelisted target models' so original_cap_cents is explicitly canonical-only/legacy. Not a gate failure because the model contract only freezes the 11 materialized target models, but it should not be left implicit.",
+      "NON-BLOCKING (report finalization): the report's verify-change test entry still records `python scripts/projectctl.py verify-change --base 5a86124 --task PH-324`, but the rebased branch's BASE is 094f61e (the old base would now report path_out_of_scope for the PH-313 merge files); after this pass is committed, record the real post-review run with `--base 094f61e` and result=pass (current pre-review entry is correctly `not_run`)."
+    ],
+    "evidence": "VERDICT: PASS - no blocker. Reviewed HEAD f48ac38 (BASE 094f61e) in /tmp/ph324-currency-contract, worktree clean; 29 changed files all inside the BASE PH-324 allowlist (contracts schemas/freeze/README/verification, 4 plugin model+migration groups, 2 currency tests, report/handoff/tasks/manifest/spec). Fixes verified: fx_rate_ref materialized on 11 models + JSON/JSONB ADD COLUMN migrations, canonical/schema cross-checks, BankCharge removed from the canonical target and deferred to PH-321/costing, real CNY original-amount backfill with executed-SQL CNY-vs-USD assertions. Independent runs: validate_contracts pass (3085 refs), check_contract_cases pass (19/37), manage.py check 94 warnings/0 errors, makemigrations --check clean, projectctl check ok=250, governance 23 tests OK, scoped 7 tests OK, full suite 1132/5F+3E/69 (known macOS/DRF baseline, no new failures), verify-change --base 094f61e --task PH-324 only high_risk_review_required (no path/acceptance errors). Two non-blocking notes: ContractLine original_cap_cents remains canonical-only (pre-existing cap_cents has no model), and the report's verify-change test entry must be updated from the stale 5a86124 base to 094f61e when recording the post-review pass."
+  },
+  "deviations": [
+    "Review-blocker fixes (old->new): (1) fx_rate_ref is now materialized as a nullable JSONField on all whitelisted target models plus JSON/JSONB ADD COLUMN migrations and canonical cross-check tests; (2) BankCharge was removed from PH-324's canonical target and README/spec (costing model/migration is outside the task whitelist) and explicitly deferred to PH-321/costing follow-up; (3) a real RunPython backfill now populates original_*_cents from existing *_cents for CNY rows (leaving non-CNY rows NULL), tested by executing the generated UPDATE SQL against CNY and USD sample rows rather than only grepping migration text.",
+    "The additive canonical extension is backward-compatible (new optional fields; legacy CNY documents validate), so no breaking canonical version bump was made; freeze canonical hashes were updated only for modified files, as the contract process requires.",
+    "BankCharge is intentionally out of scope for the materialized model layer: PH-324's BASE whitelist covers contracts/settlement/management_revenue/cash models only; the canonical schema no longer advertises fields the slice does not materialize, and README/spec record the PH-321/costing follow-up.",
+    "No business write side: services, views, runtime conversion and non-CNY acceptance remain PH-321; schema/model pass does not claim runtime multi-currency.",
+    "Cross-whitelist: PH-328 merged as BASE 094f61e added promotion-draft/extension-freeze.json and project/specs/PH-324.md; the branch is rebased and verify-change now reports only the review gate.",
+    "Lead integration rebase (094f61e -> ab1845b) after PH-328 planning PR merged: docs/verification.md kept main entries plus the PH-324 entry; manifest.active_handoff -> PH-324. Gates rerun green.",
+    "Fixture freeze refresh (post-review integration): fixture.json's contract_artifact_sha256 for commands.schema.json/contract-bundle.schema.json/entities.schema.json/write-dtos.schema.json were updated to the new canonical hashes; no business assertions or fixture scenario values were changed, and verification.json needed no change because its input_sha256 only binds build_legacy/seed_legacy/verify_legacy scripts. This requires the PH-329 fixture whitelist BASE; final verify-change must run after that BASE merges and this branch is rebased.",
+    "Final BASE e05adee (PH-329 merged) contains the fixture whitelist; the branch was rebased with only PH-324 commits (no PH-329 planning commits carried) and all acceptance commands plus validate/check_fixture were re-run at the final HEAD."
+  ],
+  "unverified": [
+    "No service/model/migration/runtime support for multi-currency exists; PH-321 must implement FX snapshots, conversion and non-CNY write rejection.",
+    "PostgreSQL/CI behavior of the future additive migrations is not verified here; this slice changes only preparation JSON schemas and freeze hashes.",
+    "The PH-328 whitelist-correction BASE does not exist yet; final verify-change must be re-run after rebase.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}

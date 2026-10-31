@@ -10401,7 +10401,7 @@
       "title": "canonical 币种字段/类型扩展与迁移计划（多币种事实前置）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10443,9 +10443,9 @@
         "python manage.py test tests.test_v1_currency_schema tests.test_v1_currency_backfill --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-docs",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-324.md"
     },
     {
       "id": "PH-325",

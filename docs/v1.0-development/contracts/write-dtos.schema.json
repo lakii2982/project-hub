@@ -448,6 +448,21 @@
         },
         "pricing_configuration": {
           "$ref": "./contract-bundle.schema.json#/$defs/PricingConfiguration"
+        },
+        "currency": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CurrencyCode"
+        },
+        "original_gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "fx_rate_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
         }
       },
       "x-contract-status-enum": [
@@ -2097,6 +2112,15 @@
         },
         "payee": {
           "$ref": "./contract-bundle.schema.json#/$defs/BankPayeeRef"
+        },
+        "currency": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CurrencyCode"
+        },
+        "original_gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "fx_rate_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
         }
       },
       "x-contract-status-enum": [
@@ -2368,6 +2392,21 @@
         },
         "invoice_date": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "currency": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CurrencyCode"
+        },
+        "original_gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "fx_rate_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
         }
       },
       "x-contract-status-enum": [
@@ -2406,6 +2445,21 @@
         },
         "tax_cents": {
           "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "currency": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CurrencyCode"
+        },
+        "original_gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "fx_rate_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
         }
       },
       "x-contract-status-enum": [
@@ -2443,6 +2497,21 @@
         },
         "tax_cents": {
           "$ref": "./contract-bundle.schema.json#/$defs/CnyCents"
+        },
+        "currency": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CurrencyCode"
+        },
+        "original_gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "fx_rate_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
         }
       },
       "x-contract-status-enum": [
@@ -2487,6 +2556,21 @@
         },
         "reversal_date": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessDate"
+        },
+        "currency": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CurrencyCode"
+        },
+        "original_gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalSignedCents"
+        },
+        "original_net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalSignedCents"
+        },
+        "original_tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalSignedCents"
+        },
+        "fx_rate_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
         }
       },
       "x-contract-status-enum": [
@@ -4177,6 +4261,21 @@
         },
         "scope": {
           "$ref": "./contract-bundle.schema.json#/$defs/BusinessScope"
+        },
+        "currency": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CurrencyCode"
+        },
+        "original_gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "fx_rate_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
         }
       },
       "required": [
@@ -4989,6 +5088,21 @@
           "items": {
             "$ref": "./write-dtos.schema.json#/$defs/InvoiceAllocationInput"
           }
+        },
+        "currency": {
+          "$ref": "./contract-bundle.schema.json#/$defs/CurrencyCode"
+        },
+        "original_gross_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_net_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "original_tax_cents": {
+          "$ref": "./contract-bundle.schema.json#/$defs/OriginalCents"
+        },
+        "fx_rate_ref": {
+          "$ref": "./contract-bundle.schema.json#/$defs/SourceRef"
         }
       }
     },

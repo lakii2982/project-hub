@@ -58,6 +58,24 @@
       "minimum": -1000000000000,
       "maximum": 1000000000000
     },
+    "CurrencyCode": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 alphabetic currency code. Legacy facts and v1 default are CNY; non-CNY use requires PH-324 extension and PH-321 implementation.",
+      "x-contract-rule": "No free-text currencies, no inferred codes; currency is frozen into the business fact."
+    },
+    "OriginalCents": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000000000,
+      "description": "Original-currency minor units (PH-324); JSON number must be integer, not float/bool."
+    },
+    "OriginalSignedCents": {
+      "type": "integer",
+      "minimum": -1000000000000,
+      "maximum": 1000000000000,
+      "description": "Signed original-currency minor units for reversals (PH-324); integer only."
+    },
     "Minutes": {
       "type": "integer",
       "minimum": 1,
@@ -84,13 +102,13 @@
       ],
       "properties": {
         "currency": {
-          "const": "CNY"
+          "$ref": "#/$defs/CurrencyCode"
         },
         "amount_cents": {
           "$ref": "#/$defs/SignedCnyCents"
         }
       },
-      "x-contract-rule": "all v1 entities use CNY; no float or yuan input"
+      "x-contract-rule": "amount_cents is the minor-unit amount in the declared ISO 4217 currency; legacy CNY facts remain valid, no float or yuan input"
     },
     "PolicyVersion": {
       "type": "object",

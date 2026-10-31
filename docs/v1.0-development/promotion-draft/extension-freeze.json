@@ -4,17 +4,17 @@
   "patch_entries": 201,
   "canonical_sha256": {
     "requirements-coverage.json": "72e9192317e258a11a91ee3b66527e1d6a10c481d1ae9b9ce140e012160abf2e",
-    "write-dtos.schema.json": "e054b4928848a67149d94fb3988cbf0c3d39b3427c2271c4b65e77f98648a4e8",
+    "write-dtos.schema.json": "6a895be65c2bb35c16455d193fc07b80a2d678926b1f10749fe0c68faa0d2739",
     "queries.schema.json": "50245c71bbff40c5afcced62446f5762afba8ab53e54909a3751a534e4dd4442",
     "events.schema.json": "d359377d0e4035531fa83479fa08e331956c2ad7a71564e2403b7fca94547e58",
     "catalog-completeness.schema.json": "61ac045f1d772ae9089816bedcfe345afcd98f93547182ee506c833d39674884",
-    "entities.schema.json": "5fad4d94cbd66367b727e98b6eb67db0f08a030e7d29f9e3a9405a3f3b13d100",
+    "entities.schema.json": "ebd29ded998d1ef0f3c334bd9bb0d422c28a09763d59942ff8c03f87a265f814",
     "query-results.schema.json": "5b698c58b36b32af7f5e1ec5559983ee1e540fd967bb9005135543d93396485d",
     "contract-catalog.json": "6b7882b5a652cf2329545958bce865db70810ffd06f78ef9bec74b34b9b311da",
     "relationships.json": "2e47454ebeed0b611035cf151ae14803afc3ac3f95685cf8db7b729d78556424",
     "source-registry.json": "97ebe78f937a7f7d05a1aa9c9788f5581f5b4c519b39e65afd616abf0720306a",
-    "contract-bundle.schema.json": "6046e83646633ddb972d7cc81cdc6c1c4b0c1845d5abc80ca094403d21c9fda5",
-    "commands.schema.json": "30ee34fa42d2223b3b71877e100268d0764bf611641f24dd13f7092555ab9b3d",
+    "contract-bundle.schema.json": "fe71427175dc6dfc4951b5446a9ed4393963db23a9eff9aed03dea5d516dce05",
+    "commands.schema.json": "ce712663876c4c75f7858b0965b0ef9f28e7928d025113341f0759ca86c6c3c6",
     "command-results.schema.json": "aac4931f1eebcf4f3a47df52feb6d624b2667eead6002ef6532c826eb5dc584e"
   },
   "input_sha256": {

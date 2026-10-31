@@ -789,3 +789,8 @@ BASE 094f61e，docs/governance-only：关闭 PH-328 槽并完成三处规划修�
 ## PH-329 规划槽：PH-324 冻结夹具白名单（2026-10-31）
 
 BASE ab1845b，docs/governance-only：PH-324 CI 的 Preparation 域用 `docs/v1.0-development/fixtures/fixture.json` 的 `contract_artifact_sha256` 锁定 canonical 契约哈希；本槽把该文件（仅此一条）加入 PH-324 `allowed_paths`，使 PH-324 可合法同步冻结哈希；不追加 `verification.json`/`check_fixture.py`（不含 canonical 哈希、不被 Preparation 锁定）。完整规划复核转入 PH-331（ready）。实际执行：`projectctl check` ok=true/task_count=253；`python -m unittest tests.test_projectctl tests.test_governance -v` 23 tests OK；verify-change pre-review 仅 review 门禁、无 path。无代码/迁移/UI 变更。
+
+
+## PH-324 canonical 币种扩展（多币种事实前置，contract+model additive）（2026-10-31）
+
+基线 PH-329 白名单修正（fixtures 纳入）。contract+model additive，无业务写侧、不改已应用迁移。canonical：CurrencyCode/OriginalCents/OriginalSignedCents、Money.currency、目标实体与 DTO/命令可选 currency/original_*_cents/fx_rate_ref；BankCharge 不在本任务白名单，canonical 不提前声明、由 PH-321/后续 costing 承接。模型：11 个目标模型 currency（CNY 默认/editable=False）、可空 original_*_cents、可空 JSON fx_rate_ref；迁移 SeparateDatabaseAndState + 原生 ADD COLUMN，RunPython 真实回填 CNY 行 original=既有 *_cents。fixtures：更新 `fixtures/fixture.json` 的 contract_artifact_sha256（4 文件），`check_fixture.py` 与 validate_contracts 均 pass；verification.json 的 input_sha256 仅绑定 build/seed/verify 脚本，未改。最终 BASE e05adee（PH-329 合入，fixtures 白名单生效），HEAD 0f36d91：validate 3085 refs pass；check_fixture pass（99/8/92/18/137，errors=[]）；manage.py check 94 既有 warning/0 error；makemigrations 无变更；scoped currency 7 tests OK；全量 1132 tests=5F+3E+69（既有基线无新增）；新库 verify_integrity ok；projectctl check ok/task_count=253；23 项治理 OK；verify-change --base e05adee --task PH-324 ok=true、30 文件全白名单、无 errors。未验证：PH-321 写侧/运行时多币种；PG 交 CI。
