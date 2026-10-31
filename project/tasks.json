@@ -9558,7 +9558,7 @@
       "title": "修复 PH-291 运营核对总览 HTTP 测试的随机 CSRF 误匹配（test-only）",
       "kind": "fix",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9579,7 +9579,7 @@
         "python manage.py test tests.test_v1_ops_reconciliation_overview --verbosity 1"
       ],
       "github_issue": null,
-      "owner": "worker-docs",
+      "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-303.md"
     },

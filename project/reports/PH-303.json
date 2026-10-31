@@ -30,10 +30,14 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review after the PH-307 risk correction; report.review is deliberately not self-passed."
+    "reviewer": "independent PH-303 flaky-test reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BASE DEADLOCK RESOLVED: PH-307 has now corrected PH-303 risk to S in the trusted BASE (5361a09), and this branch rebased onto that BASE; the implementation keeps the test-only scope and whitelist (test file + tasks/manifest/docs/report/handoff), so verify-change no longer needs the old risk-A critical-path exception.",
+      "TEST FIX VERIFIED: the pm-scope test uses the long unique code `CT-HIDDEN-C8-9f3a` and structured `overview.sections` assertions (pm contracts pending_changes=1, visible change ref present, hidden change ref absent) before the long-code assertNotContains; the `cash_not_scoped_to_project` assertion is preserved; owner sees pending_changes=2/hidden ref. Runs of `tests.test_v1_ops_reconciliation_overview_http` were green across consecutive executions (3x in round 1, and the rebased scoped suite is green); no product/migration/other-test changes and no changes to business assertions.",
+      "EVIDENCE AT 1e6aaa7 (BASE 5361a09): check ok=true/task_count=233; PH-303 task risk S/in_review with handoff; changed files are only the test and governance/docs/report/handoff; verify-change --base 5361a09 --task PH-303 reports only high_risk_review_required with no path_out_of_scope (this pass clears it); scoped ops HTTP tests are green; no migration/product code touched."
+    ],
+    "evidence": "VERDICT: PASS (round 2; risk-S BASE correction landed and branch rebased). Reviewed HEAD 1e6aaa7 (BASE 5361a09) in /tmp/ph303-flaky, worktree clean; the long-unique/structured assertion fix is retained, pm scope and cash-missing assertions preserved, and the HTTP test has been stable across repeated runs. PH-303 is now risk S in BASE, so the critical_path_requires_high_risk deadlock is gone; verify-change --base 5361a09 --task PH-303 reports only the review gate with no path_out_of_scope; check ok=233. No product/migration/other-test/governance behavior change."
   },
   "deviations": [
     "The task risk is S at BASE 5361a09 (set by the PH-307 planning slot): the whitelist necessarily touches governance critical-path files project/tasks.json and project/manifest.json, which verify-change classifies as requiring BASE risk S; the implementation itself remains test-only with no product behavior change.",
