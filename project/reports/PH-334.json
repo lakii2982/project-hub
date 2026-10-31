@@ -38,9 +38,9 @@
       "evidence": "Actual run exit 2; envelope status=not_run with SQLite-rejection note; SQLite is not accepted as concurrency evidence."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 5763f4a --task PH-334",
+      "command": "python scripts/projectctl.py verify-change --base f1eeac3 --task PH-334",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-334 allowed_paths (review pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-334 allowed_paths (post-rebase rerun)."
     }
   ],
   "review": {
@@ -58,7 +58,8 @@
     "This is a rollup acceptance slice only: the PG concurrency implementation/CLI remains PH-349 (done); PH-334 adds rollup contract tests and an evidence matrix, and does not reimplement probes.",
     "No real PostgreSQL is available locally, so the PG probe is skipped with an explicit not_run and the CLI returns exit 2 for missing/SQLite DSN. SQLite or local contract tests are never presented as concurrency evidence.",
     "Only L1 (code exists) + L2 (local contract tests) are produced; L3 CI/PG real probes, business-level PG concurrency, RPO/RTO/capacity and L5 production are not_run; release_ready=false.",
-    "No product code, migration, CI gate or contract-schema change is made; the added tests live in the whitelisted tests/test_v1_pg_concurrency.py and the rollup status is documented in docs/engineering/pg-concurrency.md."
+    "No product code, migration, CI gate or contract-schema change is made; the added tests live in the whitelisted tests/test_v1_pg_concurrency.py and the rollup status is documented in docs/engineering/pg-concurrency.md.",
+    "Lead integration rebase (5763f4a -> f1eeac3) after PH-333/350 merged: verification/manifest merged; gates rerun."
   ],
   "unverified": [
     "Real PostgreSQL probe matrix (V1-OPS-06.1–06.4), PG version/connection counts and one-winner-one-rejection evidence are not_run locally; CI/deployment must execute them.",
