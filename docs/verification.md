@@ -798,3 +798,12 @@ BASE ab1845b，docs/governance-only：PH-324 CI 的 Preparation 域用 `docs/v1.
 ## PH-252 发票实现首片（invoicing 插件，按 ADR 0015）（2026-10-31）
 
 基线ab1845b（rebase后）。新建pmo_plugins/invoicing插件（manifest 8字段、requires contracts/settlement（按ADR 0010收敛）、default_enabled=True、自有迁移0001_initial、domain_metadata canonical路由、delivery urls root单写绑定）。模型Invoice/InvoiceLine/InvoiceAllocation/InvoiceReversal/TaxQualification + vendor-aware append-only触发器（PG函数+SQLite触发器；仅Invoice允许active→reversed状态位，其余UPDATE/DELETE拒绝；TaxQualification亦装守卫）。服务record_invoice/allocate_invoice_lines/reverse_invoice：公司锁、request_token审计收据幂等、期间/锁期、整数分gross=net+tax、行合计=头、分配合计=行、业务来源（合同批准明细/结算未清项/结算）同org/同往来方/额度只读派生、逐行/逐分配红冲校验（归属本票、不超剩余、行/分配合计一致）、部分红冲保active、全额→reversed、append-only负值冲销、红票≠退款；不写收入/现金/账本/未清。浏览器列表/详情/登记/分配/红冲表单走具名服务；verify_integrity新增发票分支（头行合计、分配守恒与来源、行/分配冲销合计交叉核对、红冲signed/状态机、规范事件、无财务事件/来源消费）并有坏发票头/坏reversal明细探针；generic audit + recorded/lines_allocated/reversed canonical events。偏差：红冲按Lead任务+ADR 0015实现；request_token收据存AuditEvent payload不新增表；分配首片仅sales合同明细/结算未清项/结算；TaxQualification仅模型无确认写服务；无core迁移。按规划白名单对16个受依赖守卫影响的测试文件做最小顺序同步（停用contracts/settlement前先停用invoicing，不改业务断言）。实际执行（最终HEAD）：projectctl check ok=true/task_count=253；manage.py check exit0（既有W003/W342、0错误）；makemigrations无变更；全量1143项=1066 pass+69 skip+8项既有macOS失败（BASE ab1845b 1128+18新测试，无新增失败类）；verify_integrity全新迁移库ok=true+坏发票头/坏reversal探针CommandError；scoped 18项全通过；verify-change --base ab1845b --task PH-252 ok=true。未验证：浏览器1440/390、独立S复核终审、PG触发器/真并发（SQLite不宣称生产并发正确）、生产/UAT、旧库升级；税额资格确认/采购侧来源/抵扣申报/电子发票/PDF邮件/多币种/批量导入/发票-现金收入绑定未实现。
+
+## PH-331 下一规划槽：依赖再基线 + 批次 C 登记（2026-10-31）
+
+基线 c69c8ee（PH-324 合入后；注册后 count 258）。纯规划/契约文字片：
+1. **晋级 2 项（依赖全 done）**：PH-321 多币种实现（deps PH-308/324/214/224/232/287 done）、PH-322 关期/结项实现（deps PH-299/300/312/291/283/288/280/281/284/287/309 done）。
+2. **保持 proposed（精确 blocker）**：PH-320/317/325 等 PH-252 done；PH-318/326 等 PH-321 done；PH-330/327 等 PH-322 done；PH-314 等 PH-301/310/285/179/183；无虚假晋级。
+3. **批次 C 登记**：PH-332 M01–M15 验收矩阵/runbook 骨架（ready，deps done，docs-only）、PH-333 M15 部署/升级/备份恢复演练、PH-334 PG 多连接并发验收、PH-335 健康/容量/性能基线（均 proposed，精确 blocker）、PH-336 下一规划槽（proposed，待 PH-331 done）。count 253→258，编号 332-336 连续。
+4. **路线**：ROADMAP 新增批次 C 路线与 M01–M15 映射/顺序（PH-332→333→334→335）。
+5. 无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：晋级/blockers/批次 C 登记/编号事实核对通过）；最终证据 HEAD 521943a 按槽惯例置 PH-331 done / PH-336 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=258；23 项治理 OK；verify-change --base c69c8ee --task PH-331 ok=true、20 文件全白名单、无 errors。未验证：PH-321/322 未实现；批次 C 演练/部署/并发/性能未执行。

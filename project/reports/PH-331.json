@@ -1,0 +1,51 @@
+{
+  "task_id": "PH-331",
+  "summary": "Consumed the PH-331 planning slot on main c69c8ee (PH-324 merged; 258 tasks after registration) and re-baselined the remaining batch B/C dependencies. Two slices were promoted to ready with all-done dependencies: PH-321 FX implementation (deps PH-308/PH-324/PH-214/PH-224/PH-232/PH-287 all done) and PH-322 close/project-close implementation (deps PH-299/PH-300/PH-312/PH-291/PH-283/PH-288/PH-280/PH-281/PH-284/PH-287/PH-309 all done). Slices whose missing capability is not delivered stay proposed with precise blockers: PH-320/PH-317/PH-325 wait on PH-252 (ready, not yet merged), PH-318/PH-326 on PH-321, PH-330/PH-327 on PH-322, PH-314 on the undelivered notification/export-archive capabilities. Batch C (M01–M15 acceptance/ops/deploy/recovery/perf) was registered continuously as PH-332 (M01–M15 acceptance matrix + runbook skeleton, docs-only, ready because its deps are done), PH-333 (M15 deploy/upgrade/backup-recovery drills), PH-334 (PostgreSQL multi-connection concurrency acceptance), PH-335 (health/capacity/backlog visibility + performance baseline) and PH-336 (next planning slot). ROADMAP gained the batch C route with the M01–M15 mapping and dependency table. No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run (reviewed HEAD 32f2938, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":258}, exit 0; PH-331 done with handoff and PH-336 ready on PH-331 done."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph331-planning on main c69c8ee with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 987ec1e --task PH-331",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 20 files inside BASE PH-331 allowed_paths (post-rebase gate rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "PROMOTION EVIDENCE VERIFIED at BASE c69c8ee: PH-321 (deps PH-308/PH-324/PH-214/PH-224/PH-232/PH-287 all done) and PH-322 (deps PH-299/PH-300/PH-312/PH-291/PH-283/PH-288/PH-280/PH-281/PH-284/PH-287/PH-309 all done) are the only new ready implementation slices; PH-332 (docs-only M01-M15 acceptance matrix/runbook skeleton) deps PH-324/312/313/291/304/309/316 are all done. No promoted task has a non-done dependency; spec risk/dependency sections were updated old->new; no implementation is claimed delivered.",
+      "NO FALSE PROMOTION: PH-317/318/320/325 wait on ready-not-done PH-252, PH-318/326 on ready-not-done PH-321, PH-327/330 on ready-not-done PH-322, PH-314 on undelivered notification/export capabilities; PH-333/334 wait on PH-322/321/252/330 and PH-335 on PH-333/334; blockers are precise and match the intended DoR. PH-332..PH-336 are continuous (BASE max PH-331, count 253->258), have complete DoR/whitelists/acceptance/counterexamples, no code/migration/schema, and PH-331 is done / PH-336 ready at the final HEAD.",
+      "BATCH C / ROADMAP VERIFIED: ROADMAP adds the batch-C route with all 15 M01-M15 items and the PH-332->333->334->335 dependency table consistent with tasks (PH-332 deps done/ready, 333/334 proposed on 322/321/252/330, 335 on 333/334, 336 next slot); PH-332's whitelist equals its task allowed_paths (8) and it will produce docs/v1.0-development/batch-c-acceptance.md; PH-333/334/335 whitelists equal their task allowed_paths (9/7/8) and their acceptance commands are executable.",
+      "REQUIRED dependency re-baseline sync for the remaining proposed slices (non-blocking to this planning slot, hand to PH-336): PH-318's spec/blocker says it waits on PH-321 but its `depends_on` still lacks PH-321 (and still lists legacy PH-150/PH-155); PH-317's `depends_on` still lists legacy PH-150/PH-155 even though the spec records their contract boundaries as covered by done PH-214/224/232/287 and only PH-252 is missing. Update depends_on/blockers in the next slot so readiness is not permanently blocked by stale legacy ids and the re-baselined rationale is enforceable.",
+      "MINOR evidence hygiene: the final report/handoff/verification text still describes PH-336 as proposed and cites pre-final HEADs (32f2938/521943a/d9f9214), while the final HEAD 15a0ad4 sets PH-331 done/PH-336 ready; record the final HEAD/verification evidence after the slot-close commit (verify-change --base c69c8ee --task PH-331 is ok=true at 15a0ad4).",
+      "OTHER CONTENT CHECKED: 20 changed files all inside BASE PH-331 allowed paths (9 spec updates, 5 new specs, tasks, manifest, verification, ROADMAP, report/handoff); PH-321/322/317/318/320/325/326/327/330 spec risk sections updated; PH-330 header reflects PH-322 ready; no placeholders; projectctl check ok=true/task_count=258; governance 23 tests OK; verify-change --base c69c8ee --task PH-331 ok=true (head 15a0ad4, 20 files, errors=[])."
+    ],
+    "evidence": "VERDICT: PASS - the promotions (PH-321/PH-322/PH-332) all have only done BASE dependencies, batch C (PH-332..336) is continuous and complete, ROADMAP M01-M15/dependency table matches tasks, no false promotion, and the gates pass. Reviewed final HEAD 15a0ad4 (BASE c69c8ee; the briefed 32f2938 was advanced by 521943a/15a0ad4 which recorded the prior review pass and closed the slot); worktree clean; 20 files all inside the PH-331 allowlist; no code/migration/schema changes; no placeholders. Independent runs: projectctl check ok=true/task_count=258; governance 23 tests OK; verify-change --base c69c8ee --task PH-331 ok=true (head 15a0ad4, 20 files, errors=[]). Required follow-up (not blocking): sync PH-317/PH-318 depends_on to the re-baselined deps (PH-318 add PH-321; PH-317 drop/justify legacy PH-150/155) in PH-336, and update final evidence text/SHA references from pre-final to 15a0ad4."
+  },
+  "deviations": [
+    "Promotion evidence: PH-321 deps are PH-308/PH-324 (both done, canonical currency extension merged) plus PH-214/PH-224/PH-232/PH-287 done; PH-322 deps are PH-299/PH-300 (ADRs) plus PH-312 (implementation prerequisite, done) and the done read-only sources PH-291/283/288/280/281/284/287/309. Both now have only done dependencies and are promoted ready; no implementation is claimed delivered.",
+    "Non-promoted blockers are precise: PH-320/PH-317/PH-325 wait on PH-252 (ready, not merged); PH-318/PH-326 wait on PH-321 (ready); PH-330/PH-327 wait on PH-322 (ready); PH-314 still lacks PH-301/PH-310/PH-285/PH-179/PH-183 capability. No false promotion.",
+    "Batch C registration: PH-332 (M01–M15 acceptance matrix + runbook skeleton) is docs-only and ready because all its dependencies are done; PH-333/334/335 are implementation/ops slices with explicit still-proposed write-side blockers; PH-336 is the next planning slot (proposed until PH-331 done).",
+    "ROADMAP batch C route: added the M01–M15 mapping and the PH-332→333→334→335 dependency/sequence table; no product behavior or gate change.",
+    "Planning-slot state convention: PH-331 is kept in_review with handoff and PH-336 is proposed with blocker 'PH-331 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-331 done and PH-336 ready and clear the blocker.",
+    "Numbering basis: BASE max PH-331; checked remote branches/PRs (PH-252 feature branch and dependabot only) - no >=PH-332 ids exist, so PH-332..PH-336 are continuous and free.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands.",
+    "Lead integration rebase (c69c8ee -> 987ec1e) after PH-252 merged: docs/verification.md kept main entries plus PH-331 entry; manifest.active_handoff -> PH-331. Gates rerun green."
+  ],
+  "unverified": [
+    "PH-321/PH-322 are now ready but not implemented/written; their FX/close write-side code does not exist yet.",
+    "PH-332 is a docs-only acceptance/runbook skeleton; PH-333/334/335 are registered proposed only with no ops/deploy/recovery/PG/perf evidence.",
+    "Batch C real deployment, upgrade, backup/restore, PostgreSQL concurrency and performance baselines have not been executed; they remain unverified by definition.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
