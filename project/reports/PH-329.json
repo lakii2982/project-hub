@@ -1,0 +1,44 @@
+{
+  "task_id": "PH-329",
+  "task": "PH-329",
+  "title": "PH-329 规划槽：补 PH-324 契约冻结夹具白名单",
+  "risk": "S",
+  "owner": "root",
+  "summary": "把 docs/v1.0-development/fixtures/fixture.json 加入 PH-324 allowed_paths（canonical 哈希冻结锁），登记 PH-331 下一规划槽；完整规划职责转 PH-331（本槽范围收窄并披露）。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":253} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Ran 23 tests OK"
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base ab1845b --task PH-329",
+      "result": "not_run",
+      "evidence": "Pre-review gate: {\"command\":\"verify-change\",\"ok\":false,\"errors\":[{\"code\":\"high_risk_review_required\"}]} — no path errors; pass run recorded after the review block is committed."
+    }
+  ],
+  "deviations": [
+    "PH-324 首轮 CI 失败：Preparation 夹具 test_v1_preparation 校验 docs/v1.0-development/fixtures/fixture.json 的 contract_artifact_sha256（canonical 文件哈希），该路径不在 PH-324 白名单。按 Lead 授权把 fixture.json（仅此一条）加入 PH-324 allowed_paths，并移除不必要条目；实现者在 PH-324 内只更新哈希与服务端夹具结构，不改业务断言。"
+  ],
+  "unverified": [
+    "PH-324 未实现完成",
+    "本槽 governance/docs-only，无浏览器/PG/生产证据"
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD b53d0bb: (1) PH-324 allowed_paths now adds only docs/v1.0-development/fixtures/fixture.json (the only canonical-hash lock; verification.json is legacy prep-run evidence and check_fixture.py reads the map dynamically, both removed); (2) PH-329 spec is narrowed to this whitelist fix and the full planning duty is explicitly moved to the new PH-331 next-slot task (ready, depends_on=[], to be dispatched by Lead after PH-329 merges); the narrowing is disclosed in summary/spec/handoff; (3) report verify-change entry is now not_run with the real pre-review ok=false/high_risk_review_required and no path errors; handoff status is in_review; (4) docs/verification.md has the PH-329 entry and the report review block no longer carries the extra verdict field.",
+      "REQUIRED text sync before merging (non-blocking, all small): (a) report.deviations still says 'fixture.json / verification.json / check_fixture.py 加入 PH-324 allowed_paths', contradicting the summary/spec/actual minimal change - update it to fixture.json only; (b) report tests' check evidence and the docs/verification.md PH-329 entry both record task_count=252 while the current check is 253 after registering PH-331 - update to 253; (c) PH-329 spec behavior #2 still says 'PH-331（ready，deps PH-329）' while the PH-331 task has depends_on=[] and its spec says no mandatory prerequisite (dispatched after PH-329 merge) - align the wording.",
+      "FINAL EVIDENCE: after committing this pass block, record the real post-review verify-change run (--base ab1845b --task PH-329) as pass; at the reviewed HEAD it is only blocked by report.review and there are no path/acceptance errors.",
+      "OTHER CONTENT CHECKED: 7 changed files (tasks/manifest/report/specs 329/331/verification/handoff) all inside BASE PH-329 allowed paths; PH-324 allowed_paths addition is exactly one path and no other task scope changes; PH-331 is registered ready with a spec and no forced dependency; no code/migration/schema changes; no placeholders; projectctl check ok=true/task_count=253; governance 23 tests OK; verify-change --base ab1845b --task PH-329 only high_risk_review_required (no path_out_of_scope, no acceptance errors)."
+    ],
+    "evidence": "VERDICT: PASS - all four prior findings are addressed at HEAD b53d0bb (BASE ab1845b): minimal PH-324 whitelist (fixture.json only), DoR narrowed with the full planning responsibility moved to the new PH-331 ready next-slot task, truthful pre-review verify-change evidence and in_review handoff, docs/verification entry and normalized review block. Remaining items are three small text/count synchronizations (stale deviation listing three fixture files; task_count 252 vs actual 253 in report/docs; PH-329 spec says PH-331 deps PH-329 while PH-331 has no forced dependency). Reviewed HEAD b53d0bb in /tmp/ph329-slot, worktree clean; 7 files inside BASE PH-329 allowlist; no code/migration/schema changes; no placeholders. Independent runs: check ok=true/task_count=253 (after this pass block); governance 23 tests OK; verify-change --base ab1845b --task PH-329 is gated only by report.review at the reviewed HEAD (no path/acceptance errors) and becomes ok=true after the pass is committed."
+  }
+}
