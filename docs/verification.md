@@ -971,4 +971,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 5. **发布资格 gate 清单**：治理基线、V1-OPS-01–06、M01–M15 required 层、浏览器 L4、发布包；缺口/豁免需产品+发布+独立复核三方签批（执行人不得自批）；当前 PH-350 未实现、L3/L4/L5 未执行 → **发布资格 blocked**，不得以文档/演练声称就绪。
 6. **双人复核/签名/时间戳/证据 digest**；**失效与重跑**：绑定候选 SHA、环境/契约变化重跑、14 天时效、失败修复重跑、禁止挑选旧证据/手改 JSONL。
 7. 与 PH-357（回填）/PH-367（汇总验收）/PH-333/334/335 的边界；反例清单；无实现/脚本/迁移/门禁变更。
-实跑：projectctl check ok/291；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：真实 staging/production、PG 备份/恢复/并发、PH-350、L3 CI、L4 浏览器、L5 客户验收。
+独立 S 复核 PASS（含 PH-357/PH-367 边界、gate/豁免/失效规则检查）；最终门禁：projectctl check ok=true/task_count=291；23 项治理 OK；verify-change --base fe9c257 --task PH-366 ok=true、7 文件全白名单、无 errors。未验证：真实 staging/production、PG 备份/恢复/并发、PH-350、L3 CI、L4 浏览器、L5 客户验收。
