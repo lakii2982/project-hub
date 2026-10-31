@@ -74,3 +74,4 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 - 分摊/预算 ETC 实现首片（PH-330）：costing 0005/0006 落地共享费用分摊批次（净零重归属、末项吸收、append-only）与项目预算版本/四眼批准/budget_residual_v1 ETC 只读派生；只读核对页 + verifier 分支；无 canonical/schema/core migration/其它 owner 写。
 - 批次 C 规划同步（PH-356）：PH-330 done 后晋级 PH-347/348/349 演练执行；PH-350 与 PH-333/334/335 保持 proposed 并刷新 blockers；登记 PH-357 证据回填、PH-358 发票批量导入、PH-359 insights、PH-360 通知后续与 PH-361 下一规划入口。
 - 跨 owner 编排执行首片（PH-370）：复用 PH-320 引用链，按管理收入反冲/cash 退款/银行退回/settlement 核销调用具名 owner 服务；invoicing 只记录事实/引用，收据幂等、失败零链接，不声称单事务；只读执行页。
+- 批次 C/D 规划同步（PH-376）：PH-357 done 后晋级 PH-367 汇总验收前置契约；PH-372 等 PH-367；登记 PH-377 发布资格后续、PH-378 发票批量导入、PH-379 insights、PH-380 通知收件箱、PH-381 下一规划入口（依赖 PH-376）。

@@ -1062,3 +1062,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 5. **角色/安全**：DBA/支持/安全/发布/独立复核；只读/最小权限/递归 redact（password/token/secret/credential/payroll/customer 等）；不发送外部消息；证据 `runtime/observability`（不入发布包）。
 6. **未实现/未验证**：SLO 存储、告警记录、趋势存储/聚合、容量预测、外部告警/自动扩缩容均未实现；PH-350 本地 L1+L2、PH-335 release_ready=false；L3/L4/L5 not_run；本片无脚本/表/迁移/门禁变更。
 实跑：projectctl check ok/297；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：SLO/告警/趋势/容量实现；L3/L4/L5；发布资格。
+
+## PH-376 后续交付独立规划入口（2026-10-31，BASE 2f082a3）
+
+按最新 main 复核依赖：PH-367（批次 C 部署/恢复/并发汇总验收执行前置契约）deps PH-333/334/357/366 均 done → **晋级 ready**，spec 状态/blockers/白名单同步。PH-372 保持 proposed（等 PH-367 done）；PH-338/353 仍等 PH-289/PH-181/PH-185，PH-339/354 等 PH-272，PH-340/355 等 PH-301/314/179/183/151；PH-377（发布资格后续）等 PH-372。新登记连续切片 **PH-377** 发布资格 gate 后续（proposed）、**PH-378** 发票批量导入实现首片（proposed）、**PH-379** insights 差异单/工作台实现首片（proposed）、**PH-380** 通知中心收件箱实现首片（proposed）、**PH-381** 后续交付独立规划入口（proposed，依赖 PH-376；PH-376 done 后由下一规划槽置 ready）。只晋级依赖全 done 的任务，未虚假晋级。实跑：check ok=true/task_count=302；`python -m unittest tests.test_projectctl tests.test_governance -v` 23 OK；无代码/迁移/schema/门禁变更；verify-change 待 review pass。

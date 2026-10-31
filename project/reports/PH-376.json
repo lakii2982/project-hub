@@ -1,0 +1,42 @@
+{
+  "task_id": "PH-376",
+  "summary": "后续交付独立规划入口（接续 PH-373）on BASE 2f082a3. Planning-only slice: rechecked latest-main dependency facts and promoted PH-367 (batch C deployment/recovery/concurrency summary-acceptance precondition contract) from proposed to ready because PH-333/334/357/366 are all done, updating its spec status/blockers/whitelist/DoR. Keeps PH-372 proposed until PH-367 is done; keeps PH-338/353 blocked on PH-289/PH-181/PH-185, PH-339/354 on PH-272, PH-340/355 on PH-301/314/179/183/151; keeps PH-377 awaiting PH-372. Registers five continuous slices: PH-377 batch C release-gate follow-up (proposed), PH-378 invoice batch import implementation (proposed; waits PH-338/353), PH-379 insights difference/workbench implementation (proposed; waits PH-339/354), PH-380 notification inbox implementation (proposed; waits PH-340/355), and PH-381 next independent planning entry (proposed; depends on PH-376; to be set ready by the next planning slot after PH-376 closes). Each new spec has concrete DoR, exact allowlist, executable acceptance and honest blockers/not_run discipline. Updates ROADMAP batch C/D status, delivery-status, verification, manifest and task state; no product code, migration, contract schema, CI-gate or canonical change.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":302}. Includes PH-367 promotion and PH-377–381 additions; dependency/status/allowlist/spec checks pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 889061d --task PH-376",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 files inside BASE PH-376 allowed_paths (post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-376 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PROMOTION CHECK: PH-367 is promoted ready with deps PH-333/334/357/366 all done and its spec/blockers/whitelist updated to status ready; PH-372 remains proposed on PH-367 (now ready-not-done) with an accurate blocker; PH-338/353 stay proposed on PH-289/181/185 while explicitly noting PH-362 is done; PH-339/354 stay on PH-272; PH-340/355 stay on the notification/precondition chain; PH-371 remains ready and is not falsely promoted/done by this planning slot.",
+      "NEW TASKS: PH-377–PH-381 are continuous after PH-376, all with precise dependency blockers: PH-377 waits PH-372; PH-378 waits PH-338/353; PH-379 waits PH-339/354; PH-380 waits PH-340/355; PH-381 is the genuine next planning slot depending PH-376 and stays proposed with 'PH-376 done then next slot sets ready'. New specs have DoR/whitelist/acceptance; no placeholder task numbers; ROADMAP/batch C/D status matches; no code/migration/schema/CI-gate change; 13 changed files within PH-376 allowed paths.",
+      "GATES: task_count 302 unique continuous PH-377..PH-381; check ok=302; governance 23 OK; verify-change --base 2f082a3 --task PH-376 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass. Final evidence must set PH-376 done and PH-381 ready."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 722cdfb (BASE 2f082a3) in /tmp/ph376-planning, worktree clean; 13 files within PH-376 allowed paths; task_count 302 unique continuous PH-377..PH-381. PH-367 promoted ready on all-done deps (333/334/357/366); PH-372 waits PH-367; PH-338/353 note PH-362 done and wait PH-289/181/185; PH-339/354 wait PH-272; PH-340/355 wait notification chain; PH-371 untouched; PH-377–380 proposed with exact blockers; PH-381 proposed on PH-376; no placeholders/code/migration/schema; check ok=302; governance 23 OK; verify-change only review gate, no path_out_of_scope. Independent reviewer PASS (722cdfb): 13 files within PH-376 allowlist; PH-367 promoted on all-done deps; PH-372/338/353/339/354/340/355/377 blockers precise; PH-377–380 proposed; PH-381 proposed on PH-376. Final evidence commit records the actual verify-change pass."
+  },
+  "deviations": [
+    "PH-367 is the only task promoted ready; PH-372/PH-338/353/339/354/340/355/377 remain proposed with refreshed blockers, and PH-381 stays proposed until PH-376 is done.",
+    "PH-378/379/380 are downstream implementation slices of existing proposed prerequisites, registered to keep the planning chain continuous; they are not work authorization until their dependencies are done.",
+    "PH-381 next planning entry depends on PH-376 and is proposed at this stage; the final evidence commit after reviewer pass may set PH-376 done and PH-381 ready, matching the predecessor pattern.",
+    "No product code, migration, contract schema, engineering-gate or canonical change; deliverables are specs, task board entries and planning/status docs only."
+  ],
+  "unverified": [
+    "Actual batch D implementation, real CI/PG/browser/production acceptance and release qualification are not executed by this planning slice.",
+    "Independent S review and CI/PR pending."
+  ]
+}

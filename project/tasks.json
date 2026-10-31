@@ -11546,7 +11546,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-289（proposed）与 PH-181/PH-185（proposed）done；PH-362 契约已 done；复核 DoR 再晋级。"
+        "缺 PH-289/PH-181/PH-185（均 proposed）done；PH-362 契约已 done；依赖完成后复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -12051,7 +12051,7 @@
       "title": "批次 C 部署/恢复/并发汇总验收执行前置契约（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12077,9 +12077,7 @@
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
-      "blockers": [
-        "缺 PH-357（证据回填，ready 未 done）done；PH-333/334/PH-366 已 done；PH-357 完成后由下一规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "github_issue": null,
       "owner": null,
       "handoff": null
@@ -12274,7 +12272,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-357（证据回填，ready 未 done）与 PH-367（汇总验收前置，proposed）done；PH-350 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+        "PH-357 已 done；缺 PH-367（汇总验收前置，ready 未 done）done；PH-367 完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -12352,7 +12350,7 @@
       "title": "后续交付独立规划入口（接续 PH-373）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -12372,6 +12370,201 @@
         "docs/verification.md",
         "project/reports/PH-376.json",
         "project/handoffs/PH-376.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": "worker-contract",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-376.md"
+    },
+    {
+      "id": "PH-377",
+      "title": "批次 C 发布资格 gate 判定后续（PH-372 后续，docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 3,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-372"
+      ],
+      "spec": "project/specs/PH-377.md",
+      "allowed_paths": [
+        "docs/v1.0-development/release-evidence-backfill.md",
+        "docs/v1.0-development/batch-c-release-evidence-contract.md",
+        "docs/verification.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "project/reports/PH-377.json",
+        "project/handoffs/PH-377.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-372（发布资格 gate 判定执行，proposed）done；PH-372 完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-378",
+      "title": "发票批量导入实现首片（PH-338/353 后续）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-338",
+        "PH-353"
+      ],
+      "spec": "project/specs/PH-378.md",
+      "allowed_paths": [
+        "pmo_plugins/invoicing/invoice_import_services.py",
+        "pmo_plugins/invoicing/views.py",
+        "pmo_plugins/invoicing/forms.py",
+        "pmo_plugins/invoicing/templates/invoicing/invoice_import.html",
+        "pmo_plugins/invoicing/domain_metadata.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_invoice_batch_commit*.py",
+        "project/reports/PH-378.json",
+        "project/handoffs/PH-378.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_invoice_batch_commit tests.test_v1_invoice_batch_commit_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-338（发票批量/导入后续）与 PH-353（导入提交首片）done；二者均 proposed，依赖 PH-289/181/185 完成后复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-379",
+      "title": "insights 差异单/工作台实现首片（PH-339/354 后续）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-339",
+        "PH-354"
+      ],
+      "spec": "project/specs/PH-379.md",
+      "allowed_paths": [
+        "pmo_plugins/insights/*",
+        "pmo_plugins/delivery/urls.py",
+        "pmo_plugins/delivery/domain_metadata.py",
+        "tests/test_v1_insights_difference*.py",
+        "tests/test_v1_insights_workbench*.py",
+        "project/reports/PH-379.json",
+        "project/handoffs/PH-379.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_insights_difference tests.test_v1_insights_workbench --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-339（insights 读模型实现首片）与 PH-354（期间预检只读 API）done；二者 proposed，依赖 PH-272 等完成后复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-380",
+      "title": "通知中心收件箱实现首片（PH-340/355 后续）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-340",
+        "PH-355"
+      ],
+      "spec": "project/specs/PH-380.md",
+      "allowed_paths": [
+        "core/notification_services.py",
+        "core/notification_views.py",
+        "core/notification_forms.py",
+        "core/templates/core/notifications.html",
+        "core/management/commands/scan_due.py",
+        "tests/test_v1_notifications*.py",
+        "project/reports/PH-380.json",
+        "project/handoffs/PH-380.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_notifications tests.test_v1_notifications_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-340（通知中心实现首片）与 PH-355（reminder refs 契约/扫描骨架）done；二者 proposed，依赖 PH-301/314/179/183/151 完成后复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-381",
+      "title": "后续交付独立规划入口（接续 PH-376）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-376"
+      ],
+      "spec": "project/specs/PH-381.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-381.json",
+        "project/handoffs/PH-381.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
