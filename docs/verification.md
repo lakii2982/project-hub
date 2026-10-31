@@ -938,3 +938,8 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 ## PH-361 后续交付独立规划入口（2026-10-31）
 
 基线ea8e765（PH-348 合入后）。docs-only 规划：PH-347/348 done、PH-349 ready 未 done → PH-350（deps 347/348/349）保持 proposed 并刷新 blocker；PH-333/334 等 PH-349、PH-335 等 PH-333/334/PH-350、PH-357 等 PH-349/350/352，均保持 proposed 并刷新精确 blocker；本 BASE 无新增可晋级执行片。新登记 PH-362 导入提交实现前置契约冻结（proposed，等 PH-363）、PH-363 期间预检/四类核对/差额契约冻结（ready，deps PH-291/283/284/288/280 done）、PH-364 到期扫描/待办/通知契约冻结（ready，deps PH-291/304/309/281 done）、PH-365 下一规划入口（proposed，depends_on PH-361，待 PH-361 done 后置 ready）；编号从 PH-362 连续、已核无并行占用；刷新 PH-289→PH-362、PH-353→PH-363、PH-355→PH-364、PH-338 等依赖；ROADMAP 批次 C 进展同步；无产品代码/迁移/脚本/门禁/contract schema 变更。实际执行（最终HEAD）：projectctl check ok=true/task_count=287；23项治理OK；verify-change --base ea8e765 --task PH-361在review pending时仅high_risk_review_required（预期）。未验证：独立S复核pending；PH-349/350/333/334/335/357与PH-362/363/364实现未开始；部署/恢复/并发/性能证据未执行。
+
+
+## PH-365 后续交付独立规划入口（2026-10-31）
+
+基线d81c11c。docs-only 规划：PH-347/348/349/352 done → PH-350健康/容量/积压基线（deps 347/348/349）晋级ready；PH-333/334部署/恢复与PG并发汇总验收晋级ready（PH-333 deps补PH-349，所有依赖done）；PH-335等PH-333/334/PH-350、PH-357等PH-350，保持proposed并刷新精确blocker。新登记PH-366批次C演练证据回填与发布资格清单契约（ready，deps347/348/349/352 done）、PH-367部署/恢复/并发汇总验收执行前置（proposed，等PH-357/PH-366）、PH-368容量/健康/积压后续契约（proposed，等PH-350）、PH-369独立工程/交付规划入口（ready，不依赖当前规划槽）；编号从PH-366连续、已核无并行占用；ROADMAP批次C状态同步；无产品代码/迁移/脚本/门禁/contract schema变更。实际执行（最终HEAD）：projectctl check ok=true/task_count=291；23项治理OK；verify-change --base d81c11c --task PH-365在review pending时仅high_risk_review_required（预期）。未验证：独立S复核pending；PH-350/333/334/335/357/366/367/368实现未开始；部署/恢复/并发/性能证据未执行。
