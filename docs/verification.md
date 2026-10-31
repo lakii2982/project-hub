@@ -1110,3 +1110,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **未真实执行（not_run）**：`revenue_reversal` 与 `settlement_clearance` 仅在单元测试中以 `patch` 校验“调用具名 owner 服务 + link”，**非真实 owner e2e**（测试证据见 `tests/test_v1_invoice_orchestration.py::test_revenue_and_settlement_dispatch_use_named_services`）；`cash_bank_return`、`settlement_clearance_reversal` 未被本片真实执行；真实 PG/CI L3、浏览器 1440/390 L4、生产/客户 L5 全部 **not_run**。
 - **层级/判定**：L1（代码已合入）有；L2 部分通过（cash-refund 真实 + revenue/settlement dispatch 契约）；L3/L4/L5 not_run。**D-01 整体验收不通过**：required 层（L3 + 财务复核）缺失，revenue/settlement 真实 e2e 未执行；`release_ready=false`，发布资格仍按 PH-366 **blocked**。
 - **财务复核结论（执行人角色记录，非独立 pass）**：本地证据支持 cash-refund 编排事实/引用链/幂等/失败零写；不支持收入反冲与结算调整的真实 owner e2e，也不支持生产/并发/浏览器验收；不得据此签署 D-01 通过。
+- 独立 S 复核 PASS（命令输出/partial e2e 诚实性/全量基线映射/未通过结论）。最终门禁：projectctl check ok=true/task_count=307；23 项治理 OK；verify-change --base 9830b37 --task PH-382 ok=true、8 文件全白名单、无 errors。
