@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}跨 owner 编排执行{% endblock %}{% block breadcrumb %}发票 / 跨 owner 编排执行{% endblock %}{% block content %}
+<section class="page-header"><div><h1 tabindex="-1">跨 owner 编排执行</h1><p>发票只记录自身事实与引用链；管理收入反冲、现金退款/银行退回、结算核销由各自 owner 具名服务执行，不声称单事务。</p></div><a class="button" href="/modules/invoicing/invoice-list/">返回发票</a></section>
+{% if error %}<div class="notice" role="alert">{{ error }}</div>{% endif %}
+<section class="panel"><div class="panel-heading"><h2>引用链执行记录</h2></div><div class="body">
+{% if snapshot %}<p>发票：<span class="trace">{{ snapshot.invoice_ref.id }}</span>（{{ snapshot.invoice_ref.version }}）</p>
+<table><thead><tr><th>动作</th><th>状态</th><th>owner 引用</th><th>引用类型</th><th>时间</th></tr></thead><tbody>
+{% for row in snapshot.executions %}<tr><td>{{ row.action }}</td><td><span class="badge">{{ row.status }}</span></td><td class="trace">{{ row.owner_ref.id|default:"—" }}</td><td>{{ row.link_kind|default:"—" }}</td><td>{{ row.recorded_at }}</td></tr>{% empty %}<tr><td colspan="5">暂无编排执行；请先完成发票红冲并登记/执行引用链。</td></tr>{% endfor %}
+</tbody></table>{% else %}<p>请选择发票。</p>{% endif %}
+</div></section>
+{% if execute_form %}<section class="panel"><div class="panel-heading"><h2>执行编排动作</h2></div><div class="body"><form method="post" action="{{ execute_url }}">{% csrf_token %}
+<div class="form-field"><label for="invoice_id">发票</label><input id="invoice_id" name="invoice_id" value="{{ execute_form.initial.invoice_id|default:'' }}"></div>
+<div class="form-field"><label for="reversal_id">红冲</label><input id="reversal_id" name="reversal_id"></div>
+<div class="form-field"><label for="action">动作</label><select id="action" name="action">{% for value,label in execute_form.fields.action.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+<div class="form-field"><label for="payload">参数（JSON）</label><textarea id="payload" name="payload" rows="4"></textarea></div>
+<div class="form-field"><label for="expected_version">expected_version</label><input id="expected_version" name="expected_version" type="number" min="1"></div>
+<div class="form-field"><label for="dry_run">dry_run</label><input id="dry_run" name="dry_run" type="checkbox"></div>
+<div class="form-actions"><button class="button primary" type="submit">执行</button></div>
+</form></div></section>{% endif %}
+{% endblock %}

@@ -12162,7 +12162,7 @@
       "title": "跨 owner 编排执行首片：管理收入反冲/cash 退款/settlement 调整（基于 PH-320 引用链）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12198,9 +12198,9 @@
         "python manage.py test tests.test_v1_invoice_orchestration tests.test_v1_invoice_orchestration_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-370.md"
     },
     {
       "id": "PH-371",

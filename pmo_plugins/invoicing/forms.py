@@ -145,3 +145,27 @@ class TaxLinkForm(forms.Form):
         if not isinstance(value, list) or not value:
             raise forms.ValidationError('证据须为非空JSON数组')
         return value
+
+
+class OrchestrationExecuteForm(forms.Form):
+    invoice_id = forms.UUIDField()
+    reversal_id = forms.UUIDField()
+    action = forms.ChoiceField(choices=[('revenue_reversal', '管理收入反冲'),
+                                        ('cash_refund', '现金退款'),
+                                        ('cash_bank_return', '银行退回'),
+                                        ('settlement_clearance', '结算核销'),
+                                        ('settlement_clearance_reversal', '撤核')])
+    payload = forms.CharField(widget=forms.Textarea)
+    expected_version = forms.IntegerField(min_value=1)
+    request_token = forms.UUIDField(required=False)
+    dry_run = forms.BooleanField(required=False)
+
+    def clean_payload(self):
+        raw = (self.cleaned_data.get('payload') or '').strip()
+        try:
+            value = json.loads(raw)
+        except ValueError:
+            raise forms.ValidationError('编排参数须为JSON对象')
+        if not isinstance(value, dict) or not value:
+            raise forms.ValidationError('编排参数须为非空JSON对象')
+        return value
