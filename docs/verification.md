@@ -876,3 +876,13 @@ BASE 20ffc12（PH-322 合入后）。复用 PH-252 已交付 `pmo_plugins/invoic
 ## PH-345 批次 C 演练前置：部署/恢复/并发验收脚本契约（2026-10-31）
 
 基线4c0d309。docs-only：新增docs/engineering/ops-runbook.md（通用evidence envelope/退出码0 pass-2 not_run-3 fail-4环境-5安全拒绝/角色/前置/幂等/失败处置；V1-OPS-01–06脚本ops_preflight/ops_tls_probe/ops_upgrade/ops_backup_verify/ops_restore_rehearsal/ops_health_capacity/ops_pg_concurrency契约与not_run/blocked状态）与docs/engineering/upgrade-recovery.md（升级前置/时序/仅结构兼容回退/备份隔离恢复/RPO-RTO证据契约）；docs/v1.0-development/batch-c-acceptance.md追加§6契约映射，保持PH-332五层证据纪律。明确当前PH-333/334/335未实现、全部not_run/blocked，不虚构运行结果、不执行生产操作、无scripts/ops实现/产品代码/迁移/CI门禁/contract schema变更。实际执行（最终HEAD）：projectctl check ok=true/task_count=268；23项治理OK；verify-change --base 4c0d309 --task PH-345在review pending时仅high_risk_review_required（预期）。未验证：独立S复核pending；PH-333/334/335实现、真实环境profile、RPO/RTO、PG CI、生产/客户验收L5均未执行。
+
+
+## PH-346 下一规划槽：依赖再基线 + 批次 C 演练拆分（2026-10-31）
+
+基线 de85caa（PH-325/PH-345 合入后；注册后 count 273）。纯规划/契约文字片：
+1. **依赖再基线（无晋级）**：PH-330 ready 实现中未 done → PH-333/334 等 PH-330、PH-335 等 333/334；PH-338/342 等 PH-289；PH-339/343 等 PH-272；PH-340/344 等 PH-301/314；blockers 全部刷新为精确缺失项，无虚假晋级。
+2. **批次 C 演练拆分**：PH-347 安装/升级（PH-333 拆分）、PH-348 备份/恢复（PH-333 拆分）、PH-349 PG 并发验收（PH-334 拆分）、PH-350 健康/容量/积压（PH-335 拆分，依赖 347/348/349）；均 proposed 等 PH-330。
+3. **下一规划槽**：PH-351（proposed，待 PH-346 done 置 ready）。count 268→273，编号 347-351 连续。
+4. **ROADMAP** 新增批次 B/C 状态同步节（已合入/ready 队列/拆片/精确 blocker/not_run 边界）。
+5. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-330/333/334/335/347/348/349/350 未实现；批次 C 演练未执行。
