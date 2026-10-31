@@ -2,21 +2,57 @@
   "task_id": "PH-388",
   "summary": "多币种汇率反查/对账后续 on BASE c931137. Implements PH-388 on top of PH-321 FxRateSnapshot without a new owner/table or core migration: fx_rate_history returns exact business-date history by currency pair/source/version, keeps all same-date versions, reports fx_rate_exact_date_missing with no fallback, and rejects future rates for historical use; trace_fx_ref validates immutable refs and effective date against the business date; fx_reconciliation produces read-only original/book/rate consistency rows for contract lines, active settlements and invoices, with null+missing semantics, conversion mismatch/issue reporting, pm project scope and member denial. The existing /modules/contracts/fx-rates/ page is extended with history filters and reconciliation tables (no new route; route binding unchanged and remains inside the PH-388 allowlist). Tests (10) cover exact-date/versions/no fallback, future rejection, permissions/module-disabled history, contract conversion pass/mismatch, invoice CNY-only schema missing explicit, settlement CNY reconciliation, and pm/cross-org/member boundaries. L3 CI/PostgreSQL, L4 browser and L5 production are not_run; invoice has no original currency/FX fields so it is honestly reported missing rather than fabricated; no release/product-level pass is claimed. No core migration/table/route/product change beyond allowlisted contracts FX files/tests.",
   "tests": [
-    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":316}."},
-    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."},
-    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual run exit 0: No changes detected; no core migration/table added."},
-    {"command": "python manage.py test tests.test_v1_fx_history tests.test_v1_fx_history_http --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 10 tests, OK. Covers exact-date/all versions/no fallback, future rejection, contract conversion consistent/mismatch, invoice CNY-only missing explicit, settlement CNY, permissions/pm/cross-org/disabled history."},
-    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 1320 tests in 134.711s, 5 failures/3 errors/70 environment skips. The 8 failure/error names are the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names."},
-    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests, OK."},
-    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual fresh SQLite (migrate then verify) run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."},
-    {"command": "python scripts/projectctl.py verify-change --base c931137 --task PH-388", "result": "not_run", "evidence": "Not run before report creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."}
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":316}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: No changes detected; no core migration/table added."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_fx_history tests.test_v1_fx_history_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 10 tests, OK. Covers exact-date/all versions/no fallback, future rejection, contract conversion consistent/mismatch, invoice CNY-only missing explicit, settlement CNY, permissions/pm/cross-org/disabled history."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1320 tests in 134.711s, 5 failures/3 errors/70 environment skips. The 8 failure/error names are the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual fresh SQLite (migrate then verify) run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base c931137 --task PH-388",
+      "result": "pass",
+      "evidence": "Actual run after the reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-388 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
+    }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Independent S review pending. Verify exact-date/no-fallback/future-rejection semantics, immutable fx ref tracing, contract/settlement/invoice reconciliation with null+missing and no fabricated invoice FX, permissions/pm scope/module-disabled history, no core migration/table/route binding change, exact whitelist, real outputs for 10 scoped and 1320 full tests, and honest L3-L5 not_run. Implementer does not self-pass."
+    "reviewer": "independent PH-388 FX history/reconciliation reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "EXACT-DATE/TRACE SEMANTICS: fx_rate_history filters by exact effective_on, keeps all same-day versions, returns fx_rate_exact_date_missing when the exact date has no rate and never falls back; future exact dates are rejected. trace_fx_ref resolves the immutable ref and rejects a rate whose effective date is later than the supplied business date. Both are read-only and derive no new canonical facts.",
+      "RECONCILIATION/AUTHORIZATION: fx_reconciliation reads contract lines, active settlements and invoices, reports original/book/rate and conversion mismatch/missing/issue codes without guessing zero or repairing data; invoices without original-currency/FX schema are explicitly invoice_original_currency_fields_missing/not-implemented rather than fabricated. owner/finance/auditor can read; pm gets project summary without company FX history; member is denied; disabled module keeps history read; the existing fx-rates page reuses its route and adds history/reconciliation forms/table.",
+      "CONTENT/GATES: P/L/booking migration not added; 11 files within the PH-388 whitelist; no core migration/new route/contract schema; no placeholders; task_count 316; check ok=316; manage.py check exit0; makemigrations No changes; scoped FX tests 10 OK; full suite 1320/5F+3E/70 known macOS baseline; fresh SQLite verify_integrity ok; verify-change --base c931137 --task PH-388 only high_risk_review_required, no path_out_of_scope; report review now pass. The non-CNY settlement fixture gap and L3-L5 not_run are disclosed."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 85b7765 (BASE c931137) in /tmp/ph388-fx-history, worktree clean; 11 files within PH-388 whitelist; no core migration/new route/schema. fx_rate_history exact-date/multi-version/no-fallback/future rejection, trace_fx_ref business-date validation and read-only contract/settlement/invoice reconciliation (CNY-only invoice missing) are implemented with owner/finance/auditor/pm/member and module-disabled protections. Independent runs: check ok=316; makemigrations clean; scoped 10 OK; full 1320/5F+3E/70 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope. Independent reviewer PASS (85b7765): 11 files within PH-388 whitelist, no core migration/new route/schema; exact-date/multi-version/no-fallback/future rejection, business-date validation and read-only contract/settlement/invoice reconciliation with CNY-only invoice missing and role/module protections. Final evidence commit records the actual verify-change pass."
   },
   "deviations": [
     "Invoice schema has no original-currency/FX fields, so invoice reconciliation reports invoice_original_currency_fields_missing and invoice_fx_fields_not_implemented instead of fabricating original/book/rate values; this is a recorded gap for a future invoice multi-currency slice.",
