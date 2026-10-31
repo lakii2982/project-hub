@@ -16,18 +16,20 @@ PMO_PG_DSN='postgresql://...' python manage.py test tests.test_v1_pg_concurrency
 ```
 
 - DSN 来源：`--dsn` 优先，其次 `PMO_PG_DSN`，再次 `DATABASE_URL`。
+- **`--mode` 默认 `dry_run`**：只做只读连接/PG 版本检查，不创建 schema/表；envelope 记录实际 mode。
+- **`execute` 必须显式 `--allow-execute`** 且 profile ∈ {`ci`,`staging`,`rehearsal`}；生产/未授权 profile 或缺少显式授权 → **exit 5（安全拒绝）**，在连接/DDL 前拒绝。
 - 缺 DSN / SQLite / 非 PostgreSQL → **exit 2（not_run）**，不生成通过结论。
 - 连接失败/环境异常 → **exit 4（fail）**，重试一次后升级支持。
 - 断言失败（一胜一拒不成立、半笔、死锁无法重试等）→ **exit 3（fail）**。
-- 安全检查拒绝 → **exit 5**。
+- 生产/sensitive/未授权 execute → **exit 5（安全拒绝）**。
 
 ## 2. 探针矩阵（`V1-OPS-06.1`–`.4`）
 
 | id | 断言 | 期望 |
 | --- | --- | --- |
-| V1-OPS-06.1 | 公司锁串行化 | 两连接竞争同一 advisory lock，第二连接等待第一释放后取得；顺序确定 |
+| V1-OPS-06.1 | 公司锁串行化 | 两连接竞争同一 advisory lock；释放前第二连接不得取得，释放后顺序 `[first, second]` |
 | V1-OPS-06.2 | 幂等收据唯一 | 同一 `org + request_token` 并发插入仅一次成功，另一连接 `UniqueViolation` 回滚 |
-| V1-OPS-06.3 | append-only 拒绝 | 守卫表 UPDATE/DELETE 均被数据库 trigger 拒绝（2/2） |
+| V1-OPS-06.3 | append-only 拒绝 | 守卫表 UPDATE/DELETE 均被 trigger 以 SQLSTATE `P0001` 拒绝（2/2） |
 | V1-OPS-06.4 | 死锁检测+重试 | 相反加锁顺序触发 `DeadlockDetected`（SQLSTATE 40P01）；回滚后重试成功，无静默数据丢失 |
 
 - 隔离：每次运行创建随机 `ph349_<uuid>` schema，结束 `DROP ... CASCADE`；所有事务提交/回滚受控；不写业务表、不改已应用迁移。

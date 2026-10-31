@@ -52,12 +52,13 @@ def classify_exit(exit_code):
 
 
 def build_envelope(*, exit_code, checks, artifacts=None, started_at=None,
-                   finished_at=None, profile='ci', app_sha=None, notes=''):
+                   finished_at=None, profile='ci', app_sha=None, notes='',
+                   mode='dry_run'):
     """PH-345 evidence envelope; status follows the frozen exit-code mapping."""
     return {
         'script': SCRIPT,
         'contract_version': CONTRACT_VERSION,
-        'mode': 'execute',
+        'mode': mode,
         'profile': profile,
         'app_sha': app_sha or os.environ.get('GIT_SHA') or 'unknown',
         'started_at': started_at or _now(),
@@ -100,6 +101,47 @@ def _probe_company_lock(dsn, schema, barrier, results):
         conn.close()
 
 
+EXECUTE_PROFILES = {'ci', 'staging', 'rehearsal'}
+
+
+def run_dry_run(dsn, app_sha=None, profile='ci'):
+    """Read-only connectivity/tooling check; never creates schema or tables."""
+    started = _now()
+    checks, artifacts = [], []
+    try:
+        conn = _connect(dsn)
+    except Exception as error:  # noqa: BLE001
+        envelope = build_envelope(exit_code=EXIT_ENV, checks=[], started_at=started,
+                                  profile=profile, app_sha=app_sha, mode='dry_run',
+                                  notes='连接 PostgreSQL 失败：%s' % error.__class__.__name__)
+        return EXIT_ENV, envelope
+    try:
+        with conn.cursor() as cur:
+            cur.execute('SELECT version(), current_setting(%s)', ('max_connections',))
+            pg_version, max_connections = cur.fetchone()
+            cur.execute('SELECT 1 FROM pg_database WHERE datname = current_database()')
+            cur.fetchone()
+        conn.rollback()
+        artifacts.append({'kind': 'log', 'path_or_url': 'pg_version',
+                          'sha256': '', 'summary': pg_version})
+        artifacts.append({'kind': 'log', 'path_or_url': 'max_connections',
+                          'sha256': '', 'summary': str(max_connections)})
+        checks.append(_check('V1-OPS-06.dry_run', True,
+                             'dry_run 只读连接并读取 PG 版本',
+                             'version=%s max_connections=%s' % (pg_version, max_connections),
+                             'stderr'))
+    except Exception as error:  # noqa: BLE001
+        checks.append(_check('V1-OPS-06.dry_run', False, 'dry_run 只读检查',
+                             error.__class__.__name__, 'stderr'))
+    finally:
+        conn.close()
+    exit_code = EXIT_OK if checks and all(item['status'] == 'pass' for item in checks) else EXIT_FAIL
+    envelope = build_envelope(exit_code=exit_code, checks=checks, artifacts=artifacts,
+                              started_at=started, profile=profile, app_sha=app_sha,
+                              mode='dry_run', notes='dry_run 只读；未创建 schema/表')
+    return exit_code, envelope
+
+
 def run_probes(dsn, app_sha=None):
     """Run the PG concurrency matrix; return (exit_code, envelope)."""
     started = _now()
@@ -113,11 +155,13 @@ def run_probes(dsn, app_sha=None):
         return EXIT_ENV, envelope
     try:
         with conn.cursor() as cur:
-            cur.execute('SELECT version()')
-            pg_version = cur.fetchone()[0]
+            cur.execute('SELECT version(), current_setting(%s)', ('max_connections',))
+            pg_version, max_connections = cur.fetchone()
         conn.rollback()
         artifacts.append({'kind': 'log', 'path_or_url': 'pg_version',
                           'sha256': '', 'summary': pg_version})
+        artifacts.append({'kind': 'log', 'path_or_url': 'max_connections',
+                          'sha256': '', 'summary': str(max_connections)})
         schema = 'ph349_' + uuid.uuid4().hex[:12]
         with conn.cursor() as cur:
             cur.execute('CREATE SCHEMA %s' % schema)
@@ -153,14 +197,18 @@ def run_probes(dsn, app_sha=None):
             holder.start()
             assert results['acquired'].wait(timeout=10), 'holder 未取得公司锁'
             waiter.start()
-            time.sleep(0.1)
-            wait_ok['waited'] = results['order'] == ['first']
+            time.sleep(0.15)
+            waited_before_release = results['order'] == ['first']
             holder.join(timeout=15)
             waiter.join(timeout=15)
+            final_order = results['order']
+            serialized = (waited_before_release and final_order == ['first', 'second']
+                          and wait_ok['error'] is None)
             checks.append(_check(
-                'V1-OPS-06.1', wait_ok['waited'] and wait_ok['error'] is None,
-                '公司锁串行化：第二连接等待第一连接释放',
-                'order=%s error=%s' % (results['order'], wait_ok['error']),
+                'V1-OPS-06.1', serialized,
+                '公司锁串行化：第二连接等待第一连接释放后取得',
+                'order=%s waited_before_release=%s error=%s'
+                % (final_order, waited_before_release, wait_ok['error']),
                 'stderr'))
 
             # 2) idempotent receipt uniqueness (same org+token must win once)
@@ -206,20 +254,22 @@ def run_probes(dsn, app_sha=None):
                             'FOR EACH ROW EXECUTE FUNCTION %s.reject_mutation()'
                             % (schema, schema, schema))
             conn.commit()
-            rejected = 0
+            rejected, sqlstates = 0, []
             for statement in ('UPDATE %s.open_item SET amount = 200 WHERE id = 1' % schema,
                               'DELETE FROM %s.open_item WHERE id = 1' % schema):
                 try:
                     with conn.cursor() as cur:
                         cur.execute(statement)
                     conn.commit()
-                except Exception:  # noqa: BLE001 - expected trigger rejection
+                except Exception as error:  # noqa: BLE001 - trigger rejection expected
+                    sqlstate = getattr(error, 'sqlstate', None) or getattr(error, 'pgcode', None)
+                    sqlstates.append(sqlstate)
                     rejected += 1
                     conn.rollback()
             checks.append(_check(
-                'V1-OPS-06.3', rejected == 2,
-                'append-only 事实的 UPDATE/DELETE 被数据库守卫拒绝',
-                'rejected=%s' % rejected, 'stderr'))
+                'V1-OPS-06.3', rejected == 2 and all(state == 'P0001' for state in sqlstates),
+                'append-only 事实的 UPDATE/DELETE 被 trigger 以 P0001 拒绝',
+                'rejected=%s sqlstates=%s' % (rejected, sqlstates), 'stderr'))
 
             # 4) deadlock detection + one retry succeeds (no silent data loss)
             with conn.cursor() as cur:
@@ -292,20 +342,48 @@ def main(argv=None):
     parser.add_argument('--out', default=None)
     parser.add_argument('--profile', default='ci')
     parser.add_argument('--app-sha', default=None)
+    parser.add_argument('--mode', choices=('dry_run', 'execute'), default='dry_run')
+    parser.add_argument('--allow-execute', action='store_true',
+                        help='显式授权 execute（生产/未授权 profile 仍被拒绝）')
     args = parser.parse_args(argv)
+    # Security gate (PH-345 exit 5): execute requires explicit approval and a
+    # non-production, rehearsal/CI profile; otherwise refuse before any I/O.
+    if args.mode == 'execute':
+        if not args.allow_execute:
+            envelope = build_envelope(
+                exit_code=EXIT_SECURITY, checks=[_check(
+                    'V1-OPS-06.security', False, 'execute 需显式授权', '缺少 --allow-execute',
+                    'stderr')], profile=args.profile, app_sha=args.app_sha,
+                mode='execute', notes='安全检查拒绝：execute 未显式授权')
+            return _emit(envelope, args.out)
+        if args.profile not in EXECUTE_PROFILES:
+            envelope = build_envelope(
+                exit_code=EXIT_SECURITY, checks=[_check(
+                    'V1-OPS-06.security', False, '仅 ci/staging/rehearsal 可 execute',
+                    'profile=%s' % args.profile, 'stderr')], profile=args.profile,
+                app_sha=args.app_sha, mode='execute',
+                notes='安全检查拒绝：生产/未授权 profile 不执行并发探针')
+            return _emit(envelope, args.out)
     dsn, code, reason = ensure_pg_dsn(args.dsn)
     if code != EXIT_OK:
         envelope = build_envelope(exit_code=code, checks=[], profile=args.profile,
-                                  app_sha=args.app_sha, notes=reason)
+                                  app_sha=args.app_sha, mode=args.mode, notes=reason)
+        return _emit(envelope, args.out)
+    if args.mode == 'dry_run':
+        code, envelope = run_dry_run(dsn, app_sha=args.app_sha, profile=args.profile)
     else:
         code, envelope = run_probes(dsn, app_sha=args.app_sha)
         envelope['profile'] = args.profile
+    return _emit(envelope, args.out)
+
+
+def _emit(envelope, out_path):
     payload = json.dumps(envelope, ensure_ascii=False, indent=2)
-    if args.out:
-        with open(args.out, 'w', encoding='utf-8') as handle:
+    if out_path:
+        with open(out_path, 'w', encoding='utf-8') as handle:
             handle.write(payload + '\n')
     print(payload)
-    return code
+    return envelope['exit_code']
 
 
 if __name__ == '__main__':
@@ -327,7 +405,7 @@ class PgConcurrencyContractTests(TestCase):
             envelope = build_envelope(exit_code=code, checks=[])
             self.assertEqual(envelope['script'], 'ops_pg_concurrency')
             self.assertEqual(envelope['contract_version'], 1)
-            self.assertEqual(envelope['mode'], 'execute')
+            self.assertEqual(envelope['mode'], 'dry_run')
             self.assertEqual(envelope['exit_code'], code)
             self.assertEqual(envelope['status'], status)
             for field in ('profile', 'app_sha', 'started_at', 'finished_at',
@@ -336,6 +414,8 @@ class PgConcurrencyContractTests(TestCase):
             self.assertIn('password', envelope['redactions'])
             self.assertIn('payroll', envelope['redactions'])
             json.dumps(envelope)
+        execute_envelope = build_envelope(exit_code=EXIT_OK, checks=[], mode='execute')
+        self.assertEqual(execute_envelope['mode'], 'execute')
 
     def test_missing_dsn_is_exit_2_not_run_never_sqlite(self):
         dsn, code, reason = ensure_pg_dsn(None)
@@ -371,6 +451,42 @@ class PgConcurrencyContractTests(TestCase):
             code = main(['--dsn', 'sqlite:///tmp/x.sqlite3'])
         self.assertEqual(code, EXIT_PREREQ)
         self.assertEqual(json.loads(output.getvalue())['status'], 'not_run')
+
+    def test_execute_without_allow_execute_is_exit_5_security(self):
+        output = StringIO()
+        with redirect_stdout(output):
+            code = main(['--mode', 'execute', '--profile', 'ci',
+                         '--dsn', 'postgresql://127.0.0.1:1/never?connect_timeout=2'])
+        self.assertEqual(code, EXIT_SECURITY)
+        envelope = json.loads(output.getvalue())
+        self.assertEqual(envelope['status'], 'fail')
+        self.assertEqual(envelope['mode'], 'execute')
+        self.assertEqual(envelope['checks'][0]['id'], 'V1-OPS-06.security')
+
+    def test_execute_on_production_profile_is_exit_5_security(self):
+        output = StringIO()
+        with redirect_stdout(output):
+            code = main(['--mode', 'execute', '--allow-execute', '--profile', 'production',
+                         '--dsn', 'postgresql://127.0.0.1:1/never?connect_timeout=2'])
+        self.assertEqual(code, EXIT_SECURITY)
+        envelope = json.loads(output.getvalue())
+        self.assertEqual(envelope['exit_code'], EXIT_SECURITY)
+
+    def test_default_mode_is_dry_run_and_needs_no_execute_permission(self):
+        output = StringIO()
+        with redirect_stdout(output):
+            code = main(['--dsn', 'sqlite:///tmp/x.sqlite3'])
+        self.assertEqual(code, EXIT_PREREQ)
+        self.assertEqual(json.loads(output.getvalue())['mode'], 'dry_run')
+
+    def test_dry_run_unreachable_postgres_is_exit_4(self):
+        output = StringIO()
+        with redirect_stdout(output):
+            code = main(['--dsn', 'postgresql://127.0.0.1:1/never?connect_timeout=2'])
+        self.assertEqual(code, EXIT_ENV)
+        envelope = json.loads(output.getvalue())
+        self.assertEqual(envelope['mode'], 'dry_run')
+        self.assertEqual(envelope['status'], 'fail')
 
     def test_unreachable_postgres_is_exit_4_environment(self):
         code, envelope = run_probes('postgresql://127.0.0.1:1/never?connect_timeout=2')
