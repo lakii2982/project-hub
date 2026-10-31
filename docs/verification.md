@@ -1188,4 +1188,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **全量本地**：最终 HEAD 1332 tests，5F+3E/70 skips；8 个失败/错误逐项与 main 既有 macOS 基线一致，无新增；不据此声称 Linux/PG 通过。
 - **L3/L4/L5：not_run**。本片未做真实 Codex PASS、远端保护启用、浏览器、生产或客户 UAT；`remote_checks_enforced=false`，PH-122 必须做真实对抗验证。
 - **规划登记**：`agent-protocol.md` §9 新增 ready 的 PH-397，仅作后续规划，不实现业务、不恢复 EXP-1、不改变 PH-110 暂不入库决定。
-- 独立 S review：初轮 PASS；补充 HEAD/BASE workflow 逐字节反伪造后增量复核 PASS（a04e7fb）。最终 verify-change 待复核证据提交后重跑。
+- 独立 S review：仲裁实现、workflow 反伪造、PH-397 规划与授权摘要增量复核均 PASS（最终 9f3dc7d）；verify-change ok=true、14 文件全白名单。
