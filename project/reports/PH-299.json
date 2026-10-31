@@ -1,0 +1,41 @@
+{
+  "task_id": "PH-299",
+  "summary": "期间关期与预测覆盖契约冻结 ADR（docs-only）：新增 docs/adr/0016-forecast-close-contract.md，冻结关期状态机（open→closing→closed→reopened，append-only 结论、重复关期拒绝、公司锁/request_token/并发一胜）、锁账边界（AccountingPeriod.closed_through 为唯一服务端边界；关期不代写业务事实、关期后 owner 写拒绝、更正只走既有负值冲销/撤核/撤转或明确重新开期）、预测覆盖（forecast batch period/version/scope/status/coverage/covered/gap/source_refs/as_of；覆盖服务端派生、缺失 null+missing、客户端不得传覆盖/金额；版本 append-only superseded）、跨 owner 边界（delivery 只读组合 PH-291/283/288/280/281/279/277/274，不建第二 owner、不重算口径）、只读核对与权限矩阵（owner/finance 写、auditor 只读、pm 管理项目摘要、member 拒绝、模块停用历史只读）。ADR 0016 新增「与既有模型映射」小节：冻结 open=AccountingPeriod.active(closed_through null)、closed=posted(closed_through not null) 的旧→新映射，closing/reopened 明确为未来 schema 变更（方案 A 扩展 status 或方案 B append-only PeriodCloseRun），并写入 PH-322 前置的迁移/回填/约束/未实现标记要求；同步更新 tasks.json 的 PH-322 blocker 指向 ADR 0016 与 PH-300（含映射/迁移要求）；不写代码/迁移/schema、不新增 canonical topic/command。编号核验：docs/adr 叶 0014，0015 已由发票价税 ADR 任务占用，0016 按 PH-299 spec 冻结。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Final Lead integration rerun after rebase onto c2c76d8: {\"command\":\"check\",\"ok\":true,\"task_count\":245} exit 0."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-299 period-close/forecast ADR reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKER RESOLVED AT 7395646: ADR 0016 now explicitly separates the frozen contract names (open/closing/closed/reopened) from the merged `AccountingPeriod` fact (`status in (active, posted)` with the active<->closed_through constraint), maps open=active (closed_through null) and closed=posted (closed_through not null), marks closing/reopened as no existing mapping, and freezes a PH-322 migration/backfill/constraint plan (方案 A status extension vs 方案 B append-only PeriodCloseRun), including no historical rewrite, migration-number rules and `close_command_not_implemented`/`reopen_not_implemented` read projections until implemented. This removes the incompatible-enum blocker without weakening the contract.",
+      "OTHER CONTENT RE-VERIFIED: lock boundary uses the real AccountingPeriod.closed_through; close command/append-only conclusion/company lock/request_token/dry_run/duplicate-close rejection; forecast batch fields/version/superseded/server-derived coverage/null+missing/client-override rejection; cross-owner read-only composition limited to delivered PH-291/283/288/280/281/279/277/274 with no second owner; role matrix/history-read; ADR is docs-only, number 0016 correct, changed files within the 8-path whitelist, no code/migration/schema/canonical topic; PH-299 in_review/handoff, PH-322 blocker points to ADR 0016/PH-300.",
+      "EVIDENCE AT 7395646 (BASE 15cf20c): check ok=true/task_count=245; governance 23 tests OK; verify-change --base 15cf20c --task PH-299 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; report review now pass. After the final evidence/done transition, verify-change should be clean."
+    ],
+    "evidence": "VERDICT: PASS (round 2; period-state mapping/migration plan added). Reviewed HEAD 7395646 (BASE 15cf20c) in /tmp/ph299-close-adr, worktree clean; ADR 0016 plus tasks/manifest/docs/verification/report/handoff within the 8-path whitelist; no code/migration/schema. open/closed map to existing active/posted, closing/reopened explicitly future with PH-322 migration/backfill/constraint plans and not-implemented markers; close/forecast/cross-owner/permissions/idempotency otherwise frozen; PH-299 in_review, PH-322 blocker points to 0016/PH-300. Independent runs: check ok=245; governance 23 OK; verify-change --base 15cf20c --task PH-299 only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "ADR file name follows the PH-299 spec exact whitelist (docs/adr/0016-forecast-close-contract.md); the Lead message's shorthand 'period-close-forecast' is not used to avoid diverging from the frozen whitelist.",
+    "Numbering basis: docs/adr currently ends at 0014; 0015 is already reserved by the registered invoice tax/red-reversal ADR task in tasks.json, so 0016 (as frozen by the PH-299 spec) is the next free number for this ADR.",
+    "The ADR is docs-only: no code, migration, table, contract schema, canonical topic/command, route or runtime behavior is added; PH-322 remains proposed and its blocker now points at ADR 0016 and PH-300.",
+    "PH-299 spec itself was not edited (its whitelist allows it but no contract text needed changing); the ADR is the frozen deliverable and the tasks blocker is the only registry change besides governance files.",
+    "Reviewer round-1 blocker fixed: ADR 0016 now includes a 与既有模型映射 section mapping open->AccountingPeriod.status='active' (closed_through NULL) and closed->'posted' (closed_through NOT NULL), marking closing/reopened as not-yet-existing future schema changes with a PH-322 migration/backfill/constraint plan (extend status or add append-only PeriodCloseRun) and an unimplemented marker; no incompatible enum is described as an existing fact.",
+    "Lead integration rebase (15cf20c -> c2c76d8) after PH-293 merged: docs/verification.md kept main entries plus the PH-299 entry; manifest.active_handoff -> PH-299. Gates rerun green."
+  ],
+  "unverified": [
+    "This slice is docs-only: no runtime, browser, PG or migration verification applies; the implementation must re-validate the ADR against the actual BASE in PH-322.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "Forecast/close implementation, period locking writes, notification/export, forecast algorithms and canonical schema changes remain unimplemented (PH-322 proposed).",
+    "PH-300 (project close ADR) is a separate slice and not covered here; PH-322 stays blocked until both ADRs and the implementation prerequisites are done."
+  ]
+}

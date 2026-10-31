@@ -9409,7 +9409,7 @@
       "title": "期间关期与预测覆盖（WP-FORECAST/CLOSE）首片：关期前置与预测覆盖契约冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9440,9 +9440,9 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-299.md"
     },
     {
       "id": "PH-300",
@@ -10333,7 +10333,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-299/PH-300（关期/结项契约冻结，ready 未 done）、PH-312（实现前置，proposed）与 PH-180/PH-181/PH-182/PH-185（proposed）done；契约/前置完成后由 PH-323 规划槽复核 DoR 再晋级。"
+        "缺 PH-299（关期/预测契约冻结，ADR 0016；含与 AccountingPeriod active/posted 的映射及 closing/reopened 迁移/回填计划）与 PH-300（项目结项契约冻结，ADR 0017；含与 Project.stage 的映射及 ProjectClose 迁移计划）done；缺 PH-312（实现前置，proposed）与 PH-180/PH-181/PH-182/PH-185（proposed）done。契约/前置完成后由 PH-323 规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
