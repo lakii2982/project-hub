@@ -1,7 +1,7 @@
 # 批次 C 发布资格 gate 判定记录（PH-372 执行，PH-366/PH-367 契约）
 
 - 执行任务：PH-372（docs-only；本片**不执行**部署/恢复/并发/性能，只合并既有证据并判定）。
-- 执行 BASE / 候选 SHA：**5278c96**（main，PH-386/382 已合入）；候选发布 SHA 以此记录绑定；产品代码自 PH-370 后未变。
+- 执行 BASE / 候选 SHA：**5278c96**（main，PH-386/382 已合入）；候选发布 SHA 以此记录绑定；产品代码基线为 **PH-371（#244, 36cdf00）**，其后无产品代码提交（PH-382 docs-only / PH-386 docs）。
 - 执行时间：2026-10-31（UTC+8）；执行环境：macOS 本地 SQLite（仅治理基线），无 staging/production。
 - 契约：`batch-c-release-evidence-contract.md`（PH-366）、`batch-c-aggregate-acceptance-contract.md`（PH-367）、`ops-runbook.md`（PH-345）、`batch-c-runbook.md §10`（PH-357）。
 - 结论先行：**gate = blocked；release_ready=false；无有效豁免；未发布**。详见 §6/§7。
@@ -11,22 +11,208 @@
 1. 收集 PH-333/334/335/357 汇总产物与 PH-347/348/349/350 已记录证据（只读，不重跑演练）。
 2. 按 PH-366 §3/§7 归一 exit→status；按 PH-367 §3 **多来源取最严**（fail > blocked > not_run > pass），L2–L5 分层保留；冲突记录（本次无冲突）。
 3. 按 PH-366 §6.1 必需证据集合逐项判定；缺口登记；核心项不豁免。
-4. 合并记录与 digest：
+4. **产品代码基线**：BASE `5278c96` 中最新产品代码提交为 **PH-371（#244, 36cdf00）**；其后 PH-382（#247，docs-only）与 PH-386（#246，docs/规划）未改产品代码。本记录绑定候选 SHA 5278c96，不声称“PH-370 后产品代码未变”。
+5. **合并记录与 digest（可复现）**：完整 canonical 记录如下（下文 JSON 块）。digest 算法：对**解析后的该 JSON 对象**执行 `json.dumps(record, ensure_ascii=False, sort_keys=True)`（UTF-8、默认分隔符），取 SHA-256。任何人可从下方 JSON 重算并验证。
 
 ```json
 {
   "aggregate_id": "batch-c-release-gate-2026-10-31",
   "candidate_sha": "5278c96",
-  "profile": "local/rehearsal (no staging/production)",
-  "overall_status": "blocked",
-  "release_ready": false,
+  "checks": [
+    {
+      "evidence": "projectctl check ok/312; 23 governance OK; manage.py check 0 errors; makemigrations clean; verify_integrity ok",
+      "id": "governance.baseline",
+      "layers": [
+        "L2"
+      ],
+      "status": "pass"
+    },
+    {
+      "evidence": "local dry_run pass; real install L3 not_run",
+      "id": "V1-OPS-01",
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "status": "not_run"
+    },
+    {
+      "evidence": "real TLS/domain not_run",
+      "id": "V1-OPS-02",
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "status": "not_run"
+    },
+    {
+      "evidence": "local dry_run pass; real upgrade/rollback L3 not_run",
+      "id": "V1-OPS-03",
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "status": "not_run"
+    },
+    {
+      "evidence": "SQLite backup/restore local; real PG L3 not_run",
+      "id": "V1-OPS-04",
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "status": "not_run"
+    },
+    {
+      "evidence": "rehearsal facts pass; real capacity L3 not_run",
+      "id": "V1-OPS-05",
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "status": "not_run"
+    },
+    {
+      "evidence": "contract tests pass; real PG concurrency L3 not_run",
+      "id": "V1-OPS-06",
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "status": "not_run"
+    },
+    {
+      "evidence": "no browser walkthrough",
+      "id": "L4_browser",
+      "layers": [
+        "L4"
+      ],
+      "status": "not_run"
+    },
+    {
+      "evidence": "no production/customer acceptance",
+      "id": "L5_production",
+      "layers": [
+        "L5"
+      ],
+      "status": "not_run"
+    },
+    {
+      "evidence": "only L1/L2 summary",
+      "id": "M15_rollup",
+      "layers": [
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "status": "not_run"
+    }
+  ],
   "conflicts": [],
-  "merged_at": "2026-10-31T13:10:00+00:00",
-  "merged_by_role": "worker-docs (execution)"
+  "gaps": [
+    {
+      "item": "V1-OPS-01/03/04 real staging/production deploys",
+      "reason": "not_run"
+    },
+    {
+      "item": "V1-OPS-02 TLS",
+      "reason": "not_run"
+    },
+    {
+      "item": "V1-OPS-04 real PG backup/restore + RPO/RTO",
+      "reason": "not_run"
+    },
+    {
+      "item": "V1-OPS-05 CI/PG capacity/backlog/health",
+      "reason": "not_run"
+    },
+    {
+      "item": "V1-OPS-06 real PG concurrency",
+      "reason": "not_run"
+    },
+    {
+      "item": "L4 browser 1440/390",
+      "reason": "not_run"
+    },
+    {
+      "item": "L5 production/customer",
+      "reason": "not_run"
+    },
+    {
+      "item": "independent reviewer signature",
+      "reason": "pending; executor cannot self-sign"
+    }
+  ],
+  "merged_at": "2026-10-31T13:30:00+00:00",
+  "merged_by_role": "worker-docs (execution)",
+  "overall_status": "blocked",
+  "product_code_baseline": "PH-371 (#244, 36cdf00) is the latest product-code commit in this BASE; product code is unchanged after it (PH-382 #247 docs-only, PH-386 #246 docs/planning).",
+  "profile": "local/rehearsal (no staging/production)",
+  "release_ready": false,
+  "sources": [
+    {
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "note": "local/rehearsal; V1-OPS-02 TLS not_run; release_ready=false",
+      "script": "ops_rollup_acceptance",
+      "status": "pass",
+      "task": "PH-333"
+    },
+    {
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "note": "contract only; real PG not_run",
+      "script": "ops_pg_concurrency",
+      "status": "pass",
+      "task": "PH-334"
+    },
+    {
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "note": "rehearsal facts; L3-L5 not_run; release_ready=false",
+      "script": "ops_health_capacity",
+      "status": "pass",
+      "task": "PH-335"
+    },
+    {
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "note": "backfill local evidence; gaps L3-L5",
+      "script": "docs",
+      "status": "pass",
+      "task": "PH-357"
+    },
+    {
+      "layers": [
+        "contract"
+      ],
+      "note": "execution prerequisite contract",
+      "script": "docs",
+      "status": "pass",
+      "task": "PH-367"
+    },
+    {
+      "layers": [
+        "contract"
+      ],
+      "note": "release evidence/gate contract",
+      "script": "docs",
+      "status": "pass",
+      "task": "PH-366"
+    }
+  ]
 }
 ```
 
-- **evidence_digest**（合并记录规范化 JSON 的 SHA256，完整记录见 `/tmp/ph372-merged-gate.json`）：`0b9f1cd924eab535132f76a21899f6c194f6475f28d6b9b7fdd0d6d651ae0c68`。
+- **evidence_digest（canonical JSON SHA-256）**：`3ee83650a3a5fb7df1ec0efe589ee176a6e9df9af11e36adcdc0fbfb8d86b17b`（canonical 字节数 3159；`merged_at=2026-10-31T13:30:00+00:00`）。
 
 ### 1.1 来源登记
 
@@ -109,7 +295,7 @@
 
 | 角色 | 成员引用 | 范围 | 时间 | decision | evidence_digest |
 | --- | --- | --- | --- | --- | --- |
-| 执行（documentation/evidence merge） | worker-docs | gate 记录/合并 | 2026-10-31 (UTC+8) | submitted-for-review | `0b9f1cd924eab535132f76a21899f6c194f6475f28d6b9b7fdd0d6d651ae0c68` |
+| 执行（documentation/evidence merge） | worker-docs | gate 记录/合并 | 2026-10-31 (UTC+8) | submitted-for-review | `3ee83650a3a5fb7df1ec0efe589ee176a6e9df9af11e36adcdc0fbfb8d86b17b` |
 | 独立复核人 | 待独立 S 复核 | gate 判定/缺口/签名 | 评审时 | pending | 同上 |
 | 产品/发布/独立复核（豁免，如需） | 无 | — | — | 未申请 | — |
 

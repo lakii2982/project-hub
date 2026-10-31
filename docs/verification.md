@@ -1141,7 +1141,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 
 基线/候选 SHA 5278c96。新增 `docs/v1.0-development/release-evidence-backfill.md`：
 1. **来源登记**：PH-333 rollup、PH-334 PG 汇总契约、PH-335 health rollup、PH-357 回填（本地 L1+L2）、PH-366/367 契约；只读合并，不重跑演练。
-2. **合并**：exit→status 归一 + 多来源取最严（fail>blocked>not_run>pass）；L2–L5 分层；无冲突。evidence_digest=`0b9f1cd924eab535132f76a21899f6c194f6475f28d6b9b7fdd0d6d651ae0c68`。
+2. **合并**：exit→status 归一 + 多来源取最严（fail>blocked>not_run>pass）；L2–L5 分层；无冲突。evidence_digest=`3ee83650a3a5fb7df1ec0efe589ee176a6e9df9af11e36adcdc0fbfb8d86b17b`（完整 canonical 记录已嵌入可复现）。
 3. **治理基线实跑**：projectctl check ok/312；23 项治理 OK；manage.py check 119 既有警告/0 error；makemigrations clean；verify_integrity（新库）ok；全量 1310 tests，5F+3E+70skip=既有 macOS 基线，无新增。
 4. **合并矩阵**：V1-OPS-01–06/M15/L4/L5 的 L3–L5 全部 **not_run**；发布包/本地基线仅 L2 pass。
 5. **必需集**：治理基线 pass（L2）；V1-OPS-01–06、M15、L4、L5 均 not_run；**无有效豁免**。
