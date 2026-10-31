@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 9719f93 (BASE 0281043, PH-332 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":258}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":258} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -14,16 +14,21 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 0281043 --task PH-332",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 9719f93: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (batch-c-acceptance.md, ROADMAP.md, tasks.json, manifest.json, docs/verification.md, PH-332 report/handoff) are inside BASE PH-332 allowed_paths."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 changed files inside BASE PH-332 allowed_paths (independent review pass recorded)."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (acceptance matrix/runbook skeleton, evidence-layer rules and no-fabrication boundaries); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-332 batch-C acceptance-matrix reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "FIVE-LAYER DISCIPLINE PRESENT: L1 code existence, L2 local automated pass, L3 CI/PG, L4 browser, L5 production/pilot are explicitly defined with evidence formats and non-substitution rules; skipped/not_run/blocked must be marked, configuration/document existence cannot substitute for runtime evidence, and the whole document explicitly states it records no pass conclusions.",
+      "M01–M15 COVERAGE: the matrix maps V1-ORG/MD/PRO/CON/TIM/CST/SPD/SET/CSH/REV/PLN/REC/INS/ONB/OPS to acceptance targets, prerequisites, commands/evidence, pass criteria and unverified boundaries; M01's referenced test module names exist; rows whose write side or ops slices are not delivered (M03/M06/M07/M10/M11/M12/M13/M14/M15 etc.) are explicitly marked not_run/blocked rather than fabricated passes. The common command block is executable and the unverified boundaries are honest.",
+      "V1-OPS-01–06 SKELETON: installation/diagnosis, TLS, upgrade/rollback, backup/restore, health/capacity/backlog and real-PG multi-connection sections define prerequisites, role placeholders, steps and evidence paths, including failure-safe retry, additive migration, RPO/RTO, no SQLite-as-PG and no sensitive credentials/customer data; batch-C order PH-332→333→334→335 matches the task dependencies and is cross-referenced from ROADMAP/docs/verification.",
+      "SLOT/WHITELIST/GATES: 7 changed files are exactly the docs-only whitelist (ROADMAP, batch-c-acceptance, verification, tasks/manifest/report/handoff); no code/migration/script/placeholder; PH-332 in_review/handoff. At HEAD 7ce4970 (BASE 0281043): projectctl check ok=true/task_count=258; governance 23 tests OK; verify-change --base 0281043 --task PH-332 only high_risk_review_required + acceptance_not_passed (the check declaration is still honestly pre-review not_run), no path_out_of_scope. Final evidence must set the check declaration to pass and rerun verify-change after review."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 7ce4970 (BASE 0281043) in /tmp/ph332-batch-c, worktree clean; 7 changed files exactly the docs-only whitelist; no code/migration/script. Five-layer evidence rules, M01–M15 target/evidence/pass/boundary matrix (with not_run/blocked for undelivered slices), V1-OPS-01–06 runbook skeleton, batch-C order/dependency mapping and ROADMAP/docs/verification cross-references are complete and honest, with no fabricated pass; check ok=258; governance 23 OK; verify-change --base 0281043 only review/acceptance gates, no path_out_of_scope. Final evidence must mark the check declaration pass and set PH-332 done."
   },
   "deviations": [
     "The acceptance matrix intentionally leaves M03/M06/M10/M11/M12/M13/M14/M15 rows as not_run/blocked where the corresponding write-side or ops slices (PH-322/321/330/252/320, PH-333/334/335) are not yet delivered; this is a deliberate truthful boundary, not a partial deliverable.",

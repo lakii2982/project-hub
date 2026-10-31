@@ -10724,7 +10724,7 @@
       "title": "批次 C-1：M01–M15 验收矩阵与运维 runbook 骨架（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
