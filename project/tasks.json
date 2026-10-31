@@ -7409,7 +7409,29 @@
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "tests/test_acceptance_revenue.py",
+        "tests/test_api_security.py",
+        "tests/test_service_period_revenue_http.py",
+        "tests/test_v1_bank_charge.py",
+        "tests/test_v1_bank_charge_approval.py",
+        "tests/test_v1_bank_charge_approval_http.py",
+        "tests/test_v1_bank_charge_http.py",
+        "tests/test_v1_bank_charge_pairing.py",
+        "tests/test_v1_bank_charge_pairing_http.py",
+        "tests/test_v1_billable_reversal.py",
+        "tests/test_v1_billable_reversal_http.py",
+        "tests/test_v1_cash_http.py",
+        "tests/test_v1_clearance_http.py",
+        "tests/test_v1_contract_change.py",
+        "tests/test_v1_contract_change_http.py",
+        "tests/test_v1_contract_change_impact.py",
+        "tests/test_v1_contract_change_impact_http.py",
+        "tests/test_v1_contract_terms_snapshot.py",
+        "tests/test_v1_contract_terms_snapshot_http.py",
+        "tests/test_v1_revenue_pairing_read.py",
+        "tests/test_v1_revenue_pairing_read_http.py",
+        "tests/test_v1_settlement_http.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -10566,7 +10588,7 @@
       "title": "后续交付独立规划入口（接续 PH-323）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -10595,6 +10617,67 @@
       "owner": "root",
       "blockers": [],
       "handoff": "project/handoffs/PH-328.md"
+    },
+    {
+      "id": "PH-329",
+      "title": "下一规划槽：验收实现切片与批次 C 登记",
+      "status": "ready",
+      "risk": "S",
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-328"
+      ],
+      "blockers": [],
+      "allowed_paths": [
+        "project/specs/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "ROADMAP.md",
+        "project/reports/PH-329.json",
+        "project/handoffs/PH-329.md"
+      ],
+      "owning_plugin": "core",
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "python scripts/projectctl.py verify-change --task PH-329"
+      ],
+      "handoff": null,
+      "owner": null
+    },
+    {
+      "id": "PH-330",
+      "title": "分摊/预算 ETC 实现首片（costing 0005/0006）",
+      "status": "proposed",
+      "risk": "S",
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-313",
+        "PH-322"
+      ],
+      "blockers": [
+        "等待依赖 done"
+      ],
+      "allowed_paths": [
+        "pmo_plugins/costing/",
+        "tests/test_v1_shared_cost*.py",
+        "tests/test_v1_budget*.py",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-330.json",
+        "project/handoffs/PH-330.md",
+        "project/tasks.json",
+        "project/manifest.json"
+      ],
+      "owning_plugin": "delivery",
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "python scripts/projectctl.py verify-change --task PH-330"
+      ],
+      "handoff": null,
+      "owner": null
     }
   ]
 }

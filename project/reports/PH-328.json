@@ -8,7 +8,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":250} exit 0"
+      "evidence": "{\"command\":\"check\",\"ok\":true,\"task_count\":252} exit 0."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -16,14 +16,17 @@
       "evidence": "Ran 23 tests OK"
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 2659317 --task PH-328",
+      "command": "python scripts/projectctl.py verify-change --base 094f61e --task PH-328",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 5 changed files all inside BASE PH-328 allowed_paths (independent review pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — changed files all inside BASE PH-328 allowed_paths."
     }
   ],
   "deviations": [
     "PH-324 实现发现 canonical 契约文件被 extension-freeze.json 的 canonical_sha256 锁定，而该文件不在 PH-324 白名单：本槽按 Lead 授权把它与 PH-324 spec 一并加入 PH-324 allowed_paths（真实交付，不降级为旁路 schema）。",
-    "PH-324 spec 此前缺失（PH-323 仅登记任务未建 spec），本槽补齐。"
+    "PH-324 spec 此前缺失（PH-323 仅登记任务未建 spec），本槽补齐。",
+    "PH-252 依赖收敛到 ADR 0010 requires={contracts,settlement} 后，既有 22 个测试文件需在停用被依赖模块前先停用 invoicing（否则依赖守卫拒绝）；本槽按 Lead 授权把这 22 个测试文件加入 PH-252 allowed_paths，并写入 PH-252 spec「依赖/停用顺序说明」，禁止改动业务断言。",
+    "PH-313 实现前置被第二复核者发现 2 阻断 + 2 必改（line_key 与 PH-306 唯一性冲突；pool 冲销符号规则自相矛盾；pool_kind 映射未落地；PH-306 审计偏差未披露）——本槽在 PH-313 spec 中修正并披露，PH-313 仍 done（缺陷修正，非范围扩张）。",
+    "登记 PH-329（下一规划槽，ready）与 PH-330（分摊/预算实现首片，proposed d epends PH-313/PH-322）；关闭 PH-328 → done。"
   ],
   "unverified": [
     "PH-324 实现本身未开始",
