@@ -51,6 +51,7 @@ def entry_point():
             'contract_change_save': approval_views.contract_change_save,
             'contract_change_review': approval_views.contract_change_review,
             'contract_change_impact': views.contract_change_impact_detail,
+            'fx_rates': views.fx_rates, 'fx_rate_save': views.fx_rate_save,
             'contract_terms_snapshot': views.contract_terms_snapshot,
         },
         'management_revenue': {'revenue_pairing': revenue_views.revenue_pairing_snapshot_page},

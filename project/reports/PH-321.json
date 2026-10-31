@@ -1,0 +1,32 @@
+{
+  "task_id": "PH-321",
+  "summary": "多币种/汇率实现首片（contracts-only）on BASE 987ec1e，按 Lead 裁决 B 收窄：只做 contracts owner 的 FX 事实、换算助手与合同行只读核对；不写结算/收入/现金/发票，不改 core 迁移/verify_integrity。实现 contracts/fx_services.py：FxRateSnapshot（append-only、org+base/quote+effective_on+version 唯一、Decimal(18,8)、source、created_by、algorithm_version；unmanaged ORM model + contracts migration 0007 建表及 SQLite/PG vendor-aware UPDATE/DELETE trigger、state 同步使 makemigrations 无变更）；record_fx_rate（owner/finance、公司锁、版本递增、dry_run 零写、plugin. 审计）；精确业务日 resolve_fx_rate（无最近汇率回退）与 resolve_fx_ref；convert_cents/convert_original_amounts（整数分、一次 ROUND_HALF_UP、book gross=book net+tax、上限 10^12）；fx_rate_list；contract_line_fx_snapshots（原币/记账币/rate/missing，非 CNY 行必须带冻结 fx_rate_ref，否则 fx_rate_missing，不做日期回退）；prepare_contract_line_fx 为未来 approval/change 写入路径提供转换+校验 helper（本片不创建/修改 ContractLine）。UI：fx-rates history_read + fx-rate-save business_write，owner/finance 写、auditor 读、pm 项目行、member 拒绝、模块停用历史只读。偏差：BASE PH-321 仍 proposed，verify-change 预期 task_not_executable（Lead 将由 PH-336 置 ready/补路径）；approval_services/change_services 不在 BASE 白名单，合同行非 CNY 写入集成未落地（仅 helper）；models.py 不在白名单，采用 unmanaged model+state migration 规避；verify_integrity 未改（不在白名单）；结算/收入/现金/发票集成不在本片。",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run on BASE 987ec1e: {\"command\":\"check\",\"ok\":true,\"task_count\":253}."},
+    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; 102 known URL/field-system warnings, no errors."},
+    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual run: 'No changes detected' after adding the unmanaged FxRateSnapshot state migration 0007; no core migration changed."},
+    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."},
+    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 1159 tests in 131.357s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."},
+    {"command": "python manage.py test tests.test_v1_fx tests.test_v1_fx_http --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 9 tests, OK. Service 6: record/version exact-date resolution and no nearest-date fallback, permissions/disabled-module history read, one-time ROUND_HALF_UP conversion, append-only model+DB triggers, CNY/non-CNY/missing contract-line display, CNY/non-CNY write preparation helper. HTTP 3: owner page+record/redirect+no GET writes, invalid post/roles, disabled-module history read."},
+    {"command": "python scripts/projectctl.py verify-change --base 987ec1e --task PH-321", "result": "fail", "evidence": "Expected governance failure at this BASE: PH-321 status is still proposed in BASE tasks.json, so verify-change returns task_not_executable (Lead stated PH-336 planning slot will set ready/add paths). No path_out_of_scope was evaluated because the baseline task is not executable; implementation files themselves are within the BASE allowlist for fx_services/views/forms/domain_metadata/templates/migrations/tests."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级写侧片由 fresh-context reviewer 按 BASE 987ec1e 的 PH-321/PH-308/PH-324 核对：FxRateSnapshot append-only/唯一/Decimal/来源/版本、record/resolve（精确日期无回退）、一次 ROUND_HALF_UP 与 gross=net+tax、权限/停用 history_read、无 core 迁移、unmanaged model+state migration 的 makemigrations/fresh migrate 行为、SQLite/PG trigger 路径、只读合同行原币/记账币/missing、非 CNY 无冻结 ref 拒绝回退、测试/全量基线；并核对本片范围收窄是否如实（合同行写入集成因 approval_services/change_services 不在白名单未落地）、PH-321 proposed 导致的 verify-change 非可执行是否如实披露。实现者不自写 pass。"
+  },
+  "deviations": [
+    "Lead 裁决 B 收窄到 contracts；BASE PH-321 allowed_paths 不含 approval_services.py/change_services.py/models.py/verify_integrity，故：合同行非 CNY 写入集成未落地（仅 prepare_contract_line_fx helper 供未来 approval/change 调用）；FxRateSnapshot 用 unmanaged ORM model + state migration 0007 规避 models.py 缺失；verify_integrity FX 分支未改（按 Lead 不动/不在白名单）；结算/收入/现金/发票跨 owner 集成不在本片。",
+    "BASE tasks.json PH-321 仍 status=proposed；按 Lead 指示不自行改状态，由 PH-336 规划槽置 ready/补路径。verify-change 因此预期 task_not_executable，report 如实记 fail/not executable。",
+    "record_fx_rate 允许同一业务日期追加新版本（version+1），历史/旧版本只读；effective_on 不允许未来（本片收窄口径），与 PH-308 未来汇率可选登记不同，属本片实现口径，report 披露。",
+    "新增/改迁移仅 contracts/0007_fxratesnapshot.py；未改已应用迁移/core 迁移。"
+  ],
+  "unverified": [
+    "PostgreSQL 运行证据以 CI 为准；本机 SQLite vendor-aware trigger/迁移通过。",
+    "浏览器 1440/390/键盘/空错停用态未实机；HTTP 测试仅断言页面/权限/表单/停用 history_read。",
+    "合同行非 CNY 写入集成、跨 owner（结算/收入/现金/发票）换算与 verify_integrity FX 分支未实现（受当前 BASE 白名单限制，待 PH-336 新 BASE）。",
+    "独立 S 复核 pending；PH-321 仍 proposed，verify-change 验收需 PH-336 新 BASE 后重跑。"
+  ]
+}

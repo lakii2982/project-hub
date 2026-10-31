@@ -16,6 +16,7 @@ DOMAIN_METADATA = {
             ('contract-change-impact', 'history_read'),
             ('contract-terms-snapshot', 'history_read'),
             ('contract-change-save', 'business_write'), ('contract-change-review', 'business_write'),
+            ('fx-rates', 'history_read'), ('fx-rate-save', 'business_write'),
         )
     ],
 }

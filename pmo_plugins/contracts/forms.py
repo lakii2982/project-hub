@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from django import forms
 from django.db.models import Q
@@ -91,3 +92,29 @@ class TermsSnapshotFilterForm(forms.Form):
             from core.access import visible_projects
             rows = rows.filter(project__in=visible_projects(member))
         self.fields['contract'].queryset = rows.select_related('project').order_by('contract_code', 'id')
+
+
+class FxRateForm(StrictForm):
+    """Owner/finance input for an append-only FX rate snapshot."""
+
+    quote_currency = forms.CharField(label='原币种（ISO 4217）', max_length=3)
+    rate = forms.DecimalField(label='汇率（1 原币 = ? CNY）', max_digits=18,
+                              decimal_places=8, min_value=Decimal('0.00000001'))
+    effective_on = forms.DateField(label='生效日期', widget=forms.DateInput(attrs={'type': 'date'}))
+    source = forms.ChoiceField(label='来源', choices=[('manual', '手工'), ('bank', '银行'),
+                                                      ('provider', '供应商')])
+    reference = forms.CharField(label='参考', max_length=240, required=False)
+
+    def clean_quote_currency(self):
+        value = (self.cleaned_data.get('quote_currency') or '').strip().upper()
+        if len(value) != 3 or not value.isalpha() or not value.isascii():
+            raise forms.ValidationError('原币种须为三位 ISO 4217 代码')
+        if value == 'CNY':
+            raise forms.ValidationError('原币种不能与记账本位币相同')
+        return value
+
+    def clean_effective_on(self):
+        value = self.cleaned_data.get('effective_on')
+        if value and value > timezone.localdate():
+            raise forms.ValidationError('汇率生效日期不能在未来')
+        return value
