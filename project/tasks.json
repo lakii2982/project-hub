@@ -11300,7 +11300,7 @@
       "title": "批次 C-2a 安装/升级演练执行（PH-333 拆分：V1-OPS-01/02/03）",
       "kind": "feature",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [

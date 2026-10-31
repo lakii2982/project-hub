@@ -59,8 +59,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base cbb84c2 --task PH-347",
-      "result": "not_run",
-      "evidence": "Not run before report creation; expected only high_risk_review_required while review is pending. Will be rerun after the independent review pass."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 10 files inside BASE PH-347 allowed_paths (review pass recorded)."
     },
     {
       "command": "python scripts/ops/install_drill.py --mode execute --env staging --facts '{\"compose_version\":\"2.29.0\",\"db_engine\":\"sqlite\",\"migrations_append_only\":true}' --out /tmp/ph347-evidence/install-staging-refused.jsonl",
@@ -81,13 +81,13 @@
   "review": {
     "required": true,
     "reviewer": "independent PH-347 install/upgrade drill reviewer (fresh context, read-only)",
-    "status": "pending",
+    "status": "pass",
     "findings": [
-      "BLOCKER - staging execute produces a false pass: install_drill.preflight refuses only `profile == 'production'`; with `--env staging --mode execute` it falls through to a temporary local rehearsal manifest, records `install.rehearsal=pass`, and returns exit 0/pass for a staging install that was never performed. upgrade_drill.upgrade_plan has the same behavior: only production execute is refused; staging execute with a backup and migration facts returns pass from a temporary plan copy. The report/docs say real staging/production are not_run, so staging execute must not be able to claim pass. Fix: restrict `execute` to `profile == 'rehearsal'` (staging/production execute should return EXIT 5 blocked or EXIT 2 not_run with an explicit reason), and add regressions for staging execute on both scripts.",
-      "BLOCKER - missing migration fact defaults to pass in install preflight: `facts.get('migrations_append_only', True)` makes the migration.mode check pass when the fact is absent (e.g. compose/db facts supplied but no migration evidence), so the install drill can claim append-only migrations without evidence. Fix: require an explicit fact and emit not_run/fail when missing; add a test with compose/db present but no migration evidence.",
-      "OTHER CONTENT CHECKED: both scripts emit the PH-345 envelope fields (script/contract_version/mode/profile/app_sha/started_at/finished_at/exit_code/status/checks/artifacts/redactions/notes); exit-code mapping 0/2/3/4/5 and JSONL append-only evidence are implemented; production execute is refused with exit 5; TLS probe with no domain exits 2/not_run; upgrade execute requires backup and copies an isolated SQLite DB before migrate; smoke/real staging/production remain not_run/blocked and the docs reflect local/rehearsal-only evidence; scoped tests 12 OK; check 283; makemigrations clean; full 1236/5F+3E/69 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope; 10 files within the PH-347 whitelist and no product code/migration/schema change."
+      "ROUND-2 BLOCKERS RESOLVED AT 718e8c1: both scripts now restrict `execute` to `profile == 'rehearsal'`; any staging/production execute returns exit 5 with `safety.execute_profile` blocked before any local rehearsal, so a temporary manifest can no longer pose as a staging install/upgrade. install preflight now requires an explicit `migrations_append_only` fact: true -> pass, false -> fail, missing -> not_run/exit 2; regressions cover staging execute on both scripts and the compose/db-present-but-no-migration-evidence case.",
+      "CONTENT RE-VERIFIED: PH-345 envelope fields (script/contract_version/mode/profile/app_sha/started_at/finished_at/exit_code/status/checks/artifacts/redactions/notes), exit-code mapping 0/2/3/4/5, and JSONL append-only evidence are implemented; production execute is refused with exit 5; TLS probe without a domain exits 2/not_run and a real handshake failure maps to environment_error; upgrade execute requires backup evidence and copies an isolated SQLite DB before migrate; smoke and real staging/production remain not_run/blocked and docs reflect local/rehearsal-only evidence; the drill never writes product data or modifies the source DB.",
+      "EVIDENCE AT 718e8c1 (BASE cbb84c2): check ok=true/task_count=283; manage.py check exit0; makemigrations --check No changes; scoped install/upgrade tests 15 OK; full suite 1239/5F+3E/69 = known macOS baseline; fresh SQLite verify_integrity ok; verify-change --base cbb84c2 --task PH-347 only high_risk_review_required, no path_out_of_scope; 10 files within the PH-347 whitelist and no product code/migration/schema change. report review now pass."
     ],
-    "evidence": "reviewer round-1 REJECTED: staging execute could claim pass from a local temporary rehearsal in both scripts, and install preflight defaulted missing migrations_append_only to pass. Fixed: execute restricted to rehearsal (staging/production exit 5 blocked), migration fact must be explicit true (missing not_run, false fail), regressions added. Round-2 independent review pending; implementer does not self-pass."
+    "evidence": "VERDICT: PASS (round 2; staging execute and missing migration evidence fixed). Reviewed HEAD 718e8c1 (BASE cbb84c2) in /tmp/ph347-upgrade-drill, worktree clean; 10 files within the PH-347 whitelist; no product code/migration/schema. Execute is rehearsal-only; staging/production execute exit5 blocked; explicit migration fact required (missing -> not_run); envelope/exit/JSONL/production refusal/TLS not_run/isolated SQLite execute otherwise verified. Independent runs: check ok=283; makemigrations clean; scoped 15 OK; full 1239/5F+3E/69 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope."
   },
   "deviations": [
     "No real staging/production installation, TLS handshake, upgrade, or rollback was executed; only local/isolated rehearsal and contract tests. Real-environment items are marked not_run.",
