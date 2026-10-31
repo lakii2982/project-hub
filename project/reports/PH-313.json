@@ -1,0 +1,28 @@
+{
+  "task_id": "PH-313",
+  "summary": "共享费用分摊/预算 ETC 实现前置（docs-only）on BASE bfc5ca3. The PH-313 exact allowlist has only six docs paths and no code/migration/schema/docs-adr, so no skeleton or migration is landed and no number is reserved; the frozen decisions and executable follow-up implementation specs are written into project/specs/PH-313.md. Decisions: both shared-cost allocation batches and project budgets live in the costing plugin (SharedCostAllocationBatch/Line/Receipt and ProjectBudgetVersion/Line/Receipt); two independent costing migrations 0005_shared_cost_allocation and 0006_project_budget (BASE leaf 0004; actual leaf re-checked at construction). Allocation batch is append-only with kind allocation/reversal, conditional unique active allocation per org+period+pool_key (status='posted'; reversed batches yield to a new one), one reversal per batch via OneToOne, positive/negative amount and line sign rules, total 10000 basis points, zero-allocation lines retained, and a frozen deterministic conversion: prefix ROUND_HALF_UP is clamped to the remaining amount and the last stable target id absorbs the residual, which is the only interpretation satisfying both the contract's last-item absorption and every item >= 0 (extreme equal splits would otherwise produce a negative last item); algorithm_version basis_points_clamped_half_up_last_absorb_v1 is stored and history is never recomputed under a new label. Pool sources are only posted costing nonproject postings (project costs such as PH-250 fees, cash, revenue, unapproved/draft, cross-org/period excluded); the pool amount is the signed source total and missing/non-positive pools are rejected, never zero-fabricated. Reallocation posts one net-zero costing AccountingEvent + SourceConsumption claim + per-source negative nonproject postings and per-project positive postings (reversal mirrors with opposite signs), preserving original sources and company total cost; dry_run is zero-write; request_token receipts, company lock, period open/non-future/not-closed guards, plugin-prefixed audit avoiding new canonical topics, and vendor-aware SQLite/PG append-only guards are frozen. Budget: append-only draft/approved/superseded/rejected versions with per-project/period unique approved, four-eyes approval, effective_from frozen, integer-cent subject lines labor/expense/procurement/other with contract-line validation and line_key uniqueness, receipts/optimistic expected_version/company lock/period-closed rejection, plugin audit; ETC is derived read-only via PH-306 budget_residual_v1 from the as-of approved budget plus costing posted costs with the PH-306 exclusion list, null+missing semantics and frozen budget/ETC issue codes. Shared-cost reconciliation reuses PH-305's 13 issue codes plus pool_source_missing and driver_missing. Dependencies are frozen: PH-252 InvoiceAllocation is a different invoicing concept and must not share tables or write shared allocation; PH-322 consumes the two read-only reconciliation/ETC interfaces for close prechecks with missing/read_model_missing degradation only if planning schedules them in parallel, and allocation/budget writes reject after close. The executable follow-up spec proposes two implementation slices (allocation and budget/ETC), their shared/likely whitelist expansion for the planning slot (not self-authorized), two migrations, services/read models/pages, verify_integrity branches, gold/rejection matrix and acceptance commands; neither task ID nor migration number is reserved here.",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run on BASE bfc5ca3: {\"command\":\"check\",\"ok\":true,\"task_count\":250}."},
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests in 2.4s, OK (projectctl 8 + governance 15), exit 0; no governance regression."},
+    {"command": "python scripts/projectctl.py verify-change --base bfc5ca3 --task PH-313", "result": "not_run", "evidence": "Actual run before review pass: ok=false, errors=[{\"code\":\"high_risk_review_required\",\"path\":\"report.review\"}] (no path_out_of_scope). will be rerun and set to pass only after the independent reviewer status=pass."}
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "待独立复核：S 级 docs 实现前置片由 fresh-context reviewer 按 BASE bfc5ca3 的 PH-313 spec + PH-305/PH-306 契约核对：分摊批次模型/迁移/条件唯一/pool_key/来源互斥/符号与末项吸收算法（clamp 解释是否解决契约不变量冲突）、净零账本重归属与既有 costing/ledger 边界；预算版本/行/迁移/四眼/生效切换/条件唯一；命令/幂等/公司锁/期间；只读核对与 issue codes；PH-252 命名/表隔离；PH-322 只读集成与可选依赖降级；后续实现切片 spec 的白名单/迁移/verifier/验收是否可施工；无代码/迁移/schema/docs-adr 与精确白名单。实现者不自写 pass。"
+  },
+  "deviations": [
+    "本片白名单仅 6 个 docs 路径（不含代码/迁移/schema/docs-adr），与任务描述“若写代码仅限 spec 白名单内最小骨架”存在张力；为不 path_out_of_scope，本片不落地任何模型/迁移骨架，全部模型/迁移/命令/页面/verifier 计划冻结在 spec §2-§8，并明确实现切片白名单增补需规划槽授权。",
+    "PH-305 的“逐项 ROUND_HALF_UP + 末项吸收”在极端权重下会产生负末项，与“每项≥0”冲突；本片冻结 prefix clamp + 末项剩余算法 `basis_points_clamped_half_up_last_absorb_v1`，以契约不变量优先并写入 algorithm_version，历史不得换标签重算。",
+    "分摊/预算都选 costing owner（而非 delivery）：pool/成本事实与 ETC 输入均在 costing；避免 delivery 成为第二成本 owner，并让 PH-322 只读消费。两实现切片未登记任务/未占号，由规划槽按实际 BASE 授权。",
+    "PH-322 的可选降级（read_model_missing）只在规划选择并行且实现未落地时允许，且具体 ImportError/optional-provider 代码需 PH-322 spec 另行授权；本片不预设绕过。",
+    "PH-252 InvoiceAllocation 与 SharedCostAllocationBatch 明确不同 owner/表/服务/口径，禁止表复用或互相写；两实现可并行。"
+  ],
+  "unverified": [
+    "后续实现切片未落地：模型/迁移/命令/页面/verify_integrity 仅有可执行 spec，未运行代码、未跑 PG 并发/触发器。",
+    "PG/浏览器/生产不适用（docs-only）；docs-only 验收以 check + 23 治理 + verify-change 为准。",
+    "独立 S 复核 pending；通过后置 done、重跑 check/verify-change 并报最终 SHA。"
+  ]
+}
