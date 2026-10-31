@@ -1,0 +1,50 @@
+{
+  "task_id": "PH-369",
+  "summary": "Consumed the PH-369 planning slot on main 5763f4a (PH-366 merged; 295 tasks after registration). Two tasks were promoted ready because all their dependencies are done and their scope does not duplicate delivered work: PH-327 close/project-close write-side acceptance + ops runbook (deps PH-322/312/291/299/300 done) and PH-362 import-submission implementation-prerequisite contract (deps PH-274/PH-363 done). Legacy proposed tasks with all-done deps were checked and deliberately not promoted: PH-318 (multi-currency implementation prerequisite) and PH-326 (FX history follow-up) overlap with the delivered PH-321/324 work, so they keep precise blockers requiring a future re-scope-or-close review rather than false readiness; PH-006/009/011/014/141 are stale legacy planning items excluded by their own DoR. Remaining blockers were refreshed to the real chain: PH-335/357/368 wait on PH-350 (ready, not done); PH-367/372 wait on PH-357; PH-338/353 wait on PH-289/PH-362. Batch D/closure work registered continuously: PH-370 cross-owner orchestration execution (management-revenue reversal/cash refund/settlement adjustment based on PH-320's reference chain, ready on done PH-320/321/322/325/330), PH-371 tax-credit-to-costing open-period adjustment (ready on done PH-320/322/330/313), PH-372 batch C closure evidence-backfill/release-gate execution per PH-366 (proposed; waits PH-350/357/367) and PH-373 as the next planning slot (proposed until PH-369 done). ROADMAP gained the batch C closure/batch D section including the honest release-status note (PH-350 unimplemented; L3/L4/L5 not_run; no release readiness claim). No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE 5763f4a): {\"command\":\"check\",\"ok\":true,\"task_count\":295}, exit 0; PH-369 done with handoff and PH-373 ready."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph369-planning on main 5763f4a with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 9835e8a --task PH-369",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-369 allowed_paths (post-rebase gate rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD 0fa573a: PH-327 spec is now coherent with its ready task (all sources PH-322/312/291/299/300 done, status ready; no remaining '依赖未 done/proposed' text) and its 7-path whitelist matches the task. PH-338 depends_on now includes PH-362 and PH-353 includes PH-289/PH-362, matching their blockers (no cycle: PH-362 itself depends on done PH-274/PH-363). PH-362 spec whitelist is now exactly the task's 10 paths.",
+      "PROMOTIONS/BLOCKERS VERIFIED: PH-327 (deps PH-322/312/291/299/300) and PH-362 (deps PH-274/PH-363) are correctly ready on done deps; PH-370 (deps PH-320/321/322/325/330) and PH-371 (deps PH-320/322/330/313) are also ready with all deps done. PH-318/PH-326 stay proposed with explicit overlap/re-scope blockers (PH-321/324 delivered), legacy PH-006/009/011/014/141 untouched. PH-335/357/368 wait on PH-350, PH-367/372 on PH-357, PH-338/353 on PH-289/PH-362, PH-339/354 on PH-272, PH-340/355 on PH-301/314/179/183/151; PH-372/373 blockers precise; PH-373 proposed on PH-369 for the final slot-close.",
+      "GATES (HEAD 0fa573a, BASE 5763f4a): projectctl check ok=true/task_count=295; governance 23 tests OK; 12 changed files all inside BASE PH-369 allowed paths; no placeholders; no code/migration/script/gate/contract-schema changes; verify-change --base 5763f4a --task PH-369 pre-review reports high_risk_review_required + acceptance_not_passed because the report check declaration is still not_run (no path errors).",
+      "MINOR final-evidence note: the report's check/verify evidence still cites candidate HEAD 59fffd8; after this pass block is committed, record the actual final-HEAD check pass/verify-change pass and set PH-369 done / PH-373 ready + clear its blocker per the slot convention."
+    ],
+    "evidence": "VERDICT: PASS - the two blockers and the whitelist fix are resolved at HEAD 0fa573a (BASE 5763f4a): PH-327's ready spec is coherent, PH-338/PH-353 deps now encode PH-289/PH-362 to match their blockers (no cycle), and PH-362's spec whitelist equals its 10-path task. Promotions rest on done deps; no false readiness for PH-318/326/legacy; count 295, IDs 370-373 continuous; 12 files inside allowlist; no placeholders/code/schema changes; check ok=295; governance 23 OK; verify-change only review + pre-review check declaration (no path errors) pending the final evidence commit."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): PH-327's spec now says all dependencies are done/ready and its risk section no longer claims PH-322 is pending; PH-338 depends_on gained PH-362 and PH-353 gained PH-289+PH-362 so the dependency graph matches the refreshed blockers; PH-362's spec whitelist was expanded to the 10 paths authorized by its task (spec/adr/engineering/v1.0-development/delivery-status/tasks/manifest/verification/report/handoff).",
+    "PH-327 and PH-362 were promoted because every dependency is done and their scope is not duplicative; PH-318 and PH-326 were NOT promoted despite all-done deps because PH-321/PH-324 already delivered the multi-currency/FX capability they describe, and promoting them would be a false readiness claim. Their blockers now require a future re-scope-or-close decision.",
+    "Legacy tasks PH-006/009/011/014/141 have technically done dependencies but are old planning items whose own DoR/context no longer matches the current batch; they are left untouched (not promoted) rather than silently activated.",
+    "PH-370/371 are new ready implementation slices derived from PH-317/PH-320's documented remaining boundaries (cross-owner execution and tax-credit costing adjustment), not duplicates of the delivered PH-252/PH-320 behavior.",
+    "PH-372 is registered proposed only; it performs evidence backfill/gate judgment per PH-366 but cannot run until PH-350/PH-357/PH-367 are done. No release-readiness claim is made.",
+    "PH-373 is the next planning slot (proposed until PH-369 done); after review PASS the final evidence commit sets PH-369 done and PH-373 ready and clears its blocker.",
+    "Numbering basis: BASE max PH-369; no >=PH-370 branch/PR exists; PH-370..PH-373 are continuous and free.",
+    "No placeholder strings or non-executable acceptance commands; no code/migration/schema/gate changes.",
+    "Lead integration rebase (5763f4a -> f1eeac3) after PH-333/350 merged: verification/manifest merged; gates rerun; PH-373 next slot should re-check PH-335/357/367/372 promotion on the then-current main."
+  ],
+  "unverified": [
+    "PH-327/PH-362/PH-370/PH-371 are ready but unimplemented; no behavior or tests exist for them yet.",
+    "PH-372 is proposed only; PH-350/V1-OPS-05 remains unimplemented and the batch C release qualification is still blocked (L3/L4/L5 not_run).",
+    "PH-318/PH-326 remain proposed with re-scope blockers; PH-335/357/367/368/338/353 still wait on their chains.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}

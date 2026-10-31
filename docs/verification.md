@@ -984,3 +984,13 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 ## PH-334 批次 C-3 PostgreSQL 多连接并发汇总验收（2026-10-31）
 
 基线5763f4a。汇总验收（执行由PH-349承担）：tests/test_v1_pg_concurrency.py增加PH-334 rollup契约测试，调用PH-349 CLI（--dsn/--out/--profile/--mode）验证无PG DSN→诚实not_run/exit2、SQLite DSN→拒绝为并发证据（not_run/exit2）、不把本地/SQLite结果写成pass；docs/engineering/pg-concurrency.md追加§5 PH-334汇总验收，记录V1-OPS-06证据矩阵（L1+L2契约通过；真实PG探针/业务级并发/CI L3 not_run；release_ready=false）。未重实现PH-349探针、无产品代码/迁移/门禁变更。实际执行（最终HEAD）：projectctl check ok=true/task_count=291；manage.py check exit0；23项治理OK；全量1270项=1192 pass+70 skip+5F+3E（8项既有macOS，无新增失败类；第70 skip为既有真实PG探针not_run）；scoped 16项=15 pass+1 PG skip（新增2项rollup测试）；CLI无DSN→exit2 not_run、SQLite DSN→exit2 not_run拒绝；verify-change --base 5763f4a --task PH-334在review pending时仅high_risk_review_required（预期）。未验证：真实PG探针矩阵/业务级并发/CI L3、RPO/RTO/容量、生产L5、独立S复核。
+
+## PH-369 独立工程/交付规划入口（批次 C 收尾 + D 批）（2026-10-31）
+
+基线 5763f4a（PH-366 合入后；注册后 count 295）。纯规划/契约文字片：
+1. **晋级 2 项（依赖全 done 且不重复）**：PH-327 关期/结项写侧验收与运维 runbook（deps PH-322/312/291/299/300 done）；PH-362 导入提交实现前置契约（deps PH-274/363 done）。
+2. **不晋级（防虚假 readiness）**：PH-318/PH-326 依赖虽 done，但 PH-321/PH-324 已交付多币种/汇率首片，保持 proposed 并写“下一槽重定范围或关闭”；legacy PH-006/009/011/014/141 不激活。
+3. **精确 blockers**：PH-350 ready 未 done → PH-335/357/368；PH-357 未 done → PH-367/372；PH-338/353 等 PH-289/PH-362；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151。
+4. **新登记（PH-370–373 连续）**：PH-370 跨 owner 编排执行首片（ready，基于 PH-320 引用链）；PH-371 税额→costing 开放期成本更正（ready）；PH-372 批次 C 收尾证据回填/gate 判定（proposed，deps PH-350/357/367）；PH-373 下一规划槽（proposed，待 PH-369 done）。count 291→295。
+5. **ROADMAP** 新增批次 C 收尾/D 批规划节；发布资格仍按 PH-366 blocked（PH-350 未实现、L3/L4/L5 未执行），不得宣称就绪。
+6. 独立 S 复核首轮 2 阻断（PH-327 spec 状态、PH-338/353 依赖图）+ 1 required（PH-362 白名单）已修，二轮 PASS（reviewer-b）；最终证据 HEAD c6d0e51 按槽惯例置 PH-369 done / PH-373 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=295；23 项治理 OK；verify-change --base 5763f4a --task PH-369 ok=true、12 文件全白名单、无 errors。未验证：PH-327/362/370/371/372 未实现；PH-350/335/357/367 未完成（main 后续已合入 PH-333/350，下一槽按新 BASE 复核）；发布资格仍 blocked。
