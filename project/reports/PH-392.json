@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD 1cb0ffb (BASE c931137, PH-392 in_review; PH-396 registered ready): {\"command\":\"check\",\"ok\":true,\"task_count\":317}, exit 0; final entry recorded after the review pass."
+      "evidence": "Pre-review actual run at candidate HEAD 9771d8280e34085257fe2ac796f4ed0e3785bee7 (BASE c931137, PH-392 in_review; PH-396 registered ready): {\"command\":\"check\",\"ok\":true,\"task_count\":317}, exit 0; final entry recorded after the review pass."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,12 +20,20 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
+    "reviewer": "reviewer-b",
     "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (waves/dependencies/parallelism, 5-step backfill order, gate-recompute triggers, L3–L5 real-environment thresholds, honest statuses and PH-396 registration/spec); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "findings": [
+      "BLOCKER - batch-d-acceptance is only partially synced: the top status rows D-09/D-10 were updated, but the acceptance-card rows still carry stale facts that contradict the trusted BASE: D-09 card says '**blocked**（PH-357/367 未 done）' although PH-357/PH-367 are done (PH-372 done, gate blocked), and D-10 card says 'PH-335/357 ready、PH-367 proposed → **blocked**' although PH-335/357/367 are done (PH-394 terminal review still proposed, gate blocked). These rows must match the top rows/base facts; otherwise the matrix gives two different D-09/D-10 states.",
+      "BLOCKER - the batch-d-runbook current-status line still says 'D-02–D-11 blocked', but D-02 is executed and recorded as **不通过（false）** (L2 pass, L3/L4/L5 not_run), not blocked; D-09/D-10 are blocked; D-11 is partially covered by ready PH-388 plus pending re-scope. Use the same distinction (not passed vs blocked vs pending) as the orchestration/acceptance matrix.",
+      "REQUIRED - D-11 top row still says only 'proposed 重定 → blocked' and omits the PH-388 ready implementation slice that the orchestration and report explicitly rely on; make the D-11 row reflect 'PH-388 ready + PH-318/326 re-scope pending → blocked' so the wave/order references are traceable.",
+      "OTHER CONTENT CHECKED: the orchestration doc freezes W0–W3 consistently with the tasks (D-01/02 partial, D-03–08 blocked, D-09/D-10 gate-blocked, D-11 PH-388 ready + re-scope); the 5-step backfill order and gate-recompute triggers (new required evidence/waiver/SHA-env-contract/14-day/execution completion; doc-only non-triggers) are executable; L3–L5 real-environment matrix vs local work is correct; blocked/not_run/fail semantics and roles/signatures are honest; no D-batch pass or release readiness is claimed. PH-396 is registered ready with deps=[], spec docs/v1.0-development/closure-reconciliation.md created with the required reconciliation/close/partial/new-slice/keep-with-gap/final delivery+blocker content, and its 9-path allowed_paths with explicit spec file are self-consistent (count 317, ID 396 continuous). No placeholders; no code/script/migration/schema/gate changes; check ok=317; governance 23 OK; verify-change --base c931137 --task PH-392 only high_risk_review_required + acceptance_not_passed (report check still not_run; no path errors).",
+      "MINOR: report check evidence cites candidate HEAD 1cb0ffb; record the final-HEAD check/verify pass after the pass block."
+    ],
+    "evidence": "VERDICT: REJECTED - 2 blockers: batch-d-acceptance acceptance-card rows D-09/D-10 still cite PH-357/367 as not done/ready and PH-335/357 ready while the trusted BASE has PH-335/357/367/372 done (gate blocked), and batch-d-runbook still labels D-02 as blocked although it is executed/not passed (false). Required: reflect PH-388 ready in the D-11 row. The orchestration waves, 5-step backfill, gate-recompute triggers, L3–L5 thresholds, honest not_run/blocked statuses and PH-396 registration/spec are otherwise correct. Reviewed HEAD 7bc6523 (BASE c931137), worktree clean; count 317; check ok=317; governance 23 OK; verify-change only review + pre-review check declaration (no path errors)."
   },
   "deviations": [
+    "Review-blocker fix (old->new): the acceptance matrix rows/cards now consistently state D-09=PH-372 done/blocked, D-10=PH-333/334/335/357/372 done+PH-394 proposed/blocked and D-11=PH-388 ready+PH-318/326 re-scope pending; the runbook current-status line distinguishes D-01/D-02 not passed (L2 only) from D-03–D-08 blocked and D-09/D-10 blocked; stale 'D-02–D-11 blocked' and 'PH-357/367 not done' text removed.",
+    "Review-minor fix: the report check evidence was refreshed to the new (post-fix) HEAD.",
     "The orchestration is documentation-only and freezes order/backfill/gate rules; it does not execute any D-batch acceptance, real PG/browser/production run, or implementation work.",
     "D-01/D-02 are recorded as not passed (L2 only; L3/L4/L5 not_run) and D-03–D-11 as blocked/not_run; no acceptance pass or release readiness is claimed.",
     "PH-396 was registered per the Lead's addendum as ready with deps=[], kind docs, risk S and spec docs/v1.0-development/closure-reconciliation.md; the spec file was created in this PR. Its ~115-task evidence-based reconciliation is NOT executed by this slice (worker-clearance owns it).",
