@@ -1,0 +1,43 @@
+{
+  "task_id": "PH-364",
+  "summary": "到期扫描/待办/通知契约冻结（docs-only）on BASE d81c11c. Freezes the read-only reminder contract consumed by PH-355 and the later notification center: source ownership and adapter boundary; SourceRef/reminder_ref and frozen pending-item shape; an issue_code registry (settlement open-item overdue/clearance, cash-plan overdue, contract change/termination, billable confirmation, invoice tax qualification, budget missing/overrun, close precheck blocker, import conflict, agent-token expiry, read-model missing, module-disabled history) with severity/source/recipient mapping; recipient matrix (owner/finance/auditor all-org, pm managed projects only, member self only, revoked/inactive deny, disabled module history-only); deterministic reminder_key excludes as_of/token/channel/display so the same source fact+issue+recipient is deduped; frozen scan envelope (core.reminders.read/v1, scan_key/scan_digest, read_only=true, notifications_sent=0, missing/issues/truncated); time semantics (Asia/Shanghai as_of, no future, due/overdue/30-day horizon, overdue never moved); null+missing discipline; idempotent repeated scan with no queue/read-state/audit/outbox/external send; permission/rejection paths; PH-301/314/PH-355 boundaries (no inbox persistence/read state/external push in this slice; no new canonical topic/command/schema; no implementation/migration/table); PH-355 acceptance and counterexamples; change control. Updates PH-355 depends_on to include PH-364 and its blocker to the remaining PH-179/PH-183/PH-151 proposed dependencies; keeps all notification-center tasks proposed. No product code, migration, contract-schema, CI-gate or canonical change. Reviewer round-1 blocker fixed: scan_digest now explicitly canonicalizes the envelope excluding both generated_at and scan_digest itself (no self-reference); the spec adds two frozen golden vectors with expected hashes (empty result 7e9894b1…, one changed settlement reminder 42d1a265…) and requires PH-355 to assert same-input/same-digest and changed-fact/changed-digest.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":287}. Only PH-364 spec/tasks/manifest/docs/report/handoff changes; PH-355 dependency/blocker refreshed."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 2.258s, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 1b09e61 --task PH-364",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 files inside BASE PH-364 allowed_paths (review pass; post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-364 due-scan/todo/reminder contract reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 CIRCULAR DIGEST BLOCKER RESOLVED AT 2c46ab5: §4.2 now defines scan_digest over the envelope excluding both generated_at and scan_digest itself, removing self-reference; §4.3 freezes two golden vectors with the exact canonicalization (UTF-8, sort_keys=True, separators=(',',':'), ensure_ascii=False) and expected digests. I independently recomputed both vectors and got the frozen 7e9894b1…7921a65 (empty) and 42d1a265…4036b8 (with one settlement_open_item_overdue reminder), so the vectors are internally consistent.",
+      "CONTENT RE-VERIFIED: owner boundaries keep due facts with their owners and core only as read projection; reminder_ref/reminder_key shapes and stability rules, issue_code registry severity/source/recipient, recipient matrix (owner/finance/auditor full, pm managed project, member self, disabled/revoked denial, module-disabled history_read), read-only zero-write and notifications_sent=0, null+missing vs fabricated 0, as_of/period/window/truncation ordering, PH-355 adapter/envelope boundary and PH-301/314 persistence boundary are documented; PH-355 depends_on includes PH-364 and retains PH-179/183/151 blockers; no implementation/migration/table/product code/canonical schema change; 6 files changed within the PH-364 whitelist; no placeholders; task_count 287; check ok=287; governance 23 OK; verify-change --base d81c11c --task PH-364 only review/acceptance gates, no path_out_of_scope."
+    ],
+    "evidence": "VERDICT: PASS (round 2; circular scan_digest fixed). Reviewed HEAD 2c46ab5 (BASE d81c11c) in /tmp/ph364-due-notify, worktree clean; 6 files within PH-364 whitelist; no implementation/migration/product code. scan_digest excludes generated_at and itself; both frozen golden vectors recompute exactly; owner/read-only/reminder/issue/recipient/security and PH-355/PH-301/314 boundaries otherwise complete; check ok=287; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope. Round-2 reviewer PASS (2c46ab5): scan_digest excludes generated_at and itself; both frozen golden vectors recompute exactly; 6 files in whitelist, no implementation/migration/product code. Final evidence commit records the actual verify-change pass."
+  },
+  "deviations": [
+    "This is a contract-only docs slice: it freezes the reminder read projection but does not implement PH-355 or persist inbox/read state. PH-355 remains proposed because PH-179/PH-183/PH-151 are still proposed.",
+    "The contract intentionally uses an internal projection identifier `core.reminders.read/v1`, not a canonical topic/command/query; no contract schema, canonical entity, migration or new table is added.",
+    "PH-355 depends_on now includes PH-364; its blocker still names PH-179/PH-183/PH-151 and is not cleared by this slice.",
+    "Notification-center tasks PH-301/314/340/344 remain proposed; no false promotion or execution evidence is claimed.",
+    "Lead integration rebase (d81c11c -> 1b09e61) after PH-363/365 merged: verification/manifest merged; gates rerun."
+  ],
+  "unverified": [
+    "PH-355 implementation, browser 1440/390/keyboard states and PG/CI are future work; this slice executes only docs/governance checks.",
+    "No real scans, inbox persistence, read state, external notifications or production behavior were implemented or verified.",
+    "Independent S review and CI/PR pending."
+  ]
+}
