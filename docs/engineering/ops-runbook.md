@@ -147,3 +147,10 @@
 - 脚本实现/参数/证据字段变更需实现片按实际 BASE 复核；本契约不得被实现片静默削弱。
 - 安全/凭据/客户数据按最小权限；证据脱敏；发布前由发布负责人/安全负责人复核。
 - 本文件不改变 CI 门禁、验收命令或产品行为。
+
+## 5. PH-333 汇总验收状态（2026-10-31，V1-OPS-01–04）
+
+- 新增 `scripts/ops/rollup_acceptance.py`：调用 PH-347 `install_drill.py`/`upgrade_drill.py` 与 PH-348 `backup_drill.py`/`restore_drill.py` 的本地/隔离可执行路径，聚合为 M15/V1-OPS 证据回填草稿（rollup envelope：script/contract_version/mode/profile/app_sha/时间/exit_code/status/release_ready/checks/artifacts/redactions/notes）。
+- 当前证据层：**L1 代码存在 + L2 本地自动化**（V1-OPS-01/03/04 pass；V1-OPS-02 真实 TLS not_run）；**L3 CI/PG、L4 浏览器、L5 生产/客户验收 not_run**；`release_ready=false`，不得把 L1/L2 当发布资格。
+- 真实 staging/production 安装/升级/TLS/恢复未执行；rollup 仅在临时隔离目录运行，生产 execute 由各 drill 拒绝（exit 5）。
+- 验收：`python manage.py test tests.test_v1_ops_recovery --verbosity 1`（6 项）；rollup 证据写入 `docs/verification.md`，不提交 /tmp artifacts。

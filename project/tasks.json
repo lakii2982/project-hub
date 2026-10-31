@@ -10764,7 +10764,7 @@
       "title": "批次 C-2：M15 部署/升级/备份恢复演练（V1-OPS-01–04）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10795,9 +10795,9 @@
         "python manage.py test tests.test_v1_ops_recovery --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-333.md"
     },
     {
       "id": "PH-334",
