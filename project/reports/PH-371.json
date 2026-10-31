@@ -35,7 +35,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base 3c77653 --task PH-371",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-371 allowed_paths (review pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-371 allowed_paths (post-rebase rerun)."
     }
   ],
   "review": {
