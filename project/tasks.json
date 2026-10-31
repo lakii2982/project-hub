@@ -9640,7 +9640,7 @@
       "title": "共享费用分摊（WP-SHARED-COST）首片：跨项目分摊规则与只读摊回核对冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9662,9 +9662,9 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-docs",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-305.md"
     },
     {
       "id": "PH-306",

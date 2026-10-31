@@ -1,0 +1,39 @@
+{
+  "task_id": "PH-305",
+  "summary": "Froze the shared-cost allocation contract as a docs-only slice written into project/specs/PH-305.md (per the Lead's BASE correction, the whitelist has no docs/adr/ path, so no new ADR file was created and report discloses this). The frozen contract covers: the shared pool definition limited to company-level posted cost facts (non-project/unallocated labor via PH-217, company-level bank-charge cost via PH-250, later company expense slices otherwise null+missing), excluding direct project cost/cash/draft/reversed/cross-org sources so T09 total cost is not double counted; append-only SharedCostAllocationBatch with at most one effective batch per org+period+pool_kind and correction only by negative reversal; driver enum revenue_cents/approved_minutes/direct_cost_cents/fixed_weights with the first three sourced read-only from their owners; integer basis points summing exactly 10000, ROUND_HALF_UP per target with the stable last target absorbing the residual and sum equal to the pool amount, no client-supplied amounts; no net company cost increase and no direct ledger edits (costing/ledger owner append-only re-scope); read-only shared_cost_reconciliation with frozen issue codes; request_token receipts, org lock, dry_run, period/lock checks; immutable history with reversal+new batch in an open period and algorithm_version (no migration-free recomputation); role matrix with history_read when the module is disabled; explicit owner boundaries (costing owns facts, contracts/management_revenue/time provide read-only drivers, cash untouched, core via existing commands, insights/invoicing read-only); and the relation to PH-313 (implementation prerequisite, this contract does not authorize implementation and adds no canonical topic/command).",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at rebased candidate HEAD dd660a3 (BASE c2c76d8, PH-305 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":245}, exit 0; final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph305-allocation-contract after rebase to main c2c76d8 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 15cf20c --task PH-305",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at rebased candidate HEAD dd660a3: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 6 changed files (PH-305 spec freeze section, tasks.json, manifest.json, docs/verification.md, PH-305 report/handoff) are inside BASE PH-305 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (docs-only shared-cost contract freeze); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Rebased to new main c2c76d8 after PH-293 merged (PH-305 candidate was originally based on 15cf20c); only tasks/manifest/docs-verification context conflicts were resolved, the frozen spec content is unchanged.",
+    "Contract-freeze location: the Lead's BASE correction states PH-305's spec/whitelist does not include docs/adr/, so the freeze is written as a dedicated section inside project/specs/PH-305.md instead of a new ADR file; no ADR was created or modified and no docs/adr/ path was touched.",
+    "The freeze keeps the implementation deferred: PH-313 remains the write-side implementation prerequisite and stays proposed; PH-305 adds no canonical topic/command and does not modify contract schema.",
+    "Historical recomputation is explicitly forbidden: corrections must append a negative reversal batch plus a new batch in an open period, with algorithm_version recorded; the contract is a docs-only freeze with no code/migration/runtime evidence."
+  ],
+  "unverified": [
+    "PH-313/PH-320 write-side implementation is not done; the contract is frozen but no allocator, model, migration or read-only endpoint exists yet.",
+    "No runtime/browser/PostgreSQL verification applies (docs-only); only governance/document checks were run.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
