@@ -60,7 +60,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base cbb84c2 --task PH-347",
       "result": "pass",
-      "evidence": "Actual run after the round-2 reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-347 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
+      "evidence": "Actual run after the round-2 reviewer pass and final status commit 839a311: ok=true, head=839a31184ab3f9b66b135f42049e6ce540615d03, changes=10 files all inside the PH-347 allowlist, errors=[]."
     },
     {
       "command": "python scripts/ops/install_drill.py --mode execute --env staging --facts '{\"compose_version\":\"2.29.0\",\"db_engine\":\"sqlite\",\"migrations_append_only\":true}' --out /tmp/ph347-evidence/install-staging-refused.jsonl",
