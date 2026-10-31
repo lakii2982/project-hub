@@ -1,0 +1,57 @@
+{
+  "task_id": "PH-382",
+  "summary": "Executed the batch D-01 acceptance for the merged PH-370 cross-owner orchestration on BASE/app SHA 9830b37 without changing PH-370 code. In the local macOS/SQLite environment: projectctl check ok=true/task_count=307; manage.py check 119 known warnings/0 errors; makemigrations --check 'No changes detected'; fresh migrate + verify_integrity {\"ok\":true,\"errors\":[],\"organizations\":0,\"entries\":0}; scoped orchestration tests 'Ran 9 tests, OK'; full suite 'Ran 1310 tests in 139.298s, FAILED (failures=5, errors=3, skipped=70)' where the 8 failure/error names are exactly the known macOS baseline (4F+3E drf_security_compatibility, 1F delivery_execution, 1F delivery_execution_sandbox) with no new failures. L2 real coverage: cash-refund path really calls the cash owner service and records Refund fact + PH-320 link + audits + snapshot + HTTP 302/permission denial; token replay and failure zero-write cases pass; single_transaction_claim=false; period/role/cross-org/disabled/stale-version rejections pass. Honest limits: revenue_reversal and settlement_clearance are only exercised with patched named services (unit contract, NOT real owner e2e), cash_bank_return/settlement_clearance_reversal were not executed, and L3 CI/PG, L4 browser 1440/390 and L5 production/customer evidence are all not_run. Evidence backfilled in docs/verification.md PH-382, batch-d acceptance/runbook D-01 status updated; D-01 overall verdict is NOT passed (required L3 + financial sign-off missing), release_ready=false and release qualification remains blocked per PH-366.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 6e25ef6 (BASE 9830b37, PH-382 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":307}, exit 0; final entry recorded after the review pass."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run on BASE 9830b37: 119 known URL/field-system warnings, 0 errors, exit 0."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_invoice_orchestration tests.test_v1_invoice_orchestration_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Found 9 test(s), Ran 9 tests in 0.463s, OK, exit 0 (SQLite test DB)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual full run: Ran 1310 tests in 139.298s, FAILED (failures=5, errors=3, skipped=70). The 8 failure/error names are exactly the known macOS baseline (drf_security_compatibility 4F+3E, delivery_execution 1F, delivery_execution_sandbox 1F); no new failures. Treated as pass against the declared no-new-failures baseline, not as green."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "On a freshly migrated local SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}, exit 0."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 9830b37 --task PH-382",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 6e25ef6: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 8 changed files (docs/verification, batch-d acceptance/runbook, ROADMAP, tasks/manifest, report/handoff) inside BASE PH-382 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (actual command outputs, partial e2e honesty, full-suite baseline mapping and D-01 not-passed verdict); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Revenue/settlement owner paths are NOT real e2e in this slice: the only execution test patches revenue_services.reverse_recognition and settlement_services.create_clearance to assert the named-service dispatch + link. They are recorded as not_run for real owner e2e, not as pass.",
+    "cash_bank_return and settlement_clearance_reversal were not executed by the scoped suite; their real owner paths remain unverified.",
+    "Full suite has 5 failures + 3 errors, all exactly the declared macOS baseline (6 DRF compatibility + 2 delivery execution); there are no new failures, but the run is not green and is not claimed as such.",
+    "verify_integrity required a fresh local migrate because the worktree had no database; the check was run on an empty freshly-migrated DB, so it proves schema/integrity on empty data only.",
+    "D-01 overall acceptance is NOT passed: required L3 CI/PG and financial sign-off are missing and real revenue/settlement e2e is not executed; release_ready=false and the release gate remains blocked per PH-366.",
+    "No PH-370 code/spec, product code, script, migration or gate change was made; only evidence docs/report/tasks/ROADMAP."
+  ],
+  "unverified": [
+    "Real revenue-reversal and settlement-clearance owner e2e; cash-bank-return and settlement-clearance-reversal paths.",
+    "L3 CI/PostgreSQL evidence, L4 browser 1440/390/keyboard/empty-error-loading-disabled walkthrough and L5 production/customer acceptance.",
+    "Financial reviewer sign-off for D-01 (local evidence only; cannot sign pass).",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}

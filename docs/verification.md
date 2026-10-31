@@ -1093,3 +1093,20 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **legacy 主交付链复核**：PH-179/181/183/185/151 的 deps 仍有大量 proposed/ready 未 done（PH-170–184 等），非“依赖已完成”；保持 proposed，blockers 已按实际依赖刷新。
 - **新登记 PH-387–391**：PH-387 D-02 税额成本验收执行（ready，deps PH-371 done）、PH-388 多币种反查/对账后续（proposed）、PH-389 D-03/04 发票/导入验收（proposed）、PH-390 D-05/06 insights 验收（proposed）、PH-391 下一规划入口（proposed，deps PH-386）。
 - 实跑：check ok=true/task_count=312；治理 23 OK；无代码/迁移/schema/门禁变更；verify-change 待 review pass。
+
+## PH-382 批次 D-01 跨 owner 编排验收执行（2026-10-31）
+
+执行 BASE/候选 app SHA：**9830b37**（PH-370 已合入；本片未改 PH-370 代码）。执行环境：macOS 本地 SQLite（测试库临时库），无 PG/CI/浏览器/生产。
+证据文件：`/tmp/ph382-d01-acceptance`、全量日志 `/tmp/ph382-full-suite.log`。
+
+- **命令与实际结果**
+  1. `python scripts/projectctl.py check` → `{"command":"check","ok":true,"task_count":307}`，exit 0。
+  2. `python manage.py check` → 119 个既有 URL W003/字段 W342 警告、0 error，exit 0。
+  3. `python manage.py makemigrations --check --dry-run` → `No changes detected`，exit 0。
+  4. `python manage.py migrate --noinput`（新库）→ OK；`python manage.py verify_integrity --json` → `{"ok": true, "errors": [], "organizations": 0, "entries": 0}`，exit 0。
+  5. `python manage.py test tests.test_v1_invoice_orchestration tests.test_v1_invoice_orchestration_http --verbosity 1` → **Ran 9 tests, OK**，exit 0。
+  6. 全量 `python manage.py test tests --verbosity 1` → **Ran 1310 tests in 139.298s, FAILED (failures=5, errors=3, skipped=70)**；8 个失败/错误名称=既有 macOS 基线（`test_drf_security_compatibility` 4F+3E、`test_delivery_execution` 1F、`test_delivery_execution_sandbox` 1F），**无新增失败**；环境为 macOS 本地（symlink/DRF 兼容已知基线）。
+- **L2 实际覆盖（真实执行）**：cash-refund 路径真实调用 `cash.refund_services.record_refund` 生成 Refund 事实 + PH-320 引用链 + 审计 + 快照 + HTTP 302/权限拒绝；幂等 replay 不重复事实；失败（超额/错往来方）零 Refund/零执行收据/零链接；`single_transaction_claim=false`；auditor/member/跨 org/停用/无效 action/stale version 拒绝；invoice/reversal 事实未被静默回滚。
+- **未真实执行（not_run）**：`revenue_reversal` 与 `settlement_clearance` 仅在单元测试中以 `patch` 校验“调用具名 owner 服务 + link”，**非真实 owner e2e**（测试证据见 `tests/test_v1_invoice_orchestration.py::test_revenue_and_settlement_dispatch_use_named_services`）；`cash_bank_return`、`settlement_clearance_reversal` 未被本片真实执行；真实 PG/CI L3、浏览器 1440/390 L4、生产/客户 L5 全部 **not_run**。
+- **层级/判定**：L1（代码已合入）有；L2 部分通过（cash-refund 真实 + revenue/settlement dispatch 契约）；L3/L4/L5 not_run。**D-01 整体验收不通过**：required 层（L3 + 财务复核）缺失，revenue/settlement 真实 e2e 未执行；`release_ready=false`，发布资格仍按 PH-366 **blocked**。
+- **财务复核结论（执行人角色记录，非独立 pass）**：本地证据支持 cash-refund 编排事实/引用链/幂等/失败零写；不支持收入反冲与结算调整的真实 owner e2e，也不支持生产/并发/浏览器验收；不得据此签署 D-01 通过。
