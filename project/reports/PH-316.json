@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=245; PH-316 in_review with owner/handoff; 15 allowed_paths match the changed files; no path/acceptance schema issues."
+      "evidence": "Final Lead integration rerun after rebase onto 7166439: {\"command\":\"check\",\"ok\":true,\"task_count\":246} exit 0."
     },
     {
       "command": "python manage.py check",
@@ -52,7 +52,8 @@
     "The workbench template builds export links from dataset/as_of/period descriptors; the export page links back to the workbench, but both pages remain GET-only history_read.",
     "No business rule is re-derived: partition metrics come from the PH-309 aggregation and CSV rows from the PH-304 composition of the same owner read services; consistency is asserted for the settlement partition row count vs its open_item_count metric.",
     "Counterexamples/tests never UPDATE/DELETE historical rows; the linkage itself is read-only, so append-only triggers are untouched.",
-    "Single worker owns the whole write set (workbench service/view/templates/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending."
+    "Single worker owns the whole write set (workbench service/view/templates/domain metadata, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending.",
+    "Lead integration rebase (15cf20c -> 7166439) after ADR batch merged: docs/verification.md kept main entries plus the PH-316 entry; manifest.active_handoff -> PH-316. Gates rerun green."
   ],
   "unverified": [
     "No browser 1440/390 check was run; the workbench/export linkage was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
