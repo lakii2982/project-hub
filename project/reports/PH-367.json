@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD c895786 (BASE 3c77653, PH-367 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":302}, exit 0; final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE 3c77653): {\"command\":\"check\",\"ok\":true,\"task_count\":302}, exit 0; PH-367 done with handoff."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (preconditions, most-severe merge, PH-366 gate flow, three-party waiver, execution order/rollback and honest not_run status); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-367 batch-C aggregate-acceptance prerequisite reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "SOURCE/CONTRACT ALIGNMENT: the contract consumes, without reimplementing or changing thresholds, PH-333 `scripts/ops/rollup_acceptance.py` (`ops_rollup_acceptance`), PH-334 `tests.test_v1_pg_concurrency` (no DSN/SQLite refusal), PH-335 `healthcheck.rollup_evidence`, PH-357 backfill (§10/§7/verification), PH-366 gate and PH-345/PH-352/PH-332 evidence rules. I verified the PH-333 script exists in the repository.",
+      "PRECONDITIONS/EVIDENCE MERGE: candidate SHA/profile/rehearsal-data/four-eyes/backup-rollback/evidence collection are frozen; per-V1-OPS preconditions are explicit; missing preconditions -> blocked, no dry_run/config substitution. Exit->status normalization and strictest merge fail>blocked>not_run>pass, layered L2-L5 preservation, conflict recording, SHA-bound/14-day/no-old-evidence/ no-cherry-pick rules are complete; release_ready is false and cannot be self-promoted.",
+      "GATE/EXEMPTION/SEQUENCE: PH-366 gate validation->preconditions->collection->merge->required set->gaps/exemptions->signature->released/blocked is frozen; core items non-waivable, exemptions require product+release+independent three-party approval and are not pass; executor cannot self-approve; ordering 05->01->02->03->04->06->merge, checkpoint/failure-stop/backup-rollback/retry-once/verify_integrity are explicit; current L3-L5 not_run, gate blocked, no fabricated result.",
+      "GATES: docs-only, no product code/migration/script/gate change; 7 files within the PH-367 whitelist; no placeholders; task_count 302; check ok=302; governance 23 OK; verify-change --base 3c77653 --task PH-367 only review/acceptance gates, no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD b123c8e (BASE 3c77653) in /tmp/ph367-batch-c-gate, worktree clean; 7 files within PH-367 whitelist; docs-only. PH-333/334/335/357/366 sources are correctly referenced (PH-333 script verified), merge/exit normalization/gate/exemption/sequence and honest L3-L5 not_run/release-blocked status are complete; no code/migration/script/schema; check ok=302; governance 23 OK; verify-change only review/acceptance gates, no path_out_of_scope."
   },
   "deviations": [
     "The contract consumes PH-333/334/335/357/366 artifacts as-is and does not reimplement or change their checks/thresholds/rollup semantics; only the execution preconditions, merge and gate-decision mechanics are frozen.",
