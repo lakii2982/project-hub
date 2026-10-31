@@ -10031,7 +10031,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-301（通知中心首片，proposed）与 PH-310（导出归档后续，proposed）done；PH-285/PH-179/PH-183（proposed）done；PH-304/PH-316 已 done 但不构成通知/归档交付；依赖完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-301（通知中心首片）、PH-310（导出归档后续）done；PH-304/316 已 done，PH-285/179/183 仍 proposed；能力未交付，保持 proposed。"
       ],
       "handoff": null
     },
@@ -10142,7 +10142,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-293（发票/价税分离/红冲契约冻结，ready 未 done）、PH-252（发票实现，proposed）与 PH-150/PH-155（合同/结算 legacy）done；PH-293 合入 done 后由 PH-323 规划槽复核 DoR 再晋级。"
+        "缺 PH-252（发票实现首片，ready 未 done）done；PH-293/150/155 的契约边界已由 PH-214/224/232/287 覆盖；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10176,7 +10176,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-308（多币种/汇率契约冻结，ready 未 done）与 PH-150/PH-155/PH-252（proposed）done；PH-308 合入 done 后由 PH-323 规划槽复核 DoR 再晋级。"
+        "缺 PH-321（多币种实现首片，ready 未 done）done；PH-308/324/214/224/232/287 已 done；PH-321 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10257,7 +10257,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-252（发票实现首片，ready 未 done）done；PH-293（ADR 0015）/PH-214/PH-224/PH-232 已 done；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-252（发票实现首片，ready 未 done）done；PH-293/214/224/232 已 done；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10266,7 +10266,7 @@
       "title": "多币种实现首片：汇率快照/换算与只读展示（按 ADR 落地）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10303,9 +10303,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-324（canonical 币种扩展，ready 未 done）done；PH-308（多币种 ADR）/PH-214/PH-224/PH-232/PH-287 已 done；PH-324 合入后由下一规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -10313,7 +10311,7 @@
       "title": "关期/结项实现首片：期间预检、关期与项目结项写侧（按 ADR 落地）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10356,9 +10354,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-312（关期/结项实现前置，ready 未 done）done；PH-299/PH-300（ADR 0016/0017）与只读核对来源 PH-291/283/288/280/281/284/287/309 已 done；PH-312 合入后由下一规划槽复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -10490,7 +10486,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-252（发票实现首片，ready 未 done）done；PH-284/PH-283/PH-287/PH-293 已 done；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-252（发票实现首片，ready 未 done）done；PH-284/283/287/293 已 done；PH-252 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10538,7 +10534,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-324（canonical 币种扩展，ready 未 done）与 PH-321（多币种实现首片，proposed）done；PH-214/PH-224 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-321（多币种实现首片，ready 未 done）done；PH-324/214/224 已 done；PH-321 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10574,7 +10570,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-322（关期/结项写侧实现，proposed）与 PH-312（实现前置，ready 未 done）done；PH-291/PH-299/PH-300 已 done；实现完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-322（关期/结项实现首片，ready 未 done）done；PH-312/291/299/300 已 done；PH-322 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10660,7 +10656,7 @@
         "PH-322"
       ],
       "blockers": [
-        "缺 PH-322（关期/结项实现，proposed）done；PH-313 已 done；实现前置完成后由规划槽复核 DoR 再晋级。"
+        "缺 PH-322（关期/结项实现首片，ready 未 done）done；PH-313 已 done；PH-322 合入后由下一规划槽复核 DoR 再晋级。"
       ],
       "allowed_paths": [
         "pmo_plugins/costing/*",
@@ -10695,7 +10691,7 @@
       "title": "后续交付独立规划入口（接续 PH-329）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [],
@@ -10719,8 +10715,193 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
+      "owner": "worker-docs",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-331.md"
+    },
+    {
+      "id": "PH-332",
+      "title": "批次 C-1：M01–M15 验收矩阵与运维 runbook 骨架（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-324",
+        "PH-312",
+        "PH-313",
+        "PH-291",
+        "PH-304",
+        "PH-309",
+        "PH-316"
+      ],
+      "spec": "project/specs/PH-332.md",
+      "allowed_paths": [
+        "project/specs/PH-332.md",
+        "docs/v1.0-development/batch-c-acceptance.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-332.json",
+        "project/handoffs/PH-332.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
       "owner": null,
       "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-333",
+      "title": "批次 C-2：M15 部署/升级/备份恢复演练（V1-OPS-01–04）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-322",
+        "PH-321",
+        "PH-330",
+        "PH-252"
+      ],
+      "spec": "project/specs/PH-333.md",
+      "allowed_paths": [
+        "docs/engineering/ops-runbook.md",
+        "docs/engineering/upgrade-recovery.md",
+        "scripts/ops/*",
+        "tests/test_v1_ops_recovery.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-333.json",
+        "project/handoffs/PH-333.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "python manage.py test tests.test_v1_ops_recovery --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-322（关期/结项实现）、PH-321（多币种实现）、PH-252（发票实现）done 与 PH-330（分摊/预算实现）done；实现完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-334",
+      "title": "批次 C-3：PostgreSQL 多连接安全与并发验收（V1-OPS-06）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-322",
+        "PH-321",
+        "PH-330",
+        "PH-252"
+      ],
+      "spec": "project/specs/PH-334.md",
+      "allowed_paths": [
+        "tests/test_v1_pg_concurrency.py",
+        "docs/engineering/pg-concurrency.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-334.json",
+        "project/handoffs/PH-334.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "python manage.py test tests.test_v1_pg_concurrency --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-322/PH-321/PH-252/PH-330 done（写侧并发场景需真实实现）；实现完成后由下一规划槽复核 DoR 再晋级；真实 PG 交 CI/部署环境。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-335",
+      "title": "批次 C-4：健康/容量/任务积压可见性与性能基线（V1-OPS-05）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-333",
+        "PH-334"
+      ],
+      "spec": "project/specs/PH-335.md",
+      "allowed_paths": [
+        "docs/engineering/observability.md",
+        "scripts/ops/healthcheck.py",
+        "tests/test_v1_ops_observability.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md",
+        "project/reports/PH-335.json",
+        "project/handoffs/PH-335.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v",
+        "python manage.py test tests.test_v1_ops_observability --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-333（部署/升级恢复演练）与 PH-334（PG 并发验收）done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-336",
+      "title": "后续交付独立规划入口（接续 PH-331）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-331"
+      ],
+      "spec": "project/specs/PH-336.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "docs/v1.0-development/*",
+        "project/reports/PH-336.json",
+        "project/handoffs/PH-336.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "PH-331 done 后置 ready（当前 PH-331 为 in_review，待独立 S 复核 pass 的最终证据 commit 再置 done/ready）。"
+      ],
       "handoff": null
     }
   ]
