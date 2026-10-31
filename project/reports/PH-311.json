@@ -1,0 +1,46 @@
+{
+  "task_id": "PH-311",
+  "summary": "Consumed the PH-311 planning slot on main fd0136a (PH-303/304/307/284 merged; task_count 233) and registered the next batch of implementation-prerequisite slices without false promotion. Numbering was checked (BASE max PH-311; no remote branch/PR occupies >=PH-312) and four tasks were registered continuously: PH-312 period-close/project-close implementation prerequisite (proposed; needs PH-299/300 and PH-180/181/182/185), PH-313 shared-cost/budget-ETC implementation prerequisite (proposed; needs PH-305/306/162/255/177/261), PH-314 notification-center/export-archive implementation prerequisite (proposed; needs PH-301/310/285/179/183) and PH-315 as the next planning slot (proposed until PH-311's review pass). No task was promoted because every proposed slice still lacks done dependencies: PH-309, PH-304, PH-284 and other ready slices stay ready; PH-292/293/295/296/297/299/300/301/305/306/308/310/312/313/314 stay proposed with explicit blockers. PH-310's blocker was refreshed (PH-304 done satisfied; PH-285/181/182 still proposed). No product code, migration, scaffold or contract-schema change was made.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run (reviewed HEAD 3dd61e4, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":237}, exit 0; PH-311 done with handoff and PH-315 ready on PH-311 done."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph311-planning on main fd0136a with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fd0136a --task PH-311",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD 78cc148: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"78cc14818ed2a9784341834e66e9a6660b938b33\",\"count\":9,\"errors\":null}, exit 0; all 9 changed files inside BASE PH-311 allowed_paths and review.status=pass with the reviewer's name."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-311 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "NO FALSE PROMOTION: PH-312/313/314 are proposed only because their upstream dependencies are still proposed (PH-312 deps PH-299/300/180/181/182/185; PH-313 deps PH-305/306/162/255/177/261; PH-314 deps PH-301/310/304/285/179/183, with PH-304 the only done one); PH-315 is proposed on PH-311 in_review with the done-transition blocker. PH-309 remains ready from the prior slot; PH-304 and PH-284 are done. No new task was promoted and no ready task was demoted.",
+      "BLOCKER REFRESH ACCURACY: PH-310's blocker now correctly says PH-304 is done/satisfied while PH-285/181/182 remain not done; PH-312/313/314 blockers list exactly their still-not-done upstream contracts/implementations; PH-315 carries the PH-311 done-transition blocker. No ready item depends on a not-done task; no false readiness.",
+      "New TASKS/DoR/NUMBERING: task_count 237 unique continuous PH-312..PH-315 (BASE max 311; no remote/local branch/spec >=312). PH-312 freezes period-close/project-close implementation prerequisites (permissions/idempotency/read-only precheck/notification refs/correction path); PH-313 freezes shared-cost allocation/budget-ETC implementation boundaries (basis points 10000, last-item rounding, budget versions, ETC null+missing); PH-314 freezes notification/export-archive implementation boundaries (dedupe/read state, CSV format/checksum/archive metadata/audit, no external push/Zip); PH-315 is the next planning slot. Specs/whitelists/counterexamples/acceptance are complete; no scaffold/code/migration/schema change; 9 changed files all inside PH-311 allowed_paths; no placeholder strings; acceptance commands executable; PH-311 in_review with owner/handoff and PH-315 proposed.",
+      "SLOT CONVENTION/GATES: PH-311 remains in_review and PH-315 proposed; after this pass the final evidence commit must set PH-311 done/PH-315 ready and clear the blocker, then rerun check/verify-change. At HEAD 3dd61e4 (BASE fd0136a): projectctl check ok=true/task_count=237; governance 23 tests OK; verify-change --base fd0136a --task PH-311 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; manifest=PH-311."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 3dd61e4 (BASE fd0136a) in /tmp/ph311-planning, worktree clean; 9 changed files all inside PH-311 allowed_paths; task_count 237 unique continuous PH-312..PH-315; manifest=PH-311. No new ready promotions because PH-312/313/314 upstream contracts/implementations are still proposed (PH-304 is done and correctly removed from PH-310's blocker; PH-285/181/182 remain); PH-315 proposed on PH-311 in_review. New specs freeze close/allocation/budget/notification-export implementation boundaries with complete DoR/whitelists/counterexamples/acceptance; numbering free/continuous; no placeholders/scaffold/schema/code. Gates: check ok=true/237; governance 23 OK; verify-change --base fd0136a --task PH-311 only review/acceptance gates, no path_out_of_scope. Final evidence sets PH-311 done/PH-315 ready."
+  },
+  "deviations": [
+    "Planning-slot state convention: PH-311 is kept in_review with handoff and PH-315 is proposed with blocker 'PH-311 done 后置 ready'; after the independent review PASS the final evidence commit will set PH-311 done and PH-315 ready and clear the blocker.",
+    "No new ready task was created this slot: the registered slices PH-312/313/314 all still have proposed upstream dependencies (PH-299/300/180/181/182/185; PH-305/306/162/255/177/261; PH-301/310/285/179/183), so they are proposed with explicit blockers and no false promotion. PH-309/304/284 remain the ready queue.",
+    "PH-310's blocker was refreshed because PH-304 is now done: the only remaining gaps are PH-285, PH-181 and PH-182 (all proposed).",
+    "Numbering basis: BASE max PH-311; checked remote branches and open PRs (EXP-line #143/#144 etc.) - no >=PH-312 ids exist, so PH-312..PH-315 are continuous and free.",
+    "No placeholder strings (<PH-, {tid}) remain in the changed specs/tasks; all acceptance command lists contain only executable commands."
+  ],
+  "unverified": [
+    "PH-312/313/314 are registered only; no implementation/ADR/tests/CI evidence exists yet (all proposed).",
+    "PH-309/304 are ready implementation slices that remain unexecuted; they will be verified by their own PRs/CI.",
+    "PH-251/252/255/256/257/260/261/262/271/272/285/289/292/293/295/296/297/299/300/301/305/306/308/310/312/313/314 remain blocked on upstream proposed tasks; no promotion or scope change was made.",
+    "Full product test suite not run locally (planning-only slice); required CI checks cover the PR."
+  ]
+}
