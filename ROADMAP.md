@@ -808,3 +808,6 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - 新增 `docs/v1.0-development/batch-d-execution-orchestration.md`：D-01–D-11 状态基线、W0/W1/W2/W3 波次（本地→真实环境→gate）、每项 5 步回填顺序、gate 重算触发、L3–L5 真实环境门槛、blocked/not_run 语义。
 - 现状：D-01/D-02 仅 L2（未通过）；D-03–D-08 blocked；D-09/D-10 gate blocked；D-11 PH-388 ready；批次 D 无整体通过项，发布资格仍 blocked（PH-372）。
 - 追加登记 **PH-396**（ready，docs，deps=[]）：v1.0 遗留任务对账与关闭，spec `docs/v1.0-development/closure-reconciliation.md`；本片只登记，对账由 worker-clearance 承接。
+- 追加登记 **PH-396**（ready，docs，deps=[]）：v1.0 遗留任务对账与关闭，spec `docs/v1.0-development/closure-reconciliation.md`；本片只登记，对账由 worker-clearance 承接。
+## v1.0 遗留任务对账与关闭（PH-396，2026-10-31，BASE 7748ea1）
+- 对账 v1.0.0 BASE open 113 项：**6 项已覆盖→关闭（cancelled，仅保留直接已合并实现/验收证据）**；**106 项保留（未开工/部分覆盖，含本片 PH-396）+ 1 验收中（PH-241 in_review）** = 113（PH-388 ready、PH-389/390/393/394/395 及导入/通知/insights 链），逐项 gap 见 `docs/v1.0-development/closure-reconciliation.md` §2。
