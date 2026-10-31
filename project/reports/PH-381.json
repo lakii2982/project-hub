@@ -2,16 +2,32 @@
   "task_id": "PH-381",
   "summary": "后续交付独立规划入口（接续 PH-376）on BASE 3c77653. Planning-only slice: latest-main dependency recheck finds PH-367/PH-371 still ready (not done, so no duplicate promotion), PH-372 waiting PH-367, PH-338/353 waiting PH-289/PH-181/PH-185, PH-339/354 waiting PH-272, PH-340/355 waiting PH-301/314/179/183/151; no existing proposed task has all dependencies done, so no existing task is falsely promoted. Registers continuous PH-382–PH-386: PH-382 batch D-01 cross-owner orchestration acceptance execution (ready; deps PH-370 done; evidence-only, does not reimplement), PH-383 invoice batch import error-list/source-coverage follow-up (proposed; waits PH-378), PH-384 insights workbench/difference performance/export follow-up (proposed; waits PH-379), PH-385 notification scan/read follow-up (proposed; waits PH-380), and PH-386 next independent planning entry (proposed; depends on PH-381; to be set ready after PH-381 closes). Updates ROADMAP batch D, delivery-status, verification, manifest and task state; each new spec has concrete DoR/exact allowlist/executable acceptance/honest blockers; no product code/migration/schema/CI-gate/canonical change.",
   "tests": [
-    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":307}. Includes PH-382 ready and PH-383–386 proposed; dependency/status/allowlist/spec checks pass."},
-    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests, OK."},
-    {"command": "python scripts/projectctl.py verify-change --base 3c77653 --task PH-381", "result": "not_run", "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."}
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":307}. Includes PH-382 ready and PH-383–386 proposed; dependency/status/allowlist/spec checks pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 3c77653 --task PH-381",
+      "result": "pass",
+      "evidence": "Actual run after the reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-381 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
+    }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Independent S review pending. Verify no false promotion (PH-367/371 untouched ready; PH-372/batch D blockers precise), PH-382 ready only on done PH-370 and evidence-only scope, PH-383–386 continuous/unique with specs/DoR/allowlists/executable acceptance, PH-386 honestly proposed until PH-381 closes, ROADMAP/docs/tasks/manifest consistent, no code/migration/schema/gate change. Implementer does not self-pass."
+    "reviewer": "independent PH-381 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "NO FALSE PROMOTION: PH-367 and PH-371 remain ready-not-done and are explicitly not re-promoted/done; PH-372 waits PH-367; PH-338/353 wait PH-289/181/185 (with PH-362 noted done); PH-339/354 wait PH-272; PH-340/355 wait the notification/precondition chain; no existing proposed task had all dependencies done in this slot.",
+      "NEW TASKS: PH-382 is a genuine ready D-01 acceptance/evidence task depending only on PH-370 (done) and explicitly does not reimplement orchestration; PH-383 waits PH-378, PH-384 waits PH-379, PH-385 waits PH-380, and PH-386 is the genuine next planning entry proposed on PH-381 with a 'PH-381 done then next slot sets ready' blocker. New specs have DoR/whitelist/acceptance and no placeholder task numbers; task_count 307 is unique/continuous PH-382..PH-386; ROADMAP D-batch status matches (D-01 acceptance not_run, D-02–D-11 blocked, release blocked).",
+      "GATES: planning/governance-only changes; no product code/migration/schema/CI-gate change; 12 changed files within PH-381 allowed paths; no placeholders; check ok=307; governance 23 OK; verify-change --base 3c77653 --task PH-381 only high_risk_review_required (pre-review), no path_out_of_scope; report review now pass. Final evidence must set PH-381 done/PH-386 ready."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 68cba68 (BASE 3c77653) in /tmp/ph381-planning, worktree clean; 12 files within PH-381 allowed paths; task_count 307 unique continuous PH-382..PH-386. No existing task falsely promoted; PH-382 ready on PH-370 done as a D-01 evidence-only acceptance slice; PH-383/384/385 proposed on their exact predecessors; PH-386 proposed on PH-381; ROADMAP consistent; no code/migration/schema; check ok=307; governance 23 OK; verify-change only review gate, no path_out_of_scope. Independent reviewer PASS (68cba68): 12 files within PH-381 allowlist; no existing task falsely promoted; PH-382 ready on done PH-370 as evidence-only D-01 acceptance; PH-383/384/385 proposed; PH-386 proposed on PH-381; no code/migration/schema/gate change. Final evidence commit records the actual verify-change pass."
   },
   "deviations": [
     "No existing proposed task was promoted because no remaining proposed task has all dependencies done at this BASE; PH-367/PH-371 already ready and are not duplicated.",

@@ -12545,7 +12545,7 @@
       "title": "后续交付独立规划入口（接续 PH-376）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -12724,7 +12724,7 @@
       "title": "后续交付独立规划入口（接续 PH-381）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -12751,9 +12751,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-381 done 后由下一规划槽复核 DoR 并置 ready；本 BASE 仅登记，不提前 ready。"
-      ],
+      "blockers": [],
       "handoff": null
     }
   ]
