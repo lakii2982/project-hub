@@ -17,15 +17,16 @@
       "evidence": "Ran 23 tests OK"
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 0281043 --task PH-336",
-      "result": "not_run",
-      "evidence": "Pre-review gate pending; record real pass after independent review."
+      "command": "python scripts/projectctl.py verify-change --base 8208de7 --task PH-336",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — changed files inside BASE PH-336 allowed_paths (post-rebase gate rerun)."
     }
   ],
   "deviations": [
     "PH-321/PH-322 实现开工发现 BASE 契约缺必要路径（contracts models/migrations/approval/change 服务、delivery models/migrations）：实现 PR 不得自我扩权，本槽按 Lead 授权补白名单。",
     "PH-317 的 depends_on 仍列 legacy PH-150/155（能力已由 PH-214/224/232/287 交付），本槽按 reviewer-b 建议去 stale 并晋级 ready。",
-    "reviewer-b 复核补充：PH-322 白名单加 core/management/commands/verify_integrity.py + tests/test_v1_cash_book_bridge.py（新增 close 校验查询使 verifier query-count 阈值需 84→92，PH-269/274 先例）；PH-321 白名单加 pmo_plugins/delivery/urls.py（FX 页面接线）；同步 PH-321/PH-322/PH-317 spec 白名单与行为（PH-321 合同行非 CNY 写入经 approval/change 服务）。"
+    "reviewer-b 复核补充：PH-322 白名单加 core/management/commands/verify_integrity.py + tests/test_v1_cash_book_bridge.py（新增 close 校验查询使 verifier query-count 阈值需 84→92，PH-269/274 先例）；PH-321 白名单加 pmo_plugins/delivery/urls.py（FX 页面接线）；同步 PH-321/PH-322/PH-317 spec 白名单与行为（PH-321 合同行非 CNY 写入经 approval/change 服务）。",
+    "Lead integration rebase (0281043 -> 8208de7) after PH-332 merged: docs/verification.md kept main entries plus PH-336 entry; manifest.active_handoff -> PH-336."
   ],
   "unverified": [
     "PH-321/PH-322 实现未完成",
