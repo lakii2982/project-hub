@@ -34,16 +34,21 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-333",
-      "result": "not_run",
-      "evidence": "Actual exit 1: only high_risk_review_required (review pending); no task/path/report-shape errors. Final pass record will be written after reviewer pass."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 9 files inside BASE PH-333 allowed_paths (review pass recorded)."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": "independent PH-333 rollup-acceptance reviewer (fresh context, read-only)",
-    "status": "pending",
-    "findings": [],
-    "evidence": "Awaiting independent S review at this HEAD: PH-347 execution evidence referenced (not reimplemented), rollup envelope/L1+L2 vs L3-L5 not_run discipline, release_ready=false, no staging/production execution, no fabricated pass, scripts/tests/docs within the PH-333 whitelist. projectctl check, manage.py check, governance, full suite (known macOS baseline only) and scoped 6 tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "ROLLUP NOT REIMPLEMENTED: `rollup_acceptance.py` invokes the PH-347 install_drill/upgrade_drill and PH-348 backup_drill/restore_drill scripts through subprocess, parses/aggregates their JSON envelopes and checks, and emits V1-OPS-01–04 + release.L3–L5 checks; the M15/V1-OPS mapping is correct. The local run produced V1-OPS-01 pass(L2), V1-OPS-02 not_run(L3), V1-OPS-03 pass(L2), V1-OPS-04 pass(L2), release.L3/L4/L5 not_run, status=pass, release_ready=false.",
+      "HONESTY/SAFETY VERIFIED: the rollup only performs local/isolated rehearsal work (temp SQLite/backup/restore dirs) and never staging/production; upstream drill production execute is refused (tests: install/upgrade exit5 blocked), missing migration evidence is not_run(2), missing backup is fail(3), idempotent rerun passes, and release_ready stays false. L1+L2 evidence only; L3 CI/PG, L4 browser and L5 production/customer acceptance are explicitly not_run in the payload/report/docs (ops-runbook and upgrade-recovery state the same). No release qualification is claimed.",
+      "GATES (HEAD bea669a, BASE fe9c257): projectctl check ok=true/task_count=291; manage.py check 114 pre-existing warnings/0 errors; makemigrations --check no changes; scoped 6 tests OK; full suite 1274 = 5F+3E+70 baseline (no new class); direct `python scripts/ops/rollup_acceptance.py` exit 0/pass with release_ready=false; verify-change --base fe9c257 --task PH-333 pre-review only high_risk_review_required (no path errors); 9 changed files all inside PH-333 allowed paths; no placeholders; no product code/migration/schema/CI-gate changes.",
+      "MINOR (non-blocking): the rollup artifacts entry points at the temporary evidence directory, which the script removes in `finally`, so that artifact path is not retrievable after the run; either persist a small summary/manifest in the requested output directory or reference the output file instead. Also V1-OPS-03 is an L2 dry_run using a placeholder backup (clearly layered); keep the L2 wording explicit in the final report."
+    ],
+    "evidence": "VERDICT: PASS - the rollup genuinely calls the PH-347/PH-348 drills and aggregates their envelopes; it produces only L1+L2 evidence, marks V1-OPS-02/L3/L4/L5 not_run, sets release_ready=false and refuses/avoids production operations, with missing-evidence/backup and idempotency tests. Reviewed HEAD bea669a (BASE fe9c257), worktree clean; 9 files inside allowlist; check ok=291; manage 0 errors; makemigrations clean; scoped 6 OK; full suite 1274 = 5F+3E+70 baseline; rollup exit 0/pass release_ready=false; verify-change only high_risk_review_required (no path errors). Minor artifact-retention nit only."
   },
   "deviations": [
     "This slice is a rollup acceptance only: installation/upgrade/backup/restore implementations remain PH-347/PH-348 (both done); this slice adds a rollup runner, scoped tests and evidence docs, and does not reimplement the drills.",
