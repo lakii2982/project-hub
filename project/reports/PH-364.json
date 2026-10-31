@@ -13,9 +13,9 @@
       "evidence": "Actual run: Ran 23 tests in 2.258s, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base d81c11c --task PH-364",
+      "command": "python scripts/projectctl.py verify-change --base 1b09e61 --task PH-364",
       "result": "pass",
-      "evidence": "Actual run after the round-2 reviewer pass and final status commit ebcd769: ok=true, head=ebcd7694799e222c6c29aa03022d0ef37099494d, changes=6 files all inside the PH-364 allowlist, errors=[]."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 files inside BASE PH-364 allowed_paths (review pass; post-rebase rerun)."
     }
   ],
   "review": {
@@ -32,7 +32,8 @@
     "This is a contract-only docs slice: it freezes the reminder read projection but does not implement PH-355 or persist inbox/read state. PH-355 remains proposed because PH-179/PH-183/PH-151 are still proposed.",
     "The contract intentionally uses an internal projection identifier `core.reminders.read/v1`, not a canonical topic/command/query; no contract schema, canonical entity, migration or new table is added.",
     "PH-355 depends_on now includes PH-364; its blocker still names PH-179/PH-183/PH-151 and is not cleared by this slice.",
-    "Notification-center tasks PH-301/314/340/344 remain proposed; no false promotion or execution evidence is claimed."
+    "Notification-center tasks PH-301/314/340/344 remain proposed; no false promotion or execution evidence is claimed.",
+    "Lead integration rebase (d81c11c -> 1b09e61) after PH-363/365 merged: verification/manifest merged; gates rerun."
   ],
   "unverified": [
     "PH-355 implementation, browser 1440/390/keyboard states and PG/CI are future work; this slice executes only docs/governance checks.",
