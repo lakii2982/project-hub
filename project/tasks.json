@@ -10314,7 +10314,7 @@
       "title": "关期/结项实现首片：期间预检、关期与项目结项写侧（按 ADR 落地）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10360,9 +10360,9 @@
         "python manage.py test tests.test_v1_close tests.test_v1_close_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-322.md"
     },
     {
       "id": "PH-323",

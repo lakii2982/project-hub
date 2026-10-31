@@ -32,7 +32,8 @@ class Command(BaseCommand):
                 entries = LedgerEntry.objects.filter(**{field: source})
                 if entries.filter(reverses__isnull=True).count() != 1: errors.append(f"{field}:{source.pk}:posting_count")
                 if source.status == "reversed" and entries.filter(reverses__isnull=False).count() != 1: errors.append(f"{field}:{source.pk}:missing_reversal")
-        for project in Project.objects.all():
+        projects = list(Project.objects.all())
+        for project in projects:
             for plan in project.cash_plans.all():
                 if plan_remaining(plan) < 0: errors.append(f"plan:{plan.pk}:over_settlement")
         from core.models import AccountingEvent, LedgerPosting, SourceConsumption, NonProjectDestination
@@ -1439,6 +1440,124 @@ class Command(BaseCommand):
                     organization_id=invoice.organization_id,
                     source__kind='invoice').exists():
                 errors.append(f"invoice:{invoice.pk}:source_consumption")
+        from pmo_plugins.delivery.models import (PeriodCloseRun, ProjectClose,
+                                                  DeliveryReceipt)
+        from core.models import AccountingPeriod as _ClosePeriod
+        periods = list(_ClosePeriod.objects.all())
+        period_runs = list(PeriodCloseRun.objects.all().order_by(
+            'organization_id', 'period', 'sequence'))
+        project_runs = list(ProjectClose.objects.all().order_by(
+            'organization_id', 'project_id', 'sequence'))
+        close_receipts = list(DeliveryReceipt.objects.filter(
+            action__in=['period.close', 'period.reopen', 'project.close', 'project.reopen']))
+        by_period, by_project = {}, {}
+        for run in period_runs:
+            by_period.setdefault((run.organization_id, run.period), []).append(run)
+        for run in project_runs:
+            by_project.setdefault((run.organization_id, run.project_id), []).append(run)
+        period_index = {(row.organization_id, row.period): row for row in periods}
+        project_index = {row.pk: row for row in projects}
+        for (org_id, period), runs in by_period.items():
+            expected = 1
+            for index, run in enumerate(runs):
+                if run.sequence != expected:
+                    errors.append(f"period_close:{org_id}:{period}:sequence")
+                expected += 1
+                if run.action == 'close' and run.state not in ('closing', 'closed'):
+                    errors.append(f"period_close:{run.pk}:action_state")
+                if run.action == 'reopen' and run.state != 'reopened':
+                    errors.append(f"period_close:{run.pk}:action_state")
+                if run.state == 'closed' and run.closed_through is None:
+                    errors.append(f"period_close:{run.pk}:closed_date")
+                prev = runs[index - 1] if index else None
+                if run.action == 'close':
+                    if run.state == 'closing' and prev is not None and prev.state != 'reopened':
+                        errors.append(f"period_close:{run.pk}:close_transition")
+                    if run.state == 'closed':
+                        if (prev is None or prev.action != 'close' or prev.state != 'closing'
+                                or prev.sequence + 1 != run.sequence):
+                            errors.append(f"period_close:{run.pk}:missing_closing_pair")
+                if run.action == 'reopen':
+                    if prev is None or prev.state != 'closed':
+                        errors.append(f"period_close:{run.pk}:reopen_transition")
+                    if run.state != 'reopened':
+                        errors.append(f"period_close:{run.pk}:reopen_state")
+                if prev is not None:
+                    if prev.state == 'closed' and run.action != 'reopen':
+                        errors.append(f"period_close:{run.pk}:closed_followup")
+                    if prev.state == 'reopened' and run.action != 'close':
+                        errors.append(f"period_close:{run.pk}:reopened_followup")
+                if run.state == 'closing':
+                    nxt = runs[index + 1] if index + 1 < len(runs) else None
+                    if nxt is None or nxt.sequence != run.sequence + 1 or nxt.state != 'closed':
+                        errors.append(f"period_close:{run.pk}:dangling_closing")
+            if runs and runs[-1].state == 'closing':
+                errors.append(f"period_close:{org_id}:{period}:latest_closing")
+            row = period_index.get((org_id, period))
+            latest = runs[-1]
+            if latest.state == 'closed':
+                if row is None or row.status != 'posted' or row.closed_through != latest.closed_through:
+                    errors.append(f"period_close:{org_id}:{period}:latest_state")
+            if latest.state == 'reopened':
+                if row is None or row.status != 'active' or row.closed_through is not None:
+                    errors.append(f"period_close:{org_id}:{period}:reopened_state")
+        for (org_id, project_id), runs in by_project.items():
+            project = project_index.get(project_id)
+            expected = 1
+            for index, run in enumerate(runs):
+                if run.sequence != expected:
+                    errors.append(f"project_close:{project_id}:sequence")
+                expected += 1
+                if run.action == 'close' and run.state not in ('closing', 'closed'):
+                    errors.append(f"project_close:{run.pk}:action_state")
+                if run.action == 'reopen' and run.state != 'reopened':
+                    errors.append(f"project_close:{run.pk}:action_state")
+                if run.action == 'reopen' and run.from_stage != 'closed':
+                    errors.append(f"project_close:{run.pk}:reopen_stage")
+                if run.action == 'close' and run.from_stage not in {
+                        choice[0] for choice in Project.Stage.choices}:
+                    errors.append(f"project_close:{run.pk}:from_stage")
+                prev = runs[index - 1] if index else None
+                if run.action == 'close':
+                    if run.state == 'closing' and prev is not None and prev.state != 'reopened':
+                        errors.append(f"project_close:{run.pk}:close_transition")
+                    if run.state == 'closed':
+                        if (prev is None or prev.action != 'close' or prev.state != 'closing'
+                                or prev.sequence + 1 != run.sequence):
+                            errors.append(f"project_close:{run.pk}:missing_closing_pair")
+                if run.action == 'reopen':
+                    if prev is None or prev.state != 'closed':
+                        errors.append(f"project_close:{run.pk}:reopen_transition")
+                    if run.state != 'reopened':
+                        errors.append(f"project_close:{run.pk}:reopen_state")
+                if prev is not None:
+                    if prev.state == 'closed' and run.action != 'reopen':
+                        errors.append(f"project_close:{run.pk}:closed_followup")
+                    if prev.state == 'reopened' and run.action != 'close':
+                        errors.append(f"project_close:{run.pk}:reopened_followup")
+                if run.state == 'closing':
+                    nxt = runs[index + 1] if index + 1 < len(runs) else None
+                    if nxt is None or nxt.sequence != run.sequence + 1 or nxt.state != 'closed':
+                        errors.append(f"project_close:{run.pk}:dangling_closing")
+            if runs and runs[-1].state == 'closing':
+                errors.append(f"project_close:{project_id}:latest_closing")
+            latest = runs[-1]
+            if project is not None and project.stage == 'cancelled' and runs:
+                errors.append(f"project_close:{project_id}:cancelled_with_run")
+            if latest.state == 'closed':
+                if project is None or project.stage != 'closed':
+                    errors.append(f"project_close:{project_id}:latest_state")
+            if latest.state == 'reopened':
+                closed_runs = [run for run in runs if run.state == 'closed']
+                if project is None or not closed_runs or project.stage != closed_runs[-1].from_stage:
+                    errors.append(f"project_close:{project_id}:reopened_state")
+        period_run_ids = {run.pk for run in period_runs}
+        project_run_ids = {run.pk for run in project_runs}
+        for receipt in close_receipts:
+            valid = (receipt.result_id in period_run_ids if receipt.action.startswith('period.')
+                     else receipt.result_id in project_run_ids)
+            if not valid:
+                errors.append(f"close_receipt:{receipt.pk}:result")
         result = {"ok": not errors, "errors": errors, "organizations": Organization.objects.count(), "entries": LedgerEntry.objects.count()}
         self.stdout.write(json.dumps(result, ensure_ascii=False) if options["json"] else ("完整性检查通过" if not errors else "\n".join(errors)))
         if errors: raise CommandError("项目账完整性检查未通过")

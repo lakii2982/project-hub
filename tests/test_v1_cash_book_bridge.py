@@ -168,7 +168,9 @@ class CashBookBridgeTests(ClassificationFixture, TestCase):
             self.assertTrue(self.verify()['ok'])
         self.assertLessEqual(len(second.captured_queries), len(first.captured_queries) + 2)
         # PH-269 adds a fixed-cost time billable-confirmation branch to verify_integrity.
-        self.assertLessEqual(len(first.captured_queries), 84)
+        # PH-322 adds a fixed-cost close-run branch (4 bulk queries: accounting periods,
+        # period runs, project runs, close receipts), measured at 88 total queries.
+        self.assertLessEqual(len(first.captured_queries), 88)
 
     def _verify_payload(self):
         from io import StringIO

@@ -1,0 +1,66 @@
+{
+  "task_id": "PH-322",
+  "summary": "关期/结项实现首片（delivery append-only run，按 ADR 0016/0017 + PH-312 spec）：新增 delivery.models.PeriodCloseRun/ProjectClose 与迁移 0005（唯一序列、action/state 组合、closed 日期、vendor-aware UPDATE/DELETE 守护），命令 close_period/reopen_period/close_project/reopen_project（owner/finance、公司锁、expected_version、DeliveryReceipt request_token 幂等、dry_run 零写、closing+closed 成对追加、plugin. 审计、不写账本/收入/成本/现金/未清）；只读预检 period_close_precheck/reopen_period_precheck/project_close_precheck/reopen_project_precheck 复用 PH-291/283/284/280/288/275/287/274/269/281/309 等既有 owner 只读接口，冻结 blocker/warning issue_code + reminder_ref + precheck_digest；close 页面/执行 POST/重开表单（history_read 预检、business_write 执行、停用历史只读）；verify_integrity 新增期间/项目 close 分支（序列连续、closing→closed 成对、无 dangling closing、latest 与 AccountingPeriod/Project 当前状态一致、cancelled 无 run、重开链、收据结果引用）；新增 23 项 scoped 测试（服务+HTTP+trigger/verifier 探针）；reviewer-b 首轮 2 阻断+4 必改已修：reopen 专用预检、verify_integrity 状态机/重开链校验、业务事实计数断言、pm period 预检/页面拒绝、ProjectClose trigger/项目 dry_run/replay 测试、report/handoff 证据纠正。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD (BASE fcb7b17): ok=true, task_count=259; PH-322 in_review with owner/handoff; BASE allowed_paths (18) include pmo_plugins/delivery/models.py, pmo_plugins/delivery/migrations/*, core/management/commands/verify_integrity.py and tests/test_v1_cash_book_bridge.py after PH-336; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 106 issues (0 silenced), all pre-existing W003/W342 warnings; 0 errors (delivery close routes/metadata validate)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected; delivery migration 0005_periodcloserun_projectclose matches the two new models and is the new delivery leaf (no core migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 on BASE fcb7b17: Ran 1174 tests, FAILED (failures=5, errors=3, skipped=69) => 1097 passed. All 8 failures/errors are exactly the known macOS environment limits; no new failure class. The verifier query-count ceiling is the measured 88 (4 fixed bulk queries)."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Probe tests create dangling closing rows and assert verify_integrity fails with period_close:/project_close: errors; append-only trigger probes assert UPDATE/DELETE are rejected on SQLite."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_close tests.test_v1_close_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 24 tests, OK => 24 passed (18 service + 6 HTTP). Includes positive verifier tests: normal period and project close+reopen histories produce verify_integrity ok=true with no close_transition; plus the previous negative/dangling/receipt/trigger/fact-count/pm probes."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "reviewer-b",
+    "status": "pass",
+    "findings": [
+      "RESOLVED at HEAD 80ff6a8: the close_transition rule now applies only to the opening row (`if run.state == 'closing' and prev is not None and prev.state != 'reopened'`) for both period and project blocks; the closed row of a legitimate closing(n)->closed(n+1) pair is validated by missing_closing_pair instead. Independent clean-DB probe: a normal period close followed by verify_integrity returns {\"ok\": true, \"errors\": []}; the added positive tests cover clean period and project close+reopen histories with ok=true, errors=[], and no close_transition.",
+      "VERIFIED: previous blockers/fixes all hold: dedicated `_reopen_period_precheck` (mode=reopen, eligible, blockers=[], closed-period test), pm period precheck/page denial (403; pm remains limited to managed-project project precheck), business-fact count assertions (LedgerEntry/AccountingEvent/revenue/salary-pool/cash/open-item for period/project dry_run and real close+reopen), ProjectClose UPDATE/DELETE trigger probe, project dry_run/token replay/changed-input tests, report/handoff now record BASE fcb7b17, full suite 1174 and threshold 88, and docs/verification PH-336 historical entry now says 84->88.",
+      "GATES (reviewed HEAD 80ff6a8, BASE fcb7b17): projectctl check ok=true/task_count=259 (PH-322 in_review); manage.py check 106 pre-existing warnings/0 errors; makemigrations --check no changes; full suite 1174 tests = 5F+3E+69 known macOS baseline (no new failure class); scoped 24 tests OK (18 service + 6 HTTP); fresh migrated SQLite verify_integrity ok=true with empty errors; query-count test exactly 88 with the documented 4 fixed bulk queries; verify-change --base fcb7b17 --task PH-322 pre-review only high_risk_review_required (no path/acceptance errors); 18 changed files all inside BASE PH-322 allowed paths; no core migration; no placeholders.",
+      "MINOR (non-blocking, for final report hygiene): the report's `unverified` list can drop the duplicated 'Independent S review is still pending' entry now that this pass block exists; the reviewer-b pass is recorded for the worker's final commit."
+    ],
+    "evidence": "VERDICT: PASS - the last blocker (verify_integrity false positive on normal close pairs) is fixed at HEAD 80ff6a8: close_transition is restricted to opening closing rows and positive verifier tests pass for clean period/project close+reopen (ok=true/errors=[]/no close_transition); independent clean-DB probe also returns ok=true after a normal close. All prior fixes remain verified: dedicated reopen precheck, pm period denial, business-fact count assertions, ProjectClose trigger/project dry-run/replay tests, report/handoff/documentation evidence. Reviewed HEAD 80ff6a8 (BASE fcb7b17) in /tmp/ph322-close-impl, worktree clean; 18 files inside the PH-322 allowlist. Actual runs: check ok=259; manage.py check 106 warnings/0 errors; makemigrations no changes; full suite 1174 = 5F+3E+69 (no new class); scoped 24 OK; fresh migrated SQLite verify_integrity ok; verify-change --base fcb7b17 --task PH-322 pre-review only high_risk_review_required (no path errors)."
+  },
+  "deviations": [
+    "Reviewer-b round-2 blocker fixed: close_transition is now checked only for opening closing rows (run.state == 'closing'); the paired closed row is validated by missing_closing_pair. Added positive verifier tests for clean period and project close+reopen histories (verify_integrity ok=true, errors=[], no close_transition).",
+    "Reviewer-b round-1 fixes applied: (1) reopen_period_precheck is now a dedicated reopen precheck (state closed/eligible, no close blockers, independent digest) instead of calling the close precheck; (2) verify_integrity validates legal transitions and the reopen chain (close only initial or after reopened; reopen only immediately after closed; closing(n)->closed(n+1); reject duplicate close/reopen/orphan transitions) with sequence-gap/double-reopen/latest-state/cancelled-with-run/receipt-mismatch probes; (3) scoped tests assert LedgerEntry/AccountingEvent/revenue/cost/cash/OpenItem counts unchanged for period/project close+reopen dry_run and real; (4) pm is denied period precheck/page (pm remains limited to managed-project project precheck); (5) ProjectClose UPDATE/DELETE trigger probes and project dry_run/token replay/changed-input tests added; (6) report/handoff BASE/threshold/full-suite text corrected and the superseded rejection review block cleared.",
+    "PH-336 planning slot applied: BASE fcb7b17 sets PH-322 ready and adds pmo_plugins/delivery/models.py, pmo_plugins/delivery/migrations/*, core/management/commands/verify_integrity.py and tests/test_v1_cash_book_bridge.py to allowed_paths; this branch was rebased onto fcb7b17 (old 987ec1e base not kept) and verify-change is green.",
+    "Query-count threshold evidence: the close verifier uses 4 fixed bulk queries (AccountingPeriod list, PeriodCloseRun list, ProjectClose list, close DeliveryReceipt list) and does not add per-row queries; the measured total is 88 vs the previous frozen ceiling 84 (baseline 84 + 4 fixed). The PH-336 whitelist allowed the test file, and its ceiling was bumped to exactly 88 with an explanatory comment (PH-269/274 precedent), not an arbitrary larger value.",
+    "closing is a transactional phase, not a durable observable state: the committed history contains the pair closing(n)+closed(n+1); reads/verifier treat a dangling closing as corruption. This follows PH-312's frozen decision B and does not add a closing branch to owner period/project checks.",
+    "Period precheck/project precheck reuse existing owner read services with conservative issue-code mapping; unsupported read sources are reported as missing (not as 0) and no second reconciliation rule is created. Cash bank issues are read via bank_account_issues dict issue_count, not treated as a list.",
+    "request_token idempotency uses DeliveryReceipt (action/digest/result_id); run request_token is stored only on the first (closing/reopened) row and is null on the paired closed row, matching the frozen PH-312 model constraint.",
+    "No core model/migration is changed; only existing AccountingPeriod.status/closed_through and Project.stage/previous_stage current rows are updated in the same transaction as the run pair and audit/receipt.",
+    "No automatic correction, export, notification push, PAT/MCP close tool or customer portal is added; no business fact is written by close/reopen.",
+    "Lead integration rebase (fcb7b17 -> 863f946) after PH-321/337 merged: docs/verification.md kept main entries plus PH-322 entry; manifest.active_handoff -> PH-322."
+  ],
+  "unverified": [
+    "Independent reviewer-b re-review is pending; verify-change remains review-gated until that PASS. Full suite is the known 8 macOS environment failures only (5 failures + 3 errors) with 69 skips.",
+    "PostgreSQL trigger/function behaviour and true multi-connection concurrency (company lock, concurrent close one-winner) are not exercised locally; CI including the PG domain is authoritative. SQLite does not prove production concurrency correctness.",
+    "Browser 1440/390 visual/keyboard/focus/overflow/empty-error-disabled states were not manually checked; only HTTP tests were run.",
+    "Production/UAT and legacy database upgrades are not verified; only freshly migrated SQLite databases were exercised."
+  ]
+}
