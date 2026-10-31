@@ -242,7 +242,7 @@ def ops_export(context, payload):
         download_query = '?' + urlencode({
             'dataset': plan['dataset'], 'as_of': plan['as_of'] or '',
             'period': plan['period'] or '', 'download': '1',
-            'token': str(form.cleaned_data.get('token') or uuid.uuid4())})
+            'token': plan['token']})
     return render(context.request, 'delivery/ops_export.html', {
         'nav': 'delivery', 'form': form, 'plan': plan, 'error': error,
         'page_url': base, 'download_url': base + download_query,

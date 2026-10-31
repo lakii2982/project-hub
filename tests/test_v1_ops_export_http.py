@@ -51,6 +51,26 @@ class OpsExportHTTPTests(OpsOverviewFixture, TestCase):
                                                'as_of': 'bad-date'}).status_code, 400)
         self.assertEqual(self.client.post(URL, {'dataset': 'ops_overview'}).status_code, 405)
 
+    def test_plan_download_token_idempotent(self):
+        import uuid
+        token = uuid.uuid4()
+        self.login(self.owner)
+        page = self.client.get(URL, {'dataset': 'ops_overview', 'token': str(token),
+                                     'as_of': self.today.isoformat()})
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, str(token))
+        first = self.client.get(URL, {
+            'dataset': 'ops_overview', 'download': '1', 'token': str(token),
+            'as_of': self.today.isoformat()})
+        self.assertEqual(first.status_code, 200)
+        first_id = first['X-Content-SHA256']
+        self.assertEqual(len(first_id), 64)
+        second = self.client.get(URL, {
+            'dataset': 'ops_overview', 'download': '1', 'token': str(token),
+            'as_of': self.today.isoformat()})
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second['X-Content-SHA256'], first_id)
+
     def test_module_disabled_history_readable(self):
         PluginState.objects.update_or_create(
             organization=self.org, plugin_id='delivery',

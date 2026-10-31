@@ -218,24 +218,29 @@ def export_reconciliation_worksheets(member, *, dataset, as_of=None, period=None
     key = (member.organization_id, str(token))
     with _LOCK:
         stored = _RECEIPTS.get(key)
+        if stored is not None and stored['digest'] != digest:
+            raise ValidationError('同一 request_token 的导出输入已改变，请使用新的令牌')
         if stored is not None:
-            if stored['digest'] != digest:
-                raise ValidationError('同一 request_token 的导出输入已改变，请使用新的令牌')
-            return stored['plan'] if dry_run else stored['result']
+            if dry_run and stored.get('plan') is not None:
+                return stored['plan']
+            if not dry_run and stored.get('result') is not None:
+                return stored['result']
     generated_at = datetime.now(dt_timezone.utc).replace(microsecond=0).isoformat()
     columns = COLUMNS[dataset]
     plan = {
         'dataset': dataset, 'dataset_label': DATASET_LABELS[dataset],
         'as_of': day.isoformat() if day else None, 'period': month,
         'columns': columns, 'row_count': len(rows), 'dry_run': True,
-        'content_id': None, 'generated_at': None,
+        'content_id': None, 'generated_at': None, 'token': str(token),
         'checksum_row': ['#checksum', 'dataset', dataset,
                          'as_of', day.isoformat() if day else '',
                          'period', month or '', 'row_count', len(rows)],
     }
     if dry_run:
         with _LOCK:
-            _RECEIPTS[key] = {'digest': digest, 'plan': plan, 'result': plan}
+            cached = _RECEIPTS.get(key) or {'digest': digest}
+            cached['plan'] = plan
+            _RECEIPTS[key] = cached
         return plan
     text, checksum, columns = _render(
         dataset, rows, as_of=day.isoformat() if day else None, period=month,
@@ -253,7 +258,10 @@ def export_reconciliation_worksheets(member, *, dataset, as_of=None, period=None
                          'checksum', checksum, 'generated_at', generated_at],
     }
     with _LOCK:
-        _RECEIPTS[key] = {'digest': digest, 'plan': plan, 'result': result}
+        cached = _RECEIPTS.get(key) or {'digest': digest}
+        cached['result'] = result
+        cached['plan'] = plan
+        _RECEIPTS[key] = cached
     return result
 
 

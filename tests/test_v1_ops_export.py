@@ -55,6 +55,27 @@ class ExportOpsOverviewTests(OpsOverviewFixture, TestCase):
         with self.assertRaises(ValidationError):
             self.export(request_token=token, as_of='2000-01-01')
 
+    def test_dry_run_then_real_same_token(self):
+        token = uuid.uuid4()
+        plan = self.export(request_token=token, dry_run=True)
+        self.assertTrue(plan['dry_run'])
+        self.assertNotIn('csv', plan)
+        real = self.export(request_token=token, dry_run=False)
+        self.assertFalse(real['dry_run'])
+        self.assertTrue(real['csv'].startswith('\ufeff'))
+        self.assertEqual(len(real['content_id']), 64)
+        self.assertEqual(real['row_count'], plan['row_count'])
+
+    def test_real_then_dry_run_same_token(self):
+        token = uuid.uuid4()
+        real = self.export(request_token=token, dry_run=False)
+        plan = self.export(request_token=token, dry_run=True)
+        self.assertTrue(plan['dry_run'])
+        self.assertNotIn('csv', plan)
+        self.assertIsNone(plan['content_id'])
+        self.assertEqual(plan['row_count'], real['row_count'])
+        self.assertEqual(plan['token'], str(token))
+
     def test_invalid_dataset_and_dates(self):
         with self.assertRaises(ValidationError):
             self.export(dataset='unknown')
