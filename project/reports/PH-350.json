@@ -1,0 +1,102 @@
+{
+  "task_id": "PH-350",
+  "summary": "健康/容量/积压基线实现 on BASE fe9c257. Implements scripts/ops/healthcheck.py against the PH-345 V1-OPS-05 read-only contract: PH-345 evidence envelope v1, append-only JSONL dedupe, exit codes 0 pass / 2 not_run / 3 fail / 4 environment error / 5 security refusal; dry_run default; execute restricted to --env rehearsal with staging/production execute blocked exit 5. Local/test redacted facts feed health checks (DB reachability/migration pending/cache/worker/disk/backup age), capacity checks (connection utilisation, largest table bytes, slow-query count, attachment bytes), backlog checks (queue depth/reminders/todos/unsettled with frozen local thresholds), and perf samples (nearest-rank P50/P95) without guessing production SLOs. Missing facts/environment return not_run exit 2; sensitive keys are recursively redacted so no password/token/credential/customer/payroll values enter evidence. Adds docs/engineering/observability.md with the frozen facts schema/thresholds/evidence/not_run discipline and records the V1-OPS-05 local/rehearsal status in the allowlisted observability document (ops-runbook is outside the PH-350 whitelist and was left unchanged). Real CI/deployment capacity, PG/table/slow-query/attachment/queue metrics and page P50/P95 remain not_run and are explicitly not claimed from local numbers. No production access, product code, migration, contract schema, canonical or CI-gate changes. Scoped 7 tests cover envelope, exit codes, missing environment, staging/production refusal, backlog/disk/backup/connection/migration thresholds, redaction, P50/P95 and JSONL idempotency. Reviewer round-1 blockers fixed: only the rehearsal profile can ever pass; staging/production dry_run now return not_run/exit 2 (and execute exit 5 blocked) because local facts cannot represent real capacity; health.db requires an explicit reachable=true fact, missing reachability is not_run, false is fail. Regressions cover production/staging dry_run and missing DB reachability.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":291}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual final run after the round-1 fixes: Ran 1277 tests in 132.241s, 5 failures/3 errors/70 environment skips. The 8 failure/error names are the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI authoritative."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_observability --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run after the round-1 fixes: Ran 9 tests, OK. Adds non-rehearsal dry_run not_run (staging/production) and missing DB reachability not_run to the envelope/exit/threshold/redaction/perf coverage."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 2.530s, OK."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode dry_run --env rehearsal --facts <complete-local-facts> --out /tmp/ph350-evidence/health.jsonl",
+      "result": "pass",
+      "evidence": "Actual local run exit 0; envelope status pass, all health/capacity/backlog/perf checks; artifact /tmp/ph350-evidence/health.jsonl."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode dry_run --env rehearsal --out /tmp/ph350-evidence/health-missing.jsonl",
+      "result": "pass",
+      "evidence": "Actual run exit 2; envelope status not_run with environment.supplied not_run; no production collection attempted."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode execute --env production --facts <complete-local-facts> --out /tmp/ph350-evidence/health-production-refused.jsonl",
+      "result": "pass",
+      "evidence": "Actual run exit 5; envelope status blocked with safety.execute_profile fail; no production access."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode dry_run --env rehearsal --facts <backlog-200-facts> --out /tmp/ph350-evidence/health-backlog-fail.jsonl",
+      "result": "pass",
+      "evidence": "Actual run exit 3; envelope status fail with backlog.reminders fail; threshold enforcement confirmed."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base b3769fb --task PH-350",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-350 allowed_paths (post-rebase rerun)."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base b3769fb --task PH-350",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-350 allowed_paths (post-rebase rerun)."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode dry_run --env production --facts <complete-local-facts> --out /tmp/ph350-evidence/health-production-dry-notrun.jsonl",
+      "result": "pass",
+      "evidence": "Actual run exit 2; envelope status not_run with profile.real_environment; local facts cannot pose as production capacity."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode execute --env staging --facts <complete-local-facts> --out /tmp/ph350-evidence/health-staging-refused.jsonl",
+      "result": "pass",
+      "evidence": "Actual run exit 5; envelope status blocked with safety.execute_profile."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode dry_run --env rehearsal --facts <db-without-reachable> --out /tmp/ph350-evidence/health-db-missing.jsonl",
+      "result": "pass",
+      "evidence": "Actual run exit 2/not_run; health.db actual=missing, proving missing reachability cannot pass."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-350 health/capacity/backlog drill reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKERS RESOLVED AT 6a702d7: (1) only `--env rehearsal` can reach the collection path; staging/production dry_run now return exit 2/status not_run with `profile.real_environment`, while staging/production execute still return exit 5 blocked; local facts can no longer be labelled as a production/staging pass. (2) health.db now requires an explicit `reachable` fact: true -> pass, false -> fail, missing -> not_run/exit 2; regressions cover production/staging dry_run and missing reachability.",
+      "CONTENT RE-VERIFIED: PH-345 envelope fields, exit 0/2/3/4/5 mapping, append-only JSONL dedupe, recursive sensitive-key redaction, missing facts -> not_run/exit2, honest not_run notes, health DB/migrations/cache/queue/disk/backup, capacity connections/tables/slow queries/attachments, backlog queue/reminders/todos/unsettled thresholds, nearest-rank P50/P95 and local-only environment labels are implemented; the script consumes redacted facts only and does not connect to or write production; ops-runbook.md was correctly left untouched (deferred); no product code/migration/schema/canonical/CI-gate change; 8 files within the PH-350 whitelist.",
+      "EVIDENCE AT 6a702d7 (BASE fe9c257): check ok=true/task_count=291; manage.py check exit0; makemigrations --check No changes; scoped observability tests 9 OK; full suite 1277/5F+3E/70 = known macOS baseline; fresh SQLite verify_integrity ok; verify-change --base fe9c257 --task PH-350 only high_risk_review_required, no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS (round 2; non-rehearsal pass and default DB reachability fixed). Reviewed HEAD 6a702d7 (BASE fe9c257) in /tmp/ph350-health-capacity, worktree clean; 8 files within PH-350 whitelist; no product code/migration/schema. Rehearsal-only pass; staging/production dry_run not_run/exit2 and execute exit5 blocked; DB reachability explicit (missing -> not_run); envelope/exit/JSONL/redaction/thresholds/P50-P95 otherwise verified. Independent runs: check ok=291; makemigrations clean; scoped 9 OK; full 1277/5F+3E/70 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope. Round-2 reviewer PASS (6a702d7): only rehearsal can pass; staging/production dry_run not_run/exit2 and execute exit5; health.db requires explicit reachability; 8 files in whitelist, no product code/migration/schema. Final evidence commit records the actual verify-change pass."
+  },
+  "deviations": [
+    "Only local/rehearsal redacted facts were measured; real CI/deployment health, connection counts, table sizes, slow queries, attachments, backup, queue backlog and page P50/P95 were not executed and remain not_run.",
+    "The script consumes redacted fact JSON supplied by the local/test environment; it deliberately does not connect to production or auto-discover credentials. Real environment collection belongs to deployment/CI evidence.",
+    "Thresholds are frozen local rehearsal defaults, not production SLOs; local numbers must not be used to claim production capacity.",
+    "Artifacts are written under /tmp/ph350-evidence and not committed; no product code/migration/schema/canonical/CI-gate changes.",
+    "No browser/product UI, PG or customer data is exercised in this slice.",
+    "docs/engineering/ops-runbook.md is outside the PH-350 allowed_paths, so it was not modified; the V1-OPS-05 local/rehearsal status is recorded in the allowlisted docs/engineering/observability.md and report, with the runbook sync left to a later authorized slice.",
+    "Lead integration rebase (fe9c257 -> 5763f4a) after PH-366 merged: verification/manifest merged; gates rerun."
+  ],
+  "unverified": [
+    "Real CI/deployment health/capacity/backlog/performance baselines and L4/L5 evidence",
+    "PostgreSQL metrics, page latency/P50/P95, attachment storage and backup/queue production systems",
+    "Browser 1440/390/keyboard states (script/docs only)",
+    "Independent S review and CI/PR pending"
+  ]
+}
