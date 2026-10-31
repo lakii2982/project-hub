@@ -52,7 +52,7 @@ def _fresh(member, *, write=False):
     return row
 
 
-def _period(member, value):
+def _period(member, value, *, write=True):
     if not isinstance(value, str) or len(value) != 7 or value[4] != '-':
         _fail('分摊期间须为YYYY-MM')
     try:
@@ -61,10 +61,10 @@ def _period(member, value):
         _fail('分摊期间须为YYYY-MM')
     if start.strftime('%Y-%m') != value or start > timezone.localdate():
         _fail('分摊期间须为有效且不晚于本月的YYYY-MM')
-    if member.organization.locked_through and start <= member.organization.locked_through:
+    if write and member.organization.locked_through and start <= member.organization.locked_through:
         _fail('分摊期间已锁账')
     row = AccountingPeriod.objects.filter(organization=member.organization, period=value).first()
-    if row and (row.status != 'active' or row.closed_through is not None):
+    if write and row and (row.status != 'active' or row.closed_through is not None):
         _fail('分摊期间已关闭')
     return start
 
@@ -269,6 +269,13 @@ def create_shared_cost_allocation_batch(member, *, period, pool_kind, driver,
     pool_key = hashlib.sha256(json.dumps(
         {'org': str(member.organization_id), 'period': period, 'pool_kind': pool_kind,
          'source_digest': source_digest}, sort_keys=True).encode()).hexdigest()
+    payload = {'period': period, 'pool_kind': pool_kind, 'driver': driver,
+               'amount_cents': amount, 'source_digest': source_digest,
+               'weights': weights, 'algorithm_version': ALGORITHM}
+    digest = _digest(payload)
+    token, existing = _receipt(member, 'allocate', request_token, digest, dry_run)
+    if existing is not None:
+        return existing
     for active in SharedCostAllocationBatch.objects.filter(
             organization=member.organization, period=period, status='posted',
             kind='allocation').exclude(pool_key=pool_key):
@@ -279,13 +286,6 @@ def create_shared_cost_allocation_batch(member, *, period, pool_kind, driver,
             organization=member.organization, period=period, pool_key=pool_key,
             kind='allocation', status='posted').exists():
         _fail('该费用池期间已有有效分摊批次')
-    payload = {'period': period, 'pool_kind': pool_kind, 'driver': driver,
-               'amount_cents': amount, 'source_digest': source_digest,
-               'weights': weights, 'algorithm_version': ALGORITHM}
-    digest = _digest(payload)
-    token, existing = _receipt(member, 'allocate', request_token, digest, dry_run)
-    if existing is not None:
-        return existing
     if dry_run:
         return {'dry_run': True, 'period': period, 'pool_kind': pool_kind, 'driver': driver,
                 'amount_cents': amount, 'pool_key': pool_key, 'source_digest': source_digest,
@@ -333,19 +333,19 @@ def reverse_shared_cost_allocation_batch(member, batch_id, *, reason, request_to
             organization=member.organization, pk=batch_id, kind='allocation')
     except (SharedCostAllocationBatch.DoesNotExist, ValueError, TypeError):
         raise PermissionDenied('分摊批次不存在或无权访问')
-    if original.status != 'posted':
-        _fail('仅有效未冲销分摊批次可以冲销')
-    if expected_version != 1:
-        _fail('分摊批次版本冲突')
     if not isinstance(reason, str) or not 1 <= len(reason.strip()) <= 500:
         _fail('冲销原因须为1至500字')
-    if SharedCostAllocationBatch.objects.filter(reverses_batch=original).exists():
-        _fail('该分摊批次已冲销')
     payload = {'batch_id': str(original.pk), 'reason': reason.strip()}
     digest = _digest(payload)
     token, existing = _receipt(member, 'reverse', request_token, digest, dry_run)
     if existing is not None:
         return existing
+    if original.status != 'posted':
+        _fail('仅有效未冲销分摊批次可以冲销')
+    if expected_version != 1:
+        _fail('分摊批次版本冲突')
+    if SharedCostAllocationBatch.objects.filter(reverses_batch=original).exists():
+        _fail('该分摊批次已冲销')
     if dry_run:
         return {'dry_run': True, 'batch_ref': original.source_ref,
                 'amount_cents': -original.amount_cents, 'kind': 'reversal'}
@@ -379,7 +379,7 @@ def shared_cost_reconciliation(member, *, period, pool_kind=None, as_of=None):
     member = _fresh(member)
     if member.role == 'pm':
         raise PermissionDenied('项目经理无法查看公司共享费用池，请使用项目成本摘要')
-    start = _period(member, period)
+    start = _period(member, period, write=False)
     kinds = [pool_kind] if pool_kind else sorted(POOL_KINDS)
     batches = SharedCostAllocationBatch.objects.filter(
         organization=member.organization, period=period).prefetch_related('lines')

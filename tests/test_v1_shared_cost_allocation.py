@@ -107,6 +107,20 @@ class SharedCostTests(CostFixture, TestCase):
         with self.assertRaises((PermissionDenied, ValidationError)):
             self.allocate(period='2000-01')
 
+    def test_request_token_replay_returns_original_result(self):
+        token = uuid.uuid4()
+        first = self.allocate(request_token=token)
+        replay = self.allocate(request_token=token)
+        self.assertEqual(first, replay)
+        reverse_token = uuid.uuid4()
+        first_reverse = services.reverse_shared_cost_allocation_batch(
+            self.owner, first['batch_ref']['id'], reason='幂等冲销',
+            request_token=reverse_token, dry_run=False)
+        replay_reverse = services.reverse_shared_cost_allocation_batch(
+            self.owner, first['batch_ref']['id'], reason='幂等冲销',
+            request_token=reverse_token, dry_run=False)
+        self.assertEqual(first_reverse, replay_reverse)
+
     def test_append_only_db_guards(self):
         batch = self.allocate()['batch_ref']
         with self.assertRaises(ValidationError):

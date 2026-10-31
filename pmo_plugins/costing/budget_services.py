@@ -40,7 +40,7 @@ def _fresh(member, *, write=False):
     return row
 
 
-def _period(member, value):
+def _period(member, value, *, write=True):
     if not isinstance(value, str) or len(value) != 7 or value[4] != '-':
         _fail('预算期间须为YYYY-MM')
     try:
@@ -49,10 +49,10 @@ def _period(member, value):
         _fail('预算期间须为YYYY-MM')
     if start.strftime('%Y-%m') != value or start > timezone.localdate():
         _fail('预算期间须为有效且不晚于本月的YYYY-MM')
-    if member.organization.locked_through and start <= member.organization.locked_through:
+    if write and member.organization.locked_through and start <= member.organization.locked_through:
         _fail('预算期间已锁账')
     row = AccountingPeriod.objects.filter(organization=member.organization, period=value).first()
-    if row and (row.status != 'active' or row.closed_through is not None):
+    if write and row and (row.status != 'active' or row.closed_through is not None):
         _fail('预算期间已关闭')
     return start
 
@@ -157,18 +157,17 @@ def create_project_budget(member, *, project_id, period, effective_from, lines,
                 status='approved', pk=based_on_version_id)
         except (ProjectBudgetVersion.DoesNotExist, ValueError, TypeError):
             _fail('依据预算版本不存在或未批准')
-    previous = ProjectBudgetVersion.objects.filter(
-        organization=member.organization, project=project, period=period).order_by(
-        '-version').first()
-    version_no = (previous.version if previous else 0) + 1
     payload = {'project_id': str(project.pk), 'period': period,
                'effective_from': when.isoformat(),
-               'lines': rows, 'based_on_version': str(based_on.pk) if based_on else None,
-               'version': version_no}
+               'lines': rows, 'based_on_version': str(based_on.pk) if based_on else None}
     digest = _digest(payload)
     token, existing = _receipt(member, 'create', request_token, digest, dry_run)
     if existing is not None:
         return existing
+    previous = ProjectBudgetVersion.objects.filter(
+        organization=member.organization, project=project, period=period).order_by(
+        '-version').first()
+    version_no = (previous.version if previous else 0) + 1
     if dry_run:
         return {'dry_run': True, 'project_id': str(project.pk), 'period': period,
                 'version': version_no, 'effective_from': when.isoformat(),
@@ -200,6 +199,11 @@ def approve_project_budget(member, version_id, *, request_token, expected_versio
             organization=member.organization, pk=version_id)
     except (ProjectBudgetVersion.DoesNotExist, ValueError, TypeError):
         raise PermissionDenied('预算版本不存在或无权访问')
+    payload = {'version_id': str(version.pk), 'expected_version': expected_version}
+    digest = _digest(payload)
+    token, existing = _receipt(member, 'approve', request_token, digest, dry_run)
+    if existing is not None:
+        return existing
     if version.status != 'draft' or expected_version != version.version:
         _fail('仅草稿预算可按当前版本号批准')
     if member.pk in {version.created_by_id, version.submitted_by_id}:
@@ -207,11 +211,6 @@ def approve_project_budget(member, version_id, *, request_token, expected_versio
     if not version.effective_from:
         _fail('预算缺少生效日')
     _period(member, version.period)
-    payload = {'version_id': str(version.pk), 'expected_version': expected_version}
-    digest = _digest(payload)
-    token, existing = _receipt(member, 'approve', request_token, digest, dry_run)
-    if existing is not None:
-        return existing
     if dry_run:
         return {'dry_run': True, 'version_id': str(version.pk), 'status': 'approved'}
     ProjectBudgetVersion.objects.filter(
@@ -243,8 +242,6 @@ def reject_project_budget(member, version_id, *, request_token, expected_version
             organization=member.organization, pk=version_id)
     except (ProjectBudgetVersion.DoesNotExist, ValueError, TypeError):
         raise PermissionDenied('预算版本不存在或无权访问')
-    if version.status != 'draft' or expected_version != version.version:
-        _fail('仅草稿预算可驳回')
     if not isinstance(reason, str) or not 1 <= len(reason.strip()) <= 500:
         _fail('驳回原因须为1至500字')
     payload = {'version_id': str(version.pk), 'expected_version': expected_version,
@@ -253,6 +250,8 @@ def reject_project_budget(member, version_id, *, request_token, expected_version
     token, existing = _receipt(member, 'reject', request_token, digest, dry_run)
     if existing is not None:
         return existing
+    if version.status != 'draft' or expected_version != version.version:
+        _fail('仅草稿预算可驳回')
     if dry_run:
         return {'dry_run': True, 'version_id': str(version.pk), 'status': 'rejected'}
     version.status = 'rejected'
@@ -281,13 +280,13 @@ def supersede_project_budget(member, version_id, *, request_token, expected_vers
             project=old.project, period=old.period, status='approved')
     except (ProjectBudgetVersion.DoesNotExist, ValueError, TypeError):
         raise PermissionDenied('预算版本不存在或无权访问')
-    if old.status != 'approved' or expected_version != old.version or new.pk == old.pk:
-        _fail('仅可被更新且更晚版本的已批准预算取代')
     payload = {'version_id': str(old.pk), 'replacement_version_id': str(new.pk)}
     digest = _digest(payload)
     token, existing = _receipt(member, 'supersede', request_token, digest, dry_run)
     if existing is not None:
         return existing
+    if old.status != 'approved' or expected_version != old.version or new.pk == old.pk:
+        _fail('仅可被更新且更晚版本的已批准预算取代')
     if dry_run:
         return {'dry_run': True, 'version_id': str(old.pk), 'status': 'superseded'}
     old.status = 'superseded'
@@ -314,7 +313,7 @@ def budget_etc_snapshot(member, *, project_id, period=None, as_of=None):
         organization=member.organization, project=project, status='approved',
         effective_from__lte=when)
     if period:
-        _period(member, period)
+        _period(member, period, write=False)
         budget_query = budget_query.filter(period=period)
     budget = budget_query.order_by('-effective_from', '-version').first()
     lines = list(budget.lines.all()) if budget else []
@@ -326,22 +325,28 @@ def budget_etc_snapshot(member, *, project_id, period=None, as_of=None):
         cost_rows = cost_rows.filter(accounting_event__posting_period=period)
     if as_of is not None:
         cost_rows = cost_rows.filter(accounting_event__occurred_on__lte=when)
-    incurred = cost_rows.aggregate(total=Sum('amount_cents'))['total'] or 0
+    has_cost = cost_rows.exists()
+    incurred = (cost_rows.aggregate(total=Sum('amount_cents'))['total'] or 0) if has_cost else None
     missing = []
     if budget is None:
         missing.append('approved_budget')
-    if not cost_rows.exists():
+    if not has_cost:
         missing.append('incurred_cost')
-    etc = max(0, (budget_total or 0) - incurred) if budget is not None else None
-    eac = incurred + etc if etc is not None else None
+    etc = (max(0, budget_total - incurred)
+           if budget is not None and incurred is not None else None)
+    eac = (incurred + etc) if etc is not None else None
     variance = (budget_total - eac) if eac is not None else None
-    over = max(0, (eac - budget_total)) if eac is not None else None
-    remaining = (budget_total - incurred) if budget is not None else None
+    over = max(0, eac - budget_total) if eac is not None else None
+    remaining = (budget_total - incurred) if budget_total is not None and incurred is not None else None
     issues = []
     if budget is None:
         issues.append({'issue_code': 'budget_missing',
                        'refs': [{'project_id': str(project.pk)}],
                        'expected': 'approved budget', 'actual': None})
+    if not has_cost:
+        issues.append({'issue_code': 'incurred_cost_missing',
+                       'refs': [{'project_id': str(project.pk)}],
+                       'expected': 'posted project cost facts', 'actual': None})
     if budget is not None and not lines:
         issues.append({'issue_code': 'budget_lines_exceed_total',
                        'refs': [{'version_ref': {'namespace': 'costing',

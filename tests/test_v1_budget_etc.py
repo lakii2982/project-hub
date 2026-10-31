@@ -95,6 +95,40 @@ class BudgetTests(BudgetFixture, TestCase):
         with self.assertRaises((PermissionDenied, ValidationError)):
             services.budget_etc_snapshot(self.plain, project_id=self.project.pk)
 
+    def test_request_token_replay_and_missing_incurred(self):
+        token = uuid.uuid4()
+        first = self.create(request_token=token)
+        second = self.create()
+        replay = self.create(request_token=token)
+        self.assertEqual(first, replay)
+        self.assertNotEqual(first['version_ref']['id'], second['version_ref']['id'])
+        approve_token = uuid.uuid4()
+        approved = self.approve(first, request_token=approve_token)
+        replay_approved = self.approve(first, request_token=approve_token)
+        self.assertEqual(approved, replay_approved)
+        third = self.create()
+        rejected_token = uuid.uuid4()
+        rejected = services.reject_project_budget(
+            self.finance, third['version_ref']['id'], request_token=rejected_token,
+            expected_version=third['version'], reason='幂等驳回', dry_run=False)
+        replay_rejected = services.reject_project_budget(
+            self.finance, third['version_ref']['id'], request_token=rejected_token,
+            expected_version=third['version'], reason='幂等驳回', dry_run=False)
+        self.assertEqual(rejected, replay_rejected)
+        # A project with an approved budget but no posted cost facts must not fabricate 0 ETC.
+        no_cost_budget = self.create(project_id=self.project2.pk,
+                                     lines=[{'subject': 'labor', 'amount_cents': 1000}])
+        self.approve(no_cost_budget)
+        snapshot = services.budget_etc_snapshot(self.owner, project_id=self.project2.pk)
+        self.assertIsNone(snapshot['incurred_cost_cents'])
+        self.assertIsNone(snapshot['etc_cents'])
+        self.assertIsNone(snapshot['eac_cents'])
+        self.assertIsNone(snapshot['budget_variance_cents'])
+        self.assertIsNone(snapshot['remaining_budget_cents'])
+        self.assertIn('incurred_cost', snapshot['missing'])
+        self.assertIn('incurred_cost_missing',
+                      [issue['issue_code'] for issue in snapshot['issues']])
+
     def test_append_only_budget_guards(self):
         created = self.create()
         version = ProjectBudgetVersion.objects.get(pk=created['version_ref']['id'])
