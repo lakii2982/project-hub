@@ -15,7 +15,7 @@
     {
       "command": "python scripts/projectctl.py verify-change --base db8ed47 --task PH-356",
       "result": "pass",
-      "evidence": "Actual run after the round-2 reviewer pass and the final status/evidence commit: ok=true, all changed files inside the PH-356 allowlist, only review gate no longer applies. Exact HEAD/result recorded in the follow-up evidence commit."
+      "evidence": "Actual run after the round-2 reviewer pass and final status commit ea61d30: ok=true, head=ea61d30213bb0e2f91983019ff65e485ce693069, changes=18 files all inside the PH-356 allowlist, errors=[]."
     }
   ],
   "review": {
