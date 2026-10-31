@@ -274,6 +274,44 @@ def run_healthcheck(profile="rehearsal", mode="dry_run", *, facts=None,
                            notes="Local/rehearsal facts only; real CI/deployment capacity is not measured and must not be replaced by local numbers.")
 
 
+
+def rollup_evidence(evidence):
+    """PH-335 rollup: aggregate one local PH-350 envelope into L1-L5 evidence.
+
+    Only L1 (code exists) and L2 (local automated/rehearsal) can pass here.
+    L3 CI/PG, L4 browser and L5 production/customer evidence are always not_run
+    in this local rollup; release_ready stays false and local numbers are not
+    presented as production capacity.
+    """
+    local_status = (evidence or {}).get("status")
+    checks = [
+        {"id": "release.L1", "layer": "L1", "status": "pass",
+         "expected": "scripts/ops/healthcheck.py exists and emits envelope",
+         "actual": "local script executed"},
+        {"id": "release.L2", "layer": "L2", "status": local_status if local_status in {"pass", "fail", "not_run"} else "not_run",
+         "expected": "local/rehearsal automated checks pass",
+         "actual": local_status},
+        {"id": "release.L3", "layer": "L3", "status": "not_run",
+         "expected": "CI/PostgreSQL capacity/backlog evidence",
+         "actual": "not executed locally"},
+        {"id": "release.L4", "layer": "L4", "status": "not_run",
+         "expected": "browser 1440/390/keyboard evidence",
+         "actual": "not executed locally"},
+        {"id": "release.L5", "layer": "L5", "status": "not_run",
+         "expected": "production/customer acceptance evidence",
+         "actual": "not executed locally"},
+    ]
+    return {"contract": "ph335.observability.rollup/v1", "release_ready": False,
+            "status": "pass" if checks[0]["status"] == checks[1]["status"] == "pass" else (
+                "not_run" if checks[1]["status"] == "not_run" else "fail"),
+            "checks": checks,
+            "source_checks": [{"id": c["id"], "status": c["status"]}
+                              for c in (evidence or {}).get("checks", [])],
+            "source_status": local_status,
+            "missing": ["L3_ci_pg", "L4_browser", "L5_production"],
+            "notes": "L1+L2 local evidence only; L3-L5 not_run; release_ready=false."}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="PH-350 health/capacity/backlog baseline")
     parser.add_argument("--mode", choices=["dry_run", "execute"], default="dry_run")
@@ -282,9 +320,12 @@ def main(argv=None):
     parser.add_argument("--facts", default="")
     args = parser.parse_args(argv)
     try:
-        facts = json.loads(args.facts) if args.facts else {}
-    except json.JSONDecodeError:
-        print(json.dumps({"error": "facts must be valid JSON"}), file=sys.stderr)
+        raw = args.facts
+        if raw and not raw.lstrip().startswith(("{", "[")) and Path(raw).is_file():
+            raw = Path(raw).read_text(encoding="utf-8")
+        facts = json.loads(raw) if raw else {}
+    except (OSError, json.JSONDecodeError):
+        print(json.dumps({"error": "facts must be valid JSON or a JSON file path"}), file=sys.stderr)
         return EXIT["fail"]
     code, evidence = run_healthcheck(args.profile, args.mode, facts=facts)
     append_evidence(args.out, evidence)

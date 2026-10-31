@@ -82,3 +82,23 @@ python manage.py test tests.test_v1_ops_observability --verbosity 1
 
 - V1-OPS-05 新状态：本地/隔离已实现（`healthcheck.py`）；只有 rehearsal 可 pass；staging/production dry_run=not_run、execute=exit5，真实 CI/部署容量统一 `not_run`。
 - 本片只改 `docs/engineering/observability.md`（白名单），未改 `ops-runbook.md`；ops-runbook 的 V1-OPS-05 状态由后续获授权规划/实现片按实际 BASE 同步。
+
+## 7. PH-335 汇总验收（L1+L2 only，release_ready=false）
+
+- 执行承担：PH-350 `healthcheck.py`；本片只做汇总，不重实现健康/容量/积压/性能采集。
+- 汇总函数：`healthcheck.rollup_evidence(envelope)` 将本地 PH-350 envelope 聚合为 L1–L5 检查：
+  - **L1 pass**：脚本存在并产出 envelope；
+  - **L2 pass/fail/not_run**：本地 rehearsal 检查（缺 facts 时 not_run）；
+  - **L3 not_run**：CI/PostgreSQL 真实容量、连接、积压、慢查询证据；
+  - **L4 not_run**：浏览器 1440/390/键盘全流程证据；
+  - **L5 not_run**：生产/客户验收证据。
+- `release_ready=false` 恒为 false；本地数字/阈值不得写成生产容量或发布资格；`missing=["L3_ci_pg","L4_browser","L5_production"]`。
+- 验收命令：
+  ```sh
+  python scripts/projectctl.py check
+  python manage.py check
+  python -m unittest tests.test_projectctl tests.test_governance -v
+  python manage.py test tests.test_v1_ops_observability --verbosity 1
+  ```
+- 证据：scoped 11 项覆盖本地 L1+L2、缺环境 not_run、L3–L5 not_run、release_ready=false；真实 L3/L4/L5 未执行，不在本片声明通过。
+- 反例：release_ready=true、L2 not_run 却写 pass、本地 facts 冒充 CI/PG/生产、隐藏 L3–L5 missing。
