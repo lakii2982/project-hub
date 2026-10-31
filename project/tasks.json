@@ -12956,7 +12956,7 @@
       "title": "批次 D 验收执行顺序与证据回填编排（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
