@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Final rebased run at BASE 5361a09: {\"command\":\"check\",\"ok\":true,\"task_count\":233}, exit 0."
+      "evidence": "Final Lead integration rerun after rebase onto dd719b5: {\"command\":\"check\",\"ok\":true,\"task_count\":233} exit 0."
     },
     {
       "command": "python manage.py test tests.test_v1_ops_reconciliation_overview_http --verbosity 1",
@@ -23,9 +23,9 @@
       "evidence": "Final rebased run at BASE 5361a09: Ran 1090 tests in ~128s, FAILED (failures=5, errors=3, skipped=69) — the known macOS/DRF environment baseline (5F+3E), no new failure and no PH-303 regression."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 5361a09 --task PH-303",
+      "command": "python scripts/projectctl.py verify-change --base dd719b5 --task PH-303",
       "result": "pass",
-      "evidence": "Post-independent-review actual run at HEAD d5f21bd: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"d5f21bd2f8420272b6e4316aa9d36009bb4940f1\",\"count\":6,\"errors\":null}, exit 0; all 6 changed files inside BASE PH-303 allowed_paths and review.status=pass with the reviewer's name."
+      "evidence": "Final Lead integration rerun after rebase onto dd719b5 (PH-304 merged): {\"command\":\"verify-change\",\"ok\":true} exit 0 — 6 changed files inside BASE PH-303 allowed_paths."
     }
   ],
   "review": {
@@ -43,7 +43,8 @@
     "The task risk is S at BASE 5361a09 (set by the PH-307 planning slot): the whitelist necessarily touches governance critical-path files project/tasks.json and project/manifest.json, which verify-change classifies as requiring BASE risk S; the implementation itself remains test-only with no product behavior change.",
     "The Lead's expected full-suite count was ~1088; the actual BASE 5361a09 full run reports 1090 tests (5F+3E+69 skipped) after PH-284/PH-307 merges, with no new failure versus the known baseline.",
     "The new assertion inspects the derived overview payload (counts and refs) rather than a random HTML substring, and also asserts the full unique code is absent.",
-    "Only the testing file plus tasks/manifest/docs/verification/report/handoff were changed, exactly as the frozen PH-303 whitelist."
+    "Only the testing file plus tasks/manifest/docs/verification/report/handoff were changed, exactly as the frozen PH-303 whitelist.",
+    "Lead integration rebase (5361a09 -> dd719b5) after PH-304 merged: docs/verification.md kept main entries plus the PH-303 entry; manifest.active_handoff -> PH-303. Gates rerun green."
   ],
   "unverified": [
     "PostgreSQL/CI and browser checks are not applicable to this test-only fix and were not run locally.",
