@@ -9019,7 +9019,8 @@
       "depends_on": [
         "PH-274",
         "PH-181",
-        "PH-185"
+        "PH-185",
+        "PH-362"
       ],
       "spec": "project/specs/PH-289.md",
       "allowed_paths": [
@@ -9047,7 +9048,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-362（导入提交实现前置契约冻结，proposed）done；PH-274 已 done；PH-362 完成并复核 DoR 后晋级。"
+        "PH-362 导入提交契约已 done；仍缺 PH-181/PH-185（proposed）done，不提前晋级。"
       ],
       "handoff": null
     },
@@ -10980,7 +10981,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-289（导入提交，proposed）与 PH-362（导入提交实现前置契约，ready 未 done）done；PH-252/PH-274/PH-320 已 done；依赖完成后复核 DoR 再晋级。"
+        "缺 PH-289（proposed）done；PH-362 契约已 done；仍等 PH-289/PH-181/PH-185，复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11547,7 +11548,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-289/PH-362（导入提交实现前置，proposed/ready 未 done）done；PH-274 已 done；依赖完成后复核 DoR 再晋级。"
+        "缺 PH-289（proposed）与 PH-181/PH-185（proposed）done；PH-362 契约已 done；复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11876,7 +11877,7 @@
       "title": "导入提交实现前置契约冻结（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11902,8 +11903,8 @@
       ],
       "blockers": [],
       "github_issue": null,
-      "owner": null,
-      "handoff": null
+      "owner": "worker-contract",
+      "handoff": "project/handoffs/PH-362.md"
     },
     {
       "id": "PH-363",
