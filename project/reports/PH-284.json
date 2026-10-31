@@ -2,19 +2,47 @@
   "task_id": "PH-284",
   "summary": "管理收入确认与结算/合同条款只读配对核对首片 on BASE c640a1c. Added pmo_plugins/management_revenue/pairing_read_services.py with two read-only interfaces. revenue_pairing_snapshot(member, *, project_id=None, period=None, as_of=None) derives, per project or as an aggregate with per-project rows: contract_value (approved contract line net via contracts.approved_contract_totals), recognized (posted RevenueRecognition net minus posted RevenueAdjustment via the management-revenue owner export, with a read-only line-level fallback when the owner export needs a missing accounting event), settled (active Settlement gross via settlement_snapshot), unsettled (active OpenItem gross minus active Clearance), cash_coverage (active Clearance total), difference (recognized-settled), contract_variance (contract_value-recognized), terminated flag/terminated contract refs, and capped recognition/settlement refs. revenue_pairing_issues(member, *, as_of=None) returns issue_code/refs/expected/actual for recognized_over_contract_line, recognition_source_invalid, recognized_after_termination, settlement_source_invalid, settlement_after_termination, settlement_without_recognition, settled_exceeds_recognized, terms_without_recognition, cross_project_reference, cross_org_reference and duplicate_recognition. Permissions are owner/finance/auditor full, PM only managed projects, member denied; the new history_read route revenue-pairing renders a read-only page (project/period/as_of filters, unknown params rejected 400) and stays readable when management_revenue is disabled, with no POST/write entry. No model, migration, canonical schema, write path or business fact is changed; the service writes no audit, receipt, event or fact. Gold: contract net 100000, recognized 60000, active settlement 40000, open item 40000 with 30000 active clearance => snapshot recognized/settled/unsettled(10000)/cash(30000)/difference(20000)/variance(40000) and issues=[]; anomaly fixtures (all INSERT-only/legal service transitions, no UPDATE/DELETE of history) hit over-cap recognition, settlement without recognition, recognition/settlement after termination, cross-project and settled-exceeds-recognized issues.",
   "tests": [
-    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run on BASE c640a1c: {\"command\":\"check\",\"ok\":true,\"task_count\":224}."},
-    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (92 issues, 0 silenced), no errors."},
-    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual run exit 0: 'No changes detected' (PH-284 adds no model or migration)."},
-    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 1088 tests in 129.468s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."},
-    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No new business invariant was added because the slice only reads existing facts."},
-    {"command": "python manage.py test tests.test_v1_revenue_pairing_read tests.test_v1_revenue_pairing_read_http --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 9 tests, OK. Service 5: gold snapshot derives 100000/60000/40000/10000/30000 with difference 20000, variance 40000 and issues=[], aggregate rows and no fact/audit/event writes; period/as_of filters read-only and future/invalid rejected; over-cap recognition + settlement without recognition; termination and cross-project issues; permissions (auditor/finance/PM own project allowed, member denied, PM other project denied) and disabled-module history read. HTTP 4: page renders snapshot/aggregate/issue sections and values; auditor/finance/PM allowed, member 403; invalid period/as_of/unknown params/PM other project 400; over-cap issue rendered; disabled-module history read 200; POST writes no audit/event/recognition/settlement."}
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run on BASE c640a1c: {\"command\":\"check\",\"ok\":true,\"task_count\":224}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; only the repository's known urls.W003 plugin-route-name warnings (92 issues, 0 silenced), no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run exit 0: 'No changes detected' (PH-284 adds no model or migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1088 tests in 129.468s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No new business invariant was added because the slice only reads existing facts."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_revenue_pairing_read tests.test_v1_revenue_pairing_read_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 9 tests, OK. Service 5: gold snapshot derives 100000/60000/40000/10000/30000 with difference 20000, variance 40000 and issues=[], aggregate rows and no fact/audit/event writes; period/as_of filters read-only and future/invalid rejected; over-cap recognition + settlement without recognition; termination and cross-project issues; permissions (auditor/finance/PM own project allowed, member denied, PM other project denied) and disabled-module history read. HTTP 4: page renders snapshot/aggregate/issue sections and values; auditor/finance/PM allowed, member 403; invalid period/as_of/unknown params/PM other project 400; over-cap issue rendered; disabled-module history read 200; POST writes no audit/event/recognition/settlement."
+    }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
+    "reviewer": "independent PH-284 revenue-pairing reviewer (fresh context, read-only)",
     "status": "pending",
-    "findings": [],
-    "evidence": "待独立复核：S 级复核由 fresh-context reviewer 按 BASE PH-284 spec 实跑 check/manage check/makemigrations/verify_integrity/scoped/full 并核对：派生值口径（contract_value 净额、recognized 净额、settled gross、unsettled、cash_coverage、difference）、issue_code/refs/expected/actual、终止后确认/结算与跨项目、权限/pm/停用 history_read、零 audit/写/迁移、append-only 兼容反例、精确 14 路径白名单与 UI 只读性。实现者不自写 pass。"
+    "findings": [
+      "BLOCKER - denied settlement snapshots are silently converted to zero instead of missing: `_settlements` catches PermissionDenied/ValidationError from `receivable_services.settlement_snapshot` and simply `continue`s, so a pm (or any caller) whose settlement read is rejected receives settled_cents=0, unsettled_cents=0 and cash_coverage_cents=0 with no `missing` marker, i.e. fabricated clean data. The spec/Lead explicitly requires 'pm 仅管理项目（settlement 快照被拒时显示缺失不伪造)'. Fix: record denied/errored settlement refs in a `missing`/`settlement_missing` field and return null (not 0) for the affected settled/unsettled/cash aggregates (or surface a readable=false section), and add a regression where a settlement snapshot is denied and the result is missing/null rather than zero.",
+      "PASSED CHECKS: read-only purity (snapshot/issues only SELECT; fact counts/audit/events unchanged; no migration/write); contract_value=approved terms net (100000), recognized=posted net+adjustments (60000), settled=active Settlement gross (40000), unsettled=active OpenItem gross-active Clearance (10000), cash_coverage=active cleared (30000), difference=recognized-settled (20000), contract_variance=contract_value-recognized (40000) all match the gold fixture; 11 issue codes (over-contract/line, source invalid, terminated recognition/settlement, settlement without/over recognition, duplicate, cross-project/org, terminated terms) are exercised by the service tests; period/as_of filters; owner/finance/auditor full, pm managed project (recognized path), member denied; management_revenue-disabled history read; read-only UI/no POST; 14 changed files all inside PH-284 allowed_paths; task in_review, manifest=PH-284.",
+      "EVIDENCE AT aba0f71 (BASE c640a1c): check ok=true/task_count=224; manage.py check exit 0; makemigrations --check No changes; scoped pairing tests 9 OK; full suite Ran 1088 tests, 5 failures/3 errors/69 skips (exactly the known 8 macOS baseline, no fifth class); verify_integrity fresh DB ok=true/errors=[]; verify-change --base c640a1c --task PH-284 only high_risk_review_required, no path_out_of_scope; report review now pass cannot be set until the missing/null behavior is fixed."
+    ],
+    "evidence": "VERDICT: REJECTED - 1 blocker (denied settlement snapshots are silently skipped, yielding zero settled/unsettled/cash instead of missing/null; spec/Lead requires missing not fabricated zero). Reviewed HEAD aba0f71 (BASE c640a1c) in /tmp/ph284-revenue-read, worktree clean; 14 changed files all inside PH-284 allowed_paths; task in_review, manifest=PH-284. Independent runs: check ok=224; manage check exit 0; makemigrations clean; scoped 9 OK; full suite 1088/5F+3E/69 = known 8 macOS baseline; verify_integrity fresh DB ok; verify-change only high_risk_review_required, no path_out_of_scope. Gold derivation/issue codes/read-only/permissions/history_read/no migration otherwise verified. Fix the settlement-missing/null path and add a regression before PASS."
   },
   "deviations": [
     "金额口径：contract_value 使用批准条款净额（management revenue 口径）；settled 使用 active Settlement gross（含税）；recognized 为 posted RevenueRecognition 净额减 posted 调整；三者差异仅展示不调整，report 披露。",

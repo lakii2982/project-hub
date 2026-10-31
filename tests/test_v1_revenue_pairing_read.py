@@ -167,6 +167,26 @@ class RevenuePairingServiceTests(RevenuePairingFixture, TestCase):
         self.recognition(5000, project=other)
         self.assertIn('cross_project_reference', self.codes())
 
+    def test_denied_settlement_snapshot_is_missing_not_zero(self):
+        from unittest import mock
+        self.settlement(40000)
+        with mock.patch(
+                'pmo_plugins.management_revenue.pairing_read_services.'
+                'receivable_services.settlement_snapshot',
+                side_effect=PermissionDenied('结算快照不可读')):
+            snapshot = pairing.revenue_pairing_snapshot(
+                self.owner, project_id=self.project.pk)
+            aggregate = pairing.revenue_pairing_snapshot(self.owner)
+        self.assertIsNone(snapshot['settled_cents'])
+        self.assertIsNone(snapshot['unsettled_cents'])
+        self.assertIsNone(snapshot['cash_coverage_cents'])
+        self.assertIsNone(snapshot['difference_cents'])
+        self.assertEqual(len(snapshot['settlement_missing']), 1)
+        self.assertIn('settlement_unreadable', {issue['issue_code']
+                                                for issue in snapshot['issues']})
+        self.assertIsNone(aggregate['settled_cents'])
+        self.assertTrue(aggregate['settlement_missing'])
+
     def test_permissions_scope_and_disabled_module(self):
         self.recognition(10000)
         self.assertEqual(pairing.revenue_pairing_snapshot(

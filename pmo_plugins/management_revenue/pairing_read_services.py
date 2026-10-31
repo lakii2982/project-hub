@@ -151,15 +151,18 @@ def _settlements(member, projects, period, as_of):
         organization=member.organization, project__in=projects, status='active')
     if as_of:
         rows = rows.filter(settled_on__lte=as_of)
-    result = []
+    result, missing = [], []
     for row in rows.order_by('settled_on', 'id'):
         if period and row.settled_on.strftime('%Y-%m') != period:
             continue
         try:
             result.append(receivable_services.settlement_snapshot(member, row.pk))
-        except (PermissionDenied, ValidationError):
-            continue
-    return result
+        except (PermissionDenied, ValidationError) as error:
+            missing.append({
+                'settlement_ref': _settlement_ref(row),
+                'reason': '；'.join(getattr(error, 'messages', [str(error)])),
+            })
+    return result, missing
 
 
 def _unsettled_and_cash(settlements):
@@ -283,19 +286,33 @@ def _project_snapshot(member, project, period, as_of):
     rows, adjustments = _project_rows(member, [project], period, as_of)
     recognized = sum(row['amount_cents'] for row in rows) + sum(
         row['amount_cents'] for row in adjustments)
-    settlements = _settlements(member, [project], period, as_of)
-    unsettled, cash_coverage = _unsettled_and_cash(settlements)
-    settled = sum(item['gross_cents'] for item in settlements)
+    settlements, settlement_missing = _settlements(member, [project], period, as_of)
+    if settlement_missing:
+        # A denied/unreadable settlement must be shown as missing, never fabricated as zero.
+        settled = unsettled = cash_coverage = None
+    else:
+        unsettled, cash_coverage = _unsettled_and_cash(settlements)
+        settled = sum(item['gross_cents'] for item in settlements)
     terminated = _terminated_contracts(member, [project])
     issues = _issues_for(member, rows, settlements, terminated)
+    issues.extend({
+        'issue_code': 'settlement_unreadable',
+        'refs': [{'settlement_ref': item['settlement_ref']}],
+        'expected': 'readable active settlement', 'actual': item['reason'],
+    } for item in settlement_missing)
+    missing = list(settlement_missing)
+    if settlement_missing:
+        missing.append({'missing_fields': ['settled_cents', 'unsettled_cents',
+                                          'cash_coverage_cents', 'difference_cents']})
     return {
         'project_id': str(project.pk), 'project_code': project.code, 'project_name': project.name,
         'period': period, 'as_of': as_of.isoformat() if as_of else None,
         'contract_value_cents': totals['net_cents'],
         'recognized_cents': recognized, 'settled_cents': settled,
         'unsettled_cents': unsettled, 'cash_coverage_cents': cash_coverage,
-        'difference_cents': recognized - settled,
+        'difference_cents': (recognized - settled) if settled is not None else None,
         'contract_variance_cents': totals['net_cents'] - recognized,
+        'settlement_missing': settlement_missing, 'missing': missing,
         'terminated': bool(terminated),
         'terminated_contract_refs': [
             {'namespace': 'contracts', 'kind': 'contract', 'id': str(c.pk), 'version': c.version}
@@ -317,16 +334,26 @@ def revenue_pairing_snapshot(member, *, project_id=None, period=None, as_of=None
         return _project_snapshot(member, project, period, when)
     projects = list(_projects(member).order_by('code', 'id')[:MAX_ROWS])
     rows = [_project_snapshot(member, project, period, when) for project in projects]
+    def total(key):
+        values = [row[key] for row in rows]
+        return None if any(value is None for value in values) else sum(values)
     aggregate = {
-        'contract_value_cents': sum(row['contract_value_cents'] for row in rows),
-        'recognized_cents': sum(row['recognized_cents'] for row in rows),
-        'settled_cents': sum(row['settled_cents'] for row in rows),
-        'unsettled_cents': sum(row['unsettled_cents'] for row in rows),
-        'cash_coverage_cents': sum(row['cash_coverage_cents'] for row in rows),
+        'contract_value_cents': total('contract_value_cents'),
+        'recognized_cents': total('recognized_cents'),
+        'settled_cents': total('settled_cents'),
+        'unsettled_cents': total('unsettled_cents'),
+        'cash_coverage_cents': total('cash_coverage_cents'),
     }
     aggregate.update({
-        'difference_cents': aggregate['recognized_cents'] - aggregate['settled_cents'],
-        'contract_variance_cents': aggregate['contract_value_cents'] - aggregate['recognized_cents'],
+        'difference_cents': (aggregate['recognized_cents'] - aggregate['settled_cents']
+                             if aggregate['settled_cents'] is not None
+                             and aggregate['recognized_cents'] is not None else None),
+        'contract_variance_cents': (
+            aggregate['contract_value_cents'] - aggregate['recognized_cents']
+            if aggregate['contract_value_cents'] is not None
+            and aggregate['recognized_cents'] is not None else None),
+        'settlement_missing': [item for row in rows for item in row['settlement_missing']],
+        'missing': [item for row in rows for item in row['missing']],
     })
     return {'project_id': None, 'period': period, 'as_of': when.isoformat() if when else None,
             **aggregate, 'projects': rows, 'project_limit': MAX_ROWS,

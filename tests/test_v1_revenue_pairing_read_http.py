@@ -1,6 +1,7 @@
 """PH-284 revenue pairing browser boundaries."""
 from datetime import timedelta
 
+from django.core.exceptions import PermissionDenied
 from django.test import Client, TestCase
 
 from core.models import AuditEvent, DomainEvent, Project
@@ -33,6 +34,19 @@ class RevenuePairingHTTPTests(RevenuePairingFixture, TestCase):
         aggregate = self.client.get(self.url)
         self.assertEqual(aggregate.status_code, 200)
         self.assertContains(aggregate, self.project.code)
+
+    def test_denied_settlement_snapshot_renders_missing(self):
+        from unittest import mock
+        self.client.force_login(self.owner.user)
+        with mock.patch(
+                'pmo_plugins.management_revenue.pairing_read_services.'
+                'receivable_services.settlement_snapshot',
+                side_effect=PermissionDenied('结算快照不可读')):
+            page = self.client.get(self.url + '?project=' + str(self.project.pk))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, '缺失（结算读取被拒）')
+        self.assertContains(page, 'settlement_unreadable')
+        self.assertContains(page, '部分结算快照不可读')
 
     def test_roles_and_invalid_filters(self):
         self.client.force_login(self.auditor.user)
