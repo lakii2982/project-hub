@@ -1,0 +1,66 @@
+{
+  "task_id": "PH-372",
+  "summary": "Executed the batch C release-qualification gate decision at BASE/candidate SHA 5278c96 per PH-366/PH-367, without executing any real drill or changing code/contracts. docs/v1.0-development/release-evidence-backfill.md records: the source register (PH-333 rollup, PH-334 PG contract rollup, PH-335 health rollup, PH-357 backfill — all local L1+L2 — plus PH-366/PH-367 contracts); normalized exit→status and the most-severe merge (fail>blocked>not_run>pass, layers kept separate, no conflicts) with evidence_digest 3ee83650a3a5fb7df1ec0efe589ee176a6e9df9af11e36adcdc0fbfb8d86b17b (complete canonical record embedded for recomputation); the actual governance baseline at this BASE (projectctl check ok/312; 23 governance OK; manage.py check 119 known warnings/0 errors; makemigrations clean; fresh-DB verify_integrity ok; full suite 1310 tests 5F+3E+70skip with exactly the known macOS baseline names, no new failures); the merged gate matrix where V1-OPS-01–06/M15/L4/L5 remain not_run at L3–L5; the required-evidence-set check; gap register G1–G8 (real staging deploy/upgrade/TLS, PG backup/restore+RPO/RTO, CI/PG capacity/concurrency, browser L4, production/customer L5, independent reviewer signature); the empty waiver register with core items not waivable; the signature block (execution submitted-for-review, no self-approval); and the honest verdict **blocked, release_ready=false, not released/piloted**. No code, script, migration, gate or contract-schema change; no real environment result is fabricated.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at final HEAD (BASE 5278c96): {\"command\":\"check\",\"ok\":true,\"task_count\":312}, exit 0; PH-372 done with handoff."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run on BASE 5278c96: Ran 23 tests, OK."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run: 119 known URL/field warnings, 0 errors, exit 0."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: No changes detected."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "After a fresh local migrate: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}, exit 0 (empty data)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual full run: Ran 1310 tests in 141.269s, FAILED (failures=5, errors=3, skipped=70). The 8 failure/error names are exactly the known macOS baseline (drf_security_compatibility 4F+3E, delivery_execution 1F, delivery_execution_sandbox 1F); no new failures. Not green; used only as a no-new-failures baseline."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 3bcbb5e --task PH-372",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 7 files inside BASE PH-372 allowed_paths (post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-372 batch-C release-gate reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 PRODUCT-BASELINE BLOCKER RESOLVED: the record now states the actual latest product-code commit is PH-371 (#244, 36cdf00) and that PH-382 (#247) / PH-386 (#246) after it are docs-only; the prior false 'unchanged since PH-370' claim is removed.",
+      "ROUND-2 DIGEST REPRODUCIBILITY BLOCKER RESOLVED: the complete canonical merged record is embedded in the committed document; the algorithm is exactly `json.dumps(record, ensure_ascii=False, sort_keys=True)` UTF-8 SHA-256. I extracted the embedded JSON, re-serialized it, and independently recomputed `3ee83650a3a5fb7df1ec0efe589ee176a6e9df9af11e36adcdc0fbfb8d86b17b` (3159 bytes), matching the documented digest and the signature table.",
+      "CONTENT RE-VERIFIED: sources PH-333/334/335/357/366/367, exit->status normalization and strictest merge fail>blocked>not_run>pass, L2-L5 layering, no conflicts, required-set/G1-G8, blocked/release_ready=false, no exemptions/self-approval and PH-366 signature/14-day rules remain; L3-L5 are honestly not_run and no real-environment result is fabricated; docs-only, 7 files within the PH-372 whitelist; no placeholders; check ok=312; governance 23 OK; full suite 1310/5F+3E/70 known baseline; verify-change --base 5278c96 --task PH-372 only review/acceptance gates, no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS (round 2; product baseline and digest provenance fixed). Reviewed HEAD 8d548fb (BASE 5278c96) in /tmp/ph372-release-gate, worktree clean; 7 files within PH-372 whitelist; docs-only. Product baseline is correctly PH-371/#244; complete canonical record is embedded and digest recomputes exactly to 3ee83650…86b17b (3159 bytes). Gate remains blocked/release_ready=false with L3-L5 not_run, G1-G8 and no exemptions; check ok=312; governance 23 OK; full 1310/5F+3E/70 baseline; verify-change only review/acceptance gates, no path_out_of_scope."
+  },
+  "deviations": [
+    "Review-blocker fix (old->new): the record no longer claims product code is unchanged since PH-370 — the real product-code baseline is PH-371 (#244, 36cdf00), after which only docs/planning commits (PH-382 #247, PH-386 #246) landed in BASE 5278c96. The evidence_digest was recomputed over a corrected canonical record that is now embedded in full in the committed document; the algorithm is specified so reviewers can recompute it (new digest 3ee83650a3a5fb7df1ec0efe589ee176a6e9df9af11e36adcdc0fbfb8d86b17b, canonical bytes 3159).",
+    "The gate verdict is deliberately blocked: L3 CI/PG, L4 browser and L5 production/customer evidence are not_run, V1-OPS-02 real TLS and V1-OPS-04 real PG restore remain not_run, and no valid waiver exists; release_ready=false and the slice does not claim release readiness.",
+    "No drill/deployment/recovery/concurrency was executed by this slice; evidence is merged from the already-recorded local L1+L2 sources only.",
+    "The full suite is not green (5F+3E known macOS baseline); it is reported as exactly the declared 8 baseline failure names with no new failures, not as a passing suite.",
+    "verify_integrity ran on a freshly migrated empty local DB, so it proves schema/integrity on empty data only.",
+    "The execution signature is submitted-for-review only; no executor self-approval, no waiver approval, and the independent reviewer signature is pending.",
+    "No code, scripts, migrations, gates or contract-schema changes."
+  ],
+  "unverified": [
+    "Real staging/production install/upgrade/rollback, real TLS, real PG backup/restore with RPO/RTO, real PG concurrency, CI/PG capacity, browser 1440/390 and production/customer acceptance are all not_run.",
+    "No waiver has been requested/approved; independent reviewer signature pending.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}

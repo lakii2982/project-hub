@@ -12263,7 +12263,7 @@
       "title": "批次 C 收尾：演练证据回填与发布资格 gate 判定执行（PH-366 契约）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12290,7 +12290,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-372.md"
     },
     {
       "id": "PH-373",

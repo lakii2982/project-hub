@@ -1136,3 +1136,15 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - v1.0-preparation 规划收尾：PH-391 为该 milestone 最后 open 任务，done 后无 open 任务可关闭；不再登记下一规划槽，执行/验收由 PH-392–395 承接。
 - 发布资格：release_ready=false；缺口 L3 CI/PG/真实部署、L4 浏览器、L5 生产/客户验收、PH-367/372/387/388/389/390/394/395；需真实环境与产品/发布/独立复核三方签批。
 - 实际执行（最终 HEAD）：projectctl check ok=true/task_count=316；23 项治理 OK；verify-change --base 5278c96 --task PH-391 在 review pending 时仅 high_risk_review_required（预期）。未验证：L3/L4/L5、PH-389/390 上游、PH-393/394/395、三方签批、独立 S 复核。
+
+## PH-372 批次 C 发布资格 gate 判定（docs-only，PH-366/367 契约）（2026-10-31）
+
+基线/候选 SHA 5278c96。新增 `docs/v1.0-development/release-evidence-backfill.md`：
+1. **来源登记**：PH-333 rollup、PH-334 PG 汇总契约、PH-335 health rollup、PH-357 回填（本地 L1+L2）、PH-366/367 契约；只读合并，不重跑演练。
+2. **合并**：exit→status 归一 + 多来源取最严（fail>blocked>not_run>pass）；L2–L5 分层；无冲突。evidence_digest=`3ee83650a3a5fb7df1ec0efe589ee176a6e9df9af11e36adcdc0fbfb8d86b17b`（完整 canonical 记录已嵌入可复现）。
+3. **治理基线实跑**：projectctl check ok/312；23 项治理 OK；manage.py check 119 既有警告/0 error；makemigrations clean；verify_integrity（新库）ok；全量 1310 tests，5F+3E+70skip=既有 macOS 基线，无新增。
+4. **合并矩阵**：V1-OPS-01–06/M15/L4/L5 的 L3–L5 全部 **not_run**；发布包/本地基线仅 L2 pass。
+5. **必需集**：治理基线 pass（L2）；V1-OPS-01–06、M15、L4、L5 均 not_run；**无有效豁免**。
+6. **缺口 G1–G8**：真实 staging 部署/升级/TLS、PG 备份恢复/RPO-RTO、CI/PG 容量/并发、L4 浏览器、L5 生产/客户、独立复核签名；核心项不可豁免。
+7. **判定：blocked**；release_ready=false；未发布/未试点；签名 pending（执行人不得自批）。未执行任何真实环境；不得以本地/演练/文档宣称通过。
+- 独立 S 复核：首轮 2 阻断（PH-371 产品代码基线误述、digest 不可复现）已修（基线=PH-371/36cdf00；完整 canonical 记录嵌入，digest=3ee83650…可重算）；二轮 PASS。最终门禁：check ok=true/task_count=312；23 项治理 OK；verify-change --base 5278c96 --task PH-372 ok=true、7 文件全白名单、无 errors。
