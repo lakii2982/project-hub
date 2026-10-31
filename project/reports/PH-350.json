@@ -1,0 +1,76 @@
+{
+  "task_id": "PH-350",
+  "summary": "健康/容量/积压基线实现 on BASE fe9c257. Implements scripts/ops/healthcheck.py against the PH-345 V1-OPS-05 read-only contract: PH-345 evidence envelope v1, append-only JSONL dedupe, exit codes 0 pass / 2 not_run / 3 fail / 4 environment error / 5 security refusal; dry_run default; execute restricted to --env rehearsal with staging/production execute blocked exit 5. Local/test redacted facts feed health checks (DB reachability/migration pending/cache/worker/disk/backup age), capacity checks (connection utilisation, largest table bytes, slow-query count, attachment bytes), backlog checks (queue depth/reminders/todos/unsettled with frozen local thresholds), and perf samples (nearest-rank P50/P95) without guessing production SLOs. Missing facts/environment return not_run exit 2; sensitive keys are recursively redacted so no password/token/credential/customer/payroll values enter evidence. Adds docs/engineering/observability.md with the frozen facts schema/thresholds/evidence/not_run discipline and updates ops-runbook V1-OPS-05 from unimplemented/blocked to local/rehearsal implemented. Real CI/deployment capacity, PG/table/slow-query/attachment/queue metrics and page P50/P95 remain not_run and are explicitly not claimed from local numbers. No production access, product code, migration, contract schema, canonical or CI-gate changes. Scoped 7 tests cover envelope, exit codes, missing environment, staging/production refusal, backlog/disk/backup/connection/migration thresholds, redaction, P50/P95 and JSONL idempotency.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":291}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual final run: Ran 1275 tests in 133.699s, 5 failures/3 errors/70 environment skips. The 8 failure/error names are the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI authoritative."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_observability --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 7 tests, OK. Covers complete-facts envelope/pass, missing environment/no-perf not_run, staging+production execute exit5, backlog/disk/backup/migration/connection threshold failures, redaction, P50=30/P95=50, JSONL idempotency, CLI out/exit."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 2.530s, OK."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode dry_run --env rehearsal --facts <complete-local-facts> --out /tmp/ph350-evidence/health.jsonl",
+      "result": "pass",
+      "evidence": "Actual local run exit 0; envelope status pass, all health/capacity/backlog/perf checks; artifact /tmp/ph350-evidence/health.jsonl."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode dry_run --env rehearsal --out /tmp/ph350-evidence/health-missing.jsonl",
+      "result": "pass",
+      "evidence": "Actual run exit 2; envelope status not_run with environment.supplied not_run; no production collection attempted."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode execute --env production --facts <complete-local-facts> --out /tmp/ph350-evidence/health-production-refused.jsonl",
+      "result": "pass",
+      "evidence": "Actual run exit 5; envelope status blocked with safety.execute_profile fail; no production access."
+    },
+    {
+      "command": "python scripts/ops/healthcheck.py --mode dry_run --env rehearsal --facts <backlog-200-facts> --out /tmp/ph350-evidence/health-backlog-fail.jsonl",
+      "result": "pass",
+      "evidence": "Actual run exit 3; envelope status fail with backlog.reminders fail; threshold enforcement confirmed."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base fe9c257 --task PH-350",
+      "result": "not_run",
+      "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after independent review."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Independent S review pending. Verify PH-345 V1-OPS-05 contract: read-only, no production/staging execute, envelope/exit 0/2/3/4/5, missing facts not_run, thresholds for health/capacity/backlog/perf, redaction/no sensitive values, no local numbers claimed as production capacity, docs observability/runbook not_run honesty, exact whitelist/non-product changes, scoped/full evidence. Implementer does not self-pass."
+  },
+  "deviations": [
+    "Only local/rehearsal redacted facts were measured; real CI/deployment health, connection counts, table sizes, slow queries, attachments, backup, queue backlog and page P50/P95 were not executed and remain not_run.",
+    "The script consumes redacted fact JSON supplied by the local/test environment; it deliberately does not connect to production or auto-discover credentials. Real environment collection belongs to deployment/CI evidence.",
+    "Thresholds are frozen local rehearsal defaults, not production SLOs; local numbers must not be used to claim production capacity.",
+    "Artifacts are written under /tmp/ph350-evidence and not committed; no product code/migration/schema/canonical/CI-gate changes.",
+    "No browser/product UI, PG or customer data is exercised in this slice."
+  ],
+  "unverified": [
+    "Real CI/deployment health/capacity/backlog/performance baselines and L4/L5 evidence",
+    "PostgreSQL metrics, page latency/P50/P95, attachment storage and backup/queue production systems",
+    "Browser 1440/390/keyboard states (script/docs only)",
+    "Independent S review and CI/PR pending"
+  ]
+}

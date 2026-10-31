@@ -114,7 +114,7 @@
 | 输出/证据 | 健康输出、积压/磁盘/失败记录、基线环境与数据量、告警可操作性 |
 | 通过判据 | 健康项通过、积压/磁盘在阈值内、告警可诊断；日志不含密码/令牌/薪酬 |
 | 失败处置 | exit 3/4；不静默重试；登记容量/积压 blocker |
-| 当前状态 | 未实现（PH-335，等 PH-333/334）；`blocked` |
+| 当前状态 | PH-350 实现：`scripts/ops/healthcheck.py`（本地/隔离 facts，envelope/退出码；真实 CI/部署容量未执行，`not_run`；staging/production execute exit 5 拒绝） |
 
 ### V1-OPS-06 PostgreSQL 多连接安全与并发（PH-334）
 
@@ -136,7 +136,7 @@
 | V1-OPS-02 TLS/安全 | `ops_tls_probe` | PH-347（本地/隔离） | 无真实域名 not_run；契约测试通过 |
 | V1-OPS-03 升级/回退 | `ops_upgrade` | PH-347（本地/隔离） | 本地 dry_run pass；execute smoke not_run；生产拒绝 exit 5 |
 | V1-OPS-04 备份/恢复 | `ops_backup_verify` / `ops_restore_rehearsal` | PH-333 | not_run |
-| V1-OPS-05 健康/容量/积压 | `ops_health_capacity` | PH-335 | blocked |
+| V1-OPS-05 健康/容量/积压 | `ops_health_capacity` | PH-350（本地/隔离） | 本地 dry_run pass；真实 CI/部署 not_run |
 | V1-OPS-06 PG 并发 | `ops_pg_concurrency` | PH-334 | blocked |
 
 - 本文件冻结的是**契约**，不是运行结果；PH-333/334/335 实现后按本契约产出 evidence，且只有真实执行才能写 L2/L3/L5。

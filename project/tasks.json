@@ -11404,7 +11404,7 @@
       "title": "批次 C-4a 健康/容量/积压基线执行（PH-335 拆分：V1-OPS-05）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11431,9 +11431,9 @@
         "python manage.py test tests.test_v1_ops_observability --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-350.md"
     },
     {
       "id": "PH-351",
