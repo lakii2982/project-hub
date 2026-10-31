@@ -9,9 +9,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser): parser.add_argument("--json", action="store_true")
     def handle(self, *args, **options):
         errors = []
-        for org in Organization.objects.all():
+        organizations = list(Organization.objects.all())
+        for org in organizations:
             if not verify_audit(org): errors.append(f"organization:{org.pk}:audit_chain")
-        for entry in LedgerEntry.objects.select_related("document", "timesheet", "reverses", "project"):
+        ledger_entries = list(LedgerEntry.objects.select_related("document", "timesheet", "reverses", "project"))
+        for entry in ledger_entries:
             source = entry.document or entry.timesheet
             if not source or source.project_id != entry.project_id: errors.append(f"ledger:{entry.pk}:source_project")
             if entry.reverses_id:
@@ -1558,6 +1560,10 @@ class Command(BaseCommand):
                      else receipt.result_id in project_run_ids)
             if not valid:
                 errors.append(f"close_receipt:{receipt.pk}:result")
-        result = {"ok": not errors, "errors": errors, "organizations": Organization.objects.count(), "entries": LedgerEntry.objects.count()}
+        from pmo_plugins.costing.shared_cost_services import integrity_errors as shared_cost_integrity_errors
+        from pmo_plugins.costing.budget_services import integrity_errors as budget_integrity_errors
+        errors.extend(shared_cost_integrity_errors())
+        errors.extend(budget_integrity_errors())
+        result = {"ok": not errors, "errors": errors, "organizations": len(organizations), "entries": len(ledger_entries)}
         self.stdout.write(json.dumps(result, ensure_ascii=False) if options["json"] else ("完整性检查通过" if not errors else "\n".join(errors)))
         if errors: raise CommandError("项目账完整性检查未通过")

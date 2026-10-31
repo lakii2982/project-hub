@@ -1,0 +1,68 @@
+{
+  "task_id": "PH-330",
+  "summary": "共享费用分摊与预算/ETC 实现首片 on BASE de85caa (rebased after PH-325/PH-345). Adds costing migration 0005_shared_cost_allocation and 0006_project_budget (generated after the actual leaf 0004, no applied migration edits) for SharedCostAllocationBatch/Line/Receipt and ProjectBudgetVersion/Line/Receipt, with vendor-aware SQLite/PostgreSQL append-only guards, conditional unique active allocation/budget, one-to-one reversal, and draft->posted/reversed and draft->approved/rejected, approved->superseded transitions only. Services add create_shared_cost_allocation_batch / reverse_shared_cost_allocation_batch: pool is strictly posted current nonproject costing cost postings in the period, reversed originals and negative reversal lines are pair-excluded, PH-250 project costs/revenue/cash/drafts/cross-org/cross-period are excluded, missing/non-positive pool refuses, fixed_weights and server-derived revenue/minutes/direct-cost drivers quantize to integer basis points summing 10000 (largest remainder), amounts use exact integer basis_points_clamped_half_up_last_absorb_v1 with last-item absorption and non-negative lines, duplicate active pool and source in multiple pools refuse; each allocation/reversal writes one net-zero AccountingEvent (source nonproject negative, project positive for allocation; exact mirror for reversal) with a SourceConsumption claim, never mutates original source postings, and appends plugin audit plus receipt. Budget services add create_project_budget/approve_project_budget/reject_project_budget/supersede_project_budget: draft versions, four-eyes approval (creator/submitter cannot approve), effective_from in period, one approved version per project/period (old approved superseded in the same transaction), append-only lines/subjects, contract-line snapshots validated for project/termination, expected_version/request_token/dry_run/company lock/period lock, append-only receipts; budget_residual_v1 read model derives budget/incurred/ETC/EAC/variance/over/remaining with missing semantics (null+missing, never zero), frozen issue codes budget_missing/over_budget/budget_lines_exceed_total/subject_attribution_missing. Adds read-only reconciliation and budget/ETC pages (costing routes history_read, period/pool/project filters, empty/missing/issues, role gating, disabled-module history read) and two verifier branches; the verifier now folds its two terminal COUNT queries into already-loaded Organization/LedgerEntry lists to keep the PH-244 query-count budget at 88. No canonical topic/command, no contract schema change, no core migration, no ledger outside costing, no revenue/cash/settlement writes. Actual runs: check 268; manage.py check exit0; makemigrations clean; fresh SQLite migrate+verify ok; scoped 10 tests OK; full 1204 tests/128.753s with only the known 8 macOS baseline failures; verify-change after report (review pending). Reviewer round-1 blockers fixed: (1) request_token idempotency now looks up the org+token receipt before state/duplicate gates for allocation, reversal, budget approve/reject/supersede, and the create digest no longer embeds the computed next version, so replay returns the recorded result even after newer batches/versions exist; replay regressions cover allocate/reverse/create/approve/reject. (2) ETC no longer fabricates zero incurred cost: with no posted project cost fact, incurred_cost_cents remains None and ETC/EAC/variance/over/remaining are null with incurred_cost plus incurred_cost_missing issues; a no-cost regression asserts null+missing rather than budget-equals-ETC.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run after rebase onto de85caa: {\"command\":\"check\",\"ok\":true,\"task_count\":268}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; existing URL/field-system warnings only, no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: 'No changes detected'; only new migrations are costing 0005_shared_cost_allocation and 0006_project_budget generated after leaf 0004, no applied migration edits."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Probe tests create a malformed allocation batch and assert the verifier emits shared_allocation:; the shared-cost/project-budget verifier branches run in the full suite."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual final run after rebase onto de85caa: Ran 1224 tests in 130.512s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI authoritative."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_shared_cost_allocation tests.test_v1_shared_cost_http tests.test_v1_budget_etc",
+      "result": "pass",
+      "evidence": "Actual run after the round-1 fixes: Ran 12 tests, OK. Allocation/net-zero/reconciliation/reversal/append-only/verifier probes plus request_token replay; HTTP page/role/disabled; budget gold ETC/four-eyes/reject/supersede, request_token replay, and no-cost incurred=None/ETC/EAC/variance/remaining=None+incurred_cost_missing."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base d830929 --task PH-330",
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 21 files inside BASE PH-330 allowed_paths (review pass; post-rebase rerun)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-330 shared-cost/budget-ETC reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 IDEMPOTENCY BLOCKER RESOLVED AT 3a93b20: allocate/reverse now look up the receipt by org+token+action before the active/reversed/expected_version state gates; budget create removes the computed next version from the digest and checks the receipt before deriving version_no; approve/reject/supersede check the receipt before their draft/approved state gates. Replay regressions cover allocate/reverse/create/approve/reject.",
+      "ROUND-2 ETC MISSING BLOCKER RESOLVED: `budget_etc_snapshot` detects `has_cost`, returns incurred_cost_cents=None when no posted project cost fact exists, sets etc/eac/variance/over/remaining to None, adds incurred_cost to missing and `incurred_cost_missing` to issues; the no-cost regression asserts null/missing rather than 0. Read-only snapshots also use `_period(..., write=False)` so a locked/closed period can be viewed without treating the read as a write.",
+      "OTHER CONTENT RE-VERIFIED: costing 0005/0006 use the actual leaf and vendor-aware append-only guards; batch/line/receipt and budget version/line/receipt include conditional active-allocation uniqueness, one-reversal OneToOne mirror, status/sign/BP 10000 and append-only checks; pool selection is posted nonproject current cost, excludes shared-cost events/reversed originals/PH-250 project cost/cash/revenue/unposted; clamp+last-absorb algorithm with sum/amount and nonnegative lines; net-zero AccountingEvent/SourceConsumption claim with source negative/project positive; reversal exact mirror; budget draft/approved/rejected/superseded with four-eyes/effective_from/line_key/contract-line snapshot; read-only pages/issue codes/permissions (pm company pool denied)/verifier branches; 21 files within the PH-330 whitelist; no core migration. Original-blank deviations (no subject actuals, only fixed_weights cross-project counterexample, COUNT merge to 88) remain disclosed.",
+      "EVIDENCE AT 3a93b20 (BASE 4c0d309): check ok=true/task_count=268; manage.py check exit0; makemigrations --check No changes; scoped tests 12 OK; full suite 1206/5F+3E/69 = known macOS baseline; fresh SQLite verify_integrity ok; verify-change --base 4c0d309 --task PH-330 only high_risk_review_required, no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS (round 2; request_token replay and missing incurred-cost semantics fixed). Reviewed HEAD 3a93b20 (BASE 4c0d309) in /tmp/ph330-alloc-budget, worktree clean; 21 files within the PH-330 whitelist; no core migration. Allocate/reverse/create/approve/reject replay returns the recorded receipt; missing incurred cost yields None with null ETC/EAC/variance/over/remaining plus issue; models/migrations, pool selection, clamp/net-zero reclassification, budget state machine/four-eyes, read-only pages/verifier and disclosed deviations otherwise verified. Independent runs: check ok=268; makemigrations clean; scoped 12 OK; full 1206/5F+3E/69 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope."
+  },
+  "deviations": [
+    "PM cannot view the company-wide shared-cost pool page: reconciliation denies pm because the pool is a company-level nonproject fact and Invoice/PH-313 project-summary cannot be derived without inventing allocation; pm budget/ETC is limited to projects the pm manages. Disclosed.",
+    "approved_minutes driver reads time BillableConfirmation confirmed minutes directly through the owner model, and revenue_cents uses management_revenue.project_revenue_summary; no new canonical query or write API was added.",
+    "ETC first slice has no subject-level actual attribution: subject_attribution_missing is reported and subject_actuals is null rather than fabricating a split.",
+    "Verifier branches fold the existing terminal Organization/LedgerEntry COUNT queries into already-loaded lists to stay within the PH-244 query-count ceiling (88); no verification semantics removed.",
+    "Only fixed_weights path includes cross-project/foreign-target rejection tests; revenue/minutes/direct-cost drivers share the same quantization helper but are not separately golden-tested beyond service wiring. PG CI is authoritative.",
+    "No canonical topic/command, contract schema, docs/adr or applied-migration changes; no core migration."
+  ],
+  "unverified": [
+    "PostgreSQL CI (SQLite/vendor-aware SQL only locally)",
+    "Browser 1440/390/keyboard/empty-error-disabled visual states (HTTP smoke only)",
+    "Real customer/production data",
+    "Independent S review (pending)",
+    "Separate golden runs for revenue/minutes/direct-cost driver paths and PM project-summary variant"
+  ]
+}

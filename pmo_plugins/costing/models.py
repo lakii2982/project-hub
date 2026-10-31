@@ -297,3 +297,293 @@ class BankChargeReceipt(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError('银行手续费草稿收据不可删除')
+
+
+class SharedCostAllocationBatch(models.Model):
+    """Append-only shared-cost pool allocation/reversal batch (PH-330)."""
+
+    KINDS = ('allocation', 'reversal')
+    STATUSES = ('draft', 'posted', 'reversed')
+    POOL_KINDS = ('labor_nonproject', 'labor_unallocated')
+    DRIVERS = ('revenue_cents', 'approved_minutes', 'direct_cost_cents', 'fixed_weights')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='shared_cost_allocation_batches')
+    period = models.CharField(max_length=7)
+    pool_key = models.CharField(max_length=64)
+    pool_kind = models.CharField(max_length=32)
+    driver = models.CharField(max_length=24)
+    kind = models.CharField(max_length=12, default='allocation')
+    status = models.CharField(max_length=12, default='draft')
+    amount_cents = models.BigIntegerField()
+    total_basis_points = models.PositiveIntegerField(default=10000)
+    source_refs = models.JSONField(default=list)
+    source_digest = models.CharField(max_length=64)
+    input_digest = models.CharField(max_length=64)
+    algorithm_version = models.CharField(max_length=64,
+                                        default='basis_points_clamped_half_up_last_absorb_v1')
+    reverses_batch = models.OneToOneField('self', on_delete=models.PROTECT, null=True,
+                                          related_name='reversal')
+    reason = models.TextField(blank=True, default='')
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organization', 'period', 'pool_key'],
+                condition=Q(kind='allocation', status='posted'),
+                name='costing_active_shared_allocation'),
+            models.UniqueConstraint(fields=['reverses_batch'], condition=Q(kind='reversal'),
+                                    name='costing_one_allocation_reversal'),
+            models.CheckConstraint(condition=Q(kind__in=('allocation', 'reversal')), name='costing_shared_batch_kind'),
+            models.CheckConstraint(condition=Q(status__in=('draft', 'posted', 'reversed')),
+                                   name='costing_shared_batch_status'),
+            models.CheckConstraint(condition=Q(total_basis_points=10000),
+                                   name='costing_shared_batch_basis'),
+            models.CheckConstraint(
+                condition=Q(kind='allocation', amount_cents__gte=0, reverses_batch__isnull=True)
+                | Q(kind='reversal', amount_cents__lte=0, reverses_batch__isnull=False),
+                name='costing_shared_batch_sign'),
+            models.CheckConstraint(condition=Q(status='reversed', kind='allocation')
+                                   | ~Q(status='reversed'),
+                                   name='costing_shared_batch_reversed_kind'),
+        ]
+        indexes = [models.Index(fields=['organization', 'period', 'status'],
+                                name='cost_batch_period_idx'),
+                   models.Index(fields=['organization', 'pool_key', 'status'],
+                                name='cost_batch_pool_idx')]
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            persisted = type(self).objects.get(pk=self.pk)
+            if persisted.status == self.status:
+                raise ValidationError('共享分摊批次事实不可修改')
+            if (persisted.status == 'draft' and self.status == 'posted'
+                    and all(getattr(self, field) == getattr(persisted, field) for field in (
+                        'organization_id', 'period', 'pool_key', 'pool_kind', 'driver',
+                        'kind', 'amount_cents', 'total_basis_points', 'source_refs',
+                        'source_digest', 'input_digest', 'algorithm_version',
+                        'reverses_batch_id', 'reason', 'created_by_id', 'created_at'))):
+                super().save(update_fields=['status'])
+                return
+            if (persisted.kind == 'allocation' and persisted.status == 'posted'
+                    and self.status == 'reversed'
+                    and all(getattr(self, field) == getattr(persisted, field) for field in (
+                        'organization_id', 'period', 'pool_key', 'pool_kind', 'driver',
+                        'kind', 'amount_cents', 'total_basis_points', 'source_refs',
+                        'source_digest', 'input_digest', 'algorithm_version',
+                        'reverses_batch_id', 'reason', 'created_by_id', 'created_at'))):
+                super().save(update_fields=['status'])
+                return
+            raise ValidationError('共享分摊批次仅允许 draft→posted 或 posted→reversed')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('共享分摊批次不可删除')
+
+    @property
+    def source_ref(self):
+        return {'namespace': 'costing', 'kind': 'shared_cost_allocation_batch',
+                'id': str(self.pk), 'version': 1}
+
+
+class SharedCostAllocationLine(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='+')
+    batch = models.ForeignKey(SharedCostAllocationBatch, on_delete=models.PROTECT,
+                              related_name='lines')
+    sequence = models.PositiveIntegerField()
+    target_kind = models.CharField(max_length=16, default='project')
+    target_id = models.CharField(max_length=64)
+    basis_points = models.PositiveIntegerField()
+    allocated_cents = models.BigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sequence']
+        constraints = [
+            models.UniqueConstraint(fields=['batch', 'sequence'],
+                                    name='costing_shared_line_sequence'),
+            models.UniqueConstraint(fields=['batch', 'target_kind', 'target_id'],
+                                    name='costing_shared_line_target'),
+            models.CheckConstraint(condition=Q(target_kind='project'),
+                                   name='costing_shared_line_target_kind'),
+            models.CheckConstraint(condition=Q(basis_points__gte=1, basis_points__lte=10000),
+                                   name='costing_shared_line_basis'),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError('共享分摊明细不可修改')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('共享分摊明细不可删除')
+
+
+class SharedCostAllocationReceipt(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='shared_cost_allocation_receipts')
+    request_token = models.UUIDField()
+    action = models.CharField(max_length=20)
+    input_digest = models.CharField(max_length=64)
+    result = models.JSONField(default=dict)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['organization', 'request_token'],
+                                               name='costing_shared_receipt_unique')]
+        ordering = ['created_at', 'id']
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError('共享分摊收据不可修改')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('共享分摊收据不可删除')
+
+
+class ProjectBudgetVersion(models.Model):
+    STATUSES = ('draft', 'approved', 'superseded', 'rejected')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='project_budget_versions')
+    project = models.ForeignKey('core.Project', on_delete=models.PROTECT,
+                                related_name='budget_versions')
+    period = models.CharField(max_length=7)
+    version = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=12, default='draft')
+    effective_from = models.DateField(null=True, blank=True)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    submitted_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, null=True,
+                                     blank=True, related_name='+')
+    approved_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, null=True,
+                                    blank=True, related_name='+')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    reject_reason = models.TextField(blank=True, default='')
+    based_on_version = models.ForeignKey('self', on_delete=models.PROTECT, null=True,
+                                         blank=True, related_name='derived_versions')
+    input_digest = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['version']
+        constraints = [
+            models.UniqueConstraint(fields=['organization', 'project', 'period', 'version'],
+                                    name='costing_budget_version_unique'),
+            models.UniqueConstraint(fields=['organization', 'project', 'period'],
+                                    condition=Q(status='approved'),
+                                    name='costing_active_budget_version'),
+            models.CheckConstraint(condition=Q(status__in=('draft', 'approved', 'superseded', 'rejected')),
+                                   name='costing_budget_status'),
+            models.CheckConstraint(condition=Q(version__gte=1),
+                                   name='costing_budget_version_positive'),
+            models.CheckConstraint(
+                condition=~Q(status='approved')
+                | Q(effective_from__isnull=False, approved_by__isnull=False,
+                    approved_at__isnull=False),
+                name='costing_budget_approved_fields'),
+            models.CheckConstraint(condition=~Q(status='rejected') | ~Q(reject_reason=''),
+                                   name='costing_budget_rejected_reason'),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            persisted = type(self).objects.get(pk=self.pk)
+            immutable = ('organization_id', 'project_id', 'period', 'version',
+                         'created_by_id', 'created_at', 'input_digest')
+            if any(getattr(self, field) != getattr(persisted, field) for field in immutable):
+                raise ValidationError('预算版本身份/期间/版本不可修改')
+            if (persisted.status == 'draft' and self.status == 'approved'
+                    and self.approved_by_id and self.approved_at and self.effective_from
+                    and self.reject_reason == persisted.reject_reason):
+                super().save()
+                return
+            if (persisted.status == 'draft' and self.status == 'rejected'
+                    and self.reject_reason.strip()):
+                super().save()
+                return
+            if (persisted.status == 'approved' and self.status == 'superseded'
+                    and all(getattr(self, field) == getattr(persisted, field) for field in (
+                        'effective_from', 'approved_by_id', 'approved_at',
+                        'reject_reason', 'based_on_version_id', 'submitted_by_id'))):
+                super().save(update_fields=['status'])
+                return
+            raise ValidationError('预算版本仅允许 draft→approved/rejected 或 approved→superseded')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('预算版本不可删除')
+
+
+class ProjectBudgetLine(models.Model):
+    SUBJECTS = ('labor', 'expense', 'procurement', 'other')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='+')
+    version = models.ForeignKey(ProjectBudgetVersion, on_delete=models.PROTECT,
+                                related_name='lines')
+    line_key = models.CharField(max_length=64)
+    subject = models.CharField(max_length=16)
+    amount_cents = models.PositiveBigIntegerField()
+    contract_line_ref = models.JSONField(null=True, blank=True)
+    cost_owner_ref = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['subject', 'line_key']
+        constraints = [
+            models.UniqueConstraint(fields=['version', 'line_key'],
+                                    name='costing_budget_line_key_unique'),
+            models.UniqueConstraint(fields=['version', 'subject', 'contract_line_ref'],
+                                    condition=Q(contract_line_ref__isnull=False),
+                                    name='costing_budget_line_contract_unique'),
+            models.CheckConstraint(condition=Q(subject__in=('labor', 'expense', 'procurement', 'other')),
+                                   name='costing_budget_subject'),
+            models.CheckConstraint(condition=Q(amount_cents__lte=10**12),
+                                   name='costing_budget_amount_bound'),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.version.status != 'draft':
+            raise ValidationError('仅草稿预算版本可修改行')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.version.status != 'draft':
+            raise ValidationError('仅草稿预算版本可删除行')
+        super().delete(*args, **kwargs)
+
+
+class ProjectBudgetReceipt(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('core.Organization', on_delete=models.PROTECT,
+                                     related_name='project_budget_receipts')
+    request_token = models.UUIDField()
+    action = models.CharField(max_length=20)
+    input_digest = models.CharField(max_length=64)
+    result = models.JSONField(default=dict)
+    created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['organization', 'request_token'],
+                                               name='costing_budget_receipt_unique')]
+        ordering = ['created_at', 'id']
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError('预算收据不可修改')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError('预算收据不可删除')

@@ -6,7 +6,7 @@ from .plugin import Plugin
 
 
 def entry_point():
-    from pmo_plugins.costing import bank_charge_views, labor_views
+    from pmo_plugins.costing import bank_charge_views, budget_views, labor_views, shared_cost_views
     from . import close_views, service_period_views
     from . import views as delivery_views
     from core import identity_views
@@ -79,7 +79,9 @@ def entry_point():
                     ('labor_list', 'labor_detail', 'labor_form', 'labor_save', 'labor_action')}
                    | {name: getattr(bank_charge_views, name) for name in
                       ('bank_charge_list', 'bank_charge_form', 'bank_charge_save', 'bank_charge_action',
-                                 'bank_charge_pairing')},
+                                 'bank_charge_pairing')}
+                   | {'shared_cost_reconciliation': shared_cost_views.shared_cost_reconciliation,
+                      'budget_etc': budget_views.budget_etc_page},
         'time': {name: getattr(time_views, name) for name in
                  ('billable_confirmation_list', 'billable_confirmation_form',
                   'billable_confirmation_save', 'billable_confirmation_confirm',

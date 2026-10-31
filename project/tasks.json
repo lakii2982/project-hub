@@ -10653,7 +10653,7 @@
     {
       "id": "PH-330",
       "title": "分摊/预算 ETC 实现首片（costing 0005/0006）",
-      "status": "ready",
+      "status": "done",
       "risk": "S",
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10682,8 +10682,8 @@
         "python manage.py test tests --verbosity 1",
         "python manage.py verify_integrity --json"
       ],
-      "handoff": null,
-      "owner": null,
+      "handoff": "project/handoffs/PH-330.md",
+      "owner": "worker-contract",
       "kind": "feature",
       "priority": 2,
       "spec": "project/specs/PH-330.md",
