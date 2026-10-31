@@ -1,0 +1,11 @@
+{% extends 'base.html' %}{% block title %}发票{% endblock %}{% block breadcrumb %}发票 / 办理{% endblock %}{% block content %}
+<section class="page-heading"><div><div class="eyebrow">INVOICING · FORM</div><h1>{{ title|default:'登记发票' }}</h1></div></section>
+<section class="panel"><div class="panel-heading"><h2>表单</h2></div><div class="panel-body">
+{% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<form method="post" action="{{ submit_url }}">{% csrf_token %}
+{% include 'partials/form_fields.html' with form=form %}
+<div class="actions"><button type="submit" class="button primary">提交</button><a class="button" href="{{ list_url }}">返回列表</a></div>
+</form>
+<p class="help-text">金额为整数分；含税=不含税+税额；红冲须填负值行/分配明细（留空表示全额红冲）。不写收入/现金/账本。</p>
+</div></section>
+{% endblock %}

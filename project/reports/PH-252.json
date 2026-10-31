@@ -1,0 +1,72 @@
+{
+  "task_id": "PH-252",
+  "summary": "发票实现首片（invoicing 插件，按 ADR 0015）：新建 pmo_plugins/invoicing 插件（manifest 8 字段、requires contracts/settlement（按 ADR 0010 收敛）、自有迁移 0001、domain_metadata canonical 路由、delivery urls root 单写绑定），实现 Invoice/InvoiceLine/InvoiceAllocation/InvoiceReversal/TaxQualification 五个 owned fact 模型与 vendor-aware append-only 触发器（PG 函数 + SQLite 触发器；仅 Invoice 允许 active→reversed 状态位，其余 UPDATE/DELETE 拒绝）。服务层 record_invoice/allocate_invoice_lines/reverse_invoice：公司锁、request_token 审计收据幂等、期间/锁期、整数分 gross=net+tax、行合计=头、分配合计=行、业务来源（合同批准明细/结算未清项/结算）同 org/同往来方/额度只读派生、部分红冲保 active、全额→reversed、append-only 负值冲销、红票≠退款；不写收入/现金/账本/未清。浏览器列表/详情/登记/分配/红冲表单走具名服务；verify_integrity 新增发票分支（头行合计、分配守恒与来源、红冲 signed/状态机、规范事件、无财务事件/来源消费）；generic audit + canonical DomainEvent（recorded/lines_allocated/reversed）。默认启用（default_enabled=True，符合 ADR 0010）；requires 已按 ADR 0010 收敛为 contracts+settlement。剩余 14 个白名单外测试因直接停用 contracts/settlement 被依赖守卫拒绝，需规划槽补测试白名单后显式先停用 invoicing；停用后 history_read 历史只读。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD (BASE e05adee): ok=true, task_count=253; PH-252 done with owner/handoff; 40 allowed_paths include the 16 dependency-order test files plus the invoicing plugin/migrations/tests and root-only wiring; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: System check identified 99 issues (0 silenced), all pre-existing W003/W342 warnings; 0 errors (invoicing domain metadata/routes/registry validate)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected; the invoicing migration 0001_initial matches the models and is the new leaf in its own plugin chain (no core migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 on BASE ab1845b: Ran 1143 tests, FAILED (failures=5, errors=3, skipped=69) => 1066 passed. All 8 failures/errors are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); the BASE ab1845b total grows to 1143 with the 18 new PH-252 tests and the dependency-order sync of the 16 whitelisted test files, with no new failure class. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. Probe regression creates a malformed invoice header (no lines/events) and asserts verify_integrity fails with invoice:* errors, proving the new branch is exercised."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 18 tests, OK => 18 passed (12 service + 6 HTTP). Adds over-line/foreign-allocation reversal refusals, TaxQualification trigger probe, and bad-reversal-detail verify_integrity probe to the original coverage."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-252 invoicing first-slice reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-4 FULL-SUITE REGRESSION RESOLVED: after the planning-slot whitelist expansion, the branch adds the 16 dependency-order test files and disables invoicing before disabling contracts/settlement in those tests; the full suite is now back to exactly the known baseline `Ran 1143 tests, 5 failures/3 errors/69 skips` (8 known macOS-only failures: 6 DRF Accept/codec/large-JSON + 2 delivery symlink; no new failures). The manifest keeps `default_enabled=True` with `requires={contracts,settlement}` per ADR 0010, and the plugin still allows disabled-module history reads / rejects writes.",
+      "ROUND-2/3 CODE FIXES VERIFIED: default-enabled plugin; `requires` matches ADR 0010; partial reversal validates each line/allocation reference, ownership, duplicate refs, business-source match, per-line/per-allocation remaining and line/allocation total consistency (over-line and foreign-allocation regressions); TaxQualification now has vendor-aware append-only triggers/probes; verify_integrity cross-checks reversal detail totals/refs/over-reversal, plus header/line/allocation conservation, source validity, status/reversed consistency, canonical event counts and absence of financial events/source consumption. Service checks integer cents gross=net+tax, header/line/allocation totals, company lock, request_token replay/conflict, expected_version, period/locked/closed rejection, source quota, and no revenue/cash/ledger writes; route metadata is canonical domain_metadata with urls import-only; no core migration (invoicing 0001 only).",
+      "EVIDENCE AT 76ed2af (BASE ab1845b): check ok=true/task_count=252; manage.py check exit 0; makemigrations --check No changes; scoped invoicing tests 18 OK; full suite 1143/5F+3E/69 = exactly the known macOS baseline; verify_integrity fresh DB ok=true/errors=[] (malformed-header probe raises); verify-change --base ab1845b --task PH-252 only high_risk_review_required, no path_out_of_scope; report review now pass. 23 changed implementation files plus the planning-authorized dependency-order tests are within the 40-path PH-252 whitelist; task in_review/handoff."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 76ed2af (BASE ab1845b) in /tmp/ph252-invoicing, worktree clean; PH-252 whitelist now 40 paths including planning-authorized dependency-order tests; invoicing 0001 only, no core migration. default_enabled=True+requires contracts/settlement per ADR 0010, full suite restored to 1143/5F+3E/69 known baseline; partial reversal per-line/per-allocation validation, TaxQualification DB trigger, and verify_integrity reversal/over-reversal/source checks all verified; amount invariants/idempotency/company lock/period/source quota/no financial writes/scoped 18 OK/fresh verify_integrity ok/check 252/makemigrations clean; verify-change --base ab1845b only high_risk_review_required, no path_out_of_scope."
+  },
+  "deviations": [
+    "Reverse is implemented in this slice (InvoiceReversal + reverse_invoice + verify branch) per the Lead task instruction and ADR 0015; the older PH-252 spec text said reversal was deferred, but ADR 0015 freezes invoicing.invoice.reverse/v1 and the Lead explicitly required record/allocate/reverse. No posted/superseded status is produced.",
+    "PG-only CI follow-up: tests/test_contract_approval.py and tests/test_v1_contracts.py disable dependants in setUp before the test body, so the invoicing guard was moved into those setUps (is_enabled check + set_enabled before the contracts/settlement disable loop). No other whitelisted setUp disables contracts/settlement; no business assertion changed.",
+    "Reviewer round-3 whitelist decision applied: the 16 whitelisted dependency-order test files (14 locally failing + tests/test_contract_approval.py and tests/test_v1_contracts.py PG-only) now call set_enabled(owner,'invoicing',False) before disabling contracts/settlement; no business assertion was changed and the PG-only cases disable invoicing before starting their lock/threads to avoid deadlock.",
+    "Reviewer round-2 blocker 1 fix: manifest.requires narrowed to contracts+settlement per ADR 0010 (removed cash/management_revenue/costing). This eliminated the costing/management_revenue dependency-guard regressions; 14 tests remain failing because they directly disable contracts or settlement, which invoicing legitimately requires. Those test files are outside the PH-252 whitelist; exact list is recorded in the report/handoff for a planning-slot whitelist expansion (no self-expansion).",
+    "Reviewer round-1 blocker 2 fix: reverse_invoice now validates every line_reversal reference belongs to the invoice and stays within that line's remaining amount, every allocation_reversal reference/line/business-source belongs to the invoice and stays within that allocation's remaining amount, and line vs allocation reversal totals must match; over-line and foreign-allocation regressions were added, and verify_integrity cross-checks line/allocation detail totals and cumulative reversals.",
+    "Reviewer round-1 blocker 3 fix: the migration now installs vendor-aware append-only triggers (PG function + SQLite update/delete triggers) on invoicing_taxqualification as well, and a regression proves direct UPDATE/DELETE are rejected.",
+    "request_token receipts are stored in generic AuditEvent payload (request_token/input_digest/result) rather than a new receipt table, matching the spec's five-model list and avoiding an extra table; replay/changed-input semantics are covered by tests.",
+    "Business-source allocation first slice supports contract approved lines, settlement open items and settlement sources (sales direction only); purchase invoice allocation to other source kinds and service/acceptance sources are rejected as unsupported rather than guessed, to be extended by a later slice.",
+    "TaxQualification model is created per ADR/spec but no qualification write service/UI is exposed in this slice (ADR leaves qualification confirmation to a later slice); tax treatment remains a snapshot fact only.",
+    "The plugin requires all five owner plugins in its manifest (per ADR 0015) but its migration_dependencies are core/contracts/settlement to keep the migration graph acyclic; cash/management_revenue/costing are runtime read dependencies.",
+    "No core model/migration is modified; invoicing owns its own migration chain (0001_initial) and root-only files (settings, delivery urls, verify_integrity, governance) are the integrator-owned wiring explicitly allowed by the spec.",
+    "Counterexamples/tests never UPDATE/DELETE historical rows through supported paths; DB triggers and model guards are asserted with savepoint-contained IntegrityError checks.",
+    "Lead integration rebase (ab1845b -> e05adee) after PH-329 merged: docs/verification.md kept main entries plus PH-252 entry; manifest.active_handoff -> PH-252. Gates rerun green.",
+    "Lead integration rebase (e05adee -> c69c8ee) after PH-324 merged: docs/verification.md kept main entries plus PH-252 entry; manifest.active_handoff -> PH-252. Gates rerun green."
+  ],
+  "unverified": [
+    "Full suite is back to the known baseline: 5 failures + 3 errors (8 macOS environment limits) + 69 skips; no dependency-guard errors remain after the whitelisted order sync. PG-only ordering cases are exercised only in CI.",
+    "Full suite is currently red only because default_enabled=True triggers the dependency guard in 22 existing test files outside the PH-252 whitelist; those tests must explicitly set_enabled(false) for invoicing first, which requires a planning-slot whitelist expansion. The 8 macOS environment failures remain the known baseline.",
+    "Browser 1440/390 visual/keyboard/focus/overflow/empty-error-disabled states were not manually checked; only HTTP tests were run.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "PostgreSQL trigger/function behaviour and true multi-connection concurrency were not exercised locally (SQLite cannot prove production concurrency); CI including the PG domain remains authoritative. SQLite tests do not claim production concurrency correctness.",
+    "Production/UAT and legacy database upgrades are not verified; only freshly migrated SQLite databases were exercised.",
+    "Tax qualification confirmation, purchase-side source kinds, tax deduction/reporting, e-invoicing, PDF/email, multi-currency, batch/import, and invoice-to-cash/revenue settlement binding remain unimplemented."
+  ]
+}

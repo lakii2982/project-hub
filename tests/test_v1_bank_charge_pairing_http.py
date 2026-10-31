@@ -47,6 +47,7 @@ class BankChargePairingHTTPTests(FeePairingFixture, TestCase):
         page = self.client.get(self.url)
         self.assertContains(page, 'approved_without_cost')
         from core.plugin_runtime import get_registry, set_enabled
+        set_enabled(self.owner, 'invoicing', False)
         for plugin_id in ('onboarding', 'time', 'management_revenue', 'settlement', 'delivery',
                           'contracts', 'costing'):
             if plugin_id in get_registry().manifests:

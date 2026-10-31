@@ -236,7 +236,10 @@ class ContractsConcurrencyTests(Fixture, TransactionTestCase):
         # Isolate the original contract lifecycle scenarios from newer dependants.
         # PH-226: settlement depends on delivery, so it must be disabled first when installed.
         # PH-269: time depends on contracts, so disable it before contracts below.
-        from core.plugin_runtime import get_registry, set_enabled
+        from core.plugin_runtime import get_registry, is_enabled, set_enabled
+        # PH-252: invoicing requires contracts+settlement, so disable it before them.
+        if is_enabled(self.owner.organization, 'invoicing'):
+            set_enabled(self.owner, 'invoicing', False)
         # PH-286: onboarding requires contracts, so disable it before the contracts guards below.
         for plugin_id in ('onboarding', 'management_revenue', 'settlement', 'delivery', 'time'):
             if plugin_id in get_registry().manifests:
@@ -273,6 +276,7 @@ class ContractsConcurrencyTests(Fixture, TransactionTestCase):
 
     def waiting_writer_refused(self, revoke=False):
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'invoicing', False)
         ready = Event()
         pids, results = {}, []
         def queued():
@@ -331,6 +335,7 @@ class ContractsConcurrencyTests(Fixture, TransactionTestCase):
 
     def test_committed_write_precedes_waiting_disable_then_later_writes_refused(self):
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'invoicing', False)
         ready = Event()
         pids, errors = {}, []
         def disable():

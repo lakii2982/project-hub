@@ -352,6 +352,7 @@ class ServicePeriodHTTPTests(ServicePeriodHTTPFixture, TestCase):
     def test_module_disabled_history_facts_still_readable_but_routes_refuse(self):
         row = self.confirmation()
         from core.plugin_runtime import set_enabled
+        set_enabled(self.owner, 'invoicing', False)
         set_enabled(self.owner, 'management_revenue', False)
         # PH-226: disable the newer settlement dependant before its delivery/contracts dependencies.
         from core.plugin_runtime import plugin_catalog
