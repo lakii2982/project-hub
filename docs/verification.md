@@ -1066,3 +1066,16 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 ## PH-376 后续交付独立规划入口（2026-10-31，BASE 2f082a3）
 
 按最新 main 复核依赖：PH-367（批次 C 部署/恢复/并发汇总验收执行前置契约）deps PH-333/334/357/366 均 done → **晋级 ready**，spec 状态/blockers/白名单同步。PH-372 保持 proposed（等 PH-367 done）；PH-338/353 仍等 PH-289/PH-181/PH-185，PH-339/354 等 PH-272，PH-340/355 等 PH-301/314/179/183/151；PH-377（发布资格后续）等 PH-372。新登记连续切片 **PH-377** 发布资格 gate 后续（proposed）、**PH-378** 发票批量导入实现首片（proposed）、**PH-379** insights 差异单/工作台实现首片（proposed）、**PH-380** 通知中心收件箱实现首片（proposed）、**PH-381** 后续交付独立规划入口（proposed，依赖 PH-376；PH-376 done 后由下一规划槽置 ready）。只晋级依赖全 done 的任务，未虚假晋级。实跑：check ok=true/task_count=302；`python -m unittest tests.test_projectctl tests.test_governance -v` 23 OK；无代码/迁移/schema/门禁变更；verify-change 待 review pass。
+
+
+## PH-367 批次 C 汇总验收执行前置契约冻结（docs-only）（2026-10-31）
+
+基线 3c77653。新增 `docs/v1.0-development/batch-c-aggregate-acceptance-contract.md`：
+1. **来源/产物**：PH-333 `ops_rollup_acceptance`、PH-334 PG 并发汇总、PH-335 `healthcheck.rollup_evidence`、PH-357 回填、PH-366 gate/PH-345/PH-352/PH-332；只消费，不新造口径/不改脚本。
+2. **前置条件**：候选 SHA/环境 profile/演练数据与四眼角色/备份回退点/证据采集/分项前置（01–06、M15）；缺失 → blocked，不得 dry_run/配置冒充。
+3. **证据合并（多来源取最严）**：exit→status 归一并取 fail>blocked>not_run>pass；L2–L5 分层保留；冲突记录；汇总 envelope schema/`release_ready=false`；禁止挑有利/跨 SHA/覆盖旧证据。
+4. **PH-366 gate 流程**：校验→前置→收集→归一化合并→必需集→缺口/豁免→签名→released/blocked/released_with_gaps；核心项不可豁免，豁免≠pass。
+5. **缺口/豁免三方签批**：产品+发布+独立复核；执行人不得自批；到期/证据 digest；带缺口发布需披露范围/风险/回滚。
+6. **执行顺序/回滚**：05→01→02→03→04→06→合并；每步 checkpoint、失败停止、备份回滚、失败最多重试一次的边界、`verify_integrity`。
+7. **映射/现状**：V1-OPS-01–06/M15 的 L2 现况/L3–L5 not_run；PH-333/334/335/357/366 done 但 `release_ready=false`，真实 L3/L4/L5 未执行 → gate blocked；本片无脚本/表/迁移/门禁/产品代码变更。
+实跑：projectctl check ok/302；23 项治理 OK；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：真实 staging/production、真实 PG、TLS、L3/L4/L5、发布资格。

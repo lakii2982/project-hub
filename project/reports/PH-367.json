@@ -1,0 +1,41 @@
+{
+  "task_id": "PH-367",
+  "summary": "Froze the docs-only prerequisite contract for batch C aggregate acceptance execution at BASE 3c77653 on top of the merged PH-333/334/335/357/366 artifacts. docs/v1.0-development/batch-c-aggregate-acceptance-contract.md defines: the source artifacts (PH-333 ops_rollup_acceptance, PH-334 PG concurrency rollup, PH-335 healthcheck.rollup_evidence, PH-357 backfill, PH-366 gate) consumed without inventing new criteria; the execution preconditions (candidate SHA, environment/profile, drill-only data and four-eyes roles, backup/rollback point, evidence capture, per-item preconditions for V1-OPS-01–06 and M15, blocked when missing); the evidence merge rules (exit→status normalization, most-severe wins fail>blocked>not_run>pass, L2–L5 kept separate, conflicts recorded, aggregate envelope schema with release_ready=false, no cherry-picking/cross-SHA merge/overwrite); the PH-366 gate decision flow (validate→preconditions→collect→normalize/merge→required set→gaps/waivers→signatures→released/blocked/released_with_gaps); three-party gap/waiver sign-off (product+release+independent reviewer, core items not waivable, waiver≠pass); execution order and rollback/retry boundaries (05→01→02→03→04→06→merge, per-step checkpoints, stop-on-failure, backup/rollback, verify_integrity); the per-layer evidence mapping (L2 local status vs L3/L4/L5 not_run); and the honest current status (release_ready=false, real staging/production/PG/TLS/browser/L5 not executed, gate blocked). No code, scripts, migrations, gates or product behavior changed.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD c895786 (BASE 3c77653, PH-367 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":302}, exit 0; final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph367-batch-c-gate on main 3c77653 with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 3c77653 --task PH-367",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD c895786: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (aggregate-acceptance contract, PH-367 spec summary, tasks/manifest, docs/verification, report/handoff) inside BASE PH-367 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (preconditions, most-severe merge, PH-366 gate flow, three-party waiver, execution order/rollback and honest not_run status); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "The contract consumes PH-333/334/335/357/366 artifacts as-is and does not reimplement or change their checks/thresholds/rollup semantics; only the execution preconditions, merge and gate-decision mechanics are frozen.",
+    "Evidence merge uses the most-severe rule (fail>blocked>not_run>pass) with layers kept separate; low-layer/rehearsal/dry_run evidence can never substitute for L3/L4/L5 or execute evidence.",
+    "Gap waivers require product+release+independent-reviewer sign-off and are limited to non-core items; core items (upgrade/rollback, backup/restore, PG concurrency, M15, L5) are not waivable; a waiver is not a pass.",
+    "Execution order and rollback/retry boundaries are documented but no drill was executed; real staging/production/PG/TLS/browser/L5 remain not_run and the gate is blocked.",
+    "No code, scripts, migrations, gates or product behavior changed; release_ready remains false and this document makes no release-readiness claim."
+  ],
+  "unverified": [
+    "No real staging/production deployment, upgrade/rollback, backup/restore, PG concurrency, TLS or browser acceptance was executed.",
+    "L3 CI/PG, L4 browser and L5 production/customer evidence remain not_run; aggregate acceptance gate is blocked.",
+    "No aggregate acceptance run/evidence artifacts were produced by this docs-only slice.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}
