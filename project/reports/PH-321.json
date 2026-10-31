@@ -25,7 +25,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual final run after rebase: Ran 1161 tests in 136.080s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
+      "evidence": "Actual final run after rebase onto 9e0991f: Ran 1161 tests in 135.454s, 5 failures/3 errors/69 environment skips. The 8 failure/error names are exactly the known macOS environment-limited baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI is authoritative."
     },
     {
       "command": "python manage.py test tests.test_v1_fx tests.test_v1_fx_http --verbosity 1",
