@@ -13,9 +13,9 @@
       "evidence": "Actual run in /tmp/ph369-planning on main 5763f4a with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 5763f4a --task PH-369",
+      "command": "python scripts/projectctl.py verify-change --base f1eeac3 --task PH-369",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-369 allowed_paths (reviewer-b pass recorded)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-369 allowed_paths (post-rebase gate rerun)."
     }
   ],
   "review": {
@@ -38,7 +38,8 @@
     "PH-372 is registered proposed only; it performs evidence backfill/gate judgment per PH-366 but cannot run until PH-350/PH-357/PH-367 are done. No release-readiness claim is made.",
     "PH-373 is the next planning slot (proposed until PH-369 done); after review PASS the final evidence commit sets PH-369 done and PH-373 ready and clears its blocker.",
     "Numbering basis: BASE max PH-369; no >=PH-370 branch/PR exists; PH-370..PH-373 are continuous and free.",
-    "No placeholder strings or non-executable acceptance commands; no code/migration/schema/gate changes."
+    "No placeholder strings or non-executable acceptance commands; no code/migration/schema/gate changes.",
+    "Lead integration rebase (5763f4a -> f1eeac3) after PH-333/350 merged: verification/manifest merged; gates rerun; PH-373 next slot should re-check PH-335/357/367/372 promotion on the then-current main."
   ],
   "unverified": [
     "PH-327/PH-362/PH-370/PH-371 are ready but unimplemented; no behavior or tests exist for them yet.",
