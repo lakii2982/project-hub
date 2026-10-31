@@ -34,8 +34,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base de85caa --task PH-330",
-      "result": "not_run",
-      "evidence": "Not yet rerun after rebase; expected only high_risk_review_required before the final reviewer pass is recorded. Will be rerun and set pass."
+      "result": "pass",
+      "evidence": "Actual run after the committed round-2 reviewer pass and rebase onto de85caa (HEAD 090dd3a): ok=true, changes=21 files all inside the PH-330 allowlist, errors=[]."
     }
   ],
   "review": {
