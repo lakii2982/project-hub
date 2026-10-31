@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD ab5d4b5 (BASE a352b4a, PH-307 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":233}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run (reviewed HEAD f668724, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":233}, exit 0; PH-307 done with handoff and PH-311 ready on PH-307 done."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (PH-303 risk correction plus planning registration); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-307 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PH-303 RISK CORRECTION VERIFIED: tasks.json PH-303 risk A->S and the PH-303 spec risk section is synchronized; behavior, whitelist, test-only scope and acceptance are unchanged. This is the planning-slot BASE correction that removes the critical_path_requires_high_risk deadlock (PH-303 must edit tasks/manifest, which requires BASE risk S); PH-303 remains ready with its 6-path whitelist.",
+      "NEW TASKS/NUMBERING/BLOCKERS: task_count 233 unique continuous PH-308..PH-311 (BASE max 307; no remote/local branch/spec >=308). PH-308 multi-currency/FX contract freeze is proposed on proposed PH-150/PH-155/PH-252; PH-309 read-only operations reconciliation workbench aggregation is ready on done PH-291/280/281/283/288 with canonical delivery/domain_metadata history_read route and urls import-only, no write/migration; PH-310 export archive/format-version/audit follow-up is proposed on ready-not-done PH-304 plus proposed PH-285/PH-181/PH-182 with an accurate blocker; PH-311 next planning slot is proposed on PH-307 in_review with the done-transition blocker. No proposed task was promoted; no false readiness.",
+      "DoR/NUMBERING/ACCEPTANCE/SLOT: PH-308/PH-310 freeze exact contract/export boundaries (integer cents/ROUND_HALF_UP, missing/null, no schema change, no implementation) with exact whitelists; PH-309 freezes partition summaries/issue counts/drill-down links/missing/null and read-only permissions with executable acceptance; PH-311 is the next slot. All acceptance commands are executable; no `<PH-`/`{tid}` placeholders; no code/scaffold/schema/contract changes; 10 changed files all inside PH-307 allowed_paths; PH-307 in_review with owner/handoff, PH-311 proposed.",
+      "SLOT CONVENTION/GATES: PH-307 remains in_review and PH-311 proposed; after this pass the final evidence commit must set PH-307 done/PH-311 ready and clear the blocker, then rerun check/verify-change. At HEAD f668724 (BASE a352b4a): projectctl check ok=true/task_count=233; governance 23 tests OK; verify-change --base a352b4a --task PH-307 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; manifest=PH-307."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD f668724 (BASE a352b4a) in /tmp/ph307-planning, worktree clean; 10 changed files all inside PH-307 allowed_paths; task_count 233 unique continuous PH-308..PH-311; manifest=PH-307. PH-303 risk A->S with spec sync removes the critical-path deadlock while keeping test-only behavior/whitelist/acceptance; PH-309 workbench is ready on done PH-291/280/281/283/288 with canonical domain_metadata history_read and no write/migration; PH-308/PH-310 are docs/contract freezes proposed on accurate not-done deps; PH-311 proposed on PH-307 in_review. DoR/whitelists/counterexamples/acceptance complete; numbering free; no placeholders/scaffold/schema/code; no false promotion. Gates: check ok=true/233; governance 23 OK; verify-change --base a352b4a --task PH-307 only review/acceptance gates, no path_out_of_scope. Final evidence sets PH-307 done/PH-311 ready."
   },
   "deviations": [
     "PH-303 risk correction old->new->impact: old risk A (set by PH-302 for a test-only fix) -> new risk S. Impact: PH-303's whitelist necessarily touches project/tasks.json and project/manifest.json (in_review/handoff), which verify-change classifies as critical-path governance files and refuses under BASE risk A with critical_path_requires_high_risk; risk S is the governance-required level. Behavior/whitelist/acceptance are unchanged and the fix remains test-only. This unblocks PH-303's verify-change after the new BASE merges.",
