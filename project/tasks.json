@@ -10771,7 +10771,9 @@
         "PH-322",
         "PH-321",
         "PH-330",
-        "PH-252"
+        "PH-252",
+        "PH-347",
+        "PH-348"
       ],
       "spec": "project/specs/PH-333.md",
       "allowed_paths": [
@@ -10794,7 +10796,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-330（分摊/预算实现首片，ready 实现中未 done）done；PH-322/PH-321/PH-252 已 done；PH-330 合入后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-330（分摊/预算实现首片，ready 即将合入未 done）done；PH-322/PH-321/PH-252 已 done；PH-330 合入后由下一规划槽先晋级 PH-347/PH-348/PH-349 执行片，本片作为汇总验收再复核晋级。"
       ],
       "handoff": null
     },
@@ -10810,7 +10812,8 @@
         "PH-322",
         "PH-321",
         "PH-330",
-        "PH-252"
+        "PH-252",
+        "PH-349"
       ],
       "spec": "project/specs/PH-334.md",
       "allowed_paths": [
@@ -10830,7 +10833,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-330（分摊/预算实现首片，ready 实现中未 done）done；PH-322/PH-321/PH-252 已 done；PH-330 合入后由下一规划槽复核 DoR 再晋级；真实 PG 交 CI/部署环境。"
+        "缺 PH-330（ready 即将合入未 done）done；PH-322/PH-321/PH-252 已 done；PH-330 合入后先晋级 PH-349 执行片，本片作为汇总验收再复核晋级；真实 PG 交 CI/部署环境。"
       ],
       "handoff": null
     },
@@ -10844,7 +10847,8 @@
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-333",
-        "PH-334"
+        "PH-334",
+        "PH-350"
       ],
       "spec": "project/specs/PH-335.md",
       "allowed_paths": [
@@ -10866,7 +10870,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-333（部署/升级恢复演练）与 PH-334（PG 并发验收）done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-333/PH-334（汇总验收片，proposed）与 PH-350（执行片，proposed）done；PH-347–350 完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11326,7 +11330,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-330（分摊/预算实现首片，ready 实现中未 done）done；PH-345 契约已 done；PH-330 合入后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-330（ready 即将合入未 done）done；PH-345 契约已 done；PH-330 合入后由下一规划槽正式晋级（不提前晋级）。"
       ],
       "handoff": null
     },
@@ -11364,7 +11368,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-330（ready 实现中未 done）done；PH-345 契约已 done；PH-330 合入后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-330（ready 即将合入未 done）done；PH-345 契约已 done；PH-330 合入后由下一规划槽正式晋级（不提前晋级）。"
       ],
       "handoff": null
     },
@@ -11400,7 +11404,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-330（ready 实现中未 done）done；PH-345 契约已 done；真实 PG 交 CI/部署环境；PH-330 合入后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-330（ready 即将合入未 done）done；PH-345 契约已 done；PH-330 合入后由下一规划槽正式晋级（不提前晋级）；真实 PG 交 CI/部署环境。"
       ],
       "handoff": null
     },
@@ -11438,7 +11442,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-347/PH-348/PH-349（批次 C 演练拆分片，proposed）done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-347/PH-348/PH-349（执行片，proposed，等 PH-330）done；依赖完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11447,7 +11451,7 @@
       "title": "后续交付独立规划入口（接续 PH-346）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -11467,6 +11471,213 @@
         "docs/v1.0-development/*",
         "project/reports/PH-351.json",
         "project/handoffs/PH-351.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-351.md"
+    },
+    {
+      "id": "PH-352",
+      "title": "批次 C 验收 runbook 落地（docs-only：M01–M15 验收执行手册与证据模板）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-332",
+        "PH-345"
+      ],
+      "spec": "project/specs/PH-352.md",
+      "allowed_paths": [
+        "docs/v1.0-development/batch-c-runbook.md",
+        "docs/v1.0-development/batch-c-acceptance.md",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-352.json",
+        "project/handoffs/PH-352.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-353",
+      "title": "导入提交拆分：ImportPreview/ImportConflict 持久化与原子提交首片（PH-289 拆分）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-274",
+        "PH-181",
+        "PH-185"
+      ],
+      "spec": "project/specs/PH-353.md",
+      "allowed_paths": [
+        "pmo_plugins/onboarding/import_commit_services.py",
+        "pmo_plugins/onboarding/models.py",
+        "pmo_plugins/onboarding/migrations/0002_import_submission.py",
+        "pmo_plugins/onboarding/views.py",
+        "pmo_plugins/onboarding/forms.py",
+        "pmo_plugins/onboarding/domain_metadata.py",
+        "pmo_plugins/delivery/urls.py",
+        "pmo_plugins/onboarding/templates/onboarding/import_submit.html",
+        "tests/test_v1_import_submission.py",
+        "tests/test_v1_import_submission_http.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-353.json",
+        "project/handoffs/PH-353.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_import_submission tests.test_v1_import_submission_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-181/PH-185（期间预检/四类核对与差额契约，proposed）done；PH-274 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-354",
+      "title": "insights 读模型前置拆分：期间预检只读 API 首片（PH-272 拆分）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-277",
+        "PH-291",
+        "PH-304",
+        "PH-309",
+        "PH-272"
+      ],
+      "spec": "project/specs/PH-354.md",
+      "allowed_paths": [
+        "pmo_plugins/insights/precheck_services.py",
+        "pmo_plugins/insights/views.py",
+        "pmo_plugins/insights/forms.py",
+        "pmo_plugins/insights/templates/insights/precheck.html",
+        "pmo_plugins/insights/domain_metadata.py",
+        "pmo_plugins/delivery/urls.py",
+        "tests/test_v1_insights_precheck.py",
+        "tests/test_v1_insights_precheck_http.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-354.json",
+        "project/handoffs/PH-354.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-272（insights 读模型实现前置，proposed，其自身等 PH-180/181/182/183）done；PH-277/291/304/309 已 done；PH-272 合入后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-355",
+      "title": "通知中心前置拆分：reminder refs 契约与到期扫描骨架（PH-301 拆分）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-179",
+        "PH-183",
+        "PH-151"
+      ],
+      "spec": "project/specs/PH-355.md",
+      "allowed_paths": [
+        "core/reminder_services.py",
+        "core/reminder_scan.py",
+        "core/forms.py",
+        "core/templates/core/reminders.html",
+        "core/views.py",
+        "core/management/commands/scan_due.py",
+        "tests/test_v1_reminders.py",
+        "tests/test_v1_reminders_http.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-355.json",
+        "project/handoffs/PH-355.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_reminders tests.test_v1_reminders_http --verbosity 1"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [
+        "缺 PH-179/PH-183/PH-151（到期扫描/待办/通知契约，均 proposed）done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+      ],
+      "handoff": null
+    },
+    {
+      "id": "PH-356",
+      "title": "后续交付独立规划入口（接续 PH-351）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [
+        "PH-351"
+      ],
+      "spec": "project/specs/PH-356.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-356.json",
+        "project/handoffs/PH-356.md"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",

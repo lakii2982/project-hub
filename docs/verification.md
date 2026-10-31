@@ -895,3 +895,12 @@ BASE de85caa（PH-325/PH-345 合入后）。costing `0005_shared_cost_allocation
 ### PH-330 复核 round-1 阻断修复
 
 request_token 收据先于状态/重复门（allocate/reverse/approve/reject/supersede），create digest 去除 next version，补 replay 回归；ETC 无 posted cost 时 incurred=None、ETC/EAC/variance/over/remaining null+`incurred_cost`/`incurred_cost_missing`，补无成本回归。scoped 12 OK；全量 1224 tests/130.512s（5F+3E/69 基线无新增）。
+
+## PH-351 下一规划槽：PH-330 前夜依赖刷新 + 新切片（2026-10-31）
+
+基线 d830929（PH-346 合入后；注册后 count 278）。纯规划/契约文字片：
+1. **PH-330 ready 即将合入，不提前晋级**：PH-347/348/349 等 PH-330 done；PH-350 等 347/348/349；blockers 全部刷新。
+2. **原片↔拆片关系**：PH-333/334/335 保留为汇总验收（proposed）；执行由 PH-347/348/349/350 承担；PH-335 等 PH-333/334 与 PH-350；不重复登记。
+3. **新登记**：PH-352 批次 C 验收 runbook（ready，docs-only，deps PH-332/345 done）、PH-353 导入提交拆分（proposed，等 PH-181/185）、PH-354 insights 期间预检（proposed，等 PH-272）、PH-355 通知 reminder refs/扫描（proposed，等 PH-179/183/151）、PH-356 下一规划槽（proposed，待 PH-351 done）。count 273→278，编号 352-356 连续。
+4. **ROADMAP** 新增批次 C 状态同步节（PH-330 即将合入/原片拆片关系/新片/not_run 边界）。
+5. 独立 S 复核首轮 2 阻断（PH-354 depends_on 缺 PH-272、汇总验收片未编码拆片依赖）已修，二轮 PASS（reviewer-b）；rebase 到 main 371e80f（PH-330 合入）后最终证据 HEAD ecc7a18 按槽惯例置 PH-351 done / PH-356 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=278；23 项治理 OK；verify-change --base 371e80f --task PH-351 ok=true、14 文件全白名单、无 errors。未验证：PH-330 已合入 main（本槽仍按 BASE d830929 评审，下一槽可直接晋级 PH-347–350 拆片）；PH-333/334/335/347/348/349/350/353/354/355 未实现；批次 C 演练未执行。
