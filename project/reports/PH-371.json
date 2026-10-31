@@ -1,0 +1,62 @@
+{
+  "task_id": "PH-371",
+  "summary": "税额资格→costing 开放期抵扣成本更正首片：新增 pmo_plugins/costing/tax_adjustment_services.py（复用既有 SharedCostAllocationBatch/Line/Receipt，无新模型/迁移），仅 confirmed/not_recoverable 税额资格可生成 append-only costing 调整批次（pool_kind=tax_not_recoverable、amount=税额、引用 tax_qualification+invoice refs）；按发票行合同来源项目权重生成项目明细（无项目归属时公司级批次）；开放期/锁期/未来日期校验；owner/finance 写、auditor 只读、member 拒绝、停用写拒绝；request_token 收据幂等（重放/改输入冲突）、同资格重复调整拒绝、公司锁；负值 reversal 批次 append-only 且只允许一次；不直接改发票/税额事实、不写账本/收入/现金/未清。新增 costing/views.py、forms.py、tax_adjustment.html、canonical domain_metadata 路由（history_read 页面/business_write 执行/冲销）与 delivery urls 绑定；新增 11 项 scoped 测试（7 service + 4 HTTP）。verifier 分支未加（PH-371 白名单不含 core/management/commands/verify_integrity.py），已披露。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=295; PH-371 in_review with owner/handoff; changed files all inside the PH-371 whitelist."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0; known pre-existing W003/W342 warnings only, no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (reuses existing costing models; no new model/migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 on BASE 1c2c6ca: Ran 1296 tests, FAILED (failures=5, errors=3, skipped=70) => 1218 passed. All 8 failures/errors are exactly the known macOS environment limits; the 70th skip is the pre-existing PG/environment skip; no new failure class."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No verifier branch was added (not in the PH-371 whitelist); the adjustment is an append-only costing batch and does not change ledger/period facts."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_tax_cost_adjustment tests.test_v1_tax_cost_adjustment_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 11 tests, OK => 11 passed (7 service + 4 HTTP). Covers not_recoverable -> posted batch (amount/source refs/no ledger), recoverable/pending -> no cost, closed/locked period refusal, idempotent replay/changed-input/duplicate refusal, permissions/cross-org/module-disabled, negative append-only reversal once, owner page/execute, member/auditor denial, disabled read kept, reverse page."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 1c2c6ca --task PH-371",
+      "result": "not_run",
+      "evidence": "Actual exit 1: only high_risk_review_required (review pending); no task/path/report-shape errors. Final pass record after reviewer pass."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-371 tax-costing reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: only confirmed/not_recoverable creates a costing adjustment; recoverable/pending produce no cost; open-period/lock/future checks; owner/finance write, auditor read, member denial, module-disabled write refusal; request_token idempotency/replay/changed-input, duplicate-adjustment refusal, company lock; append-only batch and one negative reversal; no invoice/tax mutation and no ledger/revenue/cash/open-item write; reuse of existing costing models (no new model/migration); canonical routes and UI; verifier branch intentionally omitted because not in whitelist. projectctl check, manage.py check, makemigrations, verify_integrity, full suite (known macOS baseline only) and scoped 11 tests pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "No new costing model/migration: PH-371 whitelist excludes models.py/migrations and the spec allows reusing existing costing cost-adjustment models. The adjustment is represented as an append-only SharedCostAllocationBatch (pool_kind=tax_not_recoverable) with optional project lines derived from invoice allocation contract-line projects; no new table/schema.",
+    "No verify_integrity branch: the PH-371 whitelist does not include core/management/commands/verify_integrity.py (spec says 'if whitelisted'); verify_integrity is unchanged and the adjustment is an append-only batch, not a ledger/period mutation. This is disclosed rather than self-expanding the whitelist.",
+    "The service writes no ledger/revenue/cash/open-item fact: it creates only the append-only costing batch/line/receipt plus plugin. audit, references the original tax qualification/invoice, and leaves invoicing facts untouched. Company-level adjustments without project attribution carry no project lines rather than inventing one.",
+    "Reversal is a separate negative append-only SharedCostAllocationBatch (kind=reversal) linked by reverses_batch, allowed once; it does not edit the original batch.",
+    "The tax adjustment amount uses the qualification tax_cents (ADR 0015 frozen amount); no FX/multi-currency extension or tax filing is implemented."
+  ],
+  "unverified": [
+    "No verifier branch was added because it is outside the PH-371 whitelist; verify_integrity coverage for tax adjustments is deferred to a whitelist-approved follow-up.",
+    "PostgreSQL-specific behavior and true multi-connection concurrency are not exercised locally; CI (including PG) remains authoritative. SQLite does not prove production concurrency.",
+    "Browser 1440/390 visual/keyboard/empty-error-disabled states were not manually checked; only HTTP tests were run.",
+    "Production/UAT and legacy database upgrades are not verified; only freshly migrated SQLite databases were exercised.",
+    "Tax filing, FX/multi-currency, recoverable-tax deduction reporting and automatic cost correction beyond the confirmed not_recoverable path remain unimplemented."
+  ]
+}
