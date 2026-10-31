@@ -11477,7 +11477,7 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": "worker-docs",
+      "owner": null,
       "blockers": [],
       "handoff": "project/handoffs/PH-351.md"
     },
