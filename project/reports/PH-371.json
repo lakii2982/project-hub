@@ -33,7 +33,7 @@
       "evidence": "Actual exit 0: Ran 14 tests, OK => 14 passed (10 service + 4 HTTP). Adds reversal same-token replay (receipt before already-reversed gate), negative mirror lines, multi-project weights/basis 10000, company-level no lines, future-date rejection, and RevenueRecognition/CashTransaction/OpenItem fact-count assertions."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 3c77653 --task PH-371",
+      "command": "python scripts/projectctl.py verify-change --base 717324c --task PH-371",
       "result": "pass",
       "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-371 allowed_paths (post-rebase rerun)."
     }
