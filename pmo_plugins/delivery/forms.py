@@ -110,3 +110,17 @@ class OpsExportFilterForm(forms.Form):
                       or not value[5:].isdigit() or not 1 <= int(value[5:]) <= 12):
             raise forms.ValidationError('期间须为有效的年月（YYYY-MM）')
         return value or None
+
+
+class OpsWorkbenchFilterForm(forms.Form):
+    """Read-only filter for the operations reconciliation workbench."""
+    as_of = forms.DateField(label='快照日期', required=False,
+                            widget=forms.DateInput(attrs={'type': 'date'}))
+    period = forms.CharField(label='期间（YYYY-MM）', required=False, max_length=7)
+
+    def clean_period(self):
+        value = (self.cleaned_data.get('period') or '').strip()
+        if value and (len(value) != 7 or value[4] != '-' or not value[:4].isdigit()
+                      or not value[5:].isdigit() or not 1 <= int(value[5:]) <= 12):
+            raise forms.ValidationError('期间须为有效的年月（YYYY-MM）')
+        return value or None

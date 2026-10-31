@@ -1,0 +1,68 @@
+{
+  "task_id": "PH-309",
+  "summary": "运营核对工作台聚合首片（只读、无迁移/无写入口）：新增 pmo_plugins/delivery/ops_workbench_services.py，把已交付只读服务聚合成单页工作台——ops_overview（PH-291，含合同/结算/收入/时间/导入/现金分区）、settlement_coverage（PH-283）、cash_bridge（PH-279）、fee_pairing（PH-280）、identity_access（PH-281）五个分区的 issue 计数、关键合计、missing 与下钻 URL；缺失以 null+missing 表示、不显示 0；不重算业务口径、不建第二 owner、不写任何事实/审计/收据。权限 owner/finance/auditor 全量；pm 仅管理项目摘要（cash_bridge 因无项目归属显示 available=false + missing=permission，而非泄露全公司现金）；member 拒绝；delivery 模块停用后 history_read 历史可读。canonical `pmo_plugins/delivery/domain_metadata.py` 声明 `ops-workbench/` history_read 路由，`delivery/urls.py` 仅导入；浏览器只读工作台页面与 as_of/期间筛选，无 POST 写业务。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD (BASE 81ec533): ok=true, task_count=237 (PH-311 done, PH-309 done with owner/handoff); 14 changed files all inside the PH-309 allowed_paths; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 on BASE 81ec533: System check identified 93 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (delivery domain metadata validates the ops-workbench history_read route)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (this slice adds no model, table or migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 on BASE 81ec533: Ran 1115 tests, FAILED (failures=5, errors=3, skipped=69) => 1038 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); the BASE 81ec533 total grows to 1115 with the 9 new PH-309 tests and no new failure class. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. This slice adds no ledger/amount business invariant and does not change existing verify_integrity semantics."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_workbench tests.test_v1_ops_workbench_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 9 tests, OK => 9 passed (5 service + 4 HTTP). Covers partition key order/drill URLs, issue-count equality with each delivered read service, pm scope + cash partition unavailable/null+missing, member denial, as_of/period pass-through and validation, zero fact-count change, role pages, invalid params 400, POST 405 and module-disabled history_read 200."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 81ec533 --task PH-309",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=81ec533, 14 changed files all inside the PH-309 allowed_paths, no path_out_of_scope/report-shape errors; assertion_scope=declaration_only. The report review block is the independent reviewer's PASS at 06c5398."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-309 ops-workbench reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "READ-ONLY AGGREGATION VERIFIED: the five partitions call only the delivered read services (ops overview, settlement coverage issues, cash bridge issues, fee pairing issues/list, identity issues/snapshot); no business/ledger/cash/settlement/identity write, no audit/receipt/canonical event, no table/migration or verify_integrity change; fact counts are asserted unchanged and the workbench is a pure projection.",
+      "PARTITION SEMANTICS: partition order/labels/drill URLs are stable; each partition's issue_count and key metrics match the corresponding delivered read; ops missing is propagated, the other partitions have empty missing when available; pm scope is managed_projects with cash_bridge explicitly unavailable/missing=['permission'] and issue_count None (not fabricated 0), while ops/settlement/fee/identity remain available; owner/finance/auditor pm read, member denied; invalid as_of/period raise ValidationError and HTTP returns 400; history_read route remains readable after delivery module disable; no POST/write entry; canonical delivery/domain_metadata history_read declaration with urls import-only (no metadata copy); 14 changed files all inside PH-309 allowed_paths; task in_review, manifest=PH-309.",
+      "EVIDENCE AT 06c5398 (BASE fd0136a): check ok=true/task_count=233; manage.py check exit 0; makemigrations --check No changes; scoped workbench service/HTTP tests 9 OK; full suite Ran 1115 tests, 5 failures/3 errors/69 skips (exactly the known 8 macOS baseline, no fifth class); verify_integrity fresh DB ok=true/errors=[]; verify-change --base fd0136a --task PH-309 only high_risk_review_required, no path_out_of_scope; report review now pass. After the final evidence/done transition, verify-change should be clean."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 06c5398 (BASE fd0136a) in /tmp/ph309-workbench, worktree clean; 14 changed files all inside PH-309 allowed_paths; task in_review, manifest=PH-309. Five read-only partitions aggregate delivered services with matching issue counts/metrics/drill URLs, no writes/audit/migration; pm gets managed-project scope with cash_bridge unavailable/missing not zero, owner/finance/auditor full, member denied; as_of/period validation, history_read disabled-module page, GET-only/unknown params 400, canonical domain_metadata route verified; scoped 9 OK. Independent runs: check ok=233; manage check exit 0; makemigrations clean; full suite 1115/5F+3E/69 = known 8 macOS baseline; verify_integrity fresh DB ok; verify-change only high_risk_review_required, no path_out_of_scope."
+  },
+  "deviations": [
+    "Partition scope: the spec lists five partitions (ops_overview/settlement_coverage/cash_bridge/fee_pairing/identity_access); the contract/revenue/bank-balance reads are aggregated indirectly through the PH-291 ops_overview partition (which already contains contract/settlement/revenue/time/onboarding/cash sections) rather than duplicated as a second owner, per the spec's 'no second owner' constraint.",
+    "PM access: pm sees managed-project summaries for ops_overview/settlement_coverage/fee_pairing/identity_access because those read services scope rows to visible managed projects; the cash_bridge partition is marked available=false with missing=['permission'] for pm because bank/cash facts carry no project attribution (same limitation disclosed by PH-279/PH-288), rather than leaking company-wide cash.",
+    "Missing semantics: partitions return issue_count=None + missing codes (e.g. permission, import_preview_persistence_not_implemented from PH-291) instead of substituting 0, matching the spec's null+missing requirement.",
+    "The workbench performs no generic audit and no receipt/session persistence; the read path is side-effect free and does not change verify_integrity.",
+    "No export is implemented here (PH-304 owns CSV export); the workbench only links to the existing read pages via drill URLs.",
+    "Counterexamples/tests never UPDATE/DELETE historical rows; the workbench itself is read-only, so append-only triggers are untouched.",
+    "Single worker owns the whole write set (delivery workbench service/view/form/domain metadata/template, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run; the workbench UI was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
+    "Independent S review recorded PASS at 06c5398; this HEAD carries the final BASE 81ec533 evidence and the done transition.",
+    "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "Persisted workbench snapshots, export (PH-304), alerting/notifications, customer portal and new reconciliation rules remain unimplemented."
+  ]
+}

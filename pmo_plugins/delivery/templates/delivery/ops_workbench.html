@@ -1,0 +1,15 @@
+{% extends 'base.html' %}{% block title %}运营核对工作台{% endblock %}{% block breadcrumb %}交付 / 运营核对工作台{% endblock %}{% block content %}
+<section class="page-heading"><div><div class="eyebrow">DELIVERY · OPS WORKBENCH</div><h1>运营核对工作台</h1><p>只读聚合各 owner 已交付的核对结果：分区 issue 计数、关键合计与下钻；本页不重算口径、不写任何业务事实。</p></div><div class="page-actions"><a class="button" href="{{ overview_url }}">跨域总览</a><a class="button" href="{{ export_url }}">导出底稿</a></div></section>
+<section class="panel"><div class="panel-heading"><h2>筛选</h2></div><div class="panel-body">
+{% if error %}<div class="message error" role="alert">{{ error }}</div>{% endif %}
+<form method="get" action="{{ page_url }}">
+<div class="form-field"><label for="wb-as-of">快照日期</label><input id="wb-as-of" type="date" name="as_of" value="{{ form.as_of.value|default:'' }}"></div>
+<div class="form-field"><label for="wb-period">期间</label><input id="wb-period" type="month" name="period" value="{{ form.period.value|default:'' }}"></div>
+<div class="actions"><button type="submit" class="button primary">刷新</button></div>
+</form>
+<p class="help-text">owner/finance/auditor 全量；pm 仅管理项目摘要；member 拒绝。缺失指标显示 null + missing，不显示 0。</p>
+</div></section>
+{% if summary %}<section class="panel"><div class="panel-heading"><h2>工作台汇总</h2></div><div class="panel-body"><dl class="detail-grid">
+<div><dt>as_of</dt><dd>{{ summary.as_of }}</dd></div><div><dt>期间</dt><dd>{{ summary.period|default:'—' }}</dd></div><div><dt>范围</dt><dd>{{ summary.scope }}</dd></div><div><dt>角色</dt><dd>{{ summary.role }}</dd></div><div><dt>issue 合计</dt><dd>{{ summary.issue_count }}</dd></div><div><dt>missing</dt><dd>{% if summary.missing %}{{ summary.missing|join:', ' }}{% else %}—{% endif %}</dd></div></dl><p class="help-text">{{ summary.estimate_label }}</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>核对分区</h2></div><div class="panel-body">{% if summary.partitions %}<div class="table-scroll"><table aria-label="运营核对分区"><thead><tr><th>分区</th><th>issue 计数</th><th>关键合计</th><th>missing</th><th>下钻</th></tr></thead><tbody>{% for part in summary.partitions %}<tr><td>{{ part.label }}</td><td>{% if part.issue_count is None %}null{% else %}{{ part.issue_count }}{% endif %}</td><td>{% for key,value in part.metrics.items %}{{ key }}={{ value }}{% if not forloop.last %}；{% endif %}{% empty %}—{% endfor %}</td><td>{% if part.missing %}{{ part.missing|join:', ' }}{% else %}—{% endif %}</td><td>{% if part.available %}<a href="{{ part.drill_url }}">查看</a>{% else %}不可用{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="table-empty">暂无分区数据。</p>{% endif %}</div></section>{% endif %}
+{% endblock %}

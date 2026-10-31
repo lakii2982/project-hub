@@ -250,3 +250,35 @@ def ops_export(context, payload):
         'overview_url': get_script_prefix() + 'modules/delivery/ops-reconciliation-overview/',
         'generated_at': timezone.now().isoformat(),
     }, status=400 if error else 200)
+
+
+def ops_workbench(context, payload):
+    """PH-309 read-only operations reconciliation workbench (history_read)."""
+    from django.shortcuts import render
+    from django.urls import get_script_prefix
+    from . import ops_workbench_services as workbench
+    from .forms import OpsWorkbenchFilterForm
+    member = context.member
+    allowed = {'as_of', 'period'}
+    form = OpsWorkbenchFilterForm(payload)
+    error = None
+    summary = None
+    if set(payload) - allowed:
+        error = '包含不允许的查询参数，请刷新后重试'
+    elif not form.is_valid():
+        error = '；'.join(sum(form.errors.values(), [])) or '筛选条件无效'
+    if error is None:
+        try:
+            summary = workbench.ops_workbench_summary(
+                member, as_of=form.cleaned_data.get('as_of'),
+                period=form.cleaned_data.get('period'))
+        except PermissionDenied:
+            raise
+        except ValidationError as invalid:
+            error = '；'.join(invalid.messages)
+    return render(context.request, 'delivery/ops_workbench.html', {
+        'nav': 'delivery', 'summary': summary, 'form': form, 'error': error,
+        'page_url': get_script_prefix() + 'modules/delivery/ops-workbench/',
+        'overview_url': get_script_prefix() + 'modules/delivery/ops-reconciliation-overview/',
+        'export_url': get_script_prefix() + 'modules/delivery/ops-export/',
+    }, status=400 if error else 200)
