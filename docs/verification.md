@@ -1015,3 +1015,12 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 ## PH-362 导入提交实现前置契约冻结（2026-10-31，BASE 64f94ad）
 
 新增 `docs/v1.0-development/import-commit-contract.md`：冻结导入提交内部服务契约——提交只经 PH-274/PH-289 持久预览；服务端按 PH-363 重跑期间预检并重算 `precheck_digest`（不一致 `precheck_stale`、blocker/`can_close=false` `precheck_blocked`，客户端 digest 非授权）；稳定 `import_key`/`request_token` 幂等与 append-only 收据字段/唯一约束；预览一致性/已消费/conflict_key 去重/未消解 blocker 拒绝/warning 收据；行级错误 envelope 与 issue_code 注册表；owner 具名服务唯一写业务事实、来源额度消费/重复拒绝；单公司锁+单事务全有或全无；owner/finance 写、auditor 只读、pm/member 拒绝、关闭/锁定/未来/跨 org/项目/模块停用拒绝；无 canonical 新增/实现/迁移/表/路由/产品代码。同步 PH-362 spec 摘要与 PH-289/PH-338/PH-353 blocker（PH-362 done 后仍缺各自 PH-181/185/289 等依赖）。实跑：check ok=true/task_count=295；`python -m unittest tests.test_projectctl tests.test_governance -v` **23 OK**；verify-change 待 review pass；未执行 PH-289/353/338 实现、真实导入、PG/浏览器/生产（not_run）。
+
+## PH-373 下一规划槽（批次 C 收尾 + D 批）（2026-10-31）
+
+基线 64f94ad（PH-370 合入；注册后 count 298）。纯规划/契约文字片：
+1. **晋级 3 项（依赖全 done）**：PH-335 健康/容量/积压汇总验收（deps PH-333/334/350 done）；PH-357 演练证据回填与验收汇总（deps PH-347/348/349/350/352 done）；PH-368 容量/健康后续契约（dep PH-350 done）。
+2. **保持 proposed（精确 blocker）**：PH-367/PH-372 等 PH-357；PH-338/353 等 PH-289/PH-362；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151；PH-318/326 保持重定/关闭待决。
+3. **新登记/删除**：原 PH-374 reminder 只读实现因与 PH-355 重复且绕过 PH-179/183/151 blockers，按复核**删除**（PH-355 保持唯一 reminder 实现任务，proposed 不变）；保留 **PH-375**（ready，批次 D 验收矩阵与 runbook，deps PH-352/366/327 done）与 **PH-376**（proposed，下一规划槽）。count 295→297，编号 374 留空并说明。
+4. **ROADMAP** 新增批次 C 收尾/D 批规划节；发布资格仍按 PH-366（PH-357/367/372 未完成，不得宣称就绪）。
+5. 无占位符；acceptance 全可执行。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-335/357/368/375 未实现；PH-355/371/362 未 done；发布资格不完整。
