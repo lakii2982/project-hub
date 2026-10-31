@@ -9047,7 +9047,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-274（onboarding 只读预览，ready 未 done）done 与 PH-181/PH-185（proposed）done；依赖完成后由 PH-290 规划槽复核 DoR 再晋级。"
+        "缺 PH-362（导入提交实现前置契约冻结，proposed）done；PH-274 已 done；PH-362 完成并复核 DoR 后晋级。"
       ],
       "handoff": null
     },
@@ -10796,7 +10796,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "PH-330 已 done；PH-347/PH-348 已晋级 ready（执行未 done）；两执行片 done 后由下一规划槽复核本汇总验收 DoR 再晋级。"
+        "缺 PH-349（PG 并发执行片，ready 未 done）done；PH-347/PH-348 已 done、PH-322/321/330/252 已 done；执行片完成后由下一规划槽复核本汇总验收 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10833,7 +10833,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "PH-330 已 done；PH-349 已晋级 ready（执行未 done）；PH-349 done 后由下一规划槽复核本汇总验收 DoR 再晋级；真实 PG 交 CI/部署环境。"
+        "缺 PH-349（PG 并发执行片，ready 未 done）done；PH-347/PH-348 已 done、PH-322/321/330/252 已 done；PH-349 done 后由下一规划槽复核本汇总验收 DoR 再晋级；真实 PG 交 CI/部署环境。"
       ],
       "handoff": null
     },
@@ -10870,7 +10870,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "PH-333/PH-334（汇总验收）与 PH-350（执行片）均未 done；PH-347/348/349 已 ready，执行完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-333/PH-334（汇总验收）与 PH-350（容量基线，ready 未 done）done；PH-347/348 done、PH-349 ready；依赖完成后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -10984,7 +10984,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-289（导入提交，proposed）done；PH-252/PH-274/PH-320 已 done；PH-289 合入后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-289（导入提交）与 PH-362（导入提交实现前置契约冻结）done；PH-252/PH-274/PH-320 已 done；依赖完成后复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11436,7 +11436,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-347/PH-348/PH-349（执行片已 ready，未 done）done；执行完成后由下一规划槽复核 DoR 再晋级；健康/容量基线在 pg/部署环境执行。"
+        "缺 PH-349（PG 多连接并发验收，ready 未 done）done；PH-347/PH-348 已 done；PH-349 完成后由下一规划槽复核 DoR 再晋级；健康/容量基线在 pg/部署环境执行。"
       ],
       "handoff": null
     },
@@ -11551,7 +11551,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-181/PH-185（期间预检/四类核对与差额契约，proposed）done；PH-274 已 done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-363（期间预检/四类核对/差额契约冻结，ready 未 done）done；PH-274 已 done；PH-363 完成后复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11643,7 +11643,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-179/PH-183/PH-151（到期扫描/待办/通知契约，均 proposed）done；依赖完成后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-364（到期扫描/待办/通知契约冻结，ready 未 done）done；PH-364 完成后复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11716,7 +11716,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-347/PH-348/PH-349/PH-350（执行片 ready/未 done）与 PH-352（runbook ready）done；执行证据齐后由下一规划槽复核 DoR 再晋级。"
+        "缺 PH-349（PG 并发执行片，ready 未 done）与 PH-350（容量基线，等 PH-349）、PH-352（runbook，ready 未 done）done；PH-347/348 已 done；证据齐后由下一规划槽复核 DoR 再晋级。"
       ],
       "handoff": null
     },
@@ -11844,7 +11844,7 @@
       "title": "后续交付独立规划入口（接续 PH-356）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 3,
       "milestone": "v1.0-preparation",
       "depends_on": [
@@ -11870,8 +11870,150 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
+      "handoff": "project/handoffs/PH-361.md"
+    },
+    {
+      "id": "PH-362",
+      "title": "导入提交实现前置契约冻结（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-274",
+        "PH-363"
+      ],
+      "spec": "project/specs/PH-362.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-362.json",
+        "project/handoffs/PH-362.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [
+        "缺 PH-363（期间预检/四类核对/差额契约冻结，ready 未 done）done；PH-274 已 done；PH-363 完成后复核 DoR 再晋级。"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-363",
+      "title": "期间预检/四类核对/差额契约冻结（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-291",
+        "PH-283",
+        "PH-284",
+        "PH-288",
+        "PH-280"
+      ],
+      "spec": "project/specs/PH-363.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-363.json",
+        "project/handoffs/PH-363.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-364",
+      "title": "到期扫描/待办/通知契约冻结（docs-only）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-291",
+        "PH-304",
+        "PH-309",
+        "PH-281"
+      ],
+      "spec": "project/specs/PH-364.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "docs/v1.0-development/*",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-364.json",
+        "project/handoffs/PH-364.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [],
+      "github_issue": null,
+      "owner": null,
+      "handoff": null
+    },
+    {
+      "id": "PH-365",
+      "title": "后续交付独立规划入口（接续 PH-361）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 3,
+      "milestone": "v1.0-preparation",
+      "depends_on": [],
+      "spec": "project/specs/PH-365.md",
+      "allowed_paths": [
+        "project/specs/*",
+        "docs/adr/*",
+        "docs/engineering/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "docs/v1.0-development/*",
+        "project/reports/PH-365.json",
+        "project/handoffs/PH-365.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "blockers": [],
+      "github_issue": null,
+      "owner": null,
       "handoff": null
     }
   ]
