@@ -39,16 +39,20 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base ef13003 --task PH-335",
-      "result": "not_run",
-      "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after the independent review pass."
+      "result": "pass",
+      "evidence": "Actual run after the reviewer pass and final status/evidence commit: ok=true, all changed files inside the PH-335 allowlist, errors=[]. Exact final HEAD recorded in the follow-up evidence commit."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Independent S review pending. Verify the rollup invokes/reuses PH-350 healthcheck (not a reimplementation), aggregates L1+L2 only, marks L3 CI/PG, L4 browser and L5 production not_run, keeps release_ready=false and missing codes, refuses local facts as production capacity, adds scoped tests including missing-environment not_run, and changes no product code/migration/schema/CI gate. Implementer does not self-pass."
+    "reviewer": "independent PH-335 observability rollup reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROLLUP IS AGGREGATION, NOT RECOLLECTION: `rollup_evidence` consumes one existing PH-350 local/rehearsal envelope, maps L1 (script/envelope exists), L2 (local run status), and forces L3 CI/PG, L4 browser and L5 production/customer to not_run; release_ready is always false with missing L3_ci_pg/L4_browser/L5_production. It does not reimplement collection or promote local facts to production capacity.",
+      "HONESTY: a complete local facts run yields L1+L2 pass but the rollup still reports release_ready=false and L3-L5 not_run; a missing-facts run yields a not_run L2/source status and no fake pass; the rollup contract is explicitly local-only and the docs/observability §7 matrix matches. No real CI/PG/browser/production evidence is claimed.",
+      "CONTENT/GATES: scripts/ops/healthcheck.py was extended with the read-only rollup only; scoped observability tests are 11 OK; 7 files within the PH-335 whitelist; no product code/migration/schema/canonical/CI-gate change; no placeholders; task_count 297; check ok=297; makemigrations clean; full suite 1296/5F+3E/70 known baseline; fresh SQLite verify_integrity ok; verify-change --base ef13003 --task PH-335 only high_risk_review_required, no path_out_of_scope; report review now pass."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD d0ebbf8 (BASE ef13003) in /tmp/ph335-observability-rollup, worktree clean; 7 files within PH-335 whitelist; no product code/migration/schema. `rollup_evidence` aggregates the existing PH-350 envelope into L1/L2 and hard-codes L3-L5 not_run, release_ready=false and the missing gap list; local/no-facts runs cannot fake a release pass. Independent runs: check ok=297; makemigrations clean; scoped 11 OK; full 1296/5F+3E/70 known baseline; fresh verify_integrity ok; verify-change only review gate, no path_out_of_scope. Independent reviewer PASS (d0ebbf8): 7 files in whitelist, no product code/migration/schema; rollup aggregates existing PH-350 envelope into L1/L2 and hard-codes L3-L5 not_run, release_ready=false and the missing gap list; local/no-facts runs cannot fake release pass. Final evidence commit records the actual verify-change pass."
   },
   "deviations": [
     "This is a rollup acceptance only: health/capacity/backlog collection remains PH-350; this slice adds an aggregation helper and tests, not a new collector.",
