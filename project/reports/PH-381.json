@@ -13,9 +13,9 @@
       "evidence": "Actual run: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base 3c77653 --task PH-381",
+      "command": "python scripts/projectctl.py verify-change --base 717324c --task PH-381",
       "result": "pass",
-      "evidence": "Actual run after the reviewer pass and final status commit c7accdb: ok=true, head=c7accdb4f22ba7d4f7540b1ad9f0b114a1fb31c3, changes=12 files all inside the PH-381 allowlist, errors=[]."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-381 allowed_paths (post-rebase rerun)."
     }
   ],
   "review": {
