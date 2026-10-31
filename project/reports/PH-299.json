@@ -1,0 +1,35 @@
+{
+  "task_id": "PH-299",
+  "summary": "期间关期与预测覆盖契约冻结 ADR（docs-only）：新增 docs/adr/0016-forecast-close-contract.md，冻结关期状态机（open→closing→closed→reopened，append-only 结论、重复关期拒绝、公司锁/request_token/并发一胜）、锁账边界（AccountingPeriod.closed_through 为唯一服务端边界；关期不代写业务事实、关期后 owner 写拒绝、更正只走既有负值冲销/撤核/撤转或明确重新开期）、预测覆盖（forecast batch period/version/scope/status/coverage/covered/gap/source_refs/as_of；覆盖服务端派生、缺失 null+missing、客户端不得传覆盖/金额；版本 append-only superseded）、跨 owner 边界（delivery 只读组合 PH-291/283/288/280/281/279/277/274，不建第二 owner、不重算口径）、只读核对与权限矩阵（owner/finance 写、auditor 只读、pm 管理项目摘要、member 拒绝、模块停用历史只读）。同步更新 tasks.json 的 PH-322 blocker 指向 ADR 0016 与 PH-300；不写代码/迁移/schema、不新增 canonical topic/command。编号核验：docs/adr 叶 0014，0015 已由发票价税 ADR 任务占用，0016 按 PH-299 spec 冻结。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD: ok=true, task_count=245; PH-299 in_review with owner/handoff; ADR path inside the 8-path whitelist; no path/acceptance schema issues."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests, OK (governance suite, 0 failures)."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-299 forecast/close ADR reviewer (fresh context, read-only)",
+    "status": "pending",
+    "findings": [],
+    "evidence": "Awaiting independent S review at this HEAD: ADR 0016 freezes the period-close state machine, lock boundary, forecast version/coverage semantics, post-close rejection/correction paths, cross-owner boundaries, read-only reconciliation and role/idempotency matrix; no code/migration/schema change; numbering basis (leaf 0014, 0015 reserved by the invoice ADR task, 0016 per spec) and the PH-322 blocker pointer. projectctl check and the 23-test governance suite pass; verify-change is review-gated until the reviewer records pass. No worker self-attested pass is recorded."
+  },
+  "deviations": [
+    "ADR file name follows the PH-299 spec exact whitelist (docs/adr/0016-forecast-close-contract.md); the Lead message's shorthand 'period-close-forecast' is not used to avoid diverging from the frozen whitelist.",
+    "Numbering basis: docs/adr currently ends at 0014; 0015 is already reserved by the registered invoice tax/red-reversal ADR task in tasks.json, so 0016 (as frozen by the PH-299 spec) is the next free number for this ADR.",
+    "The ADR is docs-only: no code, migration, table, contract schema, canonical topic/command, route or runtime behavior is added; PH-322 remains proposed and its blocker now points at ADR 0016 and PH-300.",
+    "PH-299 spec itself was not edited (its whitelist allows it but no contract text needed changing); the ADR is the frozen deliverable and the tasks blocker is the only registry change besides governance files."
+  ],
+  "unverified": [
+    "This slice is docs-only: no runtime, browser, PG or migration verification applies; the implementation must re-validate the ADR against the actual BASE in PH-322.",
+    "Independent S review is still pending; verify-change is review-gated at this HEAD.",
+    "Forecast/close implementation, period locking writes, notification/export, forecast algorithms and canonical schema changes remain unimplemented (PH-322 proposed).",
+    "PH-300 (project close ADR) is a separate slice and not covered here; PH-322 stays blocked until both ADRs and the implementation prerequisites are done."
+  ]
+}
