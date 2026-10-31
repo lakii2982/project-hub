@@ -9764,7 +9764,7 @@
       "title": "运营核对工作台聚合首片：只读核对分区汇总与下钻（无写入口、无迁移）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9800,9 +9800,9 @@
         "python manage.py test tests.test_v1_ops_workbench tests.test_v1_ops_workbench_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-309.md"
     },
     {
       "id": "PH-310",

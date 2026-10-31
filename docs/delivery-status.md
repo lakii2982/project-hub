@@ -53,3 +53,7 @@ CI 已覆盖 SQLite/PG 回归、迁移、append-only、MCP、容器恢复、Code
 ## PH-304 运营核对底稿授权只读 CSV 导出首片（2026-10-31）
 
 新增授权只读 CSV 导出：组合 PH-291 跨域总览、PH-283 结算覆盖、PH-279 现金桥接、PH-280 手续费配对四类只读数据集，输出 UTF-8+BOM CSV（表头/refs/as_of/生成时间/行数/#checksum sha256），dry_run 计划零文件、request_token 进程内幂等；canonical domain_metadata 声明 `ops-export/` history_read、urls 仅导入，无 POST 写入口。owner/finance/auditor 全量，pm 仅有项目归属的 3 类，member 拒绝；无迁移/写/审计/零事实变化。偏差：receipt 进程内非持久、pm cash_bridge 拒绝、单路由页面+下载、仅组合既有只读服务。未验证：浏览器 1440/390、独立复核、PG、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-304.json`。
+
+## PH-309 运营核对工作台聚合首片（2026-10-31）
+
+新增只读运营核对工作台：聚合 PH-291 跨域总览、PH-283 结算覆盖、PH-279 现金桥接、PH-280 手续费配对、PH-281 成员/授权五个分区的 issue 计数、关键合计、missing 与下钻链接；缺失 null+missing 不显示 0，不重算口径、不建第二 owner。canonical domain_metadata 声明 `ops-workbench/` history_read、urls 仅导入；owner/finance/auditor 全量、pm 管理项目摘要（cash_bridge 无项目归属不可用）、member 拒绝；无迁移/写/审计。偏差：五分区按 spec、合同/收入/银行余额经 PH-291 间接聚合、pm cash 分区不可用、missing 语义。未验证：浏览器 1440/390、独立复核、PG、生产/UAT。见 `docs/verification.md` 与 `project/reports/PH-309.json`。
