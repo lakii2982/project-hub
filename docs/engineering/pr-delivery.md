@@ -7,7 +7,7 @@
 - PR 正文恰好一行 `Task: PH-###`；任务、白名单和验收仍以 BASE 的 `project/tasks.json` 与 spec 为准。
 - `base_policy_source: git-show-base`：policy、离线检查脚本和任务契约从 BASE 读取，候选 HEAD 不能修改策略自授权。
 - **12 项门禁** = 既有 8 项 required status checks（Project governance、SQLite domain、PostgreSQL domain、MCP protocol、Public hygiene、Container smoke、CodeQL python/javascript-typescript）+ 4 项仲裁证据：`independent_review_app_identity`、`arbitration_workflow_and_event`、`event_base_and_head_sha`、`test_merge_sha`。
-- `s_authorization`：S 级任务同时绑定用户授权来源和 BASE 任务/spec 的 `contract_digest`。当前仅登记 PH-120/121/122；新范围必须由独立规划 PR 增加授权，Issue、label、候选报告不能提供授权。非 S 任务沿用既有冻结任务契约。
+- `s_authorization`：S 级任务同时绑定用户授权来源和 BASE 任务/spec 的 `contract_digest`。当前登记 PH-120/121/122（原工程授权）及 PH-397（用户 2026-10-31 的 1.0 完整交付规划授权）；新范围必须由独立规划 PR 增加授权，Issue、label、候选报告不能提供授权。非 S 任务沿用既有冻结任务契约。
 - `independent_review`：本地复核必须独立于实现 actor；远端仲裁另核对官方 Codex Connector App `1144995`、bot user `199175422`、当前 HEAD 的最新完整结果和未解决 findings。
 - `merge`：strict、管理员保护、PR/讨论/线性历史保护、mergeable、最新 BASE/HEAD 和 test-merge SHA 均在合并前重新核对；拒绝自报 pass、伪造来源、skipped/neutral/未知或过期结果。
 

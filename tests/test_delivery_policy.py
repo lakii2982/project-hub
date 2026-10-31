@@ -47,7 +47,7 @@ class PolicyShapeTests(unittest.TestCase):
         with self.assertRaisesRegex(GateError, 'contract_changed'):
             authorize_task(validated, 'PH-120', '0' * 64)
         with self.assertRaisesRegex(GateError, 'not_authorized'):
-            authorize_task(validated, 'PH-397', grant['contract_digest'])
+            authorize_task(validated, 'PH-398', grant['contract_digest'])
 
     def test_remote_identity_and_authorization_mutations_fail_closed(self):
         for mutate in (
