@@ -54,7 +54,8 @@
     "Period precheck/project precheck reuse existing owner read services with conservative issue-code mapping; unsupported read sources are reported as missing (not as 0) and no second reconciliation rule is created. Cash bank issues are read via bank_account_issues dict issue_count, not treated as a list.",
     "request_token idempotency uses DeliveryReceipt (action/digest/result_id); run request_token is stored only on the first (closing/reopened) row and is null on the paired closed row, matching the frozen PH-312 model constraint.",
     "No core model/migration is changed; only existing AccountingPeriod.status/closed_through and Project.stage/previous_stage current rows are updated in the same transaction as the run pair and audit/receipt.",
-    "No automatic correction, export, notification push, PAT/MCP close tool or customer portal is added; no business fact is written by close/reopen."
+    "No automatic correction, export, notification push, PAT/MCP close tool or customer portal is added; no business fact is written by close/reopen.",
+    "Lead integration rebase (fcb7b17 -> 863f946) after PH-321/337 merged: docs/verification.md kept main entries plus PH-322 entry; manifest.active_handoff -> PH-322."
   ],
   "unverified": [
     "Independent reviewer-b re-review is pending; verify-change remains review-gated until that PASS. Full suite is the known 8 macOS environment failures only (5 failures + 3 errors) with 69 skips.",
