@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 847f66b --task PH-305",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at the rebased candidate HEAD ad2bc43: exit 1 with only high_risk_review_required (report.review still from reviewer-b's first round); all 6 changed files inside BASE PH-305 allowed_paths, no path_out_of_scope and no acceptance_not_passed. Replaced with the post-review pass at the final HEAD after reviewer-b's second round."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD 15000fb: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"15000fbec1bf33c3ba481ddef6a501605aea329e\",\"count\":6,\"errors\":null}, exit 0; all 6 changed files inside BASE PH-305 allowed_paths and review.status=pass with reviewer-b's name (second round after the four contract fixes)."
     }
   ],
   "review": {
