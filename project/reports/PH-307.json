@@ -14,8 +14,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base a352b4a --task PH-307",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD ab5d4b5: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 10 changed files (PH-303 spec risk sync, 4 new specs PH-308..311, tasks.json, manifest.json, docs/verification.md, PH-307 report/handoff) are inside BASE PH-307 allowed_paths."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run at HEAD 4c7fac3: {\"command\":\"verify-change\",\"ok\":true,\"head\":\"4c7fac3f9c04f5976152559f6824750d9b1c5a28\",\"count\":10,\"errors\":null}, exit 0; all 10 changed files inside BASE PH-307 allowed_paths and review.status=pass with the reviewer's name."
     }
   ],
   "review": {

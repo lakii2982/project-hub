@@ -680,4 +680,4 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 2. **核号**：BASE 最大 PH-307；远端分支/PR（EXP #143/#144 等）无 ≥308 占用 → PH-308 起连续。
 3. **新登记**：PH-308 多币种/汇率契约冻结（proposed，缺 PH-150/155/252）、PH-309 运营核对工作台聚合（ready，deps PH-291/280/281/283/288 done）、PH-310 导出归档/格式/审计后续（proposed，缺 PH-304/285/181/182）、PH-311 下一规划槽（proposed，待 PH-307 done 后置 ready）。count 229→233，编号 308-311 连续。
 4. **晋级**：无新增（PH-303/304/284 等 ready 保持；PH-292/293/295/296/297/299/300/301/305/306/308/310 保持 proposed，无虚假晋级）。
-5. 无占位符；acceptance 全可执行。实际执行：projectctl check、23项治理；verify-change在独立S复核落pass后按最终HEAD重跑记录。未验证：PH-308/309/310 未实现；review由独立S复核。
+5. 无占位符；acceptance 全可执行。独立 S 复核 PASS（0 阻断：PH-303 risk A→S 修正、编号/晋级事实核对通过）；最终证据 HEAD 4c7fac3 按槽惯例置 PH-307 done / PH-311 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=233；23 项治理 OK；verify-change --base a352b4a --task PH-307 ok=true、10 文件全白名单、无 errors。未验证：PH-308/309/310 未实现；PH-303 由其后 rebase 的实现 PR/CI 验证。
