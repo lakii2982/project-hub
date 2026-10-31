@@ -55,3 +55,15 @@ AccountingEvent.reverses_event_ref是服务生成的单一可空原事件引用�
 SourceConsumption.consumer新增cash内部用途，原七用途保留。稳定来源是cash owner的原始CashTransaction：organization+consumer=cash+source.namespace/kind/id+coverage_key=bank_effect唯一，source.version只读快照，不含请求键/渠道/分类ID；该用途不是clearance核销，项目分配不能重记银行流。原bank_effect claim永久保留，分类/分配及其撤销不释放它、也不产生银行流或会计事件。真实现金更正遵守bank-entry-extension.plan.json#/service_semantics/correction：先拒绝有效依赖、由各owner先撤销且不级联，反向全部当前有效posting并保留book/account/source，再追加完整正额replacement（两个零成本/收入事件）；原CashTransaction ID/原行/external_source_key/银行provenance不变且更正链不分支，按批准请求与有效predecessor唯一消费，不提供仅写差额或释放原防重再普通过账。
 
 以上仅为设计与严格schema反例；没有来源resolver、批准/期间/模型事务或真实服务拒绝，不改变现金/成本/收入口径，也不是客户或生产验收。旧99正8负夹具、原19正37负契约案例与137需求保持，PH210新增边界案例单列。
+
+## PH-324 canonical 币种扩展（多币种事实前置，2026-10-31）
+
+- **范围**：为多币种事实增加 canonical 字段/类型，不实现业务写侧，不改已应用迁移。新增 `CurrencyCode`（ISO 4217 三字母）、`OriginalCents`/`OriginalSignedCents`（原币最小单位整数），并在以下实体增加 **可选** 扩展字段：`currency`（ISO 4217）、`original_*_cents`（原币最小单位；红冲/调整类为 signed）、`fx_rate_ref`（指向汇率快照事实的 SourceRef）。
+  - 合同/结算/收入：`ContractLine`、`Settlement`、`OpenItem`、`RevenueRecognition`、`RevenueAdjustment`、`TaxQualification`。
+  - 现金/发票：`CashTransaction`、`BankCharge`、`Refund`、`BankReturn`、`Invoice`、`InvoiceLine`、`InvoiceAllocation`、`InvoiceReversal`。
+  - 客户端输入：`write-dtos.schema.json` 的 `ContractLine`/`Invoice`/`InvoiceLine`/`InvoiceAllocation`/`InvoiceReversal`/`SettlementDraft`/`CashTransaction` 与 `InvoiceLineInput` 增加同义可选字段；`invoicing.invoice.record/v1` 载荷增加 `currency/original_*_cents/fx_rate_ref`。
+- **兼容策略（冻结）**：旧 `*CnyCents`/`SignedCnyCents` 字段**保留**为 CNY 记账本位币兼容/展示口径；`currency` 缺省按 `CNY` 解释（历史事实不回溯改写）；`currency != CNY` 时既有 `*_cents` 仍存记账本位币（CNY）等值，`original_*_cents` 存原币最小单位；两者必须由服务端一致派生，禁止双写不一致。
+- **非 CNY 写入**：在 PH-321（汇率快照/换算实现）合入前，服务层必须**拒绝**非 CNY 业务写入（明确错误码），本 schema 扩展只允许 CNY 事实继续使用；不得以 schema 已扩展冒充多币种已实现。
+- **迁移/回填计划**：本扩展是加法 schema（可选字段），不改已应用迁移；实现侧（PH-321/后续）按 `currency` 可空→CNY 回填→非空的加法迁移推进；回填只补币种/原币字段，不重算历史金额；未回填/缺失按 CNY 双读兼容。
+- **不可无迁移重算**：历史金额、汇率引用与已确认事实不因新增/修正汇率或展示口径被原地重算；纠错只能追加负值/新事实或显式迁移并保留原始来源。
+- **冻结哈希**：canonical 文件变更须同步更新 `promotion-draft/extension-freeze.json` 的 `canonical_sha256`（本片已同步 entities/contract-bundle/write-dtos/commands），否则 `validate_contracts.py` 拒绝；校核器通过只证明设计 schema 可校验，不代表运行时已支持多币种。
