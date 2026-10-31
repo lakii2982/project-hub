@@ -9409,7 +9409,7 @@
       "title": "期间关期与预测覆盖（WP-FORECAST/CLOSE）首片：关期前置与预测覆盖契约冻结",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
