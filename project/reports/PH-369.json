@@ -13,7 +13,7 @@
       "evidence": "Actual run in /tmp/ph369-planning on main 5763f4a with the main checkout venv: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base f1eeac3 --task PH-369",
+      "command": "python scripts/projectctl.py verify-change --base 9835e8a --task PH-369",
       "result": "pass",
       "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 12 files inside BASE PH-369 allowed_paths (post-rebase gate rerun)."
     }
