@@ -739,3 +739,7 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 ## PH-308 多币种/汇率（WP-FX）契约冻结首片（2026-10-31）
 
 BASE 15cf20c，docs-only：沿用 Lead 裁决 C，将契约冻结正文写入 `project/specs/PH-308.md`（BASE 白名单不含 docs/adr；实际 ADR 叶 0014，若新增应为 0015）。冻结内容：org 级记账本位币 CNY 与 ISO 4217 功能币种；汇率快照只追加/版本化/业务生效日/组织+币种对+日期+版本唯一/Decimal 精度/source/不可改历史/无最近汇率回退/不自动求倒数/缺汇率显示 missing；换算边界显式一次并记录 fx_rate_ref+原币种/原币金额，ROUND_HALF_UP 到整数分一次，聚合已舍入分，禁止先汇总后换算与客户端权威换算值；跨 owner 边界 contracts/settlement/management_revenue/cash/costing-time 各 owner 口径；只读展示原币+记账币+汇率 ref+missing/issue，缺失不显示 0/不猜汇率；权限 owner/finance 维护、auditor 只读、pm 项目摘要、member 拒绝、停用 history_read；本片无 canonical/model/migration/route/代码；历史重算必须显式迁移回填。反例 12 条与未实现清单已列。无代码/迁移/UI 变更，不适用 PG/浏览器/生产验证。实际执行：`projectctl check` ok=true/task_count=245；`python -m unittest tests.test_projectctl tests.test_governance -v` 23 tests OK；verify-change 预期仅 review pending。
+
+### PH-308 复核 round-1 阻断修复（canonical 币种扩展）
+
+复核阻断：契约要求功能币种+原币金额，但 canonical 实体仅 CNY-only `*CnyCents`，本片又不改 schema/无扩展任务。修复 option A：`project/specs/PH-308.md` 新增 §9A「所需 canonical 扩展」，登记 proposed **PH-324**（contracts/settlement/management_revenue/cash/invoicing 金额事实增加 currency+原币整数分或 Money 类型；加法迁移+CNY 回填+双读兼容+非 CNY 写入拒绝+显式迁移重算+PG 覆盖；发布顺序 PH-324→PH-321）；§1/§2/§5 明确 PH-324 完成前仅 CNY、非 CNY 写入不得开始；PH-321 depends_on 增加 PH-324。重跑 check ok=true/task_count=246、23 治理、verify-change 仅 review pending。PH-324 spec 暂复用 PH-308 §9A（白名单不含新 spec 文件，后续规划槽拆独立 spec）。

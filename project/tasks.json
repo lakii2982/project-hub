@@ -10255,7 +10255,8 @@
       "depends_on": [
         "PH-308",
         "PH-150",
-        "PH-155"
+        "PH-155",
+        "PH-324"
       ],
       "spec": "project/specs/PH-321.md",
       "allowed_paths": [
@@ -10366,6 +10367,53 @@
       "acceptance": [
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
+    },
+    {
+      "id": "PH-324",
+      "title": "canonical 币种字段/类型扩展与迁移计划（多币种事实前置）",
+      "kind": "feature",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 2,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-308"
+      ],
+      "spec": "project/specs/PH-308.md",
+      "allowed_paths": [
+        "core/models.py",
+        "core/migrations/*",
+        "core/services.py",
+        "pmo_plugins/contracts/models.py",
+        "pmo_plugins/contracts/migrations/*",
+        "pmo_plugins/settlement/models.py",
+        "pmo_plugins/settlement/migrations/*",
+        "pmo_plugins/management_revenue/models.py",
+        "pmo_plugins/management_revenue/migrations/*",
+        "pmo_plugins/cash/models.py",
+        "pmo_plugins/cash/migrations/*",
+        "pmo_plugins/delivery/models.py",
+        "pmo_plugins/delivery/migrations/*",
+        "tests/test_v1_currency_schema.py",
+        "tests/test_v1_currency_backfill.py",
+        "project/reports/PH-324.json",
+        "project/handoffs/PH-324.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_currency_schema tests.test_v1_currency_backfill --verbosity 1"
       ],
       "github_issue": null,
       "owner": null,
