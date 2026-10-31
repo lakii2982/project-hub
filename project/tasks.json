@@ -7421,7 +7421,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-150（合同收费明细/生效方法）与 PH-155（结算/未清）done；PH-224/PH-232 已 done；PH-259（invoicing 归属 ADR 0010）已 done（方案 A：新建 pmo_plugins.invoicing，实现 PR 按 ADR 创建 scaffold 与迁移 0001，root 单写 settings/PMO_PLUGIN_MODULES/delivery urls）。PH-150/PH-155 done 后由后续规划槽复核 DoR 再晋级 ready。"
+        "缺 PH-150（合同收费明细/生效方法）与 PH-155（结算/未清）done 的契约边界复核；PH-224/PH-232/PH-259 已 done；契约已由 docs/adr/0015-invoice-tax-contract.md（PH-293）冻结；PH-150/PH-155 就绪后由后续规划槽复核 DoR 再晋级（本片不自行晋级 PH-252）。"
       ],
       "handoff": null
     },
@@ -9169,7 +9169,7 @@
       "title": "发票/价税分离与红冲契约冻结（ADR 0015，docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9196,9 +9196,9 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-docs",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-293.md"
     },
     {
       "id": "PH-294",

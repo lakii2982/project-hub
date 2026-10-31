@@ -1,0 +1,38 @@
+{
+  "task_id": "PH-293",
+  "summary": "Produced the invoice/tax/reversal contract-freeze ADR at docs/adr/0015-invoice-tax-contract.md (docs-only, no code/migration/schema change), using the exact BASE whitelist filename rather than the alternative name mentioned in the assignment. The ADR cites the existing canonical contract facts (Invoice/InvoiceLine/InvoiceAllocation/InvoiceReversal/TaxQualification entities; invoicing.invoice.record/v1, invoicing.lines.allocate/v1, invoicing.invoice.reverse/v1 commands; recorded/allocated/reversed events) and the delivered upstream capabilities (contracts PH-214/265/287, settlement PH-224/232, management_revenue PH-284). It freezes: private draft workflow vs canonical status semantics (record -> active, posted reserved for later accounting, reversed only as an append-only full-reversal status bit, superseded requires a later planning slice); gross=net+tax integer-cent arithmetic with row/sum conservation, ROUND_HALF_UP residual absorption and snapshot tax rates; tax qualification pending/unknown cost treatment and open-period recoverable/not_recoverable correction by the costing owner; append-only negative InvoiceReversal (amounts never edited, red offset is not a refund, revenue/cash stay with their owners); idempotency/org lock/invoice-number uniqueness; role matrix and module-disabled history read; the relation to PH-252 (remains the sole proposed implementation slice; this ADR does not authorize implementation) and read-only integration points for later overview/export slices. PH-252's spec and blocker were synced to point at the ADR without promoting it.",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 14bb580 (BASE 15cf20c, PH-293 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":245}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run in /tmp/ph293-invoice-adr on main 15cf20c with the main checkout venv: Ran 23 tests, OK."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 15cf20c --task PH-293",
+      "result": "not_run",
+      "evidence": "Pre-review actual run at candidate HEAD 14bb580: exit 1, errors = high_risk_review_required (report.review pending) + acceptance_not_passed (check declaration still pre-review), no path_out_of_scope — all 7 changed files (ADR 0015, PH-252 spec sync, tasks.json, manifest.json, docs/verification.md, PH-293 report/handoff) are inside BASE PH-293 allowed_paths."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": [],
+    "evidence": "Pending independent S review (docs-only ADR contract freeze); finalized to pass with the reviewer's name after the fresh-context review lands."
+  },
+  "deviations": [
+    "Filename: the free-form assignment mentioned docs/adr/0015-invoicing-tax-split-cancellation.md, but the trusted BASE PH-293 allowed_paths and the main spec name only docs/adr/0015-invoice-tax-contract.md; the ADR is written to the BASE-whitelisted exact path. Lead's correction message confirmed this path.",
+    "canonical status semantics were aligned with the existing PH-252 implementation contract: private draft does not emit canonical rows and a successful record command emits canonical `active`; `posted` is reserved for a later accounting slice, so the ADR does not promise ledger posting in the first implementation.",
+    "The ADR stays within the contract-freeze scope: no canonical schema/topic/command changes, no code/scaffold/migration, and no promotion of PH-252 (blocker text now references the ADR but PH-252 stays proposed pending PH-150/PH-155)."
+  ],
+  "unverified": [
+    "PH-252/PH-320 implementation is not done; the ADR only freezes the contract and the whitelist/acceptance for implementation still come from the PH-252 spec at its own BASE.",
+    "No runtime/browser/PostgreSQL verification applies (docs-only); only governance/document checks were run.",
+    "The independent review is pending; report.review is deliberately not self-passed."
+  ]
+}

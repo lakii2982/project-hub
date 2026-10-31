@@ -722,3 +722,8 @@ rebase 到 c1cd18d（PH-239/PH-253 合入后）并合并 verify_integrity 共享
 4. **实现路线**：新增 `ROADMAP.md（剩余 1.0 实现路线节）`（批次 A ADR 冻结 → 批次 B 写侧首片 → 批次 C 验收/运维与剩余缺口）。
 5. **登记**：PH-320 发票实现（proposed，deps PH-293/252/214/224/232）、PH-321 多币种实现（proposed，deps PH-308/150/155）、PH-322 关期/结项实现（proposed，deps PH-299/300/312/180-185）、PH-323 下一规划槽（proposed，待 PH-319 done 后置 ready）。count 241→245，编号 320-323 连续。
 6. 独立 S 复核首轮 1 阻断（PH-305/306 写侧误指 PH-320/PH-323）已修为 PH-313，二轮 PASS；最终证据 HEAD 9fc38a8 按槽惯例置 PH-319 done / PH-323 ready 并清 blocker。最终门禁：projectctl check ok=true/task_count=245；23 项治理 OK；verify-change --base 2ec2232 --task PH-319 ok=true、17 文件全白名单、无 errors。未验证：PH-293/299/300/305/306/308/316 的 ADR/契约文档本身与 PH-320/321/322 实现尚未交付；review 二轮 PASS。
+
+
+## PH-293 发票/价税分离与红冲 ADR 0015 契约冻结（docs-only）（2026-10-31）
+
+基线 15cf20c（PH-319 合入后）。docs-only 契约冻结：新增 `docs/adr/0015-invoice-tax-contract.md`（按 BASE 白名单字面文件名，不占 0010–0014）。内容：引用 canonical `Invoice`/`InvoiceLine`/`InvoiceAllocation`/`InvoiceReversal`/`TaxQualification` 字段与 `invoicing.invoice.record|reverse/v1`、`invoicing.lines.allocate/v1` 命令/事件；冻结状态语义（私有 draft 不输出 canonical，登记成功即 `active`，`posted` 预留后续入账，`reversed` 仅全额红冲状态位、`superseded` 需后续规划）；价税分离（整数分、gross=net+tax、行和守恒、ROUND_HALF_UP 末项吸收、税率快照不推断）；税额资格（pending/unknown 默认含税暂计成本，recoverable/not_recoverable 在开放期由 costing owner 更正）；红冲 append-only（负值、≤未冲、原票/行/分配永不编辑，红冲≠退款，收入/现金走各自 owner）；命令幂等/公司锁/查重；角色矩阵与模块停用 history_read；与 PH-252 关系（唯一写侧实现仍 proposed，ADR 不授权实现）及只读核对接入点。同步 PH-252 spec/bloker 指向 ADR。未改已合并 ADR 0010–0014、未改 contract schema、无代码/迁移/运行时验证（docs-only）。实跑：projectctl check、23 项治理；verify-change 在独立 S 复核落 pass 后按最终 HEAD 重跑记录。未验证：PH-252 实现未做；review 独立 S 复核。
