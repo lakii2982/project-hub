@@ -38,9 +38,9 @@
       "evidence": "Actual run: Ran 23 tests, OK."
     },
     {
-      "command": "python scripts/projectctl.py verify-change --base b50f5ca --task PH-325",
+      "command": "python scripts/projectctl.py verify-change --base 4c0d309 --task PH-325",
       "result": "pass",
-      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 files inside BASE PH-325 allowed_paths (review pass; post-rebase rerun)."
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 13 files inside BASE PH-325 allowed_paths (merge-resolved integration rerun)."
     }
   ],
   "review": {
@@ -60,7 +60,8 @@
     "The canonical route was added to pmo_plugins/invoicing/domain_metadata.py and bound through the existing pmo_plugins/delivery/urls.py handler map; no pmo_plugins/invoicing/urls.py was created (that file does not exist).",
     "manage.py check reports 109 warnings vs the main 20ffc12 baseline 108; the single new warning is the route-name W003 created by the new canonical route (the repo already has this warning pattern for all plugin routes). 0 errors.",
     "manage.py check reports 103 warnings vs the main baseline 102; the single new warning is the route-name W003 created by the new canonical route (the repo already has this warning pattern for all plugin routes). 0 errors.",
-    "No migration and no model change; the tax-qualification confirmation flow, browser 1440/390 manual walkthrough and PostgreSQL concurrency are out of scope for this read-only slice."
+    "No migration and no model change; the tax-qualification confirmation flow, browser 1440/390 manual walkthrough and PostgreSQL concurrency are out of scope for this read-only slice.",
+    "Lead integration merge (b50f5ca -> main 4c0d309): resolved conflicts in pmo_plugins/delivery/urls.py, invoicing domain_metadata/forms/views by keeping both PH-320 tax routes/forms and PH-325 reconciliation route/form; docs/verification + manifest merged; gates rerun green."
   ],
   "unverified": [
     "Browser 1440/390 keyboard/focus/empty/error/loading/disabled-state walkthrough was not performed; the template and HTTP handlers exist but only automated HTTP tests ran.",
