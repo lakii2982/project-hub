@@ -92,6 +92,15 @@ class OrchestrationTests(OrchFixture, TestCase):
         self.assertEqual(AuditEvent.objects.filter(
             action='plugin.invoicing.orchestration_link_pending').count(), 0)
 
+    def test_snapshot_and_disabled_module_direct_gates(self):
+        with self.assertRaises(PermissionDenied):
+            orch.orchestration_snapshot(self.plain, self.invoice_row.pk)
+        from core.models import PluginState
+        PluginState.objects.filter(organization=self.org, plugin_id='invoicing').update(enabled=False)
+        with self.assertRaises(PermissionDenied):
+            self.execute()
+        self.assertEqual(Refund.objects.count(), 0)
+
     def test_permissions_and_invalid_action(self):
         with self.assertRaises(PermissionDenied):
             orch.execute_invoice_orchestration(

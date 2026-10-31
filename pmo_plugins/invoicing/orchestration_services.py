@@ -16,6 +16,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from core.models import AuditEvent, Membership
+from core.plugin_runtime import is_enabled
 from core.services import audit, lock_company
 from pmo_plugins.costing import budget_services
 from pmo_plugins.management_revenue import services as revenue_services
@@ -61,8 +62,11 @@ def _fresh(member, *, write=True):
         raise PermissionDenied('公司成员上下文无效')
     if not row.active or not row.user.is_active:
         raise PermissionDenied('此账户尚未加入有效公司工作区')
-    if write and row.role not in {'owner', 'finance'}:
-        raise PermissionDenied('仅 owner/finance 可执行跨 owner 编排')
+    if write:
+        if row.role not in {'owner', 'finance'}:
+            raise PermissionDenied('仅 owner/finance 可执行跨 owner 编排')
+        if not is_enabled(row.organization, 'invoicing'):
+            raise PermissionDenied('发票模块已停用，不能执行跨 owner 编排')
     return row
 
 
@@ -224,8 +228,8 @@ def orchestration_snapshot(member, invoice_id):
             organization=member.organization, pk=invoice_id)
     except (Invoice.DoesNotExist, ValueError, TypeError):
         raise PermissionDenied('发票不存在或无权访问')
-    if member.role == 'pm':
-        raise PermissionDenied('项目经理只能查看其管理项目摘要')
+    if member.role in {'pm', 'member'}:
+        raise PermissionDenied('项目经理只能查看其管理项目摘要；成员无权查看编排')
     events = AuditEvent.objects.filter(
         organization=member.organization,
         action__in=[EXECUTED_ACTION, PENDING_ACTION]).order_by('-id')[:200]

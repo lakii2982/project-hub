@@ -1,22 +1,57 @@
 {
   "task_id": "PH-370",
-  "summary": "跨 owner 编排执行首片 on BASE 1c2c6ca. Adds invoicing/orchestration_services.py that turns a PH-320 reversal/attribution context into named owner-service execution for management-revenue reversal, cash refund/bank return and settlement clearance/reverse-clearance. The service validates invoice/reversal/expected_version, derives a deterministic owner request token from the orchestration token, invokes the owner's named service (reverse_recognition / record_refund / record_bank_return / create_clearance / reverse_clearance), builds the resulting owner ref, and appends it through PH-320 link_invoice_orchestration after attribution validation. It stores an append-only execution receipt in AuditEvent keyed by request_token+digest (receipt is checked before state gates for replay), records executed/link_pending audit, and on owner/link failure leaves no execution receipt/link; the owner action is retried through its own idempotency receipt on retry. It never writes revenue/cash/settlement directly and explicitly returns single_transaction_claim=false. Adds a read-only orchestration snapshot and invoicing page with separate history_read page and business_write execute routes; owner/finance write, auditor read, member denied. No new canonical model/migration/canonical topic/contract schema. Tests cover real cash-refund owner execution + link + audit + snapshot, token replay/no duplicate owner fact and changed-input conflict, failed owner action with no execution/link, role/expected-version rejection, cross-org invoice and mismatched-counterparty attribution rejection, revenue/settlement dispatch via injected named-service fakes, and HTTP GET/POST/invalid/role behavior. verify_integrity has no new PH-370 branch because core verify_integrity is outside the PH-370 allowlist; the read-only snapshot is the in-scope reconciliation surface.",
+  "summary": "跨 owner 编排执行首片 on BASE 1c2c6ca. Adds invoicing/orchestration_services.py that turns a PH-320 reversal/attribution context into named owner-service execution for management-revenue reversal, cash refund/bank return and settlement clearance/reverse-clearance. The service validates invoice/reversal/expected_version, derives a deterministic owner request token from the orchestration token, invokes the owner's named service (reverse_recognition / record_refund / record_bank_return / create_clearance / reverse_clearance), builds the resulting owner ref, and appends it through PH-320 link_invoice_orchestration after attribution validation. It stores an append-only execution receipt in AuditEvent keyed by request_token+digest (receipt is checked before state gates for replay), records executed/link_pending audit, and on owner/link failure leaves no execution receipt/link; the owner action is retried through its own idempotency receipt on retry. It never writes revenue/cash/settlement directly and explicitly returns single_transaction_claim=false. Adds a read-only orchestration snapshot and invoicing page with separate history_read page and business_write execute routes; owner/finance write, auditor read, member denied. No new canonical model/migration/canonical topic/contract schema. Tests cover real cash-refund owner execution + link + audit + snapshot, token replay/no duplicate owner fact and changed-input conflict, failed owner action with no execution/link, role/expected-version rejection, cross-org invoice and mismatched-counterparty attribution rejection, revenue/settlement dispatch via injected named-service fakes, and HTTP GET/POST/invalid/role behavior. verify_integrity has no new PH-370 branch because core verify_integrity is outside the PH-370 allowlist; the read-only snapshot is the in-scope reconciliation surface. Reviewer round-1 blocker fixed: execute now requires invoicing module enabled at the service layer (not just the page), and orchestration_snapshot now allows only owner/finance/auditor/pm (pm project scope preserved), denying member/unknown roles; regressions cover disabled-module execute and direct member snapshot reads.",
   "tests": [
-    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":295}."},
-    {"command": "python manage.py check", "result": "pass", "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."},
-    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual run: 'No changes detected'; no new model/migration."},
-    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual final run: Ran 1293 tests in 141.414s, 5 failures/3 errors/70 environment skips. The 8 failure/error names are the known macOS baseline (6 DRF Accept/codec/large-JSON, 2 delivery symlink); no new names. Linux/PostgreSQL CI authoritative."},
-    {"command": "python manage.py test tests.test_v1_invoice_orchestration tests.test_v1_invoice_orchestration_http --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 8 tests, OK. Real cash-refund owner execution+link+audit+snapshot; token replay/no duplicate refund/changed-input conflict; failed owner action no execution/link; auditor/member/expected-version rejection; cross-org invoice and mismatched-counterparty attribution rejection; revenue/settlement dispatch via named-service fakes; HTTP page/execute/invalid/roles."},
-    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual run: Ran 23 tests in 2.456s, OK."},
-    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No PH-370 verifier branch because core/management/commands/verify_integrity.py is outside the PH-370 allowlist; orchestration reconciliation is the read-only snapshot."},
-    {"command": "python scripts/projectctl.py verify-change --base 1c2c6ca --task PH-370", "result": "not_run", "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after the independent review pass."}
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual run: {\"command\":\"check\",\"ok\":true,\"task_count\":295}."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual run exit 0; known URL/field-system warnings only, no errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual run: 'No changes detected'; no new model/migration."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run after the round-1 fixes (before rebase): Ran 1294 tests in 140.374s, 5 failures/3 errors/70 environment skips; only the known 8 macOS baseline failures. Post-rebase full run will be recorded in the final evidence."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_invoice_orchestration tests.test_v1_invoice_orchestration_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run after the round-1 fixes: Ran 9 tests, OK. Adds disabled-module execute rejection and direct member snapshot denial to the real cash owner/link/idempotency/failure/roles/attribution/HTTP coverage."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual run: Ran 23 tests in 2.456s, OK."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Freshly-migrated SQLite run: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. No PH-370 verifier branch because core/management/commands/verify_integrity.py is outside the PH-370 allowlist; orchestration reconciliation is the read-only snapshot."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 1c2c6ca --task PH-370",
+      "result": "not_run",
+      "evidence": "Not run before report/handoff creation; expected only high_risk_review_required while review is pending. Will be rerun after the independent review pass."
+    }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
+    "reviewer": "independent PH-370 cross-owner orchestration reviewer (fresh context, read-only)",
     "status": "pending",
-    "findings": [],
-    "evidence": "Independent S review pending. Verify only named owner services mutate revenue/cash/settlement; invoicing records facts/links only; no single-transaction claim; receipt-before-state-gate idempotency and derived owner token/retry; expected_version/company lock/period/roles; attribution via PH-320; failure leaves no execution/link; page read/execute split and role boundaries; no new migration/canonical/schema; scoped/full/verify evidence. Implementer does not self-pass."
+    "findings": [
+      "BLOCKER - the orchestration service bypasses the invoicing module/read-role gates on direct service/API paths: `orchestration_services._fresh` only checks active membership and write role for execute, but does not check `is_enabled(organization, 'invoicing')`; `execute_invoice_orchestration` can therefore run the named owner services while the invoicing module is disabled. `orchestration_snapshot` uses `_fresh(write=False)`, which has no role check and only explicitly denies pm, so a member can read orchestration executions directly even though the task/view contract requires member denial. The views call `services._fresh` first, but services/API are required to enforce the same gate. Fix: gate execute on the invoicing module enabled and snapshot on the invoice READ_ROLES (owner/finance/auditor/pm with pm managed-project rules), delegate to `services._fresh` or replicate it, and add direct-service tests for module-disabled execute and member snapshot denial.",
+      "OTHER CONTENT CHECKED: execute validates invoice/reversal/expected_version, action mapping and payload, derives an owner token for retry idempotency, calls only the named owner services (revenue reverse, cash refund/bank return, settlement clearance/reverse), records the PH-320 reference link plus an append-only AuditEvent receipt, and returns single_transaction_claim=false with a read-only snapshot; the cash-refund owner action is exercised end-to-end; no new canonical model/migration/topic/contract schema and no direct owner-model writes; pages/domain metadata/routes/templates are wired; no verifier branch is disclosed; 14 files within the PH-370 whitelist; check 295; makemigrations clean; scoped tests 8 OK; full 1293/5F+3E/70 known baseline; verify-change only review gate, no path_out_of_scope."
+    ],
+    "evidence": "reviewer round-1 REJECTED: service-layer gate gaps (execute did not check invoicing module enabled; snapshot denied pm only, leaving member reads). Fixed: execute requires module enabled; snapshot allows only owner/finance/auditor/pm (pm project scope), denying member; regressions added. Round-2 independent review pending; implementer does not self-pass."
   },
   "deviations": [
     "Only the cash-refund path is exercised against the real cash owner service and real owner models in tests; management-revenue reversal and settlement clearance dispatch are tested with injected named-service fakes to avoid constructing the full owner fixtures. This is disclosed, not a claim of full owner end-to-end coverage.",
