@@ -9588,7 +9588,7 @@
       "title": "运营核对底稿授权只读导出首片：核对总览/结算/现金/手续费清单 CSV（无写入口）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -9624,9 +9624,9 @@
         "python manage.py test tests.test_v1_ops_export tests.test_v1_ops_export_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-304.md"
     },
     {
       "id": "PH-305",

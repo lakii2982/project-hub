@@ -194,3 +194,59 @@ def ops_reconciliation_overview(context, payload):
         'page_url': get_script_prefix() + 'modules/delivery/ops-reconciliation-overview/',
         'delivery_url': get_script_prefix() + 'modules/delivery/acceptance-list/',
     }, status=400 if error else 200)
+
+
+def ops_export(context, payload):
+    """PH-304 authorized read-only CSV export page/download (history_read)."""
+    import uuid
+    from django.http import HttpResponse
+    from django.shortcuts import render
+    from django.urls import get_script_prefix
+    from django.utils import timezone
+    from . import operations_export_services as export
+    from .forms import OpsExportFilterForm
+    member = context.member
+    allowed = {'dataset', 'as_of', 'period', 'download', 'token'}
+    form = OpsExportFilterForm(payload)
+    error = None
+    plan = None
+    if set(payload) - allowed:
+        error = '包含不允许的查询参数，请刷新后重试'
+    elif not form.is_valid():
+        error = '；'.join(form.errors.get('__all__', [])) or '筛选条件无效'
+    if error is None:
+        data = form.cleaned_data
+        token = data.get('token') or uuid.uuid4()
+        try:
+            if data.get('download'):
+                result = export.export_reconciliation_worksheets(
+                    member, dataset=data['dataset'], as_of=data.get('as_of'),
+                    period=data.get('period'), request_token=token, dry_run=False)
+                response = HttpResponse(
+                    result['csv'], content_type='text/csv; charset=utf-8')
+                response['Content-Disposition'] = (
+                    f"attachment; filename=\"{result['filename']}\"")
+                response['X-Content-SHA256'] = result['content_id']
+                return response
+            plan = export.export_reconciliation_worksheets(
+                member, dataset=data['dataset'], as_of=data.get('as_of'),
+                period=data.get('period'), request_token=token, dry_run=True)
+        except PermissionDenied:
+            raise
+        except ValidationError as invalid:
+            error = '；'.join(invalid.messages)
+    base = get_script_prefix() + 'modules/delivery/ops-export/'
+    download_query = ''
+    if plan is not None:
+        from urllib.parse import urlencode
+        download_query = '?' + urlencode({
+            'dataset': plan['dataset'], 'as_of': plan['as_of'] or '',
+            'period': plan['period'] or '', 'download': '1',
+            'token': plan['token']})
+    return render(context.request, 'delivery/ops_export.html', {
+        'nav': 'delivery', 'form': form, 'plan': plan, 'error': error,
+        'page_url': base, 'download_url': base + download_query,
+        'datasets': export.export_dataset_options(),
+        'overview_url': get_script_prefix() + 'modules/delivery/ops-reconciliation-overview/',
+        'generated_at': timezone.now().isoformat(),
+    }, status=400 if error else 200)

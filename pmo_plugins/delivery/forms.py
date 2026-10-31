@@ -89,3 +89,24 @@ class OpsOverviewFilterForm(forms.Form):
                       or not value[5:].isdigit() or not 1 <= int(value[5:]) <= 12):
             raise forms.ValidationError('期间须为有效的年月（YYYY-MM）')
         return value or None
+
+
+class OpsExportFilterForm(forms.Form):
+    """Read-only filter for the authorized reconciliation CSV export."""
+    DATASETS = [('ops_overview', '跨域核对总览'),
+                ('settlement_coverage', '结算未清/核销/退款覆盖'),
+                ('cash_bridge', '现金分类/桥接/退款/互转'),
+                ('fee_pairing', '手续费批准/成本/净额配对')]
+    dataset = forms.ChoiceField(label='导出数据集', choices=DATASETS)
+    as_of = forms.DateField(label='快照日期', required=False,
+                            widget=forms.DateInput(attrs={'type': 'date'}))
+    period = forms.CharField(label='期间（YYYY-MM）', required=False, max_length=7)
+    download = forms.BooleanField(required=False)
+    token = forms.UUIDField(required=False)
+
+    def clean_period(self):
+        value = (self.cleaned_data.get('period') or '').strip()
+        if value and (len(value) != 7 or value[4] != '-' or not value[:4].isdigit()
+                      or not value[5:].isdigit() or not 1 <= int(value[5:]) <= 12):
+            raise forms.ValidationError('期间须为有效的年月（YYYY-MM）')
+        return value or None

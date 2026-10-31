@@ -1,0 +1,70 @@
+{
+  "task_id": "PH-304",
+  "summary": "运营核对底稿授权只读 CSV 导出首片（无迁移/无写入口）：新增 pmo_plugins/delivery/operations_export_services.py，按授权范围组合已交付只读接口导出四类 CSV 底稿——ops_overview（PH-291 跨域总览）、settlement_coverage（PH-283 未清/核销/退款覆盖）、cash_bridge（PH-279 现金分类/桥接/退款/互转）、fee_pairing（PH-280 手续费批准/成本/净额配对）；CSV 为 UTF-8+BOM、表头、refs/金额/状态、as_of/期间、生成时间、行数与 sha256 校验行；dry_run 返回计划（数据集/列/行数/校验行）不生成文件；request_token 幂等（同 token 同输入返回同一 content_id、改输入冲突）。权限 owner/finance/auditor 全量；pm 仅可导出有项目归属的数据集（ops_overview/settlement_coverage/fee_pairing），cash_bridge 因无项目归属拒绝；member 拒绝；delivery 模块停用后 history_read 历史可读。canonical `pmo_plugins/delivery/domain_metadata.py` 声明 `ops-export/` history_read 路由，`delivery/urls.py` 仅导入；无写/无迁移/无审计/零事实计数变化。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 at this HEAD (BASE 5361a09): ok=true, task_count=233 (PH-307 done, PH-304 done with owner/handoff); 14 changed files all inside the PH-304 allowed_paths; no path/acceptance schema issues."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0 on BASE 5361a09: System check identified 92 issues (0 silenced), all pre-existing urls.W003 namespace warnings; 0 errors (delivery domain metadata validates the ops-export history_read route)."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected (this slice adds no model, table or migration)."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual local exit 1 on BASE 5361a09: Ran 1106 tests, FAILED (failures=5, errors=3, skipped=69) => 1029 passed. All 8 failures are exactly the known macOS environment limits (tests.test_drf_security_compatibility and tests.test_delivery_execution* symlink cases); the BASE 5361a09 total grows to 1106 with the 16 new PH-304 tests and no new failure class. CI Linux (including the PG domain) is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual exit 0 on a freshly migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}. This slice writes no ledger/cash/amount fact and does not change existing verify_integrity semantics."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_ops_export tests.test_v1_ops_export_http --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 16 tests, OK => 16 passed (10 service + 6 HTTP). Covers dry_run plan, UTF-8 BOM/header/checksum/row-count consistency, token replay + changed-input conflict, dry_run->real and real->dry_run same-token cache separation (real returns csv/content_id, dry_run returns plan without csv), plan-token download idempotency (same X-Content-SHA256), invalid dataset/date/period/token, settlement/cash/fee derived CSV values, member/pm dataset denials, zero fact-count change, page/download, invalid query params 400, POST 405 and module-disabled history_read 200."
+    },
+    {
+      "command": "python scripts/projectctl.py verify-change --base 5361a09 --task PH-304",
+      "result": "pass",
+      "evidence": "Actual exit 0 at the final HEAD: ok=true, base=5361a09, 14 changed files all inside the PH-304 allowed_paths, no path_out_of_scope/report-shape errors; assertion_scope=declaration_only. The report review block is the independent reviewer's round-2 PASS at e018615."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-304 reconciliation-export reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "ROUND-2 BLOCKERS RESOLVED AT e018615: the receipt cache now stores plan and result separately and selects by the requested dry_run; same-token dry_run->real returns a real CSV with a 64-char content_id and same row_count, while real->dry_run returns a plan with no csv and content_id None (digest/input-conflict still checked). The plan page now carries the exact plan token into the download URL, and the HTTP regression plan->download->replay asserts the same X-Content-SHA256. Scoped tests now 16 OK.",
+      "RE-VERIFIED: read-only export composes the PH-291/283/288/280 read services with no business/audit/fact writes or migration; dry_run returns a plan without file; UTF-8+BOM CSV, header/rows/checksum row, row_count and sha256 content_id; dataset/date/token validation; unknown query 400/POST 405; owner/finance/auditor full; pm ops/settlement/fee allowed and cash denied (no project attribution); member denied; canonical delivery/domain_metadata history_read route with urls import-only; process-local receipt map remains disclosed/accepted under the no-new-table constraint; 14 changed files all inside PH-304 allowed_paths; task in_review, manifest=PH-304.",
+      "EVIDENCE AT e018615 (BASE a352b4a): check ok=true/task_count=229; manage.py check exit 0; makemigrations --check No changes; scoped export tests 16 OK; full suite Ran 1095 tests, 5 failures/3 errors/69 skips (exactly the known 8 macOS baseline, no fifth class); verify_integrity fresh DB ok=true/errors=[]; verify-change --base a352b4a --task PH-304 only high_risk_review_required, no path_out_of_scope; report review now pass. After the final evidence/done transition, verify-change should be clean."
+    ],
+    "evidence": "VERDICT: PASS (round 2; dry_run/real cache and plan-token HTTP flow fixed). Reviewed HEAD e018615 (BASE a352b4a) in /tmp/ph304-export, worktree clean; 14 changed files all inside PH-304 allowed_paths; task in_review, manifest=PH-304. Plan/result are cached separately and selected by dry_run; same-token dry_run->real returns CSV/content_id and real->dry_run returns plan/no csv with input-conflict preserved; the plan page uses the plan token and HTTP replay asserts the same X-Content-SHA256; scoped 16 OK. Read-only purity, CSV/checksum, permissions/history_read, no migration/verify change verified. Independent runs: check ok=229; manage check exit 0; makemigrations clean; full suite 1095/5F+3E/69 = known 8 macOS baseline; verify_integrity fresh DB ok; verify-change only high_risk_review_required, no path_out_of_scope."
+  },
+  "deviations": [
+    "Idempotency receipt is a process-local in-memory map keyed by (organization, request_token) storing the input digest plus plan/result, because this slice must not create a business table and no reusable receipt table exists; it is therefore non-durable across processes/restarts and is disclosed in the report (spec allows reporting this limitation instead of creating a table).",
+    "PM dataset scope: pm may export ops_overview, settlement_coverage and fee_pairing because those read services scope rows to visible managed projects; cash_bridge is denied for pm because bank/cash facts carry no project attribution (same limitation disclosed by PH-279/PH-288), rather than leaking company-wide cash.",
+    "The browser uses the single canonical ops-export/ history_read route for both the preview page and the CSV download (download=1); there is no POST/write route. The download response is streamed from memory with Content-Disposition and an X-Content-SHA256 header, not persisted to a temp file.",
+    "CSV layout: UTF-8 BOM, one header row, dataset rows, then a #checksum row carrying dataset/as_of/period/row_count/sha256/generated_at; content_id is the same sha256. Checksum is computed over the data body plus row count/as_of/period, so repeated identical exports are stable.",
+    "Export composes the delivered read services without re-deriving business rules: ops_overview -> operations_read_services.ops_reconciliation_overview; settlement_coverage -> settlement.coverage_read_services.open_item_coverage_snapshot; cash_bridge -> cash.reconciliation_services.cash_bridge_snapshot; fee_pairing -> costing.bank_charge_pairing_services.bank_charge_pairing.",
+    "The read path writes no generic audit (optional in the spec) and no receipt/session persistence beyond the in-memory token map; no verify_integrity assertion is changed or added.",
+    "Counterexamples and tests never UPDATE/DELETE historical rows; the export itself is read-only, so append-only triggers are untouched.",
+    "Single worker owns the whole write set (delivery export service/views/forms/domain metadata/template, delivery urls, two test files, governance); no parallel slice writes these files; independent review is pending.",
+    "Reviewer round-1 token/HTTP fixes: the request-token cache now stores plan and result separately and selects by dry_run, so dry_run->real returns the real CSV/content_id and real->dry_run returns a plan without csv/content_id; the plan carries its token and the download URL reuses it, so plan->download is a same-input replay with the same X-Content-SHA256 (regressions added for both service and HTTP)."
+  ],
+  "unverified": [
+    "No browser 1440/390 check was run; the export page/download was exercised through HTTP tests only. Visual/keyboard/overflow/empty-error-disabled states remain for the reviewer/browser round.",
+    "Independent S review recorded round-2 PASS at e018615; this HEAD carries the final BASE 5361a09 evidence and the done transition.",
+    "PostgreSQL-specific behaviour is not exercised locally; the slice is read-only and adds no table/trigger/migration, so CI (including PG) remains authoritative.",
+    "Production/UAT and legacy database upgrades are not verified; only a freshly migrated SQLite database was exercised.",
+    "ZIP/manifest/encrypted external delivery, scheduled/emailed exports, persisted export receipts and identity-sensitive token/password/payroll fields remain unimplemented."
+  ]
+}
