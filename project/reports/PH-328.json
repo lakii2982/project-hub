@@ -17,8 +17,8 @@
     },
     {
       "command": "python scripts/projectctl.py verify-change --base 2659317 --task PH-328",
-      "result": "not_run",
-      "evidence": "Pre-review gate: {\"command\":\"verify-change\",\"ok\":false,\"errors\":[{\"code\":\"high_risk_review_required\"}]} — no path errors; will record the real pass run after the independent review block is written."
+      "result": "pass",
+      "evidence": "{\"command\":\"verify-change\",\"ok\":true} exit 0 — 5 changed files all inside BASE PH-328 allowed_paths (independent review pass recorded)."
     }
   ],
   "deviations": [
