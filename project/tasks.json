@@ -12124,13 +12124,15 @@
     },
     {
       "id": "PH-369",
-      "title": "独立工程/交付规划入口",
+      "title": "后续交付独立规划入口（接续 PH-365）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "proposed",
       "priority": 3,
       "milestone": "v1.0-preparation",
-      "depends_on": [],
+      "depends_on": [
+        "PH-365"
+      ],
       "spec": "project/specs/PH-369.md",
       "allowed_paths": [
         "project/specs/*",
@@ -12150,7 +12152,9 @@
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
-      "blockers": [],
+      "blockers": [
+        "缺 PH-365（当前规划槽，in_review 未 done）done；PH-365 done 后由下一规划槽复核 DoR 并置 ready。"
+      ],
       "github_issue": null,
       "owner": null,
       "handoff": null
