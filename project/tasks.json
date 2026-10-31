@@ -12596,7 +12596,7 @@
       "title": "批次 D-01 跨 owner 编排验收执行（PH-370 后续）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12622,7 +12622,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-382.md"
     },
     {
       "id": "PH-383",

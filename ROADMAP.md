@@ -245,3 +245,40 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
   - PH-390（proposed）批次 D-05/06 insights 验收执行；
   - PH-391（proposed）下一规划入口（依赖 PH-386；PH-386 done 后置 ready）。
 - 发布资格仍按 PH-366 gate；未执行 L3 CI/PG、L4 浏览器、L5 生产，不冒充。
+
+## 批次 D 验收矩阵与 runbook（PH-375，2026-10-31，BASE ef13003）
+
+- 新增 `docs/v1.0-development/batch-d-acceptance.md`（D-01–D-11 矩阵：需求映射/required 层/命令/证据/判据/角色/blocked 现状）与 `docs/v1.0-development/batch-d-runbook.md`（执行协议/回填模板/切片执行卡/退出标准）。
+- 现状：D-01（PH-370 编排执行）实现已合入但验收 **not_run**；D-02–D-11 **blocked**（PH-371/338/353/339/354/340/355/372 等未 done）；发布资格仍按 PH-366 **blocked**。
+- 不新增验收口径；五层证据/PH-345 envelope/PH-366 release gate 为唯一口径。
+
+## 批次 C/D 状态复核（PH-376 规划槽，2026-10-31，BASE 2f082a3）
+
+- **晋级 ready（依赖全 done）**：**PH-367** 批次 C 部署/恢复/并发汇总验收执行前置契约（deps PH-333/334/357/366 均 done；spec 状态/blockers/白名单已同步）。
+- **保持 proposed（精确 blocker）**：PH-372 等 PH-367 done；PH-338/353 等 PH-289/PH-181/PH-185；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151；PH-377 等 PH-372。
+- **新登记（PH-377–PH-381，编号已核）**：
+  - PH-377 批次 C 发布资格 gate 判定后续（proposed，等 PH-372）；
+  - PH-378 发票批量导入实现首片（proposed，等 PH-338/353）；
+  - PH-379 insights 差异单/工作台实现首片（proposed，等 PH-339/354）；
+  - PH-380 通知中心收件箱实现首片（proposed，等 PH-340/355）；
+  - PH-381 后续交付独立规划入口（proposed，依赖 PH-376；PH-376 done 后由下一规划槽置 ready）。
+- 下一实现/规划队列：PH-367（汇总验收前置契约）→ PH-372（发布资格 gate 判定）→ PH-377；发票/insights/通知实现按各自前置完成推进；PH-381 等 PH-376 done。
+- 真实 L3 CI/PG、L4 浏览器、L5 生产仍 not_run；不得以本地/文档证据宣称发布就绪。
+
+## 批次 D 状态与后续规划（PH-381 规划槽，2026-10-31，BASE 3c77653）
+
+- **依赖复核**：PH-367/PH-371 保持 ready（契约/修复复审中，未 done，不重复晋级）；PH-372 等 PH-367；PH-338/353 等 PH-289/181/185；PH-339/354 等 PH-272；PH-340/355 等 PH-301/314/179/183/151。无新的依赖全 done 既有任务可晋级。
+- **新登记（PH-382–PH-386，编号已核）**：
+  - **PH-382**（ready）批次 D-01 跨 owner 编排验收执行（deps PH-370 done；只回填验收证据，不重实现）；
+  - **PH-383**（proposed）发票批量导入错误清单/来源覆盖后续（等 PH-378）；
+  - **PH-384**（proposed）insights 工作台/差异单性能与导出后续（等 PH-379）；
+  - **PH-385**（proposed）通知中心扫描调度/已读后续（等 PH-380）；
+  - **PH-386**（proposed）后续交付独立规划入口（deps PH-381；PH-381 done 后置 ready）。
+- 批次 D 矩阵仍以 `batch-d-acceptance.md`/`batch-d-runbook.md` 为唯一方法；PH-382 只执行 D-01 验收，不改变未实现项的 blocked/not_run。
+- 发布资格仍按 PH-366 gate：L3 CI/PG、L4 浏览器、L5 生产未执行；不得以本地/演练冒充。
+
+## 批次 D-01 验收执行（PH-382，2026-10-31，BASE 9830b37）
+
+- PH-370 跨 owner 编排：本地 L2 部分验收通过（cash-refund 真实 e2e、9 scoped tests OK；全量 1310/5F+3E 无新增）；
+- revenue/settlement 真实 owner e2e 未执行（仅 patch 契约测试）、L3 CI/PG、L4 浏览器、L5 生产 not_run；
+- **D-01 未通过**、release_ready=false；发布资格仍按 PH-366 blocked。

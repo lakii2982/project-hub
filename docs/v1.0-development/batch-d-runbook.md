@@ -2,7 +2,7 @@
 
 - 产出任务：PH-375（docs-only；不实现/不执行；本文件为执行模板，不含通过结论）。
 - 对齐：`batch-d-acceptance.md`（矩阵）、`batch-c-runbook.md`（执行协议）、`batch-c-release-evidence-contract.md`（envelope/证据/发布 gate）、`docs/engineering/ops-runbook.md`（脚本契约）。
-- 当前状态：D-01 实现已合入但验收 `not_run`；D-02–D-11 `blocked`；发布资格仍按 PH-366 **blocked**。
+- 当前状态：D-01 已执行本地 L2 部分验收（PH-382：cash-refund 真实 e2e pass；revenue/settlement 真实 e2e、L3/L4/L5 not_run；整体未通过）；D-02–D-11 `blocked`；发布资格仍按 PH-366 **blocked**。
 
 ## 1. 通用执行协议
 
@@ -40,7 +40,7 @@
 - 证据：命令输出、编排引用链/核对输出、L4 截图、CI URL；模板见 §2。
 - 判据：矩阵 D-01 全部满足；财务复核人签字。
 - 失败处置：停止执行；保留引用链/审计；不得手工补写其它 owner；按 owner 既有更正流程。
-- 状态：**not_run**（实现 done，验收未执行）。
+- 状态：**部分执行（2026-10-31，PH-382）**：L2 cash-refund 真实 e2e pass、9 scoped tests OK；revenue/settlement 真实 e2e、L3/L4/L5 **not_run**；D-01 整体未通过（evidence: docs/verification.md PH-382 条）。
 
 ### D-02 PH-371 税额→costing 成本更正
 - 前置：PH-371 实现合入（当前未实现 → blocked）。
@@ -87,7 +87,7 @@
 
 ## 4. 未验证与发布资格
 
-- 本片 docs-only：D-01 仅实现合入，验收未执行；D-02–D-11 全部 blocked。
+- 本片 docs-only；D-01 已有 PH-382 本地 L2 部分证据（cash-refund 真实；revenue/settlement 真实 e2e 未执行）；D-02–D-11 全部 blocked。
 - 无 L3 CI PG、L4 浏览器、L5 生产/试点证据；批次 D 发布资格仍 **blocked**（依 PH-366，不得以本 runbook 宣称就绪）。
 
 ## 5. 反例
