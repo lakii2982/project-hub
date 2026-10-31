@@ -4,8 +4,8 @@
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
-      "result": "not_run",
-      "evidence": "Pre-review actual run at candidate HEAD d9f9214 (BASE c69c8ee, PH-331 in_review): {\"command\":\"check\",\"ok\":true,\"task_count\":258}, exit 0 (in_review+owner+handoff accepted); final entry recorded after the review pass."
+      "result": "pass",
+      "evidence": "Post-independent-review actual run (reviewed HEAD 32f2938, then final slot-close commit): {\"command\":\"check\",\"ok\":true,\"task_count\":258}, exit 0; PH-331 done with handoff and PH-336 ready on PH-331 done."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
@@ -20,10 +20,15 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": [],
-    "evidence": "Pending independent S review (dependency re-baseline, PH-321/322 promotions, batch C registration and ROADMAP route); finalized to pass with the reviewer's name after the fresh-context review lands."
+    "reviewer": "independent PH-331 next-planning-slot reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "PROMOTION EVIDENCE VERIFIED: PH-321 (deps PH-308/324/214/224/232/287 all done) and PH-322 (deps PH-299/300/312 + PH-291/283/288/280/281/284/287/309 all done) are the only new ready implementation slices; PH-332 (docs-only batch-C acceptance matrix/runbook) has all-done deps PH-324/312/313/291/304/309/316 and is ready. No promoted task has a non-done dependency; the old->new rationale and ROADMAP batch-C section are written.",
+      "NO FALSE PROMOTION OF REMAINING SLICES: PH-317/318 still wait on ready-not-done PH-252/PH-321 (with their contract boundaries noted); PH-320/325 wait on PH-252; PH-326 on PH-321; PH-327/330 on PH-322 ready-not-done; PH-333/334 wait on PH-322/321/252/330 and PH-335 on 333/334; PH-314 remains proposed on notification/export capabilities; PH-336 is proposed on PH-331 in_review. Blockers match dependencies; no ready task depends on a not-done task.",
+      "NEW TASKS/DoR/NUMBERING: task_count 258 unique continuous PH-332..PH-336 (BASE max 331; no remote/local/spec conflict). PH-332 is the M01–M15 acceptance matrix/runbook skeleton, PH-333 deployment/upgrade/backup-recovery drill, PH-334 real-PostgreSQL concurrency acceptance, PH-335 health/capacity/performance observability, PH-336 next planning slot; all have explicit scope/DoR/whitelists/acceptance/counterexamples and no placeholder/code/schema changes; 20 changed files are within PH-331 allowed paths; PH-331 in_review/PH-336 proposed.",
+      "SLOT CONVENTION/GATES: PH-331 remains in_review and PH-336 proposed; final evidence must set PH-331 done/PH-336 ready and record the `check` test declaration as pass (the current entry is honestly pre-review `not_run`, which leaves acceptance_not_passed until updated), then rerun check/verify-change. At HEAD 32f2938 (BASE c69c8ee): projectctl check ok=true/task_count=258; governance 23 tests OK; verify-change --base c69c8ee --task PH-331 only high_risk_review_required + acceptance_not_passed (expected pre-review), no path_out_of_scope; manifest=PH-331."
+    ],
+    "evidence": "VERDICT: PASS. Reviewed HEAD 32f2938 (BASE c69c8ee) in /tmp/ph331-planning, worktree clean; 20 changed files within PH-331 allowed paths; task_count 258 unique continuous PH-332..PH-336; manifest=PH-331. New ready PH-321/PH-322/PH-332 all have only done deps (321: 308/324/214/224/232/287; 322: 299/300/312+291/283/288/280/281/284/287/309; 332: 324/312/313/291/304/309/316); the rest keep proposed with accurate blockers; new 332-336 DoR/whitelists/acceptance complete; no placeholders/code/schema; check ok=258; governance 23 OK; verify-change --base c69c8ee only review/acceptance gates, no path_out_of_scope. Final evidence must set the check declaration pass and PH-331 done/PH-336 ready."
   },
   "deviations": [
     "Promotion evidence: PH-321 deps are PH-308/PH-324 (both done, canonical currency extension merged) plus PH-214/PH-224/PH-232/PH-287 done; PH-322 deps are PH-299/PH-300 (ADRs) plus PH-312 (implementation prerequisite, done) and the done read-only sources PH-291/283/288/280/281/284/287/309. Both now have only done dependencies and are promoted ready; no implementation is claimed delivered.",
