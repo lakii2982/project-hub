@@ -117,21 +117,44 @@ def contract_terms_snapshot(context, payload):
 
 
 def fx_rates(context, payload):
-    """Read-only FX rate and contract-line original/book display; writers see the form."""
+    """Read-only FX history/reconciliation, rates and contract-line display."""
     member = fx_services._reader(context.member, roles=fx_services.READ_ROLES)
     form = FxRateForm() if member.role in fx_services.WRITE_ROLES else None
     error = ''
+    quote = (payload.get('quote_currency') or '').strip() or None
+    exact = (payload.get('effective_on') or '').strip() or None
+    source = (payload.get('source') or '').strip() or None
+    version = (payload.get('version') or '').strip() or None
+    as_of = (payload.get('as_of') or '').strip() or None
+    project_id = (payload.get('project_id') or '').strip() or None
+    history = {'rows': [], 'missing': [], 'exact_date_required': bool(exact)}
+    reconciliation = {'contracts': [], 'settlements': [], 'invoices': [],
+                      'missing': [], 'issues': [], 'summary': {}}
     try:
         rates = (fx_services.fx_rate_list(member)
                  if member.role in fx_services.RATE_ROLES else [])
         lines = fx_services.contract_line_fx_snapshots(member)
-    except (PermissionDenied, ValidationError) as exc:
+        try:
+            history = fx_services.fx_rate_history(
+                member, quote_currency=quote, effective_on=exact, source=source,
+                version=int(version) if version else None)
+        except PermissionDenied:
+            if member.role != 'pm':
+                raise
+            history['notice'] = 'pm 仅查看项目摘要，不展示全公司汇率历史'
+        reconciliation = fx_services.fx_reconciliation(
+            member, project_id=project_id or None, as_of=as_of or None)
+    except (PermissionDenied, ValidationError, ValueError) as exc:
         rates, lines = [], []
         error = '；'.join(getattr(exc, 'messages', [str(exc)]))
     return render(context.request, 'contracts/fx_rates.html', _context(
-        member, rates=rates, lines=lines, form=form, error=error,
+        member, rates=rates, lines=lines, history=history,
+        reconciliation=reconciliation, form=form, error=error,
         enabled=member.role in fx_services.WRITE_ROLES,
-        fx_rate_save_url=url('fx-rate-save')))
+        fx_rate_save_url=url('fx-rate-save'),
+        filters={'quote_currency': quote or '', 'effective_on': exact or '',
+                 'source': source or '', 'version': version or '',
+                 'as_of': as_of or '', 'project_id': project_id or ''}))
 
 
 def fx_rate_save(context, payload):
@@ -153,3 +176,4 @@ def fx_rate_save(context, payload):
         _context(member, rates=fx_services.fx_rate_list(member),
                  lines=fx_services.contract_line_fx_snapshots(member), form=form,
                  error='', enabled=True, fx_rate_save_url=url('fx-rate-save')), status=400)
+

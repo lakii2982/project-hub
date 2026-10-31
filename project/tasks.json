@@ -12808,7 +12808,7 @@
       "title": "多币种汇率反查/对账后续（接收 PH-318/326 剩余范围）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12840,9 +12840,9 @@
         "python manage.py test tests.test_v1_fx_history tests.test_v1_fx_history_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "worker-contract",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-388.md"
     },
     {
       "id": "PH-389",
