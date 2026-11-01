@@ -1,6 +1,6 @@
 {
  "task_id": "PH-343",
- "summary": "insights 读模型实现前置契约冻结（docs-only）：新增 insights-read-model-contract.md，冻结只读投影/期间预检复用/差异单与项目工作台字段/as_of-period/missing-null/权限与内部读模型边界；不实现、不建表/迁移/路由。",
+ "summary": "insights 读模型实现前置契约冻结（docs-only）：新增 insights-read-model-contract.md，冻结只读投影/期间预检复用/差异单与项目工作台字段/as_of-period/missing-null/权限与内部读模型边界；不实现、不建表/迁移/路由。 复核修复：未来 as_of 改为 warning+事实截断（与 PH-363/PH-354 一致）；刷新/快照改为不写 owner 业务事实但可按 ADR 0014 写已冻结 insights.reconciliation_* 事件；状态机与 canonical 必填字段明确。",
  "tests": [
   {
    "command": "python scripts/projectctl.py check",
@@ -20,7 +20,8 @@
   "findings": []
  },
  "deviations": [
-  "Docs-only; PH-339 remains proposed and must re-check the actual BASE before implementation."
+  "Docs-only; PH-339 remains proposed and must re-check the actual BASE before implementation.",
+  "Independent review blockers fixed: future as_of semantics aligned with PH-363/PH-354 warning behavior; canonical event boundary aligned with ADR 0014 (insights.reconciliation_* only); case state machine and required canonical fields made explicit."
  ],
  "unverified": [
   "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed.",

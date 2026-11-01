@@ -11,7 +11,7 @@
 2. **owner 唯一事实来源**：contracts→合同/条款/变更/终止；settlement→OpenItem/Clearance/Offset；cash→posted 现金/分类/退款/退回/互转；costing→成本/人工池/分摊/预算；management_revenue→收入确认/冲销；time→工时/可计费确认；core→AccountingPeriod/locked_through。insights 不复制表、不重算 owner 规则。
 3. **复用既有只读接口**：PH-291 跨域总览、PH-283 结算覆盖、PH-284 收入配对、PH-288 现金对账、PH-280 手续费配对、PH-309 工作台聚合、PH-354 期间预检；本片只做聚合/投影，不新增第二套口径。
 4. **缺失不为 0**：上游缺失/不可判定 → `null` + `missing[]`；`0` 只表示真实零值；差额任一侧缺失 → `null`。
-5. **刷新不产生业务事实**：刷新/快照只更新 insights 内部读模型（若实现片申请），不写 canonical 事件、不写账本/审计业务事实。
+5. **刷新不产生 owner 业务事实**：刷新/快照只更新 insights 内部读模型（若实现片申请），不写账本/现金/收入/成本/未清；不新增 canonical schema/topic；仅可按 ADR 0014 写已冻结的 `insights.reconciliation_*` 事件/generic audit。若首片选择不发事件，必须写成首片限制而非通用边界。
 6. **无外部副作用**：不发送邮件/Webhook、不触发审批/付款/关期/结项、不调用 PAT/MCP/AI 授权。
 
 ## 2. 冻结的只读接口（复用 ADR 0014）
@@ -19,13 +19,13 @@
 ### 2.1 `period_precheck_snapshot(member, *, scope, project_id, period, as_of, sections=None)`
 
 - 已由 PH-354 实现；本文不重定义 envelope/digest，只确认实现片必须复用它而非复制公式。
-- 期间必须与 as_of 同月；跨月拒绝；未来 as_of 拒绝。
+- 期间必须与 as_of 同月；跨月拒绝。未来 as_of 允许但产生 `future_as_of` warning，事实按 as_of 截断（与 PH-363/PH-354 一致）。
 
 ### 2.2 `reconciliation_case_list/snapshot(member, *, period, status, owner_member_id, project_id, as_of)`
 
-- 输出严格为 canonical `ReconciliationCase` 字段（`source_refs/difference_cents/owner_member_id/resolution_note/status` + 只读 `case_key/rule_code/coverage_key/snapshot_watermark`）。
+- 输出严格为 canonical `ReconciliationCase` 字段：必填 `id/organization_id/version/status/source_refs/difference_cents/owner_member_id/resolution_note`，只读 `case_key/rule_code/coverage_key/snapshot_watermark`；按 canonical 原样输出，不裁剪字段。
 - 刷新语义（`insights.reconciliation.refresh/v1`）：生成/刷新 draft/pending case；同 `case_key` 至多一条非 closed/superseded 有效 case；并发 refresh 公司锁只一胜；旧快照被替代 → superseded（append-only 历史）。
-- case 更新（`insights.reconciliation.case.update/v1`）：仅 draft→pending→approved/rejected→closed；不改业务事实。
+- case 更新（`insights.reconciliation.case.update/v1`）：draft→pending；pending→approved|rejected；approved→closed；刷新替代→superseded；rejected 为终态；不改业务事实。
 - 幂等：request_token 收据（org+token 唯一、输入 digest）。
 
 ### 2.3 `project_workbench_summary(member, project_id, *, as_of)`
@@ -36,7 +36,7 @@
 
 ## 3. as_of / period 过滤
 
-- `as_of` 为业务日（含）；未来日期拒绝或按契约产生 warning，不纳入未来事实。
+- `as_of` 为业务日（含）；未来 `as_of` 产生 `future_as_of` warning，as_of 之后的事实不参与；跨月 period 拒绝。
 - `period` 为 YYYY-MM；与 as_of 不一致时按 PH-354 口径拒绝（跨月分别查询）。
 - 期间/锁期引用 AccountingPeriod/Organization.locked_through/PeriodCloseRun/ProjectClose 只读事实，不复制状态机。
 
