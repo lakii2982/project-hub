@@ -1208,3 +1208,9 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - 实证 PR #258 run 41266764258：webhook mergeable=null 导致 mergeable_required。
 - 修复：当前 PR REST API 最多 3 次读取，只接受 mergeable=true 且 API/webhook BASE/HEAD 一致；持续未知拒绝，不执行候选代码。
 - 登记 73 tests OK；projectctl check ok/321；YAML 解析与 bash -n 通过；独立 S review PASS；live Delivery arbitration 已在 PR #264 通过（run 41269596652）；不启用远端强制。
+
+## PH-399 规划修正（2026-11-01，BASE 3136003）
+
+- PH-354 实现方全量回归计划外发现 11 个白名单外同类型失败（9 个首批 + contract_change_impact/_http 全量补漏）；本规划仅补精确文件白名单，不允许实现片自行扩权，不改业务断言。
+- PH-400 merge 3136003 收口 done；登记 PH-401 proposed（Issue #265）。按最终 spec 重算 PH-354/399/401 授权 digest。
+- 无产品实现、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。

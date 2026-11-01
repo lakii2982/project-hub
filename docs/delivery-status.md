@@ -92,3 +92,6 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 
 ## PH-400 仲裁 mergeable 兼容修复（2026-11-01）
 - Delivery arbitration 改用当前 PR REST API 刷新可空 mergeable，并交叉核对 webhook BASE/HEAD；持续未知仍拒绝。登记 73 tests OK，独立复核 PASS，live PR #264 仲裁已通过（run 41269596652）。
+
+## PH-399 规划修正（2026-11-01）
+- PH-354 新增 11 个经全量回归发现的依赖停用测试白名单，仅允许最小顺序修正；PH-400 收口 done，登记 PH-401 下一规划槽。无产品实现或发布宣称。
