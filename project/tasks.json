@@ -13288,6 +13288,37 @@
         "PH-399 规划修正合入后晋级 ready。"
       ],
       "handoff": null
+    },
+    {
+      "id": "PH-402",
+      "title": "修复质量门把非 Python 文件误判为未测量源",
+      "kind": "fix",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [],
+      "spec": "project/specs/PH-402.md",
+      "allowed_paths": [
+        "scripts/quality_gate.py",
+        "tests/test_quality_gate.py",
+        "project/specs/PH-402.md",
+        "project/tasks.json",
+        "project/delivery-policy.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-402.json",
+        "project/handoffs/PH-402.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance tests.test_quality_gate tests.test_delivery_policy -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/269",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
     }
   ]
 }

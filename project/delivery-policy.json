@@ -33,7 +33,8 @@
       {"task_id": "PH-397", "contract_digest": "63ab4163e2214519f85cc5a6a82831706577db40eba21aebf3dc4c782b6f7978", "source": "user-2026-10-31-complete-v1"},
       {"task_id": "PH-399", "contract_digest": "1cbc3517a299424dba654a0de65b46aa4a37ff3f13a635f6f2dfd1b348e83d75", "source": "user-2026-10-31-complete-v1"},
       {"task_id": "PH-400", "contract_digest": "cc7a53f3ff591eae8492fe67e3c41be61e093962f24f32de2d60b45579ba3362", "source": "user-2026-10-31-complete-v1"},
-      {"task_id": "PH-401", "contract_digest": "a994a12809b43cec0e6ca131b1738a3eea3c12f69b2c5364974c158aa19a8efa", "source": "user-2026-10-31-complete-v1"}
+      {"task_id": "PH-401", "contract_digest": "a994a12809b43cec0e6ca131b1738a3eea3c12f69b2c5364974c158aa19a8efa", "source": "user-2026-10-31-complete-v1"},
+      {"task_id": "PH-402", "contract_digest": "8f5c311f6ce24bd318080869214628b7c7ecec004925ac8434d61fbda0715305", "source": "user-2026-11-01-quality-fix"}
     ]
   },
   "remote_arbitration": {
