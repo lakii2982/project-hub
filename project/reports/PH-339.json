@@ -40,11 +40,16 @@
  ],
  "review": {
   "required": true,
-  "reviewer": null,
-  "status": "pending",
+  "reviewer": "independent PH-339 reviewer (fresh context, read-only)",
+  "status": "pass",
   "findings": [
-   "Not self-reviewed; independent S review pending."
-  ]
+   "PASS at eb6ef69 (BASE 7bb8351): both review rounds are closed. First-round blockers fixed — snapshot_watermark is a canonical core/period_precheck SourceRef array (business date in external_key), resolution_note is null|1..1000, difference_cents parses owner cents dicts (cleared_over_gross=5000, remaining_negative=-5000), and issues without normalized source identity become missing instead of merged cases.",
+   "Second-round blocker fixed: reconciliation_case_list no longer pre-filters by created_at, so a backdated snapshot is listed under its own as_of while a later snapshot stays hidden; probe reproduced both directions.",
+   "Additional verified: snapshot_as_of column removed with no migration drift; difference_cents non-null and range-guarded; coverage_key 300; append-only triggers cover case identity and both internal tables; older as_of cannot overwrite a newer snapshot; remaining_cents parsed; out-of-range differences skipped as missing without IntegrityError.",
+   "68 insight tests OK; check/makemigrations clean; verify_integrity ok on a throwaway migrated SQLite.",
+   "Non-blocking limits recorded: PK id outside the trigger column list, CASE_SCAN_LIMIT truncation on very large backfills, skipped missing entries lack missing_code/severity, and canonical case.update action/owner_member_id shape drifts from ADR 0014 state language."
+  ],
+  "evidence": "Independent S review performed by a fresh read-only context; implementer did not self-approve."
  },
  "deviations": [
   "Reconciliation cases are derived from PH-354 precheck issues with a stable identity of period|domain|owner + normalized source identities (version excluded) + rule_code; evidence changes supersede the prior draft/pending row. approved rows are never overwritten by refresh; issues whose refs cannot be normalized are surfaced in missing instead of creating a case. Active cases whose issue disappears are not auto-closed; they are listed in stale_case_keys for human follow-up.",
