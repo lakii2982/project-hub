@@ -1,22 +1,42 @@
 {
-  "task_id": "PH-399",
-  "summary": "规划修正：PH-354 全量回归计划外发现 11 个同类型依赖停用测试文件（9 个首批 + contract_change_impact/_http 全量补漏），按恢复矩阵先由独立规划 PR 补精确白名单，不允许实现片自行扩权；仅调整停用顺序，不改业务断言。PH-400 按真实 merge 收口 done，登记 PH-401 下一规划槽。其余顺序保持 PH-354→PH-353→PH-342。",
-  "tests": [
-    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual exit 0: ok=true, task_count=322."},
-    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual exit 0: Ran 23 tests in 2.637s, OK."}
+ "task_id": "PH-399",
+ "summary": "规划修正：PH-354 全量回归计划外发现 11 个同类型依赖停用测试文件（9 个首批 + contract_change_impact/_http 全量补漏），按恢复矩阵先由独立规划 PR 补精确白名单，不允许实现片自行扩权；仅调整停用顺序，不改业务断言。PH-400 按真实 merge 收口 done，登记 PH-401 下一规划槽。其余顺序保持 PH-354→PH-353→PH-342。 收口：PH-354 期间预检已按 CI（SQLite/PostgreSQL/容器全绿）合入 f52a7a1；PH-399/PH-354 done，PH-401 ready，PH-353 晋级 ready。",
+ "tests": [
+  {
+   "command": "python scripts/projectctl.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0: ok=true, task_count=322."
+  },
+  {
+   "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 23 tests in 2.637s, OK."
+  },
+  {
+   "command": "gh pr checks 267",
+   "result": "pass",
+   "evidence": "PH-354 PR #267 all required checks passed; merge f52a7a1."
+  }
+ ],
+ "review": {
+  "required": true,
+  "reviewer": "independent PH-399 planning reviewer (fresh context, read-only)",
+  "status": "pass",
+  "findings": [
+   "PASS at 2bfd3c2: 29 regression files in spec and tasks match exactly; contract_change_impact/_http confirmed as same failure mode; all six authorization digests independently recomputed and MATCH (PH-354=96f39c9d…, PH-397=63ab4163…, PH-399=1cbc3517…, PH-401=a994a128…, PH-353/400 unchanged).",
+   "PH-400 done and PH-401 proposed dependencies are valid; changes stay within PH-399 allowed_paths; no EXP-1/PH-110 or arbitration-rule expansion.",
+   "Text residuals were corrected to 11/29 and PH-397 digest refreshed before final evidence commit."
   ],
-  "review": {"required": true, "reviewer": "independent PH-399 planning reviewer (fresh context, read-only)", "status": "pass", "findings": [
-    "PASS at 2bfd3c2: 29 regression files in spec and tasks match exactly; contract_change_impact/_http confirmed as same failure mode; all six authorization digests independently recomputed and MATCH (PH-354=96f39c9d…, PH-397=63ab4163…, PH-399=1cbc3517…, PH-401=a994a128…, PH-353/400 unchanged).",
-    "PH-400 done and PH-401 proposed dependencies are valid; changes stay within PH-399 allowed_paths; no EXP-1/PH-110 or arbitration-rule expansion.",
-    "Text residuals were corrected to 11/29 and PH-397 digest refreshed before final evidence commit."
-  ], "evidence": "Independent verdict PASS; projectctl check ok/322 and 23 governance tests OK; verify-change only review pending at reviewed HEAD."},
-  "deviations": [
-    "PH-354 original 18-file regression whitelist was insufficient for default_enabled insights; 11 additional files were found by broader regression (9 first, then contract_change_impact/_http on full suite). Planning, not implementation, expands only those exact paths.",
-    "PH-399/401 share agent-protocol.md as spec, so their digests are recomputed after adding §11; PH-354 digest also changes with the eleven-file whitelist/spec update. PH-397 was already done; its policy digest is refreshed to 63ab4163e2214519f85cc5a6a82831706577db40eba21aebf3dc4c782b6f7978 for audit consistency with the shared spec.",
-    "No EXP-1, PH-110, out-of-milestone or arbitration-rule change is authorized."
-  ],
-  "unverified": [
-    "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed by this planning slice.",
-    "Independent S review and final verify-change are pending."
-  ]
+  "evidence": "Independent verdict PASS; projectctl check ok/322 and 23 governance tests OK; verify-change only review pending at reviewed HEAD."
+ },
+ "deviations": [
+  "PH-354 original 18-file regression whitelist was insufficient for default_enabled insights; 11 additional files were found by broader regression (9 first, then contract_change_impact/_http on full suite). Planning, not implementation, expands only those exact paths.",
+  "PH-399/401 share agent-protocol.md as spec, so their digests are recomputed after adding §11; PH-354 digest also changes with the eleven-file whitelist/spec update. PH-397 was already done; its policy digest is refreshed to 63ab4163e2214519f85cc5a6a82831706577db40eba21aebf3dc4c782b6f7978 for audit consistency with the shared spec.",
+  "No EXP-1, PH-110, out-of-milestone or arbitration-rule change is authorized.",
+  "Closeout after PH-354 merge: PH-399 done, PH-354 done, PH-401 ready, PH-353 ready; no product code changed in this closeout PR."
+ ],
+ "unverified": [
+  "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed by this planning slice.",
+  "Independent S review and final verify-change are pending."
+ ]
 }

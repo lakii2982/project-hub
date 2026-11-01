@@ -11491,7 +11491,7 @@
       "title": "导入提交拆分：ImportPreview/ImportConflict 持久化与原子提交首片（PH-289 拆分）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11528,9 +11528,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/260",
       "owner": null,
-      "blockers": [
-        "等 PH-354 提供真实 period_precheck_snapshot/precheck_digest 后晋级；不得复制第二套预检。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -11538,7 +11536,7 @@
       "title": "insights 读模型前置拆分：期间预检只读 API 首片（PH-272 拆分）",
       "kind": "feature",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11607,7 +11605,7 @@
         "python manage.py test tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http --verbosity 1"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/259",
-      "owner": "integration-agent",
+      "owner": "root",
       "blockers": [],
       "handoff": "project/handoffs/PH-354.md"
     },
@@ -13192,7 +13190,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13258,7 +13256,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
