@@ -15,9 +15,13 @@
  ],
  "review": {
   "required": true,
-  "reviewer": null,
-  "status": "pending",
-  "findings": []
+  "reviewer": "independent PH-343 insights-contract reviewer (fresh context, read-only)",
+  "status": "pass",
+  "findings": [
+   "Initial review blockers: future as_of semantics contradicted PH-363/PH-354, and the refresh boundary wrongly excluded the ADR 0014 insights.reconciliation_* events. Both fixed.",
+   "Final PASS at ceb36bb: as_of warning/truncation, canonical event boundary, rejected-terminal state machine and required canonical fields all align with ADR 0013/0014 and PH-354; PH-339 stays proposed."
+  ],
+  "evidence": "Independent final verdict PASS at ceb36bb (BASE 4907774)."
  },
  "deviations": [
   "Docs-only; PH-339 remains proposed and must re-check the actual BASE before implementation.",
