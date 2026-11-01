@@ -50,10 +50,10 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
         return results
 
     def test_same_frozen_month_different_request_tokens_recognizes_once(self):
-        row = self.confirmation(start=self.today.replace(day=1),
-            end=self.today.replace(day=28 if self.today.month == 2 else 28),
-            schedule=[{'coverage_start': self.today.replace(day=1).isoformat(),
-                       'coverage_end': self.today.replace(day=28 if self.today.month == 2 else 28).isoformat(),
+        start, end = self.completed_month()
+        row = self.confirmation(start=start, end=end,
+            schedule=[{'coverage_start': start.isoformat(),
+                       'coverage_end': end.isoformat(),
                        'allocated_net_cents': 101}])
         month = row.coverage_start.strftime('%Y-%m')
 
@@ -66,10 +66,10 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
         self.assertEqual(LedgerPosting.objects.count(), 0)
 
     def test_two_full_service_reversals_apply_once(self):
-        row = self.confirmation(start=self.today.replace(day=1),
-            end=self.today.replace(day=28 if self.today.month == 2 else 28),
-            schedule=[{'coverage_start': self.today.replace(day=1).isoformat(),
-                       'coverage_end': self.today.replace(day=28 if self.today.month == 2 else 28).isoformat(),
+        start, end = self.completed_month()
+        row = self.confirmation(start=start, end=end,
+            schedule=[{'coverage_start': start.isoformat(),
+                       'coverage_end': end.isoformat(),
                        'allocated_net_cents': 101}])
         recognition = self.recognize(row, row.coverage_start.strftime('%Y-%m'))
 
@@ -123,7 +123,7 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
         self.assertEqual(LedgerPosting.objects.count(), 0)
 
     def test_income_competes_with_company_locked_close(self):
-        start, end = self.today.replace(day=1), self.today.replace(day=28 if self.today.month == 2 else 28)
+        start, end = self.completed_month()
         row = self.confirmation(start=start, end=end, schedule=[
             {'coverage_start': start.isoformat(), 'coverage_end': end.isoformat(),
              'allocated_net_cents': 101}])
@@ -191,10 +191,10 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
         self.assertEqual(LedgerPosting.objects.count(), 0)
 
     def test_two_parent_reversals_apply_once(self):
-        row = self.confirmation(start=self.today.replace(day=1),
-            end=self.today.replace(day=28 if self.today.month == 2 else 28),
-            schedule=[{'coverage_start': self.today.replace(day=1).isoformat(),
-                       'coverage_end': self.today.replace(day=28 if self.today.month == 2 else 28).isoformat(),
+        start, end = self.completed_month()
+        row = self.confirmation(start=start, end=end,
+            schedule=[{'coverage_start': start.isoformat(),
+                       'coverage_end': end.isoformat(),
                        'allocated_net_cents': 101}])
 
         def action(_member):
@@ -209,7 +209,7 @@ class ServicePeriodConcurrencyTests(ServiceRevenueFixture, TransactionTestCase):
         from threading import Event, Thread
         import time
         from core.models import Organization
-        start, end = self.today.replace(day=1), self.today.replace(day=28 if self.today.month == 2 else 28)
+        start, end = self.completed_month()
         row = self.confirmation(start=start, end=end, schedule=[
             {'coverage_start': start.isoformat(), 'coverage_end': end.isoformat(),
              'allocated_net_cents': 101}])

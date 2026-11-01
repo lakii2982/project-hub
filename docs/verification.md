@@ -1180,3 +1180,9 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - 关闭规则：每项至少一条已合并实现/契约/验收证据；历史 ID 保留；关闭项不再阻塞保留项；执行人不得自批，独立 S 复核 pending。
 - v1.0 发布资格：release_ready=false；L3 CI/PG、L4 浏览器、L5 生产/客户验收、人工三方签批未完成；PH-020 上线评审在 gate 通过后执行。
 - 实际执行（最终 HEAD）：projectctl check ok=true/task_count=317；23 项治理 OK；verify-change --base 7748ea1 --task PH-396 在 review pending 时仅 high_risk_review_required（预期）。未验证：L3/L4/L5、PH-389/390/393/394/395、三方签批、独立 S 复核。
+
+## PH-398 服务期收入测试跨日恢复（2026-11-01）
+
+- PR #254 PG run 41217305149 的 6 个失败均为当前月 28 日客户确认跨日变成未来；仅改测试夹具为已结束自然月，不改业务未来日期拒绝。
+- scoped 34 tests OK（8 个 PG-only 在 SQLite 跳过）；check ok/318；manage.py check exit 0；makemigrations No changes；fresh SQLite verify exit 0。
+- 全量 1321 tests，5F+3E/70 skips，均为既有 8 项 macOS 基线，无新增；独立 S 复核 PASS；真实 PG/PR CI pending。直接 main 引导被保护拒绝，origin/main 未改。不得将 BASE task_not_in_baseline 或业务红灯写成通过。

@@ -1,0 +1,26 @@
+{
+  "task_id": "PH-398",
+  "summary": "专项恢复 PostgreSQL 跨日阻断：仅为服务期收入测试增加 completed_month 夹具（当前月1日前一日为已结束月份末日），将5个需要完整月份的并发夹具入口从当前月1–28日改为已结束月份；新增非PG反例断言夹具不进入当前月。保留全部业务服务、未来日期拒绝规则、并发/幂等/撤销断言，不删除或跳过测试。",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual exit 0: ok=true, task_count=318."},
+    {"command": "python manage.py check", "result": "pass", "evidence": "Actual exit 0; 119 pre-existing warnings, 0 errors."},
+    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual exit 0: No changes detected."},
+    {"command": "python manage.py test tests.test_service_period_revenue tests.test_service_period_revenue_concurrency --verbosity 1", "result": "pass", "evidence": "Actual exit 0: Ran 34 tests in 2.124s, OK (skipped=8 = PostgreSQL-only on SQLite). New completed_month boundary test passes; PG races remain for CI, not claimed locally."},
+    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 1321 tests in 157.619s; 5 failures + 3 errors + 70 environment skips. All eight failure/error names match the established main macOS baseline (6 DRF Accept/codec/large-JSON and 2 delivery /private/var symlink cases); no new failure. Linux/PG CI is authoritative and separately required."},
+    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual fresh SQLite /tmp/ph398-verify.sqlite3 after migrate completed exit 0; JSON integrity result is ok with no errors."}
+  ],
+  "review": {"required": true, "reviewer": "independent PH-398 recovery reviewer (fresh Sonnet context, read-only)", "status": "pass", "findings": [
+    "PASS at 85bbe69; full-suite evidence added at 84e375d without changing test logic. All six CI failures map to the five changed fixture entries; amount/concurrency/period assertions are unchanged.",
+    "completed_month returns the actual previous-month last day, so confirmed_on cannot be future across month/year boundaries or a test run crossing midnight. No unrelated production or test changes.",
+    "Real PostgreSQL and final PR CI remain separate required evidence, not inferred from this review or SQLite."
+  ], "evidence": "Independent read-only verdict PASS; scoped 34 tests OK and full local 1321 tests show only the established eight macOS failures. PG CI remains authoritative for race execution."},
+  "deviations": [
+    "The authorized one-time main planning commit 2b7e08e was rejected by GitHub protected-branch rules and never changed origin/main. The same contract is preserved on this normal PR branch; BASE task_not_in_baseline is expected until maintainer recovery and is not marked as passed.",
+    "Only test fixtures changed. The previous-month helper returns the actual last day of the preceding month rather than hardcoding day 28, so coverage and confirmed_on are never in the future at month boundaries.",
+    "Local SQLite cannot execute the eight PostgreSQL-only race tests; real PG CI is mandatory and separately reported."
+  ],
+  "unverified": [
+    "PostgreSQL multi-connection and final PR CI are not yet passed at this report revision.",
+    "No production deployment, browser or customer UAT was performed by this test-only recovery."
+  ]
+}
