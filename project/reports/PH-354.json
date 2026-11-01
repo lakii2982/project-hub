@@ -25,7 +25,7 @@
   {
    "command": "python manage.py test <29 个白名单依赖停用回归文件> --verbosity 1",
    "result": "pass",
-   "evidence": "Actual exit 0: 18 个原有回归文件两批 156 tests OK（16 项 PG-only SQLite 跳过）+ 11 个补入文件（test_v1_close/bank_charge_pairing(_http)/billable_reversal(_http)/contract_change(_http)/contract_change_impact(_http)/contract_terms_snapshot(_http)）58+10 tests OK。全部仅调整停用顺序，不改业务断言。"
+   "evidence": "Actual exit 0: 24 个实际调整文件（原有 18 中 13 个 + 补入 11 个）全部通过；其余 5 个原有文件自愈或公司锁先行。全部仅调整停用顺序，不改业务断言。"
   },
   {
    "command": "python manage.py test tests --verbosity 1",
