@@ -318,8 +318,8 @@ class GitHubGuardTests(ControllerFixture):
                                return_value={"total_count": len(rows), "check_runs": rows}):
             return self.delivery._checks(self.head, self.protection)
 
-    def test_all_eight_current_head_and_correct_app_required(self):
-        self.assertEqual(len(self.check_rows(self.rows)), 8)
+    def test_all_nine_current_head_and_correct_app_required(self):
+        self.assertEqual(len(self.check_rows(self.rows)), 9)
 
     def test_wrong_head_app_or_missing_check_cannot_pass(self):
         from tooling.ai_delivery.delivery.github import DeliveryError
@@ -341,11 +341,12 @@ class GitHubGuardTests(ControllerFixture):
 
     def test_another_apps_same_name_cannot_replace_protected_app(self):
         other = dict(self.rows[0], id=999, app={"id": 777}, conclusion="failure")
-        self.assertEqual(len(self.check_rows(self.rows + [other])), 8)
+        self.assertEqual(len(self.check_rows(self.rows + [other])), 9)
 
     def test_pending_cancelled_and_neutral_are_not_success(self):
         from tooling.ai_delivery.delivery.github import DeliveryError
-        for status, conclusion in [("in_progress", None), ("completed", "neutral"), ("completed", "cancelled")]:
+        for status, conclusion in [("in_progress", None), ("completed", "neutral"),
+                                   ("completed", "cancelled"), ("completed", "skipped")]:
             with self.subTest(conclusion=conclusion):
                 with self.assertRaises(DeliveryError):
                     self.check_rows([dict(self.rows[0], status=status, conclusion=conclusion), *self.rows[1:]])
@@ -353,11 +354,11 @@ class GitHubGuardTests(ControllerFixture):
     def test_incomplete_api_page_cannot_be_guessed_green(self):
         from tooling.ai_delivery.delivery.github import DeliveryError
         with mock.patch.object(self.delivery, "_gh_json",
-                               return_value={"total_count": 9, "check_runs": self.rows}):
+                               return_value={"total_count": 10, "check_runs": self.rows}):
             with self.assertRaisesRegex(DeliveryError, "incomplete"):
                 self.delivery._checks(self.head, self.protection)
 
-    def test_protection_must_remain_strict_and_exactly_eight(self):
+    def test_protection_must_remain_strict_and_exactly_nine(self):
         from tooling.ai_delivery.delivery.github import DeliveryError
         required = {"strict": True, "checks": [{"context": n, "app_id": app} for n, app in self.protection.items()]}
         payload = {"required_status_checks": required, "enforce_admins": {"enabled": True},

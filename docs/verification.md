@@ -1236,3 +1236,11 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - PH-122 晋级 ready，allowed_paths 增补 scripts/delivery_gate.py、tooling/ai_delivery/delivery/github.py、tests/test_delivery_policy.py、tests/test_delivery_gate.py；submitted 8→9 checks 变更须以真实对抗证据验证。
 - 登记 PH-403 proposed（Issue #273）；授权摘要 PH-122/401/403 按最终契约重算。
 - 无产品代码、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。
+
+## PH-122 远端强制门禁启用与对抗演练（2026-11-01，BASE a70d3eb）
+
+- **L1/L2**：policy/门禁 8→9、12→13，校验拒绝旧口径；67 项交付/质量测试 OK；manage.py check exit 0；makemigrations No changes。
+- **远端事实**：分支保护 API 显示 9 项 required checks（app 15368），strict/enforce_admins/线性/讨论/PR/禁强推/禁删除不变；规则集为空；`release` environment 未配置。
+- **对抗演练**：PR #275 缺 Task 行、#276 越界路径均 Project governance 失败并关闭（run 41281938305 / 41281956764）；PR #267 失败 CI 未合并（run 41277292446）；PR #270 落后 BASE 被拒。
+- **未验证/限制**：单一维护者 approvals=0；Agent 复核非第二 GitHub 人工身份；管理员可改规则，证据为时间点观察；无生产/UAT。
+- 独立 S review 与 verify-change：pending；执行人未自批。

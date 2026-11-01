@@ -105,3 +105,6 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 
 ## PH-401 规划推进（2026-11-01）
 - PH-354 合入后晋级 PH-353（原子导入，复用真实 precheck/digest）与 PH-122（远端强制，补齐 8→9 checks 实现白名单）；登记 PH-403 下一规划槽。仅规划，无功能/发布宣称。
+
+## PH-122 远端强制门禁启用（2026-11-01）
+- required checks 8→9（Delivery arbitration/app 15368），策略/门禁校验 9/13；strict/admin/线性/讨论/PR/禁强推禁删除保持不变。负例 PR #275/#276 被拒绝；失败 CI/落后 BASE/伪造复核/未授权高风险均有阻断证据。单一维护者 approvals=0、release 环境未配置，均如实记录。

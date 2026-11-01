@@ -4,11 +4,18 @@
   "visibility": "public",
   "ssh_authentication": "verified",
   "main_pushed": true,
+  "captured_at": "2026-11-01T06:45:05Z",
+  "main_sha": "a70d3ebdf3c5662b888c0ed9787d18c3b8869fbe",
   "github_actions": {
-    "status": "all_8_pass_on_recovery_pr",
     "head": "e4c99bf4e45e0452600a6b94a1b4b2229300252a",
     "checks_url": "https://github.com/lakii2982/project-hub/actions/runs/39789487592",
-    "codeql_url": "https://github.com/lakii2982/project-hub/actions/runs/39789487620"
+    "codeql_url": "https://github.com/lakii2982/project-hub/actions/runs/39789487620",
+    "permissions": {
+      "enabled": true,
+      "allowed_actions": "all",
+      "sha_pinning_required": false
+    },
+    "historical_status_2026_10_31": "all_8_pass_on_recovery_pr"
   },
   "branch_protection": {
     "status": "verified_enabled",
@@ -30,9 +37,37 @@
       "Public hygiene",
       "Container smoke",
       "CodeQL (python)",
-      "CodeQL (javascript-typescript)"
+      "CodeQL (javascript-typescript)",
+      "Delivery arbitration"
     ],
-    "evidence": "Saved GitHub edit page and public branch API protected:true; PR #15 merged under protection"
+    "delivery_arbitration": {
+      "enabled": true,
+      "app_id": 15368,
+      "workflow": ".github/workflows/delivery.yml",
+      "event": "pull_request",
+      "enabled_at": "2026-11-01T06:44:00Z",
+      "evidence": "GitHub branch protection API reports 9 required checks with app_id 15368; strict/enforce_admins/linear/conversation/PR protections unchanged."
+    },
+    "historical_evidence_2026_10_31": "Public branch protection API captured 2026-11-01; PR #254/#257/#258/#263/#264/#267/#268/#271/#272/#274 merged under protection."
+  },
+  "rulesets": [],
+  "collaborators": [
+    {
+      "login": "lakii2982",
+      "role": "admin"
+    }
+  ],
+  "apps": {
+    "github_actions": 15368,
+    "chatgpt_codex_connector": 1144995
+  },
+  "environments": [],
+  "release_workflow": {
+    "trigger": "workflow_dispatch",
+    "protected_environment_declared": "release",
+    "protected_environment_present": false,
+    "verifies_existing_tag_points_to_head": true,
+    "creates_or_moves_tags": false
   },
   "security_reporting": {
     "status": "verified_enabled",

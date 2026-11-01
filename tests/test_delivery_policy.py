@@ -29,12 +29,12 @@ def event(body, *, base='a' * 40, head='b' * 40, mergeable=True):
 
 
 class PolicyShapeTests(unittest.TestCase):
-    def test_versioned_policy_is_complete_and_has_eight_plus_four(self):
+    def test_versioned_policy_is_complete_and_has_nine_plus_four(self):
         validated = validate_policy(policy())
         self.assertEqual(validated['schema_version'], 1)
-        self.assertEqual(len(validated['required_status_checks']), 8)
+        self.assertEqual(len(validated['required_status_checks']), 9)
         self.assertEqual(len(validated['arbitration_sources']), 4)
-        self.assertEqual(validated['required_check_count'], 12)
+        self.assertEqual(validated['required_check_count'], 13)
         self.assertTrue(validated['independent_review']['required'])
         self.assertTrue(validated['merge']['linear_history_required'])
         self.assertFalse(validated['bootstrap']['remote_checks_enforced'])
@@ -64,7 +64,7 @@ class PolicyShapeTests(unittest.TestCase):
     def test_policy_mutations_fail_closed(self):
         mutations = [
             ('schema_version', 2), ('base_policy_source', 'head'),
-            ('required_check_count', 8),
+            ('required_check_count', 12),
         ]
         for key, value in mutations:
             bad = policy()
@@ -72,7 +72,7 @@ class PolicyShapeTests(unittest.TestCase):
             with self.assertRaises(GateError, msg=key):
                 validate_policy(bad)
         bad = policy()
-        bad['required_status_checks'] = bad['required_status_checks'][:7]
+        bad['required_status_checks'] = bad['required_status_checks'][:8]
         with self.assertRaises(GateError):
             validate_policy(bad)
         bad = policy()
@@ -108,7 +108,7 @@ class PRMetadataTests(unittest.TestCase):
     def test_exactly_one_task_line_and_identity(self):
         result = check_pr_metadata(self.policy, event('Task: PH-120\n\nbody'))
         self.assertEqual(result['task_id'], 'PH-120')
-        self.assertEqual(result['required_check_count'], 12)
+        self.assertEqual(result['required_check_count'], 13)
 
     def test_zero_or_multiple_task_lines_are_rejected(self):
         for body in ('no task', 'Task: PH-120\nTask: PH-121\n', 'Task: PH-120\nTask: PH-121\n'):
