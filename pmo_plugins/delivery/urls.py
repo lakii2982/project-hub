@@ -65,7 +65,8 @@ def entry_point():
         'invoicing': {name: getattr(invoicing_views, name) for name in
                       ('invoice_list', 'invoice_form', 'invoice_record', 'invoice_detail',
                        'invoice_allocate', 'invoice_reverse', 'invoice_tax',
-                       'invoice_tax_confirm', 'invoice_tax_link', 'invoice_reconciliation')}
+                       'invoice_tax_confirm', 'invoice_tax_link', 'invoice_reconciliation',
+                       'invoice_import')}
                      | {'invoice_orchestration_page': invoicing_views.invoice_orchestration,
                         'invoice_orchestration_execute': invoicing_views.invoice_orchestration},
         'settlement': {name: getattr(receivable_views, name) for name in ('settlement_list', 'settlement_detail', 'settlement_form', 'settlement_save', 'settlement_action', 'aging_list', 'clearance_create', 'clearance_reverse', 'clearance_list', 'offset_list', 'offset_save', 'settlement_coverage_snapshot', 'settlement_coverage_issues')},

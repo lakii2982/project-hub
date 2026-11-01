@@ -10934,7 +10934,7 @@
       "title": "发票批量/导入后续：发票导入模板、批量登记与来源分配（按 ADR 0015/PH-252）",
       "kind": "feature",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -10973,9 +10973,9 @@
         "python manage.py test tests.test_v1_invoice_import tests.test_v1_invoice_import_http --verbosity 1"
       ],
       "github_issue": null,
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-338.md"
     },
     {
       "id": "PH-339",

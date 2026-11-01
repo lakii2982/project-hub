@@ -94,6 +94,12 @@ class InvoiceReconciliationFilterForm(forms.Form):
             self.fields['project'] = forms.ModelChoiceField(
                 queryset=projects.order_by('name'), required=False,
                 label='项目')
+class InvoiceImportFilterForm(forms.Form):
+    """Read-only selection of one persisted invoice import preview."""
+
+    preview = forms.UUIDField(required=False)
+
+
 class TaxConfirmForm(forms.Form):
     qualification_id = forms.UUIDField()
     qualification_status = forms.ChoiceField(choices=[('recoverable', '可抵扣'),

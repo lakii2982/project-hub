@@ -22,7 +22,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from core.access import require_member
-from core.imports import HEADERS, apply_rows
+from core.imports import HEADERS, apply_rows, owner_issue_code
 from core.models import Membership
 from core.plugin_runtime import is_enabled
 from core.services import lock_company
@@ -357,6 +357,14 @@ def _import_key(member, preview, rows_digest):
 
 
 def _result_ref(obj):
+    if (isinstance(obj, dict) and obj.get('namespace') and obj.get('kind')
+            and obj.get('id') is not None):
+        ref = {'namespace': str(obj['namespace']), 'kind': str(obj['kind']),
+               'id': str(obj['id'])}
+        version = obj.get('version')
+        if isinstance(version, int):
+            ref['version'] = version
+        return ref
     meta = getattr(obj, '_meta', None)
     if meta is None:
         return {'namespace': 'unknown', 'kind': type(obj).__name__,
@@ -395,7 +403,8 @@ def _warnings(snapshot, conflicts):
     return warnings
 
 
-_PERIOD_DATE_FIELD = {'time': 'work_date', 'expense': 'occurred_on', 'plan': 'due_date'}
+_PERIOD_DATE_FIELD = {'time': 'work_date', 'expense': 'occurred_on',
+                      'plan': 'due_date', 'invoicing': 'invoice_date'}
 
 
 def _period_row_errors(kind, rows, period):
@@ -430,9 +439,33 @@ def _reject_owner_error(exc, preview, rows, *, precheck=None):
     if row_no and 2 <= row_no <= len(rows) + 1:
         row_digest = _digest(rows[row_no - 2])
     return ImportCommitRejected(_envelope(
-        [_row_error('owner_validation_failed', message, row_no=row_no,
+        [_row_error(owner_issue_code(message), message, row_no=row_no,
                     original_digest=row_digest, source_ref=_source_ref(preview))],
         precheck=precheck))
+
+
+def _kind_row_errors(member, preview, rows, *, include_owner=True):
+    """Re-run kind-specific row/group checks before owner writes (invoice slice)."""
+    if preview.kind != 'invoicing':
+        return []
+    from pmo_plugins.onboarding import preview_services
+    issues = preview_services.invoicing_row_issues(
+        member, rows, include_owner=include_owner)
+    errors = []
+    for entry in issues:
+        row_no = entry.get('line')
+        try:
+            row_no = int(row_no)
+        except (TypeError, ValueError):
+            row_no = None
+        row_digest = ''
+        if row_no and 2 <= row_no <= len(rows) + 1:
+            row_digest = _digest(rows[row_no - 2])
+        errors.append(_row_error(
+            entry.get('code'), entry.get('message'), row_no=row_no,
+            field=entry.get('field'), original_digest=row_digest,
+            source_ref=_source_ref(preview)))
+    return errors
 
 
 @transaction.atomic
@@ -553,6 +586,14 @@ def commit_import(member, *, preview_ref, rows_digest, precheck_digest,
     if period_errors:
         raise ImportCommitRejected(_envelope(
             period_errors, conflicts=resolved, missing=missing, precheck=precheck))
+
+    # Contract §2.3/§3: invoice row/group format, totals and (on a real write)
+    # source quota/consistency are revalidated server-side before owner services.
+    kind_errors = _kind_row_errors(
+        member, preview, rows, include_owner=not dry_run)
+    if kind_errors:
+        raise ImportCommitRejected(_envelope(
+            kind_errors, conflicts=resolved, missing=missing, precheck=precheck))
 
     if dry_run:
         return {'status': 'dry_run', 'dry_run': True, 'would_commit': True,
