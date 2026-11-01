@@ -86,3 +86,6 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 
 ## PH-120 可信 PR 交付（rolling，2026-10-31）
 - BASE policy/离线元数据 gate 与真实合并入口已接线；S 授权绑定任务/spec 摘要，合并检查 mergeable/test-merge/远端保护，新增官方 Codex/Actions 仲裁读取路径。作用域 71 tests OK（含 workflow 反伪造）；全量仍仅既有 8 项 macOS 失败。`remote_checks_enforced=false`，远端强制与真实 Codex 对抗由 PH-122 验证，不能视为已启用。另登记 ready 的 PH-397 仅作后续 1.0 规划入口，不恢复 EXP-1、不发布 PH-110 设计参考。
+
+## PH-397 v1.0 功能交付重启（2026-11-01）
+- 收口 PH-241/120；晋级 PH-121 与 PH-354。PH-354 先提供唯一期间预检/digest，PH-353 待其后实现原子导入；PH-342/343/355 保持 proposed。登记 PH-399 为下一规划槽。仅规划，不宣称功能或发布完成。

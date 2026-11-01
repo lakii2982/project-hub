@@ -28,7 +28,10 @@
       {"task_id": "PH-120", "contract_digest": "b0288e47677e5fb718ea9aaf89f9f610e6c74d6fcc5342f16821a04d530754d9", "source": "user-2026-10-27-PH120-122"},
       {"task_id": "PH-121", "contract_digest": "e395ddd8fbef44fc262c669ff680ca475331daa7e5c4721c25f55909227f33ea", "source": "user-2026-10-27-PH120-122"},
       {"task_id": "PH-122", "contract_digest": "50f641db388933015cf5228fa73cbea6711624dce65c09b9395e10a8461cb2b6", "source": "user-2026-10-27-PH120-122"},
-      {"task_id": "PH-397", "contract_digest": "4c4a808045dddf5fc7d00b9d0dc989eb1600ea44dcfd92729e0715c6a1c79ac0", "source": "user-2026-10-31-complete-v1"}
+      {"task_id": "PH-353", "contract_digest": "08196879d18b5afcbecc22f4ef0db1b42a92b03849c1db10182e1d74cb1fd1af", "source": "user-2026-10-31-complete-v1"},
+      {"task_id": "PH-354", "contract_digest": "ccb071f503bd22b80a5cb29fda8ff4478099ce3c3239ec0914e056d525b28dbf", "source": "user-2026-10-31-complete-v1"},
+      {"task_id": "PH-397", "contract_digest": "da4fb389b8736c4277d9c7d903c363126f9934a233b3240cd3c5dabbd2a14c50", "source": "user-2026-10-31-complete-v1"},
+      {"task_id": "PH-399", "contract_digest": "a95547962afcbb8b7627e10d848176cd36709bab12ffd627a5fc947676d9e0ee", "source": "user-2026-10-31-complete-v1"}
     ]
   },
   "remote_arbitration": {

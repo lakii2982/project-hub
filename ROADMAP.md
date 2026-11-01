@@ -811,3 +811,10 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - 追加登记 **PH-396**（ready，docs，deps=[]）：v1.0 遗留任务对账与关闭，spec `docs/v1.0-development/closure-reconciliation.md`；本片只登记，对账由 worker-clearance 承接。
 ## v1.0 遗留任务对账与关闭（PH-396，2026-10-31，BASE 7748ea1）
 - 对账 v1.0.0 BASE open 113 项：**6 项已覆盖→关闭（cancelled，仅保留直接已合并实现/验收证据）**；**106 项保留（未开工/部分覆盖，含本片 PH-396）+ 1 验收中（PH-241 in_review）** = 113（PH-388 ready、PH-389/390/393/394/395 及导入/通知/insights 链），逐项 gap 见 `docs/v1.0-development/closure-reconciliation.md` §2。
+
+## v1.0 功能交付重启（PH-397，2026-11-01，BASE 03006d1）
+
+- 按真实合并证据收口 PH-241（PR #150）与 PH-120（PR #254）；PH-121 按原契约晋级 ready。
+- **PH-354 晋级 ready**：补齐 insights bootstrap/settings/urls 与 18 个依赖停用测试白名单；先实现唯一期间预检/digest。
+- PH-353 保持 proposed 并新增 PH-354 依赖，避免在无真实预检时实现原子导入；PH-342/343 分别等 PH-353/354，PH-355 旧依赖未闭合不晋级。
+- 登记 **PH-399** ready（Issue #261）承接后续规划。无产品实现、无 L3–L5 宣称，EXP-1 继续暂停，PH-110 设计参考继续不入库。

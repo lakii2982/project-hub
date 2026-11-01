@@ -88,3 +88,14 @@ Dependabot提案没有Task行而被治理检查拒绝时，先评估升级必要
 非目标：不实现产品代码、迁移、canonical schema、发布标签或生产部署；不关闭 L3–L5 gate，不做三方自签；不登记或恢复 EXP-1；不强制发布设计参考；不触碰其他在飞实现分支。新功能实现必须在对应规划 PR 合入后，以新 BASE 的 ready 任务单独交付、独立 S 复核并经 PR/CI。
 
 验收：`python scripts/projectctl.py check` 与 `python -m unittest tests.test_projectctl tests.test_governance -v`；报告列出实际晋级、保留或取消的任务及逐项证据，独立 S 复核与 BASE verify-change 通过。
+
+## 10. PH-399 · v1.0 后续交付规划入口
+
+承接 PH-397 合入后的新 BASE。仅做依赖与证据再基线，不实现产品代码：
+
+1. 复核 PH-354 期间预检的合入/CI 证据；其 done 后可将 PH-353 晋级 ready。PH-353 必须消费 PH-354 的真实 `period_precheck_snapshot/precheck_digest`，不得复制预检公式。
+2. PH-353 done 后复核 PH-342 发票批量导入契约；PH-354 及其后续只读证据满足后复核 PH-343 insights 差异单/工作台契约。PH-355 的旧依赖未闭合前保持 proposed。
+3. 按 `user-2026-10-31-complete-v1` 为本次 v1.0 范围内任务登记/更新 contract_digest；不得修改仲裁规则、登记 EXP-1/PH-110 或里程碑外任务。每项实现仍需独立 S 复核和完整 PR/CI。
+4. 保留下一独立规划槽，按导入/发票、insights、通知、真实环境验收的写域与依赖串并行；L3–L5 未执行项保持 not_run，不做发布或三方自签。
+
+验收同 PH-397：projectctl check、23 项治理测试、逐项证据报告、独立 S 复核和 BASE verify-change。
