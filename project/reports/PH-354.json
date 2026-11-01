@@ -1,6 +1,6 @@
 {
  "task_id": "PH-354",
- "summary": "insights 读模型前置拆分首片：新建 pmo_plugins.insights 插件（manifest 恰好 8 字段，requires={cash,settlement,costing,contracts}，default_enabled=True，无模型/迁移/写通道），settings/PMO_PLUGIN_MODULES 与 delivery urls root 单写接线；period_precheck_snapshot 严格按 docs/v1.0-development/period-precheck-contract.md 输出 period.precheck.snapshot/v1 envelope（precheck=null+period_precheck_missing，不伪造 canonical 实体），聚合既有 owner 只读服务（cash_bridge/settlement 覆盖/revenue 配对/bank_charge 配对）与 PH-291 跨域总览，只按冻结映射定 severity、不复制金额/差额规则（difference 恒 null，missing 不以 0 冒充）；precheck_digest=sha256(canonical_json({contract,scope,period,as_of_date,watermark,issues,differences,missing}))，重复调用稳定、事实变化可检测；history_read 路由，owner/finance/auditor 全量、pm 仅管理项目摘要、member/跨 org 拒绝；新增 21 个测试（13 服务+8 HTTP），29 个白名单既有测试文件中 24 个需最小停用顺序调整（其余 5 个自愈/公司锁先行），不改业务断言。",
+ "summary": "insights 读模型前置拆分首片：新建 pmo_plugins.insights 插件（manifest 恰好 8 字段，requires={cash,settlement,costing,contracts}，default_enabled=True，无模型/迁移/写通道），settings/PMO_PLUGIN_MODULES 与 delivery urls root 单写接线；period_precheck_snapshot 严格按 docs/v1.0-development/period-precheck-contract.md 输出 period.precheck.snapshot/v1 envelope（precheck=null+period_precheck_missing，不伪造 canonical 实体），聚合既有 owner 只读服务（cash_bridge/settlement 覆盖/revenue 配对/bank_charge 配对）与 PH-291 跨域总览，只按冻结映射定 severity、不复制金额/差额规则（difference 恒 null，missing 不以 0 冒充）；precheck_digest=sha256(canonical_json({contract,scope,period,as_of_date,watermark,issues,differences,missing}))，重复调用稳定、事实变化可检测；history_read 路由，owner/finance/auditor 全量、pm 仅管理项目摘要、member/跨 org 拒绝；新增 24 个测试（13 服务+8 HTTP+3 反例），29 个白名单既有测试文件中 24 个需最小停用顺序调整（其余 5 个自愈/公司锁先行），不改业务断言。",
  "tests": [
   {
    "command": "python scripts/projectctl.py check",
@@ -20,7 +20,7 @@
   {
    "command": "python manage.py test tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http --verbosity 1",
    "result": "pass",
-   "evidence": "Actual exit 0: Ran 21 tests, OK."
+   "evidence": "Actual exit 0: Ran 24 tests, OK. Covers gold sample, digest stability/change, zero write, roles, cross-month period rejection, unique offset missing, and project-scope isolation."
   },
   {
    "command": "python manage.py test <29 个白名单依赖停用回归文件> --verbosity 1",
@@ -47,6 +47,7 @@
  },
  "deviations": [
   "白名单外 11 个既有测试文件受新插件 default_enabled 依赖影响而失败；已由 PH-399 独立规划 PR 补入精确写域后，本片以同一最小停用顺序修正，全量回到既有 macOS 基线。",
+  "独立复核首轮 3 项阻断已修复：(1) project scope 现在对 revenue 传 project_id、对无项目归属的 cash/costing/contracts 显式 missing，不再混入其他项目；(2) period 必须与 as_of 同月，跨月直接拒绝，不静默返回跨期结果；(3) offset_not_implemented 只由 settlement 触发并按 (missing_code, domain, source_ref) 去重。另补充顶层 truncated 标志、contracts refs 排序。",
   "severity 映射按 contract §5 冻结口径执行：cleared_over_gross/settled_exceeds_recognized/duplicate_recognition/cost_*_duplicate 等归为 blocker，未分类现金/offset 未实现/period_precheck_missing 等为 warning；future_as_of 按 §6.1 记 warning（§5 将『未来日期』列入 blocker 的两处口径以该 code 定义条款为准，已在 handoff 披露待 reviewer 仲裁）。",
   "checks 的 expected/actual/difference_cents 与 envelope differences 不复制 owner 差额规则，一律 null；金额口径唯一来源为 owner 服务及其 issue 的 expected/actual 透传。",
   "pm 项目摘要不含 cash 域（owner cash 服务拒绝 pm），按 missing（cash_bridge_unavailable，warning）呈现，不按 0 处理。",

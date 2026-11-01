@@ -136,15 +136,64 @@ class PeriodPrecheckServiceTests(OpsOverviewFixture, TestCase):
     def test_period_not_found_missing_when_tracking_started(self):
         AccountingPeriod.objects.create(organization=self.org, period='2020-01',
                                         status='active')
-        data = self.snapshot(period='2020-02')
+        from datetime import date
+        data = self.snapshot(period='2020-02', as_of=date(2020, 2, 10).isoformat())
         entry = [row for row in data['missing'] if row['missing_code'] == 'period_not_found']
         self.assertEqual(len(entry), 1)
         self.assertEqual(entry[0]['severity'], 'blocker')
         # 组织完全未启用期间跟踪时，不对缺失期间作假判定。
         AccountingPeriod.objects.filter(organization=self.org).delete()
-        clean = self.snapshot(period='2020-02')
+        clean = self.snapshot(period='2020-02', as_of=date(2020, 2, 10).isoformat())
         self.assertFalse(any(row['missing_code'] == 'period_not_found'
                              for row in clean['missing']))
+
+    def test_cross_month_period_is_rejected_instead_of_mixing_facts(self):
+        with self.assertRaises(ValidationError):
+            self.snapshot(period='2020-02')
+
+    def test_offset_missing_is_unique_and_only_from_settlement(self):
+        data = self.snapshot()
+        offset_rows = [row for row in data['missing']
+                       if row['missing_code'] == 'offset_not_implemented']
+        self.assertEqual(len(offset_rows), 1)
+        self.assertEqual(offset_rows[0]['domain'], 'settlement')
+        cash_only = self.snapshot(sections=['cash'])
+        self.assertFalse(any(row['missing_code'] == 'offset_not_implemented'
+                             for row in cash_only['missing']))
+
+    def test_project_scope_never_mixes_other_projects(self):
+        # pm 管理项目1，且是项目A/B的团队成员；项目1快照不得出现其他项目的 issue。
+        Project.objects.filter(pk=self.project.pk).update(manager=self.pm)
+        self.project.refresh_from_db()
+        other = Project.objects.create(organization=self.org, code='P354-A', name='项目A',
+                                       manager=self.owner, start_date=self.today,
+                                       end_date=self.today)
+        foreign = Project.objects.create(organization=self.org, code='P354-B', name='项目B',
+                                         manager=self.owner, start_date=self.today,
+                                         end_date=self.today)
+        from core.models import ProjectMember
+        ProjectMember.objects.create(project=other, member=self.pm)
+        ProjectMember.objects.create(project=foreign, member=self.pm)
+        self.settlement_with_item(amount=50000, project=other)
+        foreign_settlement = self.settlement_with_item(amount=50000, project=foreign)
+        self.recognition(amount=60000, line=self.approved_line)
+        data = self.snapshot(self.pm, scope='project', project_id=self.project.pk)
+        self.assertEqual(data['scope']['project_id'], str(self.project.pk))
+        other_ids = {str(other.pk), str(foreign.pk)}
+        for issue in data['issues']:
+            for ref in issue['source_refs']:
+                self.assertNotIn(str(ref['id']), other_ids)
+        self.assertFalse(any(row['missing_code'] == 'revenue_pairing_unavailable'
+                             and row['domain'] == 'contracts' for row in data['missing']))
+
+    def test_truncation_flags_result_truncated(self):
+        self.settlement_with_item()
+        with mock.patch.object(precheck_services, 'ISSUE_LIMIT', 1):
+            data = self.snapshot()
+        self.assertTrue(any(row['missing_code'] == 'result_truncated'
+                            for row in data['missing']))
+        self.assertTrue(data['truncated'])
+        self.assertLessEqual(len(data['issues']), 1)
 
     def test_future_as_of_is_warning(self):
         future = (self.today + timedelta(days=3)).isoformat()

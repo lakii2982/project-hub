@@ -223,9 +223,14 @@ def _period_issues(member, period_label, day):
     return blockers, missing, watermark
 
 
-def _owner_issues(member, *, day, sections, scope, project):
-    """调用既有 owner 只读服务聚合 issue；失败记 missing，绝不静默按 0 处理。"""
+def _owner_issues(member, *, day, sections, scope, project, period_label):
+    """调用既有 owner 只读服务聚合 issue；失败记 missing，绝不静默按 0 处理。
+
+    project scope 时只调用支持项目参数的 owner 服务；无项目归属的域显式 missing，
+    不把其他项目/全公司数据混入所选项目视图。
+    """
     issues, missing, checks = [], [], []
+    project_scope = scope == 'project'
 
     def collect(domain, owner, call, missing_code, unavailable_reason):
         try:
@@ -233,10 +238,10 @@ def _owner_issues(member, *, day, sections, scope, project):
         except ValidationError:
             raise
         except PermissionDenied:
-            # pm 的项目摘要不含 cash 域（owner 服务拒绝 pm）；显式 missing，不按 0 处理。
-            if member.role == 'pm':
+            # pm 的项目摘要不含无项目归属的域；显式 missing，不按 0 处理。
+            if member.role == 'pm' or project_scope:
                 missing.append(_missing(missing_code, domain,
-                                        reason=f'{unavailable_reason}（当前角色仅项目摘要）'))
+                                        reason=f'{unavailable_reason}（当前范围无项目归属）'))
                 return
             raise
         except Exception:
@@ -256,7 +261,9 @@ def _owner_issues(member, *, day, sections, scope, project):
                        'issues': [], 'missing': []})
         for row in rows:
             issues.append(_envelope_issue(domain, owner, row))
-        if offset_flag is False:
+        # offset 只有结算覆盖服务定义；cash 快照也可能暴露 offset_implemented=False，
+        # 不能据此在 settlement 域凭空产生 missing，也不能重复追加。
+        if offset_flag is False and domain == 'settlement':
             missing.append(_missing('offset_not_implemented', 'settlement',
                                     reason='现金 offset（PH-241）未实现，offset 按 null 处理'))
 
@@ -275,18 +282,32 @@ def _owner_issues(member, *, day, sections, scope, project):
     if 'revenue' in sections:
         from pmo_plugins.management_revenue import pairing_read_services as revenue
         collect('revenue', 'management_revenue',
-                lambda: revenue.revenue_pairing_issues(member, as_of=day),
+                lambda: revenue.revenue_pairing_snapshot(
+                    member, project_id=project.pk if project is not None else None,
+                    period=period_label, as_of=day).get('issues') or [],
                 'revenue_pairing_unavailable', '收入配对只读服务不可读')
     if 'cost' in sections:
         from pmo_plugins.costing import bank_charge_pairing_services as costing
-        collect('cost', 'costing',
-                lambda: costing.bank_charge_pairing_issues(member, as_of=day),
-                'bank_charge_pairing_unavailable', '手续费成本配对只读服务不可读')
+        if project_scope:
+            # 成本配对 issue 无项目归属，project scope 下显式 missing，避免混入其他项目。
+            missing.append(_missing('bank_charge_pairing_unavailable', 'cost',
+                                    reason='手续费成本配对无项目归属（当前范围仅项目摘要）'))
+        else:
+            collect('cost', 'costing',
+                    lambda: costing.bank_charge_pairing_issues(member, as_of=day),
+                    'bank_charge_pairing_unavailable', '手续费成本配对只读服务不可读')
     return issues, missing, checks
 
 
-def _contracts_issues(member, *, day, period_label):
-    """合同域经 PH-291 跨域总览只读派生（ADR 0014 contracts blockers）。"""
+def _contracts_issues(member, *, day, period_label, scope):
+    """合同域经 PH-291 跨域总览只读派生（ADR 0014 contracts blockers）。
+
+    project scope 下总览不提供项目参数；为避免把其他项目合同问题混入所选项目，
+    显式 missing，不猜测过滤。
+    """
+    if scope == 'project':
+        return [], [_missing('contracts_overview_unavailable', 'contracts',
+                             reason='合同域总览无项目过滤（当前范围仅项目摘要）')]
     from pmo_plugins.delivery import operations_read_services as overview
     data = overview.ops_reconciliation_overview(member, as_of=day, period=period_label)
     issues, missing = [], []
@@ -295,8 +316,10 @@ def _contracts_issues(member, *, day, period_label):
             continue
         for row in section.get('issues') or []:
             envelope = _envelope_issue('contracts', 'contracts', row)
-            envelope['source_refs'] = [
-                ref for ref in (row.get('refs') or []) if isinstance(ref, dict)]
+            envelope['source_refs'] = sorted(
+                (ref for ref in (row.get('refs') or []) if isinstance(ref, dict)),
+                key=lambda ref: (str(ref.get('namespace')), str(ref.get('kind')),
+                                 str(ref.get('id'))))
             issues.append(envelope)
         for code in section.get('missing') or []:
             missing.append(_missing(code, 'contracts', reason='合同只读分区暂不可读'))
@@ -311,6 +334,8 @@ def period_precheck_snapshot(member, *, scope='company', project_id=None,
     requested = _check_sections(sections)
     day = _day(as_of)
     period_label = _period_label(period) or day.strftime('%Y-%m')
+    if day.strftime('%Y-%m') != period_label:
+        raise ValidationError('period 必须与 as_of 处于同一月份，跨期预检请分别查询')
     watermark = {'namespace': 'core', 'kind': 'organization',
                  'id': str(member.organization_id), 'version': 1}
 
@@ -327,12 +352,13 @@ def period_precheck_snapshot(member, *, scope='company', project_id=None,
 
     owner_issues, owner_missing, owner_checks = _owner_issues(
         member, day=min(day, timezone.localdate()), sections=requested,
-        scope=scope, project=project)
+        scope=scope, project=project, period_label=period_label)
     checks.extend(owner_checks)
     missing.extend(owner_missing)
     try:
         contract_issues, contract_missing = _contracts_issues(
-            member, day=min(day, timezone.localdate()), period_label=period_label)
+            member, day=min(day, timezone.localdate()), period_label=period_label,
+            scope=scope)
     except (PermissionDenied, ValidationError):
         raise
     except Exception:
@@ -362,6 +388,19 @@ def period_precheck_snapshot(member, *, scope='company', project_id=None,
         return unique
 
     blockers, warnings = dedup(blockers), dedup(warnings)
+
+    # missing 按 (missing_code, domain, 排序 source_ref) 去重，避免同一来源重复计数。
+    def dedup_missing(rows):
+        unique, seen = [], set()
+        for row in rows:
+            marker = (row['missing_code'], row['domain'],
+                      json.dumps(row.get('source_ref'), sort_keys=True))
+            if marker not in seen:
+                seen.add(marker)
+                unique.append(row)
+        return unique
+
+    missing = dedup_missing(missing)
     truncated = len(blockers) + len(warnings) > ISSUE_LIMIT
     if truncated:
         blockers = blockers[:ISSUE_LIMIT]
@@ -388,6 +427,7 @@ def period_precheck_snapshot(member, *, scope='company', project_id=None,
             'differences': differences,
             'issues': issues,
             'missing': missing,
+            'truncated': truncated,
             'summary': {'issue_count': len(issues),
                         'blocking_count': len(blockers),
                         'warning_count': len(warnings),
