@@ -17,18 +17,20 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": []
+    "reviewer": "independent review_flow / reviewer",
+    "status": "pass",
+    "findings": [
+      "PASS at 7d534fa against BASE 5966809. Independently ran projectctl check, all 59 frozen acceptance tests and diff check; verified BASE scope, no product/database/CI/protection changes, consistent entry points, bounded main-only first-parent hints, strict explicit exit codes with historical compatibility, and verbatim archived status text. Same-PR done/report updates approved."
+    ]
   },
   "deviations": [
     "No new task system, policy schema, CI job, runtime dependency or approval flow. Existing report records without exit_code remain compatible; explicit exit codes are checked but are not proof of execution.",
     "Local product full suite is not repeated for an infrastructure-only task; frozen scoped acceptance is run and unchanged remote full required CI remains mandatory.",
-    "The status page old text is preserved verbatim as an append-only archive snapshot, rather than rewriting historical claims."
+    "The status page old text is preserved verbatim as an append-only archive snapshot, rather than rewriting historical claims.",
+    "Remote current-head required checks must pass before merge and remain recorded by GitHub; local test declarations are not remote evidence. No follow-up closeout PR."
   ],
   "unverified": [
-    "Independent S review and current-head required CI pending.",
-    "No product browser/deployment/customer acceptance performed or claimed.",
-    "Offline origin/main may be stale; path/kind counts cannot prove a usable outcome."
+    "Product browser/deployment/customer acceptance is outside this infrastructure slice; no such pass is claimed.",
+    "Offline origin/main may be stale; path/kind counts cannot prove a usable outcome or actual workstream count."
   ]
 }

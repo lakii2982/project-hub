@@ -1299,3 +1299,11 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - docs-only 规划：PH-378/PH-379 cancelled（范围被 PH-338/PH-339 覆盖）、PH-383/PH-384 依赖改接、PH-355 晋级 ready、PH-406 登记 proposed；agent-protocol.md §14 记录决策。
 - 实跑：projectctl check ok=true/task_count=326；tests.test_projectctl tests.test_governance 23 项 OK；tests.test_delivery_policy 11 项 OK。
 - 未验证：无产品实现/迁移/PG/浏览器/生产/UAT；独立 S 复核与 verify-change 待完成。
+
+## PH-407 · 成果优先与流程收敛（2026-11-01）
+
+- BASE 5966809（规划PR #296 的13项检查全过并合入）；只改研发入口、只读提示与报告一致性，无业务/数据库/CI/保护修改。
+- 先加反例：旧实现运行27项项目工具测试出现缺失 delivery_flow/exit_code 与矛盾退出码被接受的失败；实现后冻结 check 与59项治理/策略/质量验收全部通过（见 project/reports/PH-407.json）。
+- 独立 S 复核 PASS 绑定7d534fa：实跑check/59 tests/diff check，主线first-parent隔离、历史缺失unavailable、测试/文档排除、报告严格整数退出码与历史兼容、原现状逐字归档均核对。
+- 实测 orient 读取20个主线PR，product_code_prs=4、trailing_support_prs=4，给出support_pr_streak提示；这是离线代理指标，不证明任何业务成果完成。
+- 当前实施PR远端全量/PG/容器等required检查必须实际通过才合入，由GitHub保存同提交结果。浏览器/部署/客户UAT不属于本研发工具片；未冒充产品验收。状态/报告同PR交付，不创建下一槽或纯收口PR。

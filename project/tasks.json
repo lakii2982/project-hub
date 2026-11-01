@@ -13430,7 +13430,7 @@
       "title": "按可用成果交付：入口收敛、只读流程提示与真实退出码",
       "kind": "infra",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [

@@ -59,7 +59,7 @@ sh scripts/run-local.sh
 | 审批与审计 | 自审阻止、锁账、不可变账本、附件、来源与审计哈希链 |
 | 内置输入 | 浏览器表单、CSV预览/原子提交/幂等/安全导出 |
 | 个人Agent接入 | 本人身份、项目与操作范围、期限/撤销；7个MCP工具 |
-| 插件管理 | 三个叶插件、按公司启停、依赖与版本检查、Outbox和重试 |
+| 插件管理 | 按公司启停、依赖与版本检查、Outbox和重试；新增业务插件见当前交付现状 |
 
 金额持久化整数分，工时整数分钟，核算用Decimal。成本和现金独立记账；现金计划不是完整应收应付，净现金流不是利润，当前任务数量完成率也不是合同履约进度。图中计划线仅作参考，实际成本包含负值冲销；使用当前批准预算重述历史，不能视为历史预算版本。老板决策工作台是后续产品任务。
 
@@ -95,7 +95,7 @@ docker compose exec app python manage.py bootstrap --company "你的公司" --us
 
 最后一条中的版本与pyproject.toml一致；发行workflow自动读取版本。CI包括任务治理、SQLite/PG回归、MCP握手、公开内容/秘密扫描、容器与隔离数据库恢复；另有CodeQL。配置存在不等于某次检查已通过，请查看对应提交的Actions记录。依赖由Dependabot提出PR，全部经过任务、评审和检查，不自动合并。
 
-Git标签触发同提交验证与草稿发布，远端资产摘要核对后公开；0.x标为pre-release。1.0有单独就绪门槛。版本与异常分支见 [发布规范](docs/engineering/releases.md) 和 [恢复矩阵](docs/engineering/recovery.md)。
+发布按 [发布规范](docs/engineering/releases.md) 与当前工作流显式执行；标签、构建、草稿和公开发布分别核对，合入 main 不等于发布；0.x标为pre-release。1.0有单独就绪门槛。版本与异常分支见 [发布规范](docs/engineering/releases.md) 和 [恢复矩阵](docs/engineering/recovery.md)。
 
 ## 设计、贡献与安全
 
