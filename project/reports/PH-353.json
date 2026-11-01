@@ -59,7 +59,10 @@
   "HTTP is split into import-submit/ history_read (owner/finance/auditor, disabled-module history still readable) and import-submit-commit/ business_write (owner/finance), matching the plugin runtime GET/POST method semantics.",
   "persist_preview performs no audit or canonical event write; only the append-only receipt and owner-service audits provide traceability after commit.",
   "No canonical entity/topic/command is added and core/imports.py is unchanged; all row writes still go through apply_rows owner services.",
-  "Independent review blocker: rows were not bound to the submitted period, so a valid current-month precheck could admit a prior-month row; commit/dry_run now reject any row whose business date month differs from period (row_date_invalid), with regression tests."
+  "Independent review blocker: rows were not bound to the submitted period, so a valid current-month precheck could admit a prior-month row; commit/dry_run now reject any row whose business date month differs from period (row_date_invalid), with regression tests.",
+  "dry_run validates preview/precheck/conflicts/row-period but not owner row rules; would_commit means those stages passed, owner rejection is returned on real commit.",
+  "resolve_conflict has no company lock/select_for_update; concurrent resolution is deferred to a follow-up slice.",
+  "Persistent preview HTTP upload is not exposed in this slice; persist_preview is a service API and the submit page is present."
  ],
  "unverified": [
   "Independent S review pending (not self-approved).",
