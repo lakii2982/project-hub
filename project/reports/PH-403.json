@@ -21,7 +21,8 @@
  },
  "deviations": [
   "PH-353 merged in PR #278 and closed by PR #279; this slice only activates the two docs-only contract tasks whose dependencies are all done.",
-  "No EXP-1/PH-110 or arbitration-rule change."
+  "No EXP-1/PH-110 or arbitration-rule change.",
+  "Review follow-up: PH-342/PH-343 spec status/dependency lines now reflect PH-353/PH-354 as the implemented slices instead of the still-proposed parent PH-289/PH-272; agent-protocol §12 numbering/trigger wording aligned; all four digests recomputed."
  ],
  "unverified": [
   "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed.",
