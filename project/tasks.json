@@ -11141,7 +11141,7 @@
       "title": "insights 读模型实现前置契约冻结（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11169,8 +11169,8 @@
       ],
       "blockers": [],
       "github_issue": null,
-      "owner": null,
-      "handoff": null
+      "owner": "root",
+      "handoff": "project/handoffs/PH-343.md"
     },
     {
       "id": "PH-344",

@@ -1257,3 +1257,8 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - PH-353 已由 PR #278 合入并由 #279 收口；PH-342/PH-343 依赖均已 done，晋级 ready（均为 docs-only 契约冻结）。
 - 登记 PH-404 proposed（Issue #280）作为下一规划槽；PH-342/343/403/404 授权摘要机器断言 MATCH。
 - 无产品代码、迁移、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。
+
+## PH-343 insights 读模型契约冻结（2026-11-01，BASE 4907774）
+
+- 新增 `docs/v1.0-development/insights-read-model-contract.md`：只读投影、期间预检复用、差异单/项目工作台字段、missing/null、权限与内部读模型边界。
+- 无产品代码/迁移/表/路由；PH-339 未解除 proposed。独立 S review 与 verify-change 待最终证据。
