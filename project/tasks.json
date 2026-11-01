@@ -13086,6 +13086,41 @@
       "owner": "root",
       "blockers": [],
       "handoff": "project/handoffs/PH-396.md"
+    },
+    {
+      "id": "PH-398",
+      "title": "修复服务期收入并发测试跨日墙钟依赖",
+      "kind": "fix",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [],
+      "spec": "project/specs/PH-398.md",
+      "allowed_paths": [
+        "tests/test_service_period_revenue.py",
+        "tests/test_service_period_revenue_concurrency.py",
+        "project/specs/PH-398.md",
+        "project/tasks.json",
+        "project/delivery-policy.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-398.json",
+        "project/handoffs/PH-398.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests.test_service_period_revenue tests.test_service_period_revenue_concurrency --verbosity 1",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/256",
+      "owner": null,
+      "blockers": [],
+      "handoff": null
     }
   ]
 }
