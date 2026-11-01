@@ -11507,7 +11507,8 @@
       "allowed_paths": [
         "pmo_plugins/onboarding/import_commit_services.py",
         "pmo_plugins/onboarding/models.py",
-        "pmo_plugins/onboarding/migrations/0002_import_submission.py",
+        "pmo_plugins/onboarding/migrations/__init__.py",
+        "pmo_plugins/onboarding/migrations/0001_initial.py",
         "pmo_plugins/onboarding/views.py",
         "pmo_plugins/onboarding/forms.py",
         "pmo_plugins/onboarding/domain_metadata.py",

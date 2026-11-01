@@ -1232,7 +1232,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 
 ## PH-401 v1.0 功能交付推进（2026-11-01，BASE f52a7a1）
 
-- PH-354 已由 PR #267 合入；PH-353 依赖 PH-274/362/354 均 done，晋级 ready。
+- PH-354 已由 PR #267 合入；PH-353 依赖 PH-274/362/354 均 done，晋级 ready；其迁移白名单修正为 onboarding 首个迁移 `0001_initial` 与 `migrations/__init__.py`。
 - PH-122 晋级 ready，allowed_paths 增补 scripts/delivery_gate.py、tooling/ai_delivery/delivery/github.py、tests/test_delivery_policy.py、tests/test_delivery_gate.py；submitted 8→9 checks 变更须以真实对抗证据验证。
 - 登记 PH-403 proposed（Issue #273）；授权摘要 PH-122/401/403 按最终契约重算。
 - 无产品代码、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。
