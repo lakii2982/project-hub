@@ -1258,12 +1258,12 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - 登记 PH-404 proposed（Issue #280）作为下一规划槽；PH-342/343/403/404 授权摘要机器断言 MATCH。
 - 无产品代码、迁移、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。
 
-## PH-343 insights 读模型契约冻结（2026-11-01，BASE 4907774）
+## PH-343 insights 读模型契约冻结（2026-11-01，BASE 4907774；已合入 3ab8d3c）
 
 - 新增 `docs/v1.0-development/insights-read-model-contract.md`：只读投影、期间预检复用、差异单/项目工作台字段、missing/null、权限与内部读模型边界。
 - 无产品代码/迁移/表/路由；PH-339 未解除 proposed。独立 S review 与 verify-change 待最终证据。
 
-## PH-342 发票批量/导入契约冻结（2026-11-01，BASE 4907774）
+## PH-342 发票批量/导入契约冻结（2026-11-01，BASE 4907774；已合入 2128ef8）
 
 - 新增 `docs/v1.0-development/invoice-import-contract.md`：批量模板/字段映射、逐行校验、全批原子/幂等/公司锁/期间、错误 envelope、权限与 owner 复用边界。
 - 无产品代码/迁移/表/路由；PH-338 未解除 proposed。独立 S review 与 verify-change 待最终证据。
