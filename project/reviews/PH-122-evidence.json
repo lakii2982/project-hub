@@ -64,7 +64,9 @@
     "required_approvals": 0,
     "force_push": false,
     "deletion": false,
-    "rulesets": []
+    "rulesets": [],
+    "note": "The ninth required check was enabled via branch protection before this PR merged so the PR itself proves the protected path. scripts/delivery_gate.py is updated in the same PR; the local ai_delivery controller would fail closed on a BASE 8/12 policy during the brief pre-merge window, so this PR uses GitHub branch protection (all nine checks green) rather than the controller merge path.",
+    "controller_compatibility": "temporary: BASE 8/12 vs candidate 9/13; resolved once this PR merges"
   },
   "positive_path": {
     "pr": null,
@@ -74,6 +76,8 @@
     "note": "Filled when the PH-122 delivery PR merges under the nine-check protection."
   },
   "limitations": [
+    "remote_checks_enforced remains false: no real Codex Connector PASS was obtained (usage limits), so the four arbitration sources are not executed in the real merge path. The ninth required check only enforces PR metadata from BASE.",
+    "The ninth check was enabled before this PR merged; the local ai_delivery controller would fail closed on the BASE 8/12 policy during that window. No branch-protection check was bypassed: the PR must pass all nine.",
     "Only one human maintainer; required approvals remain 0 and independent review is an agent review, not a second GitHub human identity.",
     "The protected 'release' environment is declared by workflow but not configured in repository settings, so release publication still requires manual approval discipline.",
     "Hosted GitHub Actions/ruleset configuration can be changed by an administrator; this evidence is a timestamped observation, not tamper-proof.",

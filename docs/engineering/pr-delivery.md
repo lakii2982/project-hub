@@ -35,7 +35,7 @@ python scripts/quality_gate.py --base <sha> --coverage coverage.json --test-log 
 
 ## bootstrap 与未验证边界
 
-- 当前 `bootstrap.remote_checks_enforced=false`：本片实现并测试远端仲裁读取路径，但不宣称新检查已成为分支保护，也不宣称已有真实 Codex PASS。PH-122 必须在真实 PR 上核对 App、workflow/event、BASE/HEAD/test-merge SHA 后才能启用。
+- 当前 `bootstrap.remote_checks_enforced=false`：本片实现并测试远端仲裁读取路径，但不宣称新检查已成为分支保护，也不宣称已有真实 Codex PASS。PH-122 已把 Delivery arbitration 设为 required 并通过真实保护合入；但真实 Codex Connector PASS 因用量限制未取得，`remote_checks_enforced` 仍为 false，4 个仲裁来源尚未在真实合并路径执行，已登记为阻断性未验证项。
 - 官方 App/bot 数字身份来自 GitHub 公共 API 实查；评论正文不是授权来源，只有符合身份、HEAD 和完整状态要求的复核结果才可作为仲裁证据。
 - 启用远端仲裁时，HEAD 与 BASE 的 `delivery.yml` 必须逐字节一致；同名但由候选修改的 workflow 不能伪造可信检查。
 - 本片不伪造人类 GitHub 批准，不关闭既有保护，不创建标签或发布生产。旧历史报告不批量重写；真实部署、生产验收另走对应任务。

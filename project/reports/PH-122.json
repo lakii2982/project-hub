@@ -35,17 +35,25 @@
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": []
+    "reviewer": "independent PH-122 remote-gate reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "Initial review flagged two blockers: remote_checks_enforced=false with no real Codex verification (undeclared), and the pre-merge 9th-check window vs controller BASE 8/12 validation.",
+      "Both are now explicitly disclosed in report/handoff/evidence rather than claimed as enforced; the eighth-to-ninth exact-set migration is consistent across policy, validator, merge guard and tests, with no 8/12 acceptance branch and no weakening of strict/admin/linear/discussion/PR protections.",
+      "Final review PASS: evidence files match captured protection (9 checks/app 15368, flags unchanged, rulesets/environments empty), negative drills #275/#276 closed unmerged, and no out-of-scope changes."
+    ],
+    "evidence": "Independent verdict PASS after disclosure fixes; 67 scoped tests OK, full suite only the established macOS baseline, check ok/323, verify_integrity ok."
   },
   "deviations": [
+    "remote_checks_enforced=false remains: real Codex Connector PASS was not obtainable (usage limits), so the four arbitration sources are declared and protected only at the PR-metadata check level, not executed in the real merge path. This is disclosed as a blocking verification gap, not claimed as enforced.",
+    "The ninth required check was enabled before this PR merged; the local ai_delivery controller cannot validate the BASE 8/12 policy for that window (fail-closed). Normal merge relies on GitHub branch protection with all nine checks green; no protection check was bypassed.",
     "Required checks increased to 9 and the policy/gate now reject 8/12 rather than accepting both shapes; this is a deliberate 8→9 migration, not a weakening.",
     "The delivery.yml workflow itself is unchanged; BASE/HEAD byte equality remains required once arbitration enforcement is enabled.",
     "The protected 'release' environment is declared by the release workflow but not configured in repository settings; protected_environment_present=false is recorded.",
     "Drill PRs #275/#276 were created only to observe rejection, then closed without merge."
   ],
   "unverified": [
+    "Real Codex/Actions arbitration (official app id, current-HEAD result, findings semantics, pagination, head-blob availability) is not verified end-to-end; remote_checks_enforced stays false.",
     "Single-maintainer repository: independent review is an agent review, not a second human GitHub identity; required approvals stay 0.",
     "Repository administrators can still change protection; captured evidence is a timestamped observation, not tamper-proof.",
     "No production deployment, browser walkthrough or customer UAT was performed."

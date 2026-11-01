@@ -345,7 +345,8 @@ class GitHubGuardTests(ControllerFixture):
 
     def test_pending_cancelled_and_neutral_are_not_success(self):
         from tooling.ai_delivery.delivery.github import DeliveryError
-        for status, conclusion in [("in_progress", None), ("completed", "neutral"), ("completed", "cancelled")]:
+        for status, conclusion in [("in_progress", None), ("completed", "neutral"),
+                                   ("completed", "cancelled"), ("completed", "skipped")]:
             with self.subTest(conclusion=conclusion):
                 with self.assertRaises(DeliveryError):
                     self.check_rows([dict(self.rows[0], status=status, conclusion=conclusion), *self.rows[1:]])
