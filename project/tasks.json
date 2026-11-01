@@ -11006,6 +11006,7 @@
         "project/tasks.json",
         "project/manifest.json",
         "pmo_plugins/delivery/urls.py",
+        "pmo_plugins/insights/migrations/__init__.py",
         "docs/delivery-status.md",
         "docs/verification.md",
         "project/reports/PH-339.json",
@@ -13328,7 +13329,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [

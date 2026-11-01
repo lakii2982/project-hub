@@ -1,6 +1,6 @@
 {
  "task_id": "PH-404",
- "summary": "规划推进（BASE 1b02cd7）：PH-342/343 契约合入后晋级 PH-338 发票批量导入实现与 PH-339 insights 实现；PH-338 白名单按 PH-342 唯一路径扩展 core/imports.py 与 onboarding preview/commit。仅规划，无产品代码。",
+ "summary": "规划推进（BASE 1b02cd7）：PH-342/343 契约合入后晋级 PH-338 发票批量导入实现与 PH-339 insights 实现；PH-338 白名单按 PH-342 唯一路径扩展 core/imports.py 与 onboarding preview/commit。仅规划，无产品代码。 收口：PH-404 done；补 PH-339 的 `pmo_plugins/insights/migrations/__init__.py` 白名单，避免 Django 迁移目录缺 __init__ 阻断 check。",
  "tests": [
   {
    "command": "python scripts/projectctl.py check",
@@ -24,7 +24,8 @@
   "evidence": "Independent verdict PASS at e94511d/6a3bab8 (BASE 1b02cd7); check ok/325 and 23 governance tests OK."
  },
  "deviations": [
-  "Docs-only; PH-338/339 implementations must still pass independent S review and full PR CI."
+  "Docs-only; PH-338/339 implementations must still pass independent S review and full PR CI.",
+  "Closeout after PH-404 merged e8e1862: PH-404 done; PH-339 migration package __init__ added to its whitelist and spec, digest recomputed."
  ],
  "unverified": [
   "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed.",
