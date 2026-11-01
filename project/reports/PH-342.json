@@ -1,6 +1,6 @@
 {
  "task_id": "PH-342",
- "summary": "发票批量/导入实现前置契约冻结（docs-only）：新增 invoice-import-contract.md，冻结批量模板/逐行校验、全批原子与幂等、错误 envelope、权限/期间与 PH-252/274/353/320 复用边界；不实现、不建表/迁移/路由。 复核修复：模板对齐 PH-252（counterparty_name/evidence_json/business_source_ref 四段式），限定本片仅 sales，明确 invoicing 批次编排与 PH-353 模型/收据复用边界及 PH-338 白名单扩展要求，issue_code/envelope 对齐 PH-362/PH-353，补 owner token 派生与 dry_run 覆盖边界。",
+ "summary": "发票批量/导入实现前置契约冻结（docs-only）：新增 invoice-import-contract.md，冻结 sales-only 模板与 PH-252 字段映射、逐行校验、全批原子与 owner token 公式、错误 envelope、权限/期间，以及“唯一提交入口为 PH-353 onboarding commit_import”的扩展边界；不实现、不建表/迁移/路由。",
  "tests": [
   {
    "command": "python scripts/projectctl.py check",
@@ -25,7 +25,8 @@
   "Owner request tokens are derived deterministically per invoice/allocation to avoid reusing one batch token across multiple owner receipts; derivation is frozen in the implementation slice.",
   "2 MiB limit corrected to 1 MiB to match PH-274 preview; duplicate_source_id naming aligned.",
   "Second review blockers fixed: the only supported path is extending PH-274/PH-353 for kind=invoicing via a PH-338 planning whitelist expansion (core/imports.py + onboarding preview/commit), not a second parser; dry_run scope excludes owner quotas with the reason stated; owner token derivation is given as a frozen formula; owner exception-to-issue_code mapping and counterparty active/customer/evidence consistency are frozen.",
-  "Third review blockers fixed: dry_run §4 now points to §2.3 (no owner quota/counterparty coverage); §7 now states onboarding commit_import is the only submission entry and invoicing helpers cannot create previews/receipts; allocation_version settlement handling and owner_idempotency_conflict mapping are explicit."
+  "Third review blockers fixed: dry_run §4 now points to §2.3 (no owner quota/counterparty coverage); §7 now states onboarding commit_import is the only submission entry and invoicing helpers cannot create previews/receipts; allocation_version settlement handling and owner_idempotency_conflict mapping are explicit.",
+  "Handoff/report wording synced with the single-submission-path boundary; remaining implementation details (PermissionDenied mapping, settlement allocation_version check) are recorded for PH-338."
  ],
  "unverified": [
   "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed.",
