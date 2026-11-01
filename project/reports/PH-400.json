@@ -3,7 +3,8 @@
   "summary": "修复 Delivery arbitration 对 GitHub webhook 可空 mergeable 的误判：workflow 以只读 pull-requests 权限调用当前 PR REST API，有限重试获取 mergeable=true，交叉核对当前 API 与 webhook 的 BASE/HEAD 后补全事件，再执行 BASE delivery_gate.py。持续 null/false/SHA 变化仍 fail-closed；不把 mergeStateStatus 用于自阻断，不执行候选代码，不启用远端强制。",
   "tests": [
     {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual exit 0: ok=true, task_count=321."},
-    {"command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_delivery_gate -v", "result": "pass", "evidence": "Actual exit 0: Ran 73 tests in 35.176s, OK. Adds null/text mergeable rejection and workflow current-PR API/SHA/static trust checks."}
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_delivery_gate -v", "result": "pass", "evidence": "Actual exit 0: Ran 73 tests in 35.176s, OK. Adds null/text mergeable rejection and workflow current-PR API/SHA/static trust checks."},
+    {"command": "gh run view 41269596652", "result": "pass", "evidence": "Live Delivery arbitration on PR #264 succeeded at HEAD d0aabcb: current PR REST API refreshed mergeable and matched BASE/HEAD; no fallback or bypass."}
   ],
   "review": {"required": true, "reviewer": "independent PH-400 workflow reviewer (fresh Sonnet context, read-only)", "status": "pass", "findings": [
     "PASS at de7af42: YAML/heredoc/shell structure, strict mergeable=true, pre-write BASE/HEAD checks, bounded retries, read-only token and BASE-only script execution are valid; null/text cannot pass.",
@@ -16,7 +17,6 @@
     "Live PR Delivery arbitration evidence is pending at this revision and will be recorded separately from unit tests."
   ],
   "unverified": [
-    "Live Delivery arbitration on this PR is pending.",
     "No production deployment or remote enforcement enablement is performed."
   ]
 }

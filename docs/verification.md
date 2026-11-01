@@ -1207,4 +1207,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 
 - 实证 PR #258 run 41266764258：webhook mergeable=null 导致 mergeable_required。
 - 修复：当前 PR REST API 最多 3 次读取，只接受 mergeable=true 且 API/webhook BASE/HEAD 一致；持续未知拒绝，不执行候选代码。
-- 登记 73 tests OK；projectctl check ok/321；YAML 解析与 bash -n 通过；独立 S review PASS；live Delivery arbitration pending；不启用远端强制。
+- 登记 73 tests OK；projectctl check ok/321；YAML 解析与 bash -n 通过；独立 S review PASS；live Delivery arbitration 已在 PR #264 通过（run 41269596652）；不启用远端强制。

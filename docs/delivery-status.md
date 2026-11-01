@@ -91,4 +91,4 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 - 收口 PH-241/120；晋级 PH-121 与 PH-354。PH-354 先提供唯一期间预检/digest，PH-353 待其后实现原子导入；PH-342/343/355 保持 proposed。登记 PH-399 为下一规划槽，另按真实 CI 证据登记 PH-400 修复仲裁 mergeable 兼容。仅规划，不宣称功能或发布完成。
 
 ## PH-400 仲裁 mergeable 兼容修复（2026-11-01）
-- Delivery arbitration 改用当前 PR REST API 刷新可空 mergeable，并交叉核对 webhook BASE/HEAD；持续未知仍拒绝。登记 73 tests OK，live PR 验证与独立复核待完成。
+- Delivery arbitration 改用当前 PR REST API 刷新可空 mergeable，并交叉核对 webhook BASE/HEAD；持续未知仍拒绝。登记 73 tests OK，独立复核 PASS，live PR #264 仲裁已通过（run 41269596652）。
