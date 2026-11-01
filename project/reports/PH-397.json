@@ -2,7 +2,7 @@
   "task_id": "PH-397",
   "summary": "v1.0 功能交付重启规划：按真实合并证据收口 PH-241/120，晋级 PH-121 与 PH-354；PH-354 先提供唯一期间预检/digest，PH-353 等其后实现原子导入。补齐 insights bootstrap/settings/urls 与 18 个依赖停用测试写域；PH-342/343/355 保持 proposed，登记下一规划槽 PH-399。仅规划，无产品代码或发布宣称。",
   "tests": [
-    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Final actual exit 0: ok=true, task_count=320. Initial missing-handoff/PH-399 dependency issues were corrected; PH-399 remains proposed until PH-397 closeout."},
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Final actual exit 0 after PH-400 registration: ok=true, task_count=321. Initial missing-handoff/PH-399 dependency issues were corrected; PH-399 remains proposed until PH-397 closeout."},
     {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual exit 0: Ran 23 tests in 2.502s, OK."}
   ],
   "review": {"required": true, "reviewer": null, "status": "pending", "findings": []},
