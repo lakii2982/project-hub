@@ -15,6 +15,7 @@
 | httpx | https://github.com/encode/httpx | BSD-3-Clause |
 | pydantic | https://github.com/pydantic/pydantic | MIT |
 | PostgreSQL / Caddy | https://www.postgresql.org/ / https://github.com/caddyserver/caddy | PostgreSQL License / Apache-2.0，Compose镜像独立分发 |
+| coverage.py（仅 CI） | https://github.com/nedbat/coveragepy | Apache-2.0，固定在 `requirements-ci.txt`，不属于产品运行时依赖 |
 
 准确版本与全部传递依赖分别由requirements.txt和integrations/mcp/requirements.txt锁定。CI保留pip inspect的实际安装依赖记录；本表不是完整二进制SBOM或所有传递许可的替代。正式二进制或镜像发布前核对对应发行物的许可清单与依赖安全结果。
 

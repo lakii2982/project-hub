@@ -25,7 +25,7 @@
 1. 确认本次包含的任务全部满足 Definition of Done（lifecycle.md 第 3 节），CI 在待发布提交上实际通过。
 2. 更新 CHANGELOG.md：新增能力、修复、破坏性变更、迁移要求、未验证事项的变化。
 3. 更新 docs/delivery-status.md：分别说明代码存在、自动化通过、浏览器检查、生产验证；检查范围之外的事项明确保留。
-4. 打标签 `vX.Y.Z`；生成源码包并校验（`scripts/package.py` 与 `scripts/verify-source-package.py`）。runtime、.env、虚拟环境、附件与备份不进入发布包。
+4. 人工确认后创建标签 `vX.Y.Z`（标签由发布负责人显式创建并推送，release workflow 不创建、不移动标签）；生成源码包并校验（`scripts/package.py` 与 `scripts/verify-source-package.py`）。runtime、.env、虚拟环境、附件与备份不进入发布包。
 5. 发布记录写进交接证据（`project/handoffs/` 与 `project/reports/`，位置见 agent-protocol.md）。
 6. 发布后发现缺陷：修复走 PATCH 或 hotfix（第 4 节）；已发布版本不撤回标签、不改写已发布内容，修正以新版本呈现。
 
@@ -52,7 +52,7 @@
 
 版本唯一来源是pyproject.toml；健康接口和源码包读取同一版本。公开标签使用vMAJOR.MINOR.PATCH，release_check验证版本、CHANGELOG与1.0就绪门槛；0.x在GitHub标为pre-release，不表示生产可用。
 
-标签触发release.yml，先对同一提交重跑全部检查，随后创建draft、上传ZIP与SHA256、下载远端资产逐字节核对，最后转公开。重试只能修复同一提交的draft；已经公开且摘要一致时幂等返回，目标或内容不一致则拒绝，不覆盖公开资产。不要为了重试移动标签。
+标签由发布负责人在确认提交和检查后显式创建并推送，**不会**自动触发代码合并后的生产发布。发布 workflow 只接受人工 `workflow_dispatch`，并要求已存在的标签指向当前提交；publish job 绑定受保护的 `release` environment（仓库设置中须配置审核人和最小权限）。workflow 先对同一提交重跑全部检查，随后创建draft、上传ZIP与SHA256、下载远端资产逐字节核对，最后转公开。workflow 不创建或移动标签。重试只能修复同一提交的draft；已经公开且摘要一致时幂等返回，目标或内容不一致则拒绝，不覆盖公开资产。不要为了重试移动标签。
 
 较旧版本的hotfix需要先把任务契约以规划PR加入对应维护分支；不能用当前main契约猜测旧标签上的范围。修复提交向main前向合并或cherry-pick，重新CI；没有维护分支时先为受支持版本明确建分支，不承诺同时维护所有历史0.x。
 

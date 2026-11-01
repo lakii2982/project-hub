@@ -1,0 +1,28 @@
+{
+  "task_id": "PH-121",
+  "summary": "客观覆盖率与发布边界：CI 专用 coverage.py 7.11.0、.coveragerc、BASE policy quality 门槛（总量80%/新增行80%/测试数1200/未知skip阻断）、scripts/quality_gate.py 失败关闭校验；SQLite/PostgreSQL CI 以 coverage 跑全量并执行质量门（首次引入 PR 显式 bootstrap）；发布 workflow 改为人工 dispatch + 受保护 release environment + 已存在标签校验，不创建/移动标签；新增 PostgreSQL 财务并发反例（公司锁串行/跨公司隔离/审计链 append-only）。",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual exit 0 after removing generated coverage artifacts from the commit: ok=true, task_count=321."},
+    {"command": "python -m unittest tests.test_quality_gate tests.test_delivery_policy -v", "result": "pass", "evidence": "Actual exit 0 after review fixes: Ran 25 tests in 0.184s, OK. Includes null/empty coverage, deletion/unmeasured source, skip-count mismatch and workflow trust cases."},
+    {"command": "python manage.py check", "result": "pass", "evidence": "Actual exit 0; existing URL-namespace warnings, 0 errors."},
+    {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual exit 0: No changes detected."},
+    {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual final run: Ran 1348 tests in 174.140s; 5 failures + 3 errors + 73 skips. All eight failure/error names match the established main macOS baseline (DRF compatibility 6, delivery symlink 2); no new failure. 73 skips = prior 70 + 3 PostgreSQL-only financial concurrency tests explicitly skipped on SQLite. Linux CI remains authoritative."},
+    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual fresh SQLite /tmp/ph121-verify.sqlite3 after migrate: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."}
+  ],
+  "review": {"required": true, "reviewer": null, "status": "pending", "findings": []},
+  "deviations": [
+    "Measured SQLite coverage 82.09% (branch=True, 21127 statements, now including package __init__ files); the 80% floor keeps ~2 points of margin. PostgreSQL coverage is confirmed by CI, not inferred.",
+    "The introducing PR predates the BASE quality policy, so CI prints explicit bootstrap_quality_policy_absent only when the BASE policy file is absent or is the prior policy without a quality section; invalid/corrupt BASE policy and a quality policy without BASE scripts/quality_gate.py fail closed.",
+    "CI now fetches scripts/quality_gate.py from BASE and executes that copy; the candidate checker cannot self-authorize. BASE is selected from the PR event or push before-SHA, never from candidate content.",
+    "Skip whitelist is explicit (PostgreSQL/SQLite/macOS/schema tooling/schema parity/FIFO/symlink/platform); unknown skip and skip-reason-count mismatch fail. Validated against the real 73-skip verbosity-2 log.",
+    "Deleting any product .py or changing a product .py absent from coverage fails closed; empty or malformed coverage files are rejected.",
+    "Both CI jobs upload test-output.txt and coverage.json with if: always() for audit.",
+    "The release workflow declares the protected 'release' environment but repository-side reviewers/secrets must be configured in GitHub settings; code cannot prove protection is enabled.",
+    "release.yml no longer triggers on tag push; publishing is manual workflow_dispatch and requires an existing tag pointing at the current commit. Tag input is passed via env, not interpolated into shell. No tag is created or moved by the workflow."
+  ],
+  "unverified": [
+    "Real Linux CI coverage/floors, PostgreSQL concurrency execution, and the live quality gate result are pending.",
+    "Browser 1440/390, staging/TLS/restore, production and UAT are out of this task and remain not_run.",
+    "Independent S review is pending; executor did not self-approve."
+  ]
+}

@@ -1,0 +1,16 @@
+[run]
+branch = True
+source =
+    core
+    pmo
+    pmo_plugins
+omit =
+    */migrations/*
+    pmo/wsgi.py
+    pmo/asgi.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError

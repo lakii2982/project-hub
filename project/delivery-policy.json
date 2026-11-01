@@ -43,6 +43,24 @@
     "workflow_path": ".github/workflows/delivery.yml",
     "workflow_event": "pull_request"
   },
+  "quality": {
+    "coverage_python": "3.12",
+    "total_min_percent": 80.0,
+    "changed_lines_min_percent": 80.0,
+    "test_count_min": 1200,
+    "unknown_skip_blocked": true,
+    "allowed_skip_patterns": [
+      "PostgreSQL",
+      "SQLite",
+      "macOS",
+      "PH-135 full schema validation requires",
+      "schema tool",
+      "schema parity",
+      "FIFO",
+      "symlink",
+      "platform"
+    ]
+  },
   "independent_review": {
     "required": true,
     "reviewer_must_differ_from_source_actors": true,
