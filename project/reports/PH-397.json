@@ -1,0 +1,24 @@
+{
+  "task_id": "PH-397",
+  "summary": "v1.0 功能交付重启规划：按真实合并证据收口 PH-241/120，晋级 PH-121 与 PH-354；PH-354 先提供唯一期间预检/digest，PH-353 等其后实现原子导入。补齐 insights bootstrap/settings/urls 与 18 个依赖停用测试写域；PH-342/343/355 保持 proposed，登记下一规划槽 PH-399。仅规划，无产品代码或发布宣称。",
+  "tests": [
+    {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Final actual exit 0 after PH-400 registration: ok=true, task_count=321. Initial missing-handoff/PH-399 dependency issues were corrected; PH-399 remains proposed until PH-397 closeout."},
+    {"command": "python -m unittest tests.test_projectctl tests.test_governance -v", "result": "pass", "evidence": "Actual exit 0: Ran 23 tests in 2.502s, OK."}
+  ],
+  "review": {"required": true, "reviewer": "independent PH-397 planning reviewer (fresh Sonnet context, read-only)", "status": "pass", "findings": [
+    "Initial review found stale PH-397/399 grant digests; corrected and independently re-reviewed at 4deecdf: all five grants MATCH the controller canonical algorithm.",
+    "Final PASS: PH-241/120 closure evidence, PH-121/354 activation, PH-353 precheck dependency, PH-342/343/355 retention, PH-399 dependency state and PH-400 fail-closed scope are valid. No EXP-1/PH-110 or arbitration-rule expansion.",
+    "PH-399 status wording and PH-355 rationale were corrected. PH-400 live PR verification remains for its implementation."
+  ], "evidence": "Independent final verdict PASS at 4deecdf; projectctl check ok/321 and 23 governance tests OK. Digest values PH-397=67e5ca82ebe20321d33076a33bca71a4d1bc884eb223808552c799aea5638cf6 and PH-399=4b7cac3480ff3a6bd33374a9c1b44f94d6da9b06a4ee921be9a0468e1eff7226 independently recomputed."},
+  "deviations": [
+    "PH-241 had already merged in PR #150 despite stale in_review metadata; it is closed by evidence, not reimplemented.",
+    "PH-353/354 specs had stale parent dependencies. PH-354 is independent of parent PH-272; PH-353 explicitly excludes PH-181/185 but requires the real PH-354 precheck, so ordering is PH-354 then PH-353.",
+    "PH-354 allowed_paths is expanded only to ADR-required bootstrap and 18 existing dependency-disable regression files; business acceptance is unchanged.",
+    "PH-399 remains proposed until PH-397 can be marked done; its status does not affect contract digest.",
+    "PH-400 is registered ready from actual PR #258 evidence (run 41266764258) to repair webhook mergeable=null compatibility through current-PR API metadata; the optional failed check is not hidden or treated as a required business failure.",
+    "Independent review found stale PH-397/399 digests after final spec edits. Final values were recomputed and machine-asserted for all five new grants: PH-397=67e5ca82ebe20321d33076a33bca71a4d1bc884eb223808552c799aea5638cf6, PH-399=4b7cac3480ff3a6bd33374a9c1b44f94d6da9b06a4ee921be9a0468e1eff7226; PH-353/354/400 also MATCH. PH-399 wording was corrected to proposed and PH-355 to PH-380 alignment."
+  ],
+  "unverified": [
+    "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed by this planning slice."
+  ]
+}
