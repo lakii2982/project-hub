@@ -31,6 +31,6 @@
   ],
   "unverified": [
     "产品实现、自动化全套、1440/390 浏览器、PostgreSQL、部署与客户验收均未在本登记轮执行或宣称通过。",
-    "当前提交所需远端 required CI 以 GitHub 实际结果为准。"
+    "当前提交所需远端 required CI 以 GitHub 实际结果为准。首次 27af6c4 的 Project governance 与 Delivery arbitration 因 PR 正文缺少唯一 Task 行而失败；已修正 PR 正文，并以本报告提交重新触发检查，不将该失败写成通过。"
   ]
 }
