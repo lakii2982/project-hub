@@ -13362,7 +13362,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13396,7 +13396,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13422,9 +13422,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/292",
       "owner": null,
-      "blockers": [
-        "PH-405 done 后晋级 ready。"
-      ],
+      "blockers": [],
       "handoff": null
     }
   ]
