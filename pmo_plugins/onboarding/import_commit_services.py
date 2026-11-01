@@ -395,6 +395,33 @@ def _warnings(snapshot, conflicts):
     return warnings
 
 
+_PERIOD_DATE_FIELD = {'time': 'work_date', 'expense': 'occurred_on', 'plan': 'due_date'}
+
+
+def _period_row_errors(kind, rows, period):
+    """Reject rows whose business date is outside the submitted posting period."""
+    field = _PERIOD_DATE_FIELD.get(kind)
+    if field is None or not isinstance(rows, list):
+        return []
+    errors = []
+    for index, row in enumerate(rows, 2):
+        raw = row.get(field) if isinstance(row, dict) else None
+        try:
+            day = date.fromisoformat(str(raw))
+        except (TypeError, ValueError):
+            errors.append(_row_error(
+                'row_date_invalid', f'第{index}行日期无效', row_no=index,
+                field=field, original_digest=_digest(row)))
+            continue
+        if day.strftime('%Y-%m') != period:
+            errors.append(_row_error(
+                'row_date_invalid', f'第{index}行业务日期不属于导入期间 {period}',
+                row_no=index, field=field, original_digest=_digest(row)))
+        if len(errors) >= MAX_ROW_ERRORS:
+            break
+    return errors
+
+
 def _reject_owner_error(exc, preview, rows, *, precheck=None):
     message = '；'.join(exc.messages)
     match = _ROW_PATTERN.search(message)
@@ -519,6 +546,13 @@ def commit_import(member, *, preview_ref, rows_digest, precheck_digest,
     missing = snapshot.get('missing') or []
     resolved = [conflict.as_envelope() for conflict in conflicts
                 if conflict.resolution is not None]
+
+    # Contract §2/§9: every row's business date must belong to the submitted period;
+    # a valid precheck for the open month must not admit a closed prior-month row.
+    period_errors = _period_row_errors(preview.kind, rows, period)
+    if period_errors:
+        raise ImportCommitRejected(_envelope(
+            period_errors, conflicts=resolved, missing=missing, precheck=precheck))
 
     if dry_run:
         return {'status': 'dry_run', 'dry_run': True, 'would_commit': True,

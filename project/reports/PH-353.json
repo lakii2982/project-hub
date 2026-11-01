@@ -1,6 +1,6 @@
 {
  "task_id": "PH-353",
- "summary": "在 ADR 0012 的 onboarding 插件内实现 PH-353 导入提交首片：新增 ImportPreview/ImportConflict/ImportSubmissionReceipt 模型与 onboarding 首个 0001_initial 迁移；persist_preview 持久化规范化 sha256 行摘要的 ready 预览与去重冲突（零业务事实）；commit_import 在公司锁+单事务内校验同 org 预览/版本/未消费、重算 rows_digest、复用 PH-354 period_precheck_snapshot 重算并比对 precheck_digest/as_of（blocker/can_close=false → precheck_blocked）、阻断未消解 blocker 冲突、request_token 同输入幂等/改输入冲突、稳定 import_key 去重、dry_run 零写，最终仅经 core.imports.apply_rows 调用既有 owner 服务，任一行失败整批回滚，成功后预览置 consumed；新增 owner/finance 提交页、auditor 历史只读、pm/member 拒绝、模块停用 history_read 的 history_read+business_write 路由与 ui-tokens 模板。新测试 31 项（24 服务 + 7 HTTP）。",
+ "summary": "在 ADR 0012 的 onboarding 插件内实现 PH-353 导入提交首片：新增 ImportPreview/ImportConflict/ImportSubmissionReceipt 模型与 onboarding 首个 0001_initial 迁移；persist_preview 持久化规范化 sha256 行摘要的 ready 预览与去重冲突（零业务事实）；commit_import 在公司锁+单事务内校验同 org 预览/版本/未消费、重算 rows_digest、复用 PH-354 period_precheck_snapshot 重算并比对 precheck_digest/as_of（blocker/can_close=false → precheck_blocked）、阻断未消解 blocker 冲突、request_token 同输入幂等/改输入冲突、稳定 import_key 去重、dry_run 零写，最终仅经 core.imports.apply_rows 调用既有 owner 服务，任一行失败整批回滚，成功后预览置 consumed；新增 owner/finance 提交页、auditor 历史只读、pm/member 拒绝、模块停用 history_read 的 history_read+business_write 路由与 ui-tokens 模板。新测试 31 项（24 服务 + 7 HTTP）。 复核修复：commit/dry_run 在调用 owner 服务前逐行校验业务日期所属期间（time=work_date、expense=occurred_on、plan=due_date），跨期行以 row_date_invalid 拒绝且零写。",
  "tests": [
   {
    "command": "python scripts/projectctl.py check",
@@ -58,7 +58,8 @@
   "period/as_of same-month mismatch is raised by PH-354 as ValidationError and mapped to precheck_stale; future as_of is additionally rejected at the commit layer as future_date before precheck.",
   "HTTP is split into import-submit/ history_read (owner/finance/auditor, disabled-module history still readable) and import-submit-commit/ business_write (owner/finance), matching the plugin runtime GET/POST method semantics.",
   "persist_preview performs no audit or canonical event write; only the append-only receipt and owner-service audits provide traceability after commit.",
-  "No canonical entity/topic/command is added and core/imports.py is unchanged; all row writes still go through apply_rows owner services."
+  "No canonical entity/topic/command is added and core/imports.py is unchanged; all row writes still go through apply_rows owner services.",
+  "Independent review blocker: rows were not bound to the submitted period, so a valid current-month precheck could admit a prior-month row; commit/dry_run now reject any row whose business date month differs from period (row_date_invalid), with regression tests."
  ],
  "unverified": [
   "Independent S review pending (not self-approved).",

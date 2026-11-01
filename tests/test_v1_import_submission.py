@@ -355,6 +355,31 @@ class ImportCommitTests(ImportSubmissionFixture, TestCase):
         self.assert_rejected(lambda: self.commit(preview), 'preview_consumed')
         self.assertEqual(before, self.counts())
 
+    def test_row_business_date_outside_period_is_rejected(self):
+        # A valid current-month precheck must not admit a prior-month row.
+        previous = (self.today.replace(day=1) - timedelta(days=1))
+        AccountingPeriod.objects.create(
+            organization=self.org, period=self.today.strftime('%Y-%m'), status='active')
+        closed_day = previous.replace(day=min(10, previous.day)).isoformat()
+        preview = self.persist(rows=[self.expense_row('E-OLD', 'INV-OLD',
+                                                      occurred_on=closed_day)])
+        before = self.counts()
+        envelope = self.assert_rejected(
+            lambda: self.commit(preview), 'row_date_invalid')
+        self.assertEqual(envelope['status'], 'rejected')
+        self.assertEqual(before, self.counts())
+        self.assertEqual(Document.objects.count(), 0)
+        self.assertEqual(ImportSubmissionReceipt.objects.count(), 0)
+
+    def test_dry_run_rejects_row_outside_period_without_writes(self):
+        previous = self.today.replace(day=1) - timedelta(days=1)
+        preview = self.persist(rows=[self.expense_row('E-OLD2', 'INV-OLD2',
+                                                      occurred_on=previous.isoformat())])
+        before = self.counts()
+        self.assert_rejected(
+            lambda: self.commit(preview, dry_run=True), 'row_date_invalid')
+        self.assertEqual(before, self.counts())
+
     def test_preview_not_found(self):
         self.assert_rejected(
             lambda: commits.commit_import(
