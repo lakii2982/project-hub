@@ -1185,7 +1185,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 
 - PR #254 PG run 41217305149 的 6 个失败均为当前月 28 日客户确认跨日变成未来；仅改测试夹具为已结束自然月，不改业务未来日期拒绝。
 - scoped 34 tests OK（8 个 PG-only 在 SQLite 跳过）；check ok/318；manage.py check exit 0；makemigrations No changes；fresh SQLite verify exit 0。
-- 全量 1321 tests，5F+3E/70 skips，均为既有 8 项 macOS 基线，无新增；独立 S 复核 PASS；真实 PG/PR CI pending。直接 main 引导被保护拒绝，origin/main 未改。不得将 BASE task_not_in_baseline 或业务红灯写成通过。
+- 全量 1321 tests，5F+3E/70 skips，均为既有 8 项 macOS 基线，无新增；独立 S 复核 PASS。最终 PR 11 项业务/安全检查全绿（含真实 PostgreSQL），merge `032fdeb`。BASE task_not_in_baseline 经维护者明确一次性恢复授权处理，Project governance required 临时解除后立即恢复，原 8 项保护已复核。
 
 ## PH-120 可信 PR 交付契约与仲裁（2026-11-01，BASE 032fdeb）
 
