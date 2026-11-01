@@ -1,6 +1,6 @@
 {
  "task_id": "PH-354",
- "summary": "insights 读模型前置拆分首片：新建 pmo_plugins.insights 插件（manifest 恰好 8 字段，requires={cash,settlement,costing,contracts}，default_enabled=True，无模型/迁移/写通道），settings/PMO_PLUGIN_MODULES 与 delivery urls root 单写接线；period_precheck_snapshot 严格按 docs/v1.0-development/period-precheck-contract.md 输出 period.precheck.snapshot/v1 envelope（precheck=null+period_precheck_missing，不伪造 canonical 实体），聚合既有 owner 只读服务（cash_bridge/settlement 覆盖/revenue 配对/bank_charge 配对）与 PH-291 跨域总览，只按冻结映射定 severity、不复制金额/差额规则（difference 恒 null，missing 不以 0 冒充）；precheck_digest=sha256(canonical_json({contract,scope,period,as_of_date,watermark,issues,differences,missing}))，重复调用稳定、事实变化可检测；history_read 路由，owner/finance/auditor 全量、pm 仅管理项目摘要、member/跨 org 拒绝；新增 24 个测试（13 服务+8 HTTP+3 反例），29 个白名单既有测试文件中 24 个需最小停用顺序调整（其余 5 个自愈/公司锁先行），不改业务断言。",
+ "summary": "insights 读模型前置拆分首片：新建 pmo_plugins.insights 插件（manifest 恰好 8 字段，requires={cash,settlement,costing,contracts}，default_enabled=True，无模型/迁移/写通道），settings/PMO_PLUGIN_MODULES 与 delivery urls root 单写接线；period_precheck_snapshot 严格按 docs/v1.0-development/period-precheck-contract.md 输出 period.precheck.snapshot/v1 envelope（precheck=null+period_precheck_missing，不伪造 canonical 实体），聚合既有 owner 只读服务（cash_bridge/settlement 覆盖/revenue 配对/bank_charge 配对）与 PH-291 跨域总览，只按冻结映射定 severity、不复制金额/差额规则（difference 恒 null，missing 不以 0 冒充）；precheck_digest=sha256(canonical_json({contract,scope,period,as_of_date,watermark,issues,differences,missing}))，重复调用稳定、事实变化可检测；history_read 路由，owner/finance/auditor 全量、pm 仅管理项目摘要、member/跨 org 拒绝；新增 25 个测试（13 服务+8 HTTP+4 反例），29 个白名单既有测试文件中 24 个需最小停用顺序调整（其余 5 个自愈/公司锁先行），不改业务断言。",
  "tests": [
   {
    "command": "python scripts/projectctl.py check",
@@ -20,7 +20,7 @@
   {
    "command": "python manage.py test tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http --verbosity 1",
    "result": "pass",
-   "evidence": "Actual exit 0: Ran 24 tests, OK. Covers gold sample, digest stability/change, zero write, roles, cross-month period rejection, unique offset missing, and project-scope isolation."
+   "evidence": "Actual exit 0: Ran 25 tests, OK. Covers gold sample, digest stability/change, zero write, roles, cross-month period rejection, unique offset missing, project-scope isolation and per-role cash hiding."
   },
   {
    "command": "python manage.py test <29 个白名单依赖停用回归文件> --verbosity 1",

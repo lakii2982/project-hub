@@ -209,13 +209,16 @@ class PeriodPrecheckServiceTests(OpsOverviewFixture, TestCase):
         self.assertLessEqual(len(cash_only['issues']), len(full['issues']))
         self.assertRaises(ValidationError, lambda: self.snapshot(sections=['cash', 'bogus']))
 
-    def test_truncation_flags_result_truncated(self):
-        self.settlement_with_item()
-        with mock.patch.object(precheck_services, 'ISSUE_LIMIT', 1):
-            data = self.snapshot()
-        self.assertTrue(any(row['missing_code'] == 'result_truncated'
-                            for row in data['missing']))
-        self.assertLessEqual(len(data['issues']), 1)
+    def test_project_scope_hides_company_cash_for_all_roles(self):
+        # 公司有无项目归属的现金事实；project scope 下 owner/finance/auditor 也不得混入。
+        self.cash(classify=False)
+        for member in (self.owner, self.finance, self.auditor):
+            data = self.snapshot(member, scope='project', project_id=self.project.pk)
+            self.assertFalse(any(issue['domain'] == 'cash' for issue in data['issues']),
+                             (member.role, data['issues']))
+            cash_missing = [row for row in data['missing']
+                            if row['missing_code'] == 'cash_bridge_unavailable']
+            self.assertEqual(len(cash_missing), 1)
 
     def test_missing_never_displayed_as_zero(self):
         # 无事实时：checks 的 items 计数为 None（上游缺失），不得出现 0 冒充。

@@ -269,9 +269,14 @@ def _owner_issues(member, *, day, sections, scope, project, period_label):
 
     if 'cash' in sections:
         from pmo_plugins.cash import reconciliation_services as cash
-        collect('cash', 'cash',
-                lambda: cash.cash_bridge_issues(member, as_of=day),
-                'cash_bridge_unavailable', '现金分类/桥接只读服务不可读')
+        if project_scope:
+            # 现金事实无项目归属；project scope 下所有角色都显式 missing，避免混入全公司数据。
+            missing.append(_missing('cash_bridge_unavailable', 'cash',
+                                    reason='现金桥接无项目归属（当前范围仅项目摘要）'))
+        else:
+            collect('cash', 'cash',
+                    lambda: cash.cash_bridge_issues(member, as_of=day),
+                    'cash_bridge_unavailable', '现金分类/桥接只读服务不可读')
     if 'settlement' in sections:
         from pmo_plugins.settlement import coverage_read_services as settlement
         collect('settlement', 'settlement',
