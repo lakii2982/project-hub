@@ -11618,7 +11618,7 @@
       "title": "通知中心前置拆分：reminder refs 契约与到期扫描骨架（PH-301 拆分）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11651,9 +11651,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-364 通知契约已 done；reminder refs/扫描骨架需与 PH-380 链对齐，保留 proposed。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -12430,7 +12428,7 @@
       "title": "发票批量导入实现首片（PH-338/353 后续）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "cancelled",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12464,7 +12462,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "PH-289 仍 proposed；发票批量导入实现首片未开工，保留 proposed。"
+        "范围已由 PH-338 实现覆盖（PR #288，main 088d5f0）；不再单独立项。"
       ],
       "handoff": null
     },
@@ -12473,7 +12471,7 @@
       "title": "insights 差异单/工作台实现首片（PH-339/354 后续）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "cancelled",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12505,7 +12503,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "PH-272 仍 proposed；insights 实现首片未开工，保留 proposed。"
+        "范围已由 PH-339 实现覆盖（PR #290，main 3400774）；不再单独立项。"
       ],
       "handoff": null
     },
@@ -12628,7 +12626,7 @@
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-378"
+        "PH-338"
       ],
       "spec": "project/specs/PH-383.md",
       "allowed_paths": [
@@ -12652,7 +12650,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-378（发票批量导入实现首片，proposed）done；PH-378 完成后复核 DoR 再晋级。"
+        "等 PH-338 done（已 done）；错误清单/来源覆盖剩余点由下一规划槽复核后晋级。"
       ],
       "handoff": null
     },
@@ -12665,7 +12663,7 @@
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-379"
+        "PH-339"
       ],
       "spec": "project/specs/PH-384.md",
       "allowed_paths": [
@@ -12687,7 +12685,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-379（insights 差异单/工作台实现首片，proposed）done；PH-379 完成后复核 DoR 再晋级。"
+        "等 PH-339 done（已 done）；性能/导出剩余点由下一规划槽复核后晋级。"
       ],
       "handoff": null
     },
@@ -13364,7 +13362,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "in_review",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13389,9 +13387,43 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/285",
+      "owner": "root",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-405.md"
+    },
+    {
+      "id": "PH-406",
+      "title": "v1.0 后续交付规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-405"
+      ],
+      "spec": "docs/engineering/agent-protocol.md",
+      "allowed_paths": [
+        "docs/engineering/agent-protocol.md",
+        "project/specs/*",
+        "docs/v1.0-development/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/delivery-policy.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-406.json",
+        "project/handoffs/PH-406.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/292",
       "owner": null,
       "blockers": [
-        "PH-404 done 后晋级 ready。"
+        "PH-405 done 后晋级 ready。"
       ],
       "handoff": null
     }

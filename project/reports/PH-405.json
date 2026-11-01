@@ -1,0 +1,32 @@
+{
+ "task_id": "PH-405",
+ "summary": "规划推进（BASE bccf0ff）：PH-338 发票批量导入（PR #288）与 PH-339 insights 读模型（PR #290）已合入并 done；PH-378/PH-379 的实现范围已被这两片覆盖，置 cancelled 并保留原因；PH-383/PH-384 依赖改接 PH-338/PH-339 并保持 proposed；晋级 PH-355 通知中心前置拆分（deps PH-364 done）；登记 PH-406 proposed（Issue #292）作为下一规划槽。仅规划，无产品代码/迁移/发布宣称。",
+ "tests": [
+  {
+   "command": "python scripts/projectctl.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0: ok=true, task_count=326."
+  },
+  {
+   "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 23 tests in 2.296s, OK."
+  }
+ ],
+ "review": {
+  "required": true,
+  "reviewer": null,
+  "status": "pending",
+  "findings": [],
+  "evidence": "Independent S review not performed by the implementer; this report does not self-approve."
+ },
+ "deviations": [
+  "Docs-only planning; PH-355 implementation must still pass independent S review and full PR CI.",
+  "PH-378/PH-379 are cancelled rather than re-scoped because PH-338/PH-339 delivered their stated scope; remaining invoice/insights follow-ups stay in PH-383/PH-384 with corrected dependencies.",
+  "This is a planning-entry commit: PH-405 moves from proposed to in_review in the same change, following the PH-404 activation precedent; local verify-change reports task_not_executable against the BASE while CI Project governance only runs projectctl check."
+ ],
+ "unverified": [
+  "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed.",
+  "Independent S review and final verify-change are pending."
+ ]
+}
