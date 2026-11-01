@@ -11575,6 +11575,8 @@
         "tests/test_v1_billable_reversal_http.py",
         "tests/test_v1_contract_change.py",
         "tests/test_v1_contract_change_http.py",
+        "tests/test_v1_contract_change_impact.py",
+        "tests/test_v1_contract_change_impact_http.py",
         "tests/test_v1_contract_terms_snapshot.py",
         "tests/test_v1_contract_terms_snapshot_http.py",
         "tests/test_v1_bank_charge_approval.py",

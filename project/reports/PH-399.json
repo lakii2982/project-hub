@@ -7,7 +7,7 @@
   ],
   "review": {"required": true, "reviewer": null, "status": "pending", "findings": []},
   "deviations": [
-    "PH-354 original 18-file regression whitelist was insufficient for default_enabled insights; 9 additional files were found only by broader regression. Planning, not implementation, expands only those exact paths.",
+    "PH-354 original 18-file regression whitelist was insufficient for default_enabled insights; 11 additional files were found by broader regression (9 first, then contract_change_impact/_http on full suite). Planning, not implementation, expands only those exact paths.",
     "PH-399/401 share agent-protocol.md as spec, so their digests are recomputed after adding §11; PH-354 digest also changes with the nine-file whitelist/spec update.",
     "No EXP-1, PH-110, out-of-milestone or arbitration-rule change is authorized."
   ],
