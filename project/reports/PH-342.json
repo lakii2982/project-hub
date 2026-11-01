@@ -15,9 +15,14 @@
  ],
  "review": {
   "required": true,
-  "reviewer": null,
-  "status": "pending",
-  "findings": []
+  "reviewer": "independent PH-342 invoice-import-contract reviewer (fresh context, read-only)",
+  "status": "pass",
+  "findings": [
+   "Initial blockers: template fields did not map to PH-252, purchase direction impossible, the \"only via PH-353\" path was not executable, and issue_code/envelope diverged from PH-362/PH-353. All fixed.",
+   "Second round: dry_run scope and the submission-only path still contradicted themselves; both resolved by pointing to §2.3 and freezing PH-353 commit_import as the only entry.",
+   "Final PASS at 84d0d6b: sales-only template, PH-252 field mapping, owner token formula, single submission path, issue_code/envelope aligned; PH-338 stays proposed. Remaining PermissionDenied mapping and settlement allocation_version checks are recorded for PH-338."
+  ],
+  "evidence": "Independent final verdict PASS at 84d0d6b (BASE 4907774)."
  },
  "deviations": [
   "Docs-only; PH-338 remains proposed and must re-check the actual BASE before implementation.",
