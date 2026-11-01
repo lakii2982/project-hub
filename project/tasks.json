@@ -13215,7 +13215,7 @@
       "title": "修复 Delivery arbitration 的 mergeable 元数据兼容性",
       "kind": "fix",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [],
@@ -13238,9 +13238,9 @@
         "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_delivery_gate -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/262",
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-400.md"
     }
   ]
 }

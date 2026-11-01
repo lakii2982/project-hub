@@ -17,7 +17,7 @@
 | --- | --- |
 | `scripts/check_pr.py` | 从 BASE 读取 `projectctl.py` 执行 `verify-change`；唯一 Task 行。 |
 | `scripts/delivery_gate.py` | 离线读取 BASE policy，校验策略、S 授权摘要与 PR 元数据；不做网络、不执行候选代码。 |
-| `.github/workflows/delivery.yml` | 产生 `Delivery arbitration` 检查；在 PR 元数据上运行 BASE 脚本，只读、无写令牌。引入该脚本前的首个 PR 仅作非强制 bootstrap。 |
+| `.github/workflows/delivery.yml` | 产生 `Delivery arbitration` 检查；在 PR 元数据上运行 BASE 脚本，只读、无写令牌。通过当前 PR REST API 刷新可空的 `mergeable` 并交叉核对 webhook BASE/HEAD；有限重试后仍未知即拒绝，不执行候选代码。 |
 | `tooling/ai_delivery/delivery/service.py` | 已有 DeliveryGate：真实验收→独立 review→PR→显式 merge，复核证据绑定 BASE/contract/diff。 |
 | `tooling/ai_delivery/delivery/github.py` | 合并前读取 BASE policy，检查远端保护、8 项 checks、mergeable、test-merge SHA、讨论和（启用后）Codex/Actions 仲裁。 |
 
