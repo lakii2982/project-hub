@@ -1221,4 +1221,4 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **实测**：SQLite 覆盖率 82.09%（branch，21127 statements）；质量门+交付策略 27 tests OK；治理组合 89 tests OK；manage.py check exit 0；makemigrations No changes；fresh SQLite verify_integrity ok/errors=[]。73 条真实 skip 原因已对白名单校验全部允许。
 - **复核修复**：CI 从 BASE 取质量门脚本执行；bootstrap 仅限 BASE policy 缺失/旧 policy 无 quality；损坏 policy、缺脚本、删源文件、未测量源文件、未知 skip、空 coverage 均失败关闭；测试日志与 coverage JSON 作为 artifact 保留。
 - **L3/L4/L5：not_run**。Linux CI 覆盖率/PG 并发、浏览器、staging/TLS/恢复、生产/UAT 未执行；`release` environment 保护需仓库设置配置。
-- 独立 S review PASS（B1–B4 已关闭）；verify-change 待最终证据提交后重跑。
+- 独立 S review PASS（B1–B4 已关闭）。收口修复：`changed_source_unmeasured` 仅针对 `.py`，HTML/CSS/JSON 不再误报；新增回归，质量门 28 tests OK。

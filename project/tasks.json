@@ -1774,7 +1774,7 @@
       "title": "客观覆盖率、财务反例和发布边界",
       "kind": "infra",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "rolling",
       "depends_on": [
@@ -1812,7 +1812,7 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/58",
-      "owner": "integration-agent",
+      "owner": "root",
       "blockers": [],
       "handoff": "project/handoffs/PH-121.md"
     },
