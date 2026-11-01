@@ -108,7 +108,12 @@
       },
       {
         "task_id": "PH-355",
-        "contract_digest": "d97cc6d390505fbb99b50eecac58b3e8991ceb3aa7ba21b7a4d57f0125d5dd5b",
+        "contract_digest": "28680a690ba07f5c564d016bde090eb0af84233e72b5bf8eee4fe0c263996a49",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-406",
+        "contract_digest": "5f38c42f5faae994de0674cc3ceba993abc9593833360c97123f7a38d27c3239",
         "source": "user-2026-10-31-complete-v1"
       }
     ]

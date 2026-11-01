@@ -1299,4 +1299,3 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - docs-only 规划：PH-378/PH-379 cancelled（范围被 PH-338/PH-339 覆盖）、PH-383/PH-384 依赖改接、PH-355 晋级 ready、PH-406 登记 proposed；agent-protocol.md §14 记录决策。
 - 实跑：projectctl check ok=true/task_count=326；tests.test_projectctl tests.test_governance 23 项 OK；tests.test_delivery_policy 11 项 OK。
 - 未验证：无产品实现/迁移/PG/浏览器/生产/UAT；独立 S 复核与 verify-change 待完成。
-

@@ -144,4 +144,3 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 - PH-355 通知中心前置拆分晋级 ready（deps PH-364 done），spec 依赖描述与任务板对齐；PH-340/PH-380 保持 proposed 等 PH-355。
 - 登记 PH-406 proposed（Issue #292）作为下一规划槽，PH-405 done 后置 ready。
 - 真实环境 L3–L5、发布包与三方签批保持 not_run；EXP-1 暂停、PH-110 不入库。
-
