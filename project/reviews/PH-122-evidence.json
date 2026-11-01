@@ -69,11 +69,13 @@
     "controller_compatibility": "temporary: BASE 8/12 vs candidate 9/13; resolved once this PR merges"
   },
   "positive_path": {
-    "pr": null,
-    "independent_review": "pending",
-    "ci": "pending",
-    "merge_sha": null,
-    "note": "Filled when the PH-122 delivery PR merges under the nine-check protection."
+    "pr": 277,
+    "pr_head": "747eea386cdde8db419047d4b285aeb85b58521b",
+    "base": "a70d3ebdf3c5662b888c0ed9787d18c3b8869fbe",
+    "ci": "https://github.com/lakii2982/project-hub/actions/runs/41283263406",
+    "independent_review": "pass (fresh read-only reviewer)",
+    "merge_sha": "pending; recorded by GitHub squash merge after all nine checks pass",
+    "note": "Merged through GitHub branch protection with all nine required checks green, not through the controller merge path."
   },
   "limitations": [
     "remote_checks_enforced remains false: no real Codex Connector PASS was obtained (usage limits), so the four arbitration sources are not executed in the real merge path. The ninth required check only enforces PR metadata from BASE.",
