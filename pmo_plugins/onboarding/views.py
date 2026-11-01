@@ -2,6 +2,7 @@
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import redirect, render
+from django.urls import get_script_prefix
 
 from core.plugin_runtime import is_enabled
 
@@ -70,14 +71,32 @@ def import_preview_upload(context, payload):
     if form.is_valid():
         data = form.cleaned_data
         upload = data['file']
-        try:
-            result = previews.preview_import(
-                member, kind=data.get('kind') or None, file_name=upload.name,
-                content=upload.read())
-        except ValidationError as exc:
-            form.add_error(None, '；'.join(exc.messages))
+        save_preview = payload.get('save_preview') == '1'
+        if save_preview and data.get('kind') != 'invoicing':
+            form.add_error(None, '仅发票导入支持预检并保存')
+        elif save_preview and not is_enabled(member.organization, 'invoicing'):
+            raise PermissionDenied('发票模块已停用')
         else:
-            messages.success(request, '导入预览完成（只读，未写入任何业务事实）')
+            try:
+                result = previews.preview_import(
+                    member, kind=data.get('kind') or None, file_name=upload.name,
+                    content=upload.read())
+            except ValidationError as exc:
+                form.add_error(None, '；'.join(exc.messages))
+            else:
+                if save_preview and (result['summary']['row_count']
+                                     != result['summary']['preview_row_count']):
+                    form.add_error(None, '完整预览超过200行，请拆分CSV至200行以内后再保存')
+                    result = None
+                elif save_preview:
+                    commits.persist_preview(
+                        member, kind='invoicing', file_name=upload.name,
+                        rows=result['rows'], conflicts=result['conflicts'])
+                    messages.success(
+                        request, '发票预检已保存，尚未写入业务事实；请完成期间预检后提交')
+                    return redirect(get_script_prefix() + PAGE_URL.lstrip('/'))
+                else:
+                    messages.success(request, '导入预览完成（只读，未写入任何业务事实）')
     return render(request, 'onboarding/import_preview_list.html', _base(
         member, form=form, templates=previews.import_template_list(member),
         result=result), status=200 if result else 400)
