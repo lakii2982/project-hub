@@ -5,14 +5,18 @@
     {"command": "python scripts/projectctl.py check", "result": "pass", "evidence": "Actual exit 0: ok=true, task_count=321."},
     {"command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_delivery_gate -v", "result": "pass", "evidence": "Actual exit 0: Ran 73 tests in 35.176s, OK. Adds null/text mergeable rejection and workflow current-PR API/SHA/static trust checks."}
   ],
-  "review": {"required": true, "reviewer": null, "status": "pending", "findings": []},
+  "review": {"required": true, "reviewer": "independent PH-400 workflow reviewer (fresh Sonnet context, read-only)", "status": "pass", "findings": [
+    "PASS at de7af42: YAML/heredoc/shell structure, strict mergeable=true, pre-write BASE/HEAD checks, bounded retries, read-only token and BASE-only script execution are valid; null/text cannot pass.",
+    "Local additional checks: Ruby YAML parser accepted metadata-gate and permissions; bash -n accepted the extracted run block including heredoc.",
+    "Non-blocking limits: transport errors and persistent null remain fail-closed; every run requires the live REST API even if webhook already says true. Live PR evidence remains required."
+  ], "evidence": "Independent verdict PASS plus 73 scoped tests, projectctl check ok/321 and verify-change whitelist validation. No self-approval."},
   "deviations": [
     "PR #258 run 41266764258 proved webhook mergeable=null causes mergeable_required. The workflow now queries the live PR instead of weakening that guard.",
     "The API result is used only for mergeable and SHA cross-checks; policy and gate script still come from BASE. No candidate script is executed.",
     "Live PR Delivery arbitration evidence is pending at this revision and will be recorded separately from unit tests."
   ],
   "unverified": [
-    "Independent S review and live Delivery arbitration on this PR are pending.",
+    "Live Delivery arbitration on this PR is pending.",
     "No production deployment or remote enforcement enablement is performed."
   ]
 }
