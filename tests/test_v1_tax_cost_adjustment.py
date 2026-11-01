@@ -128,6 +128,8 @@ class TaxCostAdjustmentTests(TaxAdjustmentFixture, TestCase):
         with self.assertRaises(PermissionDenied):
             self.adjust(member=outsider)
         from core.plugin_runtime import set_enabled
+        # PH-354: insights requires costing, disable it first.
+        set_enabled(self.owner, 'insights', False)
         set_enabled(self.owner, 'costing', False)
         with self.assertRaises(PermissionDenied):
             self.adjust()

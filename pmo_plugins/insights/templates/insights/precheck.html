@@ -1,0 +1,43 @@
+{% extends 'base.html' %}{% block title %}期间预检{% endblock %}{% block breadcrumb %}洞察与核对 / 期间预检{% endblock %}{% block content %}
+<style>
+.precheck{min-width:0;color:var(--color-text);font-size:var(--font-size-sm)}.precheck h1,.precheck h2,.precheck td,.precheck dd{overflow-wrap:anywhere}.precheck .panel{margin-block:var(--space-6);border:var(--border-default);background:var(--color-surface);border-radius:var(--radius-md)}.precheck .body{padding:var(--space-6)}.precheck .filter{display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:end}.precheck .form-field{margin:0}.precheck input{max-width:100%;min-height:var(--control-height);font:inherit}.precheck .button{white-space:normal}.precheck .amount{font-variant-numeric:tabular-nums;text-align:right}.precheck .trace{overflow-wrap:anywhere}.precheck :focus-visible{outline:var(--focus-ring);outline-offset:var(--focus-ring-offset)}.precheck .table-scroll{max-width:100%;overflow:auto}.precheck .muted{color:var(--color-text-secondary)}.precheck .badge{display:inline-block;padding:0 var(--space-2);border-radius:var(--radius-sm);border:var(--border-default)}.precheck .badge.blocker{color:var(--color-danger)}.precheck .badge.warning{color:var(--color-warning)}.precheck .digest{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.precheck table{width:100%;border-collapse:collapse}.precheck th,.precheck td{padding:var(--space-2);border-block-end:var(--border-default);text-align:left;vertical-align:top}@media(max-width:640px){.precheck .body{padding:var(--space-4)}.precheck table,.precheck tbody,.precheck tr,.precheck td{display:block;width:100%}.precheck thead{display:none}.precheck td{white-space:normal;text-align:left}.precheck td:before{content:attr(data-label);display:block;color:var(--color-text-secondary)}.precheck .filter{flex-direction:column;align-items:stretch}.precheck input,.precheck button{min-height:var(--touch-target)}}
+</style>
+<div class="precheck">
+<section class="page-header"><div><h1 tabindex="-1">期间预检</h1><p>只读聚合合同、结算、收入、成本与期间/锁期判定；各条目经既有 owner 只读接口派生，不写业务事实、不记审计、不建第二套账。缺失一律显示为空，不按 0 冒充。</p></div></section>
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+<section class="panel"><div class="body"><form class="filter" method="get" action="{{ page_url }}" aria-label="筛选期间预检">
+<div class="form-field"><label for="{{ form.as_of.id_for_label }}">基准日</label>{{ form.as_of }}</div>
+<div class="form-field"><label for="{{ form.period.id_for_label }}">期间</label>{{ form.period }}</div>
+<div class="form-field"><label for="{{ form.project.id_for_label }}">项目 ID（项目经理必填其管理项目）</label>{{ form.project }}</div>
+<div class="actions"><button type="submit" class="button primary">查看预检</button><a class="button subtle" href="{{ page_url }}">重置</a></div>
+</form></div></section>
+{% if data %}
+<div class="notice">只读快照：{{ data.contract }} · 截至 {{ data.as_of_date }} · 期间 {{ data.period }} · 阻塞 {{ data.summary.blocking_count }} · 警告 {{ data.summary.warning_count }} · 缺失 {{ data.summary.missing_count }}。{{ data.estimate_label }}</div>
+<section class="panel"><div class="panel-heading"><h2>预检摘要</h2></div><div class="body">
+{% if data.precheck is None %}<p class="muted">无 canonical PeriodPrecheck 实体（上游历史缺口），不伪造 id/version/status；仅以只读派生 envelope 呈现。</p>{% endif %}
+<p>预检摘要用途：{{ data.purpose }}；范围：{% if data.scope.kind == 'project' %}项目 {{ data.scope.project_id }}{% else %}全公司{% endif %}。</p>
+<p>precheck_digest（供导入提交绑定）：<code class="digest">{{ data.precheck_digest }}</code></p>
+</div></section>
+{% if data.issues %}
+<section class="panel"><div class="panel-heading"><h2>问题（阻塞与警告）</h2></div><div class="body table-scroll"><table aria-label="期间预检问题">
+<thead><tr><th>级别</th><th>编码</th><th>域</th><th>来源</th><th>说明</th><th>期望值</th><th>实际值</th></tr></thead>
+<tbody>{% for issue in data.issues %}<tr>
+<td data-label="级别"><span class="badge {{ issue.severity }}">{% if issue.severity == 'blocker' %}阻塞{% else %}警告{% endif %}</span></td>
+<td data-label="编码">{{ issue.issue_code }}</td>
+<td data-label="域">{{ issue.domain }}</td>
+<td data-label="来源">{% for ref in issue.source_refs %}<div class="trace">{{ ref.namespace }} · {{ ref.kind }} · {{ ref.id }}{% if ref.version %}（版本 {{ ref.version }}）{% endif %}</div>{% empty %}<span class="muted">无来源引用</span>{% endfor %}</td>
+<td data-label="说明">{{ issue.message|default:'—' }}</td>
+<td data-label="期望值">{{ issue.expected|default:'—' }}</td>
+<td data-label="实际值">{{ issue.actual|default:'—' }}</td>
+</tr>{% endfor %}</tbody></table></div></section>
+{% else %}<section class="panel"><div class="body"><p class="muted">当前范围与基准日内未发现问题；不代表上游缺失按 0 通过，缺失单列如下。</p></div></section>{% endif %}
+{% if data.missing %}
+<section class="panel"><div class="panel-heading"><h2>缺失 / 未实现</h2></div><div class="body"><ul>{% for entry in data.missing %}<li><span class="badge {{ entry.severity }}">{% if entry.severity == 'blocker' %}阻塞{% else %}警告{% endif %}</span> {{ entry.missing_code }}（{{ entry.domain }}）：{{ entry.reason }}</li>{% endfor %}</ul></div></section>
+{% endif %}
+{% if data.checks %}
+<section class="panel"><div class="panel-heading"><h2>域计数</h2></div><div class="body table-scroll"><table aria-label="域计数"><thead><tr><th>域</th><th class="amount">条目</th><th class="amount">问题</th></tr></thead><tbody>{% for check in data.checks %}<tr><td data-label="域">{{ check.domain }}</td><td data-label="条目" class="amount">{{ check.counts.items|default:'—' }}</td><td data-label="问题" class="amount">{{ check.counts.issues }}</td></tr>{% endfor %}</tbody></table><p class="muted">金额差额口径归各 owner 服务；本页不复制差额规则，金额一律不显示为 0。</p></div></section>
+{% endif %}
+{% endif %}
+</div>
+<script>(()=>{const root=document.querySelector('.precheck');if(!root)return;const bad=root.querySelector('[aria-invalid="true"]');if(bad)bad.focus();})();</script>
+{% endblock %}

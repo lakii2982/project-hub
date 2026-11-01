@@ -148,6 +148,8 @@ class PeriodCloseTests(CloseFixture, TestCase):
         self.assertEqual(services.period_close_precheck(self.auditor, self.period)['scope'],
                          'period')
         from core.plugin_runtime import set_enabled
+        # PH-354: insights requires settlement/contracts, disable it before dependency guards.
+        set_enabled(self.owner, 'insights', False)
         for plugin_id in ('invoicing', 'onboarding', 'management_revenue', 'settlement',
                           'time', 'contracts'):
             try:

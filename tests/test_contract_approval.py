@@ -369,7 +369,8 @@ class ContractApprovalConcurrencyTests(Fixture, TransactionTestCase):
         if is_enabled(self.owner.organization, 'invoicing'):
             set_enabled(self.owner, 'invoicing', False)
         # PH-286: onboarding requires contracts, so disable it before the contracts guards below.
-        for plugin_id in ('onboarding', 'management_revenue', 'settlement', 'delivery', 'time'):
+        # PH-354: insights requires settlement/contracts, disable it first.
+        for plugin_id in ('insights', 'onboarding', 'management_revenue', 'settlement', 'delivery', 'time'):
             if plugin_id in get_registry().manifests:
                 set_enabled(self.owner, plugin_id, False)
         self.finance = self.member('finance')

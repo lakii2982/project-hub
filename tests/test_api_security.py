@@ -36,6 +36,8 @@ class MonthlyTimeApiTests(TestCase):
         self.assertNotIn('cost_cents', response.content.decode())
 
     def test_disabled_monthly_module_cannot_fall_back_to_legacy_rate(self):
+        # PH-354: insights requires costing, disable it first.
+        set_enabled(self.owner, 'insights', False)
         set_enabled(self.owner, 'costing', False)
         self.assertEqual(self.post('/api/v1/timesheets', self.time_payload()).status_code, 403)
         self.assertFalse(Timesheet.objects.exists())

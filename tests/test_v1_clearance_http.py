@@ -189,6 +189,8 @@ class ClearanceHTTPTests(ClearanceHTTPFixture, TestCase):
         from core.plugin_runtime import set_enabled
         set_enabled(self.owner, 'invoicing', False)
         set_enabled(self.owner, 'onboarding', False)
+        # PH-354: insights requires settlement, disable it first.
+        set_enabled(self.owner, 'insights', False)
         set_enabled(self.owner, 'settlement', False)
         self.login(self.auditor)
         self.assertEqual(self.client.get(CLEARANCE_LIST).status_code, 403)

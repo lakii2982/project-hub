@@ -1,0 +1,66 @@
+{
+ "task_id": "PH-354",
+ "summary": "insights 读模型前置拆分首片：新建 pmo_plugins.insights 插件（manifest 恰好 8 字段，requires={cash,settlement,costing,contracts}，default_enabled=True，无模型/迁移/写通道），settings/PMO_PLUGIN_MODULES 与 delivery urls root 单写接线；period_precheck_snapshot 严格按 docs/v1.0-development/period-precheck-contract.md 输出 period.precheck.snapshot/v1 envelope（precheck=null+period_precheck_missing，不伪造 canonical 实体），聚合既有 owner 只读服务（cash_bridge/settlement 覆盖/revenue 配对/bank_charge 配对）与 PH-291 跨域总览，只按冻结映射定 severity、不复制金额/差额规则（difference 恒 null，missing 不以 0 冒充）；precheck_digest=sha256(canonical_json({contract,scope,period,as_of_date,watermark,issues,differences,missing}))，重复调用稳定、事实变化可检测；history_read 路由，owner/finance/auditor 全量、pm 仅管理项目摘要、member/跨 org 拒绝；新增 25 个测试（13 服务+8 HTTP+4 反例），29 个白名单既有测试文件中 25 个需最小停用顺序调整（其余 4 个自愈/公司锁先行），不改业务断言。",
+ "tests": [
+  {
+   "command": "python scripts/projectctl.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0 after PH-399 rebase: ok=true, task_count=322."
+  },
+  {
+   "command": "python manage.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0 in /tmp/ph354-precheck: 120 pre-existing/URL-naming warnings, 0 errors."
+  },
+  {
+   "command": "python manage.py makemigrations --check --dry-run",
+   "result": "pass",
+   "evidence": "Actual exit 0: No changes detected (insights 无模型/迁移)."
+  },
+  {
+   "command": "python manage.py test tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 25 tests, OK. Covers gold sample, digest stability/change, zero write, roles, cross-month period rejection, unique offset missing, project-scope isolation and per-role cash hiding."
+  },
+  {
+   "command": "python manage.py test <29 个白名单依赖停用回归文件> --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 0: 25 个实际调整文件（原有 18 中 14 个 + 补入 11 个）全部通过；其余 4 个原有文件自愈或公司锁先行。全部仅调整停用顺序，不改业务断言。PG-only 月度人工并发用例在 SQLite 跳过，由 CI 验证。"
+  },
+  {
+   "command": "python manage.py test tests --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual final run: Ran 1360 tests in 173.736s; 5 failures + 3 errors + 70 skips, all eight names matching the established macOS baseline (6 DRF Accept/codec/large-JSON + 2 delivery /private/var symlink). No new failure. Linux/PG CI remains authoritative."
+  },
+  {
+   "command": "python manage.py verify_integrity --json",
+   "result": "pass",
+   "evidence": "Actual exit 0 on throwaway migrated SQLite DB: {\"ok\": true, \"errors\": [], ...}。"
+  }
+ ],
+ "review": {
+  "required": true,
+  "reviewer": "independent PH-354 insights reviewer (fresh context, read-only)",
+  "status": "pass",
+  "findings": [
+    "First review found 3 blockers (project scope not propagated, cross-month period silently mixed, duplicate offset missing); all fixed at ef2a3c3.",
+    "Final review found one residual: owner/finance/auditor project scope still saw company cash issues; fixed at b82e0e1 with explicit cash_bridge_unavailable for all roles and a per-role regression test.",
+    "FINAL PASS at b82e0e1 with 3 non-blocking documentation/test-strength items; those were then corrected (25-test counts, posting_period limitation in report, stronger project-isolation assertion on OpenItem ids)."
+  ],
+  "evidence": "Independent final PASS after b82e0e1; scoped 25 tests OK, projectctl check ok/322, full suite 1360 tests with only the established eight macOS baseline failures."
+ },
+ "deviations": [
+  "白名单外 11 个既有测试文件受新插件 default_enabled 依赖影响而失败；已由 PH-399 独立规划 PR 补入精确写域后，本片以同一最小停用顺序修正，全量回到既有 macOS 基线。",
+  "独立复核首轮 3 项阻断已修复：(1) project scope 现在对 revenue 传 project_id、对无项目归属的 cash/costing/contracts 显式 missing，不再混入其他项目；(2) period 必须与 as_of 同月，跨月直接拒绝，不静默返回跨期结果；(3) offset_not_implemented 只由 settlement 触发并按 (missing_code, domain, source_ref) 去重。另补充顶层 truncated 标志、contracts refs 排序。",
+  "severity 映射按 contract §5 冻结口径执行：cleared_over_gross/settled_exceeds_recognized/duplicate_recognition/cost_*_duplicate 等归为 blocker，未分类现金/offset 未实现/period_precheck_missing 等为 warning；future_as_of 按 §6.1 记 warning（§5 将『未来日期』列入 blocker 的两处口径以该 code 定义条款为准，已在 handoff 披露待 reviewer 仲裁）。",
+  "本片期间口径仅支持 as_of 当月（跨月直接拒绝），尚未逐事实比对 posting_period；purpose 固定为 period_close。PH-353 消费时不得假定 §6.5 跨期判定已完成。",
+  "checks 的 expected/actual/difference_cents 恒 null、differences 恒空：本片只透传 owner issue 的 expected/actual；PH-353 不得据此做差额守恒断言，差额口径仍以 owner 服务为准。",
+  "pm 项目摘要不含 cash 域（owner cash 服务拒绝 pm），按 missing（cash_bridge_unavailable，warning）呈现，不按 0 处理。",
+  "契约 §5 的 missing_code 枚举无 settlement/contracts 专属项；本片以 settlement_coverage_unavailable/contracts_overview_unavailable 显式扩展，语义仍为『上游只读服务不可读』且不按 0，契约文字待 PH-401 规划补记。"
+ ],
+ "unverified": [
+  "真实 PostgreSQL 并发/触发器与 CI Linux/PG 运行（本片 SQLite scoped）。",
+  "浏览器 1440px/390px/键盘焦点人工检视（HTTP 断言已覆盖状态码与关键内容）。",
+  "生产/UAT；PH-353 消费 digest 的端到端联动。"
+ ]
+}
