@@ -1202,3 +1202,9 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - PH-354 晋级 ready：按 ADR0013/0014 补 bootstrap/settings/urls 和 18 个依赖停用测试写域；PH-353 新增 PH-354 前置，保证导入使用真实 precheck_digest。PH-342/343/355 不晋级。
 - 新登记 PH-399（Issue #261，PH-397 done 后已晋级 ready）及 PH-400 ready（Issue #262，PR #258 的 mergeable=null 实证）；规划/任务授权 digest 按最终 spec 重算并登记。
 - 本片无产品代码、迁移、PG、浏览器、生产或 UAT；EXP-1 继续暂停，PH-110 暂不入库。独立 S 初轮发现 2 个 stale digest，修正后 5/5 MATCH，增量复核 PASS；verify-change 待证据提交后重跑。
+
+## PH-400 Delivery arbitration mergeable 兼容修复（2026-11-01）
+
+- 实证 PR #258 run 41266764258：webhook mergeable=null 导致 mergeable_required。
+- 修复：当前 PR REST API 最多 3 次读取，只接受 mergeable=true 且 API/webhook BASE/HEAD 一致；持续未知拒绝，不执行候选代码。
+- 登记 73 tests OK；projectctl check、独立 S、live Delivery arbitration pending；不启用远端强制。

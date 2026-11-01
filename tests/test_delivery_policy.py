@@ -126,6 +126,21 @@ class PRMetadataTests(unittest.TestCase):
             check_pr_metadata(self.policy, event('Task: PH-120', base='a' * 40),
                               base_sha='c' * 40)
 
+    def test_null_or_textual_mergeable_is_not_accepted_as_true(self):
+        for value in (None, 'MERGEABLE', 'true', 1):
+            with self.subTest(value=value), self.assertRaisesRegex(GateError, 'mergeable_required'):
+                check_pr_metadata(self.policy, event('Task: PH-120', mergeable=value))
+
+    def test_workflow_refreshes_nullable_mergeable_from_current_pr_api(self):
+        workflow = (ROOT / '.github/workflows/delivery.yml').read_text(encoding='utf-8')
+        self.assertIn('pull-requests: read', workflow)
+        self.assertIn('repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}', workflow)
+        self.assertIn("current.get('mergeable') is not True", workflow)
+        self.assertIn("current.get('base') or {}).get('sha')", workflow)
+        self.assertIn("current.get('head') or {}).get('sha')", workflow)
+        self.assertIn('mergeable_unavailable_or_changed', workflow)
+        self.assertNotIn('pull_request_target', workflow)
+
     def test_non_pull_request_and_non_string_body_are_rejected(self):
         with self.assertRaises(GateError):
             check_pr_metadata(self.policy, {})

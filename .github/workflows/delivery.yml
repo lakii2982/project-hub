@@ -4,6 +4,7 @@ on:
     types: [opened, synchronize, reopened, edited]
 permissions:
   contents: read
+  pull-requests: read
 concurrency:
   group: delivery-metadata-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -22,13 +23,46 @@ jobs:
       - name: Read BASE policy and PR metadata only
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GH_TOKEN: ${{ github.token }}
           GIT_NO_REPLACE_OBJECTS: '1'
         run: |
           # The introducing PR predates the BASE gate and is an explicit,
           # non-required bootstrap. Later PRs fail closed if BASE lacks it.
           if git --no-replace-objects cat-file -e "$BASE_SHA:scripts/delivery_gate.py" 2>/dev/null; then
             git --no-replace-objects show "$BASE_SHA:scripts/delivery_gate.py" > "$RUNNER_TEMP/delivery_gate.py"
+            # Webhook mergeable is nullable and may describe stale computation.
+            # Refresh it from the current PR and bind it to the same BASE/HEAD.
+            for attempt in 1 2 3; do
+              gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" > "$RUNNER_TEMP/pull_request.json"
+              if python - "$RUNNER_TEMP/pull_request.json" "$GITHUB_EVENT_PATH" <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import sys
+
+          current = json.loads(Path(sys.argv[1]).read_text())
+          event = json.loads(Path(sys.argv[2]).read_text())
+          if current.get('mergeable') is not True:
+              raise SystemExit(1)
+          if (current.get('base') or {}).get('sha') != os.environ['BASE_SHA']:
+              raise SystemExit('current PR BASE differs from webhook')
+          if (current.get('head') or {}).get('sha') != os.environ['HEAD_SHA']:
+              raise SystemExit('current PR HEAD differs from webhook')
+          event['pull_request']['mergeable'] = True
+          Path(sys.argv[2]).write_text(json.dumps(event))
+          PY
+            then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              printf '%s\n' '{"ok":false,"error":"mergeable_unavailable_or_changed"}'
+              exit 1
+            fi
+            sleep 5
+            done
             python "$RUNNER_TEMP/delivery_gate.py" --root . --base "$BASE_SHA" --event "$GITHUB_EVENT_PATH"
           else
             printf '%s\n' '{"ok":true,"status":"bootstrap_base_gate_absent","remote_checks_enforced":false}'
