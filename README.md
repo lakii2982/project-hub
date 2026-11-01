@@ -106,3 +106,5 @@ Git标签触发同提交验证与草稿发布，远端资产摘要核对后公�
 - [开源方案评估](docs/open-source-review.md)、[第三方来源与许可](THIRD_PARTY_NOTICES.md)
 
 复用Django、DRF、django-axes、WhiteNoise、pluggy及官方MCP SDK等成熟组件。没有复制ERPNext、OpenProject、Odoo、Plane、Jira或DeepSeek Harness业务源码。自有源码采用Apache-2.0，依赖保留各自许可。
+
+<!-- PH-122 drill: out of scope for PH-122 -->
