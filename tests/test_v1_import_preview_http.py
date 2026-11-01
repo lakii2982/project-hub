@@ -3,6 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 
 from core.models import PluginState
+from pmo_plugins.onboarding.models import ImportPreview
 from tests.test_v1_import_preview import ImportPreviewFixture
 
 LIST_URL = "/modules/onboarding/import-preview-list/"
@@ -21,9 +22,12 @@ class ImportPreviewHTTPFixture(ImportPreviewFixture):
     def upload(self, content):
         return SimpleUploadedFile("demo.csv", content, content_type="text/csv")
 
-    def post(self, content, *, member=None, kind=""):
+    def post(self, content, *, member=None, kind="", save=False):
         self.login(member or self.owner)
-        return self.client.post(UPLOAD_URL, {"kind": kind, "file": self.upload(content)})
+        data = {"kind": kind, "file": self.upload(content)}
+        if save:
+            data["save_preview"] = "1"
+        return self.client.post(UPLOAD_URL, data)
 
     def run_preview(self, *, member=None, content=None, kind=""):
         self.login(member or self.owner)
@@ -40,6 +44,13 @@ class ImportPreviewHTTPTests(ImportPreviewHTTPFixture, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "预览结果")
         self.assertContains(response, "识别模板")
+        self.assertEqual(ImportPreview.objects.count(), 0)
+
+    def test_save_preview_is_not_available_for_other_import_kinds(self):
+        response = self.post(self.time_csv(), kind="time", save=True)
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, "仅发票导入支持预检并保存", status_code=400)
+        self.assertEqual(ImportPreview.objects.count(), 0)
 
     def test_read_page_and_auditor_readonly_preview(self):
         self.login(self.owner)
@@ -65,6 +76,9 @@ class ImportPreviewHTTPTests(ImportPreviewHTTPFixture, TestCase):
         self.assertContains(response, "message error", status_code=400)
         response = self.post(b"")
         self.assertEqual(response.status_code, 400)
+        response = self.post(b"", kind="invoicing", save=True)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(ImportPreview.objects.count(), 0)
         response = self.run_preview(content=b"bad,header\n1,2\n")
         self.assertEqual(response.status_code, 400)
 

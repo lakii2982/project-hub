@@ -15,8 +15,8 @@
 {% if can_write %}<section class="panel"><div class="panel-heading"><h2>上传并预览（只读预检）</h2></div><div class="body">
 <form method="post" action="{{ preview_upload_url }}" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="kind" value="invoicing">
 <div class="grid"><div class="form-field"><label for="id_file">CSV 文件</label><input id="id_file" type="file" name="file" accept=".csv,text/csv" required></div></div>
-<p class="help-text">上传只生成只读预检，不写业务事实；确认后到导入提交页引用持久预览提交。</p>
-<div class="actions"><button type="submit" class="button primary">上传并预检</button><a class="button subtle" href="{{ submit_url }}">前往导入提交</a></div>
+<p class="help-text">“上传并预检”只生成临时只读结果；“预检并保存，前往提交”由服务端从原 CSV 重算并保存预览，不写业务事实。提交前仍须完成期间预检。</p>
+<div class="actions"><button type="submit" class="button primary">上传并预检</button><button type="submit" name="save_preview" value="1" class="button">预检并保存，前往提交</button><a class="button subtle" href="{{ submit_url }}">前往导入提交</a></div>
 </form></div></section>{% endif %}
 <section class="panel"><div class="panel-heading"><h2>选择已持久化预览</h2></div><div class="body">
 <form method="get" action="{{ import_url }}"><div class="grid"><div class="form-field"><label for="{{ filter_form.preview.id_for_label }}">预览标识</label>{{ filter_form.preview }}{{ filter_form.preview.errors }}</div></div><div class="actions"><button type="submit" class="button subtle">查看预览投影</button>{% if selected %}<a class="button subtle" href="{{ import_url }}">清除选择</a>{% endif %}</div></form>

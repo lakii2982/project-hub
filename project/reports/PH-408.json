@@ -1,8 +1,6 @@
 {
   "task_id": "PH-408",
-  "summary": "只登记发票导入预检保存与原子提交浏览器衔接任务；来源于隔离演练库的实测断点和用户 2026-11-01 /goal 授权。不含产品实现。",
-  "registration_only": true,
-  "authorization_source": "user-goal-2026-11-01",
+  "summary": "打通发票导入预检保存到现有原子提交的浏览器路径：保留临时只读预检，新增 invoicing 专用保存动作，服务端从原 CSV 重算并复用既有 preview_import/persist_preview；不改业务服务、模型/迁移、财务或核对口径。完成相关回归、1440/390 真实浏览器、真实键盘与错误态验收。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
@@ -11,10 +9,40 @@
       "evidence": "Actual exit 0 using the repository virtualenv on PATH: ok=true, task_count=328."
     },
     {
-      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "command": "python manage.py check",
       "result": "pass",
       "exit_code": 0,
-      "evidence": "Actual exit 0 using the repository virtualenv on PATH: 35 tests ran in 10.627s, OK."
+      "evidence": "Actual exit 0 with the fixed virtualenv: system check completed with the existing 127 warnings and no error."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0: No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual final exit 0 with djangorestframework==3.18.2 and TMPDIR=/private/tmp after review corrections: Ran 1503 tests in 163.946s, OK (skipped=73)."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 with PMO_DB pointed to a newly migrated isolated demo database: ok=true, errors=[], organizations=1, entries=47."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_invoice_import tests.test_v1_invoice_import_http tests.test_v1_import_preview_http tests.test_v1_import_submission tests.test_v1_import_submission_http --verbosity 1",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 after independent-review corrections: Ran 74 tests in 5.331s, OK. New HTTP golden path does not call persist_preview directly; 201-row truncation and script-prefix regressions are covered."
+    },
+    {
+      "command": "node /private/tmp/project-hub-invoice-1kPK9qFv/ph408-keyboard-check.cjs",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 in headless Chrome at 390px: real Tab reached save_preview with :focus-visible=true, 3px solid outline and 44px height; invalid CSV returned 400, previewRowsAfterInvalid=1, bodyOverflow=false."
     }
   ],
   "review": {
@@ -22,15 +50,20 @@
     "reviewer": "independent general-purpose / reviewer",
     "status": "pass",
     "findings": [
-      "PASS at uncommitted PH-408 against BASE e05f7a6: exactly one new ready/unclaimed task with done dependencies, new regular spec/report/handoff and exact appended S grant; no implementation or existing contract/policy changes. Reviewer independently recomputed digest 5bf09f901abcbec516d18eb2ebbeab616d96d62606949a11b411c9e4ef818718, verified open Issue #298, reran projectctl check and all 35 common tests with exit 0."
+      "Initial independent S review FAIL: 201-500 rows could be silently truncated to the 200-row display projection, and redirect omitted the deployment script prefix. Both findings were reproduced before correction.",
+      "Final independent S review PASS after corrections: reviewer independently verified 201 valid rows return 400 with previews=0/invoices=0, the 200-row boundary returns 302 with persisted_rows=200, and /pmo/ prefix redirects to /pmo/modules/onboarding/import-submit/. Reviewer reran all 74 scoped tests (5.493s, exit 0) plus 3 boundary reproductions (1.381s, exit 0); no new blocking finding."
     ]
   },
   "deviations": [
-    "登记 PR 只追加一个 ready、未认领且依赖已 done 的 PH-408 契约及同编号 spec/report/handoff，并追加精确 S 授权；不修改既有任务、产品、检查器、workflow、manifest 或其它策略值。",
-    "完整产品验收与浏览器通过属于登记合入后的实现 PR；本报告不能作为实现验收。"
+    "Independent S review initially rejected the implementation: preview_import truncates its display rows to 200 while CSV accepts 500, and the first redirect omitted the deployment script prefix. Added a 201-row rejection with zero preview/business writes and a script-prefix regression; larger files must be split for this save action, while read-only preview behavior is unchanged.",
+    "The first full local run failed with 3 failures and 3 errors in DRF security compatibility because the existing virtualenv had djangorestframework 3.16.1 while requirements pin 3.18.2. Installed the locked dependencies with uv; the targeted 13 tests then passed and the final full 1501-test run passed. No test or product scope was changed to bypass the failure.",
+    "The default local runtime verify_integrity command failed because core_timesheet.organization_id is missing from that unmigrated user database. It was not migrated or reset in this slice. The passing integrity evidence is explicitly from a separate newly migrated demo database.",
+    "Desktop 1440px and mobile 390px isolated SQLite browser runs both completed upload/save, period precheck, atomic commit, committed receipt, invoice reconciliation and operations workbench. The demo reconciliation still reports revenue_invoice_mismatch and tax_qualification_missing; the workbench retains import_preview_persistence_not_implemented and identity issues. These existing source/upstream gaps are not claimed as fixed.",
+    "Browser file selection used the real file input with generated demo CSV; no real customer, payroll or credential data entered the source or external service. Temporary Playwright tooling was installed outside the repository and is not a product dependency."
   ],
   "unverified": [
-    "产品实现、自动化全套、1440/390 浏览器、PostgreSQL、部署与客户验收均未在本登记轮执行或宣称通过。",
-    "当前提交所需远端 required CI 以 GitHub 实际结果为准。首次 27af6c4 的 Project governance 与 Delivery arbitration 因 PR 正文缺少唯一 Task 行而失败；已修正 PR 正文，并以本报告提交重新触发检查，不将该失败写成通过。"
+    "Remote required CI for the implementation head must still pass on GitHub before merge.",
+    "PostgreSQL-specific concurrency, production deployment and customer UAT are not proven by local SQLite automation or browser checks.",
+    "The user's default local runtime still needs a backup followed by the existing migrations before its own integrity check can pass; this is outside PH-408's authorized file and data scope."
   ]
 }
