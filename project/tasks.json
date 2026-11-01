@@ -13459,7 +13459,7 @@
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_quality_gate -v"
       ],
-      "github_issue": null,
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/295",
       "owner": null,
       "blockers": [
         "PH-406 独立规划合入后 ready；不得先改工具/开发入口。"
