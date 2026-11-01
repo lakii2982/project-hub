@@ -1293,3 +1293,9 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - 全量 `manage.py test tests`：8 个失败名与既有 macOS 基线一致（6 DRF Accept/codec/large-JSON + 2 delivery `/private/var` 符号链接），无新增失败。
 - 差异单 canonical 对齐：`difference_cents` 非空（owner 值→cents 对→0）、`snapshot_watermark` 为 SourceRef 数组（基准日存 external_key）、`resolution_note` 为 null|1..1000、`coverage_key` 含来源身份；case/read-model append-only 数据库触发器（SQLite+PG）；较早 as_of 不覆盖较新快照；无来源身份的 issue 记 missing 不建单。
 - not_run：真实 PostgreSQL 并发/锁、CI Linux/PG、浏览器 1440/390 人工检视、生产/UAT、独立 S review（未自批）。
+
+## PH-405 规划推进（2026-11-01，BASE bccf0ff；in_review）
+
+- docs-only 规划：PH-378/PH-379 cancelled（范围被 PH-338/PH-339 覆盖）、PH-383/PH-384 依赖改接、PH-355 晋级 ready、PH-406 登记 proposed；agent-protocol.md §14 记录决策。
+- 实跑：projectctl check ok=true/task_count=326；tests.test_projectctl tests.test_governance 23 项 OK；tests.test_delivery_policy 11 项 OK。
+- 未验证：无产品实现/迁移/PG/浏览器/生产/UAT；独立 S 复核与 verify-change 待完成。

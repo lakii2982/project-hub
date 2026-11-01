@@ -134,3 +134,16 @@ Dependabot提案没有Task行而被治理检查拒绝时，先评估升级必要
 5. 登记 PH-405 proposed 作为下一规划槽，PH-404 done 后置 ready。
 
 验收沿用 projectctl check、23 项治理测试、独立 S 复核和 BASE verify-change。
+
+## 14. PH-405 · v1.0 后续交付规划入口
+
+承接 PH-404 与 PH-338/PH-339 合入后的新 BASE，仅做依赖与证据再基线：
+
+1. PH-338 发票批量导入（PR #288，main `088d5f0`）与 PH-339 insights 读模型（PR #290，main `3400774`）已 done；PH-378/PH-379 的实现范围已被这两片覆盖，置 cancelled 并保留原因，不再单独立项。
+2. PH-383（发票错误清单/来源覆盖）与 PH-384（insights 性能/导出）的依赖改接 PH-338/PH-339，保持 proposed，由下一规划槽按剩余实际缺口复核后再晋级。
+3. 晋级 PH-355 通知中心前置拆分（reminder refs 与到期扫描骨架，deps PH-364 done）；PH-340/PH-380 保持 proposed，等 PH-355 done 后复核。
+4. 真实 PostgreSQL/staging、浏览器、生产/UAT 与三方签批保持 not_run；不以本地或文档证据冒充 release。
+5. 仅可按 `user-2026-10-31-complete-v1` 登记 v1.0 范围任务的 contract_digest；不得修改仲裁规则、恢复 EXP-1、发布 PH-110 或登记里程碑外任务。
+6. 登记 PH-406 proposed 作为下一规划槽，PH-405 done 后置 ready。
+
+验收沿用 projectctl check、23 项治理测试、独立 S 复核和 BASE verify-change。

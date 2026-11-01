@@ -136,3 +136,11 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 
 - 新增 insights 自有模型/迁移、刷新/状态更新/项目工作台服务与差异单/工作台页面；期间预检直接复用 PH-354。差异单由预检 issue 派生，同 case_key 至多一条有效、证据变化旧单 superseded、刷新/更新 request_token 幂等；工作台经 contracts/management_revenue/costing/settlement 既有只读接口派生，缺失 null+missing、零业务写入；owner/finance/auditor 全量、pm 仅管理项目、member/跨 org 拒绝、停用 history_read、写入口仅 owner/finance。
 - 交付工作树（PH-404 已补 `migrations/__init__.py` 白名单）新测试 68 OK（43 差异单/工作台/HTTP + 25 期间预检回归）；check/makemigrations/verify_integrity 通过。差异单 `difference_cents` 为非空 canonical 整数、`snapshot_watermark` 为 canonical SourceRef 数组、case/read-model append-only 触发器已落库；较早 as_of 不可覆盖较新快照。未验证 PG/CI、浏览器 1440/390、生产/UAT、独立 S review。
+
+## PH-405 规划推进（2026-11-01）
+
+- PH-338（PR #288，`088d5f0`）与 PH-339（PR #290，`3400774`）已合入并收口 done。
+- PH-378/PH-379 cancelled：实现范围已分别被 PH-338/PH-339 覆盖；PH-383/PH-384 依赖改接 PH-338/PH-339 并保持 proposed，待下一规划槽按剩余缺口复核。
+- PH-355 通知中心前置拆分晋级 ready（deps PH-364 done），spec 依赖描述与任务板对齐；PH-340/PH-380 保持 proposed 等 PH-355。
+- 登记 PH-406 proposed（Issue #292）作为下一规划槽，PH-405 done 后置 ready。
+- 真实环境 L3–L5、发布包与三方签批保持 not_run；EXP-1 暂停、PH-110 不入库。
