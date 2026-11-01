@@ -88,7 +88,22 @@
       },
       {
         "task_id": "PH-404",
-        "contract_digest": "53405c8d488a3a5b289e1e82dade0f87ded71e0792be8a54a5e54d22c4a3edd9",
+        "contract_digest": "014e6c7486e0394b609e0add4437a2ae884cfcd339b1b11aae3c309598bb750f",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-338",
+        "contract_digest": "655692ed42c20101519d8dcde480164390638dd47317f236408c75a30a5f3af8",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-339",
+        "contract_digest": "59f6ae00a5b93f1419373552391040718835e8b6a3b59ba02deb574c33f15430",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-405",
+        "contract_digest": "84f2931093fd389c3bd6ea9a477723813595812b6faecb6032dfc783c7532ec2",
         "source": "user-2026-10-31-complete-v1"
       }
     ]

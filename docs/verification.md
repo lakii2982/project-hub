@@ -1267,3 +1267,10 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 
 - 新增 `docs/v1.0-development/invoice-import-contract.md`：批量模板/字段映射、逐行校验、全批原子/幂等/公司锁/期间、错误 envelope、权限与 owner 复用边界。
 - 无产品代码/迁移/表/路由；PH-338 未解除 proposed。独立 S review 与 verify-change 待最终证据。
+
+## PH-404 v1.0 后续交付规划推进（2026-11-01，BASE 1b02cd7）
+
+- PH-342/343 契约已合入；PH-338（依赖 PH-252/274/320/342）与 PH-339（依赖 PH-277/291/304/309/343）晋级 ready。
+- PH-338 白名单扩展 core/imports.py、onboarding preview/commit，按 PH-342 唯一路径实现 kind=invoicing；不新建第二套入口。
+- 登记 PH-405 proposed（Issue #285）；PH-338/339/404/405 授权摘要机器断言 MATCH。
+- 无产品代码、迁移、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。

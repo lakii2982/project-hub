@@ -837,3 +837,9 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 
 - PH-353 原子导入合入后，PH-342 发票批量导入契约与 PH-343 insights 契约晋级 ready（依赖均已 done）。
 - 登记 PH-404 proposed（Issue #280）承接实现片、通知链与真实环境验收/发布包/UAT；不做功能或发布宣称。
+
+## PH-404 后续规划（2026-11-01，BASE 1b02cd7）
+
+- PH-342/343 契约合入后，PH-338 发票批量导入实现与 PH-339 insights 实现晋级 ready。
+- PH-338 按 PH-342 唯一路径扩展 core/imports.py 与 onboarding preview/commit；PH-339 按 PH-343 契约实现只读读模型。
+- 登记 PH-405 proposed（Issue #285）承接通知链、真实环境验收、发布包与 UAT。
