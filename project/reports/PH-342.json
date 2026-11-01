@@ -1,0 +1,29 @@
+{
+ "task_id": "PH-342",
+ "summary": "发票批量/导入实现前置契约冻结（docs-only）：新增 invoice-import-contract.md，冻结批量模板/逐行校验、全批原子与幂等、错误 envelope、权限/期间与 PH-252/274/353/320 复用边界；不实现、不建表/迁移/路由。",
+ "tests": [
+  {
+   "command": "python scripts/projectctl.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0: ok=true, task_count=324."
+  },
+  {
+   "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 23 tests in 2.309s, OK."
+  }
+ ],
+ "review": {
+  "required": true,
+  "reviewer": null,
+  "status": "pending",
+  "findings": []
+ },
+ "deviations": [
+  "Docs-only; PH-338 remains proposed and must re-check the actual BASE before implementation."
+ ],
+ "unverified": [
+  "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed.",
+  "Independent S review and final verify-change are pending."
+ ]
+}
