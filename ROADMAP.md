@@ -825,7 +825,7 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - PH-400 按 merge `3136003` 收口 done；登记 PH-401 proposed（Issue #265）作为下一规划槽。
 - 其余顺序不变：PH-354→PH-353→PH-342，insights 后续复核 PH-343；真实 L3–L5 与发布 gate 不提前放行。
 
-## PH-401 功能交付推进（2026-11-01，BASE f52a7a1）
+## PH-401 功能交付推进（2026-11-01，BASE cbd4175）
 
 - PH-354 insights 期间预检已合入（PR #267）；晋级 **PH-353** 原子导入 ready（依赖 PH-274/362/354 均 done），必须复用 PH-354 的真实 precheck/digest。
 - 晋级 **PH-122** ready，并补齐其实现白名单 `scripts/delivery_gate.py`、`tooling/ai_delivery/delivery/github.py` 与对应测试；8→9 required checks 的校验改动需真实对抗证据。

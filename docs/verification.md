@@ -1230,7 +1230,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **偏差**：契约 §5 missing_code 无 settlement/contracts 专属项，本片以 settlement_coverage_unavailable/contracts_overview_unavailable 显式扩展；future_as_of 按 §6.1 记 warning。全量回归补漏经 PH-399 独立规划扩写域后修复。
 - **L3/L4/L5：not_run**。真实 PG 已在 PR #267 CI 通过；浏览器 1440/390 人工检视、生产/UAT、PH-353 digest 端到端联动未执行；review PASS，独立复核两轮后合入。
 
-## PH-401 v1.0 功能交付推进（2026-11-01，BASE f52a7a1）
+## PH-401 v1.0 功能交付推进（2026-11-01，BASE cbd4175）
 
 - PH-354 已由 PR #267 合入；PH-353 依赖 PH-274/362/354 均 done，晋级 ready；其迁移白名单修正为 onboarding 首个迁移 `0001_initial` 与 `migrations/__init__.py`。
 - PH-122 晋级 ready，allowed_paths 增补 scripts/delivery_gate.py、tooling/ai_delivery/delivery/github.py、tests/test_delivery_policy.py、tests/test_delivery_gate.py；submitted 8→9 checks 变更须以真实对抗证据验证。

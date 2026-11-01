@@ -13287,9 +13287,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/265",
       "owner": "root",
-      "blockers": [
-        "PH-399 规划修正合入后晋级 ready。"
-      ],
+      "blockers": [],
       "handoff": "project/handoffs/PH-401.md"
     },
     {
