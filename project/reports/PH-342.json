@@ -23,7 +23,8 @@
   "Docs-only; PH-338 remains proposed and must re-check the actual BASE before implementation.",
   "Independent review blockers fixed: template fields now map to PH-252 (counterparty_name, evidence_json, four-part business_source_ref); sales-only scope; invoicing batch orchestration boundary and PH-338 whitelist extension are explicit; issue_code/envelope aligned with PH-362/PH-353.",
   "Owner request tokens are derived deterministically per invoice/allocation to avoid reusing one batch token across multiple owner receipts; derivation is frozen in the implementation slice.",
-  "2 MiB limit corrected to 1 MiB to match PH-274 preview; duplicate_source_id naming aligned."
+  "2 MiB limit corrected to 1 MiB to match PH-274 preview; duplicate_source_id naming aligned.",
+  "Second review blockers fixed: the only supported path is extending PH-274/PH-353 for kind=invoicing via a PH-338 planning whitelist expansion (core/imports.py + onboarding preview/commit), not a second parser; dry_run scope excludes owner quotas with the reason stated; owner token derivation is given as a frozen formula; owner exception-to-issue_code mapping and counterparty active/customer/evidence consistency are frozen."
  ],
  "unverified": [
   "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed.",
