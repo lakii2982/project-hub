@@ -1279,9 +1279,9 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 
 - PH-404 已合入 `e8e1862` 并 done；PH-339 白名单补 `migrations/__init__.py`，spec 同步，digest 重算。
 
-## PH-338 销售发票批量导入首片（2026-11-01，BASE e8e1862）
+## PH-338 销售发票批量导入首片（2026-11-01，BASE 7bb8351）
 
 - **L1 实现**：`core.imports.HEADERS['invoicing']`（20 列冻结模板）与 `apply_rows` invoicing 分支（invoice_number+line_no 归组、uuid5 owner token、仅调 PH-252 `record_invoice`/`allocate_invoice_lines`、通用 `commit_rows` 拒绝绕过）；onboarding preview 增加发票模板精确匹配与逐行/逐票预检（往来方唯一有效客户、日期/金额/行票守恒、重复票号、来源额度/往来方一致性 owner 异常映射）；onboarding commit 增加 `invoice_date` 期间映射、kind=invoicing 行校验与 `source_quota_exceeded`/`row_source_unapproved`/`invoice_number_duplicate`/`line_total_mismatch`/`invoice_total_mismatch`/`owner_validation_failed`/`owner_idempotency_conflict` 映射；invoicing 新增只读投影服务、history_read 页面/模板与 handler 绑定映射，不新建 preview/receipt/提交入口。
-- **L2 实际结果**：scoped `tests.test_v1_invoice_import tests.test_v1_invoice_import_http` = 30 tests OK（23 服务 + 7 HTTP）；受影响既有 onboarding/import/invoicing 回归 82 tests OK（与新增合并重跑 112 tests OK）；`manage.py check` exit 0（123 条既有/路由 warning，0 错误）；`makemigrations --check` No changes；fresh SQLite `verify_integrity --json` ok=true/errors=[]；全量 `manage.py test tests` Ran 1443 tests/146.871s，5F+3E/73 skips，8 项均为既有 macOS 基线（6 DRF 安全兼容 + 2 delivery/worktree `/private/var` symlink），无新增。
-- **偏差**：`pmo_plugins/delivery/urls.py` 不在 PH-338 allowed_paths；发票导入路由已在 `domain_metadata` 声明并由 `pmo_plugins/invoicing/urls.py` 暴露 handler 映射，HTTP 测试以 test-only trusted binding 验证 dispatcher；生产 root 绑定留待拥有该文件的后续集成片，标为未验证。onboarding 模板下拉保持既有 time/expense/plan 三项（既有断言），发票模板由 invoicing 页面和自动识别提供。
+- **L2 实际结果**：scoped `tests.test_v1_invoice_import tests.test_v1_invoice_import_http` = 31 tests OK（24 服务 + 7 HTTP）；受影响既有 onboarding/import/invoicing 回归 82 tests OK（与新增合并重跑 113 tests OK）；`manage.py check` exit 0（123 条既有/路由 warning，0 错误）；`makemigrations --check` No changes；fresh SQLite `verify_integrity --json` ok=true/errors=[]；全量 `manage.py test tests` Ran 1444 tests，5F+3E/73 skips，8 项均为既有 macOS 基线（6 DRF 安全兼容 + 2 delivery/worktree `/private/var` symlink），无新增。
+- **路由**：`pmo_plugins/delivery/urls.py` 在 PH-338 allowed_paths 内并已绑定 `invoice_import` handler；发票导入路由在 `domain_metadata` 声明 history_read，`pmo_plugins/invoicing/urls.py` 暴露 handler 映射。onboarding 模板下拉保持既有 time/expense/plan 三项（既有断言），发票模板由 invoicing 页面和自动识别提供。
 - **L3/L4/L5：not_run**。PostgreSQL 并发、浏览器 1440/390、staging/生产/UAT、真实客户数据未执行；独立 S 复核 pending，未自批。
