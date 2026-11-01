@@ -13396,7 +13396,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13421,6 +13421,45 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/292",
+      "owner": "codex-flow",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-406.md"
+    },
+    {
+      "id": "PH-407",
+      "title": "按可用成果交付：入口收敛、只读流程提示与真实退出码",
+      "kind": "infra",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-406"
+      ],
+      "spec": "project/specs/PH-407.md",
+      "allowed_paths": [
+        "AGENTS.md",
+        "START_HERE.md",
+        "README.md",
+        "CONTRIBUTING.md",
+        "docs/engineering/README.md",
+        "docs/engineering/lifecycle.md",
+        "docs/engineering/agent-protocol.md",
+        "scripts/projectctl.py",
+        "tests/test_projectctl.py",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/delivery-status-archive.md",
+        "docs/verification.md",
+        "project/reports/PH-407.json",
+        "project/handoffs/PH-407.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_quality_gate -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/295",
       "owner": null,
       "blockers": [],
       "handoff": null
