@@ -5,7 +5,7 @@
   {
    "command": "python scripts/projectctl.py check",
    "result": "pass",
-   "evidence": "Actual exit 0: ok=true, task_count=321."
+   "evidence": "Actual exit 0 after PH-399 rebase: ok=true, task_count=322."
   },
   {
    "command": "python manage.py check",
