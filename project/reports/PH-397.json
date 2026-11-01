@@ -10,7 +10,8 @@
     "PH-241 had already merged in PR #150 despite stale in_review metadata; it is closed by evidence, not reimplemented.",
     "PH-353/354 specs had stale parent dependencies. PH-354 is independent of parent PH-272; PH-353 explicitly excludes PH-181/185 but requires the real PH-354 precheck, so ordering is PH-354 then PH-353.",
     "PH-354 allowed_paths is expanded only to ADR-required bootstrap and 18 existing dependency-disable regression files; business acceptance is unchanged.",
-    "PH-399 remains proposed until PH-397 can be marked done; its status does not affect contract digest."
+    "PH-399 remains proposed until PH-397 can be marked done; its status does not affect contract digest.",
+    "PH-400 is registered ready from actual PR #258 evidence (run 41266764258) to repair webhook mergeable=null compatibility through current-PR API metadata; the optional failed check is not hidden or treated as a required business failure."
   ],
   "unverified": [
     "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed by this planning slice.",
