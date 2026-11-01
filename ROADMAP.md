@@ -824,3 +824,11 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 - PH-354 全量回归新发现 11 个同类型依赖停用测试文件；按恢复矩阵先由规划 PR 补白名单，不允许实现片自行扩权。仅调整停用顺序，不改业务断言。
 - PH-400 按 merge `3136003` 收口 done；登记 PH-401 proposed（Issue #265）作为下一规划槽。
 - 其余顺序不变：PH-354→PH-353→PH-342，insights 后续复核 PH-343；真实 L3–L5 与发布 gate 不提前放行。
+
+## PH-401 功能交付推进（2026-11-01，BASE cbd4175）
+
+- PH-354 insights 期间预检已合入（PR #267）；晋级 **PH-353** 原子导入 ready（依赖 PH-274/362/354 均 done），必须复用 PH-354 的真实 precheck/digest。
+- 修正 **PH-353 迁移白名单**为 onboarding 首个迁移 `migrations/0001_initial.py` + `migrations/__init__.py`（该插件无 migrations 目录），spec 与 tasks 同步。
+- 晋级 **PH-122** ready，并补齐其实现白名单 `scripts/delivery_gate.py`、`tooling/ai_delivery/delivery/github.py` 与对应测试；8→9 required checks 的校验改动需真实对抗证据。
+- 登记 **PH-403** proposed（Issue #273）作为下一规划槽，承接导入/发票、insights、通知、费用/应付/工资现金与真实环境验收。
+- 无产品实现；不恢复 EXP-1，不发布 PH-110；L3–L5 与发布签批保持 not_run。

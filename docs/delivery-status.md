@@ -102,3 +102,6 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 ## PH-354 insights 期间预检只读 API 首片（done，2026-11-01）
 
 新建 pmo_plugins.insights（manifest 8 字段/requires 四项/default_enabled=True，无模型/迁移/写通道），period_precheck_snapshot 按 period-precheck-contract 输出 envelope 与稳定 precheck_digest；复用 cash/settlement/management_revenue/costing 只读服务与 PH-291 总览，不复制金额/差额规则，零写；owner/finance/auditor 全量、pm 仅管理项目摘要、member/跨 org 拒绝、停用 history_read；project scope 按项目过滤或显式 missing，跨月 period 拒绝。新测试 25 OK，29 个白名单既有文件最小停用顺序通过，全量回到既有 macOS 基线；check/makemigrations/verify_integrity 通过。偏差：missing_code 扩展、future_as_of 口径待复核仲裁；未验证 PG/CI、浏览器 1440/390、生产/UAT、PH-353 联动；review PASS（两轮修复 project scope/跨月 period/offset 重复/角色 cash 隔离）。见 `docs/verification.md` 与 `project/reports/PH-354.json`。
+
+## PH-401 规划推进（2026-11-01）
+- PH-354 合入后晋级 PH-353（原子导入，复用真实 precheck/digest）与 PH-122（远端强制，补齐 8→9 checks 实现白名单）；登记 PH-403 下一规划槽。仅规划，无功能/发布宣称。

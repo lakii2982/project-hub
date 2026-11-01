@@ -1,0 +1,37 @@
+{
+  "task_id": "PH-401",
+  "summary": "规划推进（BASE cbd4175）：#272 已收口 PH-354/399 并晋级 PH-353；本片将 PH-122 晋级 ready 并补齐 8→9 checks 所需实现白名单，修正 PH-353 迁移白名单（onboarding 首个 0001_initial + migrations/__init__.py），登记 PH-403 下一规划槽。仅规划，无产品代码或发布宣称。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: ok=true, task_count=323."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests in 2.720s, OK."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent PH-401 planning reviewer (fresh context, read-only)",
+    "status": "pass",
+    "findings": [
+      "Initial review BLOCKING: PH-401 was proposed in BASE (verify-change task_not_executable) and done/closeout evidence was inconsistent; resolved by merging #272 and aligning docs.",
+      "Incremental review found PH-353 spec still listed the obsolete 0002 migration path; corrected to migrations/__init__.py + 0001_initial and PH-353 digest recomputed.",
+      "Final PASS at 922303c: five grant digests MATCH, check ok/323, 23 governance tests OK, verify-change only the review gate; docs/handoff/report base attribution corrected."
+    ],
+    "evidence": "Independent final verdict PASS at 922303c (BASE cbd4175)."
+  },
+  "deviations": [
+    "BASE cbd4175 already had PH-354/PH-399 done and PH-353 ready from PR #272; this slice only activates PH-122, fixes the PH-353 migration whitelist, sets PH-401 in_review and registers PH-403.",
+    "PH-353 was allowed only migrations/0002_import_submission.py, but the onboarding plugin has no migrations package; exact paths are corrected to migrations/__init__.py + migrations/0001_initial.py and the spec whitelist/note are synchronized.",
+    "PH-122 allowed_paths is expanded only for the scripts needed to implement the 8→9 required-checks change; no arbitration rule weakening.",
+    "PH-403 is registered proposed until PH-401 closes, avoiding self-activation inside the same PR."
+  ],
+  "unverified": [
+    "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed by this planning slice.",
+    "Independent S review and final verify-change are pending."
+  ]
+}
