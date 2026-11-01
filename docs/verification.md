@@ -1236,3 +1236,5 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - PH-122 晋级 ready，allowed_paths 增补 scripts/delivery_gate.py、tooling/ai_delivery/delivery/github.py、tests/test_delivery_policy.py、tests/test_delivery_gate.py；submitted 8→9 checks 变更须以真实对抗证据验证。
 - 登记 PH-403 proposed（Issue #273）；授权摘要 PH-122/401/403 按最终契约重算。
 - 无产品代码、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。
+
+<!-- PH-122 drill: no Task line; must be rejected -->
