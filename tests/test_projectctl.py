@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
+
+from scripts import projectctl
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -605,6 +609,7 @@ class ProjectCtlTests(unittest.TestCase):
         self.assertEqual([entry["result"] for entry in report["tests"]], ["not_run"] * 2)
         self.assertEqual([entry["command"] for entry in report["tests"]], acceptance)
         self.assertFalse(any(entry["result"] == "pass" for entry in report["tests"]))
+        self.assertEqual([entry["exit_code"] for entry in report["tests"]], [None, None])
 
         ready_a = make_task("PH-003", risk="A", acceptance=list(acceptance))
         self.write_json(
@@ -620,6 +625,240 @@ class ProjectCtlTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("task_not_found", self.error_codes(payload))
 
+
+    def flow_fixture(self, tasks=None):
+        manifest = make_manifest()
+        manifest["active_handoff"] = "project/handoffs/PH-001.md"
+        self.write_fixture(tasks or [make_task("PH-001")], manifest=manifest)
+        self.write("project/handoffs/PH-001.md", "# Handoff\n")
+        self.write("AGENTS.md", "## 验收与交付\n```sh\npython check\n```\n")
+
+    def flow(self):
+        code, payload, _ = self.run_cli("orient", "--root", str(self.root))
+        self.assertEqual(code, 0, payload)
+        return payload["delivery_flow"]
+
+    def init_flow_history(self):
+        self.init_repository()
+        self.git("branch", "-M", "main")
+
+    def test_flow_without_git_or_main_is_unavailable(self):
+        self.flow_fixture()
+        flow = self.flow()
+        self.assertEqual(flow["history_status"], "unavailable")
+        self.assertIsNone(flow["trailing_support_prs"])
+        self.init_flow_history()
+        self.assertEqual(self.flow()["history_reason"], "no_merged_pr_history")
+        self.git("branch", "-m", "topic-only")
+        self.assertEqual(self.flow()["history_reason"], "main_ref_unavailable")
+
+    def test_flow_warns_on_three_support_prs_despite_feat_titles(self):
+        self.flow_fixture()
+        self.init_flow_history()
+        for i in range(3):
+            self.write("docs/note.md", str(i))
+            self.commit(f"feat(PH-001): looks like a feature (#{i + 1})")
+        flow = self.flow()
+        self.assertEqual(flow["trailing_support_prs"], 3)
+        self.assertEqual(flow["product_code_prs"], 0)
+        self.assertIn("support_pr_streak", flow["warnings"])
+        self.assertEqual(flow["history_ref"], "refs/heads/main")
+        before = self.git("status", "--porcelain")
+        self.flow()
+        self.assertEqual(self.git("status", "--porcelain"), before)
+
+    def test_flow_product_code_resets_streak_but_docs_and_tests_do_not(self):
+        self.flow_fixture()
+        self.init_flow_history()
+        for i, path in enumerate(["core/README.md", "core/tests/test_example.py", "core/test_example.py", "core/tests.py"]):
+            self.write(path, "# support\n")
+            self.commit(f"feat(PH-001): support (#{i + 1})")
+        self.assertEqual(self.flow()["trailing_support_prs"], 4)
+        self.write("core/example.py", "value = 1\n")
+        self.commit("docs(PH-001): title is not evidence (#4)")
+        flow = self.flow()
+        self.assertEqual(flow["trailing_support_prs"], 0)
+        self.assertEqual(flow["product_code_prs"], 1)
+        self.assertNotIn("support_pr_streak", flow["warnings"])
+
+    def test_flow_docs_task_code_does_not_claim_a_product_delivery(self):
+        self.flow_fixture([make_task("PH-001", kind="docs")])
+        self.init_flow_history()
+        self.write("core/example.py", "value = 1\n")
+        self.commit("feat(PH-001): documentation task (#1)")
+        self.assertEqual(self.flow()["product_code_prs"], 0)
+
+    def test_flow_uses_main_first_parent_and_excludes_topic_work(self):
+        self.flow_fixture()
+        self.init_flow_history()
+        self.write("docs/note.md", "main")
+        self.commit("docs(PH-001): main (#1)")
+        self.git("update-ref", "refs/remotes/origin/main", "HEAD")
+        self.git("checkout", "-b", "topic")
+        self.write("core/example.py", "value = 1\n")
+        self.commit("feat(PH-001): unmerged (#2)")
+        flow = self.flow()
+        self.assertEqual(flow["history_ref"], "refs/remotes/origin/main")
+        self.assertEqual(flow["sample_size"], 1)
+        self.assertEqual(flow["trailing_support_prs"], 1)
+        self.git("checkout", "main")
+        self.git("merge", "--no-ff", "topic", "-m", "feat(PH-001): merged (#3)")
+        self.git("update-ref", "refs/remotes/origin/main", "HEAD")
+        flow = self.flow()
+        self.assertEqual(flow["sample_size"], 2)
+        self.assertEqual(flow["product_code_prs"], 1)
+
+    def test_flow_bounds_pr_history_and_warns_on_product_wip(self):
+        tasks = [make_task(f"PH-{i:03}", status="in_progress", owner="worker") for i in range(1, 4)]
+        tasks.append(make_task("PH-004", kind="docs", status="in_progress", owner="planner"))
+        self.flow_fixture(tasks)
+        self.assertEqual(self.flow()["active_product_task_count"], 3)
+        self.assertIn("product_wip_over_two", self.flow()["warnings"])
+        self.init_flow_history()
+        for i in range(22):
+            self.write("docs/note.md", str(i))
+            self.commit(f"docs(PH-004): support (#{i + 1})")
+        flow = self.flow()
+        self.assertEqual(flow["sample_size"], 20)
+        self.assertEqual(flow["trailing_support_prs"], 20)
+
+    def test_report_exit_code_rejects_contradictions_and_boolean_values(self):
+        for result, exit_code in [("pass", 1), ("pass", None), ("pass", False),
+                                  ("pass", 0.0), ("pass", "0"), ("fail", 0),
+                                  ("fail", None), ("fail", True), ("not_run", 0)]:
+            with self.subTest(result=result, exit_code=exit_code):
+                report = make_report("PH-001")
+                report["tests"][0].update(result=result, exit_code=exit_code)
+                errors = projectctl._validate_report(report, "PH-001", "A")
+                self.assertIn("test_exit_code_mismatch", {error["code"] for error in errors})
+
+    def test_report_exit_code_accepts_valid_values_and_legacy_missing_field(self):
+        report = make_report("PH-001")
+        self.assertEqual(projectctl._validate_report(report, "PH-001", "A"), [])
+        report["tests"][0]["exit_code"] = 0
+        self.assertEqual(projectctl._validate_report(report, "PH-001", "A"), [])
+        report["tests"].append(dict(command="optional", result="not_run", exit_code=None, evidence="not run"))
+        self.assertEqual(projectctl._validate_report(report, "PH-001", "A"), [])
+        report["tests"][1].update(result="fail", exit_code=2)
+        errors = {error["code"] for error in projectctl._validate_report(report, "PH-001", "A")}
+        self.assertIn("tests_failed", errors)
+        self.assertNotIn("test_exit_code_mismatch", errors)
+
+    def registration_fixture(self, risk="S"):
+        manifest = make_manifest()
+        manifest["repository_url"] = "https://github.com/example/project-hub"
+        self.write_fixture([make_task("PH-001")], manifest=manifest)
+        self.write_json("project/delivery-policy.json", {"checks": ["required"], "s_authorization": {"tasks": []}})
+        base = self.init_repository()
+        task = make_task("PH-002", risk=risk, github_issue="https://github.com/example/project-hub/issues/2",
+                         handoff="project/handoffs/PH-002.md")
+        spec = "# New task\nOne bounded user outcome.\n"
+        self.write(task["spec"], spec)
+        self.write(task["handoff"], "# Registration only; no implementation.\n")
+        data = json.loads((self.root / "project/tasks.json").read_text())
+        data["tasks"].append(task)
+        self.write_json("project/tasks.json", data)
+        report = make_report("PH-002", registration_only=True, authorization_source="user-test")
+        report["review"] = dict(required=True, reviewer="independent", status="pass", findings=[])
+        report["tests"].extend(dict(command=command, result="pass", evidence="fixture") for command in
+                               ["python scripts/projectctl.py check", "python -m unittest tests.test_projectctl tests.test_governance -v"])
+        for entry in report["tests"]:
+            entry["exit_code"] = 0
+        self.write_json("project/reports/PH-002.json", report)
+        if risk == "S":
+            fields = ("id", "title", "kind", "risk", "depends_on", "spec", "allowed_paths", "acceptance", "github_issue")
+            digest = hashlib.sha256(json.dumps({"task": {key: task[key] for key in fields}, "spec": spec},
+                                              sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()).hexdigest()
+            self.write_json("project/delivery-policy.json", {"checks": ["required"], "s_authorization": {"tasks": [
+                dict(task_id="PH-002", contract_digest=digest, source="user-test")]}})
+        return base
+
+    def test_registration_has_a_bounded_path_then_normal_implementation(self):
+        base = self.registration_fixture()
+        registered = self.commit("register new task")
+        code, payload, _ = self.run_cli("verify-change", "--base", base, "--task", "PH-002")
+        self.assertEqual(code, 0, payload)
+        self.assertTrue(payload["registration_only"])
+        self.assertFalse(payload["implementation_allowed"])
+        self.write("safe.txt", "implementation\n")
+        self.commit("try using registration report as implementation")
+        code, payload, _ = self.run_cli("verify-change", "--base", registered, "--task", "PH-002")
+        self.assertEqual(code, 1, payload)
+        self.assertIn("registration_report_not_implementation", self.error_codes(payload))
+        report = json.loads((self.root / "project/reports/PH-002.json").read_text())
+        report.pop("registration_only")
+        self.write_json("project/reports/PH-002.json", report)
+        self.commit("actual implementation acceptance")
+        code, payload, _ = self.run_cli("verify-change", "--base", registered, "--task", "PH-002")
+        self.assertEqual(code, 0, payload)
+        self.assertNotIn("registration_only", payload)
+
+    def test_registration_lower_risk_still_requires_independent_s_review(self):
+        base = self.registration_fixture(risk="A")
+        self.commit("register A task with S review")
+        code, payload, _ = self.run_cli("verify-change", "--base", base, "--task", "PH-002")
+        self.assertEqual(code, 0, payload)
+        report = json.loads((self.root / "project/reports/PH-002.json").read_text())
+        report["review"] = dict(required=False, reviewer=None, status="not_required", findings=[])
+        self.write_json("project/reports/PH-002.json", report)
+        self.commit("remove independent review")
+        self.assertEqual(self.run_cli("verify-change", "--base", base, "--task", "PH-002")[0], 1)
+
+    def test_registration_rejects_existing_contract_changes_and_implementation(self):
+        for mutation in ["old_task", "product", "checker", "workflow", "manifest", "second_task", "metadata", "not_ready", "issue", "unmet_dep"]:
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                previous = self.root
+                self.root = Path(directory)
+                try:
+                    base = self.registration_fixture()
+                    data = json.loads((self.root / "project/tasks.json").read_text())
+                    if mutation == "old_task": data["tasks"][0]["title"] = "changed"
+                    elif mutation == "second_task": data["tasks"].append(make_task("PH-003"))
+                    elif mutation == "metadata": data["untrusted"] = True
+                    elif mutation == "not_ready": data["tasks"][-1]["status"] = "proposed"
+                    elif mutation == "issue": data["tasks"][-1]["github_issue"] = None
+                    elif mutation == "unmet_dep": data["tasks"][-1]["depends_on"] = ["PH-001"]
+                    elif mutation == "product": self.write("core/example.py", "value = 1\n")
+                    elif mutation == "checker": self.write("scripts/projectctl.py", "# bypass\n")
+                    elif mutation == "workflow": self.write(".github/workflows/test.yml", "# bypass\n")
+                    elif mutation == "manifest": self.write_json("project/manifest.json", make_manifest())
+                    self.write_json("project/tasks.json", data)
+                    self.commit("malicious registration")
+                    self.assertEqual(self.run_cli("verify-change", "--base", base, "--task", "PH-002")[0], 1)
+                finally:
+                    self.root = previous
+
+    def test_registration_rejects_policy_mutations_wrong_digest_and_binary_files(self):
+        for mutation in ["policy", "digest", "source", "spec_binary", "symlink", "executable", "missing_checks", "missing_exit"]:
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                previous = self.root
+                self.root = Path(directory)
+                try:
+                    base = self.registration_fixture()
+                    policy_path = self.root / "project/delivery-policy.json"
+                    policy = json.loads(policy_path.read_text())
+                    if mutation == "policy": policy["checks"] = []
+                    elif mutation == "digest": policy["s_authorization"]["tasks"][-1]["contract_digest"] = "0" * 64
+                    elif mutation == "source": policy["s_authorization"]["tasks"][-1]["source"] = "different"
+                    elif mutation == "spec_binary": (self.root / "project/specs/PH-002.md").write_bytes(b"\xff\x00")
+                    elif mutation == "symlink":
+                        path = self.root / "project/specs/PH-002.md"
+                        path.unlink()
+                        path.symlink_to("PH-001.md")
+                    elif mutation == "executable": os.chmod(self.root / "project/specs/PH-002.md", 0o755)
+                    elif mutation == "missing_exit":
+                        report = json.loads((self.root / "project/reports/PH-002.json").read_text())
+                        report["tests"][0].pop("exit_code")
+                        self.write_json("project/reports/PH-002.json", report)
+                    elif mutation == "missing_checks":
+                        report = json.loads((self.root / "project/reports/PH-002.json").read_text())
+                        report["tests"] = report["tests"][:1]
+                        self.write_json("project/reports/PH-002.json", report)
+                    self.write_json("project/delivery-policy.json", policy)
+                    self.commit("invalid registration evidence")
+                    self.assertEqual(self.run_cli("verify-change", "--base", base, "--task", "PH-002")[0], 1)
+                finally:
+                    self.root = previous
 
 if __name__ == "__main__":
     unittest.main()

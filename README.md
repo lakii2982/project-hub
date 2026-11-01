@@ -5,7 +5,7 @@
 [![Checks](https://github.com/lakii2982/project-hub/actions/workflows/test.yml/badge.svg)](https://github.com/lakii2982/project-hub/actions/workflows/test.yml)
 [Apache-2.0](LICENSE) · [迭代路线](ROADMAP.md) · [当前能力与差距](docs/delivery-status.md) · [参与开发](CONTRIBUTING.md)
 
-当前为 **0.1.0工程验证版**。已有可运行、持久化的项目工作流、项目成本/现金分账、审批审计、个人API/MCP与三个叶插件。正式合同、管理收入、应收应付、退款、完整成本分摊和业务插件抽离仍在后续迭代；模型默认关闭，真实客户端联调待完成。不能把当前版本当作完整专业PMO产品。
+当前已发布 **0.1.0 工程验证版**；开发主线已继续加入合同、结算/核销、发票、预算与核对等分阶段实现。当前能力、可用入口及浏览器/部署/客户验收缺口统一见 [交付现状](docs/delivery-status.md)，不以任务或 PR 数量表示产品完成度。主线代码不能直接当作已发布的完整专业 PMO 产品。
 
 ![经营总览历史截图（2026-10-22演练数据）](docs/screenshots/desktop-overview.png)
 
@@ -23,7 +23,7 @@ python scripts/projectctl.py next
 python scripts/projectctl.py brief PH-001
 ```
 
-CLI只读，不执行元数据中的命令、不改Git状态、不调用模型。实现PR从BASE取任务范围和检查器；扩大范围先做规划PR。详细流程、版本、失败恢复和信任边界见 [工程规范](docs/engineering/README.md)。仓库不要求某个模型供应商、付费API或个人Codex配置。
+CLI只读，不执行元数据中的命令、不改Git状态、不调用模型。`orient.delivery_flow` 提供有界主线统计与在制工作提示，规则见 [按可用成果推进](docs/engineering/agent-protocol.md#9-按可用成果推进2026-11-01-起生效)；目录变化只是提示，不证明可用成果。实现PR从BASE取任务范围和检查器；扩大范围先做规划PR。详细流程、版本、失败恢复和信任边界见 [工程规范](docs/engineering/README.md)。仓库不要求某个模型供应商、付费API或个人Codex配置。
 
 ## 本机运行
 
@@ -47,7 +47,7 @@ sh scripts/run-local.sh
 
 密码交互输入。当前基础数据存于 `runtime/pmo.sqlite3`，附件在 `runtime/uploads/`；正式部署使用PostgreSQL与独立持久卷。备份必须同时覆盖数据库与附件，见 [运维手册](docs/operations.md)。
 
-本轮代码已合入项目详情六页签、成本预算余额图、关键任务关联与项目级工时；基础资料共用 Project/Employee/CostRate 服务。全站视觉统一、基础资料独立维护模块和经营趋势图仍由 PH-026 继续，不能将视觉样张当作这些页面已交付。最新验证见 [交付状态](docs/delivery-status.md)，本机使用步骤见 [测试环境](docs/local-testing.md)。
+本轮代码已合入项目详情六页签、成本预算余额图、关键任务关联与项目级工时；基础资料共用 Project/Employee/CostRate 服务。全站体验与经营趋势仍有 PH-026 等未完成范围，不能将视觉样张当作这些页面已交付。最新验证见 [交付状态](docs/delivery-status.md)，本机使用步骤见 [测试环境](docs/local-testing.md)。
 
 ## 当前业务能力
 
@@ -59,7 +59,7 @@ sh scripts/run-local.sh
 | 审批与审计 | 自审阻止、锁账、不可变账本、附件、来源与审计哈希链 |
 | 内置输入 | 浏览器表单、CSV预览/原子提交/幂等/安全导出 |
 | 个人Agent接入 | 本人身份、项目与操作范围、期限/撤销；7个MCP工具 |
-| 插件管理 | 三个叶插件、按公司启停、依赖与版本检查、Outbox和重试 |
+| 插件管理 | 按公司启停、依赖与版本检查、Outbox和重试；新增业务插件见当前交付现状 |
 
 金额持久化整数分，工时整数分钟，核算用Decimal。成本和现金独立记账；现金计划不是完整应收应付，净现金流不是利润，当前任务数量完成率也不是合同履约进度。图中计划线仅作参考，实际成本包含负值冲销；使用当前批准预算重述历史，不能视为历史预算版本。老板决策工作台是后续产品任务。
 
@@ -95,7 +95,7 @@ docker compose exec app python manage.py bootstrap --company "你的公司" --us
 
 最后一条中的版本与pyproject.toml一致；发行workflow自动读取版本。CI包括任务治理、SQLite/PG回归、MCP握手、公开内容/秘密扫描、容器与隔离数据库恢复；另有CodeQL。配置存在不等于某次检查已通过，请查看对应提交的Actions记录。依赖由Dependabot提出PR，全部经过任务、评审和检查，不自动合并。
 
-Git标签触发同提交验证与草稿发布，远端资产摘要核对后公开；0.x标为pre-release。1.0有单独就绪门槛。版本与异常分支见 [发布规范](docs/engineering/releases.md) 和 [恢复矩阵](docs/engineering/recovery.md)。
+发布按 [发布规范](docs/engineering/releases.md) 与当前工作流显式执行；标签、构建、草稿和公开发布分别核对，合入 main 不等于发布；0.x标为pre-release。1.0有单独就绪门槛。版本与异常分支见 [发布规范](docs/engineering/releases.md) 和 [恢复矩阵](docs/engineering/recovery.md)。
 
 ## 设计、贡献与安全
 

@@ -89,6 +89,14 @@ Dependabot提案没有Task行而被治理检查拒绝时，先评估升级必要
 - 证据分开记录代码、自动化、浏览器、部署/客户验收；缺环境写具体前提与解除条件。脚本、契约、诚实 not_run 不能关闭真实验收缺口。命令非零退出只能 fail；已知问题记录环境与后续处理，不能写 pass。
 - 给用户的交付只说明新增能做什么、入口与操作、实际证据和剩余阻塞；不以 PR/任务数计算产品完成率。不恢复 EXP-1 或用户暂停的 PH-110，不自动发布、改保护或代签。
 
+### 按需登记入口：不预建规划槽
+
+没有现成 ready 任务能承载真实缺口时，由主控按实际用户授权提交**只登记** PR，Task 行使用本次新编号；BASE 的 `verify-change` 只允许在 tasks 末尾增加一个 ready、未认领、依赖已 done 的任务，并新增其同编号 spec/report/handoff。必须有本仓库 Issue（独立复核核实实际存在）、用户授权来源和独立 S 复核，报告标 `registration_only: true`、`authorization_source: user-...`，共同验收为 `python scripts/projectctl.py check` 与 `python -m unittest tests.test_projectctl tests.test_governance -v`，实际通过项附整数 exit_code=0。
+
+登记不得修改已有任务、现有 spec、产品、检查器、workflow、manifest或任何既有授权/门禁要求。S 任务只可在 delivery-policy 的既有授权数组末尾追加该新任务精确 contract_digest 与同一授权来源；其它 policy 值必须完全不变。仅允许普通非可执行文件，拒绝重命名/删除/覆盖/符号链接。此入口仅在新编号不存在于 BASE 时适用，旧任务仍走原门禁。
+
+登记 PR 合入并通过全部 required CI 后，新任务才可按新 BASE 实现；登记报告不能充当实现验收，状态不得写 done/in_progress/in_review。主控先用直接 Git/CLI 完成登记，不能让要求任务已存在于 BASE 的执行控制器提前实现。来源文本与审阅声明不是机器证明的人类确认，仍须真实独立复核、用户范围判断与实际 CI。不为将来可能发生的事提前登记任务。
+
 ## 10. PH-406 本轮固定范围
 
 来源：用户 2026-11-01 明确要求立即固化防流程膨胀、降低交付支出的开发流程，供 Claude 重新开工。复用 ready PH-406 做唯一规划入口，冻结一个 PH-407 实施任务；不再预建下一规划槽。

@@ -1,0 +1,39 @@
+{
+  "task_id": "PH-407",
+  "summary": "固化成果优先与流程收敛：统一开发入口、清除递归规划/纯收口要求，orient 增加有界离线主线提示，draft-report 增加退出码及一致性反例校验，现状页收敛并保留原文归档。未改产品业务、CI workflow或保护。 补上受限只登记入口，防止取消下一槽后无合法登记入口；登记不能夹带实现、改旧任务或放松既有策略。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0: ok=true/task_count=327."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_quality_gate -v",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual frozen -v command exit 0: 63 tests OK in 12.680s. Includes temporary-Git registration->normal implementation and rejection probes; independent reviewer reran 63 tests successfully."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent review_flow / reviewer",
+    "status": "pass",
+    "findings": [
+      "PASS at 7d534fa against BASE 5966809. Independently ran projectctl check, all 59 frozen acceptance tests and diff check; verified BASE scope, no product/database/CI/protection changes, consistent entry points, bounded main-only first-parent hints, strict explicit exit codes with historical compatibility, and verbatim archived status text. Same-PR done/report updates approved.",
+      "PASS at f6f9f42 against BASE5966809: bounded registration closes the no-ready-planning deadlock; only a new ID can append one ready unclaimed task with done dependencies, a same-repo Issue, new regular spec/report/handoff and exact appended S grant. Existing tasks/policy values cannot change. Independent S review/common acceptance/explicit exit0 required, extra product/checker/workflow/manifest and special files rejected. Normal implementation cannot reuse registration-only evidence. Independently reran check/63 tests/diff-check."
+    ]
+  },
+  "deviations": [
+    "No new task system, policy schema, CI job, runtime dependency or approval flow. Existing report records without exit_code remain compatible; explicit exit codes are checked but are not proof of execution.",
+    "Local product full suite is not repeated for an infrastructure-only task; frozen scoped acceptance is run and unchanged remote full required CI remains mandatory.",
+    "The status page old text is preserved verbatim as an append-only archive snapshot, rather than rewriting historical claims.",
+    "Remote current-head required checks must pass before merge and remain recorded by GitHub; local test declarations are not remote evidence. No follow-up closeout PR.",
+    "Integration completeness correction under the user's explicit 2026-11-01 full workflow-repair authorization: removing automatic next slots exposed a genuine no-legal-registration deadlock. Added a narrow future BASE-owned registration-only path within the already frozen projectctl/tests/docs whitelist. It does not self-authorize PH407: this PR is still checked by the old BASE ready contract. No workflow/protection/quality requirements changed and no new planning task was created."
+  ],
+  "unverified": [
+    "Product browser/deployment/customer acceptance is outside this infrastructure slice; no such pass is claimed.",
+    "Offline origin/main may be stale; path/kind counts cannot prove a usable outcome or actual workstream count.",
+    "Registration->implementation was verified in temporary Git repositories and rejection tests; no unnecessary live new-task drill PR was created. Source/review declarations do not cryptographically prove human authorization or reviewer identity."
+  ]
+}
