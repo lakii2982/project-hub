@@ -2,6 +2,8 @@
 
 本文是入口；可执行的详细规范在 [docs/engineering/](docs/engineering/README.md)。开始任何任务前，先读 README.md、docs/delivery-status.md 和任务对应的契约文档。
 
+流程成本与成果导向统一按 [agent-protocol 第9节](docs/engineering/agent-protocol.md#9-按可用成果推进2026-11-01-起生效)，不另建流程表或自动下一规划槽。
+
 ## 基本规则
 
 - 当前为 0.1 工程验证版。需求文档描述目标，不能把目标写成已实现；当前真实状态以 docs/delivery-status.md 为准。
@@ -21,13 +23,13 @@ Python 3.12+，依赖固定在 requirements.txt。交付前实际运行并通过
 .venv/bin/python manage.py verify_integrity --json
 ```
 
-开发过程中的快速反馈用作用域测试：`python manage.py test tests.test_<对应模块> --parallel`，只跑本次改动涉及的模块；全量套件在交付收尾实际运行一次、作为报告证据即可，PR 由 CI 对每次提交再跑全量，不需要本地反复跑全量。
+纯文档与研发工具按冻结任务 acceptance 验证；产品变更按上列命令，远端 required CI 不变。开发过程中的快速反馈用作用域测试：`python manage.py test tests.test_<对应模块> --parallel`，只跑本次改动涉及的模块；全量套件在交付收尾实际运行一次、作为报告证据即可，PR 由 CI 对每次提交再跑全量，不需要本地反复跑全量。
 
 涉及 MCP 适配器时另跑 integrations/mcp 的独立测试与 stdio 握手。SQLite 通过不代表生产并发正确；并发与生产口径需要 PostgreSQL 验证。
 
 ## 提交与 PR
 
-- 一个 PR 对应一个任务，不夹带白名单外修改；PR 描述写清问题、行为变化、风险级别、验证证据与未验证事项。
+- 一个 PR 对应一个任务，验收、必要复核、报告、交接和任务状态随原 PR 完成，不专开常规收口 PR，不夹带白名单外修改；PR 描述写清问题、行为变化、风险级别、验证证据与未验证事项。
 - 交付时同步更新 docs/delivery-status.md 与验证记录：分别说明代码存在、自动化通过、浏览器检查、生产验证；检查范围之外的事项明确保留。
 - 不把凭据、真实客户数据、工资信息放进代码、日志、截图或外部代理上下文；演练一律用 seed_demo 数据。
 

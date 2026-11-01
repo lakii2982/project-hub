@@ -732,6 +732,70 @@ def _acceptance_commands(root: Path, agents_relative: str = "AGENTS.md") -> list
     return commands
 
 
+def _delivery_flow(root: Path, tasks: list[dict[str, Any]]) -> dict[str, Any]:
+    """Bounded, offline hints; path changes never prove usable product delivery."""
+    active = [task["id"] for task in tasks
+              if task.get("kind") == "feature"
+              and task.get("status") in {"in_progress", "in_review"}]
+    result = {
+        "rules": "docs/engineering/agent-protocol.md#9-按可用成果推进2026-11-01-起生效",
+        "focus": "docs/delivery-status.md",
+        "metric_boundary": "路径与任务类型仅为代理指标；不证明业务可用、浏览器通过或发布就绪。",
+        "active_product_task_count": len(active),
+        "active_product_tasks": active[:10],
+        "history_status": "unavailable",
+        "history_reason": "main_ref_unavailable",
+        "history_ref": None,
+        "sample_size": None,
+        "product_code_prs": None,
+        "trailing_support_prs": None,
+        "warnings": ["product_wip_over_two"] if len(active) > 2 else [],
+        "action": "围绕一个可演示成果复用已有任务；告警时停止扩展规划、先解除具体阻塞，继续必要修复与验收。",
+    }
+    history_ref = None
+    for candidate in ("refs/remotes/origin/main", "refs/heads/main"):
+        try:
+            _run_git(root, ["rev-parse", "--verify", candidate])
+            history_ref = candidate
+            break
+        except CliError:
+            continue
+    if history_ref is None:
+        return result
+    result["history_ref"] = history_ref
+    kinds = {task["id"]: task["kind"] for task in tasks}
+    try:
+        lines = _run_git(root, ["log", history_ref, "--first-parent", "--max-count=60",
+                                "--format=%H%x09%s"]).decode("utf-8").splitlines()
+        sample = [line.split("\t", 1) for line in lines
+                  if "\t" in line and re.search(r"\(#\d+\)$", line)][:20]
+        if not sample:
+            result["history_reason"] = "no_merged_pr_history"
+            return result
+        products = []
+        for sha, title in sample:
+            paths = _run_git(root, ["diff-tree", "--root", "--no-commit-id", "--name-only",
+                                    "-r", "--first-parent", "-m", sha]).decode("utf-8").splitlines()
+            task_match = re.search(r"\bPH-[0-9]{3,6}\b", title)
+            kind = kinds.get(task_match.group()) if task_match else None
+            product = kind != "docs" and any(
+                path.startswith(("core/", "pmo_plugins/", "pmo/", "templates/", "static/", "integrations/mcp/"))
+                and PurePosixPath(path).suffix.lower() in {".py", ".html", ".css", ".js", ".svg", ".png", ".jpg", ".webp"}
+                and "tests" not in PurePosixPath(path).parts
+                and not PurePosixPath(path).name.startswith("test_")
+                for path in paths)
+            products.append(product)
+    except (CliError, UnicodeError):
+        result["history_reason"] = "git_history_unavailable"
+        return result
+    streak = next((index for index, product in enumerate(products) if product), len(products))
+    result.update(history_status="available", history_reason=None,
+                  sample_size=len(sample), product_code_prs=sum(products), trailing_support_prs=streak)
+    if streak >= 3:
+        result["warnings"].append("support_pr_streak")
+    return result
+
+
 def command_orient(root: Path) -> dict[str, Any]:
     manifest, tasks = _load_and_validate(root)
     context = {
@@ -770,6 +834,7 @@ def command_orient(root: Path) -> dict[str, Any]:
         },
         "ready": [_compact_task(task) for task in _ready_tasks(tasks)],
         "acceptance_commands": _acceptance_commands(root),
+        "delivery_flow": _delivery_flow(root, tasks),
     }
 
 
@@ -795,7 +860,7 @@ def command_draft_report(root: Path, task_id: str) -> dict[str, Any]:
         "task_id": task_id,
         "summary": "",
         "tests": [
-            {"command": command, "result": "not_run", "evidence": ""}
+            {"command": command, "result": "not_run", "exit_code": None, "evidence": ""}
             for command in task.get("acceptance", [])
         ],
         "review": {
@@ -1045,6 +1110,17 @@ def _validate_report(
             pass_count += 1
         elif result == "fail":
             fail_count += 1
+        # Old reports remain readable; explicit modern claims must be consistent.
+        if "exit_code" in test:
+            code = test["exit_code"]
+            valid_code = ((result == "not_run" and code is None)
+                          or (type(code) is int and
+                              ((result == "pass" and code == 0)
+                               or (result == "fail" and code != 0))))
+            if not valid_code:
+                issues.append(issue("test_exit_code_mismatch",
+                                    "pass requires integer 0; fail nonzero integer; not_run null",
+                                    f"{field_root}.exit_code"))
         if "evidence" in test and not isinstance(test.get("evidence"), str):
             issues.append(
                 issue("invalid_type", "evidence must be a string", f"{field_root}.evidence")

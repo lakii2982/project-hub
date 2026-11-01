@@ -2,6 +2,8 @@
 
 日期：2026-10-22。本目录是长期、跨 coding-agent 的工程执行规范，面向后续所有参与本仓库的人与代理。规范不重复业务与契约内容：财务与数据不变式、工作单机制、验收命令以 [../development-contract.md](../development-contract.md) 为准，当前实现与验证事实以 [../delivery-status.md](../delivery-status.md) 为准。发生冲突时，不变式与事实文档优先，本目录只规定协作与流程。
 
+流程成本唯一规则为 [agent-protocol 第9节](agent-protocol.md#9-按可用成果推进2026-11-01-起生效)。现有入口只引用此处；历史逐轮规划与交接不构成继续创建下一槽的要求。
+
 ## 阅读顺序
 
 1. 新参与者先读仓库 README、delivery-status.md、本页，再按任务类型读对应文件。

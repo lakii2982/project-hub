@@ -1,0 +1,34 @@
+{
+  "task_id": "PH-407",
+  "summary": "固化成果优先与流程收敛：统一开发入口、清除递归规划/纯收口要求，orient 增加有界离线主线提示，draft-report 增加退出码及一致性反例校验，现状页收敛并保留原文归档。未改产品业务、CI workflow或保护。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0: ok=true/task_count=327."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_quality_gate -v",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual frozen -v command exit 0: 59 tests OK in 6.565s. Tests first failed with missing flow/exit_code and contradiction acceptance, then passed after implementation; existing tests preserved."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": []
+  },
+  "deviations": [
+    "No new task system, policy schema, CI job, runtime dependency or approval flow. Existing report records without exit_code remain compatible; explicit exit codes are checked but are not proof of execution.",
+    "Local product full suite is not repeated for an infrastructure-only task; frozen scoped acceptance is run and unchanged remote full required CI remains mandatory.",
+    "The status page old text is preserved verbatim as an append-only archive snapshot, rather than rewriting historical claims."
+  ],
+  "unverified": [
+    "Independent S review and current-head required CI pending.",
+    "No product browser/deployment/customer acceptance performed or claimed.",
+    "Offline origin/main may be stale; path/kind counts cannot prove a usable outcome."
+  ]
+}

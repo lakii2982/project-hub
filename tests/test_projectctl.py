@@ -8,6 +8,8 @@ import unittest
 from pathlib import Path
 from typing import Any
 
+from scripts import projectctl
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "projectctl.py"
@@ -605,6 +607,7 @@ class ProjectCtlTests(unittest.TestCase):
         self.assertEqual([entry["result"] for entry in report["tests"]], ["not_run"] * 2)
         self.assertEqual([entry["command"] for entry in report["tests"]], acceptance)
         self.assertFalse(any(entry["result"] == "pass" for entry in report["tests"]))
+        self.assertEqual([entry["exit_code"] for entry in report["tests"]], [None, None])
 
         ready_a = make_task("PH-003", risk="A", acceptance=list(acceptance))
         self.write_json(
@@ -620,6 +623,124 @@ class ProjectCtlTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("task_not_found", self.error_codes(payload))
 
+
+    def flow_fixture(self, tasks=None):
+        manifest = make_manifest()
+        manifest["active_handoff"] = "project/handoffs/PH-001.md"
+        self.write_fixture(tasks or [make_task("PH-001")], manifest=manifest)
+        self.write("project/handoffs/PH-001.md", "# Handoff\n")
+        self.write("AGENTS.md", "## 验收与交付\n```sh\npython check\n```\n")
+
+    def flow(self):
+        code, payload, _ = self.run_cli("orient", "--root", str(self.root))
+        self.assertEqual(code, 0, payload)
+        return payload["delivery_flow"]
+
+    def init_flow_history(self):
+        self.init_repository()
+        self.git("branch", "-M", "main")
+
+    def test_flow_without_git_or_main_is_unavailable(self):
+        self.flow_fixture()
+        flow = self.flow()
+        self.assertEqual(flow["history_status"], "unavailable")
+        self.assertIsNone(flow["trailing_support_prs"])
+        self.init_flow_history()
+        self.assertEqual(self.flow()["history_reason"], "no_merged_pr_history")
+        self.git("branch", "-m", "topic-only")
+        self.assertEqual(self.flow()["history_reason"], "main_ref_unavailable")
+
+    def test_flow_warns_on_three_support_prs_despite_feat_titles(self):
+        self.flow_fixture()
+        self.init_flow_history()
+        for i in range(3):
+            self.write("docs/note.md", str(i))
+            self.commit(f"feat(PH-001): looks like a feature (#{i + 1})")
+        flow = self.flow()
+        self.assertEqual(flow["trailing_support_prs"], 3)
+        self.assertEqual(flow["product_code_prs"], 0)
+        self.assertIn("support_pr_streak", flow["warnings"])
+        self.assertEqual(flow["history_ref"], "refs/heads/main")
+        before = self.git("status", "--porcelain")
+        self.flow()
+        self.assertEqual(self.git("status", "--porcelain"), before)
+
+    def test_flow_product_code_resets_streak_but_docs_and_tests_do_not(self):
+        self.flow_fixture()
+        self.init_flow_history()
+        for i, path in enumerate(["core/README.md", "core/tests/test_example.py", "core/test_example.py"]):
+            self.write(path, "# support\n")
+            self.commit(f"feat(PH-001): support (#{i + 1})")
+        self.assertEqual(self.flow()["trailing_support_prs"], 3)
+        self.write("core/example.py", "value = 1\n")
+        self.commit("docs(PH-001): title is not evidence (#4)")
+        flow = self.flow()
+        self.assertEqual(flow["trailing_support_prs"], 0)
+        self.assertEqual(flow["product_code_prs"], 1)
+        self.assertNotIn("support_pr_streak", flow["warnings"])
+
+    def test_flow_docs_task_code_does_not_claim_a_product_delivery(self):
+        self.flow_fixture([make_task("PH-001", kind="docs")])
+        self.init_flow_history()
+        self.write("core/example.py", "value = 1\n")
+        self.commit("feat(PH-001): documentation task (#1)")
+        self.assertEqual(self.flow()["product_code_prs"], 0)
+
+    def test_flow_uses_main_first_parent_and_excludes_topic_work(self):
+        self.flow_fixture()
+        self.init_flow_history()
+        self.write("docs/note.md", "main")
+        self.commit("docs(PH-001): main (#1)")
+        self.git("update-ref", "refs/remotes/origin/main", "HEAD")
+        self.git("checkout", "-b", "topic")
+        self.write("core/example.py", "value = 1\n")
+        self.commit("feat(PH-001): unmerged (#2)")
+        flow = self.flow()
+        self.assertEqual(flow["history_ref"], "refs/remotes/origin/main")
+        self.assertEqual(flow["sample_size"], 1)
+        self.assertEqual(flow["trailing_support_prs"], 1)
+        self.git("checkout", "main")
+        self.git("merge", "--no-ff", "topic", "-m", "feat(PH-001): merged (#3)")
+        self.git("update-ref", "refs/remotes/origin/main", "HEAD")
+        flow = self.flow()
+        self.assertEqual(flow["sample_size"], 2)
+        self.assertEqual(flow["product_code_prs"], 1)
+
+    def test_flow_bounds_pr_history_and_warns_on_product_wip(self):
+        tasks = [make_task(f"PH-{i:03}", status="in_progress", owner="worker") for i in range(1, 4)]
+        tasks.append(make_task("PH-004", kind="docs", status="in_progress", owner="planner"))
+        self.flow_fixture(tasks)
+        self.assertEqual(self.flow()["active_product_task_count"], 3)
+        self.assertIn("product_wip_over_two", self.flow()["warnings"])
+        self.init_flow_history()
+        for i in range(22):
+            self.write("docs/note.md", str(i))
+            self.commit(f"docs(PH-004): support (#{i + 1})")
+        flow = self.flow()
+        self.assertEqual(flow["sample_size"], 20)
+        self.assertEqual(flow["trailing_support_prs"], 20)
+
+    def test_report_exit_code_rejects_contradictions_and_boolean_values(self):
+        for result, exit_code in [("pass", 1), ("pass", None), ("pass", False),
+                                  ("pass", 0.0), ("pass", "0"), ("fail", 0),
+                                  ("fail", None), ("fail", True), ("not_run", 0)]:
+            with self.subTest(result=result, exit_code=exit_code):
+                report = make_report("PH-001")
+                report["tests"][0].update(result=result, exit_code=exit_code)
+                errors = projectctl._validate_report(report, "PH-001", "A")
+                self.assertIn("test_exit_code_mismatch", {error["code"] for error in errors})
+
+    def test_report_exit_code_accepts_valid_values_and_legacy_missing_field(self):
+        report = make_report("PH-001")
+        self.assertEqual(projectctl._validate_report(report, "PH-001", "A"), [])
+        report["tests"][0]["exit_code"] = 0
+        self.assertEqual(projectctl._validate_report(report, "PH-001", "A"), [])
+        report["tests"].append(dict(command="optional", result="not_run", exit_code=None, evidence="not run"))
+        self.assertEqual(projectctl._validate_report(report, "PH-001", "A"), [])
+        report["tests"][1].update(result="fail", exit_code=2)
+        errors = {error["code"] for error in projectctl._validate_report(report, "PH-001", "A")}
+        self.assertIn("tests_failed", errors)
+        self.assertNotIn("test_exit_code_mismatch", errors)
 
 if __name__ == "__main__":
     unittest.main()

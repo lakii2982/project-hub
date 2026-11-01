@@ -13430,7 +13430,7 @@
       "title": "按可用成果交付：入口收敛、只读流程提示与真实退出码",
       "kind": "infra",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13460,9 +13460,9 @@
         "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_quality_gate -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/295",
-      "owner": null,
+      "owner": "codex-flow",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-407.md"
     }
   ]
 }
