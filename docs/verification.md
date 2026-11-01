@@ -1274,3 +1274,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - PH-338 白名单扩展 core/imports.py、onboarding preview/commit，按 PH-342 唯一路径实现 kind=invoicing；不新建第二套入口。
 - 登记 PH-405 proposed（Issue #285）；PH-338/339/404/405 授权摘要机器断言 MATCH。
 - 无产品代码、迁移、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。
+
+## PH-404 收口与 PH-339 迁移白名单（2026-11-01）
+
+- PH-404 已合入 `e8e1862` 并 done；PH-339 白名单补 `migrations/__init__.py`，spec 同步，digest 重算。

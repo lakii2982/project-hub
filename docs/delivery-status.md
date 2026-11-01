@@ -124,3 +124,6 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 
 ## PH-404 规划推进（2026-11-01）
 - PH-342/343 契约合入后晋级 PH-338 发票批量导入实现与 PH-339 insights 实现；PH-338 白名单按 PH-342 唯一路径扩展 core/imports.py 与 onboarding preview/commit；登记 PH-405 proposed。仅规划，无产品实现/发布宣称。
+
+## PH-404 收口与 PH-339 迁移白名单（2026-11-01）
+- PH-404 done；补 PH-339 `pmo_plugins/insights/migrations/__init__.py` 白名单（Django 5.2 迁移包必需），避免 check 因缺包失败。
