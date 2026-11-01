@@ -49,6 +49,7 @@ _REQUIRED_CHECKS = frozenset({
     "PostgreSQL domain",
     "Public hygiene",
     "Project governance",
+    "Delivery arbitration",
 })
 _REVIEW_QUERY = (
     "query($owner:String!,$name:String!,$number:Int!,$cursor:String){"
@@ -627,7 +628,7 @@ class GitHubDelivery:
             "delivery_policy",
         )
         if not present.strip():
-            # Pre-policy BASEs retain the original eight-check gate. Once a
+            # Pre-policy BASEs retain the original required-check gate. Once a
             # policy exists, every parse/validation failure remains blocking.
             return None
         raw = self._git(

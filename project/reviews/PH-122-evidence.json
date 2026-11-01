@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "task_id": "PH-122",
+  "captured_at": "2026-11-01T06:45:05Z",
+  "repository": "lakii2982/project-hub",
+  "main_sha_at_capture": "a70d3ebdf3c5662b888c0ed9787d18c3b8869fbe",
+  "drills": [
+    {
+      "id": "missing-task-line",
+      "pr": 275,
+      "branch": "drill/PH-122-no-task",
+      "expected": "block",
+      "blocking_check": "Project governance",
+      "run_url": "https://github.com/lakii2982/project-hub/actions/runs/41281938305",
+      "merged": false,
+      "closed": true
+    },
+    {
+      "id": "out-of-scope-path",
+      "pr": 276,
+      "branch": "drill/PH-122-out-of-scope",
+      "expected": "block",
+      "blocking_check": "Project governance",
+      "run_url": "https://github.com/lakii2982/project-hub/actions/runs/41281956764",
+      "merged": false,
+      "closed": true
+    },
+    {
+      "id": "failing-required-check",
+      "source": "PH-354 PR #267 at failing SQLite run",
+      "run_url": "https://github.com/lakii2982/project-hub/actions/runs/41277292446",
+      "expected": "block merge until all required checks pass",
+      "evidence": "PR #267 remained open with SQLite/PostgreSQL failures and was merged only after the failing checks were fixed (merge f52a7a1).",
+      "merged_while_failing": false
+    },
+    {
+      "id": "behind-base",
+      "source": "PR #270 merge attempt",
+      "expected": "block",
+      "evidence": "gh pr merge refused with 'head branch is not up to date with the base branch'; strict protection requires the branch to be current."
+    },
+    {
+      "id": "forged-or-stale-independent-review",
+      "source": "unit tests in tests/test_delivery_gate.py and tooling/ai_delivery/delivery/service.py",
+      "expected": "block",
+      "evidence": "Non-assistant output, tool echo, stale HEAD, missing official Codex identity/findings, or source actor as reviewer all raise controlled refusals."
+    },
+    {
+      "id": "unauthorized-high-risk-task",
+      "source": "project/delivery-policy.json s_authorization + scripts/delivery_gate.authorize_task",
+      "expected": "block at merge gate",
+      "evidence": "S tasks without a matching user source and BASE contract_digest are rejected with s_task_not_authorized/s_task_contract_changed; tests cover mismatch."
+    }
+  ],
+  "remote_enablement": {
+    "required_check": "Delivery arbitration",
+    "app_id": 15368,
+    "enabled": true,
+    "enabled_at": "2026-11-01T06:44:00Z",
+    "strict": true,
+    "enforce_admins": true,
+    "linear_history": true,
+    "conversation_resolution": true,
+    "required_approvals": 0,
+    "force_push": false,
+    "deletion": false,
+    "rulesets": []
+  },
+  "positive_path": {
+    "pr": null,
+    "independent_review": "pending",
+    "ci": "pending",
+    "merge_sha": null,
+    "note": "Filled when the PH-122 delivery PR merges under the nine-check protection."
+  },
+  "limitations": [
+    "Only one human maintainer; required approvals remain 0 and independent review is an agent review, not a second GitHub human identity.",
+    "The protected 'release' environment is declared by workflow but not configured in repository settings, so release publication still requires manual approval discipline.",
+    "Hosted GitHub Actions/ruleset configuration can be changed by an administrator; this evidence is a timestamped observation, not tamper-proof.",
+    "No production deployment or customer data was used in the drills."
+  ]
+}

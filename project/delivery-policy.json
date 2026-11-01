@@ -14,7 +14,8 @@
     "SQLite domain",
     "PostgreSQL domain",
     "Public hygiene",
-    "Project governance"
+    "Project governance",
+    "Delivery arbitration"
   ],
   "arbitration_sources": [
     "independent_review_app_identity",
@@ -22,7 +23,7 @@
     "event_base_and_head_sha",
     "test_merge_sha"
   ],
-  "required_check_count": 12,
+  "required_check_count": 13,
   "s_authorization": {
     "tasks": [
       {

@@ -1821,7 +1821,7 @@
       "title": "远端强制门禁启用、对抗演练与新会话交接",
       "kind": "infra",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "rolling",
       "depends_on": [
@@ -1854,9 +1854,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/59",
-      "owner": null,
+      "owner": "integration-agent",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-122.md"
     },
     {
       "id": "PH-123",

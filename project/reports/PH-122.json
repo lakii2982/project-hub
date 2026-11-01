@@ -1,0 +1,53 @@
+{
+  "task_id": "PH-122",
+  "summary": "远端强制门禁启用与对抗演练：required checks 由 8 增至 9（Delivery arbitration，app 15368），策略/门禁校验改为 9/13 且拒绝宽松双口径；真实分支保护启用并保持 strict/admin/线性/讨论/PR/禁强推禁删除；记录去敏 repository-status 与负例演练证据（缺 Task 行、越界路径、失败 CI、落后 BASE、伪造/过期复核、未授权高风险）。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: ok=true, task_count=323."
+    },
+    {
+      "command": "python -m unittest tests.test_delivery_policy tests.test_delivery_gate tests.test_quality_gate -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 67 tests in 32.689s, OK."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0; 120 pre-existing URL-namespace warnings, 0 errors."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "evidence": "Actual exit 0: No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "evidence": "Actual run: Ran 1380 tests in 147.105s; 5 failures + 3 errors + 73 skips. All eight names match the established macOS baseline (DRF compatibility, delivery symlink); no new failure. Linux CI is authoritative."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "evidence": "Actual fresh SQLite /tmp/ph122-verify.sqlite3 after migrate: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": []
+  },
+  "deviations": [
+    "Required checks increased to 9 and the policy/gate now reject 8/12 rather than accepting both shapes; this is a deliberate 8→9 migration, not a weakening.",
+    "The delivery.yml workflow itself is unchanged; BASE/HEAD byte equality remains required once arbitration enforcement is enabled.",
+    "The protected 'release' environment is declared by the release workflow but not configured in repository settings; protected_environment_present=false is recorded.",
+    "Drill PRs #275/#276 were created only to observe rejection, then closed without merge."
+  ],
+  "unverified": [
+    "Single-maintainer repository: independent review is an agent review, not a second human GitHub identity; required approvals stay 0.",
+    "Repository administrators can still change protection; captured evidence is a timestamped observation, not tamper-proof.",
+    "No production deployment, browser walkthrough or customer UAT was performed."
+  ]
+}

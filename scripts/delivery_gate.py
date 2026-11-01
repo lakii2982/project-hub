@@ -1,7 +1,7 @@
 """Offline metadata gate for trusted PR delivery (PH-120).
 
 Reads the versioned policy from the PR BASE (never the candidate HEAD) and
-checks only metadata text: exactly one Task line, base/head identity, the eight
+checks only metadata text: exactly one Task line, base/head identity, the nine
 existing required status checks plus four arbitration evidence sources, and
 linear-history/independent-review policy flags. It performs no network I/O and
 never executes candidate code; GitHub evidence remains authoritative in the
@@ -61,11 +61,11 @@ def validate_policy(policy):
         _fail('policy_task_line')
     checks = policy.get('required_status_checks')
     sources = policy.get('arbitration_sources')
-    if not isinstance(checks, list) or len(checks) != 8 or len(set(checks)) != 8:
+    if not isinstance(checks, list) or len(checks) != 9 or len(set(checks)) != 9:
         _fail('policy_required_checks')
     if not isinstance(sources, list) or len(sources) != 4 or len(set(sources)) != 4:
         _fail('policy_arbitration_sources')
-    if policy.get('required_check_count') != 12:
+    if policy.get('required_check_count') != 13:
         _fail('policy_required_check_count')
     authorization = policy.get('s_authorization')
     grants = authorization.get('tasks') if isinstance(authorization, dict) else None
