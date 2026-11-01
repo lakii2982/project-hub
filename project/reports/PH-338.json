@@ -1,0 +1,70 @@
+{
+ "task_id": "PH-338",
+ "summary": "按 PH-342 冻结的唯一路径实现销售发票批量导入首片：core/imports.py 新增 HEADERS['invoicing']（20 列）与 apply_rows invoicing 分支，按 invoice_number+line_no 归组并只用冻结 uuid5 owner token 调用 PH-252 record_invoice/allocate_invoice_lines，通用 commit_rows 明确拒绝绕过持久预览；onboarding preview_services 增加发票模板精确识别与逐行/逐票预检（往来方唯一 active customer、日期/锁期/关闭期、整数分金额、行/票/分配合计、重复票号、来源额度与往来方一致性 owner 异常映射），import_commit_services 增加 invoice_date 期间映射、kind=invoicing 行校验与 source_quota_exceeded/row_source_unapproved/invoice_number_duplicate/line_total_mismatch/invoice_total_mismatch/owner_validation_failed/owner_idempotency_conflict 映射，错误 envelope 复用 PH-353；invoicing 侧新增只读模板/预览/批次结果投影服务、history_read 页面、handler 绑定映射与 ui-tokens 模板，不新建 preview/receipt/提交入口。新测试 31 项（24 服务 + 7 HTTP），覆盖金样例多票多行原子提交、同 token 重放、改输入冲突、preview stale/consumed、precheck stale/blocked、未消解冲突、重复票号、行/票合计不守恒、来源额度/往来方不一致、跨 org、越权、dry_run 零写、owner 拒绝整批回滚、重复 import_key。未新增 canonical 实体/topic/迁移。",
+ "tests": [
+  {
+   "command": "python scripts/projectctl.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0 after governance update: {\"command\":\"check\",\"ok\":true,\"task_count\":325}; PH-338 set in_review with owner=root and handoff=project/handoffs/PH-338.md."
+  },
+  {
+   "command": "python manage.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0: System check identified 123 issues (0 silenced), all pre-existing urls.W003/cash.W342 warnings plus the new invoice-import route's W003; 0 errors."
+  },
+  {
+   "command": "python manage.py makemigrations --check --dry-run",
+   "result": "pass",
+   "evidence": "Actual exit 0: No changes detected; no model or migration was added or modified."
+  },
+  {
+   "command": "python manage.py test tests.test_v1_invoice_import tests.test_v1_invoice_import_http --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 31 tests, OK (24 service + 7 HTTP). Covers gold two-invoice/four-row atomic commit, same-token replay, changed-input conflict, preview stale/consumed, precheck stale/blocked, unresolved blocker conflict, duplicate invoice number, line/invoice total mismatch, source quota and counterparty inconsistency, cross-org, roles/module disable, dry_run zero writes, owner rejection whole-batch rollback, duplicate import_key and prior-month row_date_invalid."
+  },
+  {
+   "command": "python manage.py test tests.test_imports_ai tests.test_v1_import_preview tests.test_v1_import_preview_http tests.test_v1_import_submission tests.test_v1_import_submission_http tests.test_v1_invoice tests.test_v1_invoice_http --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 82 tests, OK, confirming existing time/expense/plan CSV behavior, PH-274 preview, PH-353 submission and PH-252 invoicing service/HTTP regressions are unchanged."
+  },
+  {
+   "command": "python manage.py test tests --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 1 only from the established macOS baseline: Ran 1444 tests, FAILED (failures=5, errors=3, skipped=73). The 8 names are the known 6 test_drf_security_compatibility + 2 test_delivery_execution*/test_delivery_execution_sandbox /private/var symlink cases; no new failure category. Linux/PG CI remains authoritative."
+  },
+  {
+   "command": "python manage.py verify_integrity --json",
+   "result": "pass",
+   "evidence": "Actual exit 0 on a freshly migrated throwaway SQLite DB (PMO_DB=/tmp/ph338-verify.sqlite3): {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+  }
+ ],
+ "review": {
+  "required": true,
+  "reviewer": "independent PH-338 reviewer (fresh context, read-only)",
+  "status": "pass",
+  "findings": [
+   "PASS at 0113428 (BASE 7bb8351): both prior blockers are genuinely fixed — no conflict markers in the commit range, and allocation_version is bound to the source current version for settlement/open_item and settlement/settlement, with contracts/contract_line delegated to PH-252 approved_line_snapshot.",
+   "Quota-bypass probe reproduced with real PH-252 services: version=1 fills the 40000-cent open item; a second version=2 import is rejected at preview and at both dry_run and real commit with allocation_ref_invalid; final allocated total stays 40000.",
+   "Version-cache logic is correct: repeated contract_line rows are revalidated by the owner (no stale cache), stale open_item rows report exactly one error with the right line number, settlement stale/current versions behave as specified.",
+   "31 scoped tests OK, 82 affected regressions OK, full suite 1444 tests with only the 8 established macOS-baseline failures.",
+   "Stale evidence text in report/verification/handoff (old BASE, 30-test count, delivery/urls.py whitelist claim) corrected in the sign-off commit; not_a_code_blocker."
+  ],
+  "evidence": "Independent S review performed by a fresh read-only context; implementer did not self-approve."
+ },
+ "deviations": [
+  "verify-change --base 7bb8351 --task PH-338 reports only high_risk_review_required (review pending) and no path_out_of_scope; the review gate remains open by design.",
+  "pmo_plugins/delivery/urls.py is in PH-338 allowed_paths and binds the invoice_import handler; invoicing/domain_metadata.py declares invoice-import/ as history_read and invoicing/urls.py exposes the handler map.",
+  "The onboarding template picker keeps its existing time/expense/plan list to preserve the frozen PH-274 assertion; invoicing is still auto-detected by exact 20-column template and is surfaced by the invoicing import page.",
+  "apply_rows returns flat invoicing result refs (invoice/invoice_line/invoice_allocation dicts) rather than ORM rows; ImportSubmissionReceipt._result_ref now accepts these dict refs. No receipt schema or migration changed.",
+  "invoice_number duplicate, row/line totals and (on a real write) source quota/consistency are revalidated server-side before owner services; dry_run intentionally skips owner quota/consistency per contract §2.3 but still checks format, totals, period and duplicate numbers.",
+  "The generic legacy commit_rows path rejects kind=invoicing so the only invoice submission entry remains onboarding commit_import after a persisted preview.",
+  "Owner error text is mapped to frozen issue codes by prefix/keyword; unknown owner messages fall back to owner_validation_failed and retain the desensitized message.",
+  "No canonical entity/topic/command, new table, migration or second CSV parser was added; invoice/line/allocation writes go only through PH-252 services."
+ ],
+ "unverified": [
+  "Independent S review pending; implementer did not self-approve.",
+  "PostgreSQL multi-connection company-lock/concurrency and trigger behavior (CI).",
+  "Real browser 1440/390 layout, keyboard/focus and overflow checks; HTTP rendering tests only.",
+  "Staging/production/UAT, real customer invoice files and any external network/model calls."
+ ]
+}

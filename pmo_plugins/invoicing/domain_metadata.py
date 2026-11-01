@@ -5,6 +5,7 @@ DOMAIN_METADATA = {
     'migration_dependencies': ['core', 'contracts', 'settlement'],
     'routes': [
         {'name': 'invoice_list', 'path': 'invoice-list/', 'access': 'history_read'},
+        {'name': 'invoice_import', 'path': 'invoice-import/', 'access': 'history_read'},
         {'name': 'invoice_form', 'path': 'invoice-form/', 'access': 'business_read'},
         {'name': 'invoice_record', 'path': 'invoice-record/', 'access': 'business_write'},
         {'name': 'invoice_detail', 'path': 'invoice-detail/', 'access': 'history_read'},

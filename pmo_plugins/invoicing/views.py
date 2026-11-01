@@ -23,6 +23,37 @@ def _base(member, **values):
             'list_url': _url('invoice_list'), 'form_url': _url('invoice_form'), **values}
 
 
+def invoice_import(context, payload):
+    """PH-338 read-only invoice import projection; submission stays in onboarding."""
+    from . import invoice_import_services as projections
+    from .forms import InvoiceImportFilterForm
+    member = projections.require_reader(context.member)
+    allowed = {'preview'}
+    error = ''
+    form = InvoiceImportFilterForm(payload or {})
+    if set(payload or ()) - allowed:
+        error = '包含不允许的查询参数，请刷新后重试'
+    elif not form.is_valid():
+        error = '；'.join(
+            message for errors in form.errors.values() for message in errors)
+    selected = None
+    if not error and form.cleaned_data.get('preview'):
+        try:
+            selected = projections.preview_projection(
+                member, form.cleaned_data['preview'])
+        except PermissionDenied as exc:
+            error = '；'.join(getattr(exc, 'messages', [str(exc)]))
+    snapshot = projections.snapshot(member)
+    prefix = get_script_prefix()
+    return render(context.request, 'invoicing/invoice_import.html', _base(
+        member, snapshot=snapshot, selected=selected, filter_form=form,
+        error=error, can_write=snapshot['can_write'],
+        import_url=_url('invoice_import'), list_url=_url('invoice_list'),
+        preview_upload_url=prefix + 'modules/onboarding/import-preview-upload/',
+        submit_url=prefix + 'modules/onboarding/import-submit/'),
+        status=400 if error else 200)
+
+
 def invoice_list(context, payload):
     member = services._fresh(context.member)
     rows = services.invoice_list(member)
