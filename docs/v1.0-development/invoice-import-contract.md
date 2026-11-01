@@ -87,9 +87,9 @@ commit_invoice_import(member, *, preview_ref, rows_digest, precheck_digest,
   - 发票：`uuid5(NAMESPACE_URL, f"project-hub:{org_id}:invoicing:invoice:{direction}:{invoice_number}")`
   - 分配：`uuid5(NAMESPACE_URL, f"project-hub:{org_id}:invoicing:allocate:{direction}:{invoice_number}:{invoice.version}")`
   - 批次收据使用请求 `request_token`。
-  - 同方向同票号重放得到相同 owner token；PH-252 收据按 action+token 查重，因此重复提交返回原收据而非输入冲突。
+  - 同方向同票号**相同输入**重放得到相同 owner token，PH-252 返回原收据；同票号但金额/往来方/日期变化时 input_digest 不同，PH-252 拒绝并映射为 `owner_idempotency_conflict`。
 - 同 token 同输入重放返回原收据；改输入 `request_token_conflict`；未知结果先查收据再重试，不盲重放。
-- `dry_run` 不写收据、不消费预览、不写发票；明确 dry_run 覆盖预览/预检/冲突/行/来源额度/往来方一致性，但不替代真实 owner 写入。
+- `dry_run` 不写收据、不消费预览、不写发票；覆盖范围以 §2.3 为准（预览/预检/冲突/行/期间，不覆盖 owner 额度与往来方一致性），不替代真实 owner 写入。
 
 ## 5. 事务、锁与失败回滚
 
@@ -107,9 +107,9 @@ commit_invoice_import(member, *, preview_ref, rows_digest, precheck_digest,
 
 ## 7. 实现边界与白名单扩展
 
-- PH-338 需要新建 invoicing 侧批次编排服务（如 `pmo_plugins/invoicing/batch_import_services.py`）与必要测试，并复用 onboarding 的 `ImportPreview`/`ImportSubmissionReceipt` 与 PH-354 预检接口。
-- 若需要 onboarding 暴露 kind=`invoicing` 的持久预览/收据接口，或需要修改 `core/imports.py`，必须由规划槽扩展 PH-338 的 allowed_paths；实现片不得自行扩权，也不得复制 PH-353 的提交实现。
-- 本文不授权实现；PH-338 仍 proposed。
+- 唯一提交入口是 PH-353 的 `commit_import` 链路：PH-338 的实现是扩展 `core/imports.py` 的 invoicing 模板/`apply_rows` 分支与 onboarding preview/commit 的 kind 映射，所有预览、收据、幂等与期间绑定仍由 onboarding 持有。
+- 允许在 invoicing 侧增加只读投影/字段映射辅助函数，但不得新建第二套 preview/receipt/提交入口，也不得复制 PH-353 的提交实现。
+- 上述文件扩展必须由 PH-338 的前置规划 PR 冻结 allowed_paths；实现片不得自行扩权。本文不授权实现；PH-338 仍 proposed。
 
 ## 8. 反例（实现片与评审须拒绝）
 
