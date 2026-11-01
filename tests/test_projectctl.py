@@ -668,10 +668,10 @@ class ProjectCtlTests(unittest.TestCase):
     def test_flow_product_code_resets_streak_but_docs_and_tests_do_not(self):
         self.flow_fixture()
         self.init_flow_history()
-        for i, path in enumerate(["core/README.md", "core/tests/test_example.py", "core/test_example.py"]):
+        for i, path in enumerate(["core/README.md", "core/tests/test_example.py", "core/test_example.py", "core/tests.py"]):
             self.write(path, "# support\n")
             self.commit(f"feat(PH-001): support (#{i + 1})")
-        self.assertEqual(self.flow()["trailing_support_prs"], 3)
+        self.assertEqual(self.flow()["trailing_support_prs"], 4)
         self.write("core/example.py", "value = 1\n")
         self.commit("docs(PH-001): title is not evidence (#4)")
         flow = self.flow()

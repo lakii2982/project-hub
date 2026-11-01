@@ -782,6 +782,7 @@ def _delivery_flow(root: Path, tasks: list[dict[str, Any]]) -> dict[str, Any]:
                 path.startswith(("core/", "pmo_plugins/", "pmo/", "templates/", "static/", "integrations/mcp/"))
                 and PurePosixPath(path).suffix.lower() in {".py", ".html", ".css", ".js", ".svg", ".png", ".jpg", ".webp"}
                 and "tests" not in PurePosixPath(path).parts
+                and PurePosixPath(path).name != "tests.py"
                 and not PurePosixPath(path).name.startswith("test_")
                 for path in paths)
             products.append(product)
