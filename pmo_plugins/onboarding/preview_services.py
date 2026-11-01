@@ -261,9 +261,40 @@ def _invoicing_quota_issue(member, ref, day, party):
                       message)
 
 
+def _source_version_matches(member, namespace, kind, identifier, version, cache):
+    """Return whether a business source ref carries its owner's current version."""
+    if (namespace, kind) == ('contracts', 'contract_line'):
+        # PH-252 approved_line_snapshot validates the version against the approved
+        # line during the same owner check; nothing to pre-read here.
+        return True
+    marker = (namespace, kind, identifier)
+    if marker in cache:
+        return cache[marker] == version
+    current = None
+    if (namespace, kind) == ('settlement', 'open_item'):
+        from pmo_plugins.settlement.models import OpenItem
+        try:
+            item = OpenItem.objects.only('version').get(
+                organization_id=member.organization_id, pk=identifier)
+        except (OpenItem.DoesNotExist, ValueError, TypeError):
+            cache[marker] = None
+            return False
+        current = item.version
+    elif (namespace, kind) == ('settlement', 'settlement'):
+        from pmo_plugins.settlement.receivable_services import settlement_snapshot
+        try:
+            current = int(settlement_snapshot(member, identifier)['version'])
+        except (PermissionDenied, ValidationError, KeyError, TypeError, ValueError):
+            cache[marker] = None
+            return False
+    cache[marker] = current
+    return current == version
+
+
 def _invoicing_validate(member, raw_rows, *, include_owner=True):
     """Read-only row/group precheck shared by preview and commit; writes nothing."""
     errors, parsed, counterparties = [], [], {}
+    version_cache = {}
     seen_sources = set()
     for offset, raw in enumerate(raw_rows):
         line = offset + 2
@@ -382,9 +413,14 @@ def _invoicing_validate(member, raw_rows, *, include_owner=True):
                 bad('allocation_version', 'allocation_ref_invalid',
                     '业务来源版本须为整数且大于0')
             if identifier and version:
-                ref = {'namespace': namespace, 'kind': kind, 'id': identifier,
-                       'version': version}
-                entry['normalized']['business_source_ref'] = ref
+                if not _source_version_matches(
+                        member, namespace, kind, identifier, version, version_cache):
+                    bad('allocation_version', 'allocation_ref_invalid',
+                        '业务来源版本必须等于来源当前版本')
+                else:
+                    ref = {'namespace': namespace, 'kind': kind, 'id': identifier,
+                           'version': version}
+                    entry['normalized']['business_source_ref'] = ref
 
         allocation_amounts = {}
         for field, label, positive in (

@@ -248,6 +248,32 @@ class InvoiceTemplateAndPreviewTests(InvoiceImportFixture, TestCase):
         self.assertIn('source_quota_exceeded',
                       {error['code'] for error in result['row_errors']})
 
+    def test_allocation_version_must_match_source_current_version(self):
+        rows = self.invoice_rows(
+            'INV-VER', lines=[(1, 30000, [('open_item', 30000)])])
+        for row in rows:
+            row['allocation_version'] = '2'
+        result = self.preview(rows)
+        self.assertIn('allocation_ref_invalid',
+                      {error['code'] for error in result['row_errors']})
+
+        rows = self.invoice_rows(
+            'INV-SET', lines=[(1, 30000, [('open_item', 30000)])])
+        settlement_version = self.settlement.version
+        for row in rows:
+            row['allocation_namespace'] = 'settlement'
+            row['allocation_kind'] = 'settlement'
+            row['allocation_id'] = str(self.settlement.pk)
+            row['allocation_version'] = '1'
+        result = self.preview(rows)
+        self.assertIn('allocation_ref_invalid',
+                      {error['code'] for error in result['row_errors']})
+        for row in rows:
+            row['allocation_version'] = str(settlement_version)
+        result = self.preview(rows)
+        self.assertNotIn('allocation_ref_invalid',
+                         {error['code'] for error in result['row_errors']})
+
     def test_preview_is_read_only_and_deterministic(self):
         before = (Invoice.objects.count(), InvoiceLine.objects.count(),
                   InvoiceAllocation.objects.count(), LedgerEntry.objects.count())

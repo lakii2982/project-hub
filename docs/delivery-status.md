@@ -125,11 +125,9 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 ## PH-404 规划推进（2026-11-01）
 - PH-342/343 契约合入后晋级 PH-338 发票批量导入实现与 PH-339 insights 实现；PH-338 白名单按 PH-342 唯一路径扩展 core/imports.py 与 onboarding preview/commit；登记 PH-405 proposed。仅规划，无产品实现/发布宣称。
 
-<<<<<<< HEAD
 ## PH-404 收口与 PH-339 迁移白名单（2026-11-01）
 - PH-404 done；补 PH-339 `pmo_plugins/insights/migrations/__init__.py` 白名单（Django 5.2 迁移包必需），避免 check 因缺包失败。
-=======
-## PH-338 销售发票批量导入首片（2026-11-01，BASE e8e1862）
+
+## PH-338 销售发票批量导入首片（2026-11-01，BASE 7bb8351）
 
 按 PH-342 冻结的唯一路径扩展导入编排：`core/imports.py` 新增 `HEADERS['invoicing']` 与 `apply_rows` 的 invoicing 分支（按 invoice_number+line_no 归组，冻结 uuid5 owner token，只经 `record_invoice`/`allocate_invoice_lines` 写发票事实，通用 `commit_rows` 拒绝绕过预览）；onboarding `preview_services` 增加发票模板精确识别与逐行/逐票预检（往来方 active/customer 唯一匹配、日期/金额/行票合计/重复票号/来源额度与往来方一致性），`import_commit_services` 增加 `invoice_date` 期间映射、kind=invoicing 行校验与 owner 异常到 issue_code 映射；invoicing 侧新增只读模板/预览/批次收据投影、history_read 页面与 ui-tokens 模板，提交仍只走 onboarding `commit_import`。未新增 canonical 实体/topic/迁移，不写收入/现金/账本/来源消费。L3/L4/L5（PG 并发、浏览器、staging/生产/UAT）not_run；独立 S 复核 pending。
->>>>>>> 521b936 (feat(PH-338): 销售发票批量导入模板与原子提交首片)
