@@ -5,7 +5,7 @@
     {
       "command": "python scripts/projectctl.py check",
       "result": "pass",
-      "evidence": "Actual exit 0 on candidate before report/task closeout: ok=true, task_count=317. Final PH-397 registration rerun: ok=true, task_count=318; governance 23 tests OK."
+      "evidence": "Actual exit 0 after PH-398 rebase (BASE 032fdeb): ok=true, task_count=319; scoped 71 tests OK; verify-change ok."
     },
     {
       "command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy tests.test_delivery_gate -v",
@@ -25,7 +25,7 @@
     {
       "command": "python manage.py test tests --verbosity 1",
       "result": "pass",
-      "evidence": "Actual final-HEAD run: Ran 1332 tests in 142.576s; 5 failures + 3 errors + 70 environment skips. All 8 names match the established main macOS baseline (6 DRF Accept/codec/large-JSON and 2 delivery /private/var symlink cases); no new failure. Linux CI remains authoritative and is not claimed locally."
+      "evidence": "Pre-rebase final-HEAD run: Ran 1332 tests in 142.576s; 5 failures + 3 errors + 70 environment skips. All 8 names match the established main macOS baseline (6 DRF Accept/codec/large-JSON and 2 delivery /private/var symlink cases); no new failure. Linux CI remains authoritative and is not claimed locally."
     },
     {
       "command": "python manage.py verify_integrity --json",
@@ -43,7 +43,7 @@
       "Planning continuation reviews through 9f3dc7d: PASS. PH-397 is limited to planning, bound to issue #255 and source user-2026-10-31-complete-v1; the reviewer independently recomputed its final digest 4c4a808045dddf5fc7d00b9d0dc989eb1600ea44dcfd92729e0715c6a1c79ac0. Scoped grant registration cannot modify arbitration rules or authorize out-of-milestone work, EXP-1 or PH-110.",
       "Non-blocking limits reserved for PH-122 live verification: real Codex marker format/strict has_any_findings semantics, arbitration check-run pagination beyond 100, and availability of the PR head blob in the local clone; all fail closed rather than accept unknown evidence."
     ],
-    "evidence": "VERDICT PASS at final HEAD 9f3dc7d (BASE b26c26f), including independent reviews of the arbitration implementation, workflow anti-forgery fix, PH-397 planning scope and final authorization digest. Remote enforcement remains disabled pending PH-122 live adversarial evidence."
+    "evidence": "VERDICT PASS through pre-rebase HEAD 9f3dc7d, including arbitration, workflow anti-forgery and PH-397 scope/digest reviews. Integration rebase onto recovered main 032fdeb preserved the reviewed implementation and PH-398; post-rebase scoped 71 tests and verify-change are green. Remote enforcement remains disabled pending PH-122 live evidence."
   },
   "deviations": [
     "The first retained WIP only declared 8+4 policy entries. This delivery connects the policy to GitHubDelivery and adds contract-bound S authorization, mergeable/test-merge verification and remote evidence readers instead of treating declarations as proof.",

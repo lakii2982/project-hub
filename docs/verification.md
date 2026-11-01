@@ -1187,11 +1187,11 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - scoped 34 tests OK（8 个 PG-only 在 SQLite 跳过）；check ok/318；manage.py check exit 0；makemigrations No changes；fresh SQLite verify exit 0。
 - 全量 1321 tests，5F+3E/70 skips，均为既有 8 项 macOS 基线，无新增；独立 S 复核 PASS；真实 PG/PR CI pending。直接 main 引导被保护拒绝，origin/main 未改。不得将 BASE task_not_in_baseline 或业务红灯写成通过。
 
-## PH-120 可信 PR 交付契约与仲裁（2026-10-31，BASE b26c26f）
+## PH-120 可信 PR 交付契约与仲裁（2026-11-01，BASE 032fdeb）
 
 - **L1 实现**：版本化 BASE delivery-policy；S 级授权来源 + task/spec contract_digest；离线 PR 元数据 gate 与只读 Delivery arbitration workflow；现有 GitHubDelivery 合并入口接入 BASE policy、mergeable/CLEAN、远端保护、test-merge SHA、最新 HEAD checks、讨论及官方 Codex/Actions 仲裁读取。
 - **L2 实际结果**：登记的 projectctl/governance/delivery 测试 **71 tests OK**（含 HEAD/BASE workflow 逐字节反伪造）；另 delivery controller 组合 119 tests OK；manage.py check exit 0（119 个既有警告）；makemigrations No changes；fresh SQLite verify_integrity ok/errors=[]。
 - **全量本地**：最终 HEAD 1332 tests，5F+3E/70 skips；8 个失败/错误逐项与 main 既有 macOS 基线一致，无新增；不据此声称 Linux/PG 通过。
 - **L3/L4/L5：not_run**。本片未做真实 Codex PASS、远端保护启用、浏览器、生产或客户 UAT；`remote_checks_enforced=false`，PH-122 必须做真实对抗验证。
 - **规划登记**：`agent-protocol.md` §9 新增 ready 的 PH-397，仅作后续规划，不实现业务、不恢复 EXP-1、不改变 PH-110 暂不入库决定。
-- 独立 S review：仲裁实现、workflow 反伪造、PH-397 规划与授权摘要增量复核均 PASS（最终 9f3dc7d）；verify-change ok=true、14 文件全白名单。
+- 独立 S review：仲裁实现、workflow 反伪造、PH-397 规划与授权摘要增量复核均 PASS；PH-398 重基线后 verify-change ok=true、14 文件全白名单，登记 71 tests OK。
