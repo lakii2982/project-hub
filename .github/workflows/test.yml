@@ -66,7 +66,10 @@ jobs:
           python -m coverage json -o coverage.json
           COV_EXIT=$?
           GATE_EXIT=0
-          if git --no-replace-objects cat-file -e "$BASE:project/delivery-policy.json" 2>/dev/null; then
+          if ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo 'BASE commit unavailable' >&2
+            GATE_EXIT=1
+          elif git --no-replace-objects cat-file -e "$BASE:project/delivery-policy.json" 2>/dev/null; then
             git --no-replace-objects show "$BASE:project/delivery-policy.json" > "$RUNNER_TEMP/base-policy.json"
             python - "$RUNNER_TEMP/base-policy.json" <<'PY'
           import json
@@ -160,7 +163,10 @@ jobs:
           python -m coverage json -o coverage.json
           COV_EXIT=$?
           GATE_EXIT=0
-          if git --no-replace-objects cat-file -e "$BASE:project/delivery-policy.json" 2>/dev/null; then
+          if ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo 'BASE commit unavailable' >&2
+            GATE_EXIT=1
+          elif git --no-replace-objects cat-file -e "$BASE:project/delivery-policy.json" 2>/dev/null; then
             git --no-replace-objects show "$BASE:project/delivery-policy.json" > "$RUNNER_TEMP/base-policy.json"
             python - "$RUNNER_TEMP/base-policy.json" <<'PY'
           import json

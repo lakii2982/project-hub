@@ -166,3 +166,22 @@ class RepositoryPolicyTests(unittest.TestCase):
     def test_repository_policy_contains_quality_section(self):
         policy = json.loads((ROOT / 'project/delivery-policy.json').read_text(encoding='utf-8'))
         validate_quality(policy.get('quality'))
+
+    def test_ci_executes_quality_gate_from_base_and_uploads_evidence(self):
+        workflow = (ROOT / '.github/workflows/test.yml').read_text(encoding='utf-8')
+        self.assertIn('git --no-replace-objects show "$BASE:scripts/quality_gate.py"', workflow)
+        self.assertIn('python "$RUNNER_TEMP/quality_gate.py"', workflow)
+        self.assertNotIn('python scripts/quality_gate.py --root . --base', workflow)
+        self.assertIn('name: sqlite-quality-evidence', workflow)
+        self.assertIn('name: postgres-quality-evidence', workflow)
+        self.assertIn('if: always()', workflow)
+        self.assertIn('git cat-file -e "$BASE^{commit}"', workflow)
+
+    def test_release_is_manual_and_never_creates_tags(self):
+        workflow = (ROOT / '.github/workflows/release.yml').read_text(encoding='utf-8')
+        self.assertIn('workflow_dispatch', workflow)
+        self.assertNotIn('push:\n    tags:', workflow)
+        self.assertIn('environment: release', workflow)
+        self.assertIn('refs/tags/$TAG^{commit}', workflow)
+        self.assertIn('--verify-tag', (ROOT / 'scripts/publish-release.py').read_text(encoding='utf-8'))
+        self.assertNotIn('${{ inputs.tag }}"', workflow.split('env:', 1)[0])
