@@ -120,6 +120,11 @@
         "task_id": "PH-407",
         "contract_digest": "05fda171a9b159ea32d938f952abfa8b5fea036af578def2e549a220e5878875",
         "source": "user-2026-11-01-reduce-process-overhead"
+      },
+      {
+        "task_id": "PH-408",
+        "contract_digest": "5bf09f901abcbec516d18eb2ebbeab616d96d62606949a11b411c9e4ef818718",
+        "source": "user-goal-2026-11-01"
       }
     ]
   },

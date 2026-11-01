@@ -13463,6 +13463,44 @@
       "owner": "codex-flow",
       "blockers": [],
       "handoff": "project/handoffs/PH-407.md"
+    },
+    {
+      "id": "PH-408",
+      "title": "发票导入预检保存与原子提交浏览器衔接",
+      "kind": "feature",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-338",
+        "PH-353"
+      ],
+      "spec": "project/specs/PH-408.md",
+      "allowed_paths": [
+        "pmo_plugins/onboarding/views.py",
+        "pmo_plugins/invoicing/templates/invoicing/invoice_import.html",
+        "tests/test_v1_invoice_import_http.py",
+        "tests/test_v1_import_preview_http.py",
+        "project/reports/PH-408.json",
+        "project/handoffs/PH-408.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python manage.py check",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json",
+        "python manage.py test tests.test_v1_invoice_import tests.test_v1_invoice_import_http tests.test_v1_import_preview_http tests.test_v1_import_submission tests.test_v1_import_submission_http --verbosity 1"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/298",
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-408.md"
     }
   ]
 }

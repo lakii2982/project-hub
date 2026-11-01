@@ -1,0 +1,36 @@
+{
+  "task_id": "PH-408",
+  "summary": "只登记发票导入预检保存与原子提交浏览器衔接任务；来源于隔离演练库的实测断点和用户 2026-11-01 /goal 授权。不含产品实现。",
+  "registration_only": true,
+  "authorization_source": "user-goal-2026-11-01",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 using the repository virtualenv on PATH: ok=true, task_count=328."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 using the repository virtualenv on PATH: 35 tests ran in 10.627s, OK."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent general-purpose / reviewer",
+    "status": "pass",
+    "findings": [
+      "PASS at uncommitted PH-408 against BASE e05f7a6: exactly one new ready/unclaimed task with done dependencies, new regular spec/report/handoff and exact appended S grant; no implementation or existing contract/policy changes. Reviewer independently recomputed digest 5bf09f901abcbec516d18eb2ebbeab616d96d62606949a11b411c9e4ef818718, verified open Issue #298, reran projectctl check and all 35 common tests with exit 0."
+    ]
+  },
+  "deviations": [
+    "登记 PR 只追加一个 ready、未认领且依赖已 done 的 PH-408 契约及同编号 spec/report/handoff，并追加精确 S 授权；不修改既有任务、产品、检查器、workflow、manifest 或其它策略值。",
+    "完整产品验收与浏览器通过属于登记合入后的实现 PR；本报告不能作为实现验收。"
+  ],
+  "unverified": [
+    "产品实现、自动化全套、1440/390 浏览器、PostgreSQL、部署与客户验收均未在本登记轮执行或宣称通过。",
+    "当前提交所需远端 required CI 以 GitHub 实际结果为准。"
+  ]
+}
