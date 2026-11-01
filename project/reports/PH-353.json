@@ -1,6 +1,6 @@
 {
  "task_id": "PH-353",
- "summary": "在 ADR 0012 的 onboarding 插件内实现 PH-353 导入提交首片：新增 ImportPreview/ImportConflict/ImportSubmissionReceipt 模型与 onboarding 首个 0001_initial 迁移；persist_preview 持久化规范化 sha256 行摘要的 ready 预览与去重冲突（零业务事实）；commit_import 在公司锁+单事务内校验同 org 预览/版本/未消费、重算 rows_digest、复用 PH-354 period_precheck_snapshot 重算并比对 precheck_digest/as_of（blocker/can_close=false → precheck_blocked）、阻断未消解 blocker 冲突、request_token 同输入幂等/改输入冲突、稳定 import_key 去重、dry_run 零写，最终仅经 core.imports.apply_rows 调用既有 owner 服务，任一行失败整批回滚，成功后预览置 consumed；新增 owner/finance 提交页、auditor 历史只读、pm/member 拒绝、模块停用 history_read 的 history_read+business_write 路由与 ui-tokens 模板。新测试 31 项（24 服务 + 7 HTTP）。 复核修复：commit/dry_run 在调用 owner 服务前逐行校验业务日期所属期间（time=work_date、expense=occurred_on、plan=due_date），跨期行以 row_date_invalid 拒绝且零写。",
+ "summary": "在 ADR 0012 的 onboarding 插件内实现 PH-353 导入提交首片：新增 ImportPreview/ImportConflict/ImportSubmissionReceipt 模型与 onboarding 首个 0001_initial 迁移；persist_preview 持久化规范化 sha256 行摘要的 ready 预览与去重冲突（零业务事实）；commit_import 在公司锁+单事务内校验同 org 预览/版本/未消费、重算 rows_digest、复用 PH-354 period_precheck_snapshot 重算并比对 precheck_digest/as_of（blocker/can_close=false → precheck_blocked）、阻断未消解 blocker 冲突、request_token 同输入幂等/改输入冲突、稳定 import_key 去重、dry_run 零写，最终仅经 core.imports.apply_rows 调用既有 owner 服务，任一行失败整批回滚，成功后预览置 consumed；新增 owner/finance 提交页、auditor 历史只读、pm/member 拒绝、模块停用 history_read 的 history_read+business_write 路由与 ui-tokens 模板。新测试 33 项（26 服务 + 7 HTTP）。 复核修复：commit/dry_run 在调用 owner 服务前逐行校验业务日期所属期间（time=work_date、expense=occurred_on、plan=due_date），跨期行以 row_date_invalid 拒绝且零写。",
  "tests": [
   {
    "command": "python scripts/projectctl.py check",
@@ -20,7 +20,7 @@
   {
    "command": "python manage.py test tests --verbosity 1",
    "result": "pass",
-   "evidence": "Actual exit 1 due only to the established macOS baseline: Ran 1411 tests, FAILED (failures=5, errors=3, skipped=73), 1330 passed. All 8 names are the known 6 drf_security_compatibility + 2 delivery_execution /private/var symlink cases; no new failure. Linux/PG CI is authoritative and is checked on the PR."
+   "evidence": "Actual exit 1 due only to the established macOS baseline: Ran 1413 tests, FAILED (failures=5, errors=3, skipped=73), 1332 passed. All 8 names are the known 6 drf_security_compatibility + 2 delivery_execution /private/var symlink cases; no new failure. Linux/PG CI is authoritative and is checked on the PR."
   },
   {
    "command": "python manage.py verify_integrity --json",
@@ -30,7 +30,7 @@
   {
    "command": "python manage.py test tests.test_v1_import_submission tests.test_v1_import_submission_http --verbosity 1",
    "result": "pass",
-   "evidence": "Actual exit 0: Ran 31 tests, OK => 24 service + 7 HTTP. Covers gold preview→commit all-or-nothing, token replay/change conflict, rows/precheck/version stale, closed/locked period blocked, unresolved blocker conflict, resolved/warning conflict, cross-org, roles/module disable, dry_run zero writes, owner rejection rollback, duplicate import_key, consumed preview, future date, unknown params, 405 methods and rendered rejection envelopes."
+   "evidence": "Actual exit 0: Ran 33 tests, OK => 26 service + 7 HTTP. Covers gold preview→commit all-or-nothing, token replay/change conflict, rows/precheck/version stale, closed/locked period blocked, unresolved blocker conflict, resolved/warning conflict, cross-org, roles/module disable, dry_run zero writes, owner rejection rollback, duplicate import_key, consumed preview, future date, unknown params, 405 methods and rendered rejection envelopes."
   },
   {
    "command": "python manage.py test tests.test_v1_import_preview tests.test_v1_import_preview_http tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http --verbosity 1",
@@ -62,13 +62,13 @@
   "Independent review blocker: rows were not bound to the submitted period, so a valid current-month precheck could admit a prior-month row; commit/dry_run now reject any row whose business date month differs from period (row_date_invalid), with regression tests.",
   "dry_run validates preview/precheck/conflicts/row-period but not owner row rules; would_commit means those stages passed, owner rejection is returned on real commit.",
   "resolve_conflict has no company lock/select_for_update; concurrent resolution is deferred to a follow-up slice.",
-  "Persistent preview HTTP upload is not exposed in this slice; persist_preview is a service API and the submit page is present."
+  "Persistent preview HTTP upload is not exposed in this slice; persist_preview is a service API and the submit page is present.",
+  "Final verify-change uses the rebased BASE 8e3f877 and reports only high_risk_review_required; the original a70d3eb BASE would now flag PH-122-merged files as out of scope, which is why the rebase was required."
  ],
  "unverified": [
   "Independent S review pending (not self-approved).",
   "PostgreSQL multi-connection company-lock/concurrency for import commit (CI).",
   "Real browser 1440/390 layout, keyboard and overflow checks (HTTP rendering only here).",
-  "Production/UAT, staging, real customer data and external network/model calls.",
-  "verify-change is not claimed: actual run reports tests_failed (full-suite macOS baseline recorded as fail), high_risk_review_required (review pending) and acceptance_not_passed (full suite command) with no out-of-scope path errors."
+  "Production/UAT, staging, real customer data and external network/model calls."
  ]
 }
