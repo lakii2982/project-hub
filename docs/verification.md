@@ -1214,3 +1214,11 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - PH-354 实现方全量回归计划外发现 11 个白名单外同类型失败（9 个首批 + contract_change_impact/_http 全量补漏）；本规划仅补精确文件白名单，不允许实现片自行扩权，不改业务断言。
 - PH-400 merge 3136003 收口 done；登记 PH-401 proposed（Issue #265）。按最终 spec 重算 PH-354/399/401 授权 digest。
 - 无产品实现、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。
+
+## PH-121 客观覆盖率、财务反例与发布边界（2026-11-01，BASE 3136003）
+
+- **L1 实现**：CI 专用 coverage.py 7.11.0；.coveragerc；BASE policy `quality`（总量 80%、新增行 80%、测试数 1200、未知 skip 白名单阻断）；`scripts/quality_gate.py` 失败关闭；SQLite/PG CI 覆盖率+质量门（首次引入 PR 显式 bootstrap）；发布 workflow 改人工 dispatch+受保护 environment+已存在标签校验，不创建/移动标签；新增 PG 财务并发反例（公司锁串行/跨公司隔离/审计链）。
+- **实测**：SQLite 覆盖率 82.09%（branch，21127 statements）；质量门+交付策略 27 tests OK；治理组合 89 tests OK；manage.py check exit 0；makemigrations No changes；fresh SQLite verify_integrity ok/errors=[]。73 条真实 skip 原因已对白名单校验全部允许。
+- **复核修复**：CI 从 BASE 取质量门脚本执行；bootstrap 仅限 BASE policy 缺失/旧 policy 无 quality；损坏 policy、缺脚本、删源文件、未测量源文件、未知 skip、空 coverage 均失败关闭；测试日志与 coverage JSON 作为 artifact 保留。
+- **L3/L4/L5：not_run**。Linux CI 覆盖率/PG 并发、浏览器、staging/TLS/恢复、生产/UAT 未执行；`release` environment 保护需仓库设置配置。
+- 独立 S review PASS（B1–B4 已关闭）；verify-change 待最终证据提交后重跑。

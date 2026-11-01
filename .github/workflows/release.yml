@@ -1,11 +1,15 @@
 name: Publish engineering release
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing git tag (vX.Y.Z) pointing at the current commit; the workflow never creates or pushes tags'
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag }}
   cancel-in-progress: false
 jobs:
   checks:
@@ -13,6 +17,8 @@ jobs:
   publish:
     needs: checks
     runs-on: ubuntu-latest
+    # Protected environment: require reviewer approval and restrict secrets in repository settings.
+    environment: release
     permissions:
       contents: write
     steps:
@@ -23,7 +29,17 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
-      - run: python scripts/release_check.py --tag "$GITHUB_REF_NAME"
+      - name: Verify the tag already exists and points at this commit
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          test -n "$TAG"
+          git fetch --tags --force origin
+          test "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$GITHUB_SHA"
+      - name: Validate release metadata
+        env:
+          TAG: ${{ inputs.tag }}
+        run: python scripts/release_check.py --tag "$TAG"
       - run: python scripts/package.py
       - name: Verify source bundle
         run: |
@@ -31,6 +47,7 @@ jobs:
           python scripts/verify-source-package.py "releases/project-hub-$VERSION-source.zip"
       - name: Publish verified assets through a retryable draft
         env:
+          TAG: ${{ inputs.tag }}
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: python scripts/publish-release.py --tag "$GITHUB_REF_NAME" --sha40hex "$GITHUB_SHA" --assets-dir releases --notes CHANGELOG.md
+        run: python scripts/publish-release.py --tag "$TAG" --sha40hex "$GITHUB_SHA" --assets-dir releases --notes CHANGELOG.md
