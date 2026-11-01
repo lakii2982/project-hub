@@ -167,8 +167,10 @@ def changed_line_coverage(coverage, changed, deleted=None):
     for path, lines in changed.items():
         row = coverage['files'].get(path) or coverage['files'].get('/' + path)
         if not isinstance(row, dict):
-            # A changed product source file absent from coverage is unmeasured.
-            if path.startswith(MEASURED_PREFIXES) and '/migrations/' not in path:
+            # Only changed Python product source absent from coverage is unmeasured;
+            # templates/static/JSON are not measured by coverage.py.
+            if (path.startswith(MEASURED_PREFIXES) and path.endswith('.py')
+                    and '/migrations/' not in path):
                 _fail('changed_source_unmeasured:' + path)
             continue
         executed = set(row.get('executed_lines') or ())

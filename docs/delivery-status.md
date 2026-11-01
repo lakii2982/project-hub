@@ -97,4 +97,4 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 - PH-354 新增 11 个经全量回归发现的依赖停用测试白名单，仅允许最小顺序修正；PH-400 收口 done，登记 PH-401 下一规划槽。无产品实现或发布宣称。
 
 ## PH-121 覆盖率与发布边界（2026-11-01）
-- CI 覆盖率门槛（实测 82.09%，底线 80%）、新增行 80%、未知 skip 阻断；发布改为人工 dispatch+受保护 environment，标签只校验不创建；新增 PG 公司锁/审计链并发反例。真实 Linux CI/PG、浏览器与生产仍 not_run。
+- CI 覆盖率门槛（实测 82.09%，底线 80%）、新增行 80%、未知 skip 阻断；发布改为人工 dispatch+受保护 environment，标签只校验不创建；新增 PG 公司锁/审计链并发反例。收口修复非 .py 变更误报，质量门 28 tests OK。真实 Linux CI/PG、浏览器与生产仍 not_run。

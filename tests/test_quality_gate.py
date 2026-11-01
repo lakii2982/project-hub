@@ -129,6 +129,16 @@ class EvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(GateError, 'changed_source_unmeasured'):
             evaluate(policy, coverage(), parse_test_log(log(200)), {'core/new_module.py': {1}})
 
+    def test_changed_non_python_product_files_are_not_unmeasured(self):
+        # Templates/static/JSON are not measured by coverage.py; only .py is a source.
+        policy = validate_quality(quality())
+        result = evaluate(policy, coverage(), parse_test_log(log(200)), {
+            'pmo_plugins/insights/templates/insights/precheck.html': {1, 2, 3},
+            'pmo_plugins/insights/static/x.css': {1},
+            'project/tasks.json': {1},
+        })
+        self.assertIsNone(result['coverage_changed_lines_percent'])
+
     def test_deleted_product_source_is_rejected(self):
         policy = validate_quality(quality())
         files = {'core/gone.py': {'executed_lines': [1], 'missing_lines': []}}
