@@ -146,7 +146,11 @@ class MonthlyLaborConcurrencyTests(TransactionTestCase):
 
     def test_allocation_rereads_module_after_actual_wait(self):
         from core.plugin_runtime import set_enabled
-        self.blocked_allocation(lambda: set_enabled(self.owner, 'costing', False), PermissionDenied)
+        def stop_costing():
+            # PH-354: insights requires costing, disable it before the costing guard.
+            set_enabled(self.owner, 'insights', False)
+            set_enabled(self.owner, 'costing', False)
+        self.blocked_allocation(stop_costing, PermissionDenied)
 
     def test_allocation_rereads_period_after_actual_wait(self):
         self.blocked_allocation(lambda: Organization.objects.filter(pk=self.org.pk).update(locked_through=self.today), ValidationError)
