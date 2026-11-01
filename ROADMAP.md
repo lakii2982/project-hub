@@ -816,5 +816,5 @@ M01–M15 映射：M01 企业/账号/权限、M02 基础资料、M03 项目/交�
 
 - 按真实合并证据收口 PH-241（PR #150）与 PH-120（PR #254）；PH-121 按原契约晋级 ready。
 - **PH-354 晋级 ready**：补齐 insights bootstrap/settings/urls 与 18 个依赖停用测试白名单；先实现唯一期间预检/digest。
-- PH-353 保持 proposed 并新增 PH-354 依赖，避免在无真实预检时实现原子导入；PH-342/343 分别等 PH-353/354，PH-355 旧依赖未闭合不晋级。
-- 登记 **PH-399** ready（Issue #261）承接后续规划。另按 PR #258 真实仲裁失败登记 **PH-400** ready，修复 webhook mergeable=null 兼容。无产品实现、无 L3–L5 宣称，EXP-1 继续暂停，PH-110 设计参考继续不入库。
+- PH-353 保持 proposed 并新增 PH-354 依赖，避免在无真实预检时实现原子导入；PH-342/343 分别等 PH-353/354，PH-355 虽 PH-364 已 done，仍需与 PH-380 通知链对齐，不晋级。
+- 登记 **PH-399** proposed（Issue #261，PH-397 done 后晋级 ready）承接后续规划。另按 PR #258 真实仲裁失败登记 **PH-400** ready，修复 webhook mergeable=null 兼容。无产品实现、无 L3–L5 宣称，EXP-1 继续暂停，PH-110 设计参考继续不入库。

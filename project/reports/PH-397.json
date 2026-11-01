@@ -11,7 +11,8 @@
     "PH-353/354 specs had stale parent dependencies. PH-354 is independent of parent PH-272; PH-353 explicitly excludes PH-181/185 but requires the real PH-354 precheck, so ordering is PH-354 then PH-353.",
     "PH-354 allowed_paths is expanded only to ADR-required bootstrap and 18 existing dependency-disable regression files; business acceptance is unchanged.",
     "PH-399 remains proposed until PH-397 can be marked done; its status does not affect contract digest.",
-    "PH-400 is registered ready from actual PR #258 evidence (run 41266764258) to repair webhook mergeable=null compatibility through current-PR API metadata; the optional failed check is not hidden or treated as a required business failure."
+    "PH-400 is registered ready from actual PR #258 evidence (run 41266764258) to repair webhook mergeable=null compatibility through current-PR API metadata; the optional failed check is not hidden or treated as a required business failure.",
+    "Independent review found stale PH-397/399 digests after final spec edits. Final values were recomputed and machine-asserted for all five new grants: PH-397=67e5ca82ebe20321d33076a33bca71a4d1bc884eb223808552c799aea5638cf6, PH-399=4b7cac3480ff3a6bd33374a9c1b44f94d6da9b06a4ee921be9a0468e1eff7226; PH-353/354/400 also MATCH. PH-399 wording was corrected to proposed and PH-355 to PH-380 alignment."
   ],
   "unverified": [
     "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed by this planning slice.",
