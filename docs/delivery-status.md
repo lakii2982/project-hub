@@ -130,4 +130,9 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 
 ## PH-338 销售发票批量导入首片（2026-11-01，BASE 7bb8351）
 
-按 PH-342 冻结的唯一路径扩展导入编排：`core/imports.py` 新增 `HEADERS['invoicing']` 与 `apply_rows` 的 invoicing 分支（按 invoice_number+line_no 归组，冻结 uuid5 owner token，只经 `record_invoice`/`allocate_invoice_lines` 写发票事实，通用 `commit_rows` 拒绝绕过预览）；onboarding `preview_services` 增加发票模板精确识别与逐行/逐票预检（往来方 active/customer 唯一匹配、日期/金额/行票合计/重复票号/来源额度与往来方一致性），`import_commit_services` 增加 `invoice_date` 期间映射、kind=invoicing 行校验与 owner 异常到 issue_code 映射；invoicing 侧新增只读模板/预览/批次收据投影、history_read 页面与 ui-tokens 模板，提交仍只走 onboarding `commit_import`。未新增 canonical 实体/topic/迁移，不写收入/现金/账本/来源消费。L3/L4/L5（PG 并发、浏览器、staging/生产/UAT）not_run；独立 S 复核 pending。
+按 PH-342 冻结的唯一路径扩展导入编排：`core/imports.py` 新增 `HEADERS['invoicing']` 与 `apply_rows` 的 invoicing 分支（按 invoice_number+line_no 归组，冻结 uuid5 owner token，只经 `record_invoice`/`allocate_invoice_lines` 写发票事实，通用 `commit_rows` 拒绝绕过预览）；onboarding `preview_services` 增加发票模板精确识别与逐行/逐票预检（往来方 active/customer 唯一匹配、日期/金额/行票合计/重复票号/来源额度与往来方一致性），`import_commit_services` 增加 `invoice_date` 期间映射、kind=invoicing 行校验与 owner 异常到 issue_code 映射；invoicing 侧新增只读模板/预览/批次收据投影、history_read 页面与 ui-tokens 模板，提交仍只走 onboarding `commit_import`。未新增 canonical 实体/topic/迁移，不写收入/现金/账本/来源消费。L3/L4/L5（PG 并发、浏览器、staging/生产/UAT）not_run；独立 S 复核 pending（已完成）。
+
+## PH-339 insights 读模型实现首片（in_review，2026-11-01，BASE 7bb8351）
+
+- 新增 insights 自有模型/迁移、刷新/状态更新/项目工作台服务与差异单/工作台页面；期间预检直接复用 PH-354。差异单由预检 issue 派生，同 case_key 至多一条有效、证据变化旧单 superseded、刷新/更新 request_token 幂等；工作台经 contracts/management_revenue/costing/settlement 既有只读接口派生，缺失 null+missing、零业务写入；owner/finance/auditor 全量、pm 仅管理项目、member/跨 org 拒绝、停用 history_read、写入口仅 owner/finance。
+- 交付工作树（PH-404 已补 `migrations/__init__.py` 白名单）新测试 68 OK（43 差异单/工作台/HTTP + 25 期间预检回归）；check/makemigrations/verify_integrity 通过。差异单 `difference_cents` 为非空 canonical 整数、`snapshot_watermark` 为 canonical SourceRef 数组、case/read-model append-only 触发器已落库；较早 as_of 不可覆盖较新快照。未验证 PG/CI、浏览器 1440/390、生产/UAT、独立 S review。

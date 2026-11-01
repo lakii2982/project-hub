@@ -5,5 +5,11 @@ DOMAIN_METADATA = {
     'migration_dependencies': ['core', 'cash', 'settlement', 'costing', 'contracts'],
     'routes': [
         {'name': 'period_precheck', 'path': 'period-precheck/', 'access': 'history_read'},
+        {'name': 'reconciliation', 'path': 'reconciliation/', 'access': 'history_read'},
+        {'name': 'reconciliation_refresh', 'path': 'reconciliation-refresh/',
+         'access': 'business_write'},
+        {'name': 'reconciliation_update', 'path': 'reconciliation-update/',
+         'access': 'business_write'},
+        {'name': 'workbench', 'path': 'workbench/', 'access': 'history_read'},
     ],
 }

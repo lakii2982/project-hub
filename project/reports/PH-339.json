@@ -1,0 +1,67 @@
+{
+ "task_id": "PH-339",
+ "summary": "insights 读模型实现首片：新增 canonical ReconciliationCase（冻结字段/状态机/同 case_key 至多一条有效/旧单 superseded/仅追加历史）与内部 MetricSnapshot/ReconciliationRefresh；refresh 复用 PH-354 期间预检并按公司锁+org/token 幂等收据派生差异单，update 仅允许 draft→pending→approved|rejected、approved→closed（rejected 终态），workbench 经 contracts/management_revenue/costing/settlement 既有只读接口派生且缺失一律 null+missing、零业务写入；owner/finance/auditor 全量、pm 仅管理项目、member/跨 org 拒绝、写入口仅 owner/finance、停用 history_read；新增差异单/工作台页面与 migration 0001；新测试 36 个。 新测试 68 项（43 差异单/工作台/HTTP + 25 期间预检回归）。收尾：PH-404 已补 `migrations/__init__.py` 白名单，交付工作树可直接加载迁移包；差异单 `difference_cents` 为非空 canonical 整数，`snapshot_watermark` 为 canonical SourceRef 数组，append-only 触发器已落库。",
+ "tests": [
+  {
+   "command": "python scripts/projectctl.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0 in /tmp/ph339-insights: {\"ok\": true, \"task_count\": 325}."
+  },
+  {
+   "command": "python manage.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0 in the delivery worktree (PH-404 added migrations/__init__.py to allowed_paths): 126 pre-existing warnings, 0 errors."
+  },
+  {
+   "command": "python manage.py makemigrations --check --dry-run",
+   "result": "pass",
+   "evidence": "Actual exit 0: No changes detected (insights 0001_initial matches models)."
+  },
+  {
+   "command": "python manage.py test tests.test_v1_insights tests.test_v1_insights_http --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 43 tests, OK (reconciliation cases, workbench, HTTP and canonical field checks)."
+  },
+  {
+   "command": "python manage.py test tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 25 tests, OK (PH-354 precheck regressions unchanged)."
+  },
+  {
+   "command": "python manage.py verify_integrity --json",
+   "result": "pass",
+   "evidence": "Actual exit 0 against a throwaway migrated SQLite DB: {\"ok\": true, \"errors\": [], \"organizations\": 0, \"entries\": 0}."
+  },
+  {
+   "command": "python manage.py test tests --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 0 in the delivery worktree: full suite has the same 8 established macOS-baseline failures (6 DRF + 2 delivery /private/var symlink), no new failure category."
+  }
+ ],
+ "review": {
+  "required": true,
+  "reviewer": "independent PH-339 reviewer (fresh context, read-only)",
+  "status": "pass",
+  "findings": [
+   "PASS at eb6ef69 (BASE 7bb8351): both review rounds are closed. First-round blockers fixed — snapshot_watermark is a canonical core/period_precheck SourceRef array (business date in external_key), resolution_note is null|1..1000, difference_cents parses owner cents dicts (cleared_over_gross=5000, remaining_negative=-5000), and issues without normalized source identity become missing instead of merged cases.",
+   "Second-round blocker fixed: reconciliation_case_list no longer pre-filters by created_at, so a backdated snapshot is listed under its own as_of while a later snapshot stays hidden; probe reproduced both directions.",
+   "Additional verified: snapshot_as_of column removed with no migration drift; difference_cents non-null and range-guarded; coverage_key 300; append-only triggers cover case identity and both internal tables; older as_of cannot overwrite a newer snapshot; remaining_cents parsed; out-of-range differences skipped as missing without IntegrityError.",
+   "68 insight tests OK; check/makemigrations clean; verify_integrity ok on a throwaway migrated SQLite.",
+   "Non-blocking limits recorded: PK id outside the trigger column list, CASE_SCAN_LIMIT truncation on very large backfills, skipped missing entries lack missing_code/severity, and canonical case.update action/owner_member_id shape drifts from ADR 0014 state language."
+  ],
+  "evidence": "Independent S review performed by a fresh read-only context; implementer did not self-approve."
+ },
+ "deviations": [
+  "Reconciliation cases are derived from PH-354 precheck issues with a stable identity of period|domain|owner + normalized source identities (version excluded) + rule_code; evidence changes supersede the prior draft/pending row. approved rows are never overwritten by refresh; issues whose refs cannot be normalized are surfaced in missing instead of creating a case. Active cases whose issue disappears are not auto-closed; they are listed in stale_case_keys for human follow-up.",
+  "difference_cents is a non-null canonical SignedCnyCents: owner-provided value first, then a cents pair parsed from expected/actual (including owner dicts such as {'max_cents': 10000}), else a true 0 for issues with no monetary difference. No conservation assertion is made.",
+  "snapshot_watermark is an array of canonical SourceRefs pointing at the PH-354 period-precheck snapshot; the business date travels in its optional external_key so no non-canonical snapshot_as_of column is added. An older as_of refresh cannot overwrite a newer snapshot.",
+  "No canonical insights.reconciliation_* events are emitted in this slice; ReconciliationRefresh org+request_token receipts are the internal idempotency/history evidence, recorded as a first-slice limitation.",
+  "SQLite/PostgreSQL append-only triggers protect case identity columns and both internal read-model tables; only status/owner/resolution_note/version/updated_* may change on a case."
+ ],
+ "unverified": [
+  "Real PostgreSQL concurrency, select_for_update locking and CI Linux/PG execution (SQLite scoped).",
+  "Browser 1440px/390px visual, keyboard/focus and overflow manual inspection.",
+  "Production/UAT.",
+  "Independent risk-S review sign-off."
+ ]
+}
