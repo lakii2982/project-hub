@@ -10934,14 +10934,14 @@
       "title": "发票批量/导入后续：发票导入模板、批量登记与来源分配（按 ADR 0015/PH-252）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-252",
         "PH-274",
         "PH-320",
-        "PH-362"
+        "PH-342"
       ],
       "spec": "project/specs/PH-338.md",
       "allowed_paths": [
@@ -10955,6 +10955,9 @@
         "tests/test_v1_invoice_import_http.py",
         "project/tasks.json",
         "project/manifest.json",
+        "core/imports.py",
+        "pmo_plugins/onboarding/preview_services.py",
+        "pmo_plugins/onboarding/import_commit_services.py",
         "docs/delivery-status.md",
         "docs/verification.md",
         "project/reports/PH-338.json",
@@ -10970,9 +10973,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-181/PH-185/PH-289 仍 proposed；发票批量/导入实现未开工，保留 proposed。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -10980,14 +10981,15 @@
       "title": "insights 读模型实现首片：期间预检/核对差异单/工作台只读投影（按 ADR 0014）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
         "PH-277",
         "PH-291",
         "PH-304",
-        "PH-309"
+        "PH-309",
+        "PH-343"
       ],
       "spec": "project/specs/PH-339.md",
       "allowed_paths": [
@@ -11003,6 +11005,7 @@
         "tests/test_v1_insights_http.py",
         "project/tasks.json",
         "project/manifest.json",
+        "pmo_plugins/delivery/urls.py",
         "docs/delivery-status.md",
         "docs/verification.md",
         "project/reports/PH-339.json",
@@ -11018,9 +11021,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-272 仍 proposed（期间预检/差异单读模型未实现）；insights 验收未开工，保留 proposed。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -13327,7 +13328,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13352,8 +13353,44 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/280",
-      "owner": null,
+      "owner": "root",
       "blockers": [],
+      "handoff": "project/handoffs/PH-404.md"
+    },
+    {
+      "id": "PH-405",
+      "title": "v1.0 后续交付规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-404"
+      ],
+      "spec": "docs/engineering/agent-protocol.md",
+      "allowed_paths": [
+        "docs/engineering/agent-protocol.md",
+        "project/specs/*",
+        "docs/v1.0-development/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/delivery-policy.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-405.json",
+        "project/handoffs/PH-405.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/285",
+      "owner": null,
+      "blockers": [
+        "PH-404 done 后晋级 ready。"
+      ],
       "handoff": null
     }
   ]

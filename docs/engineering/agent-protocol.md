@@ -122,3 +122,15 @@ Dependabot提案没有Task行而被治理检查拒绝时，先评估升级必要
 5. 登记 PH-404 proposed 作为下一规划槽，承接 PH-342/343 之后的实现片、通知链与真实环境验收/发布包/UAT；PH-403 done 后置 ready（与 PH-404 blocker 同口径）。
 
 验收沿用 projectctl check、23 项治理测试、独立 S 复核和 BASE verify-change。
+
+## 13. PH-404 · v1.0 后续交付规划入口
+
+承接 PH-403 合入后的新 BASE，仅做依赖与证据再基线：
+
+1. PH-342 发票批量导入契约与 PH-343 insights 契约合入后，晋级 PH-338 发票批量导入实现与 PH-339 insights 实现；PH-338 按 PH-342 唯一路径扩展 core/imports.py 与 onboarding preview/commit。
+2. PH-338/339 完成并满足验收后，复核 PH-378/383（发票批量导入后续）与 PH-379/384（insights 后续）；通知链 PH-355 仍需与 PH-380 对齐。
+3. 按写域与依赖登记费用/应付、工资现金、通知、真实环境验收、发布包与 UAT 切片；新插件或共享接线回归必须先由规划补精确白名单，不得实现片自行扩权。
+4. 仅可按 `user-2026-10-31-complete-v1` 登记 v1.0 范围任务的 contract_digest；不得修改仲裁规则、恢复 EXP-1、发布 PH-110 或登记里程碑外任务。
+5. 登记 PH-405 proposed 作为下一规划槽，PH-404 done 后置 ready。
+
+验收沿用 projectctl check、23 项治理测试、独立 S 复核和 BASE verify-change。

@@ -116,10 +116,11 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 ## PH-403 规划推进（2026-11-01）
 - PH-353 合入后晋级 PH-342（发票批量导入契约）与 PH-343（insights 契约）ready；登记 PH-404 proposed 作为下一规划槽。仅规划，无产品实现/发布宣称。
 
-<<<<<<< HEAD
-## PH-343 insights 契约（done，2026-11-01）
-- 新增 `docs/v1.0-development/insights-read-model-contract.md`：冻结只读投影、期间预检复用、差异单/项目工作台、as_of/period、missing/null、权限与内部读模型边界；docs-only，无产品代码/迁移，PH-339 仍 proposed。
-=======
 ## PH-342 发票批量导入契约（done，2026-11-01）
 - 新增 `docs/v1.0-development/invoice-import-contract.md`：冻结批量模板/字段映射、逐行校验与 issue_code、全批原子/幂等/公司锁/期间、权限与 PH-252/274/353/320 复用边界；docs-only，无产品代码/迁移，PH-338 仍 proposed。
->>>>>>> 4b1b575 (docs(PH-342): freeze invoice batch import contract)
+
+## PH-343 insights 契约（done，2026-11-01）
+- 新增 `docs/v1.0-development/insights-read-model-contract.md`：冻结只读投影、期间预检复用、差异单/项目工作台、as_of/period、missing/null、权限与内部读模型边界；docs-only，无产品代码/迁移，PH-339 仍 proposed。
+
+## PH-404 规划推进（2026-11-01）
+- PH-342/343 契约合入后晋级 PH-338 发票批量导入实现与 PH-339 insights 实现；PH-338 白名单按 PH-342 唯一路径扩展 core/imports.py 与 onboarding preview/commit；登记 PH-405 proposed。仅规划，无产品实现/发布宣称。
