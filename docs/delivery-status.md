@@ -80,3 +80,6 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 - PH-388 多币种汇率反查/对账：新增精确日期历史反查、fx ref 业务日校验、合同/结算/发票原币↔记账币对账（发票 CNY-only 显式 missing）；复用现有 FX 页面/路由，无 core 迁移；scoped 10 tests OK，L3 CI/PG、L4 浏览器、L5 生产 not_run。
 ## PH-396 v1.0 遗留对账（2026-10-31，BASE 7748ea1）
 - 对账表/交付清单/发布阻塞/收尾动作见 `docs/v1.0-development/closure-reconciliation.md`；release_ready=false（L3/L4/L5、三方签批未完成）。
+
+## PH-398 测试跨日恢复（2026-11-01）
+- 仅将服务期并发测试完整月份夹具改为已结束自然月，保留业务未来日期拒绝和全部并发断言；scoped 34 tests OK，PG/全量 CI 与独立复核待完成。

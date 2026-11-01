@@ -1,6 +1,6 @@
 """PH-222 service-period confirmations to month-owned management revenue."""
 import uuid
-from datetime import date
+from datetime import date, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
@@ -36,6 +36,11 @@ class ServiceRevenueFixture(Fixture):
         self.line = None
 
     # ---------- contract approval ----------
+    def completed_month(self):
+        """Return a closed calendar month so confirmation dates never depend on day 28+."""
+        last_day = self.today.replace(day=1) - timedelta(days=1)
+        return last_day.replace(day=1), last_day
+
     def approved_service_line(self, *, net=101, start=None, end=None, period_unit='calendar_day',
             partial_rule='calendar_days', schedule=None):
         start = start or date(2026, 1, 1)
@@ -121,6 +126,13 @@ class ServiceRevenueFixture(Fixture):
 
 
 class ServiceConfirmationMonthTests(ServiceRevenueFixture, TestCase):
+    def test_completed_month_fixture_never_enters_current_month(self):
+        start, end = self.completed_month()
+        self.assertEqual(start.day, 1)
+        self.assertLessEqual(end, self.today)
+        self.assertLess(end, self.today.replace(day=1))
+        self.assertEqual(start.year * 12 + start.month, end.year * 12 + end.month)
+
     def test_draft_derives_months_without_persisting_and_dry_run_has_no_side_effect(self):
         self.approved_service_line(net=101, start=date(2026, 1, 31), end=date(2026, 2, 2))
         before = self.facts()

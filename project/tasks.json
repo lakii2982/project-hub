@@ -13092,7 +13092,7 @@
       "title": "修复服务期收入并发测试跨日墙钟依赖",
       "kind": "fix",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [],
@@ -13118,9 +13118,9 @@
         "python manage.py verify_integrity --json"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/256",
-      "owner": null,
+      "owner": "root",
       "blockers": [],
-      "handoff": null
+      "handoff": "project/handoffs/PH-398.md"
     }
   ]
 }
