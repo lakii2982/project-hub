@@ -13124,7 +13124,7 @@
       "title": "修复服务期收入并发测试跨日墙钟依赖",
       "kind": "fix",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [],

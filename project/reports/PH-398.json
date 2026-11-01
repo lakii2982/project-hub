@@ -7,7 +7,8 @@
     {"command": "python manage.py makemigrations --check --dry-run", "result": "pass", "evidence": "Actual exit 0: No changes detected."},
     {"command": "python manage.py test tests.test_service_period_revenue tests.test_service_period_revenue_concurrency --verbosity 1", "result": "pass", "evidence": "Actual exit 0: Ran 34 tests in 2.124s, OK (skipped=8 = PostgreSQL-only on SQLite). New completed_month boundary test passes; PG races remain for CI, not claimed locally."},
     {"command": "python manage.py test tests --verbosity 1", "result": "pass", "evidence": "Actual run: Ran 1321 tests in 157.619s; 5 failures + 3 errors + 70 environment skips. All eight failure/error names match the established main macOS baseline (6 DRF Accept/codec/large-JSON and 2 delivery /private/var symlink cases); no new failure. Linux/PG CI is authoritative and separately required."},
-    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual fresh SQLite /tmp/ph398-verify.sqlite3 after migrate completed exit 0; JSON integrity result is ok with no errors."}
+    {"command": "python manage.py verify_integrity --json", "result": "pass", "evidence": "Actual fresh SQLite /tmp/ph398-verify.sqlite3 after migrate completed exit 0; JSON integrity result is ok with no errors."},
+    {"command": "gh pr checks 257", "result": "pass", "evidence": "Final HEAD 4e0f3c7 / run 41262599178: all 11 business/security checks passed, including PostgreSQL domain, SQLite domain, Container smoke, MCP, Public hygiene and CodeQL. The only failure was Project governance=task_not_in_baseline because main b26c26f predated PH-398. Maintainer explicitly authorized the one-time recovery exception; merge commit 032fdeb."}
   ],
   "review": {"required": true, "reviewer": "independent PH-398 recovery reviewer (fresh Sonnet context, read-only)", "status": "pass", "findings": [
     "PASS at 85bbe69; full-suite evidence added at 84e375d without changing test logic. All six CI failures map to the five changed fixture entries; amount/concurrency/period assertions are unchanged.",
@@ -17,10 +18,10 @@
   "deviations": [
     "The authorized one-time main planning commit 2b7e08e was rejected by GitHub protected-branch rules and never changed origin/main. The same contract is preserved on this normal PR branch; BASE task_not_in_baseline is expected until maintainer recovery and is not marked as passed.",
     "Only test fixtures changed. The previous-month helper returns the actual last day of the preceding month rather than hardcoding day 28, so coverage and confirmed_on are never in the future at month boundaries.",
-    "Local SQLite cannot execute the eight PostgreSQL-only race tests; real PG CI is mandatory and separately reported."
+    "Local SQLite cannot execute the eight PostgreSQL-only race tests; real PG CI is mandatory and separately reported.",
+    "Recovery merge: admin merge attempts were rejected by GitHub. With explicit maintainer authorization, Project governance alone was temporarily removed from required checks for PR #257, then restored immediately after merge. Post-merge API verification confirmed all original eight checks (app 15368), strict=true, enforce_admins=true, linear history and conversation resolution. No business/security check was bypassed or failing at merge."
   ],
   "unverified": [
-    "PostgreSQL multi-connection and final PR CI are not yet passed at this report revision.",
     "No production deployment, browser or customer UAT was performed by this test-only recovery."
   ]
 }
