@@ -1,0 +1,29 @@
+{
+ "task_id": "PH-343",
+ "summary": "insights 读模型实现前置契约冻结（docs-only）：新增 insights-read-model-contract.md，冻结只读投影/期间预检复用/差异单与项目工作台字段/as_of-period/missing-null/权限与内部读模型边界；不实现、不建表/迁移/路由。",
+ "tests": [
+  {
+   "command": "python scripts/projectctl.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0: ok=true, task_count=324."
+  },
+  {
+   "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 23 tests in 2.314s, OK."
+  }
+ ],
+ "review": {
+  "required": true,
+  "reviewer": null,
+  "status": "pending",
+  "findings": []
+ },
+ "deviations": [
+  "Docs-only; PH-339 remains proposed and must re-check the actual BASE before implementation."
+ ],
+ "unverified": [
+  "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed.",
+  "Independent S review and final verify-change are pending."
+ ]
+}
