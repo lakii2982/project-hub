@@ -19,7 +19,7 @@
 
 ### 1.2 任务 ready
 
-任务达到第 2 节 Definition of Ready 才允许排入实现。任务契约以仓库 `project/tasks.json` 版本为准（见 agent-protocol.md 第 3 节）；GitHub Issue 只是讨论镜像，不构成 ready 依据。
+任务达到第 2 节 Definition of Ready 才允许排入实现。新任务只登记入口见 agent-protocol 第9节；只登记PR不含实现，合入后才能按ready契约开发。任务契约以仓库 `project/tasks.json` 版本为准（见 agent-protocol.md 第 3 节）；GitHub Issue 只是讨论镜像，不构成 ready 依据。
 
 ### 1.3 实现
 

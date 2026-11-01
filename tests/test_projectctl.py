@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import os
 import subprocess
 import sys
 import tempfile
@@ -741,6 +743,122 @@ class ProjectCtlTests(unittest.TestCase):
         errors = {error["code"] for error in projectctl._validate_report(report, "PH-001", "A")}
         self.assertIn("tests_failed", errors)
         self.assertNotIn("test_exit_code_mismatch", errors)
+
+    def registration_fixture(self, risk="S"):
+        manifest = make_manifest()
+        manifest["repository_url"] = "https://github.com/example/project-hub"
+        self.write_fixture([make_task("PH-001")], manifest=manifest)
+        self.write_json("project/delivery-policy.json", {"checks": ["required"], "s_authorization": {"tasks": []}})
+        base = self.init_repository()
+        task = make_task("PH-002", risk=risk, github_issue="https://github.com/example/project-hub/issues/2",
+                         handoff="project/handoffs/PH-002.md")
+        spec = "# New task\nOne bounded user outcome.\n"
+        self.write(task["spec"], spec)
+        self.write(task["handoff"], "# Registration only; no implementation.\n")
+        data = json.loads((self.root / "project/tasks.json").read_text())
+        data["tasks"].append(task)
+        self.write_json("project/tasks.json", data)
+        report = make_report("PH-002", registration_only=True, authorization_source="user-test")
+        report["review"] = dict(required=True, reviewer="independent", status="pass", findings=[])
+        report["tests"].extend(dict(command=command, result="pass", evidence="fixture") for command in
+                               ["python scripts/projectctl.py check", "python -m unittest tests.test_projectctl tests.test_governance -v"])
+        for entry in report["tests"]:
+            entry["exit_code"] = 0
+        self.write_json("project/reports/PH-002.json", report)
+        if risk == "S":
+            fields = ("id", "title", "kind", "risk", "depends_on", "spec", "allowed_paths", "acceptance", "github_issue")
+            digest = hashlib.sha256(json.dumps({"task": {key: task[key] for key in fields}, "spec": spec},
+                                              sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()).hexdigest()
+            self.write_json("project/delivery-policy.json", {"checks": ["required"], "s_authorization": {"tasks": [
+                dict(task_id="PH-002", contract_digest=digest, source="user-test")]}})
+        return base
+
+    def test_registration_has_a_bounded_path_then_normal_implementation(self):
+        base = self.registration_fixture()
+        registered = self.commit("register new task")
+        code, payload, _ = self.run_cli("verify-change", "--base", base, "--task", "PH-002")
+        self.assertEqual(code, 0, payload)
+        self.assertTrue(payload["registration_only"])
+        self.assertFalse(payload["implementation_allowed"])
+        self.write("safe.txt", "implementation\n")
+        self.commit("try using registration report as implementation")
+        code, payload, _ = self.run_cli("verify-change", "--base", registered, "--task", "PH-002")
+        self.assertEqual(code, 1, payload)
+        self.assertIn("registration_report_not_implementation", self.error_codes(payload))
+        report = json.loads((self.root / "project/reports/PH-002.json").read_text())
+        report.pop("registration_only")
+        self.write_json("project/reports/PH-002.json", report)
+        self.commit("actual implementation acceptance")
+        code, payload, _ = self.run_cli("verify-change", "--base", registered, "--task", "PH-002")
+        self.assertEqual(code, 0, payload)
+        self.assertNotIn("registration_only", payload)
+
+    def test_registration_lower_risk_still_requires_independent_s_review(self):
+        base = self.registration_fixture(risk="A")
+        self.commit("register A task with S review")
+        code, payload, _ = self.run_cli("verify-change", "--base", base, "--task", "PH-002")
+        self.assertEqual(code, 0, payload)
+        report = json.loads((self.root / "project/reports/PH-002.json").read_text())
+        report["review"] = dict(required=False, reviewer=None, status="not_required", findings=[])
+        self.write_json("project/reports/PH-002.json", report)
+        self.commit("remove independent review")
+        self.assertEqual(self.run_cli("verify-change", "--base", base, "--task", "PH-002")[0], 1)
+
+    def test_registration_rejects_existing_contract_changes_and_implementation(self):
+        for mutation in ["old_task", "product", "checker", "workflow", "manifest", "second_task", "metadata", "not_ready", "issue", "unmet_dep"]:
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                previous = self.root
+                self.root = Path(directory)
+                try:
+                    base = self.registration_fixture()
+                    data = json.loads((self.root / "project/tasks.json").read_text())
+                    if mutation == "old_task": data["tasks"][0]["title"] = "changed"
+                    elif mutation == "second_task": data["tasks"].append(make_task("PH-003"))
+                    elif mutation == "metadata": data["untrusted"] = True
+                    elif mutation == "not_ready": data["tasks"][-1]["status"] = "proposed"
+                    elif mutation == "issue": data["tasks"][-1]["github_issue"] = None
+                    elif mutation == "unmet_dep": data["tasks"][-1]["depends_on"] = ["PH-001"]
+                    elif mutation == "product": self.write("core/example.py", "value = 1\n")
+                    elif mutation == "checker": self.write("scripts/projectctl.py", "# bypass\n")
+                    elif mutation == "workflow": self.write(".github/workflows/test.yml", "# bypass\n")
+                    elif mutation == "manifest": self.write_json("project/manifest.json", make_manifest())
+                    self.write_json("project/tasks.json", data)
+                    self.commit("malicious registration")
+                    self.assertEqual(self.run_cli("verify-change", "--base", base, "--task", "PH-002")[0], 1)
+                finally:
+                    self.root = previous
+
+    def test_registration_rejects_policy_mutations_wrong_digest_and_binary_files(self):
+        for mutation in ["policy", "digest", "source", "spec_binary", "symlink", "executable", "missing_checks", "missing_exit"]:
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                previous = self.root
+                self.root = Path(directory)
+                try:
+                    base = self.registration_fixture()
+                    policy_path = self.root / "project/delivery-policy.json"
+                    policy = json.loads(policy_path.read_text())
+                    if mutation == "policy": policy["checks"] = []
+                    elif mutation == "digest": policy["s_authorization"]["tasks"][-1]["contract_digest"] = "0" * 64
+                    elif mutation == "source": policy["s_authorization"]["tasks"][-1]["source"] = "different"
+                    elif mutation == "spec_binary": (self.root / "project/specs/PH-002.md").write_bytes(b"\xff\x00")
+                    elif mutation == "symlink":
+                        path = self.root / "project/specs/PH-002.md"
+                        path.unlink()
+                        path.symlink_to("PH-001.md")
+                    elif mutation == "executable": os.chmod(self.root / "project/specs/PH-002.md", 0o755)
+                    elif mutation == "missing_exit":
+                        report = json.loads((self.root / "project/reports/PH-002.json").read_text())
+                        report["tests"][0].pop("exit_code")
+                        self.write_json("project/reports/PH-002.json", report)
+                    elif mutation == "missing_checks":
+                        report = json.loads((self.root / "project/reports/PH-002.json").read_text())
+                        report["tests"] = report["tests"][:1]
+                        self.write_json("project/reports/PH-002.json", report)
+                    self.write_json("project/delivery-policy.json", policy)
+                    self.commit("invalid registration evidence")
+                    self.assertEqual(self.run_cli("verify-change", "--base", base, "--task", "PH-002")[0], 1)
+                finally:
+                    self.root = previous
 
 if __name__ == "__main__":
     unittest.main()

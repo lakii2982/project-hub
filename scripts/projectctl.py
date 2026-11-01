@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import hashlib
 import json
 import os
 import re
@@ -1185,6 +1186,100 @@ def _validate_report(
     return issues
 
 
+def _verify_registration(root: Path, base: str, head: str, task_id: str,
+                         baseline: dict[str, Any]) -> dict[str, Any]:
+    """A BASE-owned registration path; never authorizes implementation in this PR."""
+    def reject(message: str) -> None:
+        raise CliError("registration_rejected", message)
+
+    def canonical(value: Any) -> str:
+        return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+
+    candidate = _git_json(root, head, TASKS_PATH)
+    tasks, errors = _validate_tasks_data(candidate, None, check_files=False)
+    if errors:
+        reject("new task contract is invalid")
+    old_tasks = baseline["tasks"]
+    if len(tasks) != len(old_tasks) + 1 or canonical(tasks[:-1]) != canonical(old_tasks):
+        reject("registration may only append one task; existing tasks must remain identical")
+    remaining = dict(candidate)
+    remaining["tasks"] = old_tasks
+    if canonical(remaining) != canonical(baseline):
+        reject("task document metadata must remain identical")
+    task = tasks[-1]
+    if task["id"] != task_id or task["status"] != "ready" or task["owner"] is not None:
+        reject("new primary task must be ready and unclaimed; dependencies must be done")
+    spec_path = f"project/specs/{task_id}.md"
+    report_path = f"project/reports/{task_id}.json"
+    handoff_path = f"project/handoffs/{task_id}.md"
+    if task["spec"] != spec_path or task["handoff"] != handoff_path:
+        reject("registration requires new task-specific spec and handoff paths")
+    manifest = _git_json(root, base, MANIFEST_PATH)
+    repository = manifest.get("repository_url", "").removesuffix(".git").rstrip("/")
+    if (not repository.startswith("https://github.com/")
+            or not re.fullmatch(re.escape(repository) + r"/issues/[1-9][0-9]*",
+                                task.get("github_issue") or "")):
+        reject("new task requires a real issue URL in the BASE repository")
+    required = {TASKS_PATH, spec_path, report_path, handoff_path}
+    policy_path = "project/delivery-policy.json"
+    if task["risk"] == "S":
+        required.add(policy_path)
+    changes = _parse_name_status_z(_run_git(root, ["diff", "--no-ext-diff", "--no-textconv",
+                  "--name-status", "-z", "--find-renames=50%", f"{base}...{head}", "--"]))
+    if {change["path"] for change in changes} != required:
+        reject("registration may only change task metadata and its new spec/report/handoff/grant")
+    for change in changes:
+        path = str(change["path"])
+        expected_kind = "M" if path in {TASKS_PATH, policy_path} else "A"
+        if change["kind"] != expected_kind or change["old_path"] is not None:
+            reject("registration forbids overwrites of existing specs, renames and deletions")
+        tree = _run_git(root, ["ls-tree", head, "--", path]).decode("utf-8")
+        if not tree.startswith("100644 blob "):
+            reject("registration files must be regular non-executable files")
+    spec = _run_git(root, ["show", f"{head}:{spec_path}"]).decode("utf-8")
+    if not spec.strip():
+        reject("new spec cannot be empty")
+    report = _git_json(root, head, report_path)
+    report_errors = _validate_report(report, task_id, "S")
+    if report_errors:
+        reject("registration requires passing common checks and independent S review")
+    if report.get("registration_only") is not True:
+        reject("report must explicitly identify registration_only, not implementation")
+    source = report.get("authorization_source")
+    if not isinstance(source, str) or not re.fullmatch(r"user-[A-Za-z0-9._:/-]{1,195}", source):
+        reject("report must identify the explicit user authorization source")
+    common = {"python scripts/projectctl.py check",
+              "python -m unittest tests.test_projectctl tests.test_governance -v"}
+    passed = {entry["command"] for entry in report["tests"] if entry["result"] == "pass"}
+    if not common.issubset(passed):
+        reject("registration common governance acceptance has not passed")
+    if any(entry.get("result") == "pass" and (type(entry.get("exit_code")) is not int or entry["exit_code"] != 0)
+           for entry in report["tests"]):
+        reject("new registration passing evidence requires explicit integer exit_code 0")
+    if task["risk"] == "S":
+        old_policy = _git_json(root, base, policy_path)
+        new_policy = _git_json(root, head, policy_path)
+        old_grants = old_policy.get("s_authorization", {}).get("tasks", [])
+        new_grants = new_policy.get("s_authorization", {}).get("tasks", [])
+        fields = ("id", "title", "kind", "risk", "depends_on", "spec",
+                  "allowed_paths", "acceptance", "github_issue")
+        digest = hashlib.sha256(canonical({"task": {key: task[key] for key in fields},
+                                           "spec": spec}).encode("utf-8")).hexdigest()
+        grant = {"task_id": task_id, "contract_digest": digest, "source": source}
+        if canonical(new_grants) != canonical(old_grants + [grant]):
+            reject("only the new task's exact S authorization grant may be appended")
+        # Compare every existing policy value, including JSON types, unchanged.
+        expected = json.loads(canonical(old_policy))
+        expected["s_authorization"]["tasks"].append(grant)
+        if canonical(new_policy) != canonical(expected):
+            reject("registration cannot change policy requirements or existing authorizations")
+    return {"base": base, "head": head, "registration_only": True,
+            "implementation_allowed": False, "task": {"id": task_id, "risk": "S"},
+            "report_path": report_path, "changes": changes,
+            "next_step": "Merge registration with required CI, then implement against the new ready BASE contract.",
+            "authorization_boundary": "Source and review declarations do not prove user intent or reviewer identity; retain actual independent review and required CI."}
+
+
 def command_verify_change(root: Path, base: str, task_id: str) -> dict[str, Any]:
     if not root.is_dir():
         raise CliError("root_not_found", "root is not a directory", path=str(root))
@@ -1208,11 +1303,8 @@ def command_verify_change(root: Path, base: str, task_id: str) -> dict[str, Any]
         )
     baseline_matches = [task for task in baseline_tasks if task.get("id") == task_id]
     if not baseline_matches:
-        raise CliError(
-            "task_not_in_baseline",
-            f"task {task_id} does not exist in BASE {base_commit}",
-            path=TASKS_PATH,
-        )
+        return _verify_registration(root, base_commit, head_commit, task_id,
+                                    baseline_tasks_document)
     baseline_task = baseline_matches[0]
     if baseline_task.get("status") not in {"ready", "in_progress", "in_review"}:
         raise CliError("task_not_executable", "BASE task must be ready, in_progress or in_review", path=TASKS_PATH)
@@ -1290,6 +1382,8 @@ def command_verify_change(root: Path, base: str, task_id: str) -> dict[str, Any]
     report_path = f"project/reports/{task_id}.json"
     report = _git_json(root, head_commit, report_path)
     issues.extend(_validate_report(report, task_id, risk))
+    if isinstance(report, dict) and report.get("registration_only") is True:
+        issues.append(issue("registration_report_not_implementation", "registration evidence cannot satisfy implementation acceptance", report_path))
     if isinstance(report, dict):
         passed_commands = {entry.get("command") for entry in report.get("tests", []) if isinstance(entry, dict) and entry.get("result") == "pass" and isinstance(entry.get("command"), str)}
         for command in baseline_task.get("acceptance", []):
