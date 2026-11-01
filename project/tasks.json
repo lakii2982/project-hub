@@ -11106,7 +11106,7 @@
       "title": "发票批量/导入实现前置契约冻结（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11141,7 +11141,7 @@
       "title": "insights 读模型实现前置契约冻结（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13291,7 +13291,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13327,7 +13327,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13353,9 +13353,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/280",
       "owner": null,
-      "blockers": [
-        "PH-403 done 后晋级 ready。"
-      ],
+      "blockers": [],
       "handoff": null
     }
   ]
