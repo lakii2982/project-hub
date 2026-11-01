@@ -30,7 +30,7 @@
   {
    "command": "python manage.py test tests --verbosity 1",
    "result": "pass",
-   "evidence": "Actual run after PH-399 whitelist: Ran 1356 tests in 177.270s; 5 failures + 3 errors + 70 skips, all eight names matching the established macOS baseline (6 DRF Accept/codec/large-JSON + 2 delivery /private/var symlink). No new failure. Linux/PG CI remains authoritative."
+   "evidence": "Actual final run: Ran 1360 tests in 173.736s; 5 failures + 3 errors + 70 skips, all eight names matching the established macOS baseline (6 DRF Accept/codec/large-JSON + 2 delivery /private/var symlink). No new failure. Linux/PG CI remains authoritative."
   },
   {
    "command": "python manage.py verify_integrity --json",
@@ -40,16 +40,21 @@
  ],
  "review": {
   "required": true,
-  "reviewer": "pending（本片不自我复核；待独立 reviewer）",
-  "status": "pending",
-  "findings": [],
-  "evidence": "review pending：未执行独立审阅。"
+  "reviewer": "independent PH-354 insights reviewer (fresh context, read-only)",
+  "status": "pass",
+  "findings": [
+    "First review found 3 blockers (project scope not propagated, cross-month period silently mixed, duplicate offset missing); all fixed at ef2a3c3.",
+    "Final review found one residual: owner/finance/auditor project scope still saw company cash issues; fixed at b82e0e1 with explicit cash_bridge_unavailable for all roles and a per-role regression test.",
+    "FINAL PASS at b82e0e1 with 3 non-blocking documentation/test-strength items; those were then corrected (25-test counts, posting_period limitation in report, stronger project-isolation assertion on OpenItem ids)."
+  ],
+  "evidence": "Independent final PASS after b82e0e1; scoped 25 tests OK, projectctl check ok/322, full suite 1360 tests with only the established eight macOS baseline failures."
  },
  "deviations": [
   "白名单外 11 个既有测试文件受新插件 default_enabled 依赖影响而失败；已由 PH-399 独立规划 PR 补入精确写域后，本片以同一最小停用顺序修正，全量回到既有 macOS 基线。",
   "独立复核首轮 3 项阻断已修复：(1) project scope 现在对 revenue 传 project_id、对无项目归属的 cash/costing/contracts 显式 missing，不再混入其他项目；(2) period 必须与 as_of 同月，跨月直接拒绝，不静默返回跨期结果；(3) offset_not_implemented 只由 settlement 触发并按 (missing_code, domain, source_ref) 去重。另补充顶层 truncated 标志、contracts refs 排序。",
   "severity 映射按 contract §5 冻结口径执行：cleared_over_gross/settled_exceeds_recognized/duplicate_recognition/cost_*_duplicate 等归为 blocker，未分类现金/offset 未实现/period_precheck_missing 等为 warning；future_as_of 按 §6.1 记 warning（§5 将『未来日期』列入 blocker 的两处口径以该 code 定义条款为准，已在 handoff 披露待 reviewer 仲裁）。",
-  "checks 的 expected/actual/difference_cents 与 envelope differences 不复制 owner 差额规则，一律 null；金额口径唯一来源为 owner 服务及其 issue 的 expected/actual 透传。",
+  "本片期间口径仅支持 as_of 当月（跨月直接拒绝），尚未逐事实比对 posting_period；purpose 固定为 period_close。PH-353 消费时不得假定 §6.5 跨期判定已完成。",
+  "checks 的 expected/actual/difference_cents 恒 null、differences 恒空：本片只透传 owner issue 的 expected/actual；PH-353 不得据此做差额守恒断言，差额口径仍以 owner 服务为准。",
   "pm 项目摘要不含 cash 域（owner cash 服务拒绝 pm），按 missing（cash_bridge_unavailable，warning）呈现，不按 0 处理。",
   "契约 §5 的 missing_code 枚举无 settlement/contracts 专属项；本片以 settlement_coverage_unavailable/contracts_overview_unavailable 显式扩展，语义仍为『上游只读服务不可读』且不按 0，契约文字待 PH-401 规划补记。"
  ],

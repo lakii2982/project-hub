@@ -174,15 +174,16 @@ class PeriodPrecheckServiceTests(OpsOverviewFixture, TestCase):
         from core.models import ProjectMember
         ProjectMember.objects.create(project=other, member=self.pm)
         ProjectMember.objects.create(project=foreign, member=self.pm)
-        self.settlement_with_item(amount=50000, project=other)
+        other_settlement = self.settlement_with_item(amount=50000, project=other)
         foreign_settlement = self.settlement_with_item(amount=50000, project=foreign)
-        self.recognition(amount=60000, line=self.approved_line)
         data = self.snapshot(self.pm, scope='project', project_id=self.project.pk)
         self.assertEqual(data['scope']['project_id'], str(self.project.pk))
-        other_ids = {str(other.pk), str(foreign.pk)}
+        # 其他项目的 OpenItem 不得出现在 pm 的项目1快照中。
+        leaked = {str(other_settlement.items.get().pk),
+                  str(foreign_settlement.items.get().pk)}
         for issue in data['issues']:
             for ref in issue['source_refs']:
-                self.assertNotIn(str(ref['id']), other_ids)
+                self.assertNotIn(str(ref['id']), leaked)
         self.assertFalse(any(row['missing_code'] == 'revenue_pairing_unavailable'
                              and row['domain'] == 'contracts' for row in data['missing']))
 
