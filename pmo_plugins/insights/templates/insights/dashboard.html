@@ -1,0 +1,95 @@
+{% extends 'base.html' %}{% block title %}洞察与核对{% endblock %}{% block breadcrumb %}洞察与核对{% endblock %}{% block content %}
+<style>
+.insights{min-width:0;color:var(--color-text);font-size:var(--font-size-sm)}.insights h1,.insights h2,.insights h3,.insights td,.insights dd{overflow-wrap:anywhere}.insights .tabs{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-block:var(--space-4)}.insights .tabs a{padding:var(--space-2) var(--space-4);border:var(--border-default);border-radius:var(--radius-sm);text-decoration:none;color:var(--color-text)}.insights .tabs a[aria-current="page"]{border-color:var(--color-accent);font-weight:600}.insights .panel{margin-block:var(--space-6);border:var(--border-default);background:var(--color-surface);border-radius:var(--radius-md)}.insights .panel-heading{padding:var(--space-4) var(--space-6);border-block-end:var(--border-default)}.insights .body{padding:var(--space-6)}.insights .filter{display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:end}.insights .form-field{margin:0}.insights input,.insights select,.insights textarea{max-width:100%;min-height:var(--control-height);font:inherit}.insights .button{white-space:normal}.insights .amount{font-variant-numeric:tabular-nums;text-align:right}.insights .trace{overflow-wrap:anywhere}.insights :focus-visible{outline:var(--focus-ring);outline-offset:var(--focus-ring-offset)}.insights .table-scroll{max-width:100%;overflow:auto}.insights .muted{color:var(--color-text-secondary)}.insights .badge{display:inline-block;padding:0 var(--space-2);border-radius:var(--radius-sm);border:var(--border-default)}.insights .badge.draft,.insights .badge.pending{color:var(--color-warning)}.insights .badge.approved{color:var(--color-success)}.insights .badge.rejected,.insights .badge.blocker{color:var(--color-danger)}.insights .badge.superseded,.insights .badge.closed{color:var(--color-text-secondary)}.insights .missing{color:var(--color-danger)}.insights .digest{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.insights table{width:100%;border-collapse:collapse}.insights th,.insights td{padding:var(--space-2);border-block-end:var(--border-default);text-align:left;vertical-align:top}.insights .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-4)}.insights .card{border:var(--border-default);border-radius:var(--radius-md);padding:var(--space-4);background:var(--color-surface)}.insights .card dt{color:var(--color-text-secondary)}.insights .card dd{margin:var(--space-1) 0 0;font-size:var(--font-size-lg);font-variant-numeric:tabular-nums}.insights .inline-form{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:end}.insights .inline-form .form-field{min-width:9rem}.insights ul{padding-inline-start:var(--space-5)}@media(max-width:640px){.insights .body{padding:var(--space-4)}.insights table,.insights tbody,.insights tr,.insights td{display:block;width:100%}.insights thead{display:none}.insights td{white-space:normal;text-align:left}.insights td:before{content:attr(data-label);display:block;color:var(--color-text-secondary)}.insights .filter,.insights .inline-form{flex-direction:column;align-items:stretch}.insights input,.insights select,.insights button,.insights textarea{min-height:var(--touch-target)}}
+</style>
+<div class="insights">
+<section class="page-header"><div><h1 tabindex="-1">洞察与核对</h1><p>只读派生期间预检、核对差异单与项目工作台。差异单只记录与跟踪，不自动更正；缺失一律显示为缺失，不按 0 冒充。</p></div></section>
+<nav class="tabs" aria-label="洞察子页">
+<a href="{{ precheck_url }}"{% if mode == 'precheck' %} aria-current="page"{% endif %}>期间预检</a>
+<a href="{{ reconciliation_url }}"{% if mode == 'reconciliation' %} aria-current="page"{% endif %}>核对差异单</a>
+<a href="{{ workbench_url }}"{% if mode == 'workbench' %} aria-current="page"{% endif %}>项目工作台</a>
+</nav>
+{% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+{% if mode == 'precheck' %}
+<section class="panel"><div class="body"><p class="muted">期间预检复用 PH-354 页面：<a href="{{ precheck_url }}">打开期间预检</a>。</p></div></section>
+{% endif %}
+{% if mode == 'reconciliation' %}
+<section class="panel"><div class="panel-heading"><h2>筛选差异单</h2></div><div class="body">
+<form class="filter" method="get" action="{{ page_url }}" aria-label="筛选核对差异单">
+<div class="form-field"><label for="{{ form.period.id_for_label }}">期间</label>{{ form.period }}</div>
+<div class="form-field"><label for="{{ form.status.id_for_label }}">状态</label>{{ form.status }}</div>
+<div class="form-field"><label for="{{ form.owner.id_for_label }}">责任人成员 ID</label>{{ form.owner }}</div>
+<div class="form-field"><label for="{{ form.project.id_for_label }}">项目 ID</label>{{ form.project }}</div>
+<div class="form-field"><label for="{{ form.as_of.id_for_label }}">基准日</label>{{ form.as_of }}</div>
+<div class="actions"><button type="submit" class="button primary">查看</button><a class="button subtle" href="{{ reconciliation_url }}">重置</a></div>
+</form></div></section>
+{% if can_write %}
+<section class="panel"><div class="panel-heading"><h2>刷新差异单</h2></div><div class="body">
+<p class="muted">按 PH-354 期间预检只读派生；默认预演，不写任何数据。确认后仅追加 insights 内部差异单与刷新收据。</p>
+<form class="filter" method="post" action="{{ refresh_url }}" aria-label="刷新核对差异单">{% csrf_token %}
+{{ refresh_form.request_token }}
+<div class="form-field"><label for="{{ refresh_form.period.id_for_label }}">期间（YYYY-MM）</label>{{ refresh_form.period }}</div>
+<div class="form-field"><label for="{{ refresh_form.as_of.id_for_label }}">基准日</label>{{ refresh_form.as_of }}</div>
+<div class="form-field"><label for="{{ refresh_form.confirm.id_for_label }}">{{ refresh_form.confirm }} 确认写入</label></div>
+<div class="actions"><button type="submit" class="button primary">刷新</button></div>
+</form></div></section>
+{% endif %}
+{% if preview %}{% if preview.created %}
+<section class="panel"><div class="panel-heading"><h2>刷新结果{% if preview.dry_run %}（预演，未写入）{% endif %}</h2></div><div class="body">
+<p>期间 {{ preview.period }} · 截至 {{ preview.as_of }} · 新建 {{ preview.created|length }} · 替代 {{ preview.superseded|length }} · 不变 {{ preview.unchanged|length }} · 已确认保留 {{ preview.approved_kept|length }}。</p>
+<div class="table-scroll"><table aria-label="预演的差异单"><thead><tr><th>规则</th><th>状态</th><th class="amount">差额（分）</th><th>来源</th></tr></thead><tbody>{% for item in preview.created %}<tr><td data-label="规则">{{ item.rule_code }}</td><td data-label="状态">{{ item.status }}</td><td data-label="差额" class="amount">{% if item.difference_cents is None %}<span class="missing">缺失</span>{% else %}{{ item.difference_cents }}{% endif %}</td><td data-label="来源">{% for ref in item.source_refs %}<div class="trace">{{ ref.namespace }} · {{ ref.kind }} · {{ ref.id }}</div>{% empty %}<span class="muted">无来源引用</span>{% endfor %}</td></tr>{% endfor %}</tbody></table></div>
+</div></section>
+{% elif preview.case_key %}
+<section class="panel"><div class="panel-heading"><h2>状态更新预演（未写入）</h2></div><div class="body"><p>差异单 {{ preview.id }} · {{ preview.rule_code }} · 目标状态 {{ preview.status }} · 版本 {{ preview.version }}。</p></div></section>
+{% endif %}{% endif %}
+{% if data %}
+<div class="notice">只读差异单：{{ data.contract }} · 范围 {{ data.scope }} · 截至 {{ data.as_of }} · 共 {{ data.cases|length }} 条{% if data.truncated %}（已截断）{% endif %}。{{ data.estimate_label }}</div>
+<section class="panel"><div class="panel-heading"><h2>差异单</h2></div><div class="body">
+{% if rows %}<div class="table-scroll"><table aria-label="核对差异单"><thead><tr><th>状态</th><th>规则</th><th class="amount">差额（分）</th><th>版本</th><th>责任人</th><th>来源</th><th>处理</th></tr></thead><tbody>
+{% for row in rows %}<tr>
+<td data-label="状态"><span class="badge {{ row.case.status }}">{{ row.case.status_label }}</span></td>
+<td data-label="规则">{{ row.case.rule_code }}<div class="trace muted">{{ row.case.case_key }}</div></td>
+<td data-label="差额" class="amount">{% if row.case.difference_cents is None %}<span class="missing">缺失</span>{% else %}{{ row.case.difference_cents }}{% endif %}</td>
+<td data-label="版本">{{ row.case.version }}</td>
+<td data-label="责任人">{{ row.case.owner_member_id }}</td>
+<td data-label="来源">{% for ref in row.case.source_refs %}<div class="trace">{{ ref.namespace }} · {{ ref.kind }} · {{ ref.id }}</div>{% empty %}<span class="muted">无来源引用</span>{% endfor %}</td>
+<td data-label="处理">
+{% if can_write and row.case.status != 'rejected' and row.case.status != 'superseded' and row.case.status != 'closed' %}
+<form class="inline-form" method="post" action="{{ update_url }}" aria-label="更新差异单 {{ row.case.rule_code }}">{% csrf_token %}
+{{ row.form.case_id }}{{ row.form.expected_version }}{{ row.form.request_token }}
+<div class="form-field"><label for="decision-{{ row.suffix }}">变更</label>{{ row.form.decision }}</div>
+<div class="form-field"><label for="note-{{ row.suffix }}">说明</label>{{ row.form.note }}</div>
+<div class="form-field"><label for="confirm-{{ row.suffix }}">{{ row.form.confirm }} 确认写入</label></div>
+<button type="submit" class="button subtle">提交</button>
+</form>
+{% else %}<span class="muted">{{ row.case.resolution_note|default:'—' }}</span>{% endif %}
+</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<p class="muted">当前筛选下没有差异单；没有差异不代表缺失已按 0 通过，缺失单列如下。</p>{% endif %}
+</div></section>
+{% if data.missing %}<section class="panel"><div class="panel-heading"><h2>缺失 / 未实现</h2></div><div class="body"><ul>{% for entry in data.missing %}<li><span class="badge {{ entry.severity }}">{{ entry.severity }}</span> {{ entry.missing_code }}（{{ entry.domain }}）：{{ entry.reason }}</li>{% endfor %}</ul></div></section>{% endif %}
+{% endif %}
+{% endif %}
+{% if mode == 'workbench' %}
+<section class="panel"><div class="panel-heading"><h2>项目工作台</h2></div><div class="body">
+<form class="filter" method="get" action="{{ page_url }}" aria-label="筛选项目工作台">
+<div class="form-field"><label for="{{ form.project.id_for_label }}">项目 ID</label>{{ form.project }}</div>
+<div class="form-field"><label for="{{ form.as_of.id_for_label }}">基准日</label>{{ form.as_of }}</div>
+<div class="actions"><button type="submit" class="button primary">查看工作台</button></div>
+</form>
+<p class="muted">字段由合同、收入、成本/预算、结算等 owner 只读接口派生；现金事实无项目归属，项目工作台显式缺失，不混入公司现金。</p>
+</div></section>
+{% if data %}
+<div class="notice">只读项目工作台：{{ data.contract }} · 项目 {{ data.project_id }} · 截至 {{ data.as_of }}（事实截断至 {{ data.facts_as_of }}）。{{ data.estimate_label }}</div>
+<section class="panel"><div class="panel-heading"><h2>指标摘要</h2></div><div class="body"><dl class="cards">
+{% for metric in data.metric_snapshots %}<div class="card"><dt>{{ metric.name }}</dt><dd>{% if metric.value_cents is None %}<span class="missing">缺失</span>{% else %}{{ metric.value_cents }} <span class="muted">分</span>{% endif %}</dd></div>{% endfor %}
+</dl></div></section>
+{% if data.missing %}<section class="panel"><div class="panel-heading"><h2>缺失 / 未实现</h2></div><div class="body"><ul>{% for entry in data.missing %}<li><span class="badge {{ entry.severity }}">{{ entry.severity }}</span> {{ entry.missing_code }}（{{ entry.domain }}）：{{ entry.reason }}</li>{% endfor %}</ul></div></section>{% endif %}
+{% if data.warnings %}<section class="panel"><div class="panel-heading"><h2>警告</h2></div><div class="body"><ul>{% for entry in data.warnings %}<li>{{ entry.issue_code }}：{{ entry.reason }}</li>{% endfor %}</ul></div></section>{% endif %}
+<section class="panel"><div class="panel-heading"><h2>指标快照明细</h2></div><div class="body table-scroll"><table aria-label="指标快照"><thead><tr><th>指标</th><th>owner</th><th class="amount">值（分）</th><th>基准日</th><th>范围</th></tr></thead><tbody>
+{% for metric in data.metric_snapshots %}<tr><td data-label="指标">{{ metric.metric_id }} · {{ metric.name }}</td><td data-label="owner">{{ metric.owner }}</td><td data-label="值" class="amount">{% if metric.value_cents is None %}<span class="missing">缺失</span>{% else %}{{ metric.value_cents }}{% endif %}</td><td data-label="基准日">{{ metric.as_of_date }}</td><td data-label="范围">{{ metric.scope }}</td></tr>{% endfor %}
+</tbody></table><p class="muted">本页只读派生，不写指标快照或任何业务事实。</p></div></section>
+{% endif %}
+{% endif %}
+</div>
+<script>(()=>{const root=document.querySelector('.insights');if(!root)return;const bad=root.querySelector('[aria-invalid="true"]');if(bad)bad.focus();})();</script>
+{% endblock %}

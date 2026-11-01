@@ -93,7 +93,11 @@ def entry_point():
                       'tax_adjustment_page': costing_views.tax_adjustment_page,
                       'tax_adjustment_execute': costing_views.tax_adjustment_execute,
                       'tax_adjustment_reverse': costing_views.tax_adjustment_reverse},
-        'insights': {'period_precheck': insights_views.period_precheck_page},
+        'insights': {'period_precheck': insights_views.period_precheck_page,
+                     'reconciliation': insights_views.reconciliation_list_page,
+                     'reconciliation_refresh': insights_views.reconciliation_refresh_page,
+                     'reconciliation_update': insights_views.reconciliation_update_page,
+                     'workbench': insights_views.workbench_page},
         'time': {name: getattr(time_views, name) for name in
                  ('billable_confirmation_list', 'billable_confirmation_form',
                   'billable_confirmation_save', 'billable_confirmation_confirm',
