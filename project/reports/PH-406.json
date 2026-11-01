@@ -13,13 +13,21 @@
       "result": "pass",
       "exit_code": 0,
       "evidence": "Actual exit 0: 23 tests OK in 2.785s."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy -q",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0: 34 tests OK in 2.708s."
     }
   ],
   "review": {
     "required": true,
-    "reviewer": null,
-    "status": "pending",
-    "findings": []
+    "reviewer": "independent review_flow / reviewer",
+    "status": "pass",
+    "findings": [
+      "PASS at 8f0e028 against BASE 86c4689; only blocker (missing real Issue URL) fixed with Issue295 and independently recomputed contract digest. Scope, rules, preserved gates, 23 tests and diff check verified; done/ready transitions in same PR approved."
+    ]
   },
   "unverified": [
     "远端 CI 与 PR 合入待执行；PH-407 未实施；本片不是产品功能或真实环境验收。"

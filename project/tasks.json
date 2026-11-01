@@ -13396,7 +13396,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13430,7 +13430,7 @@
       "title": "按可用成果交付：入口收敛、只读流程提示与真实退出码",
       "kind": "infra",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13461,9 +13461,7 @@
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/295",
       "owner": null,
-      "blockers": [
-        "PH-406 独立规划合入后 ready；不得先改工具/开发入口。"
-      ],
+      "blockers": [],
       "handoff": null
     }
   ]
