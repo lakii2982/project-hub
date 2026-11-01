@@ -240,6 +240,8 @@ class ContractChangeServiceTests(ContractChangeFixture, TestCase):
         self.denied(lambda: self.decide(change, member=member))
         from core.plugin_runtime import set_enabled
         set_enabled(self.owner, 'invoicing', False)
+        # PH-354: insights requires settlement/contracts, disable it before dependency guards.
+        set_enabled(self.owner, 'insights', False)
         for key in ('onboarding', 'management_revenue', 'settlement', 'delivery', 'time', 'contracts'):
             set_enabled(self.owner, key, False)
         self.denied(lambda: self.draft_change())

@@ -233,6 +233,8 @@ class CashHTTPTests(CashHTTPFixture, TestCase):
         self.assertEqual(self.client.get(TX_DETAIL, {'id': row.pk}).status_code, 200)
         from core.plugin_runtime import set_enabled
         set_enabled(self.owner, 'onboarding', False)
+        # PH-354: insights requires cash, disable it first.
+        set_enabled(self.owner, 'insights', False)
         set_enabled(self.owner, 'cash', False)
         self.login(self.auditor)
         self.assertEqual(self.client.get(ACCOUNTS).status_code, 403)
@@ -408,6 +410,8 @@ class CashHTTPTests(CashHTTPFixture, TestCase):
         self.assertEqual(second.status, 'posted')
         from core.plugin_runtime import set_enabled
         set_enabled(self.owner, 'onboarding', False)
+        # PH-354: insights requires cash, disable it first.
+        set_enabled(self.owner, 'insights', False)
         set_enabled(self.owner, 'cash', False)
         self.login(self.auditor)
         self.assertEqual(self.client.get(TX_LIST).status_code, 403)

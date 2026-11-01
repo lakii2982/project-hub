@@ -1222,3 +1222,10 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **复核修复**：CI 从 BASE 取质量门脚本执行；bootstrap 仅限 BASE policy 缺失/旧 policy 无 quality；损坏 policy、缺脚本、删源文件、未测量源文件、未知 skip、空 coverage 均失败关闭；测试日志与 coverage JSON 作为 artifact 保留。
 - **L3/L4/L5：not_run**。Linux CI 覆盖率/PG 并发、浏览器、staging/TLS/恢复、生产/UAT 未执行；`release` environment 保护需仓库设置配置。
 - 独立 S review PASS（B1–B4 已关闭）。收口修复：`changed_source_unmeasured` 仅针对 `.py`，HTML/CSS/JSON 不再误报；新增回归，质量门 28 tests OK。
+
+## PH-354 insights 期间预检只读 API 首片（2026-11-01，BASE 0bd2976）
+
+- **L1 实现**：pmo_plugins.insights bootstrap（settings/urls 接线，history_read 路由 period-precheck/）+ period_precheck_snapshot（period.precheck.snapshot/v1 envelope、冻结 severity 映射、precheck=null+period_precheck_missing 不伪造 canonical、digest=sha256 canonical_json 六字段集）+ 只读页面/表单/模板。
+- **L2 实际结果**：新测试 21 OK（13 服务 + 8 HTTP，覆盖金样例/digest 稳定与变化检测/零写/member/pm/跨 org/period_closed/locked/not_found/future_as_of/sections 反例/截断/缺失不为 0）；29 个白名单既有文件仅最小停用顺序修正并通过；全量 Ran 1356 tests/177.270s，5F+3E/70 skips，均为既有 8 项 macOS 基线，无新增；manage.py check exit 0；makemigrations No changes；verify_integrity --json ok=true（throwaway SQLite）。
+- **偏差**：契约 §5 missing_code 无 settlement/contracts 专属项，本片以 settlement_coverage_unavailable/contracts_overview_unavailable 显式扩展；future_as_of 按 §6.1 记 warning。全量回归补漏经 PH-399 独立规划扩写域后修复。
+- **L3/L4/L5：not_run**。真实 PG/CI、浏览器 1440/390 人工检视、生产/UAT、PH-353 digest 端到端联动未执行；review pending，未自批。

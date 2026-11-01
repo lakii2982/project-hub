@@ -202,6 +202,8 @@ class BankChargeServiceTests(BankChargeFixture, TestCase):
         charge = self.fee(member=self.finance)
         self.assertEqual(fees.get_bank_charge(self.auditor, charge.pk)['status'], 'draft')
         from core.plugin_runtime import set_enabled
+        # PH-354: insights requires costing, disable it first.
+        set_enabled(self.owner, 'insights', False)
         set_enabled(self.owner, 'costing', False)
         self.denied(lambda: self.fee(), exceptions=(PermissionDenied,))
         self.assertEqual(len(fees.list_bank_charges(self.auditor)), 1)

@@ -35,10 +35,13 @@ def entry_point():
     from pmo_plugins.invoicing.domain_metadata import DOMAIN_METADATA as INVOICING_METADATA
     from pmo_plugins.invoicing.plugin import Plugin as InvoicingPlugin
     from pmo_plugins.invoicing import views as invoicing_views
+    from pmo_plugins.insights.domain_metadata import DOMAIN_METADATA as INSIGHTS_METADATA
+    from pmo_plugins.insights.plugin import Plugin as InsightsPlugin
+    from pmo_plugins.insights import views as insights_views
     installed = {app.label: app.name for app in apps.get_app_configs()}
     descriptors = [{'plugin_id': key, 'metadata': metadata, 'manifest': plugin.manifest,
         'catalog': {'contract_catalog': []}, 'installed_apps': installed}
-        for key, metadata, plugin in [('contracts', CONTRACTS_METADATA, ContractsPlugin), ('costing', COSTING_METADATA, CostingPlugin), ('delivery', DOMAIN_METADATA, Plugin), ('management_revenue', REVENUE_METADATA, RevenuePlugin), ('settlement', SETTLEMENT_METADATA, SettlementPlugin), ('cash', CASH_METADATA, CashPlugin), ('time', TIME_METADATA, TimePlugin), ('onboarding', ONBOARDING_METADATA, OnboardingPlugin), ('invoicing', INVOICING_METADATA, InvoicingPlugin)]]
+        for key, metadata, plugin in [('contracts', CONTRACTS_METADATA, ContractsPlugin), ('costing', COSTING_METADATA, CostingPlugin), ('delivery', DOMAIN_METADATA, Plugin), ('management_revenue', REVENUE_METADATA, RevenuePlugin), ('settlement', SETTLEMENT_METADATA, SettlementPlugin), ('cash', CASH_METADATA, CashPlugin), ('time', TIME_METADATA, TimePlugin), ('onboarding', ONBOARDING_METADATA, OnboardingPlugin), ('invoicing', INVOICING_METADATA, InvoicingPlugin), ('insights', INSIGHTS_METADATA, InsightsPlugin)]]
     return prepare_plugin_entry_point(descriptors, {
         'contracts': {
             'parties': party_views.party_list, 'party': party_views.party_detail,
@@ -88,6 +91,7 @@ def entry_point():
                       'tax_adjustment_page': costing_views.tax_adjustment_page,
                       'tax_adjustment_execute': costing_views.tax_adjustment_execute,
                       'tax_adjustment_reverse': costing_views.tax_adjustment_reverse},
+        'insights': {'period_precheck': insights_views.period_precheck_page},
         'time': {name: getattr(time_views, name) for name in
                  ('billable_confirmation_list', 'billable_confirmation_form',
                   'billable_confirmation_save', 'billable_confirmation_confirm',

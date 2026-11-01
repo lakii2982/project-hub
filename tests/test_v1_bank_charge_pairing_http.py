@@ -48,6 +48,8 @@ class BankChargePairingHTTPTests(FeePairingFixture, TestCase):
         self.assertContains(page, 'approved_without_cost')
         from core.plugin_runtime import get_registry, set_enabled
         set_enabled(self.owner, 'invoicing', False)
+        # PH-354: insights requires costing/contracts, disable it before dependency guards.
+        set_enabled(self.owner, 'insights', False)
         for plugin_id in ('onboarding', 'time', 'management_revenue', 'settlement', 'delivery',
                           'contracts', 'costing'):
             if plugin_id in get_registry().manifests:

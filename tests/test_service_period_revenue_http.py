@@ -357,6 +357,8 @@ class ServicePeriodHTTPTests(ServicePeriodHTTPFixture, TestCase):
         # PH-226: disable the newer settlement dependant before its delivery/contracts dependencies.
         from core.plugin_runtime import plugin_catalog
         set_enabled(self.owner, 'onboarding', False)
+        # PH-354: insights requires settlement, disable it first.
+        set_enabled(self.owner, 'insights', False)
         if any(spec['id'] == 'settlement' for spec in plugin_catalog()):
             set_enabled(self.owner, 'settlement', False)
         set_enabled(self.owner, 'delivery', False)

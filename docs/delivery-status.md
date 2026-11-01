@@ -98,3 +98,7 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 
 ## PH-121 覆盖率与发布边界（2026-11-01）
 - CI 覆盖率门槛（实测 82.09%，底线 80%）、新增行 80%、未知 skip 阻断；发布改为人工 dispatch+受保护 environment，标签只校验不创建；新增 PG 公司锁/审计链并发反例。收口修复非 .py 变更误报，质量门 28 tests OK。真实 Linux CI/PG、浏览器与生产仍 not_run。
+
+## PH-354 insights 期间预检只读 API 首片（in_review，2026-11-01）
+
+新建 pmo_plugins.insights（manifest 8 字段/requires 四项/default_enabled=True，无模型/迁移/写通道），period_precheck_snapshot 按 period-precheck-contract 输出 envelope 与稳定 precheck_digest；复用 cash/settlement/management_revenue/costing 只读服务与 PH-291 总览，不复制金额/差额规则，零写；owner/finance/auditor 全量、pm 仅管理项目摘要、member/跨 org 拒绝、停用 history_read。新测试 21 OK，29 个白名单既有文件最小停用顺序通过，全量回到既有 macOS 基线；check/makemigrations/verify_integrity 通过。偏差：missing_code 扩展、future_as_of 口径待复核仲裁；未验证 PG/CI、浏览器 1440/390、生产/UAT、PH-353 联动；review pending。见 `docs/verification.md` 与 `project/reports/PH-354.json`。

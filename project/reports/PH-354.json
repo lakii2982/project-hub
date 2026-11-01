@@ -1,0 +1,60 @@
+{
+ "task_id": "PH-354",
+ "summary": "insights 读模型前置拆分首片：新建 pmo_plugins.insights 插件（manifest 恰好 8 字段，requires={cash,settlement,costing,contracts}，default_enabled=True，无模型/迁移/写通道），settings/PMO_PLUGIN_MODULES 与 delivery urls root 单写接线；period_precheck_snapshot 严格按 docs/v1.0-development/period-precheck-contract.md 输出 period.precheck.snapshot/v1 envelope（precheck=null+period_precheck_missing，不伪造 canonical 实体），聚合既有 owner 只读服务（cash_bridge/settlement 覆盖/revenue 配对/bank_charge 配对）与 PH-291 跨域总览，只按冻结映射定 severity、不复制金额/差额规则（difference 恒 null，missing 不以 0 冒充）；precheck_digest=sha256(canonical_json({contract,scope,period,as_of_date,watermark,issues,differences,missing}))，重复调用稳定、事实变化可检测；history_read 路由，owner/finance/auditor 全量、pm 仅管理项目摘要、member/跨 org 拒绝；新增 21 个测试（13 服务+8 HTTP），29 个白名单既有测试文件仅最小调整停用顺序（先停 insights 再停依赖），不改业务断言。",
+ "tests": [
+  {
+   "command": "python scripts/projectctl.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0: ok=true, task_count=321."
+  },
+  {
+   "command": "python manage.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0 in /tmp/ph354-precheck: 120 pre-existing/URL-naming warnings, 0 errors."
+  },
+  {
+   "command": "python manage.py makemigrations --check --dry-run",
+   "result": "pass",
+   "evidence": "Actual exit 0: No changes detected (insights 无模型/迁移)."
+  },
+  {
+   "command": "python manage.py test tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 21 tests, OK."
+  },
+  {
+   "command": "python manage.py test <29 个白名单依赖停用回归文件> --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual exit 0: 18 个原有回归文件两批 156 tests OK（16 项 PG-only SQLite 跳过）+ 11 个补入文件（test_v1_close/bank_charge_pairing(_http)/billable_reversal(_http)/contract_change(_http)/contract_change_impact(_http)/contract_terms_snapshot(_http)）58+10 tests OK。全部仅调整停用顺序，不改业务断言。"
+  },
+  {
+   "command": "python manage.py test tests --verbosity 1",
+   "result": "pass",
+   "evidence": "Actual run after PH-399 whitelist: Ran 1356 tests in 177.270s; 5 failures + 3 errors + 70 skips, all eight names matching the established macOS baseline (6 DRF Accept/codec/large-JSON + 2 delivery /private/var symlink). No new failure. Linux/PG CI remains authoritative."
+  },
+  {
+   "command": "python manage.py verify_integrity --json",
+   "result": "pass",
+   "evidence": "Actual exit 0 on throwaway migrated SQLite DB: {\"ok\": true, \"errors\": [], ...}。"
+  }
+ ],
+ "review": {
+  "required": true,
+  "reviewer": "pending（本片不自我复核；待独立 reviewer）",
+  "status": "pending",
+  "findings": [],
+  "evidence": "review pending：未执行独立审阅。"
+ },
+ "deviations": [
+  "白名单外 11 个既有测试文件受新插件 default_enabled 依赖影响而失败；已由 PH-399 独立规划 PR 补入精确写域后，本片以同一最小停用顺序修正，全量回到既有 macOS 基线。",
+  "severity 映射按 contract §5 冻结口径执行：cleared_over_gross/settled_exceeds_recognized/duplicate_recognition/cost_*_duplicate 等归为 blocker，未分类现金/offset 未实现/period_precheck_missing 等为 warning；future_as_of 按 §6.1 记 warning（§5 将『未来日期』列入 blocker 的两处口径以该 code 定义条款为准，已在 handoff 披露待 reviewer 仲裁）。",
+  "checks 的 expected/actual/difference_cents 与 envelope differences 不复制 owner 差额规则，一律 null；金额口径唯一来源为 owner 服务及其 issue 的 expected/actual 透传。",
+  "pm 项目摘要不含 cash 域（owner cash 服务拒绝 pm），按 missing（cash_bridge_unavailable，warning）呈现，不按 0 处理。",
+  "契约 §5 的 missing_code 枚举无 settlement/contracts 专属项；本片以 settlement_coverage_unavailable/contracts_overview_unavailable 显式扩展，语义仍为『上游只读服务不可读』且不按 0，契约文字待 PH-401 规划补记。"
+ ],
+ "unverified": [
+  "真实 PostgreSQL 并发/触发器与 CI Linux/PG 运行（本片 SQLite scoped）。",
+  "浏览器 1440px/390px/键盘焦点人工检视（HTTP 断言已覆盖状态码与关键内容）。",
+  "生产/UAT；PH-353 消费 digest 的端到端联动。"
+ ]
+}

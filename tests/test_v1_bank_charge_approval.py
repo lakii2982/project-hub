@@ -85,6 +85,8 @@ class BankChargeApprovalServiceTests(BankChargeApprovalFixture, TestCase):
         self.denied(lambda: self.submit(charge))
         AccountingPeriod.objects.filter(organization=self.org).delete()
         from core.plugin_runtime import set_enabled
+        # PH-354: insights requires costing, disable it first.
+        set_enabled(self.owner, 'insights', False)
         set_enabled(self.owner, 'costing', False)
         self.denied(lambda: self.submit(charge), exceptions=(PermissionDenied,))
 

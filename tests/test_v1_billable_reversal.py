@@ -198,6 +198,8 @@ class BillableReversalServiceTests(ReversalFixture, TestCase):
         self.denied(lambda: services.billable_confirmation_pairing(outsider, row['id']))
         from core.plugin_runtime import get_registry, set_enabled
         set_enabled(self.owner, 'invoicing', False)
+        # PH-354: insights requires settlement/contracts, disable it before dependency guards.
+        set_enabled(self.owner, 'insights', False)
         for plugin_id in ('onboarding', 'time', 'management_revenue', 'settlement', 'delivery', 'contracts'):
             if plugin_id in get_registry().manifests:
                 set_enabled(self.owner, plugin_id, False)

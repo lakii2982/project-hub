@@ -104,6 +104,8 @@ class BankChargeApprovalHTTPTests(BankChargeApprovalHTTPFixture, TestCase):
         self.assertEqual(self.client.post(f'{ACTION}?id={charge.pk}&action=unknown',
                                           {}).status_code, 403)
         from core.plugin_runtime import set_enabled
+        # PH-354: insights requires costing, disable it first.
+        set_enabled(self.owner, 'insights', False)
         set_enabled(self.owner, 'costing', False)
         self.login(self.owner)
         response = self.action(charge, 'submit', member=self.owner)
