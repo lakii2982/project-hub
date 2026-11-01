@@ -1251,3 +1251,9 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **L2 实际结果**：新测试 33 OK（26 服务 + 7 HTTP）；受影响 onboarding/insights 40 OK；plugin SDK 48 OK（2 skip）；`manage.py check` exit 0（122 条既有警告/0 错误）；`makemigrations --check` No changes；fresh SQLite `verify_integrity --json` ok=true/errors=[]；全量 Ran 1411 tests/148.905s，5F+3E/73 skips（1332 passed），8 项均为既有 macOS 基线（6 DRF 安全兼容 + 2 delivery symlink），无新增类别。
 - **偏差**：append-only 收据在 apply_rows 之后、同一事务内以 result_refs 创建（无法 pending→update）；冲突消解为任务给定单表字段的单向迁移并保留原行；同月约束由 PH-354 拒绝并映射 precheck_stale，未来基准日额外 future_date；HTTP 拆 history_read 页 + business_write 提交。
 - **L3/L4/L5：not_run**。PostgreSQL 并发、浏览器 1440/390、staging/生产/UAT、真实导入未执行；独立 S 复核 pending（本片未自批 review）。
+
+## PH-403 v1.0 后续交付规划推进（2026-11-01，BASE 6a8c410）
+
+- PH-353 已由 PR #278 合入并由 #279 收口；PH-342/PH-343 依赖均已 done，晋级 ready（均为 docs-only 契约冻结）。
+- 登记 PH-404 proposed（Issue #280）作为下一规划槽；PH-342/343/403/404 授权摘要机器断言 MATCH。
+- 无产品代码、迁移、PG、浏览器、生产或 UAT；独立 S review 与 verify-change 待最终证据。

@@ -112,3 +112,6 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 ## PH-353 onboarding 导入提交原子首片（done，2026-11-01）
 
 新增 onboarding 首个迁移与 ImportPreview/ImportConflict/ImportSubmissionReceipt；预览持久化规范化行摘要与冲突，提交在公司锁+单事务内复用 PH-354 期间预检重算 digest/as_of，校验权限/期间/未消解 blocker 冲突/request_token 幂等/稳定 import_key，dry_run 零写，非 dry_run 仅经既有 owner 服务 `core.imports.apply_rows` 写入且任一行失败整批回滚，成功后预览置 consumed。页面为 owner/finance 写、auditor 历史只读、pm/member 拒绝、停用 history_read。新测试 33 OK（26 服务 + 7 HTTP），受影响 40 OK；全量 1413 项仅既有 8 项 macOS 基线失败；check/makemigrations/verify_integrity 通过。独立 S 复核 PASS（修复跨期行未绑定 period）；PR #278 合入 5ca8d30；PG 并发、浏览器 1440/390、生产/UAT not_run。见 `docs/verification.md` 与 `project/reports/PH-353.json`。
+
+## PH-403 规划推进（2026-11-01）
+- PH-353 合入后晋级 PH-342（发票批量导入契约）与 PH-343（insights 契约）ready；登记 PH-404 proposed 作为下一规划槽。仅规划，无产品实现/发布宣称。

@@ -11106,7 +11106,7 @@
       "title": "发票批量/导入实现前置契约冻结（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11131,9 +11131,7 @@
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
-      "blockers": [
-        "等 PH-354→PH-353 的真实预检与原子提交链路完成后冻结发票批量导入契约；当前保持 proposed。"
-      ],
+      "blockers": [],
       "github_issue": null,
       "owner": null,
       "handoff": null
@@ -11143,7 +11141,7 @@
       "title": "insights 读模型实现前置契约冻结（docs-only）",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -11169,9 +11167,7 @@
         "python scripts/projectctl.py check",
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
-      "blockers": [
-        "等 PH-354 期间预检实现后冻结 insights 差异单/工作台契约，并与 PH-363 去重；当前保持 proposed。"
-      ],
+      "blockers": [],
       "github_issue": null,
       "owner": null,
       "handoff": null
@@ -13295,7 +13291,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "in_review",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13320,9 +13316,45 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/273",
-      "owner": null,
+      "owner": "root",
       "blockers": [
         "PH-401 规划合入后晋级 ready。"
+      ],
+      "handoff": "project/handoffs/PH-403.md"
+    },
+    {
+      "id": "PH-404",
+      "title": "v1.0 后续交付规划入口",
+      "kind": "docs",
+      "risk": "S",
+      "status": "proposed",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-403"
+      ],
+      "spec": "docs/engineering/agent-protocol.md",
+      "allowed_paths": [
+        "docs/engineering/agent-protocol.md",
+        "project/specs/*",
+        "docs/v1.0-development/*",
+        "ROADMAP.md",
+        "project/tasks.json",
+        "project/delivery-policy.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-404.json",
+        "project/handoffs/PH-404.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/280",
+      "owner": null,
+      "blockers": [
+        "PH-403 规划修正合入后晋级 ready。"
       ],
       "handoff": null
     }

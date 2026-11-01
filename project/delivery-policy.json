@@ -73,7 +73,22 @@
       },
       {
         "task_id": "PH-403",
-        "contract_digest": "c97a4b0bd8812846d61dca7d59827d30cf1505da2b706f2f7646e1665f71c343",
+        "contract_digest": "9afb2e3313d2c658940706e8077e43be7a0d1930339cc71358181c551d130f01",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-342",
+        "contract_digest": "27a1610b53f387a7f3a2ff528481511e96797bfaab80756a2ba845e9d4f87134",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-343",
+        "contract_digest": "991fd946558a4c9e46442ae081cc316949f5c20108b49c47ee48db9413362468",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-404",
+        "contract_digest": "fc5fdc45163ebb3adaafe0afe52aa37aea57b85e9b366bf208d06a980d09dd86",
         "source": "user-2026-10-31-complete-v1"
       }
     ]
