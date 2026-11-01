@@ -48,11 +48,12 @@ class ReconciliationCase(models.Model):
     difference_cents = models.BigIntegerField(null=True, default=None)
     owner_member = models.ForeignKey('core.Membership', on_delete=models.PROTECT,
                                      related_name='+')
-    resolution_note = models.TextField(blank=True, default='')
+    resolution_note = models.TextField(null=True, blank=True, default=None)
     case_key = models.CharField(max_length=128)
     rule_code = models.CharField(max_length=80)
     coverage_key = models.CharField(max_length=255)
-    snapshot_watermark = models.JSONField(default=dict)
+    snapshot_watermark = models.JSONField(default=list)
+    snapshot_as_of = models.DateField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT,

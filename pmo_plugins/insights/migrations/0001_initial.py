@@ -5,6 +5,68 @@ import uuid
 from django.db import migrations, models
 
 
+CASE_TABLE = "insights_reconciliationcase"
+IMMUTABLE_TABLES = ["insights_metricsnapshot", "insights_reconciliationrefresh"]
+CASE_MUTABLE = {"status", "owner_member_id", "resolution_note", "version", "updated_at", "updated_by_id"}
+CASE_COLUMNS = ["case_key", "rule_code", "coverage_key", "source_refs", "difference_cents",
+                "snapshot_watermark", "snapshot_as_of", "organization_id", "created_by_id", "created_at"]
+
+
+def install_guards(apps, schema_editor):
+    vendor = schema_editor.connection.vendor
+    with schema_editor.connection.cursor() as cursor:
+        if vendor == "postgresql":
+            cursor.execute("""CREATE OR REPLACE FUNCTION pmo_insights_case_guard() RETURNS trigger LANGUAGE plpgsql AS $$
+                BEGIN
+                    IF TG_OP = 'DELETE' THEN RAISE EXCEPTION 'insights reconciliation cases are append-only';
+                    END IF;
+                    IF ROW(NEW.*)::text <> ROW(OLD.*)::text THEN
+                        IF NEW.case_key IS DISTINCT FROM OLD.case_key
+                           OR NEW.rule_code IS DISTINCT FROM OLD.rule_code
+                           OR NEW.coverage_key IS DISTINCT FROM OLD.coverage_key
+                           OR NEW.source_refs::text IS DISTINCT FROM OLD.source_refs::text
+                           OR NEW.difference_cents IS DISTINCT FROM OLD.difference_cents
+                           OR NEW.snapshot_watermark::text IS DISTINCT FROM OLD.snapshot_watermark::text
+                           OR NEW.snapshot_as_of IS DISTINCT FROM OLD.snapshot_as_of
+                           OR NEW.organization_id IS DISTINCT FROM OLD.organization_id
+                           OR NEW.created_by_id IS DISTINCT FROM OLD.created_by_id
+                           OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+                            RAISE EXCEPTION 'insights reconciliation case identity is append-only';
+                        END IF;
+                    END IF;
+                    RETURN NEW;
+                END; $$""")
+            cursor.execute(f"CREATE TRIGGER {CASE_TABLE}_guard BEFORE UPDATE OR DELETE ON {CASE_TABLE} FOR EACH ROW EXECUTE FUNCTION pmo_insights_case_guard()")
+            cursor.execute("""CREATE OR REPLACE FUNCTION pmo_insights_readmodel_guard() RETURNS trigger LANGUAGE plpgsql AS $$
+                BEGIN RAISE EXCEPTION 'insights read-model rows are append-only'; END; $$""")
+            for table in IMMUTABLE_TABLES:
+                cursor.execute(f"CREATE TRIGGER {table}_immutable BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION pmo_insights_readmodel_guard()")
+        elif vendor == "sqlite":
+            columns = ", ".join(CASE_COLUMNS)
+            cursor.execute(f"CREATE TRIGGER {CASE_TABLE}_guard BEFORE UPDATE OF {columns} ON {CASE_TABLE} BEGIN SELECT RAISE(ABORT, 'insights reconciliation case identity is append-only'); END")
+            cursor.execute(f"CREATE TRIGGER {CASE_TABLE}_no_delete BEFORE DELETE ON {CASE_TABLE} BEGIN SELECT RAISE(ABORT, 'insights reconciliation cases are append-only'); END")
+            for table in IMMUTABLE_TABLES:
+                cursor.execute(f"CREATE TRIGGER {table}_no_update BEFORE UPDATE ON {table} BEGIN SELECT RAISE(ABORT, 'insights read-model rows are append-only'); END")
+                cursor.execute(f"CREATE TRIGGER {table}_no_delete BEFORE DELETE ON {table} BEGIN SELECT RAISE(ABORT, 'insights read-model rows are append-only'); END")
+
+
+def uninstall_guards(apps, schema_editor):
+    vendor = schema_editor.connection.vendor
+    with schema_editor.connection.cursor() as cursor:
+        if vendor == "postgresql":
+            cursor.execute(f"DROP TRIGGER IF EXISTS {CASE_TABLE}_guard ON {CASE_TABLE}")
+            for table in IMMUTABLE_TABLES:
+                cursor.execute(f"DROP TRIGGER IF EXISTS {table}_immutable ON {table}")
+            cursor.execute("DROP FUNCTION IF EXISTS pmo_insights_case_guard()")
+            cursor.execute("DROP FUNCTION IF EXISTS pmo_insights_readmodel_guard()")
+        elif vendor == "sqlite":
+            cursor.execute(f"DROP TRIGGER IF EXISTS {CASE_TABLE}_guard")
+            cursor.execute(f"DROP TRIGGER IF EXISTS {CASE_TABLE}_no_delete")
+            for table in IMMUTABLE_TABLES:
+                cursor.execute(f"DROP TRIGGER IF EXISTS {table}_no_update")
+                cursor.execute(f"DROP TRIGGER IF EXISTS {table}_no_delete")
+
+
 class Migration(migrations.Migration):
 
     initial = True
@@ -41,11 +103,12 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('draft', '草稿'), ('pending', '待确认'), ('approved', '已确认'), ('rejected', '已驳回'), ('superseded', '已替代'), ('closed', '已结案')], default='draft', max_length=16)),
                 ('source_refs', models.JSONField(default=list)),
                 ('difference_cents', models.BigIntegerField(default=None, null=True)),
-                ('resolution_note', models.TextField(blank=True, default='')),
+                ('resolution_note', models.TextField(blank=True, default=None, null=True)),
                 ('case_key', models.CharField(max_length=128)),
                 ('rule_code', models.CharField(max_length=80)),
                 ('coverage_key', models.CharField(max_length=255)),
-                ('snapshot_watermark', models.JSONField(default=dict)),
+                ('snapshot_watermark', models.JSONField(default=list)),
+                ('snapshot_as_of', models.DateField(null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='core.membership')),
@@ -76,4 +139,5 @@ class Migration(migrations.Migration):
                 'constraints': [models.UniqueConstraint(fields=('organization', 'request_token'), name='insights_refresh_token_unique')],
             },
         ),
+        migrations.RunPython(install_guards, uninstall_guards),
     ]

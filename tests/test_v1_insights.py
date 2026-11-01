@@ -3,6 +3,7 @@ import uuid
 from datetime import timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import connection, transaction
 from django.test import TestCase
 
 from core.models import (AuditEvent, DomainEvent, LedgerEntry, LedgerPosting,
@@ -63,7 +64,7 @@ class InsightsServiceTests(OpsOverviewFixture, TestCase):
         self.assertEqual(case['owner_member_id'], str(self.owner.pk))
         self.assertEqual(case['status'], 'draft')
         self.assertEqual(case['version'], 1)
-        self.assertIsNone(case['difference_cents'])
+        self.assertIsInstance(case['difference_cents'], int)
         self.assertTrue(case['case_key'])
         self.assertTrue(case['coverage_key'].startswith(self.period() + '|cash|'))
         self.assertTrue(any(ref['kind'] == 'cash_transaction' and
@@ -101,9 +102,8 @@ class InsightsServiceTests(OpsOverviewFixture, TestCase):
         self.cash(classify=False)
         first = self.refresh()
         old = self.case_for(first)
-        # Same rule/coverage; changed evidence must replace, not duplicate, the case.
-        self.cash(classify=False)
-        second = self.refresh()
+        # Same rule and same source identity; a newer as_of replaces the snapshot.
+        second = self.refresh(as_of=(self.today + timedelta(days=1)).isoformat())
         new = self.case_for(second)
         self.assertNotEqual(new['id'], old['id'])
         old_row = ReconciliationCase.objects.get(pk=old['id'])
@@ -356,6 +356,29 @@ class InsightsServiceTests(OpsOverviewFixture, TestCase):
         stale = ReconciliationCase.objects.get(pk=case['id'])
         stale.status = 'approved'
         self.assertRaises(ValidationError, stale.save)
+
+    def test_database_triggers_block_direct_case_and_readmodel_mutation(self):
+        self.cash(classify=False)
+        case = self.case_for(self.refresh())
+        row = ReconciliationCase.objects.get(pk=case['id'])
+        snapshot = MetricSnapshot.objects.create(
+            organization=self.org, metric_key='contract_value', period=self.period(),
+            project=self.project, as_of=self.today, value_cents=1, source_version='v1')
+        case_id, snapshot_id = row.pk.hex, snapshot.pk.hex
+
+        def raw(sql, params):
+            with self.assertRaises(Exception):
+                with transaction.atomic(), connection.cursor() as cursor:
+                    cursor.execute(sql, params)
+
+        raw("UPDATE insights_reconciliationcase SET rule_code = 'tampered' WHERE id = %s", [case_id])
+        raw("UPDATE insights_reconciliationcase SET snapshot_as_of = NULL WHERE id = %s", [case_id])
+        raw("DELETE FROM insights_reconciliationcase WHERE id = %s", [case_id])
+        raw("UPDATE insights_metricsnapshot SET value_cents = 2 WHERE id = %s", [snapshot_id])
+        raw("DELETE FROM insights_metricsnapshot WHERE id = %s", [snapshot_id])
+        with transaction.atomic(), connection.cursor() as cursor:
+            cursor.execute("UPDATE insights_reconciliationcase SET status = 'pending' WHERE id = %s", [case_id])
+        self.assertEqual(ReconciliationCase.objects.get(pk=row.pk).status, 'pending')
 
     def test_update_rejects_non_canonical_decisions_and_bad_case_id(self):
         self.cash(classify=False)

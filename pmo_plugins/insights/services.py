@@ -100,11 +100,23 @@ def _month_day(period, as_of):
     return label, day
 
 
+def _source_identity(ref):
+    if not isinstance(ref, dict):
+        return None
+    namespace, kind, identity = ref.get('namespace'), ref.get('kind'), ref.get('id')
+    if not all(isinstance(part, str) and part for part in (namespace, kind, identity)):
+        return None
+    return f'{namespace}/{kind}/{identity}'
+
+
 def _coverage_key(period, issue):
-    # Stable logical coverage: period + domain + owner. Source refs are evidence,
-    # not identity; a changed evidence set supersedes the prior case instead of
-    # creating a second active row under a new key.
-    return f'{period}|{issue.get("domain") or "unknown"}|{issue.get("owner") or "unknown"}'
+    # Canonical identity: period + domain + owner + normalized source identities
+    # (version excluded). Different source facts never collapse into one case.
+    identities = sorted(filter(None, (
+        _source_identity(ref) for ref in (issue.get('source_refs') or ()))))
+    identity_part = ','.join(identities) if identities else 'none'
+    return (f'{period}|{issue.get("domain") or "unknown"}|'
+            f'{issue.get("owner") or "unknown"}|{identity_part}')
 
 
 def _case_key(rule_code, coverage_key):
@@ -121,11 +133,11 @@ def _case_dict(case):
         'source_refs': case.source_refs or [],
         'difference_cents': case.difference_cents,
         'owner_member_id': str(case.owner_member_id),
-        'resolution_note': case.resolution_note,
+        'resolution_note': case.resolution_note or None,
         'case_key': case.case_key,
         'rule_code': case.rule_code,
         'coverage_key': case.coverage_key,
-        'snapshot_watermark': case.snapshot_watermark or {},
+        'snapshot_watermark': case.snapshot_watermark or [],
     }
 
 
@@ -237,27 +249,51 @@ def _candidate_cases(snapshot, period_label):
             if row['difference_cents'] is None and issue.get('difference_cents') is not None:
                 row['difference_cents'] = issue.get('difference_cents')
             continue
+        difference = _difference_cents(issue)
+        watermark = snapshot.get('watermark') if isinstance(snapshot.get('watermark'), dict) else {
+            'namespace': 'core', 'kind': 'organization', 'id': str(snapshot.get('scope', {}).get('project_id') or 'company'), 'version': 1}
         row = {
             'case_key': key, 'rule_code': code, 'coverage_key': coverage,
             'source_refs': sorted(refs, key=lambda ref: (
                 str(ref.get('namespace')), str(ref.get('kind')), str(ref.get('id')))),
-            'difference_cents': issue.get('difference_cents'),
-            'snapshot_watermark': {'domain': issue.get('domain'),
-                                   'owner': issue.get('owner'),
-                                   'severity': issue.get('severity'),
-                                   'period': period_label,
-                                   'as_of': snapshot.get('as_of_date')},
+            'difference_cents': difference,
+            'snapshot_watermark': [watermark],
+            'snapshot_as_of': _iso_day(snapshot.get('as_of_date')),
         }
         by_key[key] = row
         candidates.append(row)
     return candidates
 
 
+def _iso_day(value):
+    if value is None or isinstance(value, date):
+        return value
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
+def _difference_cents(issue):
+    # Canonical SignedCnyCents is non-null. Prefer the owner-provided difference,
+    # then a cents pair; an issue that carries no monetary difference (for example
+    # an unclassified cash row) has a true difference of zero, not "missing".
+    value = issue.get('difference_cents')
+    if type(value) is int:
+        return value
+    expected = issue.get('expected_cents', issue.get('expected'))
+    actual = issue.get('actual_cents', issue.get('actual'))
+    if type(expected) is int and type(actual) is int:
+        return actual - expected
+    return 0
+
+
 def _same_content(case, candidate):
     return (case.rule_code == candidate['rule_code']
             and case.coverage_key == candidate['coverage_key']
             and (case.source_refs or []) == candidate['source_refs']
-            and case.difference_cents == candidate['difference_cents'])
+            and case.difference_cents == candidate['difference_cents']
+            and case.snapshot_as_of == candidate.get('snapshot_as_of'))
 
 
 def refresh_reconciliation_cases(member, *, period, as_of, request_token, dry_run=True):
@@ -306,6 +342,13 @@ def refresh_reconciliation_cases(member, *, period, as_of, request_token, dry_ru
                 unchanged.append(_case_dict(case))
                 result_cases.append(_case_dict(case))
                 continue
+            if (case is not None and case.snapshot_as_of is not None
+                    and candidate.get('snapshot_as_of') is not None
+                    and candidate['snapshot_as_of'] < case.snapshot_as_of):
+                # Canonical: an older as_of refresh cannot overwrite a newer snapshot.
+                unchanged.append(_case_dict(case))
+                result_cases.append(_case_dict(case))
+                continue
             if case is not None and not dry_run:
                 case.status = 'superseded'
                 case.updated_by = member
@@ -325,7 +368,7 @@ def refresh_reconciliation_cases(member, *, period, as_of, request_token, dry_ru
                 preview.update({'id': None, 'organization_id': str(member.organization_id),
                                 'version': 1, 'status': 'draft',
                                 'owner_member_id': str(member.pk),
-                                'resolution_note': ''})
+                                'resolution_note': None})
                 created.append(preview)
                 result_cases.append(preview)
             if case is not None:
@@ -333,7 +376,8 @@ def refresh_reconciliation_cases(member, *, period, as_of, request_token, dry_ru
 
         active_keys = set(keys)
         stale = list(ReconciliationCase.objects.filter(
-            organization_id=member.organization_id, status__in=ACTIVE_STATUSES
+            organization_id=member.organization_id, status__in=ACTIVE_STATUSES,
+            coverage_key__startswith=f'{label}|',
         ).exclude(case_key__in=active_keys).values_list('case_key', flat=True)[:CASE_LIMIT])
         result = {
             'contract': REFRESH_CONTRACT,
