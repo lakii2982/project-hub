@@ -8,5 +8,9 @@ DOMAIN_METADATA = {
                {'name': 'import_preview_run', 'path': 'import-preview-run/',
                 'access': 'history_read'},
                {'name': 'import_preview_upload', 'path': 'import-preview-upload/',
+                'access': 'business_write'},
+               {'name': 'import_submit_page', 'path': 'import-submit/',
+                'access': 'history_read'},
+               {'name': 'import_submit_commit', 'path': 'import-submit-commit/',
                 'access': 'business_write'}],
 }

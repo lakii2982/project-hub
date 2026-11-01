@@ -1,10 +1,17 @@
-"""PH-274 onboarding read-only import preview browser handlers (no business writes)."""
+"""PH-274/PH-353 onboarding import preview and atomic submission browser handlers."""
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import redirect, render
 
+from core.plugin_runtime import is_enabled
+
+from . import import_commit_services as commits
 from . import preview_services as previews
-from .forms import ImportPreviewForm
+from .forms import ImportPreviewForm, ImportSubmitForm
+from .models import ImportPreview, ImportSubmissionReceipt
+
+PAGE_URL = '/modules/onboarding/import-submit/'
+COMMIT_URL = '/modules/onboarding/import-submit-commit/'
 
 
 def _base(member, **values):
@@ -74,3 +81,62 @@ def import_preview_upload(context, payload):
     return render(request, 'onboarding/import_preview_list.html', _base(
         member, form=form, templates=previews.import_template_list(member),
         result=result), status=200 if result else 400)
+
+
+def _submit_context(member, **values):
+    return _base(
+        member, page_url=PAGE_URL, commit_url=COMMIT_URL,
+        module_enabled=is_enabled(member.organization, 'onboarding'),
+        previews=ImportPreview.objects.filter(organization=member.organization)
+        .order_by('-created_at')[:20],
+        receipts=ImportSubmissionReceipt.objects.filter(
+            organization=member.organization).order_by('-created_at')[:20],
+        **values)
+
+
+def import_submit_page(context, payload):
+    """Read-only submission page/history (auditor included); GET only."""
+    member = commits.require_commit_reader(context.member)
+    error = None
+    if set(payload or ()):
+        error = '包含不允许的查询参数，请刷新后重试'
+    return render(context.request, 'onboarding/import_submit.html', _submit_context(
+        member, form=ImportSubmitForm(), result=None, envelope=None, error=error),
+        status=400 if error else 200)
+
+
+def import_submit_commit(context, payload):
+    """Owner/finance atomic import commit; POST only; unknown fields rejected."""
+    member = commits.require_commit_writer(context.member)
+    form = ImportSubmitForm(payload or None)
+    result, envelope, error = None, None, None
+    if not form.is_valid():
+        error = '；'.join(
+            message for errors in form.errors.values() for message in errors)
+        status = 400
+    else:
+        data = form.cleaned_data
+        try:
+            result = commits.commit_import(
+                member, preview_ref=data['preview_ref'],
+                rows_digest=data['rows_digest'],
+                precheck_digest=data['precheck_digest'],
+                precheck_as_of_date=data['precheck_as_of_date'],
+                period=data['period'].strip(),
+                request_token=data['request_token'],
+                expected_version=data['expected_version'],
+                dry_run=data['dry_run'])
+        except commits.ImportCommitRejected as exc:
+            envelope, error, status = exc.envelope, '；'.join(exc.messages), 400
+        except PermissionDenied:
+            raise
+        else:
+            if result.get('status') == 'committed' and not result.get('replayed'):
+                messages.success(
+                    context.request,
+                    '导入已原子提交；同批次业务事实与收据只写入一次')
+                return redirect(PAGE_URL)
+            status = 200
+    return render(context.request, 'onboarding/import_submit.html', _submit_context(
+        member, form=form, result=result, envelope=envelope, error=error),
+        status=status)

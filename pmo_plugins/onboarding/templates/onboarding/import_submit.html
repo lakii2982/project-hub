@@ -1,0 +1,55 @@
+{% extends 'base.html' %}{% block title %}导入提交{% endblock %}{% block breadcrumb %}导入与期初 / 导入提交{% endblock %}{% block content %}
+<style>
+.import-submit{min-width:0;color:var(--color-text);font-size:var(--font-size-sm)}.import-submit h1,.import-submit h2,.import-submit td,.import-submit dd{overflow-wrap:anywhere}.import-submit .panel{margin-block:var(--space-6);border:var(--border-default);background:var(--color-surface);border-radius:var(--radius-md)}.import-submit .body{padding:var(--space-6)}.import-submit .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-4)}.import-submit .form-field{margin:0;min-width:0}.import-submit input{max-width:100%;min-height:var(--control-height);font:inherit}.import-submit .button{white-space:normal}.import-submit .trace,.import-submit .digest{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.import-submit :focus-visible{outline:var(--focus-ring);outline-offset:var(--focus-ring-offset)}.import-submit .table-scroll{max-width:100%;overflow:auto}.import-submit .muted{color:var(--color-text-secondary)}.import-submit .badge{display:inline-block;padding:0 var(--space-2);border-radius:var(--radius-sm);border:var(--border-default)}.import-submit .badge.blocker{color:var(--color-danger)}.import-submit .badge.warning{color:var(--color-warning)}.import-submit table{width:100%;border-collapse:collapse}.import-submit th,.import-submit td{padding:var(--space-2);border-block-end:var(--border-default);text-align:left;vertical-align:top}.import-submit .help-text{color:var(--color-text-secondary)}.import-submit .checkbox{display:flex;gap:var(--space-2);align-items:center}.import-submit .checkbox input{min-height:auto}@media(max-width:640px){.import-submit .body{padding:var(--space-4)}.import-submit table,.import-submit tbody,.import-submit tr,.import-submit td{display:block;width:100%}.import-submit thead{display:none}.import-submit td{white-space:normal;text-align:left}.import-submit td:before{content:attr(data-label);display:block;color:var(--color-text-secondary)}.import-submit .grid{grid-template-columns:1fr}.import-submit input,.import-submit button{min-height:var(--touch-target)}}
+</style>
+<div class="import-submit">
+<section class="page-heading"><div><div class="eyebrow">ONBOARDING · IMPORT COMMIT</div><h1 tabindex="-1">导入提交</h1><p>提交只引用已持久化的预览与服务端重算的期间预检；一个公司锁和一个事务内逐行调用既有 owner 服务，任一行失败整批回滚。表单不接受金额、审批人、状态或账本字段。</p></div></section>
+{% if error %}<div class="message error" role="alert">{{ error }}</div>{% endif %}
+{% if envelope %}
+<section class="panel" aria-label="拒绝明细"><div class="panel-heading"><h2>提交被拒绝（零业务事实）</h2></div><div class="body">
+<dl class="detail-grid"><div><dt>状态</dt><dd>{{ envelope.status }}</dd></div><div><dt>预检摘要</dt><dd><code class="digest">{{ envelope.precheck.digest|default:'—' }}</code></dd></div><div><dt>预检基准日</dt><dd>{{ envelope.precheck.as_of_date|default:'—' }}</dd></div><div><dt>预检阻塞</dt><dd>{% if envelope.precheck.blocked %}是{% else %}否{% endif %}</dd></div><div><dt>截断</dt><dd>{% if envelope.truncated %}是{% else %}否{% endif %}</dd></div></dl>
+{% if envelope.row_errors %}<div class="table-scroll"><table aria-label="行级错误"><thead><tr><th>行号</th><th>字段</th><th>代码</th><th>原值摘要</th><th>说明</th></tr></thead><tbody>{% for item in envelope.row_errors %}<tr><td data-label="行号">{{ item.row_no|default:'—' }}</td><td data-label="字段">{{ item.field|default:'—' }}</td><td data-label="代码">{{ item.issue_code }}</td><td data-label="原值摘要"><code class="digest">{{ item.original_digest|default:'—' }}</code></td><td data-label="说明">{{ item.message }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{% if envelope.conflicts %}<div class="table-scroll"><table aria-label="未消解冲突"><thead><tr><th>行号</th><th>字段</th><th>代码</th><th>严重级</th><th>消解</th></tr></thead><tbody>{% for item in envelope.conflicts %}<tr><td data-label="行号">{{ item.row_no|default:'—' }}</td><td data-label="字段">{{ item.field|default:'—' }}</td><td data-label="代码">{{ item.conflict_code }}</td><td data-label="严重级"><span class="badge {{ item.severity }}">{{ item.severity }}</span></td><td data-label="消解">{{ item.resolution|default:'未消解' }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{% if envelope.missing %}<ul>{% for entry in envelope.missing %}<li><span class="badge {{ entry.severity }}">{{ entry.severity }}</span> {{ entry.missing_code }}（{{ entry.domain }}）：{{ entry.reason }}</li>{% endfor %}</ul>{% endif %}
+</div></section>
+{% endif %}
+{% if result %}
+<section class="panel" aria-label="提交结果"><div class="panel-heading"><h2>{% if result.status == 'dry_run' %}预演结果（未写入）{% else %}提交收据{% endif %}</h2></div><div class="body">
+<dl class="detail-grid"><div><dt>状态</dt><dd>{{ result.status }}</dd></div><div><dt>预览</dt><dd><code class="digest">{{ result.preview_ref.id }}</code>（版本 {{ result.preview_ref.version }}）</dd></div><div><dt>期间 / 行数</dt><dd>{{ result.period }} / {{ result.row_count }}</dd></div><div><dt>导入键</dt><dd><code class="digest">{{ result.import_key }}</code></dd></div>{% if result.receipt_id %}<div><dt>收据</dt><dd><code class="digest">{{ result.receipt_id }}</code></dd></div>{% endif %}<div><dt>重放</dt><dd>{% if result.replayed %}是（返回原收据）{% else %}否{% endif %}</dd></div></dl>
+{% if result.result_refs %}<p>写入结果引用：{% for ref in result.result_refs %}<span class="trace">{{ ref.namespace }} · {{ ref.kind }} · {{ ref.id }}{% if ref.version %}（版本 {{ ref.version }}）{% endif %}</span>{% if not forloop.last %}；{% endif %}{% endfor %}</p>{% endif %}
+{% if result.warnings %}<div class="table-scroll"><table aria-label="提交警告"><thead><tr><th>来源</th><th>代码</th><th>行号</th><th>消解</th></tr></thead><tbody>{% for item in result.warnings %}<tr><td data-label="来源">{{ item.source }}</td><td data-label="代码">{% if item.issue_code %}{{ item.issue_code }}{% else %}{{ item.conflict_code|default:'—' }}{% endif %}</td><td data-label="行号">{{ item.row_no|default:'—' }}</td><td data-label="消解">{{ item.resolution|default:'不适用' }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</div></section>
+{% endif %}
+<section class="panel"><div class="panel-heading"><h2>提交一个已持久化预览</h2></div><div class="body">
+{% if not module_enabled %}<div class="message" role="status">导入与期初模块已停用：不能提交写入；历史预览与提交收据仍可只读查看。</div>{% endif %}
+<form method="post" action="{{ commit_url }}">{% csrf_token %}
+{% if form.non_field_errors %}<div class="message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<div class="grid">
+<div class="form-field"><label for="{{ form.preview_ref.id_for_label }}">预览标识</label>{{ form.preview_ref }}{{ form.preview_ref.errors }}</div>
+<div class="form-field"><label for="{{ form.expected_version.id_for_label }}">预览版本</label>{{ form.expected_version }}{{ form.expected_version.errors }}</div>
+<div class="form-field"><label for="{{ form.rows_digest.id_for_label }}">预览行摘要</label>{{ form.rows_digest }}{{ form.rows_digest.errors }}</div>
+<div class="form-field"><label for="{{ form.precheck_digest.id_for_label }}">期间预检摘要</label>{{ form.precheck_digest }}{{ form.precheck_digest.errors }}</div>
+<div class="form-field"><label for="{{ form.precheck_as_of_date.id_for_label }}">预检基准日</label>{{ form.precheck_as_of_date }}{{ form.precheck_as_of_date.errors }}</div>
+<div class="form-field"><label for="{{ form.period.id_for_label }}">导入期间</label>{{ form.period }}{{ form.period.errors }}</div>
+</div>
+{{ form.request_token }}
+<div class="checkbox form-field">{{ form.dry_run }}<label for="{{ form.dry_run.id_for_label }}">仅预演：校验全部条件但不写收据/业务事实</label></div>
+<p class="help-text">预检摘要与基准日必须与提交时服务端重算一致；行摘要必须与预览持久化摘要一致。提交后预览标记为已消费，同请求标识同输入返回原收据。</p>
+<div class="actions"><button type="submit" class="button primary">{% if module_enabled %}提交导入{% else %}模块停用（不可写）{% endif %}</button><a class="button subtle" href="{{ page_url }}">刷新</a></div>
+</form>
+</div></section>
+<section class="panel"><div class="panel-heading"><h2>已持久化预览</h2></div><div class="body table-scroll">
+<table aria-label="已持久化导入预览"><thead><tr><th>预览标识</th><th>类型</th><th>状态</th><th>版本</th><th>文件</th><th>行摘要</th><th>创建时间</th></tr></thead><tbody>
+{% for preview in previews %}<tr><td data-label="预览标识"><code class="digest">{{ preview.id }}</code></td><td data-label="类型">{{ preview.kind }}</td><td data-label="状态">{{ preview.status }}</td><td data-label="版本">{{ preview.version }}</td><td data-label="文件">{{ preview.file_name|default:'—' }}</td><td data-label="行摘要"><code class="digest">{{ preview.rows_digest }}</code></td><td data-label="创建时间">{{ preview.created_at }}</td></tr>
+{% empty %}<tr><td colspan="7" class="table-empty">暂无已持久化预览。</td></tr>{% endfor %}
+</tbody></table>
+</div></section>
+<section class="panel"><div class="panel-heading"><h2>提交历史（只读）</h2></div><div class="body table-scroll">
+<table aria-label="导入提交历史"><thead><tr><th>收据</th><th>状态</th><th>期间</th><th>请求标识</th><th>导入键</th><th>创建时间</th></tr></thead><tbody>
+{% for receipt in receipts %}<tr><td data-label="收据"><code class="digest">{{ receipt.id }}</code></td><td data-label="状态">{{ receipt.status }}</td><td data-label="期间">{{ receipt.period }}</td><td data-label="请求标识"><code class="digest">{{ receipt.request_token }}</code></td><td data-label="导入键"><code class="digest">{{ receipt.import_key }}</code></td><td data-label="创建时间">{{ receipt.created_at }}</td></tr>
+{% empty %}<tr><td colspan="6" class="table-empty">暂无提交收据。</td></tr>{% endfor %}
+</tbody></table>
+</div></section>
+<script>(()=>{const root=document.querySelector('.import-submit');if(!root)return;const bad=root.querySelector('[aria-invalid="true"]');if(bad)bad.focus();})();</script>
+</div>
+{% endblock %}

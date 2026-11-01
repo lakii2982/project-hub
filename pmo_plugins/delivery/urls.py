@@ -60,7 +60,8 @@ def entry_point():
         },
         'management_revenue': {'revenue_pairing': revenue_views.revenue_pairing_snapshot_page},
         'onboarding': {name: getattr(onboarding_views, name) for name in
-                       ('import_preview_list', 'import_preview_run', 'import_preview_upload')},
+                       ('import_preview_list', 'import_preview_run', 'import_preview_upload',
+                        'import_submit_page', 'import_submit_commit')},
         'invoicing': {name: getattr(invoicing_views, name) for name in
                       ('invoice_list', 'invoice_form', 'invoice_record', 'invoice_detail',
                        'invoice_allocate', 'invoice_reverse', 'invoice_tax',
