@@ -1,0 +1,36 @@
+{
+ "task_id": "PH-403",
+ "summary": "规划推进（BASE 6a8c410）：PH-353 原子导入已合入后晋级 PH-342 发票批量导入契约与 PH-343 insights 读模型契约（依赖均已 done）；仅规划，无产品代码/迁移/发布宣称。",
+ "tests": [
+  {
+   "command": "python scripts/projectctl.py check",
+   "result": "pass",
+   "evidence": "Actual exit 0: ok=true, task_count=324."
+  },
+  {
+   "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+   "result": "pass",
+   "evidence": "Actual exit 0: Ran 23 tests in 2.301s, OK."
+  }
+ ],
+ "review": {
+  "required": true,
+  "reviewer": "independent PH-403 planning reviewer (fresh context, read-only)",
+  "status": "pass",
+  "findings": [
+   "Initial review PASS with 2 non-blocking limits: PH-342/343 spec status lines still named the proposed parent tasks, and agent-protocol §12 numbering/trigger wording was inconsistent.",
+   "Follow-up review found PH-404 blocker still said \"after merge\" instead of \"after done\"; corrected and re-reviewed PASS.",
+   "Final PASS at f6efe38: 4 digests MATCH, check ok/324, 23 governance tests OK, verify-change only the review gate; no product code, no EXP-1/PH-110, no arbitration-rule change."
+  ],
+  "evidence": "Independent final verdict PASS at f6efe38 (BASE 6a8c410)."
+ },
+ "deviations": [
+  "PH-353 merged in PR #278 and closed by PR #279; this slice only activates the two docs-only contract tasks whose dependencies are all done.",
+  "No EXP-1/PH-110 or arbitration-rule change.",
+  "Review follow-up: PH-342/PH-343 spec status/dependency lines now reflect PH-353/PH-354 as the implemented slices instead of the still-proposed parent PH-289/PH-272; agent-protocol §12 numbering/trigger wording aligned; all four digests recomputed."
+ ],
+ "unverified": [
+  "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed.",
+  "Independent S review and final verify-change are pending."
+ ]
+}
