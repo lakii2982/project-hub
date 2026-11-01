@@ -45,12 +45,14 @@
  ],
  "review": {
   "required": true,
-  "reviewer": null,
-  "status": "pending",
+  "reviewer": "independent PH-353 atomic-import reviewer (fresh context, read-only)",
+  "status": "pass",
   "findings": [
-   "Independent S review has not been performed; this implementation does not self-approve the review gate."
+   "Initial review blocker: rows were not bound to the submitted period, so a current-month precheck could admit a prior-month row. Fixed by per-row month check in commit/dry_run (row_date_invalid) with regressions.",
+   "Final review PASS at e09e782: 33 scoped tests OK, full suite 1413 with only the established macOS baseline, verify-change only the review gate, report/handoff counts and BASE evidence updated.",
+   "Non-blocking limits accepted: dry_run does not run owner row validation; resolve_conflict lacks locking; persistent preview has no HTTP upload entry in this slice."
   ],
-  "evidence": "Review pending. No independent reviewer run, no verify-change pass, no push/PR."
+  "evidence": "Independent final verdict PASS; projectctl check ok/323; verify-change --base 8e3f877 only high_risk_review_required before this record."
  },
  "deviations": [
   "Append-only receipt ordering: apply_rows writes owner facts first and the committed receipt is created with result_refs afterwards inside the same transaction.atomic; any failure still rolls back the whole batch. The contract's pending→committed update order is impossible with an append-only receipt that cannot be updated.",
