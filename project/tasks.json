@@ -9054,7 +9054,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "仍依赖 proposed 的 PH-181/PH-185；先完成依赖与 DoR 复核再晋级。"
+      ],
       "handoff": null
     },
     {
@@ -9180,7 +9182,9 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [],
+      "blockers": [
+        "仍依赖 proposed 的 PH-289 与 PH-181/PH-185；先完成依赖与 DoR 复核再晋级。"
+      ],
       "handoff": null
     },
     {
