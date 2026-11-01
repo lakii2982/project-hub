@@ -11495,7 +11495,7 @@
       "title": "导入提交拆分：ImportPreview/ImportConflict 持久化与原子提交首片（PH-289 拆分）",
       "kind": "feature",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13261,7 +13261,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "in_review",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13295,7 +13295,7 @@
       "title": "v1.0 后续交付规划入口",
       "kind": "docs",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [

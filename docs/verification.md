@@ -1245,9 +1245,9 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **未验证/限制**：单一维护者 approvals=0；Agent 复核非第二 GitHub 人工身份；管理员可改规则，证据为时间点观察；无生产/UAT。
 - 独立 S review 与 verify-change：pending；执行人未自批。
 
-## PH-353 onboarding 导入提交原子首片（2026-11-01，BASE a70d3eb）
+## PH-353 onboarding 导入提交原子首片（2026-11-01，BASE 8e3f877；已合入 5ca8d30）
 
 - **L1 实现**：onboarding 首个迁移 `0001_initial` 与 ImportPreview/ImportConflict/ImportSubmissionReceipt；`persist_preview` 规范化行摘要并只持久化预览/冲突；`commit_import` 公司锁+单事务、重算 rows_digest、复用 PH-354 `period_precheck_snapshot` 重算 precheck_digest/as_of、blocker/未消解冲突/期间锁期/权限/幂等门禁，dry_run 零写，非 dry_run 仅经 `core.imports.apply_rows` 调 owner 服务，异常整批回滚、成功置预览 consumed；新增 history_read 提交页（auditor 可读、停用可读历史）与 business_write 提交入口（owner/finance，pm/member 拒绝）。
-- **L2 实际结果**：新测试 31 OK（24 服务 + 7 HTTP）；受影响 onboarding/insights 40 OK；plugin SDK 48 OK（2 skip）；`manage.py check` exit 0（122 条既有警告/0 错误）；`makemigrations --check` No changes；fresh SQLite `verify_integrity --json` ok=true/errors=[]；全量 Ran 1411 tests/148.905s，5F+3E/73 skips（1330 passed），8 项均为既有 macOS 基线（6 DRF 安全兼容 + 2 delivery symlink），无新增类别。
+- **L2 实际结果**：新测试 33 OK（26 服务 + 7 HTTP）；受影响 onboarding/insights 40 OK；plugin SDK 48 OK（2 skip）；`manage.py check` exit 0（122 条既有警告/0 错误）；`makemigrations --check` No changes；fresh SQLite `verify_integrity --json` ok=true/errors=[]；全量 Ran 1411 tests/148.905s，5F+3E/73 skips（1332 passed），8 项均为既有 macOS 基线（6 DRF 安全兼容 + 2 delivery symlink），无新增类别。
 - **偏差**：append-only 收据在 apply_rows 之后、同一事务内以 result_refs 创建（无法 pending→update）；冲突消解为任务给定单表字段的单向迁移并保留原行；同月约束由 PH-354 拒绝并映射 precheck_stale，未来基准日额外 future_date；HTTP 拆 history_read 页 + business_write 提交。
 - **L3/L4/L5：not_run**。PostgreSQL 并发、浏览器 1440/390、staging/生产/UAT、真实导入未执行；独立 S 复核 pending（本片未自批 review）。

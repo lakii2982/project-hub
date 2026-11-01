@@ -1,6 +1,6 @@
 {
  "task_id": "PH-353",
- "summary": "在 ADR 0012 的 onboarding 插件内实现 PH-353 导入提交首片：新增 ImportPreview/ImportConflict/ImportSubmissionReceipt 模型与 onboarding 首个 0001_initial 迁移；persist_preview 持久化规范化 sha256 行摘要的 ready 预览与去重冲突（零业务事实）；commit_import 在公司锁+单事务内校验同 org 预览/版本/未消费、重算 rows_digest、复用 PH-354 period_precheck_snapshot 重算并比对 precheck_digest/as_of（blocker/can_close=false → precheck_blocked）、阻断未消解 blocker 冲突、request_token 同输入幂等/改输入冲突、稳定 import_key 去重、dry_run 零写，最终仅经 core.imports.apply_rows 调用既有 owner 服务，任一行失败整批回滚，成功后预览置 consumed；新增 owner/finance 提交页、auditor 历史只读、pm/member 拒绝、模块停用 history_read 的 history_read+business_write 路由与 ui-tokens 模板。新测试 33 项（26 服务 + 7 HTTP）。 复核修复：commit/dry_run 在调用 owner 服务前逐行校验业务日期所属期间（time=work_date、expense=occurred_on、plan=due_date），跨期行以 row_date_invalid 拒绝且零写。",
+ "summary": "在 ADR 0012 的 onboarding 插件内实现 PH-353 导入提交首片：新增 ImportPreview/ImportConflict/ImportSubmissionReceipt 模型与 onboarding 首个 0001_initial 迁移；persist_preview 持久化规范化 sha256 行摘要的 ready 预览与去重冲突（零业务事实）；commit_import 在公司锁+单事务内校验同 org 预览/版本/未消费、重算 rows_digest、复用 PH-354 period_precheck_snapshot 重算并比对 precheck_digest/as_of（blocker/can_close=false → precheck_blocked）、阻断未消解 blocker 冲突、request_token 同输入幂等/改输入冲突、稳定 import_key 去重、dry_run 零写，最终仅经 core.imports.apply_rows 调用既有 owner 服务，任一行失败整批回滚，成功后预览置 consumed；新增 owner/finance 提交页、auditor 历史只读、pm/member 拒绝、模块停用 history_read 的 history_read+business_write 路由与 ui-tokens 模板。新测试 33 项（26 服务 + 7 HTTP）。 复核修复：commit/dry_run 在调用 owner 服务前逐行校验业务日期所属期间（time=work_date、expense=occurred_on、plan=due_date），跨期行以 row_date_invalid 拒绝且零写。 收口：PR #278 全部 required checks 通过并合入 5ca8d30；PH-353 置 done，PH-401 置 done，PH-403 晋级 ready。",
  "tests": [
   {
    "command": "python scripts/projectctl.py check",
@@ -65,7 +65,8 @@
   "dry_run validates preview/precheck/conflicts/row-period but not owner row rules; would_commit means those stages passed, owner rejection is returned on real commit.",
   "resolve_conflict has no company lock/select_for_update; concurrent resolution is deferred to a follow-up slice.",
   "Persistent preview HTTP upload is not exposed in this slice; persist_preview is a service API and the submit page is present.",
-  "Final verify-change uses the rebased BASE 8e3f877 and reports only high_risk_review_required; the original a70d3eb BASE would now flag PH-122-merged files as out of scope, which is why the rebase was required."
+  "Final verify-change uses the rebased BASE 8e3f877 and reports only high_risk_review_required; the original a70d3eb BASE would now flag PH-122-merged files as out of scope, which is why the rebase was required.",
+  "Closeout after merge 5ca8d30: PH-353/PH-401 done and PH-403 ready; no product code changed in this closeout PR."
  ],
  "unverified": [
   "Independent S review pending (not self-approved).",
