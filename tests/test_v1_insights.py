@@ -401,6 +401,56 @@ class InsightsServiceTests(OpsOverviewFixture, TestCase):
             row.get('reason') == '来源身份无法规范化，未生成差异单'
             for row in data['missing']))
 
+    def test_backdated_snapshot_is_listed_by_its_own_as_of(self):
+        backdated = (self.today.replace(day=1) - timedelta(days=1))
+        period = backdated.strftime('%Y-%m')
+        snapshot = {
+            'contract': 'insights.period_precheck.snapshot/v1',
+            'period': period, 'as_of_date': backdated.isoformat(),
+            'precheck_digest': 'b' * 64, 'watermark': {}, 'missing': [],
+            'truncated': False,
+            'issues': [{
+                'issue_code': 'classification_missing', 'severity': 'blocker',
+                'domain': 'cash', 'owner': 'cash',
+                'source_refs': [{'namespace': 'cash', 'kind': 'cash_transaction',
+                                 'id': str(uuid.uuid4()), 'version': 1}],
+                'expected': None, 'actual': None, 'difference_cents': None,
+                'message': None, 'remediation_hint': None, 'missing_code': None,
+            }],
+        }
+        with mock.patch.object(services.precheck_services,
+                               'period_precheck_snapshot', return_value=snapshot):
+            data = self.refresh(period=period, as_of=backdated.isoformat())
+        self.assertEqual(len(data['created']), 1)
+        listed = services.reconciliation_case_list(
+            self.owner, as_of=backdated.isoformat())
+        self.assertEqual([row['id'] for row in listed['cases']],
+                         [data['created'][0]['id']])
+        earlier = (backdated - timedelta(days=1)).isoformat()
+        hidden = services.reconciliation_case_list(self.owner, as_of=earlier)
+        self.assertEqual(hidden['cases'], [])
+
+    def test_difference_cents_reads_remaining_cents(self):
+        snapshot = {
+            'contract': 'insights.period_precheck.snapshot/v1',
+            'period': self.period(), 'as_of_date': self.today.isoformat(),
+            'precheck_digest': 'c' * 64, 'watermark': {}, 'missing': [],
+            'truncated': False,
+            'issues': [{
+                'issue_code': 'remaining_mismatch', 'severity': 'blocker',
+                'domain': 'settlement', 'owner': 'settlement',
+                'source_refs': [{'namespace': 'settlement', 'kind': 'open_item',
+                                 'id': str(uuid.uuid4()), 'version': 1}],
+                'expected': {'remaining_cents': 500}, 'actual': 300,
+                'difference_cents': None, 'message': None,
+                'remediation_hint': None, 'missing_code': None,
+            }],
+        }
+        with mock.patch.object(services.precheck_services,
+                               'period_precheck_snapshot', return_value=snapshot):
+            data = self.refresh()
+        self.assertEqual(data['created'][0]['difference_cents'], -200)
+
     def test_difference_cents_reads_owner_cents_dicts(self):
         settlement = self.settlement_with_item(amount=10000)
         item = settlement.items.first()

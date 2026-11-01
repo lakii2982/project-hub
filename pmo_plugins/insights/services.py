@@ -23,8 +23,8 @@ from core.plugin_runtime import is_enabled
 from core.services import lock_company
 
 from . import precheck_services
-from .models import (ACTIVE_STATUSES, TRANSITIONS, ReconciliationCase,
-                     ReconciliationRefresh)
+from .models import (ACTIVE_STATUSES, MAX_CENTS, TRANSITIONS,
+                     ReconciliationCase, ReconciliationRefresh)
 
 REFRESH_CONTRACT = 'insights.reconciliation.refresh/v1'
 CASE_UPDATE_CONTRACT = 'insights.reconciliation.case.update/v1'
@@ -192,14 +192,15 @@ def reconciliation_case_list(member, *, period=None, status=None, owner_member_i
     day = None
     if as_of not in (None, ''):
         day = _day(as_of)
-        rows = rows.filter(created_at__date__lte=day)
     limit = max(1, min(int(limit), CASE_LIMIT))
     items = list(rows.order_by('-created_at', 'id')[:CASE_SCAN_LIMIT])
     if day is not None:
         # The case's own snapshot date is the watermark external_key; a case
-        # derived from a later snapshot must not appear in an earlier as_of view.
+        # derived from a later snapshot must not appear in an earlier as_of view,
+        # and a backdated snapshot created later must still be listed.
         items = [case for case in items
-                 if (_watermark_as_of(case.snapshot_watermark) or day) <= day]
+                 if _watermark_as_of(case.snapshot_watermark) is None
+                 or _watermark_as_of(case.snapshot_watermark) <= day]
     if project is not None:
         # Only an explicit project source ref may match; company-scope cases never
         # leak into a project filter.
@@ -287,6 +288,10 @@ def _candidate_cases(snapshot, period_label):
                 row['difference_cents'] = issue.get('difference_cents')
             continue
         difference = _difference_cents(issue)
+        if abs(difference) > MAX_CENTS:
+            skipped.append({'issue_code': code, 'domain': issue.get('domain'),
+                            'reason': '差额超出 canonical 范围，未生成差异单'})
+            continue
         row = {
             'case_key': key, 'rule_code': code, 'coverage_key': coverage,
             'source_refs': sorted(refs, key=lambda ref: (
@@ -309,7 +314,8 @@ def _iso_day(value):
 
 
 _MONEY_KEYS = ('cents', 'amount_cents', 'min_cents', 'max_cents', 'gross_cents',
-               'net_cents', 'tax_cents', 'value_cents', 'total_cents', 'difference_cents')
+               'net_cents', 'tax_cents', 'value_cents', 'total_cents',
+               'remaining_cents', 'difference_cents')
 
 
 def _money(value):

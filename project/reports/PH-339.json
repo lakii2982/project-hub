@@ -1,6 +1,6 @@
 {
  "task_id": "PH-339",
- "summary": "insights 读模型实现首片：新增 canonical ReconciliationCase（冻结字段/状态机/同 case_key 至多一条有效/旧单 superseded/仅追加历史）与内部 MetricSnapshot/ReconciliationRefresh；refresh 复用 PH-354 期间预检并按公司锁+org/token 幂等收据派生差异单，update 仅允许 draft→pending→approved|rejected、approved→closed（rejected 终态），workbench 经 contracts/management_revenue/costing/settlement 既有只读接口派生且缺失一律 null+missing、零业务写入；owner/finance/auditor 全量、pm 仅管理项目、member/跨 org 拒绝、写入口仅 owner/finance、停用 history_read；新增差异单/工作台页面与 migration 0001；新测试 36 个。 新测试 66 项（41 差异单/工作台/HTTP + 25 期间预检回归）。收尾：PH-404 已补 `migrations/__init__.py` 白名单，交付工作树可直接加载迁移包；差异单 `difference_cents` 为非空 canonical 整数，`snapshot_watermark` 为 canonical SourceRef 数组，append-only 触发器已落库。",
+ "summary": "insights 读模型实现首片：新增 canonical ReconciliationCase（冻结字段/状态机/同 case_key 至多一条有效/旧单 superseded/仅追加历史）与内部 MetricSnapshot/ReconciliationRefresh；refresh 复用 PH-354 期间预检并按公司锁+org/token 幂等收据派生差异单，update 仅允许 draft→pending→approved|rejected、approved→closed（rejected 终态），workbench 经 contracts/management_revenue/costing/settlement 既有只读接口派生且缺失一律 null+missing、零业务写入；owner/finance/auditor 全量、pm 仅管理项目、member/跨 org 拒绝、写入口仅 owner/finance、停用 history_read；新增差异单/工作台页面与 migration 0001；新测试 36 个。 新测试 68 项（43 差异单/工作台/HTTP + 25 期间预检回归）。收尾：PH-404 已补 `migrations/__init__.py` 白名单，交付工作树可直接加载迁移包；差异单 `difference_cents` 为非空 canonical 整数，`snapshot_watermark` 为 canonical SourceRef 数组，append-only 触发器已落库。",
  "tests": [
   {
    "command": "python scripts/projectctl.py check",
@@ -20,7 +20,7 @@
   {
    "command": "python manage.py test tests.test_v1_insights tests.test_v1_insights_http --verbosity 1",
    "result": "pass",
-   "evidence": "Actual exit 0: Ran 41 tests, OK (reconciliation cases, workbench, HTTP and canonical field checks)."
+   "evidence": "Actual exit 0: Ran 43 tests, OK (reconciliation cases, workbench, HTTP and canonical field checks)."
   },
   {
    "command": "python manage.py test tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http --verbosity 1",

@@ -1289,7 +1289,7 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 ## PH-339 insights 读模型实现首片（2026-11-01，BASE 7bb8351；in_review）
 
 - 工作树 `/tmp/ph339-insights`（PH-404 已补 `pmo_plugins/insights/migrations/__init__.py` 白名单，可直接加载迁移包）。
-- 实际通过：`manage.py check` 126 warnings/0 error；`makemigrations --check --dry-run` No changes detected；`tests.test_v1_insights tests.test_v1_insights_http tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http` Ran 66 tests OK；throwaway migrated SQLite `verify_integrity --json` ok=true/errors=[]；`projectctl.py check` ok=true/task_count=325。
+- 实际通过：`manage.py check` 126 warnings/0 error；`makemigrations --check --dry-run` No changes detected；`tests.test_v1_insights tests.test_v1_insights_http tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http` Ran 68 tests OK；throwaway migrated SQLite `verify_integrity --json` ok=true/errors=[]；`projectctl.py check` ok=true/task_count=325。
 - 全量 `manage.py test tests`：8 个失败名与既有 macOS 基线一致（6 DRF Accept/codec/large-JSON + 2 delivery `/private/var` 符号链接），无新增失败。
 - 差异单 canonical 对齐：`difference_cents` 非空（owner 值→cents 对→0）、`snapshot_watermark` 为 SourceRef 数组（基准日存 external_key）、`resolution_note` 为 null|1..1000、`coverage_key` 含来源身份；case/read-model append-only 数据库触发器（SQLite+PG）；较早 as_of 不覆盖较新快照；无来源身份的 issue 记 missing 不建单。
 - not_run：真实 PostgreSQL 并发/锁、CI Linux/PG、浏览器 1440/390 人工检视、生产/UAT、独立 S review（未自批）。

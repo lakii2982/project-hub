@@ -135,4 +135,4 @@ delivery append-only run：PeriodCloseRun/ProjectClose + 迁移 0005（vendor-aw
 ## PH-339 insights 读模型实现首片（in_review，2026-11-01，BASE 7bb8351）
 
 - 新增 insights 自有模型/迁移、刷新/状态更新/项目工作台服务与差异单/工作台页面；期间预检直接复用 PH-354。差异单由预检 issue 派生，同 case_key 至多一条有效、证据变化旧单 superseded、刷新/更新 request_token 幂等；工作台经 contracts/management_revenue/costing/settlement 既有只读接口派生，缺失 null+missing、零业务写入；owner/finance/auditor 全量、pm 仅管理项目、member/跨 org 拒绝、停用 history_read、写入口仅 owner/finance。
-- 交付工作树（PH-404 已补 `migrations/__init__.py` 白名单）新测试 66 OK（41 差异单/工作台/HTTP + 25 期间预检回归）；check/makemigrations/verify_integrity 通过。差异单 `difference_cents` 为非空 canonical 整数、`snapshot_watermark` 为 canonical SourceRef 数组、case/read-model append-only 触发器已落库；较早 as_of 不可覆盖较新快照。未验证 PG/CI、浏览器 1440/390、生产/UAT、独立 S review。
+- 交付工作树（PH-404 已补 `migrations/__init__.py` 白名单）新测试 68 OK（43 差异单/工作台/HTTP + 25 期间预检回归）；check/makemigrations/verify_integrity 通过。差异单 `difference_cents` 为非空 canonical 整数、`snapshot_watermark` 为 canonical SourceRef 数组、case/read-model append-only 触发器已落库；较早 as_of 不可覆盖较新快照。未验证 PG/CI、浏览器 1440/390、生产/UAT、独立 S review。
