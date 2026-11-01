@@ -55,7 +55,7 @@ class ReconciliationUpdateForm(forms.Form):
     decision = forms.ChoiceField(label='变更', choices=(
         ('pending', '提交待确认'), ('approved', '确认通过'),
         ('rejected', '驳回（终态）'), ('closed', '结案')))
-    note = forms.CharField(label='处理说明', required=False, max_length=2000,
+    note = forms.CharField(label='处理说明', required=False, max_length=1000,
                            widget=forms.Textarea(attrs={'rows': 3}))
     expected_version = forms.IntegerField(label='期望版本', min_value=1,
                                           widget=forms.HiddenInput())

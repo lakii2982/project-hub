@@ -1,6 +1,7 @@
 """PH-339 insights read models: reconciliation cases and project workbench."""
 import uuid
 from datetime import timedelta
+from unittest import mock
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection, transaction
@@ -357,6 +358,57 @@ class InsightsServiceTests(OpsOverviewFixture, TestCase):
         stale.status = 'approved'
         self.assertRaises(ValidationError, stale.save)
 
+    def test_snapshot_watermark_is_canonical_sourceref(self):
+        self.cash(classify=False)
+        case = self.case_for(self.refresh())
+        self.assertEqual(len(case['snapshot_watermark']), 1)
+        ref = case['snapshot_watermark'][0]
+        self.assertTrue({'namespace', 'kind', 'id', 'version'} <= set(ref))
+        self.assertTrue(set(ref) <= {'namespace', 'kind', 'id', 'version',
+                                     'line_id', 'external_key'})
+        self.assertEqual((ref['namespace'], ref['kind']), ('core', 'period_precheck'))
+        self.assertRegex(ref['id'], r'^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$')
+        self.assertGreaterEqual(ref['version'], 1)
+
+    def test_resolution_note_is_null_or_limited_to_1000(self):
+        self.cash(classify=False)
+        case = self.case_for(self.refresh())
+        self.assertIsNone(case['resolution_note'])
+        with self.assertRaises(ValidationError):
+            self.update(case, 'pending', note='x' * 1001)
+        pending = self.update(case, 'pending', note='x' * 1000)
+        self.assertEqual(len(pending['case']['resolution_note']), 1000)
+
+    def test_issue_without_source_identity_is_missing_not_merged(self):
+        snapshot = {
+            'contract': 'insights.period_precheck.snapshot/v1',
+            'period': self.period(), 'as_of_date': self.today.isoformat(),
+            'precheck_digest': 'a' * 64, 'watermark': {}, 'missing': [],
+            'truncated': False,
+            'issues': [{
+                'issue_code': 'pairing_missing', 'severity': 'blocker',
+                'domain': 'costing', 'owner': 'costing', 'source_refs': [],
+                'expected': None, 'actual': None, 'difference_cents': None,
+                'message': None, 'remediation_hint': None, 'missing_code': None,
+            }],
+        }
+        with mock.patch.object(services.precheck_services,
+                               'period_precheck_snapshot', return_value=snapshot):
+            data = self.refresh()
+        self.assertEqual(data['created'], [])
+        self.assertEqual(ReconciliationCase.objects.count(), 0)
+        self.assertTrue(any(
+            row.get('reason') == '来源身份无法规范化，未生成差异单'
+            for row in data['missing']))
+
+    def test_difference_cents_reads_owner_cents_dicts(self):
+        settlement = self.settlement_with_item(amount=10000)
+        item = settlement.items.first()
+        cash = self.cash(amount=15000)
+        self.clearance(item, cash.pk, amount=15000)
+        case = self.case_for(self.refresh(), rule_code='cleared_over_gross')
+        self.assertEqual(case['difference_cents'], 5000)
+
     def test_database_triggers_block_direct_case_and_readmodel_mutation(self):
         self.cash(classify=False)
         case = self.case_for(self.refresh())
@@ -372,7 +424,6 @@ class InsightsServiceTests(OpsOverviewFixture, TestCase):
                     cursor.execute(sql, params)
 
         raw("UPDATE insights_reconciliationcase SET rule_code = 'tampered' WHERE id = %s", [case_id])
-        raw("UPDATE insights_reconciliationcase SET snapshot_as_of = NULL WHERE id = %s", [case_id])
         raw("DELETE FROM insights_reconciliationcase WHERE id = %s", [case_id])
         raw("UPDATE insights_metricsnapshot SET value_cents = 2 WHERE id = %s", [snapshot_id])
         raw("DELETE FROM insights_metricsnapshot WHERE id = %s", [snapshot_id])

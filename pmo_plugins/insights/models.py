@@ -45,15 +45,14 @@ class ReconciliationCase(models.Model):
     version = models.PositiveIntegerField(default=1)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='draft')
     source_refs = models.JSONField(default=list)
-    difference_cents = models.BigIntegerField(null=True, default=None)
+    difference_cents = models.BigIntegerField()
     owner_member = models.ForeignKey('core.Membership', on_delete=models.PROTECT,
                                      related_name='+')
     resolution_note = models.TextField(null=True, blank=True, default=None)
     case_key = models.CharField(max_length=128)
     rule_code = models.CharField(max_length=80)
-    coverage_key = models.CharField(max_length=255)
+    coverage_key = models.CharField(max_length=300)
     snapshot_watermark = models.JSONField(default=list)
-    snapshot_as_of = models.DateField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey('core.Membership', on_delete=models.PROTECT,
@@ -70,8 +69,8 @@ class ReconciliationCase(models.Model):
             models.CheckConstraint(condition=Q(version__gte=1),
                                    name='insights_case_version_positive'),
             models.CheckConstraint(
-                condition=Q(difference_cents__isnull=True) | Q(
-                    difference_cents__gte=-MAX_CENTS, difference_cents__lte=MAX_CENTS),
+                condition=Q(difference_cents__gte=-MAX_CENTS,
+                            difference_cents__lte=MAX_CENTS),
                 name='insights_case_difference_bound'),
             # At most one effective case per case_key; closed/superseded history is kept.
             models.UniqueConstraint(

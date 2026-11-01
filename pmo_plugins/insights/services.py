@@ -9,6 +9,7 @@ coerced to zero.
 """
 import hashlib
 import json
+import re
 import uuid
 from datetime import date
 
@@ -33,7 +34,7 @@ WRITE_ROLES = {'owner', 'finance'}
 CASE_LIMIT = 200
 CASE_SCAN_LIMIT = 2000
 METRIC_LIMIT = 200
-NOTE_LIMIT = 2000
+NOTE_LIMIT = 1000
 
 
 def _canonical_json(payload):
@@ -194,6 +195,11 @@ def reconciliation_case_list(member, *, period=None, status=None, owner_member_i
         rows = rows.filter(created_at__date__lte=day)
     limit = max(1, min(int(limit), CASE_LIMIT))
     items = list(rows.order_by('-created_at', 'id')[:CASE_SCAN_LIMIT])
+    if day is not None:
+        # The case's own snapshot date is the watermark external_key; a case
+        # derived from a later snapshot must not appear in an earlier as_of view.
+        items = [case for case in items
+                 if (_watermark_as_of(case.snapshot_watermark) or day) <= day]
     if project is not None:
         # Only an explicit project source ref may match; company-scope cases never
         # leak into a project filter.
@@ -227,16 +233,47 @@ def reconciliation_case_snapshot(member, case_id):
     return _case_dict(case)
 
 
+def _watermark(snapshot):
+    """Canonical SourceRef pointing at the period-precheck snapshot itself.
+
+    The business date travels in the optional ``external_key`` so the case needs
+    no non-canonical snapshot_as_of column to reject an older refresh.
+    """
+    digest = snapshot.get('precheck_digest')
+    if not isinstance(digest, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,79}', digest):
+        return []
+    ref = {'namespace': 'core', 'kind': 'period_precheck', 'id': digest, 'version': 1}
+    as_of = snapshot.get('as_of_date')
+    if as_of:
+        ref['external_key'] = str(as_of)[:200]
+    return [ref]
+
+
+def _watermark_as_of(refs):
+    for ref in refs or ():
+        if isinstance(ref, dict) and ref.get('external_key'):
+            return _iso_day(ref['external_key'])
+    return None
+
+
 def _candidate_cases(snapshot, period_label):
-    candidates, by_key = [], {}
+    candidates, skipped, by_key = [], [], {}
+    watermark = _watermark(snapshot)
     for issue in snapshot.get('issues') or ():
         code = issue.get('issue_code')
         # future_as_of is a request-scope warning, not a correctness difference.
         if not code or code == 'future_as_of':
             continue
+        refs = issue.get('source_refs') if isinstance(issue.get('source_refs'), list) else []
+        if not refs:
+            # Canonical source_refs requires at least one identity; an issue whose
+            # upstream refs could not be normalized is surfaced as missing instead
+            # of creating a case that merges unrelated sources under one key.
+            skipped.append({'issue_code': code, 'domain': issue.get('domain'),
+                            'reason': '来源身份无法规范化，未生成差异单'})
+            continue
         coverage = _coverage_key(period_label, issue)
         key = _case_key(code, coverage)
-        refs = issue.get('source_refs') if isinstance(issue.get('source_refs'), list) else []
         if key in by_key:
             row = by_key[key]
             existing = {_canonical_json(ref) for ref in row['source_refs']}
@@ -250,19 +287,16 @@ def _candidate_cases(snapshot, period_label):
                 row['difference_cents'] = issue.get('difference_cents')
             continue
         difference = _difference_cents(issue)
-        watermark = snapshot.get('watermark') if isinstance(snapshot.get('watermark'), dict) else {
-            'namespace': 'core', 'kind': 'organization', 'id': str(snapshot.get('scope', {}).get('project_id') or 'company'), 'version': 1}
         row = {
             'case_key': key, 'rule_code': code, 'coverage_key': coverage,
             'source_refs': sorted(refs, key=lambda ref: (
                 str(ref.get('namespace')), str(ref.get('kind')), str(ref.get('id')))),
             'difference_cents': difference,
-            'snapshot_watermark': [watermark],
-            'snapshot_as_of': _iso_day(snapshot.get('as_of_date')),
+            'snapshot_watermark': watermark,
         }
         by_key[key] = row
         candidates.append(row)
-    return candidates
+    return candidates, skipped
 
 
 def _iso_day(value):
@@ -274,16 +308,31 @@ def _iso_day(value):
         return None
 
 
+_MONEY_KEYS = ('cents', 'amount_cents', 'min_cents', 'max_cents', 'gross_cents',
+               'net_cents', 'tax_cents', 'value_cents', 'total_cents', 'difference_cents')
+
+
+def _money(value):
+    if type(value) is int:
+        return value
+    if isinstance(value, dict):
+        for key in _MONEY_KEYS:
+            if type(value.get(key)) is int:
+                return value[key]
+    return None
+
+
 def _difference_cents(issue):
     # Canonical SignedCnyCents is non-null. Prefer the owner-provided difference,
-    # then a cents pair; an issue that carries no monetary difference (for example
-    # an unclassified cash row) has a true difference of zero, not "missing".
+    # then an expected/actual cents pair (owner issues wrap money in dicts such as
+    # {'max_cents': 10000}); an issue that carries no monetary difference at all
+    # (for example an unclassified cash row) has a true difference of zero.
     value = issue.get('difference_cents')
     if type(value) is int:
         return value
-    expected = issue.get('expected_cents', issue.get('expected'))
-    actual = issue.get('actual_cents', issue.get('actual'))
-    if type(expected) is int and type(actual) is int:
+    expected = _money(issue.get('expected_cents', issue.get('expected')))
+    actual = _money(issue.get('actual_cents', issue.get('actual')))
+    if expected is not None and actual is not None:
         return actual - expected
     return 0
 
@@ -293,7 +342,7 @@ def _same_content(case, candidate):
             and case.coverage_key == candidate['coverage_key']
             and (case.source_refs or []) == candidate['source_refs']
             and case.difference_cents == candidate['difference_cents']
-            and case.snapshot_as_of == candidate.get('snapshot_as_of'))
+            and (case.snapshot_watermark or []) == candidate['snapshot_watermark'])
 
 
 def refresh_reconciliation_cases(member, *, period, as_of, request_token, dry_run=True):
@@ -326,7 +375,7 @@ def refresh_reconciliation_cases(member, *, period, as_of, request_token, dry_ru
 
         snapshot = precheck_services.period_precheck_snapshot(
             member, scope='company', period=label, as_of=day.isoformat())
-        candidates = _candidate_cases(snapshot, label)
+        candidates, skipped_issues = _candidate_cases(snapshot, label)
         keys = [row['case_key'] for row in candidates]
         existing = {case.case_key: case for case in ReconciliationCase.objects.filter(
             organization_id=member.organization_id, case_key__in=keys,
@@ -342,9 +391,10 @@ def refresh_reconciliation_cases(member, *, period, as_of, request_token, dry_ru
                 unchanged.append(_case_dict(case))
                 result_cases.append(_case_dict(case))
                 continue
-            if (case is not None and case.snapshot_as_of is not None
-                    and candidate.get('snapshot_as_of') is not None
-                    and candidate['snapshot_as_of'] < case.snapshot_as_of):
+            case_as_of = _watermark_as_of(case.snapshot_watermark) if case is not None else None
+            candidate_as_of = _watermark_as_of(candidate['snapshot_watermark'])
+            if (case_as_of is not None and candidate_as_of is not None
+                    and candidate_as_of < case_as_of):
                 # Canonical: an older as_of refresh cannot overwrite a newer snapshot.
                 unchanged.append(_case_dict(case))
                 result_cases.append(_case_dict(case))
@@ -394,7 +444,7 @@ def refresh_reconciliation_cases(member, *, period, as_of, request_token, dry_ru
             'unchanged': sorted(unchanged, key=lambda row: (row['rule_code'], row['case_key'])),
             'approved_kept': sorted(approved_kept, key=lambda row: (row['rule_code'], row['case_key'])),
             'stale_case_keys': stale,
-            'missing': snapshot.get('missing') or [],
+            'missing': (snapshot.get('missing') or []) + skipped_issues,
             'warnings': warnings,
             'truncated': bool(snapshot.get('truncated')),
             'estimate_label': '服务端派生的核对差异单；不自动更正、不写账本或业务事实',

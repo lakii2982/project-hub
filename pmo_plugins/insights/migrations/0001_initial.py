@@ -9,7 +9,7 @@ CASE_TABLE = "insights_reconciliationcase"
 IMMUTABLE_TABLES = ["insights_metricsnapshot", "insights_reconciliationrefresh"]
 CASE_MUTABLE = {"status", "owner_member_id", "resolution_note", "version", "updated_at", "updated_by_id"}
 CASE_COLUMNS = ["case_key", "rule_code", "coverage_key", "source_refs", "difference_cents",
-                "snapshot_watermark", "snapshot_as_of", "organization_id", "created_by_id", "created_at"]
+                "snapshot_watermark", "organization_id", "created_by_id", "created_at"]
 
 
 def install_guards(apps, schema_editor):
@@ -27,7 +27,6 @@ def install_guards(apps, schema_editor):
                            OR NEW.source_refs::text IS DISTINCT FROM OLD.source_refs::text
                            OR NEW.difference_cents IS DISTINCT FROM OLD.difference_cents
                            OR NEW.snapshot_watermark::text IS DISTINCT FROM OLD.snapshot_watermark::text
-                           OR NEW.snapshot_as_of IS DISTINCT FROM OLD.snapshot_as_of
                            OR NEW.organization_id IS DISTINCT FROM OLD.organization_id
                            OR NEW.created_by_id IS DISTINCT FROM OLD.created_by_id
                            OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
@@ -102,13 +101,12 @@ class Migration(migrations.Migration):
                 ('version', models.PositiveIntegerField(default=1)),
                 ('status', models.CharField(choices=[('draft', '草稿'), ('pending', '待确认'), ('approved', '已确认'), ('rejected', '已驳回'), ('superseded', '已替代'), ('closed', '已结案')], default='draft', max_length=16)),
                 ('source_refs', models.JSONField(default=list)),
-                ('difference_cents', models.BigIntegerField(default=None, null=True)),
+                ('difference_cents', models.BigIntegerField()),
                 ('resolution_note', models.TextField(blank=True, default=None, null=True)),
                 ('case_key', models.CharField(max_length=128)),
                 ('rule_code', models.CharField(max_length=80)),
-                ('coverage_key', models.CharField(max_length=255)),
+                ('coverage_key', models.CharField(max_length=300)),
                 ('snapshot_watermark', models.JSONField(default=list)),
-                ('snapshot_as_of', models.DateField(null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='core.membership')),
@@ -119,7 +117,7 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['-created_at', 'id'],
                 'indexes': [models.Index(fields=['organization', 'status', 'rule_code'], name='insights_case_status_idx')],
-                'constraints': [models.CheckConstraint(condition=models.Q(('status__in', ['draft', 'pending', 'approved', 'rejected', 'superseded', 'closed'])), name='insights_case_status_valid'), models.CheckConstraint(condition=models.Q(('version__gte', 1)), name='insights_case_version_positive'), models.CheckConstraint(condition=models.Q(('difference_cents__isnull', True), models.Q(('difference_cents__gte', -1000000000000), ('difference_cents__lte', 1000000000000)), _connector='OR'), name='insights_case_difference_bound'), models.UniqueConstraint(condition=models.Q(('status__in', ('draft', 'pending', 'approved'))), fields=('organization', 'case_key'), name='insights_case_active_unique')],
+                'constraints': [models.CheckConstraint(condition=models.Q(('status__in', ['draft', 'pending', 'approved', 'rejected', 'superseded', 'closed'])), name='insights_case_status_valid'), models.CheckConstraint(condition=models.Q(('version__gte', 1)), name='insights_case_version_positive'), models.CheckConstraint(condition=models.Q(('difference_cents__gte', -1000000000000), ('difference_cents__lte', 1000000000000)), name='insights_case_difference_bound'), models.UniqueConstraint(condition=models.Q(('status__in', ('draft', 'pending', 'approved'))), fields=('organization', 'case_key'), name='insights_case_active_unique')],
             },
         ),
         migrations.CreateModel(

@@ -1285,10 +1285,11 @@ PH-330 done 后正式晋级批次 C 执行片 **PH-347（安装/升级）、PH-3
 - **L2 实际结果**：scoped `tests.test_v1_invoice_import tests.test_v1_invoice_import_http` = 31 tests OK（24 服务 + 7 HTTP）；受影响既有 onboarding/import/invoicing 回归 82 tests OK（与新增合并重跑 113 tests OK）；`manage.py check` exit 0（123 条既有/路由 warning，0 错误）；`makemigrations --check` No changes；fresh SQLite `verify_integrity --json` ok=true/errors=[]；全量 `manage.py test tests` Ran 1444 tests，5F+3E/73 skips，8 项均为既有 macOS 基线（6 DRF 安全兼容 + 2 delivery/worktree `/private/var` symlink），无新增。
 - **路由**：`pmo_plugins/delivery/urls.py` 在 PH-338 allowed_paths 内并已绑定 `invoice_import` handler；发票导入路由在 `domain_metadata` 声明 history_read，`pmo_plugins/invoicing/urls.py` 暴露 handler 映射。onboarding 模板下拉保持既有 time/expense/plan 三项（既有断言），发票模板由 invoicing 页面和自动识别提供。
 - **L3/L4/L5：not_run**。PostgreSQL 并发、浏览器 1440/390、staging/生产/UAT、真实客户数据未执行；独立 S 复核 pending，未自批。
-## PH-339 insights 读模型实现首片（2026-11-01，BASE e8e1862；in_review）
 
-- 工作树 `/tmp/ph339-insights`，验证副本 `/tmp/ph339-verify`（仅额外加入未提交的 `pmo_plugins/insights/migrations/__init__.py`）。
-- 实际通过（副本）：`manage.py check` 126 warnings/0 error；`makemigrations --check --dry-run` No changes detected；`tests.test_v1_insights tests.test_v1_insights_http` Ran 36 tests OK；`tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http` Ran 25 tests OK；throwaway migrated SQLite `verify_integrity --json` ok=true/errors=[]；`projectctl.py check` 工作树 ok=true/task_count=325。
-- 全量 `manage.py test tests`（验证副本，含 `.git` 元数据以运行 ops drill）：Ran 1449 tests in 148.142s，5F+3E+73 skips；8 个失败名与既有 macOS 基线一致（6 DRF Accept/codec/large-JSON + 2 delivery `/private/var` 符号链接），无新增失败。
-- **阻塞**：精确白名单未含 `pmo_plugins/insights/migrations/__init__.py`；Django 5.2 视无 `__init__.py` 的 migrations 目录为 unmigrated，交付工作树在 URLconf 加载时报 `migration.models_without_migrations`。按指令未越权创建；需规划/授权补入后复验。
+## PH-339 insights 读模型实现首片（2026-11-01，BASE 7bb8351；in_review）
+
+- 工作树 `/tmp/ph339-insights`（PH-404 已补 `pmo_plugins/insights/migrations/__init__.py` 白名单，可直接加载迁移包）。
+- 实际通过：`manage.py check` 126 warnings/0 error；`makemigrations --check --dry-run` No changes detected；`tests.test_v1_insights tests.test_v1_insights_http tests.test_v1_insights_precheck tests.test_v1_insights_precheck_http` Ran 66 tests OK；throwaway migrated SQLite `verify_integrity --json` ok=true/errors=[]；`projectctl.py check` ok=true/task_count=325。
+- 全量 `manage.py test tests`：8 个失败名与既有 macOS 基线一致（6 DRF Accept/codec/large-JSON + 2 delivery `/private/var` 符号链接），无新增失败。
+- 差异单 canonical 对齐：`difference_cents` 非空（owner 值→cents 对→0）、`snapshot_watermark` 为 SourceRef 数组（基准日存 external_key）、`resolution_note` 为 null|1..1000、`coverage_key` 含来源身份；case/read-model append-only 数据库触发器（SQLite+PG）；较早 as_of 不覆盖较新快照；无来源身份的 issue 记 missing 不建单。
 - not_run：真实 PostgreSQL 并发/锁、CI Linux/PG、浏览器 1440/390 人工检视、生产/UAT、独立 S review（未自批）。
