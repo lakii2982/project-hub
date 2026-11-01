@@ -110,3 +110,14 @@ Dependabot提案没有Task行而被治理检查拒绝时，先评估升级必要
 4. 保留下一规划槽；L3–L5、发布与三方签批均按真实证据，不做自批或生产宣称。
 
 验收沿用 projectctl check、23 项治理测试、独立 S 复核和 BASE verify-change。
+
+## 12. PH-403 · v1.0 后续交付规划入口
+
+承接 PH-401 合入后的新 BASE，仅做依赖与证据再基线：
+
+1. PH-353 原子导入合入后复核 PH-342 发票批量导入契约；insights 后续只读证据满足后复核 PH-343。
+2. PH-122 远端强制启用按扩展后的白名单复核 scripts/delivery_gate.py 与 tooling/ai_delivery/delivery/github.py 的 8→9 checks 校验改动，真实对抗证据齐备才置 ready。
+3. 按写域与依赖登记费用/应付、工资现金、通知与真实环境验收切片；新插件或共享接线回归必须先由规划补精确白名单，不得实现片自行扩权。
+4. 仅可按 `user-2026-10-31-complete-v1` 登记 v1.0 范围任务的 contract_digest；不得修改仲裁规则、恢复 EXP-1、发布 PH-110 或登记里程碑外任务。保留下一规划槽，L3–L5 与发布签批按真实证据。
+
+验收沿用 projectctl check、23 项治理测试、独立 S 复核和 BASE verify-change。

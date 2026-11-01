@@ -1,0 +1,32 @@
+{
+  "task_id": "PH-401",
+  "summary": "规划推进：PH-354 期间预检合入后晋级 PH-353 原子导入（依赖 PH-274/362/354 均 done，必须复用真实 precheck/digest）；晋级 PH-122 远端强制并补齐 8→9 checks 所需实现白名单；登记 PH-403 下一规划槽。仅规划，无产品代码或发布宣称。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "evidence": "Actual exit 0: ok=true, task_count=323."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "evidence": "Actual exit 0: Ran 23 tests in 2.720s, OK."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": null,
+    "status": "pending",
+    "findings": []
+  },
+  "deviations": [
+    "PH-354 (PR #267) and PH-399 (PR #266) had already merged but tasks.json still said in_review; this planning slice closes them to done by merge evidence so their dependents can activate. Status is excluded from contract digests.",
+    "PH-353 and PH-122 both had satisfied dependencies but stale proposed status; this planning slice activates them per frozen specs.",
+    "PH-122 allowed_paths is expanded only for the scripts needed to implement the 8→9 required-checks change; no arbitration rule weakening.",
+    "PH-403 is registered proposed until PH-401 closes, avoiding self-activation inside the same PR."
+  ],
+  "unverified": [
+    "No product implementation, migration, PostgreSQL, browser, staging, production or UAT is performed by this planning slice.",
+    "Independent S review and final verify-change are pending."
+  ]
+}

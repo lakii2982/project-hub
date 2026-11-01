@@ -25,15 +25,56 @@
   "required_check_count": 12,
   "s_authorization": {
     "tasks": [
-      {"task_id": "PH-120", "contract_digest": "b0288e47677e5fb718ea9aaf89f9f610e6c74d6fcc5342f16821a04d530754d9", "source": "user-2026-10-27-PH120-122"},
-      {"task_id": "PH-121", "contract_digest": "e395ddd8fbef44fc262c669ff680ca475331daa7e5c4721c25f55909227f33ea", "source": "user-2026-10-27-PH120-122"},
-      {"task_id": "PH-122", "contract_digest": "50f641db388933015cf5228fa73cbea6711624dce65c09b9395e10a8461cb2b6", "source": "user-2026-10-27-PH120-122"},
-      {"task_id": "PH-353", "contract_digest": "08196879d18b5afcbecc22f4ef0db1b42a92b03849c1db10182e1d74cb1fd1af", "source": "user-2026-10-31-complete-v1"},
-      {"task_id": "PH-354", "contract_digest": "96f39c9dcd92bd5106c8fe5cd453b3a31311ac5a3f4ada4b8ece324b5797b8e8", "source": "user-2026-10-31-complete-v1"},
-      {"task_id": "PH-397", "contract_digest": "63ab4163e2214519f85cc5a6a82831706577db40eba21aebf3dc4c782b6f7978", "source": "user-2026-10-31-complete-v1"},
-      {"task_id": "PH-399", "contract_digest": "1cbc3517a299424dba654a0de65b46aa4a37ff3f13a635f6f2dfd1b348e83d75", "source": "user-2026-10-31-complete-v1"},
-      {"task_id": "PH-400", "contract_digest": "cc7a53f3ff591eae8492fe67e3c41be61e093962f24f32de2d60b45579ba3362", "source": "user-2026-10-31-complete-v1"},
-      {"task_id": "PH-401", "contract_digest": "a994a12809b43cec0e6ca131b1738a3eea3c12f69b2c5364974c158aa19a8efa", "source": "user-2026-10-31-complete-v1"}
+      {
+        "task_id": "PH-120",
+        "contract_digest": "b0288e47677e5fb718ea9aaf89f9f610e6c74d6fcc5342f16821a04d530754d9",
+        "source": "user-2026-10-27-PH120-122"
+      },
+      {
+        "task_id": "PH-121",
+        "contract_digest": "e395ddd8fbef44fc262c669ff680ca475331daa7e5c4721c25f55909227f33ea",
+        "source": "user-2026-10-27-PH120-122"
+      },
+      {
+        "task_id": "PH-122",
+        "contract_digest": "f75d11beb956df1f6b18538defc3ffc7484536a8e175738a1a3eed3f2bd59960",
+        "source": "user-2026-10-27-PH120-122"
+      },
+      {
+        "task_id": "PH-353",
+        "contract_digest": "08196879d18b5afcbecc22f4ef0db1b42a92b03849c1db10182e1d74cb1fd1af",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-354",
+        "contract_digest": "96f39c9dcd92bd5106c8fe5cd453b3a31311ac5a3f4ada4b8ece324b5797b8e8",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-397",
+        "contract_digest": "63ab4163e2214519f85cc5a6a82831706577db40eba21aebf3dc4c782b6f7978",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-399",
+        "contract_digest": "1cbc3517a299424dba654a0de65b46aa4a37ff3f13a635f6f2dfd1b348e83d75",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-400",
+        "contract_digest": "cc7a53f3ff591eae8492fe67e3c41be61e093962f24f32de2d60b45579ba3362",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-401",
+        "contract_digest": "08a5baaecab93709b8aa9105e7352c99459b871d9ec2b9baa3fa8b1d537fe132",
+        "source": "user-2026-10-31-complete-v1"
+      },
+      {
+        "task_id": "PH-403",
+        "contract_digest": "c97a4b0bd8812846d61dca7d59827d30cf1505da2b706f2f7646e1665f71c343",
+        "source": "user-2026-10-31-complete-v1"
+      }
     ]
   },
   "remote_arbitration": {
