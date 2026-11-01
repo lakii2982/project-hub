@@ -9054,9 +9054,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-362 仅导入提交契约；ImportPreview/ImportConflict 持久化与提交未实现（PH-353 仍 proposed），保留 proposed。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -9182,9 +9180,7 @@
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "PH-353 仍 proposed 且无报告/实现；导入提交首片未开工，保留 proposed。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -13354,7 +13350,7 @@
       "github_issue": "https://github.com/lakii2982/project-hub/issues/280",
       "owner": null,
       "blockers": [
-        "PH-403 规划修正合入后晋级 ready。"
+        "PH-403 done 后晋级 ready。"
       ],
       "handoff": null
     }
