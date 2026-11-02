@@ -1,0 +1,67 @@
+{
+  "task_id": "PH-355",
+  "summary": "实现只读提醒扫描骨架与 /reminders/ 用户入口：冻结 reminder refs、黄金 digest、按来源/收件人去重、角色/项目/撤权过滤、模块停用缺失、50 条稳定截断及 scan_due 命令；不写收件箱、审计/Outbox，不发送外部消息或自动业务动作。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 using repository virtualenv on PATH: ok=true, task_count=329."
+    },
+    {
+      "command": "python manage.py check",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0: existing 127 warnings, no error."
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0: No changes detected."
+    },
+    {
+      "command": "python manage.py test tests --verbosity 1",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual final exit 0 after independent-review corrections with TMPDIR=/private/tmp: Ran 1536 tests in 170.231s, OK (skipped=73)."
+    },
+    {
+      "command": "python manage.py verify_integrity --json",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 with PMO_DB pointing to the isolated reminder demo database: ok=true, errors=[], organizations=1, entries=47."
+    },
+    {
+      "command": "python manage.py test tests.test_v1_reminders tests.test_v1_reminders_http --verbosity 1",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 after independent-review corrections: Ran 33 tests in 2.777s, OK; includes both digest vectors, all registered owner adapters, role/org/revocation, disabled modules, historical as_of, multi-project recipients, cross-org ref rejection, 50-item boundary, script prefix, HTTP filters and zero writes."
+    },
+    {
+      "command": "node /private/tmp/project-hub-reminders-iBPDuM64/ph355-browser-check.cjs",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 in headless Chrome 390px: member empty/private-source absence, real Tab to refresh button with :focus-visible=true/3px solid/44px, invalid period 400, bodyOverflow=false."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent general-purpose / reviewer",
+    "status": "pass",
+    "findings": [
+      "Initial independent S review FAIL found seven groups: cross-org refs, missing PM scopes, non-historical as_of coverage, incomplete module/member gates, wrong costing ref kinds, day-30 token exclusion and unprefixed deeplinks.",
+      "Final incremental independent S review PASS after fixes: reviewer reran all 33 scoped tests with exit 0 plus 6 independent isolation probes with exit 0. Verified foreign refs removed, both invoice PMs notified, historical overdue unchanged by future clearance, member/disabled sources empty, registered costing refs stable, last-day token included and /pmo/ form/deeplinks preserved."
+    ]
+  },
+  "deviations": [
+    "Initial independent S review FAIL identified cross-org refs, missing PM scopes, current-instead-of-historical coverage, incomplete module/member gating, wrong costing ref kinds, day-30 token exclusion and unprefixed deeplinks. Added permanent regressions and corrected all seven groups; final independent verdict is recorded only after re-review.",
+    "No canonical model/migration, inbox, read state, queue or external channel is implemented; PH-301/314 retain that boundary.",
+    "PH-409 separately fixed the missing root-route/navigation whitelist before this implementation; no route was added before that contract merged.",
+    "Desktop 1440px finance saw actual budget/cash reminders and external sends=0; mobile 390px member had the correct empty state and no private role/project facts. Existing missing codes remain visible rather than being converted to zero.",
+    "Default user runtime was not migrated or reset; integrity evidence is from an isolated migrated demo database."
+  ],
+  "unverified": [
+    "当前实现提交的远端 required CI、PostgreSQL 专项、生产部署和客户 UAT 待验证。"
+  ]
+}

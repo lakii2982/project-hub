@@ -239,6 +239,11 @@ class MemberForm(BaseForm):
             validate_password(data["password"], get_user_model()(username=data.get("username", ""), first_name=data.get("name", "")))
         return data
 
+
+class ReminderFilterForm(BaseForm):
+    as_of = forms.DateField(label="基准日", required=False, widget=forms.DateInput(attrs=DATE))
+    period = forms.RegexField(r"^\d{4}-\d{2}$", label="来源期间（YYYY-MM）", required=False)
+
 class OrgForm(forms.ModelForm):
     class Meta:
         model = Organization

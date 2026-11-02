@@ -1,5 +1,9 @@
 # 验证记录（当前结果与历史记录分开）
 
+## PH-355 只读提醒扫描骨架（2026-11-03）
+
+33 项服务/HTTP 测试通过，完整全量 1536 项在 170.231 秒完成、`OK (skipped=73)`。独立 S 复核先打回七组缺陷，修复后 PASS，并独立复测跨 org、多项目、历史日期、停用、来源类型、令牌末日和前缀。含两个黄金 digest、所有注册来源、角色/跨 org/撤权/停用、事实解除、50 条稳定截断和零写。1440px 财务提醒页与 390px 成员空态/私有来源隔离通过；真实 Tab 到刷新按钮，3px 焦点环/44px 高，无效期间 400，两视口无横溢。隔离演练库 integrity 为 ok=true/errors=[]、47 条账本记录。完整全量、独立 S 复核和远端 CI 见 `project/reports/PH-355.json`，不以本段预写通过。
+
 ## PH-409 提醒浏览器接线规划（2026-11-03）
 
 `python -m unittest tests.test_projectctl tests.test_governance -v` 实际 35 项通过，`projectctl check` 为 ok=true、329 任务。仅冻结 `/reminders/`、共享导航和 PH-355 两个必要接线白名单，不含产品实现或浏览器通过声明。独立 S 复核与当前提交 required CI 见 `project/reports/PH-409.json`；合入后继续 PH-355。

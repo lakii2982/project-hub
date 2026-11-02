@@ -42,6 +42,7 @@ urlpatterns = [
     path("finance/", views.finance, name="finance"),
     path("time/", views.timesheets, name="timesheets"),
     path("assistant/", views.assistant, name="assistant"),
+    path("reminders/", views.reminders, name="reminders"),
     path("settings/", views.settings_page, name="settings"),
     path("audit/", views.audit_page, name="audit"),
     path("import/<str:kind>/", views.import_data, name="import-data"),
