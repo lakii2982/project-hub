@@ -1,0 +1,34 @@
+{
+  "task_id": "PH-409",
+  "summary": "补齐 PH-355 的真实浏览器接线契约：冻结 /reminders/ 根路由与“到期提醒”共享导航，仅增加 pmo/urls.py 和 templates/base.html 两个必要白名单文件；不写产品实现。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 using the repository virtualenv on PATH: ok=true, task_count=329."
+    },
+    {
+      "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0 using the repository virtualenv on PATH: 35 tests ran in 10.650s, OK."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent general-purpose / reviewer",
+    "status": "pass",
+    "findings": [
+      "PASS at uncommitted PH-409 against BASE ea31c72: only PH-355 route/navigation contract and two necessary path additions; no product implementation or weakened reminder/permission/verification boundaries. Reviewer independently reran projectctl check and 35 common tests with exit 0."
+    ]
+  },
+  "deviations": [
+    "本规划不改变提醒字段、角色矩阵、去重、缺失语义、通知写侧边界或既有验收命令。",
+    "PH-355 实现、浏览器与远端产品 CI 留待规划合入后的原任务完成。"
+  ],
+  "unverified": [
+    "当前提交远端 required CI 待完成。",
+    "本规划不证明提醒路由、页面或扫描已经实现。"
+  ]
+}

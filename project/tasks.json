@@ -11639,7 +11639,9 @@
         "docs/delivery-status.md",
         "docs/verification.md",
         "project/reports/PH-355.json",
-        "project/handoffs/PH-355.md"
+        "project/handoffs/PH-355.md",
+        "pmo/urls.py",
+        "templates/base.html"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
@@ -13501,6 +13503,36 @@
       "owner": "claude",
       "blockers": [],
       "handoff": "project/handoffs/PH-408.md"
+    },
+    {
+      "id": "PH-409",
+      "title": "通知扫描浏览器入口契约补全（PH-355接线规划）",
+      "kind": "docs",
+      "risk": "S",
+      "status": "done",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-364"
+      ],
+      "spec": "project/specs/PH-409.md",
+      "allowed_paths": [
+        "project/specs/PH-355.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-409.json",
+        "project/handoffs/PH-409.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/302",
+      "owner": "claude",
+      "blockers": [],
+      "handoff": "project/handoffs/PH-409.md"
     }
   ]
 }
