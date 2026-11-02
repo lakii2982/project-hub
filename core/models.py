@@ -424,6 +424,43 @@ class AgentOperation(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=["member", "operation", "key_hash"], name="unique_agent_operation")]
 
+class Notification(models.Model):
+    """Internal per-member reminder snapshot and personal read/ignore state.
+
+    This is not a canonical business entity or an authorization/ledger fact.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT,
+                                     related_name='notifications')
+    member = models.ForeignKey(Membership, on_delete=models.PROTECT,
+                               related_name='notifications')
+    reminder_key = models.CharField(max_length=64)
+    reminder_ref = models.JSONField()
+    source_ref = models.JSONField()
+    project_ref = models.JSONField(null=True, blank=True)
+    issue_code = models.CharField(max_length=64)
+    severity = models.CharField(max_length=16)
+    title = models.CharField(max_length=160)
+    summary = models.CharField(max_length=500)
+    due_on = models.DateField(null=True, blank=True)
+    as_of = models.DateField()
+    deeplink = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    ignored_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['member', 'reminder_key'],
+                                    name='notification_member_reminder_unique'),
+            models.CheckConstraint(
+                condition=Q(severity__in=['blocker', 'warning', 'info']),
+                name='notification_severity_valid'),
+        ]
+        indexes = [models.Index(fields=['organization', 'member', 'created_at'],
+                                name='notification_inbox_order')]
+
+
 class PluginState(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
     plugin_id = models.CharField(max_length=80)

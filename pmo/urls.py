@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path, register_converter
 from django.contrib.auth import views as auth
-from core import views, api, plugin_views
+from core import views, api, plugin_views, notification_views
 
 class SafeIdConverter:
     regex = r"[1-9][0-9]{0,17}"
@@ -43,6 +43,10 @@ urlpatterns = [
     path("time/", views.timesheets, name="timesheets"),
     path("assistant/", views.assistant, name="assistant"),
     path("reminders/", views.reminders, name="reminders"),
+    path("notifications/", notification_views.notification_list, name="notification-list"),
+    path("notifications/sync/", notification_views.notification_sync, name="notification-sync"),
+    path("notifications/<uuid:pk>/<str:action>/", notification_views.notification_mark,
+         name="notification-mark"),
     path("settings/", views.settings_page, name="settings"),
     path("audit/", views.audit_page, name="audit"),
     path("import/<str:kind>/", views.import_data, name="import-data"),

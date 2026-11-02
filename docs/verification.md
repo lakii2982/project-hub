@@ -1,5 +1,9 @@
 # 验证记录（当前结果与历史记录分开）
 
+## PH-340 当前成员通知收件箱（2026-11-03）
+
+19 项服务/HTTP 测试通过，完整全量 1555 项在 169.251 秒完成、`OK (skipped=74)`，含命令重试与 PG-only 并发接入；本地 SQLite 对该项明确 skip。1440px owner 同步 11 条、已读/忽略/历史筛选/重试通过，390px member 空态、真实 Tab 焦点/44px 高通过，两视口无横溢。0011 迁移、配置/漂移与隔离演练库 integrity 通过。完整全量、独立 S 复核和远端 CI/PG 见 `project/reports/PH-340.json`，不预写通过。
+
 ## PH-410 通知收件箱接线规划（2026-11-03）
 
 仅重基线 PH-340 并冻结最小 Notification 快照、幂等同步、已读/忽略和 `/notifications/` 接线，不含产品实现。共同治理、独立 S 复核及当前提交 required CI 见 `project/reports/PH-410.json`；规划合入后直接实现 PH-340。
