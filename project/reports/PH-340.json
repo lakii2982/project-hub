@@ -1,0 +1,21 @@
+{
+  "task_id": "PH-340",
+  "summary": "实现当前成员通知收件箱：基于 PH-355 扫描物化内部 Notification 快照，公司锁与 member+reminder_key 唯一去重，支持已读/忽略、历史保留、/notifications/ 与共享导航；无外部渠道、自动业务动作或 canonical 实体。",
+  "tests": [
+    {"command":"python scripts/projectctl.py check","result":"pass","exit_code":0,"evidence":"Actual exit 0 using repository virtualenv on PATH: ok=true, task_count=330."},
+    {"command":"python manage.py check","result":"pass","exit_code":0,"evidence":"Actual exit 0: existing 127 warnings, no error."},
+    {"command":"python manage.py makemigrations --check --dry-run","result":"pass","exit_code":0,"evidence":"Actual exit 0: No changes detected after core/0011_notification.py."},
+    {"command":"python manage.py test tests --verbosity 1","result":"pass","exit_code":0,"evidence":"Actual exit 0 with TMPDIR=/private/tmp: Ran 1555 tests in 169.251s, OK (skipped=74)."},
+    {"command":"python manage.py verify_integrity --json","result":"pass","exit_code":0,"evidence":"Actual exit 0 with isolated reminder demo PMO_DB after 0011: ok=true, errors=[], organizations=1, entries=47."},
+    {"command":"python manage.py test tests.test_v1_notifications tests.test_v1_notifications_http --verbosity 1","result":"pass","exit_code":0,"evidence":"Actual exit 0 after review corrections: Ran 19 tests in 2.158s, OK (skipped=1 PG-only locally). Includes role/PM revocation for both read and mark, auditor denial, resolved-fact history and DB cross-org rejection."},
+    {"command":"node /private/tmp/project-hub-reminders-iBPDuM64/ph340-browser-check.cjs","result":"pass","exit_code":0,"evidence":"Actual exit 0: 1440px owner sync created 11 rows, read/ignore/history filter/resync correct; 390px member empty, real Tab to sync with :focus-visible=true/3px solid/44px, no overflow."}
+  ],
+  "review": {"required":true,"reviewer":"independent general-purpose / reviewer","status":"pass","findings":["Initial and incremental S reviews found role/PM stale access, auditor writes, resolved-fact unread state, missing DB org guard, hidden-scope marking and PG exception assertion issues. Final PASS after all corrections: reviewer reran 19 scoped tests with exit 0 and independently verified member downgrade and PM manager removal deny both read and state changes with zero writes; 0012 reverse/reapply also passed."]},
+  "deviations": [
+    "Initial independent S review FAIL found stale role/PM history, auditor writes, resolved facts remaining unread and no DB organization/member guard. Added 0012 cross-database trigger and read-time authorization/source-state filtering; final verdict awaits re-review. Subsequent review found hidden-scope state changes and a PostgreSQL exception-assertion mismatch; shared read/write scope checks and a DatabaseError regression now cover both.",
+    "Notification is an internal per-member snapshot, not canonical business data. GET is read-only; sync/read/ignore use explicit POST and current-member authorization.",
+    "Default user runtime was not migrated or reset; integrity evidence is from the isolated migrated demo database.",
+    "Local SQLite skips the PG-only concurrent-sync test; actual PostgreSQL behavior requires the implementation PR's CI. The isolated demo database also completed 0012 reverse to 0011 and reapply with exit 0."
+  ],
+  "unverified": ["当前提交 required CI、PostgreSQL 并发、生产部署和客户 UAT 待验证。"]
+}
