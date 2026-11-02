@@ -13533,6 +13533,36 @@
       "owner": "claude",
       "blockers": [],
       "handoff": "project/handoffs/PH-409.md"
+    },
+    {
+      "id": "PH-410",
+      "title": "通知收件箱依赖重基线与最小持久化接线规划",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-355"
+      ],
+      "spec": "project/specs/PH-410.md",
+      "allowed_paths": [
+        "project/specs/PH-340.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-410.json",
+        "project/handoffs/PH-410.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/306",
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-410.md"
     }
   ]
 }
