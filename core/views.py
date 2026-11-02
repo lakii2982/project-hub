@@ -15,7 +15,7 @@ from django.db import transaction, IntegrityError, DatabaseError
 from django.db.models import Q, Sum
 from django.http import Http404, HttpResponse, FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
-from django.urls import reverse as url_reverse
+from django.urls import reverse as url_reverse, get_script_prefix
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 from . import forms as ui
@@ -90,17 +90,19 @@ def reminders(request):
     error, snapshot = '', None
     if set(request.GET) - {'as_of', 'period'}:
         error = '包含不允许的查询参数，请刷新后重试'
-    elif not form.is_valid():
+    elif form.is_bound and not form.is_valid():
         error = '；'.join(message for errors in form.errors.values() for message in errors)
     else:
+        data = form.cleaned_data if form.is_bound else {}
         try:
             snapshot = scan_reminders(
-                request.member, as_of=form.cleaned_data.get('as_of'),
-                period=form.cleaned_data.get('period') or None)
+                request.member, as_of=data.get('as_of'),
+                period=data.get('period') or None)
         except ValidationError as exc:
             error = '；'.join(exc.messages)
     return render(request, 'core/reminders.html', {
         'nav': 'reminders', 'form': form, 'snapshot': snapshot, 'error': error,
+        'script_prefix': get_script_prefix(),
     }, status=400 if error else 200)
 
 

@@ -311,3 +311,144 @@ class ReminderOwnerAdapterTests(ReminderFixture, TestCase):
         self.assertEqual(result['notifications_sent'], 0)
         self.assertTrue(any(row['issue_code'] == 'settlement_open_item_overdue'
                             for row in result['reminders']))
+
+
+class ReminderSecurityRegressionTests(ReminderFixture, TestCase):
+    def test_cross_org_conflict_ref_is_removed_and_own_project_reaches_pm(self):
+        other = ReminderFixture()
+        other.setUp()
+        external_ref = {'namespace': 'contracts', 'kind': 'contract_line',
+                        'id': str(other.line.pk), 'version': 1}
+        self.persist(self.invoice_rows('INV-EXT-REF'), conflicts=[{
+            'row_number': 2, 'field': 'amount', 'code': 'external',
+            'message': '外部来源', 'severity': 'blocker', 'source_ref': external_ref}])
+        rows = self.items(self.finance, code='import_conflict_pending')
+        self.assertTrue(rows)
+        self.assertNotIn(str(other.line.pk),
+                         {ref['id'] for row in rows for ref in row['refs']})
+
+        own_ref = {'namespace': 'contracts', 'kind': 'contract_line',
+                   'id': str(self.line.pk), 'version': 1}
+        self.persist(self.invoice_rows('INV-OWN-REF'), conflicts=[{
+            'row_number': 2, 'field': 'amount', 'code': 'own',
+            'message': '本项目来源', 'severity': 'blocker', 'source_ref': own_ref}])
+        pm_rows = self.items(self.pm, code='import_conflict_pending')
+        self.assertEqual(len(pm_rows), 1)
+        self.assertEqual(pm_rows[0]['project_ref']['id'], str(self.project.pk))
+
+    def test_delivery_refs_cannot_cross_org(self):
+        other = ReminderFixture()
+        other.setUp()
+        external_ref = {'namespace': 'contracts', 'kind': 'contract_line',
+                        'id': str(other.line.pk), 'version': 1}
+        snapshot = {'missing': [], 'issues': [{
+            'severity': 'blocker', 'issue_code': 'period_closed',
+            'source_refs': [external_ref]}]}
+        with mock.patch('pmo_plugins.insights.precheck_services.period_precheck_snapshot',
+                        return_value=snapshot):
+            rows = self.items(code='close_precheck_blocker')
+        self.assertTrue(rows)
+        self.assertTrue(all(row['source_ref'] == {
+            'namespace': 'core', 'kind': 'organization',
+            'id': str(self.org.pk), 'version': 1} for row in rows))
+        self.assertNotIn(str(other.line.pk),
+                         {ref['id'] for row in rows for ref in row['refs']})
+
+    def test_multi_project_invoice_reaches_each_pm(self):
+        from core.models import Project
+        from pmo_plugins.invoicing import services
+        from pmo_plugins.invoicing.models import TaxQualification
+        other_pm = self.member('pm')
+        other_project = Project.objects.create(
+            organization=self.org, code='P-MULTI', name='第二项目', manager=other_pm,
+            start_date=self.today, end_date=self.today)
+        other_settlement = ReminderFixture.settlement(self, project=other_project)
+        other_item = other_settlement.items.first()
+        invoice = self.record()
+        lines = self.lines()
+        lines[1]['allocations'][0]['business_source_ref'] = other_item.item_ref
+        services.allocate_invoice_lines(
+            self.owner, invoice_id=invoice['invoice_ref']['id'], lines=lines,
+            expected_version=1, request_token=uuid.uuid4(), dry_run=False)
+        qualification = TaxQualification.objects.create(
+            organization=self.org, source_ref=invoice['invoice_ref'], tax_cents=100,
+            status='pending')
+        for pm, project in ((self.pm, self.project), (other_pm, other_project)):
+            rows = self.items(pm, code='tax_qualification_pending')
+            self.assertIn(str(qualification.pk), {row['source_ref']['id'] for row in rows})
+            self.assertTrue(any(row['project_ref']['id'] == str(project.pk) for row in rows))
+
+    def test_future_clearance_does_not_change_historical_scan(self):
+        self.assertEqual(len(self.items(as_of=self.today)), 3)
+        Clearance.objects.create(
+            organization=self.org, open_item=self.open_item,
+            cash_transaction_id=uuid.uuid4(), cash_transaction_ref={},
+            cleared_cents=self.open_item.gross_cents,
+            occurred_on=self.today + timedelta(days=1), status='active', created_by=self.owner)
+        self.assertEqual(len(self.items(as_of=self.today)), 3)
+        self.assertEqual(self.items(
+            self.finance, code='settlement_clearance_pending', as_of=self.today), [])
+
+    def test_cash_plan_uses_ledger_as_of(self):
+        from core.models import CashPlan
+        from core.services import review, submit_document
+        historical_day = self.today - timedelta(days=1)
+        plan = CashPlan.objects.create(
+            project=self.project, direction='in', title='历史计划', counterparty='演练客户',
+            amount_cents=10000, due_date=historical_day - timedelta(days=1),
+            reference='REM-HISTORY', created_by=self.owner.user, approved=True, active=True)
+        receipt = submit_document(self.owner, {
+            'project': self.project, 'kind': 'receipt', 'title': '当日到账',
+            'amount_cents': 10000, 'tax_cents': 0, 'occurred_on': self.today,
+            'reference': 'REM-RECEIPT', 'counterparty': '演练客户', 'plan': plan,
+            'category': 'other'}, uuid.uuid4())
+        review(self.finance, 'document', receipt.pk, 'approve', '到账已核对')
+        rows = self.items(code='cash_plan_overdue', as_of=historical_day)
+        self.assertIn(str(plan.pk), {row['source_ref']['id'] for row in rows})
+
+    def test_member_does_not_scan_disabled_company_sources(self):
+        PluginState.objects.update_or_create(
+            organization=self.org, plugin_id='settlement',
+            defaults={'enabled': False, 'changed_by': self.owner.user})
+        result = self.scan(self.plain)
+        self.assertEqual(result['reminders'], [])
+        self.assertEqual(result['missing'], [])
+        self.assertEqual(result['issues'], [])
+
+    def test_insights_disabled_suppresses_precheck_reminders(self):
+        PluginState.objects.update_or_create(
+            organization=self.org, plugin_id='insights',
+            defaults={'enabled': False, 'changed_by': self.owner.user})
+        snapshot = {'missing': [], 'issues': [{
+            'severity': 'blocker', 'issue_code': 'period_closed', 'source_refs': []}]}
+        with mock.patch('pmo_plugins.insights.precheck_services.period_precheck_snapshot',
+                        return_value=snapshot) as source:
+            result = self.scan()
+        self.assertNotIn('close_precheck_blocker',
+                         {row['issue_code'] for row in result['reminders']})
+        self.assertIn('module_disabled_history', result['missing'])
+        source.assert_not_called()
+
+    def test_budget_source_refs_use_registered_derived_kinds(self):
+        missing = self.items(self.finance, code='budget_missing')
+        self.assertTrue(all(row['source_ref']['namespace'] == 'costing'
+                            and row['source_ref']['kind'] == 'project_budget_version'
+                            for row in missing))
+        snapshot = {'missing': [], 'budget_missing': False, 'over_budget_cents': 1}
+        with mock.patch('pmo_plugins.costing.budget_services.budget_etc_snapshot',
+                        return_value=snapshot):
+            overrun = self.items(self.finance, code='budget_overrun')
+        self.assertTrue(all(row['source_ref'] == {
+            'namespace': 'costing', 'kind': 'budget_etc_snapshot',
+            'id': row['source_ref']['id'], 'version': 1} for row in overrun))
+
+    def test_agent_token_last_day_is_inclusive(self):
+        from datetime import datetime, time
+        from core.models import AgentToken
+        due_day = self.today + timedelta(days=30)
+        token = AgentToken.objects.create(
+            member=self.plain, name='第30天令牌', prefix='pmo-last-day',
+            token_hash='c' * 64, auth_snapshot='d' * 64, scopes=[], project_ids=[],
+            expires_at=timezone.make_aware(datetime.combine(due_day, time(23, 59))))
+        rows = self.items(self.plain, code='agent_token_expiring')
+        self.assertIn(str(token.pk), {row['source_ref']['id'] for row in rows})

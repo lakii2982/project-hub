@@ -4,14 +4,16 @@ Adapters may query owner models or named read services. They never persist remin
 write audit/outbox, send notifications or execute owner business actions.
 """
 from datetime import timedelta
+import uuid
 
+from django.apps import apps
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Sum
 from django.utils import timezone
 
-from .models import AgentToken, CashPlan, PluginState, Timesheet
+from .models import AgentToken, CashPlan, LedgerEntry, PluginState, Timesheet
 from .plugin_runtime import is_enabled
 from .reminder_services import build_reminder
-from .services import plan_remaining
 
 
 def _empty():
@@ -82,6 +84,38 @@ def _known_ref(value):
             and set(value) == {'namespace', 'kind', 'id', 'version'})
 
 
+def _owned_ref(member, ref, projects):
+    """Resolve a ref before reuse; unknown or foreign objects are never exposed."""
+    if not _known_ref(ref):
+        return None
+    normalized = {'namespace': ref['namespace'], 'kind': ref['kind'],
+                  'id': str(ref['id']), 'version': ref['version']}
+    if ref['namespace'] == 'core' and ref['kind'] == 'organization':
+        return normalized if str(member.organization_id) == normalized['id'] else None
+    if ref['namespace'] == 'core' and ref['kind'] == 'project':
+        return normalized if normalized['id'] in {str(row.pk) for row in projects} else None
+    try:
+        model_name = ''.join(part.capitalize() for part in ref['kind'].split('_'))
+        model = apps.get_model(ref['namespace'], model_name)
+    except (LookupError, ValueError):
+        return None
+    fields = {field.attname for field in model._meta.fields}
+    selected = [name for name in ('organization_id', 'project_id') if name in fields]
+    if not selected:
+        return None
+    try:
+        row = model.objects.filter(pk=ref['id']).values(*selected).first()
+    except (TypeError, ValueError, ValidationError):
+        return None
+    if not row:
+        return None
+    if row.get('organization_id') is not None:
+        return normalized if str(row['organization_id']) == str(member.organization_id) else None
+    if row.get('project_id') is not None:
+        return normalized if str(row['project_id']) in {str(row.pk) for row in projects} else None
+    return None
+
+
 def _project_for_ref(member, ref, projects):
     if not _known_ref(ref):
         return None
@@ -111,11 +145,11 @@ def _project_for_ref(member, ref, projects):
 
 
 def scan_settlement(member, *, as_of, period, projects):
+    if member.role == 'member':
+        return _empty()
     disabled = _module(member, 'settlement')
     if disabled:
         return disabled
-    if member.role == 'member':
-        return _empty()
     from pmo_plugins.settlement import coverage_read_services as coverage
     try:
         snapshot = coverage.open_item_coverage_snapshot(member, as_of=as_of)
@@ -123,19 +157,39 @@ def scan_settlement(member, *, as_of, period, projects):
         return _read_failure(member, 'settlement', error)
     result = _empty()
     project_by_id = {str(project.pk): project for project in projects}
-    for row in snapshot['items']:
-        due_on = _date(row['due_date'])
-        if (row['status'] != 'active' or row['remaining_cents'] <= 0
-                or due_on >= as_of or not _period_match(due_on, period)):
+    from pmo_plugins.settlement.models import Clearance, OpenItem
+    from pmo_plugins.cash.models import BankReturn, Refund
+    items = OpenItem.objects.filter(
+        organization_id=member.organization_id, project__in=projects,
+        status='active', occurred_on__lte=as_of, due_date__lt=as_of,
+    ).select_related('project').order_by('due_date', 'id')
+    for item in items:
+        if not _period_match(item.due_date, period):
             continue
-        project = project_by_id.get(row['project_id'])
+        clearances = Clearance.objects.filter(
+            organization_id=member.organization_id, open_item=item,
+            status='active', occurred_on__lte=as_of)
+        cash_ids = set(clearances.values_list('cash_transaction_id', flat=True))
+        cleared = clearances.aggregate(total=Sum('cleared_cents'))['total'] or 0
+        refunded = Refund.objects.filter(
+            organization_id=member.organization_id, original_cash_transaction_id__in=cash_ids,
+            status='active', refund_date__lte=as_of).aggregate(
+            total=Sum('gross_cents'))['total'] or 0
+        returned = BankReturn.objects.filter(
+            organization_id=member.organization_id, original_cash_transaction_id__in=cash_ids,
+            status='active', return_date__lte=as_of).aggregate(
+            total=Sum('gross_cents'))['total'] or 0
+        remaining = item.gross_cents - cleared - refunded - returned
+        if remaining <= 0:
+            continue
+        project = item.project
         result['reminders'].extend(_emit(
             member, as_of=as_of, issue_code='settlement_open_item_overdue',
-            source_ref=row['open_item_ref'], source_owner='settlement', project=project,
+            source_ref=item.item_ref, source_owner='settlement', project=project,
             roles=('owner', 'finance'), title='未清项逾期',
-            summary=f'项目 {project.code if project else "未知"} 存在逾期未清项，请人工核对来源。',
-            due_on=due_on, deeplink='/modules/settlement/settlement-coverage-issues/',
-            refs=[row['open_item_ref']]))
+            summary=f'项目 {project.code} 存在逾期未清项，请人工核对来源。',
+            due_on=item.due_date, deeplink='/modules/settlement/settlement-coverage-issues/',
+            refs=[item.item_ref]))
     pending_codes = {'clearance_cash_missing', 'clearance_cash_cross_org',
                      'clearance_cash_not_posted', 'clearance_cash_direction',
                      'clearance_cash_ref_mismatch', 'clearance_cross_org'}
@@ -149,7 +203,8 @@ def scan_settlement(member, *, as_of, period, projects):
             'open_item__project')}
         for issue in pending:
             clearance = rows.get(issue['clearance_ref']['id'])
-            if not clearance or not _period_match(clearance.occurred_on, period):
+            if (not clearance or clearance.occurred_on > as_of
+                    or not _period_match(clearance.occurred_on, period)):
                 continue
             project = clearance.open_item.project
             if str(project.pk) not in project_by_id:
@@ -170,7 +225,13 @@ def scan_core(member, *, as_of, period, projects):
             project__in=projects, approved=True, active=True, due_date__lt=as_of,
         ).select_related('project').order_by('due_date', 'id')
         for plan in plans:
-            if not _period_match(plan.due_date, period) or plan_remaining(plan) <= 0:
+            if not _period_match(plan.due_date, period):
+                continue
+            expected_book = 'cash_in' if plan.direction == 'in' else 'cash_out'
+            settled = LedgerEntry.objects.filter(
+                document__plan=plan, book=expected_book, occurred_on__lte=as_of,
+            ).aggregate(total=Sum('amount_cents'))['total'] or 0
+            if plan.amount_cents - settled <= 0:
                 continue
             ref = {'namespace': 'core', 'kind': 'cash_plan',
                    'id': str(plan.pk), 'version': 1}
@@ -184,13 +245,10 @@ def scan_core(member, *, as_of, period, projects):
         result['issues'].append({'issue_code': 'read_model_missing', 'refs': [_org_ref(member)],
                                  'expected': 'cash read model', 'actual': 'module_disabled_history'})
 
-    tokens = AgentToken.objects.filter(
-        member=member, revoked_at__isnull=True,
-        expires_at__lte=timezone.make_aware(
-            timezone.datetime.combine(as_of + timedelta(days=30), timezone.datetime.min.time())))
+    tokens = AgentToken.objects.filter(member=member, revoked_at__isnull=True)
     for token in tokens.order_by('expires_at', 'id'):
         due_on = timezone.localtime(token.expires_at).date()
-        if not _period_match(due_on, period):
+        if due_on > as_of + timedelta(days=30) or not _period_match(due_on, period):
             continue
         ref = {'namespace': 'core', 'kind': 'agent_token', 'id': str(token.pk), 'version': 1}
         result['reminders'].append(build_reminder(
@@ -202,9 +260,11 @@ def scan_core(member, *, as_of, period, projects):
 
 
 def scan_contracts(member, *, as_of, period, projects):
+    if member.role == 'member':
+        return _empty()
     disabled = _module(member, 'contracts')
-    if disabled or member.role == 'member':
-        return disabled or _empty()
+    if disabled:
+        return disabled
     from pmo_plugins.contracts.models import Contract, ContractChange
     result = _empty()
     changes = ContractChange.objects.filter(
@@ -239,9 +299,11 @@ def scan_contracts(member, *, as_of, period, projects):
 
 
 def scan_time(member, *, as_of, period, projects):
+    if member.role == 'member':
+        return _empty()
     disabled = _module(member, 'time')
-    if disabled or member.role == 'member':
-        return disabled or _empty()
+    if disabled:
+        return disabled
     from pmo_plugins.time.models import BillableConfirmation
     result = _empty()
     rows = BillableConfirmation.objects.filter(
@@ -268,9 +330,11 @@ def scan_time(member, *, as_of, period, projects):
 
 
 def scan_invoicing(member, *, as_of, period, projects):
+    if member.role == 'member':
+        return _empty()
     disabled = _module(member, 'invoicing')
-    if disabled or member.role == 'member':
-        return disabled or _empty()
+    if disabled:
+        return disabled
     from pmo_plugins.invoicing.models import Invoice, InvoiceAllocation, TaxQualification
     result = _empty()
     rows = TaxQualification.objects.filter(
@@ -284,26 +348,36 @@ def scan_invoicing(member, *, as_of, period, projects):
             continue
         source_ref = {'namespace': 'invoicing', 'kind': 'tax_qualification',
                       'id': str(row.pk), 'version': row.version}
-        project = None
-        allocation = InvoiceAllocation.objects.filter(
+        allocations = InvoiceAllocation.objects.filter(
             organization_id=member.organization_id, invoice_line__invoice=invoice,
-            status='active').first()
-        if allocation:
+            status='active')
+        fact_projects = []
+        for allocation in allocations:
             project = _project_for_ref(member, allocation.business_source_ref, projects)
+            if project and str(project.pk) not in {str(row.pk) for row in fact_projects}:
+                fact_projects.append(project)
+        refs = [source_ref] + ([invoice_ref] if _known_ref(invoice_ref) else [])
         result['reminders'].extend(_emit(
             member, as_of=as_of, issue_code='tax_qualification_pending', source_ref=source_ref,
-            source_owner='invoicing', project=project, roles=('finance',),
-            title='税额资格待确认', summary='同公司发票的税额资格仍为待确认，请人工核对。',
-            deeplink='/modules/invoicing/invoice-tax/',
-            refs=[source_ref] + ([invoice_ref] if _known_ref(invoice_ref) else []),
-            missing=[] if project else ['project_ref_missing']))
+            source_owner='invoicing', roles=('finance',), title='税额资格待确认',
+            summary='同公司发票的税额资格仍为待确认，请人工核对。',
+            deeplink='/modules/invoicing/invoice-tax/', refs=refs,
+            missing=[] if fact_projects else ['project_ref_missing']))
+        for project in fact_projects:
+            result['reminders'].extend(_emit(
+                member, as_of=as_of, issue_code='tax_qualification_pending',
+                source_ref=source_ref, source_owner='invoicing', project=project,
+                title='税额资格待确认', summary=f'项目 {project.code} 的发票税额资格待确认。',
+                deeplink='/modules/invoicing/invoice-tax/', refs=refs))
     return result
 
 
 def scan_costing(member, *, as_of, period, projects):
+    if member.role == 'member':
+        return _empty()
     disabled = _module(member, 'costing')
-    if disabled or member.role == 'member':
-        return disabled or _empty()
+    if disabled:
+        return disabled
     from pmo_plugins.costing import budget_services
     result = _empty()
     for project in projects:
@@ -318,15 +392,23 @@ def scan_costing(member, *, as_of, period, projects):
         result['missing'].extend(snapshot['missing'])
         project_ref = _project_ref(project)
         if snapshot['budget_missing']:
+            source_ref = {'namespace': 'costing', 'kind': 'project_budget_version',
+                          'id': str(uuid.uuid5(uuid.NAMESPACE_URL,
+                              f'pmo:costing:missing-budget:{member.organization_id}:{project.pk}')),
+                          'version': 1}
             result['reminders'].extend(_emit(
-                member, as_of=as_of, issue_code='budget_missing', source_ref=project_ref,
+                member, as_of=as_of, issue_code='budget_missing', source_ref=source_ref,
                 source_owner='costing', project=project, roles=('finance',),
                 title='项目缺少批准预算', summary=f'项目 {project.code} 尚无批准预算；缺失不按0处理。',
                 deeplink='/modules/costing/budget-etc/', refs=[project_ref],
                 missing=['approved_budget']))
         if snapshot['over_budget_cents'] is not None and snapshot['over_budget_cents'] > 0:
+            source_ref = {'namespace': 'costing', 'kind': 'budget_etc_snapshot',
+                          'id': str(uuid.uuid5(uuid.NAMESPACE_URL,
+                              f'pmo:costing:budget-etc:{member.organization_id}:{project.pk}')),
+                          'version': 1}
             result['reminders'].extend(_emit(
-                member, as_of=as_of, issue_code='budget_overrun', source_ref=project_ref,
+                member, as_of=as_of, issue_code='budget_overrun', source_ref=source_ref,
                 source_owner='costing', project=project, roles=('finance',),
                 title='项目预计超出预算', summary=f'项目 {project.code} 的只读预计成本超过批准预算。',
                 deeplink='/modules/costing/budget-etc/', refs=[project_ref]))
@@ -334,9 +416,11 @@ def scan_costing(member, *, as_of, period, projects):
 
 
 def scan_delivery(member, *, as_of, period, projects):
-    disabled = _module(member, 'delivery')
-    if disabled or member.role == 'member':
-        return disabled or _empty()
+    if member.role == 'member':
+        return _empty()
+    disabled = _module(member, 'delivery') or _module(member, 'insights')
+    if disabled:
+        return disabled
     if period is not None and period != as_of.strftime('%Y-%m'):
         return _empty()
     from pmo_plugins.insights import precheck_services
@@ -357,7 +441,9 @@ def scan_delivery(member, *, as_of, period, projects):
         for issue in snapshot['issues']:
             if issue['severity'] != 'blocker':
                 continue
-            refs = [ref for ref in issue['source_refs'] if _known_ref(ref)]
+            refs = [owned for owned in (
+                _owned_ref(member, ref, projects) for ref in issue['source_refs'])
+                if owned is not None]
             source_ref = refs[0] if refs else _org_ref(member)
             fact_project = project or next(
                 (candidate for candidate in (
@@ -373,9 +459,11 @@ def scan_delivery(member, *, as_of, period, projects):
 
 
 def scan_onboarding(member, *, as_of, period, projects):
+    if member.role == 'member':
+        return _empty()
     disabled = _module(member, 'onboarding')
-    if disabled or member.role == 'member':
-        return disabled or _empty()
+    if disabled:
+        return disabled
     from pmo_plugins.onboarding.models import ImportConflict
     result = _empty()
     rows = ImportConflict.objects.filter(
@@ -387,10 +475,15 @@ def scan_onboarding(member, *, as_of, period, projects):
             continue
         ref = {'namespace': 'onboarding', 'kind': 'import_conflict',
                'id': str(row.pk), 'version': 1}
-        refs = [ref] + ([row.source_ref] if _known_ref(row.source_ref) else [])
+        owned_refs = [owned for owned in (
+            _owned_ref(member, row.source_ref, projects),) if owned is not None]
+        project = next((candidate for candidate in (
+            _project_for_ref(member, owned, projects) for owned in owned_refs)
+            if candidate is not None), None)
+        refs = [ref] + owned_refs
         result['reminders'].extend(_emit(
             member, as_of=as_of, issue_code='import_conflict_pending', source_ref=ref,
-            source_owner='onboarding', roles=('finance',), title='导入冲突待消解',
+            source_owner='onboarding', project=project, roles=('finance',), title='导入冲突待消解',
             summary=f'预览 {row.preview_id} 存在未消解冲突，不会自动提交。',
             deeplink='/modules/onboarding/import-submit/', refs=refs))
     return result

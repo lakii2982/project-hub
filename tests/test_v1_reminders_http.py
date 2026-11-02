@@ -1,5 +1,6 @@
 """PH-355 reminder page HTTP boundaries and read-only behavior."""
 from django.test import Client, TestCase
+from django.urls import set_script_prefix
 
 from core.models import AuditEvent, DomainEvent, PluginState
 from tests.test_v1_reminders import ReminderFixture
@@ -45,6 +46,15 @@ class ReminderHTTPTests(ReminderFixture, TestCase):
             self.assertContains(response, 'role="alert"', status_code=400)
         self.assertEqual(self.client.post(URL, {}).status_code, 405)
         self.assertEqual(Client().get(URL).status_code, 302)
+
+    def test_deeplinks_keep_script_prefix(self):
+        set_script_prefix('/pmo/')
+        self.addCleanup(set_script_prefix, '/')
+        self.login(self.owner)
+        response = self.client.get(URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'action="/pmo/reminders/"')
+        self.assertContains(response, 'href="/pmo/modules/settlement/settlement-coverage-issues/"')
 
     def test_disabled_source_shows_missing_not_new_reminder(self):
         PluginState.objects.update_or_create(
