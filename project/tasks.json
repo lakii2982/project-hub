@@ -13564,6 +13564,37 @@
       "owner": "claude",
       "blockers": [],
       "handoff": "project/handoffs/PH-410.md"
+    },
+    {
+      "id": "PH-411",
+      "title": "通知链去重与调度/归档生命周期规划",
+      "kind": "docs",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0.0",
+      "depends_on": [
+        "PH-340"
+      ],
+      "spec": "project/specs/PH-411.md",
+      "allowed_paths": [
+        "project/specs/PH-380.md",
+        "project/specs/PH-385.md",
+        "project/tasks.json",
+        "project/manifest.json",
+        "docs/delivery-status.md",
+        "docs/verification.md",
+        "project/reports/PH-411.json",
+        "project/handoffs/PH-411.md"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check",
+        "python -m unittest tests.test_projectctl tests.test_governance -v"
+      ],
+      "github_issue": "https://github.com/lakii2982/project-hub/issues/310",
+      "owner": null,
+      "blockers": [],
+      "handoff": "project/handoffs/PH-411.md"
     }
   ]
 }
