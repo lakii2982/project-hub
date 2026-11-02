@@ -1,5 +1,9 @@
 # 验证记录（当前结果与历史记录分开）
 
+## PH-409 提醒浏览器接线规划（2026-11-03）
+
+`python -m unittest tests.test_projectctl tests.test_governance -v` 实际 35 项通过，`projectctl check` 为 ok=true、329 任务。仅冻结 `/reminders/`、共享导航和 PH-355 两个必要接线白名单，不含产品实现或浏览器通过声明。独立 S 复核与当前提交 required CI 见 `project/reports/PH-409.json`；合入后继续 PH-355。
+
 ## PH-408 发票导入预检保存与提交衔接（2026-11-02）
 
 相关 74 项自动化通过；新增 HTTP 金样例从上传保存到原子提交，不再用内部 `persist_preview` 补步。独立复核发现的 201 行静默截断与 script-prefix 跳转问题均有先红后绿反例；超过 200 行的保存会 400 拒绝并提示拆分，不写入预览或业务事实。1440px/390px 隔离 SQLite 浏览器均完成 finance 上传保存、期间预检、committed 收据、发票对账及运营核对工作台；390px 真实 Tab 焦点环与 44px 触控高通过，无效 CSV 400 且不新增预览，两视口无页面横溢。演练对账仍显示 `revenue_invoice_mismatch`，工作台保留既有 missing，未计为新增通过项。
