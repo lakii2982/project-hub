@@ -1,13 +1,11 @@
 {
   "task_id": "PH-410",
-  "summary": "只登记通知收件箱依赖重基线与最小持久化接线规划，解除 PH-340 的旧 proposed 依赖和模型/路由缺口；不含实现。",
-  "registration_only": true,
-  "authorization_source": "user-continue-v1-2026-11-03",
+  "summary": "完成通知收件箱依赖重基线与最小持久化接线规划：PH-340 依赖 PH-355，冻结当前成员 Notification 内部快照、幂等同步、已读/忽略、/notifications/ 和必要模型/迁移/路由白名单；不含产品实现。",
   "tests": [
     {"command":"python scripts/projectctl.py check","result":"pass","exit_code":0,"evidence":"Actual exit 0 using repository virtualenv on PATH: ok=true, task_count=330."},
-    {"command":"python -m unittest tests.test_projectctl tests.test_governance -v","result":"pass","exit_code":0,"evidence":"Actual exit 0 using repository virtualenv on PATH: 35 tests in 10.543s, OK."}
+    {"command":"python -m unittest tests.test_projectctl tests.test_governance -v","result":"pass","exit_code":0,"evidence":"Actual exit 0 using repository virtualenv on PATH: 35 tests in 10.561s, OK."}
   ],
-  "review": {"required":true,"reviewer":"independent general-purpose / reviewer","status":"pass","findings":["PASS at uncommitted PH-410 against BASE 154d71c: exact bounded planning registration, digest 3568283dccc112685a739bc0db1c8a597fd52c7a76ef43a5874b1611d1c1d164 and open Issue #306 verified; no implementation or notification-scope expansion. Reviewer independently reran both common checks with exit 0."]},
-  "deviations": ["仅追加一个 ready/未认领规划契约和精确 S 授权；不修改既有任务、产品、检查器、workflow、manifest 或既有授权。"],
-  "unverified": ["远端 required CI 待完成。", "通知收件箱、迁移、页面及浏览器验收尚未实现。"]
+  "review": {"required":true,"reviewer":"independent general-purpose / reviewer","status":"pass","findings":["PASS at uncommitted PH-410 against BASE d93e679: PH-340 rebased to PH-355 with exact internal snapshot/sync/read/ignore/route scope and required paths; no implementation or other task expansion. Reviewer independently reran both common checks with exit 0."]},
+  "deviations": ["PH-301/314 保持 proposed；PH-380 不提前晋级。", "本规划不写模型、迁移、服务、路由、页面或测试实现。"],
+  "unverified": ["当前提交 required CI 待完成。", "通知收件箱实现与浏览器验收尚未完成。"]
 }
