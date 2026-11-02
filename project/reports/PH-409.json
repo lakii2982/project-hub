@@ -1,8 +1,6 @@
 {
   "task_id": "PH-409",
-  "summary": "只登记 PH-355 浏览器入口接线规划；解决提醒扫描验收要求与根路由/导航白名单缺失的具体死锁，不含实现。",
-  "registration_only": true,
-  "authorization_source": "user-continue-v1-2026-11-02",
+  "summary": "补齐 PH-355 的真实浏览器接线契约：冻结 /reminders/ 根路由与“到期提醒”共享导航，仅增加 pmo/urls.py 和 templates/base.html 两个必要白名单文件；不写产品实现。",
   "tests": [
     {
       "command": "python scripts/projectctl.py check",
@@ -14,7 +12,7 @@
       "command": "python -m unittest tests.test_projectctl tests.test_governance -v",
       "result": "pass",
       "exit_code": 0,
-      "evidence": "Actual exit 0 using the repository virtualenv on PATH: 35 tests ran in 12.330s, OK."
+      "evidence": "Actual exit 0 using the repository virtualenv on PATH: 35 tests ran in 10.650s, OK."
     }
   ],
   "review": {
@@ -22,14 +20,15 @@
     "reviewer": "independent general-purpose / reviewer",
     "status": "pass",
     "findings": [
-      "PASS at uncommitted PH-409 against BASE 78eadb7: one ready/unclaimed planning task with done dependency, exact digest db091fea05a6255a00a04a4df47ef4b3015b188ea39ca85681ba78d05e16f2d3 and open Issue #302; only /reminders/ root route and shared navigation planning, no implementation or notification write expansion. Reviewer independently reran both common checks with exit 0."
+      "PASS at uncommitted PH-409 against BASE ea31c72: only PH-355 route/navigation contract and two necessary path additions; no product implementation or weakened reminder/permission/verification boundaries. Reviewer independently reran projectctl check and 35 common tests with exit 0."
     ]
   },
   "deviations": [
-    "仅追加一个 ready/未认领且依赖已 done 的规划契约及精确 S 授权；不修改 PH-355、产品、检查器、workflow、manifest 或既有授权。"
+    "本规划不改变提醒字段、角色矩阵、去重、缺失语义、通知写侧边界或既有验收命令。",
+    "PH-355 实现、浏览器与远端产品 CI 留待规划合入后的原任务完成。"
   ],
   "unverified": [
-    "远端 required CI 待完成。",
-    "本登记不代表提醒路由、扫描、页面或浏览器验收已经实现。"
+    "当前提交远端 required CI 待完成。",
+    "本规划不证明提醒路由、页面或扫描已经实现。"
   ]
 }
