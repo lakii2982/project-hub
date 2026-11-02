@@ -17,7 +17,7 @@ from django.http import Http404, HttpResponse, FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse as url_reverse
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 from . import forms as ui
 from .access import (current_membership, require_member, visible_projects, can_manage, can_read_finance,
                      require_project, require_write, require_finance_write, WRITE_FINANCE)
@@ -80,6 +80,28 @@ def dashboard(request):
     alerts += alerts_for([p for p in projects if p not in financial_projects], include_finance=False)
     return render(request, "dashboard.html", {"nav": "dashboard", "metrics": metrics, "cards": cards[:8],
         "alerts": alerts[:8], "forecast_overdue": overdue_plan_totals(financial_projects), "cashflow": cash_forecast(financial_projects), "today": timezone.localdate()})
+
+
+@workspace_view
+@require_GET
+def reminders(request):
+    from .reminder_services import scan_reminders
+    form = ui.ReminderFilterForm(request.GET or None)
+    error, snapshot = '', None
+    if set(request.GET) - {'as_of', 'period'}:
+        error = '包含不允许的查询参数，请刷新后重试'
+    elif not form.is_valid():
+        error = '；'.join(message for errors in form.errors.values() for message in errors)
+    else:
+        try:
+            snapshot = scan_reminders(
+                request.member, as_of=form.cleaned_data.get('as_of'),
+                period=form.cleaned_data.get('period') or None)
+        except ValidationError as exc:
+            error = '；'.join(exc.messages)
+    return render(request, 'core/reminders.html', {
+        'nav': 'reminders', 'form': form, 'snapshot': snapshot, 'error': error,
+    }, status=400 if error else 200)
 
 
 @workspace_view
