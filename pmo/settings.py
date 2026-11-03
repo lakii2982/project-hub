@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "pmo_plugins.invoicing.apps.InvoicingConfig",
     "pmo_plugins.insights.apps.InsightsConfig",
     "pmo_plugins.billing.apps.BillingConfig",
+    "pmo_plugins.expenses.apps.ExpensesConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware", "whitenoise.middleware.WhiteNoiseMiddleware",

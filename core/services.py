@@ -343,7 +343,8 @@ def reverse(member, kind, pk, note):
         return row
     if row.status != "approved":
         raise ValidationError("只能冲销已入账记录")
-    entries = row.project.entries.filter(**{f"{'timesheet' if kind == 'time' else 'document'}_id": row.pk}, reverses__isnull=True)
+    entries = row.project.entries.filter(**{f"{'timesheet' if kind == 'time' else 'document'}_id": row.pk},
+                                            reverses__isnull=True, reversal__isnull=True)
     if not entries.exists():
         raise ValidationError("该记录不生成账目，预算请走新变更、验收请走恢复流程")
     for original in entries:

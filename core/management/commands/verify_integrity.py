@@ -12,7 +12,8 @@ class Command(BaseCommand):
         organizations = list(Organization.objects.all())
         for org in organizations:
             if not verify_audit(org): errors.append(f"organization:{org.pk}:audit_chain")
-        ledger_entries = list(LedgerEntry.objects.select_related("document", "timesheet", "reverses", "project"))
+        ledger_entries = list(LedgerEntry.objects.select_related(
+            "document", "timesheet", "reverses", "project", "reversal"))
         for entry in ledger_entries:
             source = entry.document or entry.timesheet
             if not source or source.project_id != entry.project_id: errors.append(f"ledger:{entry.pk}:source_project")
@@ -21,7 +22,11 @@ class Command(BaseCommand):
                 if (entry.amount_cents != -original.amount_cents or entry.book != original.book or entry.project_id != original.project_id
                     or entry.document_id != original.document_id or entry.timesheet_id != original.timesheet_id):
                     errors.append(f"ledger:{entry.pk}:reversal")
-            else:
+            elif getattr(entry, "reversal", None) is None:
+                # Only the current generation of an append-only correction chain is compared to
+                # the source's present amount; a superseded entry was already matched by the
+                # mirrored reversal that points at it (ledger:reversal above), so re-comparing it
+                # would report every legitimate correction as corruption.
                 expected = entry.timesheet.cost_cents if entry.timesheet_id else (
                     entry.document.amount_cents - entry.document.tax_cents if entry.document.kind == "expense" and entry.document.recoverable_tax else entry.document.amount_cents)
                 expected_book = "cost" if entry.timesheet_id else {"expense": "cost", "receipt": "cash_in", "payment": "cash_out"}.get(entry.document.kind)
@@ -32,8 +37,15 @@ class Command(BaseCommand):
             if model is Document: sources = sources.filter(kind__in=["expense", "receipt", "payment"])
             for source in sources:
                 entries = LedgerEntry.objects.filter(**{field: source})
-                if entries.filter(reverses__isnull=True).count() != 1: errors.append(f"{field}:{source.pk}:posting_count")
-                if source.status == "reversed" and entries.filter(reverses__isnull=False).count() != 1: errors.append(f"{field}:{source.pk}:missing_reversal")
+                active = entries.filter(reverses__isnull=True, reversal__isnull=True)
+                if source.status == "reversed":
+                    # A correction chain has one reversal per superseded generation; the source
+                    # is fully reversed when no active posting remains and the chain nets to zero.
+                    if (active.exists() or not entries.filter(reverses__isnull=False).exists()
+                            or sum(row.amount_cents for row in entries.only("amount_cents")) != 0):
+                        errors.append(f"{field}:{source.pk}:missing_reversal")
+                elif active.count() != 1:
+                    errors.append(f"{field}:{source.pk}:posting_count")
         projects = list(Project.objects.all())
         for project in projects:
             for plan in project.cash_plans.all():

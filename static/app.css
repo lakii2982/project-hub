@@ -110,3 +110,17 @@
 }
 
 .week-table .week-divider-row td{border-top:1px solid var(--color-border);background:var(--color-surface-subtle);color:var(--color-text-secondary);font-size:var(--font-size-xs);padding:var(--space-2) var(--space-3)}
+
+/* Q-36 费用与外包：缺口表在小屏堆叠，避免横向撑破页面；桌面端保留横向滚动容器。 */
+.expense-gap-table{min-width:620px}
+@media(max-width:760px){
+  .expense-gap-table{min-width:0}
+  .expense-gap-table thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .expense-gap-table,.expense-gap-table tbody,.expense-gap-table tr,.expense-gap-table td{display:block;width:100%}
+  .expense-gap-table tr{padding:var(--space-3) 0;border-top:1px solid var(--color-border)}
+  .expense-gap-table td{display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:var(--space-3);border:0;padding:var(--space-1) 0;align-items:center;max-width:none}
+  .expense-gap-table td:before{content:attr(data-label);color:var(--color-text-secondary);font-size:var(--font-size-xs)}
+  .expense-gap-table td:last-child{grid-template-columns:1fr}
+  .expense-gap-table td:last-child:before{display:none}
+  .expense-gap-table .inline-form{margin-top:var(--space-1)}
+}

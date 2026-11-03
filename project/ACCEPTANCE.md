@@ -40,7 +40,7 @@
 | 3 | 老板工作台：收益 + 现金一屏（Q-33） | not_run | 待实现 |
 | 4 | 项目页：合同额→开票→收款→成本→毛利（Q-34） | not_run | 待实现 |
 | 5 | 工时与自动人工成本（Q-35） | pass | `python manage.py test tests.test_weekly_time`（18 tests OK：费率快照/更正/幂等/缺费率/权限/锁期/1440 分钟反例，含真实渲染 token 重复提交、锁期费率回填拒绝、极端 ?week、旧审批入口拒绝）；`python manage.py verify_integrity --json` exit 0（演练库 47 条账目）；`manage.py seed_demo` 后 Chromium 1440/390 浏览器证据：周填报→更正→重复提交幂等、失败保留已填数据、缺费率进入工作台缺口清单、补录费率后自动定价；截图 `docs/screenshots/q35-weekly-1440.png`、`q35-weekly-390.png`、`q35-after-dashboard-gap-1440.png`、`q35-after-dashboard-gap-390.png`、`q35-project-cost-1440.png` |
-| 6 | 费用/外包成本确认（Q-36） | not_run | 待实现 |
+| 6 | 费用/外包成本确认（Q-36） | pass | `python manage.py test tests.test_q36_expenses`（37 tests OK：登记/确认/更正审计留痕、整数分 Decimal/ROUND_HALF_UP 且拒绝 float、确认→多次更正后 `verify_integrity` 仍 ok、成本=最新值且仅 1 条 active 成本分录、重复确认与重复登记/付款 token 幂等（附件参与幂等）、分次付款不重复计成本、未付进入 8 周计划且按来源去重、逾期单列、超额付款/锁期/未来日期/跨租户/成员-finance-auditor 角色拒绝、历史专业费用只读友好提示与写拒绝、附件类型校验；PostgreSQL-only FOR UPDATE 外连接回归测试在 PG 域执行）；`python manage.py verify_integrity --json` exit 0（seed 后 51 条，浏览器更正链后 56 条）；`seed_demo` 后 Chromium 1440/390 浏览器证据：登记→确认→分次付款→更正（追加冲销重述成本）→项目成本/现金/8 周缺口，截图 `docs/screenshots/q36-after-expenses-1440.png`、`q36-after-expenses-paid-390.png`、`q36-after-expenses-corrected-1440.png`、`q36-after-project-expense-1440.png`、`q36-after-project-expense-390.png`、`q36-after-dashboard-gap-1440.png`，Before 对照 `q36-before-*-1440.png`（main 5e4ae8b/Q-37 合并后、无 Q-36 入口/页面/项目面板） |
 | 7 | 极简开票与收款归集（Q-37） | not_run | 待实现 |
 | 8 | 现金账户与 8 周计划（Q-38） | not_run | 待实现 |
 | 9 | 一条命令演示环境（Q-39） | not_run | `scripts/demo.py` 未实现 |

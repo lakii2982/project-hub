@@ -391,7 +391,7 @@ class BillingHttpTests(BillingFixture):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Invoice.objects.count(), before)
 
-    def test_project_page_shows_billing_summary_and_gap(self):
+    def test_project_page_shows_billing_summary_and_q36_payment_bridge(self):
         bank = self.account()
         invoice = self.invoice(number="INV-PAGE-1", amount=10600, rate=600)
         self.receipt(account=bank, amount=4000, invoice=invoice)
@@ -401,7 +401,9 @@ class BillingHttpTests(BillingFixture):
         self.assertContains(page, "开票与收款")
         self.assertContains(page, "未收款")
         self.assertContains(page, "66.00")
-        self.assertContains(page, "付款未接入")
+        # Q-36 delivered the payment side, so the old "付款未接入" gap marker is closed.
+        self.assertContains(page, "付款由费用与付款记录接入")
+        self.assertContains(page, "费用与外包（成本 / 现金）")
 
     def test_pm_only_sees_own_project_billing_numbers(self):
         self.account(name="老板账户")
