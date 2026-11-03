@@ -82,9 +82,11 @@ def dashboard(request):
     financial_projects = [p for p in projects if can_read_finance(request.member, p)]
     alerts = alerts_for(financial_projects)
     alerts += alerts_for([p for p in projects if p not in financial_projects], include_finance=False)
+    from pmo_plugins.expenses.services import dashboard_expense_facts
     return render(request, "dashboard.html", {"nav": "dashboard", "metrics": metrics, "cards": cards[:8],
         "alerts": alerts[:8], "forecast_overdue": overdue_plan_totals(financial_projects), "cashflow": cash_forecast(financial_projects),
-        "labor_gaps": weekly.missing_rate_gaps(request.member), "today": timezone.localdate()})
+        "labor_gaps": weekly.missing_rate_gaps(request.member), "expense_facts": dashboard_expense_facts(request.member),
+        "today": timezone.localdate()})
 
 
 @workspace_view
@@ -147,9 +149,13 @@ def project_detail(request, pk):
     elif finance_read:
         from pmo_plugins.billing.services import project_billing_summary
         billing_summary = project_billing_summary(request.member, project)
+    expense_summary = None
+    if finance_read and is_micro_scope():
+        from pmo_plugins.expenses.services import project_expense_summary
+        expense_summary = project_expense_summary(request.member, project)
     return render(request, "project_detail.html", {"nav": "projects", "project": project,
         "revenue_summary": revenue_summary, "contract_totals": contract_totals, "contracts_unavailable": contracts_unavailable,
-        "billing": billing_summary,
+        "billing": billing_summary, "expenses": expense_summary,
         "summary": redact_card(project_summary(project), request.member),
         "tasks": project.tasks.filter(Q(milestone__isnull=False) | Q(cash_plan__isnull=False)).select_related("owner__user", "dependency", "milestone", "cash_plan"),
         "historical_tasks": project.tasks.filter(milestone__isnull=True, cash_plan__isnull=True).select_related("owner__user", "dependency"),

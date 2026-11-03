@@ -26,7 +26,7 @@ def resolve_scope(value, testing=False):
 
 # 1.0 保留入口（docs/product-scope.md §8.1）。客户与合同/费用/开票与收款/现金
 # 的页面由 Q-36/Q-37/Q-38 交付后加入白名单；未交付前不渲染死链。
-# Q-37 已交付开票与收款（/billing/）；客户与合同/费用/现金随 Q-36/Q-38 加入。
+# Q-36 已交付费用（/expenses/），Q-37 已交付开票与收款（/billing/）；客户与合同/现金随 Q-38 加入。
 MICRO_NAV = (
     {"key": "dashboard", "label": "工作台", "url_name": "dashboard", "icon": "grid",
      "roles": frozenset({"owner", "pm", "member", "finance", "auditor"})},
@@ -34,6 +34,8 @@ MICRO_NAV = (
      "roles": frozenset({"owner", "pm", "member", "finance", "auditor"})},
     {"key": "time", "label": "工时", "url_name": "timesheets", "icon": "clock",
      "roles": frozenset({"owner", "pm", "member", "finance", "auditor"})},
+    {"key": "expenses", "label": "费用", "url_name": "expenses", "icon": "finance",
+     "roles": frozenset({"owner", "pm"})},
     {"key": "billing", "label": "开票与收款", "url_name": "billing", "icon": "finance",
      "roles": frozenset({"owner", "pm"})},
     {"key": "settings", "label": "设置", "url_name": "settings", "icon": "settings",

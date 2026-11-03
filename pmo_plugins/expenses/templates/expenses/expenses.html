@@ -1,0 +1,159 @@
+{% extends 'base.html' %}{% load money %}
+{% block title %}费用与外包{% endblock %}
+{% block breadcrumb %}费用与外包{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><div class="eyebrow">EXPENSES / COST &amp; CASH</div><h1>费用与外包</h1>
+    <p>人民币 / 元 · 一条项目支出确认后只计一次成本；付款是同一支出下的付款记录，只计现金；未付金额进入未来 8 周计划，成本与现金不重复记。</p></div>
+  <div class="actions">
+    {% if project %}<a class="button" href="/expenses/">全部项目</a>{% endif %}
+    <span class="badge neutral">{{ snapshot.totals.registered_count }} 笔费用</span>
+  </div>
+</section>
+
+{% if can_write %}
+<section class="panel section-gap" id="expense-register">
+  <div class="panel-heading"><div><h2>登记一笔费用或外包支出</h2><p>登记只形成待确认事实；确认后才计入项目成本，附件可选且不写入真实敏感数据。</p></div></div>
+  <div class="panel-body">
+    <form method="post" action="/expenses/register/" enctype="multipart/form-data" class="stack-form" data-expense-form>
+      {% csrf_token %}
+      {{ expense_form.submission_token }}
+      {% if expense_form.non_field_errors %}<div class="message error" role="alert">{% for error in expense_form.non_field_errors %}{{ error }}{% endfor %}</div>{% endif %}
+      <div class="form-row">
+        {% include 'expenses/field.html' with field=expense_form.project %}
+        {% include 'expenses/field.html' with field=expense_form.category %}
+        {% include 'expenses/field.html' with field=expense_form.amount %}
+      </div>
+      <div class="form-row">
+        {% include 'expenses/field.html' with field=expense_form.occurred_on %}
+        {% include 'expenses/field.html' with field=expense_form.expected_pay_on %}
+        {% include 'expenses/field.html' with field=expense_form.counterparty %}
+      </div>
+      {% include 'expenses/field.html' with field=expense_form.note %}
+      {% include 'expenses/field.html' with field=expense_form.attachment %}
+      <div class="form-actions"><button class="button primary" type="submit">登记费用（待确认）</button></div>
+    </form>
+  </div>
+</section>
+{% endif %}
+
+{% if snapshot.totals.pending_count %}
+<section class="panel section-gap" id="expense-gaps">
+  <div class="panel-heading"><div><h2>待确认费用缺口</h2><p class="muted">已登记但尚未确认的费用不计入项目成本；这里显示缺口金额与笔数，不使用假零。</p></div><span class="badge warning">{{ snapshot.totals.pending_count }} 笔 · ¥ {{ snapshot.totals.pending_amount_cents|money }}</span></div>
+  <div class="panel-body">
+    <div class="table-scroll"><table class="expense-gap-table"><caption class="sr-only">待确认费用缺口</caption>
+      <thead><tr><th scope="col">项目</th><th scope="col">类别</th><th scope="col">发生日期</th><th scope="col" class="numeric">金额</th><th scope="col">操作</th></tr></thead>
+      <tbody>{% for row in snapshot.pending_rows %}<tr>
+        <td data-label="项目">{{ row.document.project.code }} · {{ row.document.project.name }}</td>
+        <td data-label="类别">{{ row.category_label }}</td>
+        <td data-label="发生日期">{{ row.document.occurred_on|date:'Y.m.d' }}</td>
+        <td data-label="金额" class="numeric">¥ {{ row.amount_cents|money }}</td>
+        <td data-label="操作">{% if can_write %}<form method="post" action="/expenses/{{ row.document.pk }}/confirm/" class="inline-form">{% csrf_token %}<input type="hidden" name="project" value="{{ row.document.project_id }}"><button class="button primary" type="submit">确认计入成本</button></form>{% else %}<span class="muted">待老板/项目经理确认</span>{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+    <p class="help-text">确认时只生成一条成本；后续付款不会再计成本。确认后若发现金额或日期有误，可在下方更正，系统追加冲销并保留原记录。</p>
+  </div>
+</section>
+{% endif %}
+
+<section class="panel section-gap" id="expense-plan">
+  <div class="panel-heading"><div><h2>未来 8 周未付支出计划</h2><p class="muted">只读派生：已确认支出 − 已付合计，按预计付款日（未填按发生日期）进入计划；同一支出只出现一次，结清后移出。</p></div><span class="badge neutral">8 周内 ¥ {{ snapshot.plan.within_amount_cents|money }}</span></div>
+  <div class="panel-body">
+    <div class="summary-band compact">
+      <div><span>8 周内未付</span><strong><small>¥</small> {{ snapshot.plan.within_amount_cents|money }}</strong></div>
+      <div><span>已逾期未付（单列）</span><strong {% if snapshot.plan.overdue_amount_cents %}class="text-warning"{% endif %}><small>¥</small> {{ snapshot.plan.overdue_amount_cents|money }}</strong></div>
+      <div><span>未付合计</span><strong><small>¥</small> {{ snapshot.plan.unpaid_total_cents|money }}</strong></div>
+      <div><span>计划来源去重</span><strong>{{ snapshot.plan.items|length }} <small>笔</small></strong></div>
+    </div>
+    {% if snapshot.plan.weeks %}
+    <div class="table-scroll"><table class="expense-plan-table"><caption class="sr-only">未来 8 周未付支出合计</caption>
+      <thead><tr><th scope="col">周</th><th scope="col">到期范围</th><th scope="col" class="numeric">未付金额</th></tr></thead>
+      <tbody>{% for week in snapshot.plan.weeks %}<tr><td data-label="周">第 {{ forloop.counter }} 周</td><td data-label="到期范围">{{ week.label }}</td><td data-label="未付金额" class="numeric">¥ {{ week.amount_cents|money }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% endif %}
+    {% if snapshot.plan.overdue %}
+    <div class="notice" role="status"><strong>逾期未付 {{ snapshot.plan.overdue_count }} 笔 · ¥ {{ snapshot.plan.overdue_amount_cents|money }}</strong>
+      <p>逾期项单列跟进，不会自动挪到本周，也不用预付款冒充已付现金。</p>
+      <ul>{% for item in snapshot.plan.overdue %}<li>{{ item.due_on|date:'Y.m.d' }} · {{ item.project.code }} · {{ item.title }} · ¥ {{ item.amount_cents|money }}（来源 expense:{{ item.expense_id }}）</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    {% if snapshot.plan.items %}<p class="help-text">计划只含已确认未付支出；未确认费用和未开票计划不在本计划内。现金余额与项目现金净额按实际收付款计算。</p>{% else %}<div class="empty-state compact"><h3>当前没有已确认未付支出</h3><p>登记并确认一笔未付费用后，这里按预计付款日显示 8 周计划。</p></div>{% endif %}
+  </div>
+</section>
+
+{% if snapshot.legacy_count %}<div class="notice" role="status"><strong>另有 {{ snapshot.legacy_count }} 笔历史专业流程费用记录只读保留</strong><p>它们未通过简明费用流程登记，不在本页显示，也不进入 8 周未付支出计划；历史金额不重算，可在项目财务/账本明细中查看。</p></div>{% endif %}
+<section class="panel section-gap" id="expense-list">
+  <div class="panel-heading"><div><h2>已登记费用与付款记录</h2><p class="muted">登记、确认、更正各自留痕；历史专业流程的费用单据只读保留，不在本页改写。</p></div><span class="badge neutral">待确认 {{ snapshot.totals.pending_count }} · 已确认 {{ snapshot.totals.confirmed_count }}</span></div>
+  <div class="record-list">
+    {% for row in snapshot.rows %}
+    <details class="record">
+      <summary>
+        <div><h3>{{ row.document.title }}</h3><p>{{ row.document.project.code }} · {{ row.category_label }} · 发生 {{ row.document.occurred_on|date:'Y.m.d' }}{% if row.expected_pay_on %} · 预计付款 {{ row.expected_pay_on|date:'Y.m.d' }}{% endif %}{% if row.version and row.version > 1 %} · 已更正 v{{ row.version }}{% endif %}</p></div>
+        <div class="record-summary">
+          {% if row.pending %}<span class="badge warning">待确认 · 未计成本</span>{% else %}<span class="badge success">已确认 · 已计成本</span>{% endif %}
+          <strong>¥ {{ row.amount_cents|money }}</strong><span class="disclosure" aria-hidden="true">⌄</span>
+        </div>
+      </summary>
+      <div class="record-body">
+        <dl class="detail-grid">
+          <div><dt>成本（确认时一次计入）</dt><dd>{% if row.confirmed %}¥ {{ row.amount_cents|money }}{% else %}<span class="text-warning">待确认，尚未计入成本</span>{% endif %}</dd></div>
+          <div><dt>现金（付款累计，不重复计成本）</dt><dd>¥ {{ row.paid_cents|money }}</dd></div>
+          <div><dt>未付支出</dt><dd>{% if row.confirmed %}¥ {{ row.unpaid_cents|money }}{% else %}<span class="muted">确认后按支出金额 − 已付计算</span>{% endif %}</dd></div>
+          <div><dt>供应商 / 往来方</dt><dd>{{ row.document.counterparty|default:'未填写' }}</dd></div>
+          <div><dt>费用说明</dt><dd class="pre-line">{{ row.document.note|default:'未填写' }}</dd></div>
+          <div><dt>预计付款日</dt><dd>{% if row.expected_pay_on %}{{ row.expected_pay_on|date:'Y.m.d' }}{% else %}未填（按发生日期）{% endif %}</dd></div>
+        </dl>
+        {% if row.pending and can_write %}
+        <form method="post" action="/expenses/{{ row.document.pk }}/confirm/" class="inline-form">{% csrf_token %}<input type="hidden" name="project" value="{{ row.document.project_id }}"><div class="grow"><p class="help-text">确认即计入成本；1.0 默认免审批，操作者与时间进入审计。</p></div><button class="button primary" type="submit">确认计入成本</button></form>
+        {% endif %}
+        {% if row.payments %}
+        <h4>付款记录（同一支出下的分次付款）</h4>
+        <div class="table-scroll"><table><caption class="sr-only">{{ row.document.title }} 的付款记录</caption><thead><tr><th scope="col">付款日期</th><th scope="col" class="numeric">金额</th><th scope="col">说明</th></tr></thead><tbody>{% for payment in row.payments %}<tr><td data-label="付款日期">{{ payment.paid_on|date:'Y.m.d' }}</td><td data-label="金额" class="numeric">¥ {{ payment.amount_cents|money }}</td><td data-label="说明">{{ payment.note|default:'—' }}</td></tr>{% endfor %}</tbody></table></div>
+        {% endif %}
+        {% if row.confirmed and row.unpaid_cents > 0 and can_write %}
+        <details class="inset-details"><summary>登记一笔付款（只计现金）</summary>
+          <form method="post" action="/expenses/{{ row.document.pk }}/payment/" class="stack-form compact-form">{% csrf_token %}
+            <input type="hidden" name="project" value="{{ row.document.project_id }}">
+            <input type="hidden" name="submission_token" value="{{ row.payment_token }}">
+            <div class="form-row">
+              <div class="form-field"><label for="pay-amount-{{ row.document.pk }}">本次付款金额（元）</label><input id="pay-amount-{{ row.document.pk }}" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required></div>
+              <div class="form-field"><label for="pay-date-{{ row.document.pk }}">实际付款日期</label><input id="pay-date-{{ row.document.pk }}" name="paid_on" type="date" value="{{ today|date:'Y-m-d' }}" required></div>
+              <div class="form-field grow"><label for="pay-note-{{ row.document.pk }}">付款说明（可选）</label><input id="pay-note-{{ row.document.pk }}" name="note" type="text" maxlength="240" placeholder="如：分两次支付的第二笔"></div>
+            </div>
+            <p class="help-text">未付余额 ¥ {{ row.unpaid_cents|money }}；付款累计不能超过支出金额，付款不会生成第二笔成本。</p>
+            <button class="button primary" type="submit">登记付款</button>
+          </form>
+        </details>
+        {% endif %}
+        {% if can_write %}
+        <details class="inset-details"><summary>更正这笔费用</summary>
+          <form method="post" action="/expenses/{{ row.document.pk }}/correct/" enctype="multipart/form-data" class="stack-form compact-form">{% csrf_token %}
+            <input type="hidden" name="project" value="{{ row.document.project_id }}">
+            <input type="hidden" name="version" value="{{ row.version }}">
+            <div class="form-row">
+              <div class="form-field"><label for="corr-category-{{ row.document.pk }}">费用类别</label><select id="corr-category-{{ row.document.pk }}" name="category">{% for value, label in categories %}<option value="{{ value }}"{% if row.document.category == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+              <div class="form-field"><label for="corr-amount-{{ row.document.pk }}">支出金额（元）</label><input id="corr-amount-{{ row.document.pk }}" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" value="{{ row.amount_yuan }}" required></div>
+              <div class="form-field"><label for="corr-other-{{ row.document.pk }}">供应商/往来方</label><input id="corr-other-{{ row.document.pk }}" name="counterparty" type="text" maxlength="120" value="{{ row.document.counterparty }}"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-field"><label for="corr-occurred-{{ row.document.pk }}">发生日期</label><input id="corr-occurred-{{ row.document.pk }}" name="occurred_on" type="date" value="{{ row.document.occurred_on|date:'Y-m-d' }}" required></div>
+              <div class="form-field"><label for="corr-expected-{{ row.document.pk }}">预计付款日（可空）</label><input id="corr-expected-{{ row.document.pk }}" name="expected_pay_on" type="date" value="{{ row.expected_pay_on|date:'Y-m-d' }}"></div>
+              <div class="form-field"><label for="corr-attachment-{{ row.document.pk }}">追加附件（可选）</label><input id="corr-attachment-{{ row.document.pk }}" name="attachment" type="file"></div>
+            </div>
+            <div class="form-field"><label for="corr-note-{{ row.document.pk }}">费用说明</label><textarea id="corr-note-{{ row.document.pk }}" name="note" rows="2" maxlength="8000" required>{{ row.document.note }}</textarea></div>
+            <p class="help-text">更正金额或日期后，已确认支出的成本会追加一笔冲销并按新值重记；原记录与审计保留。金额不能低于已付款合计 ¥ {{ row.paid_cents|money }}。</p>
+            <button class="button primary" type="submit">保存更正</button>
+          </form>
+        </details>
+        {% endif %}
+        {% if row.document.evidence_files.all %}
+        <div class="attachment-list"><p>附件（演练或业务凭证，不含真实敏感数据）</p>{% for evidence in row.document.evidence_files.all %}<a href="{% url 'download-evidence' evidence.pk %}">{{ evidence.original_name }}<span>下载</span></a>{% endfor %}</div>
+        {% endif %}
+      </div>
+    </details>
+    {% empty %}
+    <div class="empty-state"><span class="empty-glyph" aria-hidden="true">¥</span><h3>还没有登记费用</h3><p>老板或项目经理在上方登记一笔采购或外包支出；确认后计入项目成本，未付金额进入 8 周现金计划。</p></div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

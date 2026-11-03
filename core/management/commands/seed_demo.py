@@ -50,11 +50,13 @@ class Command(BaseCommand):
             ("PH-26004", "星河数据平台建设", "星河数据", "software", 52000000, 32000000, 30000000, 0),
         ]
         from core.models import ProjectMember
+        demo_projects = []
         for index, (code, name, client, template, contract, budget, etc, done_count) in enumerate(specs):
             project = create_project(pm, {"code": code, "name": name, "client": client, "manager": pm, "template": template,
                 "start_date": today - timedelta(days=60), "end_date": today + timedelta(days=45 + index * 12),
                 "contract_cents": contract, "etc_cents": etc, "scope": "业务梳理、系统交付、用户培训与上线支持；范围以合同附件为准。",
                 "acceptance_criteria": "完成约定交付物，关键流程测试通过，取得客户验收确认。", "contract_reference": f"HT-2026-{index+1:03d}"})
+            demo_projects.append(project)
             ProjectMember.objects.get_or_create(project=project, member=member)
             if index == 0:
                 ProjectMember.objects.get_or_create(project=project, member=newbie)
@@ -118,6 +120,31 @@ class Command(BaseCommand):
                 review(owner, "document", acceptance.pk, "approve", "客户确认记录已核对")
                 project.refresh_from_db()
                 transition(pm, project.pk, "warranty", project.version, "客户验收完成，进入约定支持期")
+        # Q-36 演示：简明费用流程的登记/确认/分次付款与未付计划。
+        from pmo_plugins.expenses.services import (confirm_expense, record_payment,
+                                                  register_expense)
+        demo_project = demo_projects[0]
+        split = register_expense(pm, project=demo_project, category="vendor",
+            amount_cents=2_400_000, occurred_on=today - timedelta(days=8),
+            expected_pay_on=today + timedelta(days=14),
+            note="外包开发首期（演练）", counterparty="演练外包供应商",
+            token=uuid.uuid4())
+        confirm_expense(pm, split.pk)
+        record_payment(pm, split.pk, amount_cents=1_000_000, paid_on=today - timedelta(days=5),
+                       note="分次付款第一笔（演练）", token=uuid.uuid4())
+        record_payment(pm, split.pk, amount_cents=600_000, paid_on=today - timedelta(days=2),
+                       note="分次付款第二笔（演练）", token=uuid.uuid4())
+        unpaid = register_expense(pm, project=demo_project, category="travel",
+            amount_cents=468_000, occurred_on=today - timedelta(days=12),
+            expected_pay_on=today - timedelta(days=6),
+            note="现场差旅待付（演练）", counterparty="演练差旅服务商",
+            token=uuid.uuid4())
+        confirm_expense(pm, unpaid.pk)
+        register_expense(pm, project=demo_project, category="software",
+            amount_cents=360_000, occurred_on=today - timedelta(days=1),
+            expected_pay_on=today + timedelta(days=9),
+            note="云服务续费待确认（演练）", counterparty="演练云服务商",
+            token=uuid.uuid4())
         pending = submit_time(member, {"project": tasks[0].project, "employee": member.employee,
             "work_date": today, "minutes": 120, "note": "方案准备和技术预研", "task": None}, uuid.uuid4())
         credentials = settings.BASE_DIR / "runtime/demo-credentials.txt"
