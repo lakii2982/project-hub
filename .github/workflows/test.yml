@@ -99,7 +99,7 @@ jobs:
           fi
           grep -E "skipped '|^Ran |^OK|^FAILED|^(FAIL|ERROR):" test-output.txt | tail -n 400 || true
           if [ "$TEST_EXIT" -ne 0 ] || [ "$COV_EXIT" -ne 0 ] || [ "$GATE_EXIT" -ne 0 ]; then exit 1; fi
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: sqlite-quality-evidence
@@ -112,7 +112,7 @@ jobs:
       - run: python manage.py verify_integrity --json
       - run: python manage.py collectstatic --noinput
       - run: pip inspect --local > application-dependencies.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: application-dependencies
           path: application-dependencies.json
@@ -196,7 +196,7 @@ jobs:
           fi
           grep -E "skipped '|^Ran |^OK|^FAILED|^(FAIL|ERROR):" test-output.txt | tail -n 400 || true
           if [ "$TEST_EXIT" -ne 0 ] || [ "$COV_EXIT" -ne 0 ] || [ "$GATE_EXIT" -ne 0 ]; then exit 1; fi
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: postgres-quality-evidence
@@ -223,7 +223,7 @@ jobs:
       - run: .agent-venv/bin/python -m unittest discover -s integrations/mcp -p 'test*.py'
       - run: .agent-venv/bin/python integrations/mcp/smoke_stdio.py
       - run: .agent-venv/bin/pip inspect --local > mcp-dependencies.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mcp-dependencies
           path: mcp-dependencies.json
