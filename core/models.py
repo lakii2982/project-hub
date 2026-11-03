@@ -205,6 +205,28 @@ class ProjectMember(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=["project", "member"], name="unique_project_member")]
 
+class ProjectContractChange(models.Model):
+    """Q-34 append-only contract amount change: the latest row is the current amount."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name="+")
+    project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name="contract_changes")
+    previous_amount_cents = models.PositiveBigIntegerField("变更前合同额（含税，分）")
+    amount_cents = models.PositiveBigIntegerField("变更后合同额（含税，分）")
+    effective_on = models.DateField("生效日期")
+    note = models.CharField("变更说明", max_length=240)
+    token = models.UUIDField(unique=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        constraints = [models.CheckConstraint(condition=Q(amount_cents__lte=10**12), name="contract_change_amount_bound")]
+    def __str__(self):
+        return f"{self.project.code} · 合同额变更 · {self.amount_cents}"
+    def delete(self, *args, **kwargs):
+        from django.core.exceptions import ValidationError
+        raise ValidationError("合同额变更只追加、不删除；纠错请追加新的变更记录")
+
+
 class Task(models.Model):
     class Status(models.TextChoices):
         TODO = "todo", "待开始"

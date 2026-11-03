@@ -217,6 +217,27 @@ class RateForm(BaseForm):
         super().__init__(*args, **kwargs)
         self.fields["employee"].queryset = Employee.objects.filter(organization=self.member.organization, active=True)
 
+class ContractChangeForm(BaseForm):
+    """Q-34 append-only contract amount change; history is never rewritten."""
+    amount = forms.DecimalField(label="变更后合同额（含税，元）", max_digits=14, decimal_places=2,
+                                min_value=Decimal("0"), widget=forms.NumberInput(MONEY),
+                                help_text="填写变更后的合同总额，不是增减差额；历史金额保留在变更记录中")
+    effective_on = forms.DateField(label="生效日期", widget=forms.DateInput(DATE),
+                                   initial=timezone.localdate)
+    note = forms.CharField(label="变更原因/说明（至少4字）", max_length=240,
+                           widget=forms.Textarea, help_text="追加记录并留审计；不修改历史合同额与账")
+    submission_token = forms.UUIDField(widget=forms.HiddenInput)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound:
+            self.fields["submission_token"].initial = uuid.uuid4()
+    def token(self):
+        return self.cleaned_data["submission_token"]
+    def amount_cents(self):
+        from .services import cents
+        return cents(self.cleaned_data["amount"])
+
+
 class TeamForm(ProjectScopedForm):
     management_only = True
     member = forms.ModelChoiceField(queryset=Membership.objects.none(), label="加入成员")

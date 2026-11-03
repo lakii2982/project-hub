@@ -36,7 +36,9 @@ def project_summary(project):
     eac = totals["cost"] + project.etc_cents
     over = project.budget_approved and eac > project.budget_cents
     health = "high" if over or overdue else "medium" if not project.budget_approved else "good"
-    return {"project": project, "cost_cents": totals["cost"], "budget_cents": project.budget_cents,
+    from .contract_changes import contract_amount_cents
+    return {"project": project, "contract_cents": contract_amount_cents(project),
+            "cost_cents": totals["cost"], "budget_cents": project.budget_cents,
             "labor_cost_cents": labor_cost, "labor_gap_count": labor_gaps,
             "remaining_cents": project.budget_cents - totals["cost"], "cash_in_cents": totals["cash_in"],
             "cash_out_cents": totals["cash_out"], "cash_net_cents": totals["cash_in"] - totals["cash_out"],
