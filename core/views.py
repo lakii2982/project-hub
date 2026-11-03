@@ -83,9 +83,16 @@ def dashboard(request):
     alerts = alerts_for(financial_projects)
     alerts += alerts_for([p for p in projects if p not in financial_projects], include_finance=False)
     from pmo_plugins.expenses.services import dashboard_expense_facts
+    from .business_dashboard import dashboard_snapshot, resolve_basis
+    basis = resolve_basis(request.GET.get("basis"))
+    business = None
+    if request.member.role in {"owner", "pm"}:
+        # Q-33 read-only 收益/现金一屏；聚合只读，不改账本、审计或业务事实。
+        business = dashboard_snapshot(request.member, basis=basis)
     return render(request, "dashboard.html", {"nav": "dashboard", "metrics": metrics, "cards": cards[:8],
         "alerts": alerts[:8], "forecast_overdue": overdue_plan_totals(financial_projects), "cashflow": cash_forecast(financial_projects),
         "labor_gaps": weekly.missing_rate_gaps(request.member), "expense_facts": dashboard_expense_facts(request.member),
+        "business": business, "basis": basis,
         "today": timezone.localdate()})
 
 
