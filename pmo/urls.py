@@ -2,6 +2,7 @@ from django.conf import settings
 from django.urls import path, register_converter
 from django.contrib.auth import views as auth
 from core import views, api, plugin_views, notification_views
+from pmo_plugins.billing import views as billing_views
 
 class SafeIdConverter:
     regex = r"[1-9][0-9]{0,17}"
@@ -40,6 +41,12 @@ urlpatterns = [
     path("review/<str:kind>/<pid:pk>/", views.review, name="review"),
     path("reverse/<str:kind>/<pid:pk>/", views.reverse, name="reverse"),
     path("finance/", views.finance, name="finance"),
+    path("billing/", billing_views.billing, name="billing"),
+    path("billing/accounts/save/", billing_views.account_create, name="billing-account-create"),
+    path("billing/invoices/save/", billing_views.invoice_create, name="billing-invoice-create"),
+    path("billing/invoices/<pid:pk>/void/", billing_views.invoice_void, name="billing-invoice-void"),
+    path("billing/receipts/save/", billing_views.receipt_create, name="billing-receipt-create"),
+    path("billing/receipts/<pid:pk>/refund/", billing_views.receipt_refund, name="billing-receipt-refund"),
     path("time/", views.timesheets, name="timesheets"),
     path("time/week/", views.timesheets_week, name="timesheets-week"),
     path("assistant/", views.assistant, name="assistant"),

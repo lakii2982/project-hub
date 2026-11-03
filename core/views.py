@@ -134,6 +134,7 @@ def project_detail(request, pk):
     if request.member.role not in WRITE_FINANCE: display_entries = display_entries.filter(timesheet__isnull=True)
     contract_totals, contracts_unavailable = None, False
     revenue_summary = None
+    billing_summary = None
     from .scope import is_micro_scope
     if finance_read and not is_micro_scope():
         from pmo_plugins.management_revenue.services import project_revenue_summary
@@ -143,8 +144,12 @@ def project_detail(request, pk):
             contract_totals = project_contract_totals(request.member, project.pk)
         except PermissionDenied:
             contracts_unavailable = True
+    elif finance_read:
+        from pmo_plugins.billing.services import project_billing_summary
+        billing_summary = project_billing_summary(request.member, project)
     return render(request, "project_detail.html", {"nav": "projects", "project": project,
         "revenue_summary": revenue_summary, "contract_totals": contract_totals, "contracts_unavailable": contracts_unavailable,
+        "billing": billing_summary,
         "summary": redact_card(project_summary(project), request.member),
         "tasks": project.tasks.filter(Q(milestone__isnull=False) | Q(cash_plan__isnull=False)).select_related("owner__user", "dependency", "milestone", "cash_plan"),
         "historical_tasks": project.tasks.filter(milestone__isnull=True, cash_plan__isnull=True).select_related("owner__user", "dependency"),
