@@ -1,0 +1,26 @@
+{
+  "task_id": "PH-412",
+  "summary": "轻交付流程迁移：队列/四活文档/协议/入口收敛/门禁 Queue 行兼容/历史归档；不改产品行为。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0: ok=true, task_count=332."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent-reviewer",
+    "status": "pending",
+    "findings": [
+      "独立复核进行中：本 PR 首次提交时尚未收到 verdict；收到 PASS 后在本报告追加真实 finding 并更新状态。"
+    ]
+  },
+  "deviations": [
+    "PH-412 在 bootstrap PR #314 中先用 docs/engineering/pr-delivery.md 作临时 spec；本 PR 改为 project/specs/PH-412.md。"
+  ],
+  "unverified": [
+    "完整浏览器走查不适用（文档/治理变更）；以必需 CI 与本次独立复核为准。"
+  ]
+}

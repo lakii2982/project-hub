@@ -1,23 +1,13 @@
-# 交付状态：现状头
+# 交付状态（已迁移）
 
-更新：2026-11-02。能力以当前主线代码及对应 CI 为准；任务状态唯一来源为 tasks 契约（用 `projectctl brief <id>`），逐项历史保存在 [归档](delivery-status-archive.md)，命令证据在 [验证记录](verification.md) 与 project/reports。以下分阶段能力不等于完整专业 PMO 或 1.0 已发布。
+2026-11-03 起，交付现状的唯一活文档是 [project/STATUS.md](../project/STATUS.md)（一页：现在能做什么 / 还缺什么）。
 
-## 当前能力与验证边界
+- 本文件原来的"现状头"内容已并入 STATUS.md；旧逐项现状全文（含历史条目）原样归档到
+  [docs/archive/v1.0-planning/delivery-status-archive.md](archive/v1.0-planning/delivery-status-archive.md)，只读保留。
+- 任务级历史台账仍是 `project/tasks.json`（只读，不再新增）；队列与顺序见 [project/QUEUE.md](../project/QUEUE.md)。
+- 交付流程见 [docs/engineering/light-delivery.md](engineering/light-delivery.md)；
+  候选验收见 [project/ACCEPTANCE.md](../project/ACCEPTANCE.md)；已定决定见 [project/DECISIONS.md](../project/DECISIONS.md)。
+- 2026-11-03 之前的分阶段能力矩阵、批次 C/D 验收矩阵、对账与证据回填等材料均在
+  [docs/archive/v1.0-planning/](archive/v1.0-planning/README.md)，不再是开工或验收依据。
 
-| 范围 | 代码能力 | 验证边界 / 剩余缺口 |
-| --- | --- | --- |
-| 项目、工时、成本、审批、现金 | 已有工作流、费率快照、分账、冲销、锁期与审计基础 | 全流程浏览器与正式环境验收仍须逐项补证 |
-| 合同、结算、核销、退款、发票 | 多个写侧与只读核对薄片已合入，包括发票导入 PH-338 | 不表示所有业务分支覆盖；对应任务原有 gap 继续保留 |
-| 分摊、预算/ETC、多币种 | PH-330 等分阶段实现；多币种写侧有 contracts-only 限制 | 不能宣称跨所有 owner 完成；历史核算不重算 |
-| 导入、期间预检、差异单/项目工作台 | PH-353/354/338/339 已合入；PH-408 打通发票预检保存到原子提交浏览器衔接 | PH-408 的 1440/390、键盘及真实办理路径已实测；其它业务分支与正式环境仍待逐项验证 |
-| 全站体验、通知、发布 | PH-026 仍有阻塞；通知实现链未完整完成 | PH-110 设计参考暂不入库、EXP-1 暂停；不自动恢复 |
-
-已发布版本仍为 0.1.0 工程验证版。远端 CI 已执行 SQLite/PostgreSQL 回归、准备期多连接、MCP、容器与数据库恢复等检查；这些结果不能替代仍缺的专项业务并发、真实 staging/TLS/升级/非空附件恢复、浏览器及生产/客户验收。发布资格仍有阻塞，不以配置或 not_run 证明通过。
-
-## 本轮成果与 Claude 接续
-
-- **本轮 PH-411：通知链去重与生命周期规划**。PH-380 已由 PH-340 覆盖并取消；PH-385 重基线到 PH-340，只补 append-only 同步诊断、有界重试/前台调度、归档和 0013 迁移。无外部渠道或自动业务动作。
-- **证据与边界**：本规划只改契约，不写模型、迁移、服务、页面或测试实现；共同治理、独立 S 复核和 required CI 见 PH-411 报告。
-- **接续**：规划全绿合入后直接实现 PH-385，不创建下一规划槽。
-
-流程成本唯一规则：[agent-protocol 第9节](engineering/agent-protocol.md#9-按可用成果推进2026-11-01-起生效)。交付只报告新增操作、入口、实际证据、剩余阻塞；不用 PR/任务数计算产品完成率。
+本文件保留路径只为兼容既有链接与 `project/manifest.json` 的必需文档列表。

@@ -19,12 +19,17 @@
 
 ## 2. 准备材料的唯一职责
 
+> 2026-11-03 起：工作包索引/结构化目录、需求追踪、实现计划、日程、批次 C/D 验收矩阵、
+> 对账与证据回填文档已移入 [docs/archive/v1.0-planning/](../archive/v1.0-planning/README.md)，
+> 只读保留，不再是开工或验收依据。当前流程见
+> [light-delivery.md](../engineering/light-delivery.md) 与 [project/QUEUE.md](../../project/QUEUE.md)。
+
 | 材料 | 用途 | 不能替代什么 |
 | --- | --- | --- |
-| [工作包索引](work-package-index.md)／[结构化目录](work-packages.json) | 包目标、需求归属、依赖、交付物、并行占用、待冻结项 | 不替代project/tasks.json，不具有ready权限 |
+| [工作包索引（归档）](../archive/v1.0-planning/work-package-index.md)／[结构化目录（归档）](../archive/v1.0-planning/work-packages.json) | 包目标、需求归属、依赖、交付物、并行占用、待冻结项 | 不替代project/tasks.json，不具有ready权限 |
 
 work-packages.json 超过200KB：只经 work-package-index.md 或 `jq` 按包ID查询所需字段，禁止整文件读入上下文；requirement-trace.json 同理。
-| [需求与验收追踪](requirement-trace.json) | 137条需求的唯一主包、验收要点和适用UAT | 不把计划覆盖当成测试通过 |
+| [需求与验收追踪（归档）](../archive/v1.0-planning/requirement-trace.json) | 137条需求的唯一主包、验收要点和适用UAT | 不把计划覆盖当成测试通过 |
 | [接口和数据契约](architecture-contracts.md) | 内核/领域接口、数据所有权、事务、迁移与旧新切换 | 不能替代每PH的字段级schema和实际实现 |
 | [执行协议](execution-protocol.md) | 主控/执行/复核、派遣/集成、接续、失败与证据规则 | 不复制或放宽现有治理，不是新增常驻执行器 |
 | [验收和发布设计](validation-and-release.md) | 测试层次、夹具、证据绑定、环境责任与退出条件 | 不替代CI、现场实录和客户业务判断 |

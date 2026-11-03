@@ -862,3 +862,172 @@ class ProjectCtlTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class QueueDocumentTests(unittest.TestCase):
+    """The ordered outcome queue is the single delivery entry (light delivery)."""
+
+    def setUp(self) -> None:
+        self.temp_directory = tempfile.TemporaryDirectory(prefix="projectctl-queue-")
+        self.addCleanup(self.temp_directory.cleanup)
+        self.root = Path(self.temp_directory.name)
+
+    def write(self, relative: str, content: str) -> Path:
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        return path
+
+    def item(self, item_id: str, *, wave: str = "W1", status: str = "待办",
+             checks: int = 3, outcome: str = "用户完成一个可评审的经营动作并看到结果。",
+             demo: str = "`python scripts/demo.py`", legacy: str = "PH-001",
+             requirements: str = "V1-OPS-08") -> str:
+        lines = [
+            f"### {item_id} · 成果 {item_id}",
+            "",
+            f"- 波次：{wave}",
+            f"- 状态：{status}",
+            f"- 用户可见成果：{outcome}",
+            "- 验收检查：",
+        ]
+        lines.extend(f"  {index}. 检查 {index}" for index in range(1, checks + 1))
+        lines.extend([
+            f"- 演示方式：{demo}",
+            f"- 遗留任务：{legacy}",
+            f"- 需求：{requirements}",
+            "",
+        ])
+        return "\n".join(lines)
+
+    def document(self, *items: str) -> str:
+        return "# 队列\n\n" + "\n".join(items)
+
+    def tasks(self, *task_ids: str) -> list[dict[str, Any]]:
+        return [make_task(task_id) for task_id in task_ids]
+
+    def codes(self, parsed: dict[str, Any]) -> set[str]:
+        return {error["code"] for error in parsed["issues"]}
+
+    def test_missing_queue_is_reported_without_failing_offline_fixtures(self) -> None:
+        parsed = projectctl.parse_queue(self.root)
+        self.assertFalse(parsed["available"])
+        self.assertEqual(parsed["items"], [])
+        self.assertEqual(parsed["issues"], [])
+
+    def test_valid_queue_parses_items_in_wave_order(self) -> None:
+        self.write("project/QUEUE.md", self.document(
+            self.item("Q-01"), self.item("Q-02", wave="W2", status="已交付")))
+        parsed = projectctl.parse_queue(self.root, self.tasks("PH-001"))
+        self.assertEqual(parsed["issues"], [])
+        self.assertEqual([item["id"] for item in parsed["items"]], ["Q-01", "Q-02"])
+        self.assertEqual(parsed["items"][1]["status"], "已交付")
+        self.assertEqual(parsed["items"][0]["checks"], ["检查 1", "检查 2", "检查 3"])
+        self.assertEqual(parsed["waves"], {"W1": 1, "W2": 1})
+        summary = projectctl._queue_summary(parsed)
+        self.assertEqual([item["id"] for item in summary["next"]], ["Q-01"])
+        self.assertEqual(summary["delivered"], 1)
+
+    def test_requirement_ids_are_checked_against_the_archived_trace(self) -> None:
+        self.write("project/QUEUE.md", self.document(self.item("Q-01")))
+        trace = {"requirements": [{"requirement_id": "V1-OPS-08"}]}
+        self.write("docs/archive/v1.0-planning/requirement-trace.json",
+                   json.dumps(trace))
+        parsed = projectctl.parse_queue(self.root, self.tasks("PH-001"))
+        self.assertEqual(parsed["issues"], [])
+        self.write("project/QUEUE.md", self.document(
+            self.item("Q-01", requirements="V1-NOPE-99")))
+        self.assertIn("queue_requirement", self.codes(
+            projectctl.parse_queue(self.root, self.tasks("PH-001"))))
+
+    def test_invalid_blocks_report_each_contract_violation(self) -> None:
+        cases = {
+            "queue_wave": self.item("Q-01", wave="wave-one"),
+            "queue_order": self.item("Q-01", wave="W2") + self.item("Q-02", wave="W1"),
+            "queue_status": self.item("Q-01", status="done"),
+            "queue_outcome": self.item("Q-01", outcome="短"),
+            "queue_checks": self.item("Q-01", checks=2),
+            "queue_demo": self.item("Q-01", demo=""),
+            "queue_legacy": self.item("Q-01", legacy=""),
+            "queue_requirement": self.item("Q-01", requirements=""),
+        }
+        for code, body in cases.items():
+            with self.subTest(code=code):
+                self.write("project/QUEUE.md", self.document(body))
+                parsed = projectctl.parse_queue(self.root, self.tasks("PH-001"))
+                self.assertIn(code, self.codes(parsed))
+
+    def test_unknown_legacy_task_and_duplicate_item_are_rejected(self) -> None:
+        self.write("project/QUEUE.md", self.document(
+            self.item("Q-01", legacy="PH-999"), self.item("Q-01")))
+        parsed = projectctl.parse_queue(self.root, self.tasks("PH-001"))
+        self.assertIn("queue_duplicate", self.codes(parsed))
+        self.assertIn("queue_legacy", self.codes(parsed))
+        self.write("project/QUEUE.md", self.document(self.item("Q-01", legacy="not-a-task")))
+        self.assertIn("queue_legacy", self.codes(
+            projectctl.parse_queue(self.root, self.tasks("PH-001"))))
+        self.write("project/QUEUE.md", self.document(self.item("Q-01", requirements="nope")))
+        self.assertIn("queue_requirement", self.codes(
+            projectctl.parse_queue(self.root, self.tasks("PH-001"))))
+
+    def test_empty_queue_document_is_rejected(self) -> None:
+        self.write("project/QUEUE.md", "# 队列\n\n没有条目。\n")
+        parsed = projectctl.parse_queue(self.root, [])
+        self.assertIn("queue_empty", self.codes(parsed))
+        self.assertTrue(projectctl.parse_queue(self.root)["available"])
+
+
+class QueueCommandTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp_directory = tempfile.TemporaryDirectory(prefix="projectctl-queue-cli-")
+        self.addCleanup(self.temp_directory.cleanup)
+        self.root = Path(self.temp_directory.name)
+
+    write = ProjectCtlTests.write
+    write_json = ProjectCtlTests.write_json
+    write_fixture = ProjectCtlTests.write_fixture
+    run_cli = ProjectCtlTests.run_cli
+    error_codes = ProjectCtlTests.error_codes
+
+    def test_queue_command_emits_summary_and_item_detail(self) -> None:
+        self.write_fixture([make_task("PH-001")])
+        self.write("project/QUEUE.md", "# 队列\n")
+        self.write("project/QUEUE.md", "\n".join([
+            "# 队列",
+            "### Q-01 · 成果一",
+            "- 波次：W1",
+            "- 用户可见成果：用户完成一个可评审的经营动作并看到结果。",
+            "- 验收检查：",
+            "  1. 检查一",
+            "  2. 检查二",
+            "  3. 检查三",
+            "- 演示方式：`python scripts/demo.py`",
+            "- 遗留任务：PH-001",
+            "- 需求：V1-OPS-08",
+        ]))
+        code, payload, _ = self.run_cli("queue", "--root", str(self.root))
+        self.assertEqual(code, 0, payload)
+        self.assertEqual(payload["item_count"], 1)
+        self.assertEqual([item["id"] for item in payload["items"]], ["Q-01"])
+        code, payload, _ = self.run_cli("queue", "--compact", "--root", str(self.root))
+        self.assertEqual(code, 0, payload)
+        self.assertNotIn("items", payload)
+        self.assertEqual(payload["next"][0]["id"], "Q-01")
+
+        self.write("project/QUEUE.md", "# 队列\n")
+        code, payload, _ = self.run_cli("queue", "--root", str(self.root))
+        self.assertEqual(code, 1)
+        self.assertIn("queue_empty", self.error_codes(payload))
+
+    def test_orient_surfaces_queue_summary(self) -> None:
+        manifest = make_manifest()
+        manifest["active_handoff"] = "project/handoffs/PH-001.md"
+        self.write_fixture([make_task("PH-001")], manifest=manifest)
+        self.write("project/handoffs/PH-001.md", "# Handoff\n")
+        self.write("AGENTS.md", "## 验收与交付\n```sh\npython check\n```\n")
+        code, payload, _ = self.run_cli("orient", "--root", str(self.root))
+        self.assertEqual(code, 0, payload)
+        self.assertFalse(payload["queue"]["available"])
+        self.assertEqual(payload["delivery_flow"]["queue"], "project/QUEUE.md")
+        self.assertEqual(payload["delivery_flow"]["rules"],
+                         "docs/engineering/light-delivery.md")
+        self.assertEqual(payload["delivery_flow"]["focus"], "project/STATUS.md")

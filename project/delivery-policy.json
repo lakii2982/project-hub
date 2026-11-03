@@ -4,7 +4,8 @@
   "base_policy_source": "git-show-base",
   "task_line": {
     "pattern": "^Task: (PH-[0-9]{3,6})\\s*$",
-    "required_count": 1
+    "required_count": 0,
+    "accepted_during_transition": true
   },
   "required_status_checks": [
     "CodeQL (javascript-typescript)",
@@ -187,5 +188,28 @@
   "bootstrap": {
     "remote_checks_enforced": false,
     "note": "Current BASE gate is bootstrap only until PH-122 verifies the remote enforcement."
+  },
+  "queue_line": {
+    "pattern": "^Queue: (Q-[0-9]{2,3})\\s*$",
+    "required_count": 0,
+    "queue_doc": "project/QUEUE.md"
+  },
+  "reference_line": {
+    "minimum_count": 1,
+    "maximum_per_kind": 1,
+    "rule": "Each PR body carries exactly one reference: a Queue item, or a legacy Task id during the transition."
+  },
+  "workflow": {
+    "id": "project-hub.light-delivery/v1",
+    "protocol": "docs/engineering/light-delivery.md",
+    "queue": "project/QUEUE.md",
+    "status": "project/STATUS.md",
+    "acceptance": "project/ACCEPTANCE.md",
+    "decisions": "project/DECISIONS.md",
+    "one_outcome_one_pr": true,
+    "no_planning_or_closeout_prs": true,
+    "independent_review_passes": 1,
+    "release_candidate_cadence_days": 14,
+    "archive": "docs/archive/v1.0-planning/"
   }
 }

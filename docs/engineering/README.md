@@ -2,7 +2,7 @@
 
 日期：2026-10-22。本目录是长期、跨 coding-agent 的工程执行规范，面向后续所有参与本仓库的人与代理。规范不重复业务与契约内容：财务与数据不变式、工作单机制、验收命令以 [../development-contract.md](../development-contract.md) 为准，当前实现与验证事实以 [../delivery-status.md](../delivery-status.md) 为准。发生冲突时，不变式与事实文档优先，本目录只规定协作与流程。
 
-流程成本唯一规则为 [agent-protocol 第9节](agent-protocol.md#9-按可用成果推进2026-11-01-起生效)。现有入口只引用此处；历史逐轮规划与交接不构成继续创建下一槽的要求。
+2026-11-03 起的交付流程唯一入口是 [light-delivery.md](light-delivery.md)：一条需求 → [project/QUEUE.md](../../project/QUEUE.md) 有序成果队列 → 一条成果 = 一个票据 = 一个 PR；四个活文档是 QUEUE/STATUS/ACCEPTANCE/DECISIONS。agent-protocol 与 lifecycle 中的按任务报告/交接/规划槽要求属于历史流程，不再作为默认路径；财务/安全不变式与必需 CI 规则不变。
 
 ## 阅读顺序
 

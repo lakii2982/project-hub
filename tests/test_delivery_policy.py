@@ -40,6 +40,18 @@ class PolicyShapeTests(unittest.TestCase):
         self.assertFalse(validated['bootstrap']['remote_checks_enforced'])
         self.assertEqual(validated['remote_arbitration']['codex_app_id'], 1144995)
 
+    def test_light_delivery_reference_lines_are_declared(self):
+        validated = validate_policy(policy())
+        self.assertEqual(validated['task_line']['required_count'], 0)
+        self.assertTrue(validated['task_line']['accepted_during_transition'])
+        self.assertEqual(validated['queue_line']['required_count'], 0)
+        self.assertEqual(validated['queue_line']['queue_doc'], 'project/QUEUE.md')
+        self.assertEqual(validated['reference_line']['minimum_count'], 1)
+        self.assertEqual(validated['reference_line']['maximum_per_kind'], 1)
+        self.assertEqual(validated['workflow']['protocol'],
+                         'docs/engineering/light-delivery.md')
+        self.assertEqual(validated['workflow']['queue'], 'project/QUEUE.md')
+
     def test_s_authorization_is_bound_to_exact_task_contract(self):
         validated = validate_policy(policy())
         grant = validated['s_authorization']['tasks'][0]
@@ -60,6 +72,29 @@ class PolicyShapeTests(unittest.TestCase):
             mutate(bad)
             with self.assertRaises(GateError):
                 validate_policy(bad)
+
+    def test_reference_line_configuration_mutations_fail_closed(self):
+        mutations = [
+            lambda value: value['task_line'].update(required_count=2),
+            lambda value: value['task_line'].update(pattern=1),
+            lambda value: value['queue_line'].update(required_count=3),
+            lambda value: value['queue_line'].update(pattern='('),
+            lambda value: value['queue_line'].update(queue_doc='docs/QUEUE.md'),
+            lambda value: value['reference_line'].update(minimum_count=-1),
+            lambda value: value['reference_line'].update(maximum_per_kind=0),
+            lambda value: value.update(reference_line=[]),
+        ]
+        for mutate in mutations:
+            bad = policy()
+            mutate(bad)
+            with self.assertRaises(GateError):
+                validate_policy(bad)
+        optional = policy()
+        optional['task_line']['required_count'] = 0
+        optional['queue_line']['required_count'] = 0
+        optional['reference_line']['minimum_count'] = 0
+        with self.assertRaises(GateError):
+            validate_policy(optional)
 
     def test_policy_mutations_fail_closed(self):
         mutations = [
@@ -146,3 +181,29 @@ class PRMetadataTests(unittest.TestCase):
             check_pr_metadata(self.policy, {})
         with self.assertRaises(GateError):
             check_pr_metadata(self.policy, event(None))
+
+    def test_queue_line_is_accepted_alone_or_with_a_transition_task(self):
+        result = check_pr_metadata(self.policy, event('Queue: Q-08\n\nbody'))
+        self.assertIsNone(result['task_id'])
+        self.assertEqual(result['queue_id'], 'Q-08')
+        self.assertEqual(result['references'], {'task': None, 'queue': 'Q-08'})
+        both = check_pr_metadata(self.policy, event('Queue: Q-08\nTask: PH-120\n\nbody'))
+        self.assertEqual(both['task_id'], 'PH-120')
+        self.assertEqual(both['queue_id'], 'Q-08')
+
+    def test_queue_and_task_lines_are_capped_at_one_each(self):
+        for body in ('Queue: Q-08\nQueue: Q-09\n',
+                     'Queue: Q-08\nTask: PH-120\nTask: PH-121\n',
+                     'Queue: Q-8\n',
+                     'Queue: Q-0800\n'):
+            with self.subTest(body=body), self.assertRaises(GateError):
+                check_pr_metadata(self.policy, event(body))
+
+    def test_legacy_policy_without_queue_configuration_still_requires_a_task_line(self):
+        legacy = policy()
+        legacy.pop('queue_line')
+        legacy['task_line'] = {'pattern': '^Task: (PH-[0-9]{3,6})\\s*$', 'required_count': 1}
+        validated = validate_policy(legacy)
+        check_pr_metadata(validated, event('Task: PH-120'))
+        with self.assertRaises(GateError):
+            check_pr_metadata(validated, event('Queue: Q-08'))

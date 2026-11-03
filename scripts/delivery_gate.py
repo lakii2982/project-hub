@@ -1,9 +1,10 @@
 """Offline metadata gate for trusted PR delivery (PH-120).
 
 Reads the versioned policy from the PR BASE (never the candidate HEAD) and
-checks only metadata text: exactly one Task line, base/head identity, the nine
-existing required status checks plus four arbitration evidence sources, and
-linear-history/independent-review policy flags. It performs no network I/O and
+checks only metadata text: exactly one reference line (a ``Queue: Q-nn`` queue
+item, or a legacy ``Task: PH-nnn`` during the transition), base/head identity,
+the nine existing required status checks plus four arbitration evidence
+sources, and linear-history/independent-review policy flags. It performs no network I/O and
 never executes candidate code; GitHub evidence remains authoritative in the
 controller/GitHubDelivery path.
 """
@@ -42,6 +43,29 @@ def load_base_policy(root, base_sha):
     return validate_policy(policy)
 
 
+def _compile(pattern, error_code):
+    if not isinstance(pattern, str):
+        _fail(error_code)
+    try:
+        return re.compile(pattern, re.MULTILINE)
+    except re.error:
+        _fail(error_code)
+
+
+def _reference_patterns(policy):
+    """Return [(kind, compiled_pattern, required_count)] declared by the policy."""
+    rows = []
+    for kind, key in (('queue', 'queue_line'), ('task', 'task_line')):
+        config = policy.get(key)
+        if not isinstance(config, dict):
+            continue
+        rows.append((kind, _compile(config.get('pattern'), 'policy_' + key),
+                     config.get('required_count')))
+    if not rows:
+        _fail('policy_reference_line')
+    return rows
+
+
 def validate_policy(policy):
     if not isinstance(policy, dict):
         _fail('policy_not_object')
@@ -52,13 +76,37 @@ def validate_policy(policy):
     if policy.get('base_policy_source') != 'git-show-base':
         _fail('policy_base_source')
     task_line = policy.get('task_line')
-    if (not isinstance(task_line, dict) or task_line.get('required_count') != 1
-            or not isinstance(task_line.get('pattern'), str)):
+    if (not isinstance(task_line, dict)
+            or type(task_line.get('required_count')) is not int
+            or task_line.get('required_count') not in (0, 1)):
         _fail('policy_task_line')
-    try:
-        re.compile(task_line['pattern'])
-    except re.error:
-        _fail('policy_task_line')
+    _compile(task_line.get('pattern'), 'policy_task_line')
+    queue_line = policy.get('queue_line')
+    if queue_line is not None:
+        if (not isinstance(queue_line, dict)
+                or type(queue_line.get('required_count')) is not int
+                or queue_line.get('required_count') not in (0, 1)):
+            _fail('policy_queue_line')
+        _compile(queue_line.get('pattern'), 'policy_queue_line')
+        queue_doc = queue_line.get('queue_doc')
+        if queue_doc is not None and (
+                not isinstance(queue_doc, str) or not queue_doc.startswith('project/')
+                or not queue_doc.endswith('.md')):
+            _fail('policy_queue_line')
+    reference = policy.get('reference_line')
+    if reference is not None:
+        if (not isinstance(reference, dict)
+                or type(reference.get('minimum_count')) is not int
+                or not 0 <= reference['minimum_count'] <= 4
+                or type(reference.get('maximum_per_kind')) is not int
+                or not 1 <= reference['maximum_per_kind'] <= 4):
+            _fail('policy_reference_line')
+    has_required_kind = (task_line.get('required_count') == 1
+                         or (isinstance(queue_line, dict)
+                             and queue_line.get('required_count') == 1))
+    has_minimum = (isinstance(reference, dict) and reference.get('minimum_count') >= 1)
+    if not has_required_kind and not has_minimum:
+        _fail('policy_reference_line')
     checks = policy.get('required_status_checks')
     sources = policy.get('arbitration_sources')
     if not isinstance(checks, list) or len(checks) != 9 or len(set(checks)) != 9:
@@ -133,11 +181,24 @@ def check_pr_metadata(policy, event, *, base_sha=None):
     body = pr.get('body') or ''
     if not isinstance(body, str):
         _fail('invalid_body')
-    pattern = re.compile(policy['task_line']['pattern'], re.MULTILINE)
-    matches = pattern.findall(body)
-    if len(matches) != 1:
-        _fail('task_line_count')
-    task_id = matches[0]
+    references = _reference_patterns(policy)
+    found = {}
+    maximum = policy.get('reference_line', {}).get('maximum_per_kind', 1)
+    for kind, pattern, required in references:
+        matches = pattern.findall(body)
+        if len(matches) > maximum:
+            _fail(kind + '_line_count')
+        if required == 1 and len(matches) != 1:
+            _fail(kind + '_line_count')
+        if matches:
+            found[kind] = matches[0]
+    minimum = policy.get('reference_line', {}).get('minimum_count')
+    if minimum is None:
+        minimum = 1 if any(row[2] == 1 for row in references) else 0
+    if len(found) < minimum:
+        _fail('reference_line_missing')
+    task_id = found.get('task')
+    queue_id = found.get('queue')
     base = (pr.get('base') or {}).get('sha')
     head = (pr.get('head') or {}).get('sha')
     if not isinstance(base, str) or not re.fullmatch(r'[0-9a-f]{40,64}', base):
@@ -150,7 +211,9 @@ def check_pr_metadata(policy, event, *, base_sha=None):
         _fail('mergeable_required')
     if policy['merge']['linear_history_required'] is not True:
         _fail('linear_history_required')
-    return {'ok': True, 'task_id': task_id, 'base_sha': base, 'head_sha': head,
+    return {'ok': True, 'task_id': task_id, 'queue_id': queue_id,
+            'references': {'task': task_id, 'queue': queue_id},
+            'base_sha': base, 'head_sha': head,
             'required_check_count': policy['required_check_count'],
             'arbitration_sources': list(policy['arbitration_sources'])}
 

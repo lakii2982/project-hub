@@ -1,5 +1,13 @@
 # 迭代路线与产品边界
 
+> 2026-11-03 起，本文件是历史路线记录（新增内容按时间追加）。当前交付只看：
+> [project/QUEUE.md](project/QUEUE.md)（有序成果队列）、[project/STATUS.md](project/STATUS.md)（现状一页）、
+> [project/ACCEPTANCE.md](project/ACCEPTANCE.md)（候选验收）、[project/DECISIONS.md](project/DECISIONS.md)（决定），
+> 流程见 [docs/engineering/light-delivery.md](docs/engineering/light-delivery.md)。
+> 规划/验收矩阵与工作包材料已归档到 [docs/archive/v1.0-planning/](docs/archive/v1.0-planning/README.md)，只读历史。
+> 下文提到 `docs/v1.0-development/` 旧路径的批次 C/D 矩阵、工作包、需求追踪等，均已移入该归档。
+> 路线本身仍然有效；交付顺序与验收以 QUEUE/STATUS/ACCEPTANCE 为准。
+
 本项目面向100人以下的软件开发、实施和技术服务公司，自托管、浏览器使用，不依赖已有财务或OA。项目是全部业务的管理与核算中心。
 
 版本路线表示能力门槛，不是日期承诺。真实任务状态以 [project/tasks.json](project/tasks.json) 为准；GitHub Issue用于讨论，完成证据必须回到仓库和同提交CI。

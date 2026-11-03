@@ -13105,7 +13105,7 @@
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [],
-      "spec": "docs/v1.0-development/closure-reconciliation.md",
+      "spec": "docs/archive/v1.0-planning/closure-reconciliation.md",
       "allowed_paths": [
         "docs/v1.0-development/closure-reconciliation.md",
         "docs/v1.0-development/*",
@@ -13608,7 +13608,7 @@
       "priority": 1,
       "milestone": "v1.0-preparation",
       "depends_on": [],
-      "spec": "docs/engineering/pr-delivery.md",
+      "spec": "project/specs/PH-412.md",
       "allowed_paths": [
         "project/*",
         "project/**/*",

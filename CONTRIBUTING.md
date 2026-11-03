@@ -1,15 +1,17 @@
 # 参与开发
 
-本文是入口；可执行的详细规范在 [docs/engineering/](docs/engineering/README.md)。开始任何任务前，先读 README.md、docs/delivery-status.md 和任务对应的契约文档。
+本文是入口；可执行的详细规范在 [docs/engineering/](docs/engineering/README.md)。开始任何工作前，先读 README.md、
+[project/QUEUE.md](project/QUEUE.md)、[project/STATUS.md](project/STATUS.md) 与 [light-delivery 协议](docs/engineering/light-delivery.md)。
 
-流程成本与成果导向统一按 [agent-protocol 第9节](docs/engineering/agent-protocol.md#9-按可用成果推进2026-11-01-起生效)，不另建流程表或自动下一规划槽。
+流程唯一入口是 [light-delivery](docs/engineering/light-delivery.md)：一条需求 → 有序成果队列 → 一条成果 = 一个票据 = 一个 PR；
+不建规划/契约/收口 PR，不另建流程表。
 
 ## 基本规则
 
-- 当前为 0.1 工程验证版。需求文档描述目标，不能把目标写成已实现；当前真实状态以 docs/delivery-status.md 为准。
-- 分支模型：`main` 主干加短分支 `feat/PH-001-x` / `fix/` / `hotfix/`，一切经 PR 合入，合并前当次 CI 必须实际通过。版本与发布见 [releases](docs/engineering/releases.md)。
-- 任务生命周期（ready 标准、完成标准、S/A/B 风险分级、何时找用户判断）见 [lifecycle](docs/engineering/lifecycle.md)。
-- 多代理并行、任务契约位置（`project/tasks.json` 等）与交接证据要求见 [agent-protocol](docs/engineering/agent-protocol.md)；执行失败按 [recovery](docs/engineering/recovery.md) 矩阵处置。
+- 当前为 0.1 工程验证版。需求文档描述目标，不能把目标写成已实现；当前真实状态以 [project/STATUS.md](project/STATUS.md) 为准。
+- 分支模型：`main` 主干加短分支 `feat/Q-nn-short` / `fix/Q-nn-short`，一切经 PR 合入，合并前当次 CI 必须实际通过。版本与发布见 [releases](docs/engineering/releases.md)。
+- 交付规则、复核规则、合并条件与停止规则见 [light-delivery](docs/engineering/light-delivery.md)；执行失败按 [recovery](docs/engineering/recovery.md) 矩阵处置。
+- `project/tasks.json` 是历史台账，只读；新工作只登记到 [project/QUEUE.md](project/QUEUE.md)，编号不复用。
 - 财务与数据不变式、工作单机制、机器验收以 [docs/development-contract.md](docs/development-contract.md) 为准：金额整数分、工时整数分钟、ROUND_HALF_UP、禁 float、账本审计只追加、既有测试只许加强。
 
 ## 环境与验收
@@ -23,14 +25,16 @@ Python 3.12+，依赖固定在 requirements.txt。交付前实际运行并通过
 .venv/bin/python manage.py verify_integrity --json
 ```
 
-纯文档与研发工具按冻结任务 acceptance 验证；产品变更按上列命令，远端 required CI 不变。开发过程中的快速反馈用作用域测试：`python manage.py test tests.test_<对应模块> --parallel`，只跑本次改动涉及的模块；全量套件在交付收尾实际运行一次、作为报告证据即可，PR 由 CI 对每次提交再跑全量，不需要本地反复跑全量。
+纯文档与研发工具按作用域验证；产品变更按上列命令，远端 required CI 不变。开发过程中的快速反馈用作用域测试：`python manage.py test tests.test_<对应模块> --parallel`，只跑本次改动涉及的模块；全量套件在交付收尾实际运行一次、作为报告证据即可，PR 由 CI 对每次提交再跑全量，不需要本地反复跑全量。
 
 涉及 MCP 适配器时另跑 integrations/mcp 的独立测试与 stdio 握手。SQLite 通过不代表生产并发正确；并发与生产口径需要 PostgreSQL 验证。
 
 ## 提交与 PR
 
-- 一个 PR 对应一个任务，验收、必要复核、报告、交接和任务状态随原 PR 完成，不专开常规收口 PR，不夹带白名单外修改；PR 描述写清问题、行为变化、风险级别、验证证据与未验证事项。
-- 交付时同步更新 docs/delivery-status.md 与验证记录：分别说明代码存在、自动化通过、浏览器检查、生产验证；检查范围之外的事项明确保留。
+- 一个 PR 对应 QUEUE 里的一条成果（`Queue: Q-nn`，过渡期可同时保留 `Task: PH-nnn`）；PR 描述写清成果、验收检查实际结果、演示证据、风险与未验证事项。
+- 每个 PR 恰好一次独立复核（正确性、金额/权限不变式、测试有效性），复核作用于当前 HEAD；作者不得自审。
+- 必需检查与复核通过后由维护代理 `gh pr merge <n> --auto --squash --match-head-commit <sha>` 自动合并，没有人工合并步骤；执行代理不合并。
+- 每两周一次候选走查并更新 [project/ACCEPTANCE.md](project/ACCEPTANCE.md)：分别说明代码存在、自动化通过、浏览器检查、真实环境验证；检查范围之外的事项明确保留。
 - 不把凭据、真实客户数据、工资信息放进代码、日志、截图或外部代理上下文；演练一律用 seed_demo 数据。
 
 ## 许可
