@@ -13598,6 +13598,39 @@
       "owner": "claude",
       "blockers": [],
       "handoff": "project/handoffs/PH-411.md"
+    },
+    {
+      "id": "PH-412",
+      "title": "轻交付流程迁移",
+      "kind": "infra",
+      "risk": "S",
+      "status": "ready",
+      "priority": 1,
+      "milestone": "v1.0-preparation",
+      "depends_on": [],
+      "spec": "docs/engineering/pr-delivery.md",
+      "allowed_paths": [
+        "project/*",
+        "project/**/*",
+        "docs/*",
+        "docs/**/*",
+        "scripts/*",
+        "tests/*",
+        "AGENTS.md",
+        "START_HERE.md",
+        "CONTRIBUTING.md",
+        "README.md",
+        "ROADMAP.md",
+        ".github/*",
+        ".github/**/*"
+      ],
+      "acceptance": [
+        "python scripts/projectctl.py check"
+      ],
+      "github_issue": null,
+      "owner": null,
+      "blockers": [],
+      "handoff": null
     }
   ]
 }
