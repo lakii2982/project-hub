@@ -129,7 +129,8 @@ def project_detail(request, pk):
     if request.member.role not in WRITE_FINANCE: display_entries = display_entries.filter(timesheet__isnull=True)
     contract_totals, contracts_unavailable = None, False
     revenue_summary = None
-    if finance_read:
+    from .scope import is_micro_scope
+    if finance_read and not is_micro_scope():
         from pmo_plugins.management_revenue.services import project_revenue_summary
         revenue_summary = project_revenue_summary(request.member, project.pk)
         from pmo_plugins.contracts.approval_services import project_contract_totals
