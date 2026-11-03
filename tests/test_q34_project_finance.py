@@ -1,10 +1,14 @@
 """Q-34 项目页收益/现金：只读口径、合同额追加历史、缺口与权限。"""
+import io
 import uuid
 from datetime import date, timedelta
 from decimal import Decimal
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -359,3 +363,27 @@ class Q34PermissionTests(Q34FinanceFixture):
         self.assertContains(response, "筛选项目")
         self.assertContains(response, "Q34 人工投入")
         self.assertEqual(self.client.get(reverse("timesheets") + f"?project={self.foreign_project.pk}").status_code, 404)
+
+
+@override_settings(PMO_SCOPE="micro")
+class Q34SeedConsistencyTests(TestCase):
+    """Seed demo must show the same PH-26001 margin on the project page and Q-33 dashboard."""
+
+    def test_seed_project_margin_matches_dashboard(self):
+        try:
+            from core.business_dashboard import dashboard_snapshot
+        except ImportError:  # pragma: no cover - only before the Q-33 PR is merged
+            self.skipTest("Q-33 core.business_dashboard is not merged yet")
+        with TemporaryDirectory() as tmp, override_settings(BASE_DIR=Path(tmp)):
+            call_command("seed_demo", stdout=io.StringIO())
+        owner = Membership.objects.get(role="owner")
+        project = Project.objects.get(code="PH-26001")
+        snapshot = project_finance(project)
+        dash = dashboard_snapshot(owner)
+        row = {item["project"].code: item for item in dash["rows"]}[project.code]
+        self.assertEqual(snapshot["revenue_cents"], row["revenue_cents"])
+        self.assertEqual(snapshot["cost_total_cents"], row["cost_cents"])
+        self.assertEqual(snapshot["gross_margin_cents"], row["gross_cents"])
+        self.assertEqual(snapshot["historical_cost_cents"], row["historical_cost_cents"])
+        self.assertEqual(snapshot["gross_margin_cents"], 8_452_755)
+        self.assertEqual(snapshot["cost_total_cents"], 2_868_000)
