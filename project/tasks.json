@@ -12515,7 +12515,7 @@
       "title": "通知中心收件箱实现首片（PH-340/355 后续）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "cancelled",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -12548,7 +12548,7 @@
       "github_issue": null,
       "owner": null,
       "blockers": [
-        "缺 PH-340（通知中心实现首片）与 PH-355（reminder refs 契约/扫描骨架）done；二者 proposed，依赖 PH-301/314/179/183/151 完成后复核 DoR 再晋级。"
+        "由 PH-340 完整覆盖，避免重复收件箱实现。"
       ],
       "handoff": null
     },
@@ -12697,11 +12697,11 @@
       "title": "通知中心扫描调度/已读后续（PH-380 后续）",
       "kind": "feature",
       "risk": "S",
-      "status": "proposed",
+      "status": "ready",
       "priority": 2,
       "milestone": "v1.0.0",
       "depends_on": [
-        "PH-380"
+        "PH-340"
       ],
       "spec": "project/specs/PH-385.md",
       "allowed_paths": [
@@ -12717,18 +12717,21 @@
         "project/tasks.json",
         "project/manifest.json",
         "docs/delivery-status.md",
-        "docs/verification.md"
+        "docs/verification.md",
+        "core/models.py",
+        "core/migrations/*.py"
       ],
       "acceptance": [
         "python scripts/projectctl.py check",
         "python manage.py check",
-        "python manage.py test tests.test_v1_notifications_scan tests.test_v1_notifications_read --verbosity 1"
+        "python manage.py test tests.test_v1_notifications_scan tests.test_v1_notifications_read --verbosity 1",
+        "python manage.py makemigrations --check --dry-run",
+        "python manage.py test tests --verbosity 1",
+        "python manage.py verify_integrity --json"
       ],
       "github_issue": null,
       "owner": null,
-      "blockers": [
-        "缺 PH-380（通知中心收件箱实现首片，proposed）done；PH-380 完成后复核 DoR 再晋级。"
-      ],
+      "blockers": [],
       "handoff": null
     },
     {
@@ -13570,7 +13573,7 @@
       "title": "通知链去重与调度/归档生命周期规划",
       "kind": "docs",
       "risk": "S",
-      "status": "ready",
+      "status": "done",
       "priority": 1,
       "milestone": "v1.0.0",
       "depends_on": [
@@ -13592,7 +13595,7 @@
         "python -m unittest tests.test_projectctl tests.test_governance -v"
       ],
       "github_issue": "https://github.com/lakii2982/project-hub/issues/310",
-      "owner": null,
+      "owner": "claude",
       "blockers": [],
       "handoff": "project/handoffs/PH-411.md"
     }

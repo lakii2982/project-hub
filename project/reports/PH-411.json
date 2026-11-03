@@ -1,13 +1,11 @@
 {
-  "task_id": "PH-411",
-  "summary":"只登记通知链去重与调度/诊断/归档规划；PH-380 由 PH-340 覆盖，PH-385 承接剩余生命周期。不含实现。",
-  "registration_only":true,
-  "authorization_source":"user-continue-v1-2026-11-03",
+  "task_id":"PH-411",
+  "summary":"完成通知链去重与生命周期规划：PH-380 由 PH-340 覆盖并取消；PH-385 承接调度、append-only 同步诊断、归档与 0013 迁移。不含实现。",
   "tests":[
     {"command":"python scripts/projectctl.py check","result":"pass","exit_code":0,"evidence":"Actual exit 0 using repository virtualenv on PATH: ok=true, task_count=331."},
-    {"command":"python -m unittest tests.test_projectctl tests.test_governance -v","result":"pass","exit_code":0,"evidence":"Actual exit 0 using repository virtualenv on PATH: 35 tests in 10.695s, OK."}
+    {"command":"python -m unittest tests.test_projectctl tests.test_governance -v","result":"pass","exit_code":0,"evidence":"Actual exit 0 using repository virtualenv on PATH: 35 tests in 10.536s, OK."}
   ],
-  "review":{"required":true,"reviewer":"independent general-purpose / reviewer","status":"pass","findings":["Initial FAIL: invalid JSON task_id expression; corrected to literal and independently parsed with exit 0. Final PASS against BASE a795559: exact bounded registration, digest 4324f9d327d1d30cd4c0637bc64514fefb22ca9960660c1029c2d7c60e1d75f1 and open Issue #310 verified; no implementation or scope expansion."]},
-  "deviations":["仅追加一个 ready/未认领规划契约和精确 S 授权；不改既有任务、产品、检查器、workflow、manifest 或既有授权。"],
-  "unverified":["远端 required CI 待完成。","调度、同步诊断、归档和 0013 迁移尚未实现。"]
+  "review":{"required":true,"reviewer":"independent general-purpose / reviewer","status":"pass","findings":["Initial planning review FAIL: PH-385 tasks acceptance missed three spec commands; all three were appended and independently verified. Final PASS against BASE 746ed61: PH-380 cancellation is covered by PH-340, PH-385 is ready with bounded diagnostics/scheduling/archive and 0013 scope, no implementation or expansion."]},
+  "deviations":["PH-301/314 不自动关闭；PH-380 不重复开发。", "本规划不写模型、迁移、服务、页面或测试实现。"],
+  "unverified":["当前提交 required CI 待完成。", "PH-385 实现与浏览器验收尚未完成。"]
 }
