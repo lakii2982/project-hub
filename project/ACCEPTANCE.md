@@ -1,6 +1,6 @@
 # 候选验收清单（一页）
 
-更新：2026-11-03。每个候选版本（每两周一次）用本文件验收一次；只写真实结果，
+更新：2026-11-04。每个候选版本（每两周一次）用本文件验收一次；只写真实结果，
 未执行项写 `not_run` 或 `blocked` 并写清前提，禁止用文档/配置/本地 SQLite 冒充通过。
 1.0 范围见 [docs/product-scope.md](../docs/product-scope.md)（小微企业简化版：项目收益 + 现金流），
 队列与顺序见 [QUEUE.md](QUEUE.md)，现状见 [STATUS.md](STATUS.md)。
@@ -29,7 +29,9 @@
 
 ## 当前候选
 
-候选：小微版 `0.2.x` 预发布（尚未建立）。SHA：待定。环境：待定。日期：待定。
+候选：小微版 `0.2.x` 预发布（尚未建立）。SHA：待定（Q-42 走查分支 `feat/Q-42-e2e`，最终 SHA 见 PR）。
+环境：Q-42 L4 = macOS 本机 SQLite 空库 + Chromium headless 1440×900/390×844，日期：2026-11-04，复核人：待独立复核。
+（本段只记录 Q-42 的真实 L4 浏览器走查；不代表候选已建立或 L5 真实环境通过。）
 
 当前状态（按 [QUEUE.md](QUEUE.md) W1–W3，沿用 STATUS.md 的边界，不重复推断）：
 
@@ -47,12 +49,25 @@
 | 9 | 一条命令演示环境（Q-39） | pass | 空环境 `python scripts/demo.py --slice micro` exit 0，打印 `http://127.0.0.1:8765/`、owner/finance/pm/member/auditor/newbie 账号与 5 步脚本；随机密码只写凭据文件（0600）不打印；重复执行 exit 0 且输出「已存在，复用（未重复造数、未迁移）」「已有库不迁移、不覆盖」，数据库 SHA-256 与行数不变；同一命令复用已运行服务，`--stop` 停止；0 字节文件/空 SQLite/非项目库/真实公司库/旧结构演练库均在迁移前 exit 3 且文件哈希不变；服务状态文件（repo/端口/库）不匹配时 `--stop` exit 3 不误杀；外部 /health/ 服务不被复用。`python manage.py test tests.test_demo_script`（15 tests OK：空环境打印、重复幂等且 DB SHA-256 不变、0 字节/空 SQLite/非项目/真实公司/旧结构拒绝且不写、服务启动/复用/停止、状态不匹配拒绝停止、外部 health 不复用、production 在 mkdir 前拒绝、README/STATUS 一致性、seed_demo 运行时目录与 in-process 覆盖）；`python manage.py check`、`makemigrations --check`、`projectctl check/queue` 通过；演练数据覆盖 客户/项目/合同额、工时、费用（含 Q-36 分次付款）、开票、收款与工作台收益/现金；README/STATUS 入口与命令一致。scratch 副本中 `python3 scripts/demo.py --slice micro` 两次运行输出见 PR 证据（URL/账号/5 步、复用与 DB 哈希不变、`--stop`）；浏览器按打印脚本走查 5 步截图 `docs/screenshots/q39-demo-step1..5-1440.png`（无 UI 变更，不设 Before/After）。 |
 | 10 | 首次启用向导（Q-40） | pass | `python manage.py test tests.test_q40_onboarding`（13 tests OK，含 PostgreSQL-only 双连接并发测试：空库五步完成并落库公司/owner/员工/客户/项目/合同额/工时，无预算基线/单据/账本/演示数据；整数分与 0.01 元边界；重复公司创建 409 且行数不变、`start_company` 二次调用拒绝、PostgreSQL 双连接并发只创建一个工作区；中断后续接（登出重登回到缺项）、重复项目/工时/合同提交不重复；成员/finance/auditor 与非首个工作区 403、匿名有公司重定向登录、空库步骤重定向公司；就绪检查在未完成时列出缺项与续接链接；设置改公司名不改启用日期/币种）；空库 migrate 后 Chromium 1440/390/键盘证据：Before main 490e7fb `/setup/` 404 且登录页无入口 → After 五步完成公司（启用日期/CNY/Asia/Shanghai）→ 客户 → 项目 → 合同额 ¥1,234.56 → 首个工时（费率 ¥300/h，成本 ¥300）→ 就绪检查（客户/项目/合同额/工时/缺资金账户/未开票/单账号缺口），随后工作台/项目页/开票页可用且无控制台错误；中断后工作台出现“继续启用”并能回到缺项；390 各步无横向溢出；截图 `docs/screenshots/q40-after-company-1440.png`、`q40-after-company-390.png`、`q40-after-company-error-1440.png`、`q40-after-customer-1440.png`、`q40-after-customer-390.png`、`q40-after-project-1440.png`、`q40-after-project-390.png`、`q40-after-contract-1440.png`、`q40-after-time-1440.png`、`q40-after-time-390.png`、`q40-after-readiness-1440.png`、`q40-after-readiness-390.png`、`q40-after-dashboard-1440.png`、`q40-after-dashboard-390.png`、`q40-after-dashboard-resume-1440.png`、`q40-after-resume-customer-1440.png`、`q40-after-project-detail-1440.png`、`q40-after-billing-1440.png`，Before 对照 `q40-before-login-1440.png`、`q40-before-login-390.png`、`q40-before-setup-404-1440.png`（main 490e7fb） |
 | 11 | 简化导出与提醒（Q-41） | pass | `python manage.py test tests.test_q41_exports_reminders`（14 tests OK：四类 CSV 与项目页/工作台/费用/开票页聚合逐项一致，时间/费用/开票导出不含个人费率/工资、公式注入被前缀保护、同一天重复下载字节与文件名一致、导出写 `data.exported` 审计、非 owner/跨租户/全量 scope 拒绝；站内提醒按发票/费用/工时事实去重、重复扫描 key 与顺序一致且业务表零写、无 mail/外部副作用，PM 仅见本人项目、成员/finance/auditor 403、全量 scope 404）；`seed_demo` 后 Chromium 1440/390 证据：Before main `490e7fb` 工作台无到期提醒/导出入口、`/due/` 与 `/exports/` 404；After 工作台显示未收发票 2 / 逾期未付费用 1 / 缺费率工时 1（合计 4）并可下钻，`/due/` 三类来源链接与键盘 Enter 可用，`/exports/` 下载四类 CSV（项目收益 4 行、工时 38 行、费用 3 行、开票收款 6 行；项目页 PH-26001 毛利 84,527.55 与 CSV 一致）且 390 无横向溢出；截图 `docs/screenshots/q41-before-dashboard-1440.png`、`q41-before-dashboard-390.png`、`q41-after-dashboard-1440.png`、`q41-after-dashboard-390.png`、`q41-after-due-1440.png`、`q41-after-due-390.png`、`q41-after-exports-1440.png`、`q41-after-exports-390.png` |
-| 12 | 浏览器端到端验收（Q-42） | not_run | 待实现 |
+| 12 | 浏览器端到端验收（Q-42） | pass | L4 本机 Chromium（SQLite 空库，非 seed_demo）：一次会话从 `/setup/` 公司→客户→项目→合同额→首个工时（昨天 120 分钟 + ¥300/h）→重新登录→空态/停用态→资金账户→费用（¥2,000 确认 + ¥500 付款）→发票 `Q42-INV-001` ¥8,000→收款 `Q42-RCPT-001` ¥3,000→工作台/项目页/现金→四类 CSV→到期提醒→1440/390→键盘→成员/跨租户拒绝；页面与导出数字逐项一致（本月开票 8,000 / 已收 3,000 / 已支出 500 / 未收 5,000 / 账户余额 7,500；项目毛利 5,400、现金净额 2,500；8 周计划付款 1,500、预计 6,000；导出分毫不差、重复导出字节一致、审计 5 次；到期仅未收发票 5,000、无缺费率/逾期费用），正常链路 console error=0/pageerror=0，390 横向溢出=0，Tab 焦点环/回车可达，成员访问 billing/expenses/exports/settings=403、跨租户项目 404；`python manage.py test tests.test_q42_e2e tests.test_q40_onboarding` 通过（3+15 tests）；步骤与截图索引见 [docs/q42-browser-acceptance.md](../docs/q42-browser-acceptance.md) 与 `docs/screenshots/q42-*.png`，Before 对照 `q42-before-*.png`（main 69eef07）与 `docs/q42-evidence/*`。缺陷修复：Q-40 回填首个工时费率未生效（已修复+回归测试）、项目财务页简化付款重复计入“历史专业现金”（已修复+回归测试）、启用向导首页未加载 `app.js` 导致提交中/防重复提交不生效（已修复+测试）。 |
 | 13 | 安装与备份恢复底线（Q-43） | not_run | 待实测 |
 | 14 | 候选与发布包（Q-44） | not_run | 未建立候选 |
 | 15 | L5 真实环境走查 | blocked | 真实域名/PG 环境未就绪（P-02） |
 
+Q-42 走查补充（2026-11-04，L4）：详见 [docs/q42-browser-acceptance.md](../docs/q42-browser-acceptance.md)。步骤摘要：
+空库 `/setup/`（错误态/提交中态）→ 客户「星河零售」→ 项目 `Q42-001`（昨天开始）→ 合同额 ¥12,000 →
+首个工时昨天 120 分钟 @ ¥300/h → 就绪显示 ¥600 人工成本（Before main 69eef07 显示缺费率）；
+重新登录 owner → 空态（未开票/无收款/缺费率 0、毛利率无定义）→ `/finance/` 停用 403 → 新建基本户
+期初 ¥5,000 → 费用 ¥2,000 确认 + 付款 ¥500 → 发票 ¥8,000（未填税率）→ 收款 ¥3,000 关联发票 →
+工作台/项目财务/现金同数（开票 8,000、已收 3,000、已支出 500、未收 5,000、账户 7,500、毛利 5,400、
+现金净额 2,500、计划付款 1,500、预计 6,000）→ 四类 CSV（项目/工时/费用/开票收款）逐分核对，
+重复导出字节/文件名一致，`data.exported` 审计 5 次 → `/due/` 仅“未收发票 ¥5,000”，无逾期费用/缺费率
+→ 1440/390 截图与键盘焦点 → 成员 billing/expenses/exports/settings 403、跨租户项目 404。
+正常链路 console error=0；仅故意错误/停用/越权探针产生预期 400/403 网络响应。
+
 未验证：L3 CI/PG、L4 浏览器走查、L5 真实环境均未执行；下一候选建立后逐项回填真实结果。
+其中 L4 本机浏览器走查已由 Q-42 执行（L4-local，非 staging/L5）；L3（CI/PostgreSQL）见本 PR 必需检查，
+L5 真实域名/HTTPS/真实客户仍未执行。
 
 剩余风险：发布资格仍 blocked；备份恢复、真实域名 HTTPS 与浏览器验收未实测；P-01/P-02 待确认。
 小微版口径已由负责人确认（DECISIONS D-11）。
