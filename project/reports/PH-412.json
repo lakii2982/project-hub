@@ -1,0 +1,27 @@
+{
+  "task_id": "PH-412",
+  "summary": "轻交付流程迁移：队列/四活文档/协议/入口收敛/门禁 Queue 行兼容/历史归档；不改产品行为。",
+  "tests": [
+    {
+      "command": "python scripts/projectctl.py check",
+      "result": "pass",
+      "exit_code": 0,
+      "evidence": "Actual exit 0: ok=true, task_count=332."
+    }
+  ],
+  "review": {
+    "required": true,
+    "reviewer": "independent-reviewer",
+    "status": "pass",
+    "findings": [
+      "Independent read-only review of c2ae5bc (BASE 09318bf): delivery-policy changes are additive (queue_line/reference_line/workflow plus the documented task_line transition) and the 9 required checks, 4 arbitration sources, required_check_count=13, strict/linear/mergeable, independent-review, S-authorization and remote-arbitration blocks are unchanged; delivery_gate.py remains backward compatible with the actual legacy BASE policy and check_pr.py keeps the trusted BASE verify-change path for Task lines while resolving Queue ids against HEAD project/QUEUE.md with no shell/path injection. The 30-item queue validates (ordered W1-W5, four checks each, all mapped PH ids in project/tasks.json and V1 ids in docs/archive/v1.0-planning/requirement-trace.json), the 11 archive moves are pure renames with identical blob SHAs, the contract validator points at the archived trace, AGENTS.md retains the financial/security invariants and four validation commands, and the mutation-style tests pass; the only failing required check on this HEAD is Project governance/high_risk_review_required because project/reports/PH-412.json still has review.status=pending. Non-blocking findings: reference lines accept one Queue plus one Task (project/delivery-policy.json:197-201, scripts/delivery_gate.py:184-199) despite the \"exactly one reference\" wording; a malformed item heading such as \"### Q-1\" is silently merged into the preceding item and can overwrite its wave/status/demo (scripts/projectctl.py:680-693), and a missing archived trace disables V1 existence checks (scripts/projectctl.py:740-750); QUEUE.md:308 cites non-existent tests.test_v1_concurrency (actual tests/test_v1_pg_concurrency.py); QUEUE covers 82/137 trace requirements with Q-08/Q-20 mapped only to done/cancelled tasks; README.md:26 still routes to the old agent-protocol §9/planning-PR process.",
+      "Post-verdict evidence commit H2 changes only this report file; independent-reviewer confirms the H2 delta in the PR review comment."
+    ]
+  },
+  "deviations": [
+    "PH-412 在 bootstrap PR #314 中先用 docs/engineering/pr-delivery.md 作临时 spec；本 PR 改为 project/specs/PH-412.md。"
+  ],
+  "unverified": [
+    "完整浏览器走查不适用（文档/治理变更）；以必需 CI 与本次独立复核为准。"
+  ]
+}

@@ -1,20 +1,28 @@
-Task: PH-001
+<!-- 自动化代理生成：保留这一行 -->
+This is by an automated agent, not a human.
 
-## 问题与行为变化
+Queue: Q-00
 
-<!-- 写最终实现，关联Issue；范围与验收采用BASE上的任务契约。 -->
+<!-- 过渡期可另加一行 Task: PH-xxx；Queue/Task 各只允许一行。规则见 docs/engineering/light-delivery.md -->
 
-## 风险与兼容
+## 成果
 
-<!-- S/A/B；金额、权限、迁移、插件/治理门禁为S；影响旧数据/API/插件的处理。 -->
+<!-- 用户从哪个入口完成什么操作、看到什么结果；对应 project/QUEUE.md 的条目。 -->
 
-## 验证
+## 验收检查（逐条写真实结果）
 
-<!-- 实际命令、结果、CI和证据路径；未运行的检查单列，不用计划代替通过。 -->
+- [ ] pass / not_run / blocked + 证据
+- [ ] pass / not_run / blocked + 证据
+- [ ] pass / not_run / blocked + 证据
 
-## 交接与评审
+## 演示
 
-- 报告：project/reports/PH-001.json
-- 交接：project/handoffs/PH-001.md
-- 独立评审与未解决问题：
-- 偏差与未验证事项：
+<!-- 命令或浏览器步骤 + 截图/录屏/命令输出。UI 变更必须浏览器演示。 -->
+
+## 证据
+
+<!-- 命令与退出码、测试、CI run URL、独立复核（HEAD SHA + 结论）、finding。 -->
+
+## 风险与未验证
+
+<!-- 剩余风险、未验证项与前提、需要谁决定。 -->

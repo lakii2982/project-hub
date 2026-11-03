@@ -1,34 +1,47 @@
 # Project Hub 开发约束
 
-## 按可用成果交付
+## 交付流程（唯一入口）
 
-以 [agent-protocol.md 第9节](docs/engineering/agent-protocol.md#9-按可用成果推进2026-11-01-起生效) 为唯一流程成本规则。每轮先在现有交付现状头写清一个用户可观察成果、入口/操作、实际验收与结束条件，复用既有任务；同时最多两条产品主线。`orient.delivery_flow` 会提示连续支持性 PR 和在制产品任务过多，仅为离线代理指标，不替代业务演示。
+按 [轻交付协议](docs/engineering/light-delivery.md) 工作：**一条需求 → 有序成果队列 → 一条成果 = 一个票据 = 一个 PR**。
+只读这五个入口，不要再造规划/契约/收口 PR 或 per-task 报告：
 
-连续三个支持性 PR 未带来可演示能力或实际验收时，停止扩展规划，先解除一个具体阻塞；必要修复与验收继续。不得自动创建下一规划槽、重复契约/ADR或纯收口 PR；报告、交接和本任务状态随原 PR，合并 SHA 在下一次必要变更补记。范围仍取可信 BASE，扩大范围先规划；财务、安全、独立复核和 required CI 保持。
+- [project/QUEUE.md](project/QUEUE.md)：1.0 剩余范围的唯一有序清单（成果、验收检查、演示方式、历史 PH/V1 映射）。
+- [project/STATUS.md](project/STATUS.md)：现在能做什么、还缺什么（一页）。
+- [project/ACCEPTANCE.md](project/ACCEPTANCE.md)：每两周候选的验收清单与模板（一页）。
+- [project/DECISIONS.md](project/DECISIONS.md)：已定决定与待用户判断事项。
+- [docs/engineering/light-delivery.md](docs/engineering/light-delivery.md)：票据模板、PR 规则、复核规则、合并条件、失败与停止规则、不可让步底线。
 
-用户交付只说新增能做什么、入口与操作、实际证据、剩余阻塞；不用 PR/任务数作产品完成率。仓库外或未跟踪的 `HANDOFF-FOR-CLAUDE.md` 只作历史线索，与当前规范/Git/CI冲突时不得沿用其逐轮规划、固定检查数量或旧状态。
+硬性规则：
 
-## 开始、续接与完成任务
+- 一个 PR ≤1 天工作量、生产代码 ≤约 300 行（测试与迁移随 PR）；跨模块契约写成 ≤1 页设计说明放在同一个 PR。
+- 每个 PR 自带证据：代码 + 测试 + 必需 CI + 一条真实演示（UI 必须是浏览器演示，命令类要有命令与退出码）。
+- 每个 PR 恰好一次独立复核（正确性、金额/权限不变式、测试有效性），复核作用于当前 HEAD，作者不得自审。
+- **合并没有人工步骤**：9 项必需检查与独立复核通过后，由维护代理开启
+  `gh pr merge <n> --auto --squash --match-head-commit <sha>`；`--match-head-commit` 保证被复核的提交就是被合并的提交。执行代理不合并、不开启 auto-merge、不改分支保护。
+- 每两周一个候选：一次真实环境走查 + ACCEPTANCE 清单；未执行项写 `not_run`/`blocked`，缺环境写清前提。
+- 不新增 `project/tasks.json` 任务（331 条旧任务是历史台账，编号不复用）；`Task: PH-nnn` 只在过渡期兼容保留。
+- 连续 3 个 PR 没有带来可演示能力或真实验收证据时停止扩展，先解除一个具体阻塞。
 
-本仓库是长期项目，任何coding agent都从仓库事实恢复，不依赖之前的聊天。开场先运行 `python scripts/projectctl.py orient` 一次获取manifest摘要、活动handoff正文、ready任务与验收命令，再执行git status与最近提交检查，保留用户的脏修改。
+## 开始与接续
 
-用 `python scripts/projectctl.py brief PH-001` 获取目标任务的最小上下文；`draft-report PH-001` 起草交付报告骨架。只执行ready任务；proposed/blocked不是开工许可。禁止把project/tasks.json、docs/delivery-status.md（只读现状头）或docs/v1.0-development/work-packages.json整文件读入上下文：任务契约用brief，工作包用work-package-index.md或jq按包ID查询。用户提出新问题时先定位并复用现有任务，只有真实范围缺口才按第9节受限入口登记一个新任务（登记PR不含实现，合入后按新BASE开工）；需要调整已有契约时登记范围明确的规划任务，不能在实现PR扩权；普通技术决策由整合者处理，不让用户反复确认。业务口径冲突才交给用户判断。
+本仓库是长期项目，任何 coding agent 都从仓库事实恢复，不依赖之前的聊天。开场先运行一次
+`python scripts/projectctl.py orient`（manifest 摘要、当前 STATUS、ready 任务、验收命令、队列摘要），
+再看 `git status` 与最近提交，保留用户的脏修改。`python scripts/projectctl.py queue` 查看队列校验与下一项。
 
-分支用 `feat/PH-001-short-name` / `fix/PH-001-short-name`。除首次建库，全部经PR合入main；禁止强推main、删除用户修改或重写已发布标签。任务范围取BASE中的tasks契约；需要扩大范围先做规划PR，再实现，不能在同一PR自我授权。
+队列顺序即开工顺序；同一波次最多 2 条在制。分支用 `feat/Q-nn-short` / `fix/Q-nn-short`；
+除首次建库，全部经 PR 合入 main；禁止强推 main、删除用户修改或重写已发布标签。技术决策由实现者在 PR 内做；
+产品口径、范围、费用或对外承诺有冲突才交给用户判断。历史规划/验收材料在 `docs/archive/v1.0-planning/`
+只读保留，不是开工依据；与当前规范、Git 事实或 CI 冲突时不得沿用旧流程（规划槽、固定检查数量、旧状态）。
 
-提交 `project/reports/PH-001.json` 与 `project/handoffs/PH-001.md`，同步任务状态；报告包含实际命令、结果与 exit_code、独立审阅、偏差和未验证项；非零退出不得写 pass，not_run 的 exit_code 为 null，旧报告缺字段仅作兼容，不代表已核实。CI从可信BASE读取治理门禁。报告里的pass不是机器证明，实际CI和证据仍要核对。详情见CONTRIBUTING.md和docs/engineering/。
-
-模型与工具不设提供方硬依赖；按可验证任务使用现有低成本渠道。不得自动购买额度、转用未知计费API、向外部模型提供凭据或真实客户/工资。鉴权失败不盲重试；短暂超时合理重试一次，输出两次未通过则接管。派遣边界、取消、交接和恢复规则见docs/engineering/agent-protocol.md与recovery.md。
-
-
-当前为0.1工程验证版。先读 README.md、docs/delivery-status.md 和任务对应契约；需求文档描述目标，不能把目标直接写成已实现。技术决策由当前任务的主代理负责，业务口径不明确时给出具体待判断项。
+模型与工具不设提供方硬依赖；按可验证任务使用现有低成本渠道。不得自动购买额度、转用未知计费 API、
+向外部模型提供凭据或真实客户/工资。鉴权失败不盲重试；短暂超时合理重试一次，输出两次未通过则接管。
 
 ## 实现边界
 
 - Python 3.12+、Django、DRF、PostgreSQL生产/SQLite开发；使用已固定依赖。不为新表单引入前端构建链或消息中间件。
-- 项目是全部业务的共同中心。未来业务插件遵循 docs/plugin-evolution.md；先完成 WO-14 的 SDK，新增合同/结算等对象再进入独立插件 App，避免继续扩张 core。
-- 不原地修改已应用迁移。由集成者按当前迁移叶节点生成下一号；并行执行者不预占序号、不同时写共享接线文件。
-- 一张任务交付一个薄片，明确文件白名单、schema、状态机、反例、验收命令与未验证事项。写范围互斥；失败不得靠扩大权限、删测试或虚构输出解决。
+- 项目是全部业务的共同中心。未来业务插件遵循 docs/plugin-evolution.md；新增合同/结算等对象走独立插件 App，避免继续扩张 core。
+- 不原地修改已应用迁移。并行执行者不预占迁移序号、不同时写共享接线文件；写范围互斥。
+- 一条队列成果交付一个薄片；失败不得靠扩大权限、删测试或虚构输出解决。
 
 ## 财务与数据不变式
 
@@ -50,7 +63,8 @@
 
 ## 验收与交付
 
-产品变更按任务契约执行以下验收；纯文档/研发工具按已冻结 acceptance 做相应验证，CI 全套 required checks 不变。开发中跑作用域检查，收尾完整验收一次；仅新修改、失败或未解决风险才重跑相关检查。
+产品变更按队列条目的 3–5 条验收检查执行；纯文档/工具变更按实际作用域验证，必需 CI 不变。
+开发中跑作用域检查，收尾完整验收一次；仅新修改、失败或未解决风险才重跑相关检查。
 
 ```sh
 .venv/bin/python manage.py check
@@ -59,11 +73,16 @@
 .venv/bin/python manage.py verify_integrity --json
 ```
 
-修改 MCP 时另跑 integrations/mcp 的独立测试与 stdio 握手。安全或金额变更需权限/幂等/锁期反例与独立复核；真实并发用 PostgreSQL 多连接。
+另外常跑：`python scripts/projectctl.py check`、`python scripts/projectctl.py queue`、
+`python -m unittest tests.test_projectctl tests.test_governance tests.test_delivery_policy -v`。
+修改 MCP 时另跑 integrations/mcp 的独立测试与 stdio 握手。安全或金额变更需权限/幂等/锁期反例与独立复核；
+真实并发用 PostgreSQL 多连接。
 
-使用演练数据，不能把真实客户、工资、凭据放入外部代理上下文或源码包。runtime、.env、虚拟环境、附件与备份不进入发布包。用户的 Codex/WorkBuddy 设置不属于产品初始化范围。
+使用演练数据，不能把真实客户、工资、凭据放入外部代理上下文或源码包。runtime、.env、虚拟环境、
+附件与备份不进入发布包；不得在 PR/代码/日志中出现真实客户数据或密钥。
 
-交付更新 docs/delivery-status.md 与验证记录；分别说明代码存在、自动化通过、浏览器检查、生产验证。检查范围之外的事项明确保留，禁止以配置存在代替运行证据。
+交付只说明新增能做什么、入口与操作、实际证据、剩余阻塞；分别说明代码存在、自动化通过、浏览器检查、
+真实环境验证。不用 PR/任务数当产品完成率；检查范围之外的事项明确保留，禁止以配置存在代替运行证据。
 
 ## 前端必读入口（PH-023）
 

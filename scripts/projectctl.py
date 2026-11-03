@@ -25,7 +25,17 @@ from urllib.parse import urlsplit, urlunsplit
 
 MANIFEST_PATH = "project/manifest.json"
 TASKS_PATH = "project/tasks.json"
+QUEUE_PATH = "project/QUEUE.md"
+STATUS_PATH = "project/STATUS.md"
+ACCEPTANCE_PATH = "project/ACCEPTANCE.md"
+DECISIONS_PATH = "project/DECISIONS.md"
+LIGHT_PROTOCOL_PATH = "docs/engineering/light-delivery.md"
 TASK_ID_RE = re.compile(r"^PH-[0-9]{3,6}$")
+QUEUE_STATUSES = ("待办", "进行中", "已交付")
+QUEUE_WAVE_RE = re.compile(r"^W[1-9][0-9]?$")
+REQUIREMENT_ID_RE = re.compile(r"^V1-[A-Z]{2,4}-[0-9]{2}$")
+QUEUE_MIN_CHECKS = 3
+QUEUE_MAX_CHECKS = 5
 MANIFEST_FIELDS = (
     "schema_version",
     "name",
@@ -667,6 +677,165 @@ def _load_and_validate(root: Path) -> tuple[dict[str, Any], list[dict[str, Any]]
     return manifest, tasks
 
 
+def _queue_item_blocks(text: str) -> list[tuple[str, list[str]]]:
+    """Split QUEUE.md into (item id, block lines) pairs keyed by '### Q-nn' headings."""
+    blocks: list[tuple[str, list[str]]] = []
+    current_id: str | None = None
+    current: list[str] = []
+    for line in text.splitlines():
+        heading = re.match(r"^###\s+(Q-[0-9]{2,3})\b", line)
+        if heading:
+            if current_id is not None:
+                blocks.append((current_id, current))
+            current_id = heading.group(1)
+            current = []
+            continue
+        if line.startswith("## ") and current_id is not None:
+            blocks.append((current_id, current))
+            current_id, current = None, []
+            continue
+        if current_id is not None:
+            current.append(line)
+    if current_id is not None:
+        blocks.append((current_id, current))
+    return blocks
+
+
+def _queue_block_values(lines: list[str]) -> tuple[dict[str, str], list[str]]:
+    values: dict[str, str] = {}
+    checks: list[str] = []
+    key: str | None = None
+    for raw in lines:
+        line = raw.rstrip()
+        if not line.strip():
+            continue
+        bullet = re.match(r"^[-*]\s*([^：:]+)[：:]\s*(.*)$", line.strip())
+        if bullet:
+            key = bullet.group(1).strip()
+            values[key] = bullet.group(2).strip()
+            continue
+        numbered = re.match(r"^\s*(?:[0-9]+[.)]|[-*])\s+(.*\S)\s*$", line)
+        if numbered and key == "验收检查":
+            checks.append(numbered.group(1).strip())
+    return values, checks
+
+
+def _split_ids(value: str) -> list[str]:
+    return [item.strip() for item in re.split(r"[,，、\s]+", value or "") if item.strip()]
+
+
+def parse_queue(root: Path, tasks: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    path = root / QUEUE_PATH
+    if not path.is_file():
+        return {"path": QUEUE_PATH, "available": False, "items": [], "issues": [],
+                "item_count": 0, "waves": {}}
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return {"path": QUEUE_PATH, "available": False, "items": [], "issues": [
+            issue("read_error", "queue document cannot be read", QUEUE_PATH)],
+            "item_count": 0, "waves": {}}
+    task_ids = {task.get("id") for task in tasks or [] if isinstance(task, dict)}
+    requirement_ids: set[str] | None = None
+    trace = root / "docs/archive/v1.0-planning/requirement-trace.json"
+    if trace.is_file():
+        try:
+            requirement_ids = {
+                row["requirement_id"] for row in json.loads(trace.read_text(encoding="utf-8")).get("requirements", [])
+                if isinstance(row, dict) and isinstance(row.get("requirement_id"), str)
+            }
+        except (OSError, ValueError, KeyError):
+            requirement_ids = None
+    items: list[dict[str, Any]] = []
+    issues: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    last_wave = 0
+    for item_id, block in _queue_item_blocks(text):
+        field_root = f"{QUEUE_PATH}#{item_id}"
+        values, checks = _queue_block_values(block)
+        wave = values.get("波次", "")
+        status = values.get("状态", "待办")
+        outcome = values.get("用户可见成果", "")
+        demo = values.get("演示方式", "")
+        legacy = _split_ids(values.get("遗留任务", ""))
+        requirements = _split_ids(values.get("需求", ""))
+        if item_id in seen:
+            issues.append(issue("queue_duplicate", "queue item id appears more than once", item_id))
+        seen.add(item_id)
+        if not QUEUE_WAVE_RE.fullmatch(wave):
+            issues.append(issue("queue_wave", "wave must look like W1", field_root))
+        else:
+            wave_number = int(wave[1:])
+            if wave_number < last_wave:
+                issues.append(issue("queue_order", "queue items must be ordered by wave", field_root))
+            last_wave = max(last_wave, wave_number)
+        if status not in QUEUE_STATUSES:
+            issues.append(issue("queue_status", "status must be one of " + "/".join(QUEUE_STATUSES), field_root))
+        if len(outcome) < 8:
+            issues.append(issue("queue_outcome", "user-visible outcome must be a concrete sentence", field_root))
+        if not QUEUE_MIN_CHECKS <= len(checks) <= QUEUE_MAX_CHECKS:
+            issues.append(issue("queue_checks", f"acceptance checks must number {QUEUE_MIN_CHECKS}-{QUEUE_MAX_CHECKS}", field_root))
+        if not demo:
+            issues.append(issue("queue_demo", "demo method is required", field_root))
+        if not legacy:
+            issues.append(issue("queue_legacy", "mapped legacy PH ids are required", field_root))
+        for task_id in legacy:
+            if TASK_ID_RE.fullmatch(task_id) is None:
+                issues.append(issue("queue_legacy", f"invalid legacy task id: {task_id}", field_root))
+            elif task_ids and task_id not in task_ids:
+                issues.append(issue("queue_legacy", f"legacy task {task_id} is not in {TASKS_PATH}", field_root))
+        if not requirements:
+            issues.append(issue("queue_requirement", "mapped V1 requirement ids are required", field_root))
+        for requirement_id in requirements:
+            if REQUIREMENT_ID_RE.fullmatch(requirement_id) is None:
+                issues.append(issue("queue_requirement", f"invalid requirement id: {requirement_id}", field_root))
+            elif requirement_ids is not None and requirement_id not in requirement_ids:
+                issues.append(issue("queue_requirement", f"requirement {requirement_id} is not in the archived trace", field_root))
+        items.append({"id": item_id, "wave": wave, "status": status, "outcome": outcome,
+                      "checks": checks, "demo": demo, "legacy": legacy,
+                      "requirements": requirements})
+    if not items:
+        issues.append(issue("queue_empty", "queue document defines no items", QUEUE_PATH))
+    waves: dict[str, int] = {}
+    for item in items:
+        waves[item["wave"]] = waves.get(item["wave"], 0) + 1
+    return {"path": QUEUE_PATH, "available": True, "items": items, "issues": issues,
+            "item_count": len(items), "waves": waves}
+
+
+def _queue_summary(parsed: dict[str, Any], limit: int = 3) -> dict[str, Any]:
+    pending = [item for item in parsed["items"] if item["status"] != "已交付"][:limit]
+    return {
+        "path": parsed["path"],
+        "available": parsed["available"],
+        "item_count": parsed["item_count"],
+        "waves": parsed["waves"],
+        "delivered": sum(1 for item in parsed["items"] if item["status"] == "已交付"),
+        "next": [{"id": item["id"], "wave": item["wave"], "status": item["status"],
+                  "outcome": item["outcome"]} for item in pending],
+        "issues": parsed["issues"],
+    }
+
+
+def command_queue(root: Path, compact: bool = False) -> dict[str, Any]:
+    _, tasks = _load_and_validate(root)
+    parsed = parse_queue(root, tasks)
+    if parsed["issues"]:
+        raise CliError(
+            "queue_validation_failed",
+            f"queue document has {len(parsed['issues'])} validation error(s)",
+            errors=parsed["issues"],
+        )
+    if compact:
+        return _queue_summary(parsed, limit=parsed["item_count"])
+    payload = _queue_summary(parsed, limit=len(parsed["items"]))
+    payload["items"] = [
+        {key: item[key] for key in ("id", "wave", "status", "outcome", "demo")}
+        for item in parsed["items"]
+    ]
+    return payload
+
+
 def command_check(root: Path) -> dict[str, Any]:
     _, tasks = _load_and_validate(root)
     return {"task_count": len(tasks)}
@@ -739,8 +908,13 @@ def _delivery_flow(root: Path, tasks: list[dict[str, Any]]) -> dict[str, Any]:
               if task.get("kind") == "feature"
               and task.get("status") in {"in_progress", "in_review"}]
     result = {
-        "rules": "docs/engineering/agent-protocol.md#9-按可用成果推进2026-11-01-起生效",
-        "focus": "docs/delivery-status.md",
+        "rules": LIGHT_PROTOCOL_PATH,
+        "protocol": LIGHT_PROTOCOL_PATH,
+        "queue": QUEUE_PATH,
+        "status": STATUS_PATH,
+        "acceptance": ACCEPTANCE_PATH,
+        "decisions": DECISIONS_PATH,
+        "focus": STATUS_PATH,
         "metric_boundary": "路径与任务类型仅为代理指标；不证明业务可用、浏览器通过或发布就绪。",
         "active_product_task_count": len(active),
         "active_product_tasks": active[:10],
@@ -751,7 +925,7 @@ def _delivery_flow(root: Path, tasks: list[dict[str, Any]]) -> dict[str, Any]:
         "product_code_prs": None,
         "trailing_support_prs": None,
         "warnings": ["product_wip_over_two"] if len(active) > 2 else [],
-        "action": "围绕一个可演示成果复用已有任务；告警时停止扩展规划、先解除具体阻塞，继续必要修复与验收。",
+        "action": "从队列取下一条待办成果，交付一个可评审 PR；告警时先解除具体阻塞，不新增规划/契约/收口 PR。",
     }
     history_ref = None
     for candidate in ("refs/remotes/origin/main", "refs/heads/main"):
@@ -837,6 +1011,7 @@ def command_orient(root: Path) -> dict[str, Any]:
         "ready": [_compact_task(task) for task in _ready_tasks(tasks)],
         "acceptance_commands": _acceptance_commands(root),
         "delivery_flow": _delivery_flow(root, tasks),
+        "queue": _queue_summary(parse_queue(root, tasks)),
     }
 
 
@@ -1421,6 +1596,14 @@ def build_parser() -> argparse.ArgumentParser:
     check_parser = subparsers.add_parser("check", help="validate manifest and tasks")
     check_parser.add_argument("--root", default=".")
 
+    queue_parser = subparsers.add_parser(
+        "queue",
+        help="validate and show the ordered outcome queue (project/QUEUE.md)",
+    )
+    queue_parser.add_argument("--compact", action="store_true",
+                              help="omit per-item detail and print only the summary")
+    queue_parser.add_argument("--root", default=".")
+
     next_parser = subparsers.add_parser("next", help="list dependency-ready tasks")
     next_parser.add_argument("--compact", action="store_true", help="emit only id/title/kind/risk/status/milestone/depends_on")
     next_parser.add_argument("--root", default=".")
@@ -1466,6 +1649,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         root = Path(arguments.root).resolve()
         if command_name == "check":
             result = command_check(root)
+        elif command_name == "queue":
+            result = command_queue(root, compact=arguments.compact)
         elif command_name == "next":
             result = command_next(root, compact=arguments.compact)
         elif command_name == "brief":

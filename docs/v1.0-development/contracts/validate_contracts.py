@@ -63,7 +63,7 @@ def main():
         name=row['canonical_record']
         assert name in entities and row['owner']==source[name]['owner'],'relationship has competing owner'
         registry.resolver(base_uri=schemas['entities.schema.json']['$id']).lookup(row['schema_ref'])
-    trace=json.loads((HERE.parent/'requirement-trace.json').read_text())['requirements']
+    trace=json.loads((HERE.parents[1]/'archive/v1.0-planning/requirement-trace.json').read_text())['requirements']
     assert len(rows)==137 and len({r['id']for r in rows})==137
     assert {r['id']for r in rows}=={r['requirement_id']for r in trace}
     assert all(set(r['target_objects'])<=set(entities)for r in rows),'requirements reference undefined object'

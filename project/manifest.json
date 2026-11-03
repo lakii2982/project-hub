@@ -5,7 +5,7 @@
   "version_source": "pyproject.toml",
   "current_iteration": "v0.2.0-foundations",
   "tasks_file": "project/tasks.json",
-  "active_handoff": "project/handoffs/PH-411.md",
+  "active_handoff": "project/STATUS.md",
   "required_docs": [
     "AGENTS.md",
     "CONTRIBUTING.md",
@@ -17,6 +17,11 @@
     "docs/engineering/recovery.md",
     "docs/engineering/agent-protocol.md",
     "docs/delivery-status.md",
-    "docs/adr/0001-project-governance.md"
+    "docs/adr/0001-project-governance.md",
+    "project/QUEUE.md",
+    "project/STATUS.md",
+    "project/ACCEPTANCE.md",
+    "project/DECISIONS.md",
+    "docs/engineering/light-delivery.md"
   ]
 }
