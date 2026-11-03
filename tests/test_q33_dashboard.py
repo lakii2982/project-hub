@@ -110,7 +110,9 @@ class SnapshotTests(DashboardFixture):
     def test_owner_snapshot_numbers_match_billing_and_expenses(self):
         snapshot = dashboard_snapshot(self.owner, today=self.today)
         self.assertEqual(snapshot["basis"], BASIS_INVOICE)
-        self.assertEqual(snapshot["month"]["invoiced_cents"], 1_560_000)
+        # §4.1: 本月开票收入不含税 = 1,060,000 − 60,000 + 500,000（无税）。
+        self.assertEqual(snapshot["month"]["invoiced_cents"], 1_500_000)
+        self.assertEqual(snapshot["month"]["invoiced_gross_cents"], 1_560_000)
         self.assertEqual(snapshot["month"]["received_cents"], 450_000)
         self.assertEqual(snapshot["month"]["spent_cents"], 100_000)
         self.assertEqual(snapshot["outstanding"]["invoiced_cents"], 1_560_000)
@@ -134,12 +136,15 @@ class SnapshotTests(DashboardFixture):
         self.assertEqual(rows["Q33-001"]["revenue_cents"], 400_000)
         self.assertEqual(rows["Q33-002"]["revenue_cents"], 0)
         self.assertTrue(rows["Q33-002"]["margin_undefined"])
-        self.assertEqual(rows["Q33-001"]["margin_bp"], int((400_000 - 300_000) * 10000 / 400_000))
+        self.assertEqual(rows["Q33-001"]["margin_bp"], 2500)  # (400,000 − 300,000) / 400,000
         invoice = dashboard_snapshot(self.owner, basis=BASIS_INVOICE, today=self.today)
         invoice_rows = {row["project"].code: row for row in invoice["rows"]}
-        self.assertEqual(invoice_rows["Q33-001"]["revenue_cents"], 1_060_000)
-        self.assertEqual(invoice_rows["Q33-001"]["cost_cents"],
-                         project_summary(self.project)["cost_cents"])
+        # 1,060,000 gross − 60,000 tax = 1,000,000 net revenue.
+        self.assertEqual(invoice_rows["Q33-001"]["revenue_cents"], 1_000_000)
+        self.assertEqual(invoice_rows["Q33-001"]["invoiced_gross_cents"], 1_060_000)
+        self.assertEqual(invoice_rows["Q33-001"]["invoiced_net_cents"], 1_000_000)
+        self.assertEqual(invoice_rows["Q33-001"]["cost_cents"], 300_000)
+        self.assertEqual(invoice_rows["Q33-001"]["gross_cents"], 700_000)
 
     def test_ranking_sorted_by_gross_and_zero_revenue_margin_undefined(self):
         snapshot = dashboard_snapshot(self.owner, today=self.today)
@@ -161,12 +166,13 @@ class SnapshotTests(DashboardFixture):
         self.assertEqual(gaps["non_project_receipt_count"], 1)
         self.assertGreaterEqual(snapshot["cash"]["payment_unlinked_cents"], 100_000)
 
-    def test_pm_scope_is_own_projects_and_cash_balance_is_a_gap(self):
+    def test_pm_scope_is_own_projects_and_billing_account_visibility_matches(self):
         snapshot = dashboard_snapshot(self.pm, today=self.today)
         codes = {row["project"].code for row in snapshot["rows"]}
         self.assertEqual(codes, {"Q33-001", "Q33-003"})
         self.assertEqual(snapshot["ranking"][0]["project"].code, "Q33-001")
-        self.assertIsNone(snapshot["cash"]["account_total_cents"])
+        # /billing/ exposes the same company account balances to owner and PM; Q-33 aligns.
+        self.assertEqual(snapshot["cash"]["account_total_cents"], 1_450_000)
         # PM does not see the other PM's project or non-project receipts in monthly cash.
         self.assertEqual(snapshot["month"]["received_cents"], 400_000)
 
@@ -192,8 +198,36 @@ class SnapshotTests(DashboardFixture):
         snapshot = dashboard_snapshot(self.owner, today=self.today)
         codes = {row["project"].code for row in snapshot["rows"]}
         self.assertNotIn("Q33-F01", codes)
-        self.assertEqual(snapshot["month"]["invoiced_cents"], 1_560_000)
+        self.assertEqual(snapshot["month"]["invoiced_cents"], 1_500_000)
         self.assertEqual(snapshot["cash"]["account_total_cents"], 1_450_000)
+
+    def test_taxed_invoice_regression_uses_net_revenue_and_monthly_invoiced(self):
+        # Explicit reviewer probe: invoice 1,060,000 with 60,000 tax → revenue 1,000,000.
+        invoice = Invoice.objects.get(number="Q33-INV-001")
+        self.assertEqual(invoice.amount_cents, 1_060_000)
+        self.assertEqual(invoice.tax_cents, 60_000)
+        snapshot = dashboard_snapshot(self.owner, today=self.today)
+        row = {item["project"].code: item for item in snapshot["rows"]}["Q33-001"]
+        self.assertEqual(row["revenue_cents"], invoice.amount_cents - invoice.tax_cents)
+        self.assertEqual(snapshot["month"]["invoiced_cents"], 1_500_000)
+        self.assertEqual(snapshot["month"]["invoiced_gross_cents"], 1_560_000)
+        # 未收款 remains the cash/gross basis (invoiced − received).
+        self.assertEqual(snapshot["outstanding"]["outstanding_cents"], 1_160_000)
+
+    def test_margin_excludes_historical_professional_cost_and_lists_gap(self):
+        legacy = Document.objects.create(
+            project=self.project, kind=Document.Kind.EXPENSE, title="历史专业费用",
+            amount_cents=200_000, occurred_on=self.today, reference="Q33-LEGACY-EXP",
+            submitted_by=self.owner.user, status="approved")
+        LedgerEntry.objects.create(project=self.project, book=LedgerEntry.Book.COST,
+                                   amount_cents=200_000, category="vendor",
+                                   occurred_on=self.today, document=legacy)
+        snapshot = dashboard_snapshot(self.owner, today=self.today)
+        row = {item["project"].code: item for item in snapshot["rows"]}["Q33-001"]
+        self.assertEqual(row["cost_cents"], 300_000)  # Q-36 only
+        self.assertEqual(row["historical_cost_cents"], 200_000)
+        self.assertEqual(snapshot["gaps"]["historical_cost_cents"], 200_000)
+        self.assertEqual(snapshot["gaps"]["historical_cost_projects"], 1)
 
     def test_snapshot_is_read_only(self):
         before = (LedgerEntry.objects.count(), AuditEvent.objects.count(),
@@ -220,7 +254,9 @@ class DashboardHttpTests(DashboardFixture):
                      "资金账户余额", "项目毛利排行", "无定义", "未开票", "缺费率"):
             self.assertContains(page, text)
         self.assertContains(page, reverse("project-detail", args=[self.project.pk]))
-        self.assertContains(page, "11,600.00")  # outstanding ¥11,600.00
+        self.assertContains(page, "11,600.00")  # outstanding ¥11,600.00 (gross cash)
+        self.assertContains(page, "15,000.00")  # monthly net invoiced ¥15,000.00
+        self.assertContains(page, "15,600.00")  # gross invoiced shown as subtext
 
     def test_basis_query_switch_and_invalid_defaults_to_invoice(self):
         self.login(self.owner)
@@ -260,10 +296,13 @@ class SeedDemoBillingTests(TestCase):
         self.assertEqual(Receipt.objects.count(), 3)
         owner = Membership.objects.get(role="owner")
         snapshot = dashboard_snapshot(owner)
-        self.assertEqual(snapshot["month"]["invoiced_cents"], 21_600_000)
+        self.assertEqual(snapshot["month"]["invoiced_cents"], 20_581_132)  # net of tax
+        self.assertEqual(snapshot["month"]["invoiced_gross_cents"], 21_600_000)
         self.assertEqual(snapshot["month"]["received_cents"], 9_100_000)
         self.assertEqual(snapshot["month"]["spent_cents"], 700_000)
         self.assertEqual(snapshot["outstanding"]["outstanding_cents"], 13_000_000)
         self.assertEqual(snapshot["cash"]["account_total_cents"], 17_100_000)
         self.assertEqual(snapshot["gaps"]["labor_gap_count"], 1)
         self.assertGreaterEqual(snapshot["gaps"]["payment_unlinked_count"], 1)
+        self.assertGreater(snapshot["gaps"]["historical_cost_cents"], 0)
+        self.assertGreaterEqual(snapshot["gaps"]["legacy_payment_count"], 1)

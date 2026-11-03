@@ -18,8 +18,9 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from .access import require_member, visible_projects
-from .models import Document
+from .models import Document, LedgerEntry
 from .reporting import project_summary
+from .weekly_time import simplified_labor_cost
 
 DASHBOARD_ROLES = frozenset({"owner", "pm"})
 BASIS_INVOICE = "invoice"
@@ -48,6 +49,21 @@ def _sum(queryset, field="amount_cents"):
 
 def _project_payments(payments, project):
     return _sum(payments.filter(expense__project=project))
+
+
+def _simplified_cost(project):
+    """1.0 cost = Q-35 simplified labor + Q-36 confirmed direct expenses only."""
+    q36 = (LedgerEntry.objects.filter(project=project, book=LedgerEntry.Book.COST,
+                                      document__expense_detail__isnull=False)
+           .aggregate(total=Sum("amount_cents"))["total"] or 0)
+    return int(simplified_labor_cost(project)) + int(q36)
+
+
+def _taxed_invoice_totals(queryset):
+    """Gross and net (tax-excluded) invoiced amounts; void reversals are negative rows."""
+    totals = queryset.aggregate(gross=Sum("amount_cents"), tax=Sum("tax_cents"))
+    gross = int(totals["gross"] or 0)
+    return gross, gross - int(totals["tax"] or 0)
 
 
 def _margin_bp(revenue, gross):
@@ -94,19 +110,21 @@ def dashboard_snapshot(member, basis=None, today=None):
                             if is_owner else Receipt.objects.none())
 
     month_filters = {"issued_on__gte": month_start, "issued_on__lt": month_end}
-    month_invoiced = _sum(invoice_scope.filter(**month_filters))
+    month_invoiced_gross, month_invoiced = _taxed_invoice_totals(
+        invoice_scope.filter(**month_filters))
     month_received = _sum(cash_receipts.filter(received_on__gte=month_start,
                                                received_on__lt=month_end))
     month_spent = _sum(cash_payments.filter(paid_on__gte=month_start,
                                             paid_on__lt=month_end))
 
-    invoiced_total = _sum(invoice_scope)
+    invoiced_gross_total, invoiced_net_total = _taxed_invoice_totals(invoice_scope)
     received_total = _sum(receipt_scope)
-    outstanding_total = invoiced_total - received_total
+    # 未收款是现金口径（价税合计），不能用不含税收入冲抵；收入口径只影响毛利。
+    outstanding_total = invoiced_gross_total - received_total
 
+    # /billing/ shows the same company account balances to owner and PM, so Q-33 aligns.
     accounts = list(Account.objects.filter(organization=member.organization))
-    account_total = (sum(account_balance_cents(account) for account in accounts)
-                     if is_owner else None)
+    account_total = sum(account_balance_cents(account) for account in accounts)
     payment_unlinked_count = cash_payments.count()
     payment_unlinked_amount = _sum(cash_payments)
 
@@ -115,29 +133,45 @@ def dashboard_snapshot(member, basis=None, today=None):
     legacy_receipts = Document.objects.filter(
         project_id__in=project_ids, kind=Document.Kind.RECEIPT,
         status__in=[Document.Status.SUBMITTED, Document.Status.APPROVED]).count()
+    legacy_payments = Document.objects.filter(
+        project_id__in=project_ids, kind=Document.Kind.PAYMENT,
+        status__in=[Document.Status.SUBMITTED, Document.Status.APPROVED]).count()
 
     rows = []
+    historical_cost_total = 0
+    historical_cost_projects = 0
     for project in projects:
         totals = project_totals(project)
         summary = project_summary(project)
         received = totals["received_cents"]
         paid = _project_payments(payment_scope, project)
-        revenue = totals["invoiced_cents"] if basis == BASIS_INVOICE else received
-        cost = int(summary["cost_cents"])
-        gross = revenue - cost
+        invoiced_gross, invoiced_net = _taxed_invoice_totals(
+            Invoice.objects.filter(project=project))
+        # §4.1：按开票确认收入时项目收入 = 已开票金额（不含税）；按收款时用实际现金收款。
+        revenue = invoiced_net if basis == BASIS_INVOICE else received
+        simplified_cost = _simplified_cost(project)
+        historical_cost = int(summary["cost_cents"]) - simplified_cost
+        if historical_cost > 0:
+            historical_cost_total += historical_cost
+            historical_cost_projects += 1
+        else:
+            historical_cost = 0
+        gross = revenue - simplified_cost
         rows.append({
             "project": project,
             "revenue_cents": revenue,
-            "invoiced_cents": totals["invoiced_cents"],
+            "invoiced_gross_cents": invoiced_gross,
+            "invoiced_net_cents": invoiced_net,
             "received_cents": received,
-            "outstanding_cents": totals["invoiced_cents"] - received,
+            "outstanding_cents": invoiced_gross - received,
             "cash_net_cents": received - paid,
-            "cost_cents": cost,
+            "cost_cents": simplified_cost,
+            "historical_cost_cents": historical_cost,
             "gross_cents": gross,
             "margin_bp": _margin_bp(revenue, gross),
             "margin_undefined": revenue <= 0,
             "labor_gap_count": int(summary["labor_gap_count"]),
-            "uninvoiced": totals["invoiced_cents"] == 0,
+            "uninvoiced": invoiced_net == 0,
             "no_receipt": received == 0,
         })
     ranking = sorted(rows, key=lambda row: (-row["gross_cents"], row["project"].code))
@@ -149,19 +183,22 @@ def dashboard_snapshot(member, basis=None, today=None):
         "payment_unlinked_cents": payment_unlinked_amount,
         "legacy_expense_count": legacy_expenses,
         "legacy_receipt_count": legacy_receipts,
+        "legacy_payment_count": legacy_payments,
+        "historical_cost_cents": historical_cost_total,
+        "historical_cost_projects": historical_cost_projects,
         "non_project_receipt_count": non_project_receipts.count(),
         "non_project_receipt_cents": _sum(non_project_receipts),
         "pending_expense_count": int(expense_facts.get("pending_count") or 0),
         "pending_expense_cents": int(expense_facts.get("pending_amount_cents") or 0),
-        "liability_plan_count": len(expense_facts.get("plan", {}).get("overdue", []) or []),
     }
     return {
         "basis": basis,
         "basis_label": dict(BASIS_CHOICES)[basis],
         "month_label": f"{today.year}年{today.month}月",
-        "month": {"invoiced_cents": month_invoiced, "received_cents": month_received,
-                  "spent_cents": month_spent},
-        "outstanding": {"invoiced_cents": invoiced_total, "received_cents": received_total,
+        "month": {"invoiced_cents": month_invoiced,
+                  "invoiced_gross_cents": month_invoiced_gross,
+                  "received_cents": month_received, "spent_cents": month_spent},
+        "outstanding": {"invoiced_cents": invoiced_gross_total, "received_cents": received_total,
                         "outstanding_cents": outstanding_total},
         "cash": {"account_total_cents": account_total, "account_count": len(accounts),
                  "payment_unlinked_count": payment_unlinked_count,
@@ -169,5 +206,4 @@ def dashboard_snapshot(member, basis=None, today=None):
         "rows": rows,
         "ranking": ranking,
         "gaps": gaps,
-        "has_data": bool(rows),
     }
