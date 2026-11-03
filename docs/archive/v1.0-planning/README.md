@@ -27,6 +27,9 @@
 | [work-packages.json](work-packages.json) | docs/v1.0-development/ | 62 个工作包结构化目录 |
 | [work-package-index.md](work-package-index.md) | docs/v1.0-development/ | 工作包索引 |
 | [delivery-status-archive.md](delivery-status-archive.md) | docs/ | 旧交付现状全文（逐项历史） |
+| [queue-professional-2026-11-03.md](queue-professional-2026-11-03.md) | project/QUEUE.md | 专业版 1.0 的 30 条有序队列（Q-01–Q-30），2026-11-03 范围重定义后归档只读 |
+
+归档后为保持可导航，仅修正了 `queue-professional-2026-11-03.md` 开头 5 条相对链接的路径，正文内容未改。
 
 `requirement-trace.json` 仍被 `docs/v1.0-development/contracts/validate_contracts.py` 读取用于契约一致性校验，
 因此归档路径是该脚本的唯一数据源；契约本身没有归档。

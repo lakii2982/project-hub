@@ -1,11 +1,11 @@
 # 项目中枢 · Project Hub
 
-面向100人以下软件开发、实施与技术服务公司的自托管项目经营系统。以项目连接交付、工时、成本、结算与现金；面向没有财务软件和OA的小团队，所有核心业务都应有内置入口。
+面向100人以下软件开发、实施与技术服务公司的自托管项目经营系统。**1.0 产品范围为小微企业简化版：以项目为中心，只回答项目收益与现金流**（见 [产品范围](docs/product-scope.md)）；面向没有财务软件和OA的小团队，所有核心业务都应有内置入口。
 
 [![Checks](https://github.com/lakii2982/project-hub/actions/workflows/test.yml/badge.svg)](https://github.com/lakii2982/project-hub/actions/workflows/test.yml)
 [Apache-2.0](LICENSE) · [迭代路线](ROADMAP.md) · [当前能力与差距](docs/delivery-status.md) · [参与开发](CONTRIBUTING.md)
 
-当前已发布 **0.1.0 工程验证版**；开发主线已继续加入合同、结算/核销、发票、预算与核对等分阶段实现。当前能力、可用入口及浏览器/部署/客户验收缺口统一见 [交付现状](docs/delivery-status.md)，不以任务或 PR 数量表示产品完成度。主线代码不能直接当作已发布的完整专业 PMO 产品。
+当前已发布 **0.1.0 工程验证版**。2026-11-03 起 1.0 范围重定义为小微企业简化版（项目收益 + 现金流）：合同版本、收入确认、结算核销、银行现金、预算/ETC、四类核对、关期、多币种、工资与导入等专业能力移出当前 1.0，代码、数据与审计保留、默认隐藏/停用（见 [产品范围](docs/product-scope.md) 与 [DECISIONS](project/DECISIONS.md)）。当前能力、可用入口及浏览器/部署验收缺口统一见 [交付现状](project/STATUS.md)，不以任务或 PR 数量表示产品完成度。
 
 ![经营总览历史截图（2026-10-22演练数据）](docs/screenshots/desktop-overview.png)
 
@@ -50,6 +50,8 @@ sh scripts/run-local.sh
 本轮代码已合入项目详情六页签、成本预算余额图、关键任务关联与项目级工时；基础资料共用 Project/Employee/CostRate 服务。全站体验与经营趋势仍有 PH-026 等未完成范围，不能将视觉样张当作这些页面已交付。最新验证见 [交付状态](docs/delivery-status.md)，本机使用步骤见 [测试环境](docs/local-testing.md)。
 
 ## 当前业务能力
+
+> 下表描述 `main` 上**代码层面已存在**的能力（含专业财务实现）。其中合同版本、收入确认、结算核销、银行现金、预算/ETC、核对/关期、多币种、工资、导入与 Agent 接入已移出小微版 1.0 用户承诺，默认隐藏/停用；1.0 保留与简化清单见 [产品范围](docs/product-scope.md) §5–6。
 
 | 入口 | 已有能力 |
 | --- | --- |

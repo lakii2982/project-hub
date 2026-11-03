@@ -3,8 +3,9 @@
 ## 交付流程（唯一入口）
 
 按 [轻交付协议](docs/engineering/light-delivery.md) 工作：**一条需求 → 有序成果队列 → 一条成果 = 一个票据 = 一个 PR**。
-只读这五个入口，不要再造规划/契约/收口 PR 或 per-task 报告：
+只读这六个入口，不要再造规划/契约/收口 PR 或 per-task 报告：
 
+- [docs/product-scope.md](docs/product-scope.md)：1.0 产品范围的唯一定义（小微企业简化版：项目收益 + 现金流；保留/简化/移出清单与发布标准）。
 - [project/QUEUE.md](project/QUEUE.md)：1.0 剩余范围的唯一有序清单（成果、验收检查、演示方式、历史 PH/V1 映射）。
 - [project/STATUS.md](project/STATUS.md)：现在能做什么、还缺什么（一页）。
 - [project/ACCEPTANCE.md](project/ACCEPTANCE.md)：每两周候选的验收清单与模板（一页）。

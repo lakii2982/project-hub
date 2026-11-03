@@ -3,10 +3,11 @@
 状态：2026-11-03 起生效，取代按切片多段 PR 的重流程。历史规划/验收材料在
 [docs/archive/v1.0-planning/](../../docs/archive/v1.0-planning/README.md) 只读保留，不再是开工依据。
 
-## 0. 只看五个入口
+## 0. 只看六个入口
 
 | 文件 | 回答什么 |
 | --- | --- |
+| [docs/product-scope.md](../../docs/product-scope.md) | 1.0 产品范围：目标用户、核心链路、简化口径、保留/简化/移出清单与发布标准 |
 | [project/QUEUE.md](../../project/QUEUE.md) | 1.0 剩余范围的唯一有序清单：下一条做什么、验收检查、演示方式、映射的历史 PH 与 V1 需求 |
 | [project/STATUS.md](../../project/STATUS.md) | 现在能做什么、还缺什么（一页） |
 | [project/ACCEPTANCE.md](../../project/ACCEPTANCE.md) | 当前候选的验收清单与模板（一页） |
