@@ -1,5 +1,20 @@
 # 验证记录（当前结果与历史记录分开）
 
+## Q-44 小微版候选与发布包（2026-11-04，候选 0.2.0-rc.1）
+
+- 版本：`pyproject.toml` = `0.2.0`；`CHANGELOG.md` 新增 0.2.0 段；候选标识 `0.2.0-rc.1`，未打标签/未发布/未部署。
+- 候选清单：`docs/candidates/0.2.0/`（README、candidate.json、`source.zip.sha256`；逐文件 `SHA256MANIFEST.json` 在源码包内）；源码包构建/校验命令：
+  `python scripts/package.py` → `releases/project-hub-0.2.0-source.zip`；`python scripts/verify-source-package.py <zip>`。
+- 包策略：`scripts/package.py` 确定性 ZIP（固定时间/权限），排除 `runtime/`、`.env`（仅 `.env.example`）、数据库、附件、备份、
+  虚拟环境/缓存/发布产物，保留 `LICENSE`/`NOTICE`/`THIRD_PARTY_NOTICES.md`；`docs/candidates/` 不进入包内，避免元数据改变包摘要。
+- 实测：源码包文件数、归档 SHA-256 与包内 manifest 摘要以 `docs/candidates/0.2.0/candidate.json` / `source.zip.sha256` 为准；同一源码树重复构建字节一致；
+  `verify-source-package.py` 返回 `ok=true/runtime_excluded=true`；`release_check.py --tag v0.2.0` 返回 `ok=true/prerelease=true`。
+- 防复发：`python scripts/check_candidate_metadata.py` 在 Public hygiene 与 release workflow 的 `package.py`+`verify-source-package.py` 之后运行，对比提交的归档 SHA-256、`source.zip.sha256`、文件数与包内 manifest 摘要；摘要过期/漂移即 exit 1。`tests/test_candidate_metadata.py` 覆盖匹配、归档摘要漂移、manifest/sidecar 漂移与无候选元数据跳过。
+- ACCEPTANCE：逐项 pass/not_run/blocked 已按真实证据回填（Q-31/Q-32/Q-37 补证据，Q-40/Q-42 计数修正，Q-44 新证据）；
+  `not_run`/`blocked` 未写成 pass。
+- not_run/blocked：真实 Docker/Compose 安装、生产 PostgreSQL 备份恢复、TLS/域名、L5 真实环境/客户走查；
+  9 项必需 CI 与独立复核须作用于 Q-44 PR 同一 HEAD；客户 UAT/三方签批不是本次预发布前置（D-12）。
+
 ## Q-43 安装与备份恢复底线（2026-11-04）
 
 干净 SQLite 本地安装（scratch 目录，`PMO_PYTHON=python3.12 sh scripts/local.sh`）exit 0；再次执行同命令 exit 0，`runtime/pmo.sqlite3` SHA-256 不变（`dfdb1721…b40a5`）。Compose 安装脚本 `scripts/install.sh` 的生成 `.env`/0600/不覆盖/占位值拒绝/失败保留/健康超时诊断/重试由 `tests.test_q43_install` 8 项 fake-docker 回归覆盖（含 docker 存在但 compose 不可用→3）；本机无 Docker 与 PostgreSQL，真实 compose/PG 安装与恢复标记为未执行，见下方缺口。

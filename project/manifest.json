@@ -3,7 +3,7 @@
   "name": "Project Hub · 项目中枢",
   "repository_url": "https://github.com/lakii2982/project-hub",
   "version_source": "pyproject.toml",
-  "current_iteration": "v0.2.0-foundations",
+  "current_iteration": "v0.2.0-rc.1",
   "tasks_file": "project/tasks.json",
   "active_handoff": "project/STATUS.md",
   "required_docs": [

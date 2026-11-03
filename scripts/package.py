@@ -11,12 +11,15 @@ output.mkdir(exist_ok=True)
 allowed_roots = {"core", "pmo", "pmo_plugins", "tests", "templates", "static", "scripts", "docs", "integrations", ".github", "project", ".cursor"}
 allowed_files = {"manage.py", "requirements.txt", "requirements.in", "pyproject.toml", "README.md", "AGENTS.md", "CLAUDE.md", "GEMINI.md", "CHANGELOG.md", "LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "CONTRIBUTING.md", "SECURITY.md", "ROADMAP.md", "START_HERE.md", ".gitleaks.toml", "compose.yaml", "Dockerfile", "Caddyfile", ".env.example", ".dockerignore", ".gitignore"}
 excluded_parts = {"__pycache__", ".git", ".venv", ".agent-venv", ".cache", "node_modules", "runtime", "staticfiles", "backups", "releases"}
+# Release-candidate metadata describes the archive, so it must not be packaged into it.
+release_metadata_parts = {("docs", "candidates")}
 files = []
 for path in sorted(root.rglob("*")):
     rel = path.relative_to(root)
     if not path.is_file() or path.is_symlink(): continue
     if rel.parts[0] not in allowed_roots and str(rel) not in allowed_files: continue
     if set(rel.parts) & excluded_parts or path.suffix in {".pyc", ".pyo", ".sqlite3", ".pem", ".key", ".p12"}: continue
+    if any(rel.parts[:len(parts)] == parts for parts in release_metadata_parts): continue
     if path.name.startswith(".env") and str(rel) != ".env.example": continue
     files.append((path, rel))
 contents = {rel.as_posix(): path.read_bytes() for path, rel in files}

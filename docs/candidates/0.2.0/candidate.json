@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "candidate": "0.2.0-rc.1",
+  "version": "0.2.0",
+  "status": "candidate",
+  "prerelease": true,
+  "date": "2026-11-04",
+  "base_commit": "e642ec24a8fa82d454c1e9b50a8873af1336c09a",
+  "branch": "feat/Q-44-candidate",
+  "build": {
+    "command": "python scripts/package.py",
+    "verify_command": "python scripts/verify-source-package.py releases/project-hub-0.2.0-source.zip",
+    "archive": "project-hub-0.2.0-source.zip",
+    "sha256": "a2c367981d9a03a8c4763db2ee7cf602239449e1e036f7b13d407db7628f1944",
+    "files": 1791,
+    "manifest_sha256": "0c2a52831d4cd8c51a3ce9cba7b554d51508a4f497e1d4fec907a0afeffb8df8"
+  },
+  "excluded": [
+    "runtime/",
+    ".env",
+    "*.sqlite3",
+    "attachments",
+    "backups/",
+    "releases/",
+    ".venv/",
+    "__pycache__/",
+    "staticfiles/",
+    "node_modules/",
+    "*.pem",
+    "*.key",
+    "*.p12"
+  ],
+  "verification": {
+    "acceptance": "project/ACCEPTANCE.md",
+    "walkthrough": "docs/q42-browser-acceptance.md + docs/verification.md 2026-11-04 (Q-43)",
+    "required_checks": "Q-44 PR checks on the same HEAD (9 required)",
+    "independent_review": "pending: re-review required on the final HEAD; previous review at 0ca5eaf failed on stale package digests, fixed by rebuilding at HEAD and by scripts/check_candidate_metadata.py (runs in Public hygiene + release workflow)"
+  },
+  "not_run": [
+    "real Docker/Compose install",
+    "production PostgreSQL backup/restore",
+    "TLS/domain/reverse proxy",
+    "L5 real environment/customer walkthrough"
+  ],
+  "blocked": [
+    "L5 real environment (P-02)"
+  ],
+  "notes": "No tag, GitHub Release, deployment or image upload was performed by this candidate PR."
+}
