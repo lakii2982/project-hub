@@ -60,10 +60,14 @@ class MicroScopeTests(TestCase):
         for label in ("工作台", "项目", "工时", "设置"):
             self.assertContains(page, label)
         for hidden in ("项目财务", "经营助手", "审批中心", "插件管理", "个人 Agent 接入",
-                       "通知中心", "到期提醒", "验收与收入", "应收与账龄", "人工成本池"):
+                       "通知中心", "验收与收入", "应收与账龄", "人工成本池"):
             self.assertNotContains(page, hidden)
         self.assertNotContains(page, 'href="/finance/"')
         self.assertNotContains(page, reverse("export-data", args=["projects"]))
+        # Q-41 intentionally adds the micro-only due list and CSV export entry points.
+        self.assertContains(page, reverse("due-list"))
+        self.assertContains(page, reverse("micro-exports"))
+        self.assertContains(page, "到期提醒")
         self.assertContains(page, reverse("settings"))
 
     def test_navigation_is_role_scoped(self):

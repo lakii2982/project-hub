@@ -84,15 +84,21 @@ def dashboard(request):
     alerts += alerts_for([p for p in projects if p not in financial_projects], include_finance=False)
     from pmo_plugins.expenses.services import dashboard_expense_facts
     from .business_dashboard import dashboard_snapshot, resolve_basis
+    from .scope import is_micro_scope
     basis = resolve_basis(request.GET.get("basis"))
     business = None
+    due = None
     if request.member.role in {"owner", "pm"}:
         # Q-33 read-only 收益/现金一屏；聚合只读，不改账本、审计或业务事实。
         business = dashboard_snapshot(request.member, basis=basis)
+        if is_micro_scope():
+            # Q-41 in-app due reminders: read-only, deduped per business fact, no delivery.
+            from .due_reminders import due_reminders
+            due = due_reminders(request.member)
     return render(request, "dashboard.html", {"nav": "dashboard", "metrics": metrics, "cards": cards[:8],
         "alerts": alerts[:8], "forecast_overdue": overdue_plan_totals(financial_projects), "cashflow": cash_forecast(financial_projects),
         "labor_gaps": weekly.missing_rate_gaps(request.member), "expense_facts": dashboard_expense_facts(request.member),
-        "business": business, "basis": basis,
+        "business": business, "basis": basis, "due": due,
         "today": timezone.localdate()})
 
 
@@ -728,6 +734,54 @@ def import_data(request, kind):
 def csv_safe(value):
     if isinstance(value, str) and value.lstrip().startswith(("=", "+", "-", "@", "\t", "\r", "\n")): return "'" + value
     return value
+
+
+@workspace_view
+@require_GET
+def micro_exports(request):
+    """Q-41 owner-facing CSV export index (micro scope only)."""
+    from .scope import is_micro_scope
+    if not is_micro_scope():
+        raise Http404()
+    if request.member.role != "owner":
+        raise PermissionDenied("简化导出仅向公司负责人开放")
+    from .simplified_exports import EXPORTS
+    return render(request, "micro_exports.html", {
+        "nav": "exports", "exports": EXPORTS, "today": timezone.localdate()})
+
+
+@workspace_view
+@require_GET
+def micro_export_download(request, kind):
+    """Q-41 deterministic CSV download; writes one audit event, no other writes."""
+    from .scope import is_micro_scope
+    if not is_micro_scope():
+        raise Http404()
+    if request.member.role != "owner":
+        raise PermissionDenied("简化导出仅向公司负责人开放")
+    from .simplified_exports import EXPORT_KINDS, build_export, export_csv_text
+    if kind not in EXPORT_KINDS:
+        raise Http404()
+    data = build_export(request.member, kind)
+    audit(request.member, "data.exported", request.member.organization,
+          {"kind": f"micro:{kind}", "rows": data["row_count"], "version": 1})
+    response = HttpResponse(export_csv_text(data), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{data["filename"]}"'
+    return response
+
+
+@workspace_view
+@require_GET
+def due_list(request):
+    """Q-41 read-only in-app due list (micro scope, owner/PM); no external delivery."""
+    from .scope import is_micro_scope
+    if not is_micro_scope():
+        raise Http404()
+    if request.member.role not in {"owner", "pm"}:
+        raise PermissionDenied("到期提醒仅向公司负责人和项目经理开放")
+    from .due_reminders import due_reminders
+    return render(request, "due.html", {
+        "nav": "due", "due": due_reminders(request.member), "today": timezone.localdate()})
 
 
 @workspace_view
