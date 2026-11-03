@@ -91,7 +91,7 @@ class Q34FinanceFixture(TestCase):
             occurred_on=cls.today - timedelta(days=12), expected_pay_on=cls.today + timedelta(days=5),
             note="Q34 外包支出", counterparty="供应商", token=uuid.uuid4())
         confirm_expense(cls.pm, cls.expense.pk)
-        record_payment(cls.pm, cls.expense.pk, amount_cents=200_000,
+        record_payment(cls.pm, cls.expense.pk, account=cls.account, amount_cents=200_000,
                        paid_on=cls.today - timedelta(days=3), note="Q34 首笔付款", token=uuid.uuid4())
         cls.pending_expense = register_expense(
             cls.pm, project=cls.project, category="software", amount_cents=300_000,

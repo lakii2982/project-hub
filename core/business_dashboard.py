@@ -5,8 +5,8 @@
 * 成本复用 core 项目账费用 + Q-35 简化人工成本（``project_summary``）。
 * 毛利 = 收入 − 成本；收入为 0 时毛利率无定义，不显示假 0。
 * 未收款 = 已开票 − 已收款（仅项目收款，不含显式非项目收款）。
-* 资金账户余额 = 期初 + 已收款 − 退款（Q-37 派生）；已确认支出的付款记录暂未
-  关联资金账户（Q-38 接入前），单列为缺口而不是假装已从账户扣除。
+* 资金账户余额 = 期初 + 已收款（退款负值） − 已付款（Q-38 账户关联的 Q-36 付款）；
+  Q-38 之前未关联账户的历史付款单列为缺口，不从账户余额假装扣除。
 * 所有函数只读：不写账本/审计，不修改业务事实。
 """
 from calendar import monthrange
@@ -125,8 +125,9 @@ def dashboard_snapshot(member, basis=None, today=None):
     # /billing/ shows the same company account balances to owner and PM, so Q-33 aligns.
     accounts = list(Account.objects.filter(organization=member.organization))
     account_total = sum(account_balance_cents(account) for account in accounts)
-    payment_unlinked_count = cash_payments.count()
-    payment_unlinked_amount = _sum(cash_payments)
+    unlinked_payments = cash_payments.filter(account__isnull=True)
+    payment_unlinked_count = unlinked_payments.count()
+    payment_unlinked_amount = _sum(unlinked_payments)
 
     expense_facts = dashboard_expense_facts(member) or {}
     legacy_expenses = legacy_expense_count(member)

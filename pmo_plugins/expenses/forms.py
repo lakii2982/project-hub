@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from core.forms import CATEGORIES, BaseForm
 from core.models import Project
+from pmo_plugins.billing.models import Account
 
 from .services import (ATTACHMENT_MAX_BYTES, ATTACHMENT_SUFFIXES, to_cents,
                        writable_projects)
@@ -80,6 +81,9 @@ class CorrectionForm(ExpenseFields):
 
 
 class PaymentForm(BaseForm):
+    account = forms.ModelChoiceField(
+        queryset=Account.objects.none(), label="资金账户", empty_label="请选择资金账户",
+        help_text="付款从该账户余额扣减（余额 = 期初 + 收款 − 付款）。")
     amount = forms.DecimalField(label="本次付款金额（元）", max_digits=14,
                                 decimal_places=2, min_value=Decimal("0.01"),
                                 widget=forms.NumberInput(attrs=MONEY))
@@ -88,6 +92,14 @@ class PaymentForm(BaseForm):
     note = forms.CharField(label="付款说明", max_length=240, required=False,
                            widget=forms.Textarea(attrs={"rows": 2}))
     submission_token = forms.UUIDField(widget=forms.HiddenInput, initial=uuid.uuid4)
+
+    def __init__(self, *args, member=None, **kwargs):
+        super().__init__(*args, member=member, **kwargs)
+        from .services import payment_accounts
+        accounts = payment_accounts(member) if member is not None else Account.objects.none()
+        self.fields["account"].queryset = accounts.order_by("id")
+        if not accounts.exists():
+            self.fields["account"].help_text = "还没有资金账户；请先在现金页新建账户再登记付款。"
 
     def amount_cents(self):
         return to_cents(self.cleaned_data["amount"])

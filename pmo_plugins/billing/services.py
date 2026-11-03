@@ -84,9 +84,16 @@ def _check_amount(cents, label):
 
 # ---------- 资金账户 ----------
 
+def account_paid_cents(account):
+    """Q-36 已关联该账户的付款合计（Q-38 接入；未关联账户的历史付款单列缺口）。"""
+    from pmo_plugins.expenses.models import ExpensePayment
+    return _sum(ExpensePayment.objects.filter(account=account))
+
+
 def account_balance_cents(account):
-    """余额 = 期初余额 + 已收款 − 已付款；Q-37 只有收款（退款为负值），付款待 Q-36。"""
-    return account.opening_balance_cents + _sum(account.receipts.all())
+    """余额 = 期初余额 + 已收款（退款负值） − 已付款（Q-36 账户关联）。派生值，不直接编辑。"""
+    return (account.opening_balance_cents + _sum(account.receipts.all())
+            - account_paid_cents(account))
 
 
 @transaction.atomic
@@ -111,6 +118,41 @@ def register_account(member, *, name, kind, opening_balance_cents, note, token=N
     audit(member, "billing.account.created", row, {"name": row.name, "kind": row.kind,
                                                    "opening_balance_cents": row.opening_balance_cents})
     return row
+
+
+@transaction.atomic
+def update_account(member, account_id, *, opening_balance_cents, active, version):
+    """Q-38 owner maintenance: only opening balance and active state; never the balance itself."""
+    org = lock_company(member)
+    billing_member(member)
+    require_write(member)
+    if member.role != "owner":
+        raise PermissionDenied("资金账户由公司负责人维护")
+    account = Account.objects.select_for_update().filter(pk=account_id).first()
+    if account is None or account.organization_id != org.pk:
+        raise ValidationError("资金账户不存在或无权访问")
+    if type(version) is not int or version != account.version:
+        raise ValidationError("资金账户已被更新，请刷新后重试")
+    if type(active) is not bool:
+        raise ValidationError("账户启停状态无效")
+    if (type(opening_balance_cents) is not int
+            or not -MAX_MONEY <= opening_balance_cents <= MAX_MONEY):
+        raise ValidationError("期初余额不能超过100亿元")
+    before = {"opening_balance_cents": account.opening_balance_cents,
+              "active": account.active, "version": account.version}
+    if (before["opening_balance_cents"] == opening_balance_cents
+            and before["active"] is active):
+        return account
+    account.opening_balance_cents = opening_balance_cents
+    account.active = active
+    account.version += 1
+    account.save(update_fields=["opening_balance_cents", "active", "version"])
+    audit(member, "billing.account.updated", account, {
+        "before": before,
+        "after": {"opening_balance_cents": opening_balance_cents, "active": active,
+                  "version": account.version},
+    })
+    return account
 
 
 # ---------- 发票 ----------
@@ -299,14 +341,16 @@ def refund_receipt(member, receipt_id, amount_cents, reason, token):
 # ---------- 只读聚合 ----------
 
 def project_totals(project):
+    from pmo_plugins.expenses.models import ExpensePayment
     invoices = Invoice.objects.filter(project=project)
     receipts = Receipt.objects.filter(project=project)
     invoiced = _sum(invoices)
     tax = _sum(invoices, "tax_cents")
     received = _sum(receipts)
+    paid = _sum(ExpensePayment.objects.filter(expense__project=project))
     return {"invoiced_cents": invoiced, "tax_cents": tax, "net_cents": invoiced - tax,
             "received_cents": received, "outstanding_cents": invoiced - received,
-            "payment_gap": True}
+            "paid_cents": paid, "cash_net_cents": received - paid}
 
 
 def project_billing_summary(member, project):
@@ -325,9 +369,15 @@ def account_rows(organization):
             Receipt.objects.filter(organization=organization).values("account_id")
             .annotate(total=Sum("amount_cents"))}
     rows = []
+    from pmo_plugins.expenses.models import ExpensePayment
+    paid = {row["account_id"]: int(row["total"] or 0) for row in
+            ExpensePayment.objects.filter(organization=organization, account__isnull=False)
+            .values("account_id").annotate(total=Sum("amount_cents"))}
     for account in Account.objects.filter(organization=organization):
         account.received_cents = sums.get(account.pk, 0)
-        account.balance_cents = account.opening_balance_cents + account.received_cents
+        account.paid_cents = paid.get(account.pk, 0)
+        account.balance_cents = (account.opening_balance_cents + account.received_cents
+                                 - account.paid_cents)
         rows.append(account)
     return rows
 
@@ -380,10 +430,12 @@ def billing_snapshot(member):
         received = receipt_sums.get(project.pk, 0)
         if not (invoiced or received):
             continue
+        totals = project_totals(project)
         project_rows.append({"project": project, "invoiced_cents": invoiced,
                              "tax_cents": tax, "net_cents": invoiced - tax,
-                             "received_cents": received,
-                             "outstanding_cents": invoiced - received})
+                             "received_cents": received, "paid_cents": totals["paid_cents"],
+                             "outstanding_cents": invoiced - received,
+                             "cash_net_cents": totals["cash_net_cents"]})
     accounts = account_rows(org)
     # 项目经理只聚合本人负责的项目；老板看全公司（含显式非项目收款）。
     invoices = Invoice.objects.filter(organization=org)
@@ -395,8 +447,16 @@ def billing_snapshot(member):
         if member.role == "owner" else 0
     non_project_count = receipts.filter(project__isnull=True).count() \
         if member.role == "owner" else 0
+    from pmo_plugins.expenses.models import ExpensePayment
+    payment_scope = ExpensePayment.objects.filter(organization=org)
+    if member.role != "owner":
+        payment_scope = payment_scope.filter(expense__project_id__in=project_ids)
+    unlinked_payments = payment_scope.filter(account__isnull=True)
     legacy = Document.objects.filter(project_id__in=project_ids, kind="receipt",
                                      status__in=["submitted", "approved"]).count()
+    legacy_payments = Document.objects.filter(
+        project_id__in=project_ids, kind="payment",
+        status__in=["submitted", "approved"], expense_payment_link__isnull=True).count()
     tax_unspecified = invoices.filter(tax_rate_bp__isnull=True, reverses__isnull=True,
                                       reversal__isnull=True).count()
     return {
@@ -412,7 +472,10 @@ def billing_snapshot(member):
         "non_project_received_cents": non_project_received,
         "invoice_rows": invoice_rows(member),
         "receipt_rows": receipt_rows(member),
-        "gaps": {"legacy_receipts": legacy, "payments_connected": False,
+        "gaps": {"legacy_receipts": legacy, "payments_connected": True,
+                 "unlinked_payment_count": unlinked_payments.count(),
+                 "unlinked_payment_cents": _sum(unlinked_payments),
+                 "legacy_payments": legacy_payments,
                  "tax_unspecified": tax_unspecified,
                  "non_project_receipts": non_project_count},
     }

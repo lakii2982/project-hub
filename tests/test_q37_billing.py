@@ -286,7 +286,7 @@ class BillingHttpTests(BillingFixture):
         page = self.client.get(reverse("billing"))
         self.assertEqual(page.status_code, 200)
         for text in ("登记发票", "登记收款", "资金账户", "未收款 = 已开票 − 已收款",
-                     "付款未接入", "还没有发票", "还没有资金账户", "新建资金账户"):
+                     "付款已接入资金账户（Q-38）", "还没有发票", "还没有资金账户", "新建资金账户"):
             self.assertContains(page, text)
         self.assertIn("billing/billing.html", [t.name for t in page.templates])
 

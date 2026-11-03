@@ -85,8 +85,8 @@ class DashboardFixture(TestCase):
             note="演练外包费用", counterparty="演练供应商", token=uuid.uuid4())
         expenses.confirm_expense(cls.pm, cls.expense.pk)
         cls.payment = expenses.record_payment(
-            cls.pm, cls.expense.pk, amount_cents=100_000, paid_on=cls.today,
-            note="第一笔付款", token=uuid.uuid4())
+            cls.pm, cls.expense.pk, account=cls.account, amount_cents=100_000,
+            paid_on=cls.today, note="第一笔付款", token=uuid.uuid4())
         # Q-35 missing-rate gap: a simplified timesheet with no cost rate stays unpriced.
         cls.unpriced_employee = Employee.objects.create(
             organization=cls.org, name="无费率成员", title="工程师")
@@ -123,10 +123,12 @@ class SnapshotTests(DashboardFixture):
                          billing_totals["outstanding_cents"])
         self.assertEqual(snapshot["cash"]["account_total_cents"],
                          billing_totals["account_total_cents"])
-        self.assertEqual(snapshot["cash"]["account_total_cents"], 1_450_000)
-        self.assertEqual(snapshot["cash"]["payment_unlinked_count"], 1)
-        self.assertEqual(snapshot["cash"]["payment_unlinked_cents"],
-                         ExpensePayment.objects.aggregate(total=Sum("amount_cents"))["total"])
+        self.assertEqual(snapshot["cash"]["account_total_cents"], 1_350_000)
+        # Q-38: the payment is linked to the funding account and deducted from its balance.
+        self.assertEqual(snapshot["cash"]["payment_unlinked_count"], 0)
+        self.assertEqual(snapshot["cash"]["payment_unlinked_cents"], 0)
+        self.assertEqual(sum(account.balance_cents for account in billing_snapshot(self.owner)["accounts"]),
+                         1_350_000)
 
     def test_revenue_basis_invoice_default_and_receipt_switch(self):
         self.assertEqual(resolve_basis(None), BASIS_INVOICE)
@@ -162,9 +164,9 @@ class SnapshotTests(DashboardFixture):
         self.assertGreaterEqual(gaps["no_receipt_count"], 1)
         self.assertGreaterEqual(gaps["labor_gap_count"], 1)
         self.assertEqual(gaps["legacy_receipt_count"], 1)
-        self.assertEqual(gaps["payment_unlinked_count"], 1)
+        self.assertEqual(gaps["payment_unlinked_count"], 0)
         self.assertEqual(gaps["non_project_receipt_count"], 1)
-        self.assertGreaterEqual(snapshot["cash"]["payment_unlinked_cents"], 100_000)
+        self.assertEqual(snapshot["cash"]["payment_unlinked_cents"], 0)
 
     def test_pm_scope_is_own_projects_and_billing_account_visibility_matches(self):
         snapshot = dashboard_snapshot(self.pm, today=self.today)
@@ -172,7 +174,7 @@ class SnapshotTests(DashboardFixture):
         self.assertEqual(codes, {"Q33-001", "Q33-003"})
         self.assertEqual(snapshot["ranking"][0]["project"].code, "Q33-001")
         # /billing/ exposes the same company account balances to owner and PM; Q-33 aligns.
-        self.assertEqual(snapshot["cash"]["account_total_cents"], 1_450_000)
+        self.assertEqual(snapshot["cash"]["account_total_cents"], 1_350_000)
         # PM does not see the other PM's project or non-project receipts in monthly cash.
         self.assertEqual(snapshot["month"]["received_cents"], 400_000)
 
@@ -199,7 +201,7 @@ class SnapshotTests(DashboardFixture):
         codes = {row["project"].code for row in snapshot["rows"]}
         self.assertNotIn("Q33-F01", codes)
         self.assertEqual(snapshot["month"]["invoiced_cents"], 1_500_000)
-        self.assertEqual(snapshot["cash"]["account_total_cents"], 1_450_000)
+        self.assertEqual(snapshot["cash"]["account_total_cents"], 1_350_000)
 
     def test_taxed_invoice_regression_uses_net_revenue_and_monthly_invoiced(self):
         # Explicit reviewer probe: invoice 1,060,000 with 60,000 tax → revenue 1,000,000.
@@ -326,8 +328,8 @@ class SeedDemoBillingTests(TestCase):
         self.assertEqual(snapshot["month"]["received_cents"], 9_100_000)
         self.assertEqual(snapshot["month"]["spent_cents"], 700_000)
         self.assertEqual(snapshot["outstanding"]["outstanding_cents"], 13_000_000)
-        self.assertEqual(snapshot["cash"]["account_total_cents"], 17_100_000)
+        self.assertEqual(snapshot["cash"]["account_total_cents"], 15_400_000)
         self.assertEqual(snapshot["gaps"]["labor_gap_count"], 1)
-        self.assertGreaterEqual(snapshot["gaps"]["payment_unlinked_count"], 1)
+        self.assertEqual(snapshot["gaps"]["payment_unlinked_count"], 0)
         self.assertGreater(snapshot["gaps"]["historical_cost_cents"], 0)
         self.assertEqual(snapshot["gaps"]["legacy_payment_count"], 3)

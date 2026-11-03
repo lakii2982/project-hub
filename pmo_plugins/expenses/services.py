@@ -146,6 +146,27 @@ def _locked_project(member, project):
     return locked
 
 
+def payment_accounts(member):
+    """Active funding accounts of the member's company; owner/PM may choose any."""
+    member = _writer(member)
+    from pmo_plugins.billing.models import Account
+    return Account.objects.filter(organization=member.organization, active=True)
+
+
+def _locked_payment_account(member, account):
+    """Validate the funding account inside the same lock; never trust a posted id."""
+    from pmo_plugins.billing.models import Account
+    account_id = getattr(account, "pk", account)
+    row = None
+    if account_id is not None:
+        row = Account.objects.select_for_update().filter(pk=account_id).first()
+    if row is None or row.organization_id != member.organization_id:
+        raise ValidationError("请选择当前公司的启用资金账户")
+    if not row.active:
+        raise ValidationError("资金账户已停用，请选择其他启用账户")
+    return row
+
+
 def _locked_expense(member, pk):
     member = _writer(member)
     # PostgreSQL rejects FOR UPDATE on the nullable side of an outer join, so lock only
@@ -524,9 +545,10 @@ def correct_expense(member, expense_id, *, category, amount_cents, occurred_on,
 
 
 @transaction.atomic
-def record_payment(member, expense_id, *, amount_cents, paid_on, note="", token):
+def record_payment(member, expense_id, *, account, amount_cents, paid_on, note="", token):
     org = lock_company(member)
     member = _writer(member)
+    account = _locked_payment_account(member, account)
     document = _locked_expense(member, expense_id)
     _require_detail(document)
     if document.status not in {Document.Status.SUBMITTED, Document.Status.APPROVED}:
@@ -541,7 +563,8 @@ def record_payment(member, expense_id, *, amount_cents, paid_on, note="", token)
     existing = ExpensePayment.objects.filter(token=token).select_related("expense").first()
     if existing is not None:
         if (existing.expense_id != document.pk or existing.amount_cents != amount
-                or existing.paid_on != paid_on or existing.note != note):
+                or existing.paid_on != paid_on or existing.note != note
+                or existing.account_id != account.pk):
             raise ValidationError("提交编号已被使用，请刷新后核对")
         return existing
     if Document.objects.filter(token=token).exists():
@@ -563,7 +586,7 @@ def record_payment(member, expense_id, *, amount_cents, paid_on, note="", token)
     payment_document.save()
     payment = ExpensePayment.objects.create(
         organization=org, expense=document, payment_document=payment_document,
-        amount_cents=amount, paid_on=paid_on, note=note, token=token,
+        amount_cents=amount, paid_on=paid_on, account=account, note=note, token=token,
         created_by=member.user)
     LedgerEntry.objects.create(
         project=document.project, book=LedgerEntry.Book.CASH_OUT, amount_cents=amount,
@@ -573,6 +596,7 @@ def record_payment(member, expense_id, *, amount_cents, paid_on, note="", token)
     audit(member, "expense.payment_recorded", payment, {
         "expense_id": document.pk, "payment_document_id": payment_document.pk,
         "amount_cents": amount, "paid_on": paid_on.isoformat(),
-        "paid_total_cents": paid + amount, "unpaid_cents": unpaid,
+        "account_id": account.pk, "paid_total_cents": paid + amount,
+        "unpaid_cents": unpaid,
     })
     return payment

@@ -101,7 +101,7 @@
         <div><span>未收款</span><strong>¥ {{ billing.outstanding_cents|money }}</strong></div>
         <p>项目现金净额 = 已收款 − 已付款；付款由费用与付款记录接入。</p>
       </div>
-      <div class="balance-strip"><span>项目现金净额 <strong>¥ {{ summary.cash_net_cents|money }}</strong></span><span class="muted">已开票含税；税额来自可选税率，不猜测</span></div>
+      <div class="balance-strip"><span>项目现金净额 <strong>¥ {{ billing.cash_net_cents|money }}</strong></span><span class="muted">已收款 − 已付款（费用付款已计入，账户关联见现金页）；已开票含税，税额来自可选税率，不猜测</span></div>
     </div>
     {% endif %}
     {% if micro_scope and expenses %}
