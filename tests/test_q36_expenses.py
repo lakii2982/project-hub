@@ -25,6 +25,8 @@ from core.models import (AuditEvent, Document, LedgerEntry, Membership, Organiza
                          Project, ProjectMember)
 from core.reporting import project_summary
 from core.services import reverse as reverse_record
+from pmo_plugins.billing.models import Account
+from pmo_plugins.billing.services import register_account
 from pmo_plugins.expenses.models import ExpenseDetail, ExpensePayment
 from pmo_plugins.expenses.services import (cash_plan, correct_expense, dashboard_expense_facts,
                                            confirm_expense, expense_snapshot,
@@ -58,6 +60,8 @@ class ExpenseFixture(TestCase):
         cls.other_project = cls.make_project(cls.org, cls.other_pm, "Q36-002", "他人项目")
         cls.foreign_project = cls.make_project(cls.foreign_org, cls.foreign, "F-001", "外部项目")
         ProjectMember.objects.create(project=cls.project, member=cls.member)
+        cls.account = register_account(cls.owner, name="费用测试账户", kind="bank",
+                                       opening_balance_cents=0, note="", token=uuid.uuid4())
         cls.tokens = []
 
     @classmethod
@@ -91,9 +95,9 @@ class ExpenseFixture(TestCase):
 
     def pay(self, document, member=None, amount_cents=400_000, paid_on=None, note="首笔付款",
             token=None):
-        return record_payment(member or self.owner, document.pk, amount_cents=amount_cents,
-                              paid_on=paid_on or self.today, note=note,
-                              token=token or self.token())
+        return record_payment(member or self.owner, document.pk, account=self.account,
+                              amount_cents=amount_cents, paid_on=paid_on or self.today,
+                              note=note, token=token or self.token())
 
     def ledger(self, book="cost", document=None):
         qs = LedgerEntry.objects.filter(project=self.project, book=book)
@@ -354,7 +358,8 @@ class PageAndConsistencyTests(ExpenseFixture):
         self.assertEqual(document.status, "approved")
         self.assertEqual(self.ledger().count(), 1)
         payment = self.client.post(reverse("expense-payment", args=[document.pk]), {
-            "amount": "4000.00", "paid_on": self.today.isoformat(), "note": "第一笔",
+            "account": self.account.pk, "amount": "4000.00",
+            "paid_on": self.today.isoformat(), "note": "第一笔",
             "submission_token": str(uuid.uuid4()), "project": self.project.pk})
         self.assertEqual(payment.status_code, 302)
         self.assertEqual(ExpensePayment.objects.filter(expense=document).count(), 1)
@@ -396,7 +401,8 @@ class PageAndConsistencyTests(ExpenseFixture):
         posts = {
             reverse("expense-confirm", args=[foreign.pk]): {},
             reverse("expense-payment", args=[foreign.pk]): {
-                "amount": "1.00", "paid_on": self.today.isoformat(),
+                "account": self.account.pk, "amount": "1.00",
+                "paid_on": self.today.isoformat(),
                 "submission_token": str(uuid.uuid4())},
         }
         for url, payload in posts.items():
@@ -585,8 +591,9 @@ class LegacyExpenseReadOnlyTests(ExpenseFixture):
         with self.assertRaises(ValidationError):
             confirm_expense(self.owner, legacy.pk)
         with self.assertRaises(ValidationError):
-            record_payment(self.owner, legacy.pk, amount_cents=100_000,
-                           paid_on=self.today, note="legacy", token=self.token())
+            record_payment(self.owner, legacy.pk, account=self.account,
+                           amount_cents=100_000, paid_on=self.today, note="legacy",
+                           token=self.token())
         with self.assertRaises(ValidationError):
             correct_expense(self.owner, legacy.pk, category="vendor", amount_cents=500_000,
                             occurred_on=self.today, expected_pay_on=None, note="legacy",
@@ -595,8 +602,8 @@ class LegacyExpenseReadOnlyTests(ExpenseFixture):
         posts = {
             reverse("expense-confirm", args=[legacy.pk]): {},
             reverse("expense-payment", args=[legacy.pk]): {
-                "amount": "1000.00", "paid_on": self.today.isoformat(),
-                "submission_token": str(uuid.uuid4())},
+                "account": self.account.pk, "amount": "1000.00",
+                "paid_on": self.today.isoformat(), "submission_token": str(uuid.uuid4())},
             reverse("expense-correct", args=[legacy.pk]): {
                 "category": "vendor", "amount": "5000.00",
                 "occurred_on": self.today.isoformat(), "note": "legacy",

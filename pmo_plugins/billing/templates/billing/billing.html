@@ -19,9 +19,9 @@
   <article class="metric featured"><span class="metric-label">未收款</span><strong><small>¥</small> {{ snapshot.outstanding_cents|money }}</strong><p>已开票 − 已收款；负数表示预收/超额收款</p></article>
 </div>
 <div class="balance-strip">
-  <span>资金账户余额（期初 + 收款） <strong>¥ {{ snapshot.account_total_cents|money }}</strong></span>
+  <span>资金账户余额（期初 + 收款 − 付款） <strong>¥ {{ snapshot.account_total_cents|money }}</strong></span>
   <span>资金账户 <strong>{{ snapshot.accounts|length }}</strong> 个</span>
-  <span class="muted">项目现金净额 = 已收款 − 已付款；付款由 Q-36「费用与付款」接入，接入前显示缺口，不用 0 冒充净额。</span>
+  <span class="muted">项目现金净额 = 已收款 − 已付款；付款由 Q-36「费用与付款」登记并关联资金账户（Q-38）。</span>
 </div>
 
 <section class="panel section-gap">
@@ -37,7 +37,7 @@
         <td class="numeric">¥ {{ row.tax_cents|money }}</td>
         <td class="numeric">¥ {{ row.received_cents|money }}</td>
         <td class="numeric">¥ {{ row.outstanding_cents|money }}</td>
-        <td><span class="badge warning">缺口</span><span class="cell-sub">付款未接入（Q-36）</span></td>
+        <td class="numeric">¥ {{ row.cash_net_cents|money }}<span class="cell-sub">已收款 − 已付款</span></td>
       </tr>
       {% empty %}<tr><td colspan="6" class="table-empty">还没有开票或收款记录。先用下方表单登记第一张发票。</td></tr>{% endfor %}
     </tbody>
@@ -81,7 +81,7 @@
   <div class="panel-heading"><div><h2>资金账户</h2><p>余额 = 期初余额 + 已收款（退款负值） − 已付款；不提供直接改余额</p></div><span class="badge neutral">派生余额</span></div>
   <div class="table-scroll"><table>
     <caption class="sr-only">资金账户与派生余额</caption>
-    <thead><tr><th>账户</th><th>类型</th><th>期初余额</th><th>已收款</th><th>派生余额</th><th>状态</th></tr></thead>
+    <thead><tr><th>账户</th><th>类型</th><th>期初余额</th><th>已收款</th><th>已付款</th><th>派生余额</th><th>状态</th></tr></thead>
     <tbody>
       {% for account in snapshot.accounts %}
       <tr>
@@ -89,6 +89,7 @@
         <td>{{ account.get_kind_display }}</td>
         <td class="numeric">¥ {{ account.opening_balance_cents|money }}</td>
         <td class="numeric">¥ {{ account.received_cents|money }}</td>
+        <td class="numeric">¥ {{ account.paid_cents|money }}</td>
         <td class="numeric">¥ {{ account.balance_cents|money }}</td>
         <td>{% if account.active %}<span class="badge success">启用</span>{% else %}<span class="badge neutral">停用</span>{% endif %}</td>
       </tr>
@@ -180,7 +181,9 @@
   <div class="panel-heading"><div><h2>数据缺口</h2><p>缺数据显示缺口，不用 0 冒充</p></div></div>
   <div class="panel-body">
     <ul class="rule-list">
-      <li><strong>付款未接入：项目现金净额暂不可算</strong><p>项目现金净额 = 已收款 − 已付款；付款记录由 Q-36「费用与付款」交付后接入，当前项目表显示缺口而不是假净额。</p></li>
+      <li><strong>付款已接入资金账户（Q-38）</strong><p>项目现金净额 = 已收款 − 已付款；资金账户余额 = 期初余额 + 已收款 − 已付款，付款未关联账户的历史记录单列缺口，不用 0 冒充净额。</p></li>
+      {% if snapshot.gaps.unlinked_payment_count %}<li><strong>历史付款 {{ snapshot.gaps.unlinked_payment_count }} 笔未关联资金账户</strong><p>¥ {{ snapshot.gaps.unlinked_payment_cents|money }} 未从账户余额扣减；历史记录只读保留，不重算。</p></li>{% endif %}
+      {% if snapshot.gaps.legacy_payments %}<li><strong>历史专业流程付款 {{ snapshot.gaps.legacy_payments }} 笔</strong><p>旧财务流程付款单据未接入极简资金账户，按停用不删历史原则只读保留。</p></li>{% endif %}
       {% if snapshot.gaps.legacy_receipts %}<li><strong>历史收款 {{ snapshot.gaps.legacy_receipts }} 笔未接入</strong><p>来自旧财务流程的收款单据没有资金账户与发票归属，未计入本页已收款和账户余额；按停用不删历史原则保留只读。</p></li>{% endif %}
       {% if snapshot.gaps.tax_unspecified %}<li><strong>税率未填 {{ snapshot.gaps.tax_unspecified }} 张</strong><p>未填税率的发票没有拆分税额，系统不猜测税率；请作废后按真实税率重新开票。</p></li>{% endif %}
       {% if snapshot.gaps.non_project_receipts %}<li><strong>非项目收款 {{ snapshot.gaps.non_project_receipts }} 笔</strong><p>显式非项目收款计入资金账户余额，但不计入任何项目现金净额。</p></li>{% endif %}

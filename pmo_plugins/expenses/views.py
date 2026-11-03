@@ -54,6 +54,7 @@ def _page(request, member, *, project=None, expense_form=None, status=200):
         "expense_form": expense_form or ui.ExpenseForm(member=member, project=project),
         "categories": CATEGORIES,
         "can_write": member.role in services.WRITER_ROLES,
+        "payment_accounts": services.payment_accounts(member),
         "today": timezone.localdate(),
     }, status=status)
 
@@ -146,7 +147,8 @@ def expense_payment(request, pk):
         return redirect(_back(request))
     try:
         services.record_payment(
-            member, pk, amount_cents=form.amount_cents(),
+            member, pk, account=form.cleaned_data["account"],
+            amount_cents=form.amount_cents(),
             paid_on=form.cleaned_data["paid_on"], note=form.cleaned_data.get("note", ""),
             token=form.cleaned_data["submission_token"])
         messages.success(request, "付款已登记：只计现金、不会重复计成本；未付余额已重算")

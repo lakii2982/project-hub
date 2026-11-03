@@ -3,6 +3,7 @@ from django.urls import path, register_converter
 from django.contrib.auth import views as auth
 from core import views, api, plugin_views, notification_views
 from pmo_plugins.billing import views as billing_views
+from pmo_plugins.cashbook import views as cash_views
 from pmo_plugins.expenses import views as expense_views
 
 class SafeIdConverter:
@@ -54,6 +55,9 @@ urlpatterns = [
     path("expenses/<pid:pk>/confirm/", expense_views.expense_confirm, name="expense-confirm"),
     path("expenses/<pid:pk>/correct/", expense_views.expense_correct, name="expense-correct"),
     path("expenses/<pid:pk>/payment/", expense_views.expense_payment, name="expense-payment"),
+    path("cash/", cash_views.cash, name="cash"),
+    path("cash/accounts/save/", cash_views.account_create, name="cash-account-create"),
+    path("cash/accounts/<pid:pk>/update/", cash_views.account_update, name="cash-account-update"),
     path("time/", views.timesheets, name="timesheets"),
     path("time/week/", views.timesheets_week, name="timesheets-week"),
     path("assistant/", views.assistant, name="assistant"),

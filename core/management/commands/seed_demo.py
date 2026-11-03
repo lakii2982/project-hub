@@ -120,6 +120,12 @@ class Command(BaseCommand):
                 review(owner, "document", acceptance.pk, "approve", "客户确认记录已核对")
                 project.refresh_from_db()
                 transition(pm, project.pk, "warranty", project.version, "客户验收完成，进入约定支持期")
+        # Q-38 演示：资金账户必须在付款前存在（付款只从关联账户扣减现金）。
+        from pmo_plugins.billing.services import register_account
+        bank = register_account(owner, name="演练基本户", kind="bank",
+            opening_balance_cents=8_000_000, note="演练：期初余额", token=uuid.uuid4())
+        wallet = register_account(owner, name="演练支付宝", kind="alipay",
+            opening_balance_cents=0, note="演练：线上收款", token=uuid.uuid4())
         # Q-36 演示：简明费用流程的登记/确认/分次付款与未付计划。
         from pmo_plugins.expenses.services import (confirm_expense, record_payment,
                                                   register_expense)
@@ -130,9 +136,11 @@ class Command(BaseCommand):
             note="外包开发首期（演练）", counterparty="演练外包供应商",
             token=uuid.uuid4())
         confirm_expense(pm, split.pk)
-        record_payment(pm, split.pk, amount_cents=1_000_000, paid_on=today - timedelta(days=5),
+        record_payment(pm, split.pk, account=bank, amount_cents=1_000_000,
+                       paid_on=today - timedelta(days=5),
                        note="分次付款第一笔（演练）", token=uuid.uuid4())
-        record_payment(pm, split.pk, amount_cents=600_000, paid_on=today - timedelta(days=2),
+        record_payment(pm, split.pk, account=bank, amount_cents=600_000,
+                       paid_on=today - timedelta(days=2),
                        note="分次付款第二笔（演练）", token=uuid.uuid4())
         unpaid = register_expense(pm, project=demo_project, category="travel",
             amount_cents=468_000, occurred_on=today - timedelta(days=12),
@@ -145,13 +153,8 @@ class Command(BaseCommand):
             expected_pay_on=today + timedelta(days=9),
             note="云服务续费待确认（演练）", counterparty="演练云服务商",
             token=uuid.uuid4())
-        # Q-33 演示：资金账户、开票与收款（首部分收款、无收款、未开票与显式非项目收款）。
-        from pmo_plugins.billing.services import (register_account, register_invoice,
-                                                  register_receipt)
-        bank = register_account(owner, name="演练基本户", kind="bank",
-            opening_balance_cents=8_000_000, note="演练：期初余额", token=uuid.uuid4())
-        wallet = register_account(owner, name="演练支付宝", kind="alipay",
-            opening_balance_cents=0, note="演练：线上收款", token=uuid.uuid4())
+        # Q-33 演示：开票与收款（首部分收款、无收款、未开票与显式非项目收款）。
+        from pmo_plugins.billing.services import register_invoice, register_receipt
         first_invoice = register_invoice(owner, project=demo_projects[0],
             number="DEMO-INV-26001", amount_cents=12_000_000, tax_rate_bp=600,
             issued_on=today, contract_reference="HT-2026-001", note="演练：首期开票",
@@ -175,7 +178,7 @@ class Command(BaseCommand):
             invoice=None, amount_cents=500_000, received_on=today,
             counterparty="其他零星客户", reference="DEMO-RCPT-26003",
             note="演练：显式非项目收款", token=uuid.uuid4())
-        record_payment(pm, split.pk, amount_cents=100_000, paid_on=today,
+        record_payment(pm, split.pk, account=bank, amount_cents=100_000, paid_on=today,
                        note="演练：本月付款（用于现金支出演示）", token=uuid.uuid4())
         # Q-33 缺口演示：新成员还没有成本费率，周填报工时保持"待定价"缺口，不计假零成本。
         from core.weekly_time import save_week, week_start_for

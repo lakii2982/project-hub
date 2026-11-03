@@ -46,6 +46,11 @@ class ExpensePayment(models.Model):
         related_name="expense_payment_link")
     amount_cents = models.PositiveBigIntegerField("付款金额（分）")
     paid_on = models.DateField("付款日期")
+    # Q-38: cash must leave a funding account. Nullable only for rows written before
+    # Q-38; legacy rows stay readable and are surfaced as a gap, never restated.
+    account = models.ForeignKey(
+        "billing.Account", on_delete=models.PROTECT, null=True, blank=True,
+        related_name="expense_payments", verbose_name="资金账户")
     note = models.CharField("付款说明", max_length=240, blank=True)
     token = models.UUIDField(unique=True)
     created_by = models.ForeignKey(

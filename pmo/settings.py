@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "pmo_plugins.insights.apps.InsightsConfig",
     "pmo_plugins.billing.apps.BillingConfig",
     "pmo_plugins.expenses.apps.ExpensesConfig",
+    "pmo_plugins.cashbook.apps.CashbookConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware", "whitenoise.middleware.WhiteNoiseMiddleware",
