@@ -1,5 +1,6 @@
 from .access import current_membership, visible_projects
 from .models import Timesheet, Document, CashPlan
+from .scope import is_micro_scope, micro_navigation
 from django.db.models import Q
 
 def workspace(request):
@@ -12,6 +13,7 @@ def workspace(request):
     from .plugin_runtime import plugin_catalog, is_enabled
     flags = {spec["id"]: is_enabled(member.organization, spec["id"]) for spec in plugin_catalog()}
     return {"plugin_flags": flags, "membership": member, "organization": member.organization, "pending_count": count,
+            "micro_scope": is_micro_scope(), "micro_nav": micro_navigation(member),
             "is_manager": member.role in {"owner", "pm", "finance"},
             "is_finance": member.role in {"owner", "finance"}, "is_owner": member.role == "owner",
             "is_viewer": member.role == "auditor"}

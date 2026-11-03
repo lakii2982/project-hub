@@ -1,0 +1,3 @@
+{% load static %}<nav class="main-nav" aria-label="主导航">
+{% for item in micro_nav %}<a href="{{ item.url }}" {% if nav == item.key %}class="active" aria-current="page"{% endif %}><svg class="nav-icon" aria-hidden="true"><use href="{% static 'icons.svg' %}#{{ item.icon }}"></use></svg>{{ item.label }}</a>
+{% endfor %}</nav>

@@ -1,7 +1,9 @@
 """Explicit local defaults; production refuses insecure secrets and demo mode."""
 import os
+import sys
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
+from core.scope import resolve_scope
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PRODUCTION = os.getenv("PMO_ENV", "development") == "production"
@@ -24,6 +26,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware", "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware", "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.MicroScopeMiddleware",
     "axes.middleware.AxesMiddleware",
 ]
 ROOT_URLCONF = "pmo.urls"
@@ -85,6 +88,12 @@ if PRODUCTION:
     SECURE_HSTS_PRELOAD = True
     # Only the bundled reverse proxy can reach the container port.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# 1.0 产品范围开关：micro = 小微企业简化版入口（默认）；full = 专业能力全开。
+# 保留的专业能力回归套件按 full 范围运行；微版门控由 tests/test_micro_scope.py
+# 用 override_settings(PMO_SCOPE="micro") 覆盖验证，二者不互相冒充。
+# resolve_scope 对空值/拼写错误 fail-closed 回落到 micro。
+PMO_SCOPE = resolve_scope(os.getenv("PMO_SCOPE"), "test" in sys.argv[1:2])
+
 AI_ENABLED = os.getenv("PMO_AI_ENABLED", "0") == "1"
 AI_BASE_URL = os.getenv("PMO_AI_BASE_URL", "")
 AI_MODEL = os.getenv("PMO_AI_MODEL", "deepseek-v4.1-flash")

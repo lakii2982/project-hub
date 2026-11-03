@@ -15,6 +15,7 @@ from django.db import transaction
 from django.utils import timezone
 from .models import Organization, PluginState, DomainEvent, EventDelivery
 from .services import lock_company, audit
+from .scope import MICRO_ENABLED_PLUGINS, is_micro_scope
 
 logger = logging.getLogger(__name__)
 KERNEL_API = "1.0"
@@ -108,6 +109,9 @@ def is_enabled(organization, plugin_id, _seen=None, *, registry=None):
     registry = registry if registry is not None else get_registry()
     spec = registry.manifests.get(plugin_id)
     if not spec: return False
+    # 1.0 小微版把移出范围的业务插件整体视为停用；表、迁移、历史与审计保留。
+    if is_micro_scope() and plugin_id not in MICRO_ENABLED_PLUGINS:
+        return False
     seen = set(_seen or ())
     if plugin_id in seen: return False
     seen.add(plugin_id)

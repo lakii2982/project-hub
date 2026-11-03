@@ -17,6 +17,8 @@ services:
     build: .
     environment: &pmo_environment
       PMO_ENV: production
+      # 1.0 默认小微版入口；需要专业能力回归时显式设为 full。
+      PMO_SCOPE: ${PMO_SCOPE:-micro}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?请设置至少40字符的随机密钥}
       DJANGO_ALLOWED_HOSTS: ${PMO_DOMAIN:?请设置系统域名},127.0.0.1,localhost
       DJANGO_CSRF_TRUSTED_ORIGINS: https://${PMO_DOMAIN}
