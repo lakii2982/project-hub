@@ -133,9 +133,11 @@ def dashboard_snapshot(member, basis=None, today=None):
     legacy_receipts = Document.objects.filter(
         project_id__in=project_ids, kind=Document.Kind.RECEIPT,
         status__in=[Document.Status.SUBMITTED, Document.Status.APPROVED]).count()
+    # 历史专业付款只统计旧流程单据；Q-36 简化付款有 expense_payment_link，不能冒充历史。
     legacy_payments = Document.objects.filter(
         project_id__in=project_ids, kind=Document.Kind.PAYMENT,
-        status__in=[Document.Status.SUBMITTED, Document.Status.APPROVED]).count()
+        status__in=[Document.Status.SUBMITTED, Document.Status.APPROVED],
+        expense_payment_link__isnull=True).count()
 
     rows = []
     historical_cost_total = 0

@@ -214,6 +214,31 @@ class SnapshotTests(DashboardFixture):
         # 未收款 remains the cash/gross basis (invoiced − received).
         self.assertEqual(snapshot["outstanding"]["outstanding_cents"], 1_160_000)
 
+    def test_q36_payment_is_not_counted_as_historical_professional_payment(self):
+        # Fixture has one Q-36 ExpensePayment and its payment Document; it is 1.0 cash,
+        # never a historical professional payment.
+        self.assertEqual(dashboard_snapshot(self.owner, today=self.today)["gaps"]["legacy_payment_count"], 0)
+        Document.objects.create(
+            project=self.project, kind=Document.Kind.PAYMENT, title="历史专业付款",
+            amount_cents=150_000, occurred_on=self.today, reference="Q33-LEGACY-PAY",
+            submitted_by=self.owner.user, status="approved")
+        self.assertEqual(dashboard_snapshot(self.owner, today=self.today)["gaps"]["legacy_payment_count"], 1)
+
+    def test_uninvoiced_boundary_uses_net_revenue(self):
+        # Gross > 0 but fully taxed (net 0) is still "uninvoiced income"; margin undefined.
+        Invoice.objects.create(
+            organization=self.org, project=self.uninvoiced_project, number="Q33-EDGE-NET-0",
+            amount_cents=100_000, tax_cents=100_000, tax_rate_bp=None, issued_on=self.today,
+            token=uuid.uuid4(), created_by=self.owner.user)
+        snapshot = dashboard_snapshot(self.owner, today=self.today)
+        row = {item["project"].code: item for item in snapshot["rows"]}["Q33-003"]
+        self.assertEqual(row["invoiced_gross_cents"], 100_000)
+        self.assertEqual(row["invoiced_net_cents"], 0)
+        self.assertEqual(row["revenue_cents"], 0)
+        self.assertTrue(row["uninvoiced"])
+        self.assertTrue(row["margin_undefined"])
+        self.assertIsNone(row["margin_bp"])
+
     def test_margin_excludes_historical_professional_cost_and_lists_gap(self):
         legacy = Document.objects.create(
             project=self.project, kind=Document.Kind.EXPENSE, title="历史专业费用",
@@ -305,4 +330,4 @@ class SeedDemoBillingTests(TestCase):
         self.assertEqual(snapshot["gaps"]["labor_gap_count"], 1)
         self.assertGreaterEqual(snapshot["gaps"]["payment_unlinked_count"], 1)
         self.assertGreater(snapshot["gaps"]["historical_cost_cents"], 0)
-        self.assertGreaterEqual(snapshot["gaps"]["legacy_payment_count"], 1)
+        self.assertEqual(snapshot["gaps"]["legacy_payment_count"], 3)
