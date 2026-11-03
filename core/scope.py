@@ -8,8 +8,21 @@ from django.conf import settings
 from django.urls import reverse
 
 MICRO_SCOPE = "micro"
-
+VALID_PRODUCT_SCOPES = frozenset({"micro", "full"})
 MICRO_ENABLED_PLUGINS = frozenset()
+
+
+def resolve_scope(value, testing=False):
+    """Resolve PMO_SCOPE fail-closed: only exact ``micro``/``full`` are trusted.
+
+    Unset means the 1.0 micro default. Empty/typo values must never open the
+    professional UI, so anything else falls back to ``micro``. The test
+    command runs the retained professional regression suite in ``full`` unless
+    the caller sets an explicit valid value.
+    """
+    if value is None:
+        return "full" if testing else MICRO_SCOPE
+    return value if value in VALID_PRODUCT_SCOPES else MICRO_SCOPE
 
 # 1.0 保留入口（docs/product-scope.md §8.1）。客户与合同/费用/开票与收款/现金
 # 的页面由 Q-36/Q-37/Q-38 交付后加入白名单；未交付前不渲染死链。
@@ -34,6 +47,10 @@ MICRO_DISABLED_PREFIXES = (
     "/notifications/",
     "/plugins/",
     "/connections/",
+    "/review/",
+    "/reverse/",
+    "/export/",
+    "/import/invoicing/",
 )
 
 
@@ -42,7 +59,8 @@ def product_scope():
 
 
 def is_micro_scope():
-    return product_scope() == MICRO_SCOPE
+    # Fail closed: only the exact full scope opens the professional capability set.
+    return product_scope() != "full"
 
 
 def is_micro_disabled_path(path):

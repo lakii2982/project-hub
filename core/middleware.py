@@ -16,7 +16,7 @@ class MicroScopeMiddleware:
 
     def __call__(self, request):
         if (is_micro_scope() and request.user.is_authenticated
-                and is_micro_disabled_path(request.path)):
+                and is_micro_disabled_path(request.path_info)):
             member = current_membership(request)
             if member is not None:
                 return render(request, "scope_disabled.html", {

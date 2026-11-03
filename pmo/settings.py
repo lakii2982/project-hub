@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
+from core.scope import resolve_scope
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PRODUCTION = os.getenv("PMO_ENV", "development") == "production"
@@ -90,8 +91,8 @@ if PRODUCTION:
 # 1.0 产品范围开关：micro = 小微企业简化版入口（默认）；full = 专业能力全开。
 # 保留的专业能力回归套件按 full 范围运行；微版门控由 tests/test_micro_scope.py
 # 用 override_settings(PMO_SCOPE="micro") 覆盖验证，二者不互相冒充。
-_TEST_COMMAND = "test" in sys.argv[1:2]
-PMO_SCOPE = os.getenv("PMO_SCOPE", "full" if _TEST_COMMAND else "micro")
+# resolve_scope 对空值/拼写错误 fail-closed 回落到 micro。
+PMO_SCOPE = resolve_scope(os.getenv("PMO_SCOPE"), "test" in sys.argv[1:2])
 
 AI_ENABLED = os.getenv("PMO_AI_ENABLED", "0") == "1"
 AI_BASE_URL = os.getenv("PMO_AI_BASE_URL", "")

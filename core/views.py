@@ -533,7 +533,7 @@ def import_data(request, kind):
                 objects = commit_rows(request.member, kind, cached["rows"])
                 del request.session[key]
                 messages.success(request, f"已处理{len(objects)}行，全部提交待审批；相同来源编号不会重复入账")
-                return redirect("timesheets" if kind == "time" else "finance")
+                return redirect("timesheets" if kind == "time" else "projects")
             except (ValidationError, IntegrityError) as error: messages.error(request, error_text(error))
     elif request.method == "POST" and form.is_valid():
         try:
@@ -544,7 +544,7 @@ def import_data(request, kind):
         except (ValidationError, IntegrityError) as error:
             request.session.pop(key, None)
             form.add_error(None, error_text(error))
-    return render(request, "import.html", {"nav": "time" if kind == "time" else "finance", "heading": {"time": "批量导入工时", "expense": "批量导入费用", "plan": "批量导入现金计划"}[kind],
+    return render(request, "import.html", {"nav": "time" if kind == "time" else "projects", "heading": {"time": "批量导入工时", "expense": "批量导入费用", "plan": "批量导入现金计划", "invoicing": "批量导入发票"}[kind],
         "kind": kind, "form": form, "headers": HEADERS[kind], "preview_rows": preview, "preview_count": count})
 
 
