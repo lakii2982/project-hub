@@ -290,7 +290,11 @@ def record_first_time(member, *, project, work_date, minutes, note, hourly_rate_
         if type(hourly_rate_cents) is not int or hourly_rate_cents < 0:
             raise ValidationError("小时成本须为非负整数分")
         if owner_rate(member, employee) is None:
-            create_rate(member, {"employee": employee, "effective_from": timezone.localdate(),
+            # The first week entry may be dated before "today" (the project can start
+            # earlier); the supplied rate must cover that business date or the row would
+            # stay an unpriced gap despite the owner having entered a rate.
+            create_rate(member, {"employee": employee,
+                                 "effective_from": min(work_date, timezone.localdate()),
                                  "hourly_amount": Decimal(hourly_rate_cents) / 100,
                                  "basis": "首次启用向导：负责人内部成本费率"})
     row = {"key": "row-0", "id": "", "token": str(__import__("uuid").uuid4()),

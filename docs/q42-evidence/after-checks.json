@@ -1,0 +1,369 @@
+{
+  "checks": {
+    "setup_error_message": {
+      "ok": true,
+      "detail": null
+    },
+    "setup_reaches_customer": {
+      "ok": true,
+      "detail": "http://127.0.0.1:8780/setup/customer/"
+    },
+    "setup_reaches_project": {
+      "ok": true,
+      "detail": "http://127.0.0.1:8780/setup/project/"
+    },
+    "setup_reaches_contract": {
+      "ok": true,
+      "detail": "http://127.0.0.1:8780/setup/contract/"
+    },
+    "setup_reaches_time": {
+      "ok": true,
+      "detail": "http://127.0.0.1:8780/setup/time/"
+    },
+    "setup_complete": {
+      "ok": true,
+      "detail": null
+    },
+    "backdated_rate_priced": {
+      "ok": true,
+      "detail": "FIRST RUN / 从零开始\n首次启用向导\n\n按顺序完成公司、客户、项目、合同额和首个工时；中断后回到本页会从缺项继续。\n\n稍后继续\n基础启用已完成。 项目、合同额和首个工时都已就绪，可以开始记工时、登记费用与开票收款。\n进入工作台\n1\n公司\n已完成\n2\n首个客户\n已完成\n3\n首个项目\n已完成\n4\n合同额\n已完成\n5\n首个工时\n已完成\n✓\n就绪检查\n已完成\n就绪检查\n\n已建立的业务事实；缺口不是假零，可按提示继续。\n\n基础启用完成\n公司\n青禾软件\n启用日期\n2026-11-04\n币种 / 时区\nCNY / Asia/Shanghai\n负责人\n公司负责人\n客户\n星河零售\n项目\nQ42-001 · 零售数据平台\n合同额\n¥ 12,000.00\n首个工时\n2026-11-03 · 120 分钟 · ¥ 600.00\n账号 / 资金账户 / 发票\n1 个账号 · 0 个账户 · 0 张发票\n缺项与建议（3）\n还没有资金账户，登记收款前需先建立账户 · 去建立资金账户\n尚未开票，项目收入为 0（显示缺口而不是假零） · 去开票\n目前只有负责人一个账号，可稍后开通项目经理/成员 · 去设置\n查看项目\n去记工时\n去开票与收款\n进入工作台\n这次会写入什么\n公司、首位负责人账号与员工档案\n首个客户（记在首个项目上）、首个项目、合同额追加记录\n首个工时（可附带负责人内部成本费率）\n\n不写入期初余额、历史单据或演示数据；示例数据只存在于独立演练库（`scripts/demo.py`）。\n\n公司名称可在设置中修改；启用日期、币种和时区在小微版固定，不会被静默改写。\n\n项目中枢 / PROJECT HUB\n项目 · 协作 · 经营"
+    },
+    "backdated_rate_no_gap": {
+      "ok": true,
+      "detail": null
+    },
+    "login_ok": {
+      "ok": true,
+      "detail": "http://127.0.0.1:8780/"
+    },
+    "empty_dashboard_no_fake_zero": {
+      "ok": true,
+      "detail": "WORKSPACE OVERVIEW / 2026年11月04日\n工作台\n\n从交付到回款，掌握项目的每一步。\n\n导出 CSV\n＋\n新建项目\n进行中的项目\n1\n查看全部项目 ↗\n项目收益与现金\n\n2026年11月 · 收入口径：按开票确认收入（不含税） · 金额人民币 / 元\n\n开票与收款 →\n费用与外包 →\n现金与 8 周计划 →\n按开票确认收入\n按收款确认收入\n默认开票\n本月开票\n不含税\n¥ 0.00\n\n价税合计 ¥ 0.00（含税；含作废负值追加）\n\n本月已收款\n现金账\n¥ 0.00\n\n本月实际收款（含退款负值追加）\n\n本月已支出\n现金账\n¥ 0.00\n\n仅 Q-36 简化费用付款；历史专业付款见缺口\n\n未收款合计\n已开票 − 已收款\n¥ 0.00\n\n已开票 ¥ 0.00 − 项目收款 ¥ 0.00\n\n公司资金账户余额（期初 + 已收 − 退款 − 已付款） ¥ 0.00 · 0 个账户\n账户余额为派生值，不提供直接修改；成本发生 ≠ 已付款\n\n收入默认按开票确认（不含税；价税合计在开票卡片单列），可选择按收款确认（实际现金收款，含税）。未开票合同额不计收入，历史口径不重算。成本 = Q-35 简化人工（工时×费率）+ Q-36 已确认直接费用；历史专业成本只读列示、不计入 1.0 毛利。本月已支出只含 Q-36 简化费用付款（历史专业付款不在内，见缺口）；付款已按资金账户计入账户余额。毛利 = 收入 − 成本；收入为 0 时毛利率无定义，缺费率/未开票/无收款显示为缺口而不是 0。未收款按价税合计现金口径 = 已开票 − 已收款。\n\n项目毛利排行（按开票确认收入口径）\n项目\t收入（不含税）\t成本（简化口径）\t毛利\t毛利率\t未收款（含税现金）\t缺口\nQ42-001 · 零售数据平台\n星河零售\n\t¥ 0.00\t¥ 600.00\t¥ -600.00\t无定义\t¥ 0.00\t未开票 无收款\n\n缺口：未开票项目 1 个 · 无收款项目 1 个 · 缺费率工时 0 条 · 待确认费用 0 笔 ¥ 0.00 · 历史专业成本 0 个项目 ¥ 0.00 未计入 1.0 毛利（只读） · 历史专业收款 0 笔 / 付款 0 笔只读。点击项目进入项目页查看收益/现金明细。\n\n到期提醒\n\n站内只读 · 按业务事实去重 · 截至 2026.11.04 · 不发送邮件/短信/Webhook\n\n查看全部 0 项 →\n导出 CSV →\n当前没有到期提醒\n\n未收发票、逾期费用与缺费率工时都会显示在这里。\n\n项目动态\n\n进度、预算与交付日期，一眼看清。\n\n全部项目 →\nQ42-001\n待完善\n零售数据平台\n\n星河零售\n\n公司负责人\n立项\n任务进度\n0%\n当前合同额\n¥ 12,000.00\n累计成本（历史口径）\n¥ 600.00\n预算余额\n¥ -600.00\n交付 2026.12.04\n进入项目 ↗\n需要关注\n当前无规则提醒\n\n项目进度和财务记录将持续纳入检查。\n\n项目中枢 / PROJECT HUB\n项目 · 协作 · 经营"
+    },
+    "expenses_empty_state": {
+      "ok": true,
+      "detail": null
+    },
+    "billing_empty_state": {
+      "ok": true,
+      "detail": null
+    },
+    "cash_empty_accounts_gap": {
+      "ok": true,
+      "detail": null
+    },
+    "disabled_finance_state": {
+      "ok": true,
+      "detail": 403
+    },
+    "account_created": {
+      "ok": true,
+      "detail": null
+    },
+    "expense_registered": {
+      "ok": true,
+      "detail": null
+    },
+    "expense_paid": {
+      "ok": true,
+      "detail": null
+    },
+    "invoice_registered": {
+      "ok": true,
+      "detail": null
+    },
+    "receipt_registered": {
+      "ok": true,
+      "detail": null
+    },
+    "dashboard_8,000.00": {
+      "ok": true,
+      "detail": null
+    },
+    "dashboard_3,000.00": {
+      "ok": true,
+      "detail": null
+    },
+    "dashboard_5,000.00": {
+      "ok": true,
+      "detail": null
+    },
+    "dashboard_7,500.00": {
+      "ok": true,
+      "detail": null
+    },
+    "dashboard_5,400.00": {
+      "ok": true,
+      "detail": null
+    },
+    "dashboard_2,600.00": {
+      "ok": true,
+      "detail": null
+    },
+    "project_12,000.00": {
+      "ok": true,
+      "detail": null
+    },
+    "project_8,000.00": {
+      "ok": true,
+      "detail": null
+    },
+    "project_5,400.00": {
+      "ok": true,
+      "detail": null
+    },
+    "project_2,500.00": {
+      "ok": true,
+      "detail": null
+    },
+    "project_5,000.00": {
+      "ok": true,
+      "detail": null
+    },
+    "cash_7,500.00": {
+      "ok": true,
+      "detail": null
+    },
+    "cash_1,500.00": {
+      "ok": true,
+      "detail": null
+    },
+    "cash_6,000.00": {
+      "ok": true,
+      "detail": null
+    },
+    "export_project-finance_download": {
+      "ok": true,
+      "detail": "project-hub-micro-project-finance-1-2026-11-04.csv"
+    },
+    "export_time_download": {
+      "ok": true,
+      "detail": "project-hub-micro-time-1-2026-11-04.csv"
+    },
+    "export_expenses_download": {
+      "ok": true,
+      "detail": "project-hub-micro-expenses-1-2026-11-04.csv"
+    },
+    "export_billing_download": {
+      "ok": true,
+      "detail": "project-hub-micro-billing-1-2026-11-04.csv"
+    },
+    "export_repeat_deterministic": {
+      "ok": true,
+      "detail": null
+    },
+    "export_project_col3": {
+      "ok": true,
+      "detail": "1200000"
+    },
+    "export_project_col4": {
+      "ok": true,
+      "detail": "800000"
+    },
+    "export_project_col6": {
+      "ok": true,
+      "detail": "800000"
+    },
+    "export_project_col7": {
+      "ok": true,
+      "detail": "400000"
+    },
+    "export_project_col8": {
+      "ok": true,
+      "detail": "300000"
+    },
+    "export_project_col9": {
+      "ok": true,
+      "detail": "500000"
+    },
+    "export_project_col10": {
+      "ok": true,
+      "detail": "60000"
+    },
+    "export_project_col11": {
+      "ok": true,
+      "detail": "200000"
+    },
+    "export_project_col12": {
+      "ok": true,
+      "detail": "260000"
+    },
+    "export_project_col13": {
+      "ok": true,
+      "detail": "540000"
+    },
+    "export_project_col15": {
+      "ok": true,
+      "detail": "50000"
+    },
+    "export_project_col16": {
+      "ok": true,
+      "detail": "250000"
+    },
+    "export_time_row": {
+      "ok": true,
+      "detail": null
+    },
+    "export_time_no_rates": {
+      "ok": true,
+      "detail": null
+    },
+    "export_expense_amounts": {
+      "ok": true,
+      "detail": [
+        "Q42-001",
+        "零售数据平台",
+        "2026-11-04",
+        "外包与采购",
+        "200000",
+        "已确认",
+        "50000",
+        "150000",
+        "2026-11-14",
+        "演示外包商",
+        "Q42 演示外包首期"
+      ]
+    },
+    "export_invoice_amounts": {
+      "ok": true,
+      "detail": [
+        "发票",
+        "Q42-001",
+        "零售数据平台",
+        "2026-11-04",
+        "Q42-INV-001",
+        "800000",
+        "0",
+        "800000",
+        "300000",
+        "500000",
+        "",
+        "有效",
+        "Q42 验收首票"
+      ]
+    },
+    "export_receipt_amount": {
+      "ok": true,
+      "detail": [
+        "收款",
+        "Q42-001",
+        "零售数据平台",
+        "2026-11-04",
+        "Q42-RCPT-001",
+        "300000",
+        "",
+        "",
+        "300000",
+        "",
+        "Q42 基本户",
+        "有效",
+        "Q42 首笔收款"
+      ]
+    },
+    "due_unpaid_invoice": {
+      "ok": true,
+      "detail": null
+    },
+    "due_has_no_fake_overdue_expense": {
+      "ok": true,
+      "detail": null
+    },
+    "390_overflow_dashboard": {
+      "ok": true,
+      "detail": null
+    },
+    "390_overflow_project": {
+      "ok": true,
+      "detail": null
+    },
+    "390_overflow_billing": {
+      "ok": true,
+      "detail": null
+    },
+    "390_overflow_cash": {
+      "ok": true,
+      "detail": null
+    },
+    "390_overflow_exports": {
+      "ok": true,
+      "detail": null
+    },
+    "390_overflow_due": {
+      "ok": true,
+      "detail": null
+    },
+    "keyboard_focus_visible": {
+      "ok": true,
+      "detail": null
+    },
+    "keyboard_reaches_nav": {
+      "ok": true,
+      "detail": null
+    },
+    "keyboard_enter_navigates": {
+      "ok": true,
+      "detail": "http://127.0.0.1:8780/projects/"
+    },
+    "keyboard_time_form_controls": {
+      "ok": true,
+      "detail": null
+    },
+    "member_created": {
+      "ok": true,
+      "detail": null
+    },
+    "member_billing_denied": {
+      "ok": true,
+      "detail": 403
+    },
+    "member_exports_denied": {
+      "ok": true,
+      "detail": 403
+    },
+    "member_settings_denied": {
+      "ok": true,
+      "detail": 403
+    },
+    "member_time_allowed": {
+      "ok": true,
+      "detail": 200
+    }
+  },
+  "console_errors": [],
+  "page_errors": [],
+  "screenshots": [
+    "q42-after-setup-company-1440.png",
+    "q42-after-setup-error-1440.png",
+    "q42-after-setup-customer-1440.png",
+    "q42-after-setup-project-1440.png",
+    "q42-after-setup-contract-1440.png",
+    "q42-after-setup-time-1440.png",
+    "q42-after-setup-ready-1440.png",
+    "q42-after-login-1440.png",
+    "q42-after-dashboard-empty-1440.png",
+    "q42-after-expenses-empty-1440.png",
+    "q42-after-billing-empty-1440.png",
+    "q42-after-cash-empty-1440.png",
+    "q42-after-disabled-finance-1440.png",
+    "q42-after-expenses-1440.png",
+    "q42-after-billing-1440.png",
+    "q42-after-dashboard-1440.png",
+    "q42-after-projects-1440.png",
+    "q42-after-project-1440.png",
+    "q42-after-cash-1440.png",
+    "q42-after-exports-1440.png",
+    "q42-after-due-1440.png",
+    "q42-after-dashboard-390.png",
+    "q42-after-project-390.png",
+    "q42-after-billing-390.png",
+    "q42-after-cash-390.png",
+    "q42-after-exports-390.png",
+    "q42-after-due-390.png",
+    "q42-after-nav-390.png",
+    "q42-after-time-week-1440.png",
+    "q42-after-member-denied-billing-1440.png"
+  ],
+  "csv": {},
+  "steps": [],
+  "project_url": "http://127.0.0.1:8780/projects/1/#overview"
+}

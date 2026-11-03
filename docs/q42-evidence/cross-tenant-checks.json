@@ -1,0 +1,17 @@
+{
+  "checks": {
+    "foreign_dashboard_no_q42_project": {
+      "ok": true,
+      "detail": null
+    },
+    "cross_tenant_project_404": {
+      "ok": true,
+      "detail": 404
+    },
+    "cross_tenant_404_copy": {
+      "ok": true,
+      "detail": null
+    }
+  },
+  "console_errors": []
+}

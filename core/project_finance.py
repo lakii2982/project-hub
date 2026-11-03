@@ -91,7 +91,16 @@ def project_finance(project):
     over_invoiced = max(invoiced_gross - contract, 0)
     outstanding = invoiced_gross - received
     cash_net = received - paid
-    legacy_cash_net = int(summary["cash_net_cents"])
+    # Q-36 simplified expense payments also write a core cash_out ledger row.  They are
+    # already part of ``paid``/``cash_net`` above, so exclude them from the legacy
+    # professional cash figure; otherwise the page would show the same payment twice
+    # under two different labels (and a misleading negative "legacy" cash net).
+    simplified_payment_net = sum(
+        int(entry.amount_cents) if entry.book == LedgerEntry.Book.CASH_IN
+        else -int(entry.amount_cents)
+        for entry in LedgerEntry.objects.filter(
+            project=project, document__expense_payment_link__isnull=False))
+    legacy_cash_net = int(summary["cash_net_cents"]) - simplified_payment_net
     margin_rate = None
     margin_rate_percent = None
     if revenue > 0:

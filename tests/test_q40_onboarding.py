@@ -144,6 +144,13 @@ class OnboardingFlowTests(TestCase):
         self.assertContains(page, "尚未设置负责人内部成本费率")
         self.assertContains(page, "还没有资金账户")
 
+    def test_company_page_loads_submit_once_script(self):
+        # Q-42 finding: the unauthenticated company form also needs app.js for the
+        # data-submit-once busy/disabled guard (auth pages previously loaded no JS).
+        response = self.client.get(reverse("setup"))
+        self.assertContains(response, "/static/app.js")
+        self.assertContains(response, "data-submit-once")
+
     def test_company_creation_is_rejected_once_workspace_exists(self):
         self.complete_company()
         count = (Organization.objects.count(), get_user_model().objects.count())
@@ -258,6 +265,29 @@ class OnboardingFlowTests(TestCase):
         self.assertEqual(Project.objects.get().contract_changes.get().amount_cents, 1)
         self.client.post(reverse("setup-contract"), {"amount": "9999999999.99"})
         self.assertEqual(Project.objects.get().contract_changes.count(), 1)  # completed step redirects
+
+
+    def test_backdated_first_time_with_supplied_rate_is_priced(self):
+        # Q-40 follow-up: project starts yesterday, first time is yesterday, rate ¥300/h.
+        yesterday = TODAY - timedelta(days=1)
+        self.complete_company()
+        self.complete_customer()
+        self.assertEqual(self.client.post(reverse("setup-project"), {
+            "name": "回填首个项目", "code": "P-BACKDATED", "start_date": yesterday,
+            "end_date": TODAY + timedelta(days=30)}).status_code, 302)
+        self.assertEqual(self.complete_contract().status_code, 302)
+        response = self.client.post(reverse("setup-time"), {
+            "work_date": yesterday, "minutes": 60, "note": "回填昨日启动会",
+            "hourly_rate": "300.00"})
+        self.assertEqual(response.status_code, 302, response.content[:800])
+        row = Timesheet.objects.get()
+        self.assertEqual(row.work_date, yesterday)
+        self.assertEqual(row.hourly_rate_cents, 30_000)
+        self.assertEqual(row.cost_cents, 30_000)  # ¥300/h × 1h
+        self.assertEqual(row.cost_state, "priced")
+        project = Project.objects.get()
+        from core.weekly_time import simplified_labor_cost
+        self.assertEqual(simplified_labor_cost(project), 30_000)
 
 
 class PostgresWorkspaceCreationConcurrencyTests(TransactionTestCase):
