@@ -157,12 +157,20 @@ def project_detail(request, pk):
         from pmo_plugins.billing.services import project_billing_summary
         billing_summary = project_billing_summary(request.member, project)
     expense_summary = None
+    project_finance_summary = None
+    contract_form = None
     if finance_read and is_micro_scope():
         from pmo_plugins.expenses.services import project_expense_summary
         expense_summary = project_expense_summary(request.member, project)
+        # Q-34 read-only 收益/现金 snapshot on the shared Q-33 basis; no business writes.
+        from .project_finance import project_finance
+        project_finance_summary = project_finance(project)
+        if can_manage(request.member, project):
+            contract_form = ui.ContractChangeForm(member=request.member, project=project)
     return render(request, "project_detail.html", {"nav": "projects", "project": project,
         "revenue_summary": revenue_summary, "contract_totals": contract_totals, "contracts_unavailable": contracts_unavailable,
-        "billing": billing_summary, "expenses": expense_summary,
+        "billing": billing_summary, "expenses": expense_summary, "finance": project_finance_summary,
+        "contract_form": contract_form,
         "summary": redact_card(project_summary(project), request.member),
         "tasks": project.tasks.filter(Q(milestone__isnull=False) | Q(cash_plan__isnull=False)).select_related("owner__user", "dependency", "milestone", "cash_plan"),
         "historical_tasks": project.tasks.filter(milestone__isnull=True, cash_plan__isnull=True).select_related("owner__user", "dependency"),
@@ -171,6 +179,30 @@ def project_detail(request, pk):
         "cash_plans": plans, "documents": docs[:40], "entries": display_entries[:60] if finance_read else [],
         "risks": project.risks.select_related("owner__user"), "members": project.team.select_related("member__user"),
         "can_manage": can_manage(request.member, project), "can_finance": finance_read, "stages": Project.Stage.choices})
+
+
+@workspace_view
+@require_POST
+def project_contract_change(request, pk):
+    """Q-34 append one contract amount change; history is never rewritten."""
+    project = scoped_project(request.member, pk)
+    from .scope import is_micro_scope
+    if not is_micro_scope() or not can_manage(request.member, project):
+        raise PermissionDenied("只有公司负责人或项目经理可以变更合同额")
+    target = url_reverse("project-detail", args=[project.pk]) + "#finance"
+    form = ui.ContractChangeForm(request.POST, member=request.member, project=project)
+    if not form.is_valid():
+        messages.error(request, "；".join(message for errors in form.errors.values() for message in errors))
+        return redirect(target)
+    from .contract_changes import record_contract_change
+    try:
+        record_contract_change(request.member, project=project, amount_cents=form.amount_cents(),
+                               note=form.cleaned_data["note"],
+                               effective_on=form.cleaned_data["effective_on"], token=form.token())
+        messages.success(request, "合同额变更已追加；历史金额保留在变更记录中")
+    except ValidationError as error:
+        messages.error(request, error_text(error))
+    return redirect(target)
 
 
 FORMS = {"project": ui.ProjectForm, "task": ui.TaskForm, "milestone": ui.MilestoneForm, "plan": ui.PlanForm,
@@ -556,8 +588,16 @@ def timesheets(request):
     rows = Timesheet.objects.filter(Q(project__in=visible_projects(request.member)) | (Q(organization=request.member.organization, project__isnull=True) if request.member.role in {"owner", "finance", "auditor", "member"} else Q(organization=request.member.organization, project__isnull=True, employee__member=request.member))).select_related("project", "employee", "task", "submitted_by")
     if request.member.role == "member": rows = rows.filter(employee__member=request.member)
     elif request.member.role == "pm": rows = rows.filter(Q(project__manager=request.member) | Q(project__isnull=True, employee__member=request.member))
+    selected_project = None
+    project_filter = request.GET.get("project", "")
+    if project_filter:
+        if not project_filter.isdigit() or len(project_filter) > 18:
+            raise Http404()
+        selected_project = get_object_or_404(visible_projects(request.member), pk=int(project_filter))
+        rows = rows.filter(project=selected_project)
     totals = rows.filter(status="approved").aggregate(minutes=Sum("minutes"), cost=Sum("cost_cents"))
-    return render(request, "time.html", {"nav": "time", "timesheets": rows[:300], "employees": Employee.objects.filter(organization=request.member.organization),
+    return render(request, "time.html", {"nav": "time", "timesheets": rows[:300], "selected_project": selected_project,
+        "employees": Employee.objects.filter(organization=request.member.organization),
         "total_minutes": totals["minutes"] or 0, "total_cost_cents": (totals["cost"] or 0) if request.member.role != "member" else None,
         "labor_gaps": weekly.missing_rate_gaps(request.member)})
 

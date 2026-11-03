@@ -83,6 +83,7 @@
   {% if can_finance %}
   <section id="finance" class="anchor-section project-panel" role="tabpanel" aria-labelledby="tab-finance" tabindex="-1">
     <div class="section-heading"><div><h2 data-panel-title tabindex="-1">项目财务</h2><p>人民币 / 元 · 成本与现金分别核算</p></div>{% if can_manage or is_finance %}<div class="actions">{% if micro_scope %}<a class="button" href="{% url 'billing' %}">登记发票与收款</a>{% else %}<a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">登记费用</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">登记收款</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">登记付款</a>{% endif %}</div>{% endif %}</div>
+    {% include 'partials/project_finance_summary.html' %}
     <div class="metrics-grid">
       <article class="metric"><span class="metric-label">成本预算</span><strong>¥ {{ summary.budget_cents|money }}</strong><p>{% if project.budget_approved %}预算基线已批准{% else %}预算基线待批准{% endif %}</p></article>
       <article class="metric"><span class="metric-label">已发生成本</span><strong>¥ {{ summary.cost_cents|money }}</strong><p>预计完工成本 ¥ {{ summary.eac_cents|money }}</p></article>

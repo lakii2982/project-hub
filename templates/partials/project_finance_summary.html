@@ -1,0 +1,32 @@
+{% load money %}{% if finance %}
+<section class="panel section-gap project-finance-summary" id="project-finance-summary">
+  <div class="panel-heading"><div><h2>项目收益与现金</h2><p>{{ finance.basis_note }}</p></div><span class="badge neutral">{{ finance.revenue_basis_label }}</span></div>
+  <div class="metrics-grid">
+    <article class="metric"><span class="metric-label">合同额</span><strong><small>¥</small> {{ finance.contract_cents|money }}</strong><p>最新合同变更；立项预估 <span class="numeric">¥ {{ finance.contract_original_cents|money }}</span></p></article>
+    <article class="metric"><span class="metric-label">已开票（不含税）</span><strong><small>¥</small> {{ finance.invoiced_net_cents|money }}</strong><p>价税合计 ¥ {{ finance.invoiced_gross_cents|money }} · 税额 ¥ {{ finance.invoiced_tax_cents|money }}</p></article>
+    <article class="metric"><span class="metric-label">待开票</span><strong><small>¥</small> {{ finance.to_invoice_cents|money }}</strong><p>合同额 − 已开票价税合计{% if finance.over_invoiced_cents %} · 已超开票 ¥ {{ finance.over_invoiced_cents|money }}{% endif %}</p></article>
+    <article class="metric"><span class="metric-label">已收款</span><strong><small>¥</small> {{ finance.received_cents|money }}</strong><p>开票与收款页的 1.0 收款</p></article>
+    <article class="metric"><span class="metric-label">未收款</span><strong><small>¥</small> {{ finance.outstanding_cents|money }}</strong><p>已开票 − 已收款</p></article>
+    <article class="metric"><span class="metric-label">人工成本</span><strong><small>¥</small> {{ finance.labor_cost_cents|money }}</strong><p>工时 × 业务日期费率快照</p></article>
+    <article class="metric"><span class="metric-label">直接费用</span><strong><small>¥</small> {{ finance.expense_cost_cents|money }}</strong><p>已确认支出成本（含保留的历史成本）</p></article>
+    <article class="metric featured"><span class="metric-label">毛利 / 收益</span><strong><small>¥</small> {{ finance.gross_margin_cents|money }}</strong><p>收入 − 人工 − 直接费用 · 毛利率 {% if finance.margin_rate_percent %}{{ finance.margin_rate_percent }}%{% else %}无定义（收入为 0）{% endif %}</p></article>
+    <article class="metric"><span class="metric-label">项目现金净额</span><strong><small>¥</small> {{ finance.cash_net_cents|money }}</strong><p>已收款 − 已付款 ¥ {{ finance.paid_cents|money }}；不是毛利</p></article>
+  </div>
+  <div class="balance-strip"><span>收入 <strong>¥ {{ finance.revenue_cents|money }}</strong></span><span>总成本 <strong>¥ {{ finance.cost_total_cents|money }}</strong></span><span class="muted">{{ finance.legacy_note }} 历史现金净额 ¥ {{ finance.legacy_cash_net_cents|money }}</span></div>
+  {% if finance.gaps %}<div class="notice" role="status"><strong>缺口（不显示假零）</strong><ul>{% for gap in finance.gaps %}<li><span class="badge {% if gap.severity == 'warning' %}warning{% else %}neutral{% endif %}">{{ gap.label }}</span> {{ gap.count }} 项{% if gap.amount_cents is not None %} · 涉及 ¥ {{ gap.amount_cents|money }}{% endif %}。{{ gap.detail }}</li>{% endfor %}</ul></div>{% endif %}
+  <div class="actions project-finance-drilldown"><a class="button" href="/time/?project={{ project.pk }}">工时明细</a><a class="button" href="/expenses/?project={{ project.pk }}">费用明细</a><a class="button" href="{% url 'billing' %}">开票与收款明细</a><a class="button" href="{% url 'project-detail' project.pk %}#finance">本页口径</a></div>
+  {% if finance.invoice_rows or finance.receipt_rows %}
+  <div class="table-scroll"><table><caption class="sr-only">本项目最近开票与收款明细</caption><thead><tr><th scope="col">类型</th><th scope="col">日期</th><th scope="col">编号/来源</th><th scope="col" class="numeric">金额</th><th scope="col">状态</th></tr></thead><tbody>
+    {% for row in finance.invoice_rows %}<tr><td data-label="类型">发票</td><td data-label="日期">{{ row.issued_on|date:'Y.m.d' }}</td><td data-label="编号">{{ row.number }}</td><td data-label="金额" class="numeric">¥ {{ row.amount_cents|money }}</td><td data-label="状态">{% if row.reversal_record %}作废冲销{% elif row.voided_by_reversal %}已作废{% else %}有效{% endif %}</td></tr>{% endfor %}
+    {% for row in finance.receipt_rows %}<tr><td data-label="类型">收款</td><td data-label="日期">{{ row.received_on|date:'Y.m.d' }}</td><td data-label="来源">{{ row.reference|default:'—' }}{% if row.invoice %} · 发票 {{ row.invoice.number }}{% endif %}</td><td data-label="金额" class="numeric">¥ {{ row.amount_cents|money }}</td><td data-label="状态">{% if row.refund_record %}退款冲销{% else %}有效{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<p class="help-text">还没有开票或收款记录；未开票合同额见上方缺口。</p>{% endif %}
+</section>
+{% if finance.contract_changes or contract_form %}
+<section class="panel section-gap" id="project-contract">
+  <div class="panel-heading"><div><h2>合同额变更（追加，不改历史）</h2><p>当前合同额取最新一条变更；立项预估与历史变更保留可查。</p></div><span class="badge neutral">共 {{ finance.contract_change_count }} 条变更</span></div>
+  {% if finance.contract_changes %}<div class="table-scroll"><table><caption class="sr-only">合同额变更历史</caption><thead><tr><th scope="col">生效日期</th><th scope="col" class="numeric">变更前</th><th scope="col" class="numeric">变更后</th><th scope="col" class="numeric">增减</th><th scope="col">说明</th><th scope="col">记录人</th></tr></thead><tbody>{% for item in finance.contract_changes %}<tr><td data-label="生效日期">{{ item.change.effective_on|date:'Y.m.d' }}</td><td data-label="变更前" class="numeric">¥ {{ item.previous_cents|money }}</td><td data-label="变更后" class="numeric">¥ {{ item.amount_cents|money }}</td><td data-label="增减" class="numeric">{% if item.delta_cents >= 0 %}+{% endif %}¥ {{ item.delta_cents|money }}</td><td data-label="说明">{{ item.change.note }}</td><td data-label="记录人">{{ item.change.created_by.get_full_name|default:item.change.created_by.username }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="help-text">当前合同额来自立项预估 ¥ {{ finance.contract_original_cents|money }}，还没有追加变更。</p>{% endif %}
+  {% if contract_form %}<details class="inset-details"><summary>追加合同额变更</summary><form method="post" action="{% url 'project-contract-change' project.pk %}" class="stack-form compact-form">{% csrf_token %}{% include 'partials/form_fields.html' with form=contract_form %}<div class="form-actions"><button class="button primary" type="submit">追加变更</button></div></form></details>{% endif %}
+</section>
+{% endif %}
+{% endif %}
