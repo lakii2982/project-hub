@@ -5,6 +5,7 @@ amount change appends a new record with the *new total*; the project page reads 
 record and shows the full history.  Nothing here rewrites past amounts, ledger facts or
 billing/expense rows; it only appends an audited commercial fact.
 """
+import uuid
 from datetime import date, datetime
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -44,6 +45,8 @@ def record_contract_change(member, *, project, amount_cents, note, effective_on,
         raise PermissionDenied("项目不属于当前公司")
     require_project(member, project, manage=True)
     check_open(project)
+    if not isinstance(token, uuid.UUID):
+        raise ValidationError("提交编号无效，请刷新后重试")
     if type(amount_cents) is not int or not 0 <= amount_cents <= MAX_AMOUNT_CENTS:
         raise ValidationError("合同额须为0至100亿元的整数分")
     note = (note or "").strip()
@@ -59,7 +62,12 @@ def record_contract_change(member, *, project, amount_cents, note, effective_on,
                 or existing.effective_on != effective_on):
             raise ValidationError("提交编号已被使用，请刷新后重试")
         return existing
-    previous = contract_amount_cents(project)
+    current = contract_amount_cents(project)
+    if amount_cents == current:
+        raise ValidationError("合同额未变化，无需追加变更")
+    if amount_cents == 0:
+        raise ValidationError("合同额变更须大于0；如需终止项目请使用项目阶段/归档流程")
+    previous = current
     row = ProjectContractChange.objects.create(
         organization=org, project=project, previous_amount_cents=previous,
         amount_cents=amount_cents, note=note, effective_on=effective_on, token=token,

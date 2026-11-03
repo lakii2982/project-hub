@@ -226,13 +226,13 @@ class ContractChangeForm(BaseForm):
                                    initial=timezone.localdate)
     note = forms.CharField(label="变更原因/说明（至少4字）", max_length=240,
                            widget=forms.Textarea, help_text="追加记录并留审计；不修改历史合同额与账")
-    submission_token = forms.UUIDField(widget=forms.HiddenInput, required=False)
+    submission_token = forms.UUIDField(widget=forms.HiddenInput)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.is_bound:
             self.fields["submission_token"].initial = uuid.uuid4()
     def token(self):
-        return self.cleaned_data.get("submission_token") or uuid.uuid4()
+        return self.cleaned_data["submission_token"]
     def amount_cents(self):
         from .services import cents
         return cents(self.cleaned_data["amount"])

@@ -90,7 +90,7 @@
       <article class="metric"><span class="metric-label">预算余额</span><strong {% if summary.remaining_cents < 0 %}class="text-warning"{% endif %}>¥ {{ summary.remaining_cents|money }}</strong><p>成本预算 − 已发生成本</p></article>
       <article class="metric featured"><span class="metric-label">项目净现金流</span><strong>¥ {{ summary.cash_net_cents|money }}</strong><p>收款 {{ summary.cash_in_cents|wan }} / 付款 {{ summary.cash_out_cents|wan }}</p></article>
     </div>
-    <div class="balance-strip"><span>计划待收 <strong>¥ {{ summary.receivable_cents|money }}</strong></span><span>计划待付 <strong>¥ {{ summary.payable_cents|money }}</strong></span><span>立项预估合同额（历史） <strong>¥ {{ project.contract_cents|money }}</strong></span></div>
+    <div class="balance-strip"><span>计划待收 <strong>¥ {{ summary.receivable_cents|money }}</strong></span><span>计划待付 <strong>¥ {{ summary.payable_cents|money }}</strong></span><span>当前合同额 <strong>¥ {{ summary.contract_cents|money }}</strong>（立项预估 ¥ {{ project.contract_cents|money }}）</span></div>
     {% if billing %}
     <div class="panel section-gap">
       <div class="panel-heading"><div><h2>开票与收款</h2><p>价税合计 / 元 · 未收款 = 已开票 − 已收款</p></div><a class="button" href="{% url 'billing' %}">登记发票与收款</a></div>

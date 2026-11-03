@@ -6,12 +6,13 @@ The numbers here are the shared basis Q-33 should reuse for the boss dashboard:
   ``ProjectContractChange`` wins and the initiation estimate remains historical;
 * revenue defaults to **invoiced net of tax** (product-scope §4.1); a project-level
   ``revenue_basis`` field, when present, may switch it to receipt basis;
-* gross margin = revenue − (labor cost + direct confirmed expense cost);
+* 1.0 gross margin = revenue − (Q-35 simplified labor + Q-36 confirmed direct expenses);
+  historical/professional cost stays out of the 1.0 margin and is listed as a gap;
 * project cash net = 1.0 receipts − 1.0 expense payments; it is not the margin and not
   the company bank balance.  Historical professional cash stays in the legacy
   ``project_summary`` cash book and is surfaced separately, never mixed into this basis;
-* gaps (missing labor rate, unconfirmed expense, uninvoiced contract) are returned with
-  counts/amounts and never rendered as a fake zero.
+* gaps (missing labor rate, unconfirmed expense, historical cost, uninvoiced contract)
+  are returned with counts/amounts and never rendered as a fake zero.
 
 This module performs reads only; it never writes a business row or audit event.
 """
@@ -24,8 +25,9 @@ from .models import Document, LedgerEntry, Timesheet
 
 INVOICE_BASIS = "invoice"
 RECEIPT_BASIS = "receipt"
-BASIS_NOTE = ("口径：合同额不是收入；收入按项目口径确认（默认开票不含税）；"
-              "毛利 = 收入 − 人工成本 − 直接费用；项目现金净额 = 已收款 − 已付款；"
+BASIS_NOTE = ("口径（与 Q-33 工作台一致）：合同额不是收入；收入按项目口径确认（默认开票不含税）；"
+              "毛利 = 收入 − Q-35 简化人工成本 − Q-36 已确认直接费用；历史专业成本不计入毛利、单列缺口；"
+              "未收款 = 已开票价税合计 − 已收款（现金口径）；项目现金净额 = 已收款 − 已付款；"
               "毛利与现金净额不可混用。")
 LEGACY_NOTE = "历史专业流程现金（项目账）单列，不混入上述 1.0 简化口径。"
 
@@ -43,13 +45,21 @@ def _sum(queryset, field="amount_cents"):
     return int(queryset.aggregate(total=Sum(field))["total"] or 0)
 
 
-def labor_cost_cents(project):
-    """All labor facts: legacy approved timesheets + monthly-pool postings + Q-35 rows."""
-    from .labor_projection import project_monthly_cost
+def simplified_labor_cost_cents(project):
+    """1.0 labor cost: Q-35 weekly simplified snapshots only (same as Q-33)."""
     from .weekly_time import simplified_labor_cost
-    legacy = _sum(LedgerEntry.objects.filter(project=project, book=LedgerEntry.Book.COST,
-                                            category="labor"))
-    return int(legacy) + int(project_monthly_cost(project)) + int(simplified_labor_cost(project))
+    return int(simplified_labor_cost(project))
+
+
+def simplified_expense_cost_cents(project):
+    """1.0 direct expense cost: Q-36 confirmed expenses only, never legacy professional cost."""
+    return _sum(LedgerEntry.objects.filter(project=project, book=LedgerEntry.Book.COST,
+                                          document__expense_detail__isnull=False))
+
+
+def simplified_cost_cents(project):
+    """1.0 total cost = Q-35 simplified labor + Q-36 confirmed direct expenses."""
+    return simplified_labor_cost_cents(project) + simplified_expense_cost_cents(project)
 
 
 def project_finance(project):
@@ -71,9 +81,11 @@ def project_finance(project):
     contract = int(contract_amount_cents(project))
     basis = revenue_basis(project)
     revenue = received if basis == RECEIPT_BASIS else invoiced_net
-    cost_total = int(summary["cost_cents"])
-    labor = labor_cost_cents(project)
-    direct_expenses = cost_total - labor
+    labor = simplified_labor_cost_cents(project)
+    direct_expenses = simplified_expense_cost_cents(project)
+    cost_total = labor + direct_expenses
+    historical_cost = int(summary["cost_cents"]) - cost_total
+    historical_cost = historical_cost if historical_cost > 0 else 0
     margin = revenue - cost_total
     to_invoice = max(contract - invoiced_gross, 0)
     over_invoiced = max(invoiced_gross - contract, 0)
@@ -86,8 +98,7 @@ def project_finance(project):
         margin_rate = Decimal(margin) / Decimal(revenue)
         margin_rate_percent = str((margin_rate * 100).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
 
-    submitted_time = Timesheet.objects.filter(project=project, status=Timesheet.Status.SUBMITTED).count()
-    labor_gaps = int(simplified_gap_count(project)) + int(submitted_time)
+    labor_gaps = int(summary["labor_gap_count"])
     pending_expenses = Document.objects.filter(
         project=project, kind=Document.Kind.EXPENSE, status=Document.Status.SUBMITTED,
         expense_detail__isnull=False)
@@ -98,6 +109,13 @@ def project_finance(project):
         gaps.append({"code": "labor_rate", "label": "缺费率/待入账工时", "count": labor_gaps,
                      "amount_cents": None, "severity": "warning",
                      "detail": "这些工时尚未计入项目人工成本，不显示假零。"})
+    if historical_cost:
+        historical_rows = (LedgerEntry.objects.filter(project=project, book=LedgerEntry.Book.COST)
+                           .exclude(document__expense_detail__isnull=False).count())
+        gaps.append({"code": "historical_cost", "label": "历史专业成本（不计入 1.0 毛利）",
+                     "count": historical_rows or 1, "amount_cents": historical_cost,
+                     "severity": "info",
+                     "detail": "历史专业流程工时/费用保留可查，但不参与 1.0 毛利；与工作台同一缺口口径。"})
     if expense_pending_count:
         gaps.append({"code": "expense_pending", "label": "待确认费用", "count": expense_pending_count,
                      "amount_cents": expense_pending_cents, "severity": "warning",
@@ -140,6 +158,7 @@ def project_finance(project):
         "labor_cost_cents": labor,
         "expense_cost_cents": direct_expenses,
         "cost_total_cents": cost_total,
+        "historical_cost_cents": historical_cost,
         "revenue_cents": revenue,
         "gross_margin_cents": margin,
         "margin_rate_percent": margin_rate_percent,

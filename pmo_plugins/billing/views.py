@@ -9,7 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import IntegrityError
-from django.shortcuts import redirect, render
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from core.access import current_membership
@@ -29,9 +30,28 @@ def _error_text(error):
     return "记录冲突或已更新，请刷新并核对后重试"
 
 
+def _selected_project(request, member):
+    """Optional project drill-down filter; read-only and scoped to billing projects."""
+    value = request.GET.get("project", "")
+    if not value:
+        return None
+    if not value.isdigit() or len(value) > 18:
+        raise Http404()
+    return get_object_or_404(services.billing_projects(member), pk=int(value))
+
+
 def _page(request, member, *, invoice_form=None, receipt_form=None,
           account_form=None, status=200):
+    selected_project = _selected_project(request, member)
     snapshot = services.billing_snapshot(member)
+    if selected_project is not None:
+        # Project drill-down from Q-34: aggregate KPIs stay company-wide, detail lists filter.
+        snapshot["project_rows"] = [row for row in snapshot["project_rows"]
+                                    if row["project"].pk == selected_project.pk]
+        snapshot["invoice_rows"] = [row for row in snapshot["invoice_rows"]
+                                    if row.project_id == selected_project.pk]
+        snapshot["receipt_rows"] = [row for row in snapshot["receipt_rows"]
+                                    if row.project_id == selected_project.pk]
     for row in snapshot["invoice_rows"]:
         if row.reverses_id is None and not row.is_voided:
             row.void_token = uuid.uuid4()
@@ -45,6 +65,7 @@ def _page(request, member, *, invoice_form=None, receipt_form=None,
         "receipt_form": receipt_form or ui.ReceiptForm(member=member),
         "account_form": account_form or ui.AccountForm(member=member),
         "can_manage_accounts": member.role == "owner",
+        "selected_project": selected_project,
     }, status=status)
 
 

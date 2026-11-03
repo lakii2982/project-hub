@@ -93,6 +93,15 @@ class Q34FinanceFixture(TestCase):
             cls.pm, project=cls.project, category="software", amount_cents=300_000,
             occurred_on=cls.today - timedelta(days=2), expected_pay_on=cls.today + timedelta(days=9),
             note="Q34 待确认云服务", counterparty="云服务商", token=uuid.uuid4())
+        # 历史专业流程成本（不属于 Q-35/Q-36 1.0 口径）：必须排除在 1.0 毛利外并单列缺口。
+        legacy_doc = Document.objects.create(
+            project=cls.project, kind=Document.Kind.EXPENSE, title="历史专业费用",
+            amount_cents=250_000, occurred_on=cls.today - timedelta(days=30),
+            status=Document.Status.APPROVED, submitted_by=cls.owner.user)
+        LedgerEntry.objects.create(
+            project=cls.project, book=LedgerEntry.Book.COST, amount_cents=250_000,
+            category="vendor", occurred_on=cls.today - timedelta(days=30),
+            document=legacy_doc, posting_key=f"legacy:q34:{cls.project.pk}")
 
         # 合同额追加变更：100,000 → 120,000 元；原立项预估保持不变。
         cls.change = record_contract_change(
@@ -146,6 +155,7 @@ class Q34AggregationTests(Q34FinanceFixture):
         self.assertEqual(snapshot["revenue_basis"], "invoice")
         self.assertEqual(snapshot["revenue_basis_label"], "按开票确认收入（不含税）")
         self.assertEqual(snapshot["margin_rate_percent"], "85.1")
+        self.assertEqual(snapshot["historical_cost_cents"], 250_000)  # 历史专业成本不进入 1.0 毛利
         from pmo_plugins.billing.services import project_totals
         billing = project_totals(self.project)
         self.assertEqual(snapshot["invoiced_gross_cents"], billing["invoiced_cents"])
@@ -160,6 +170,8 @@ class Q34AggregationTests(Q34FinanceFixture):
         self.assertEqual(gaps["expense_pending"]["amount_cents"], 300_000)
         self.assertEqual(gaps["uninvoiced"]["count"], 1)
         self.assertEqual(gaps["uninvoiced"]["amount_cents"], 7_760_000)
+        self.assertEqual(gaps["historical_cost"]["amount_cents"], 250_000)
+        self.assertEqual(gaps["historical_cost"]["count"], 1)
         self.assertNotIn("contract_missing", gaps)
         missing_contract = project_finance(self.empty_project)
         self.assertEqual({gap["code"] for gap in missing_contract["gaps"]}, {"contract_missing"})
@@ -209,6 +221,15 @@ class Q34AggregationTests(Q34FinanceFixture):
         with self.assertRaises(ValidationError):
             record_contract_change(self.owner, project=project, amount_cents=2_100_000,
                                    note="同 token 改金额", effective_on=self.today, token=token)
+        with self.assertRaises(ValidationError):
+            record_contract_change(self.owner, project=project, amount_cents=2_000_000,
+                                   note="同金额无变化", effective_on=self.today, token=uuid.uuid4())
+        with self.assertRaises(ValidationError):
+            record_contract_change(self.owner, project=project, amount_cents=0,
+                                   note="零合同额", effective_on=self.today, token=uuid.uuid4())
+        with self.assertRaises(ValidationError):
+            record_contract_change(self.owner, project=project, amount_cents=2_200_000,
+                                   note="非法 token", effective_on=self.today, token="not-a-uuid")
         with self.assertRaises(PermissionDenied):
             record_contract_change(self.owner, project=self.foreign_project, amount_cents=1_000,
                                    note="跨租户合同额", effective_on=self.today, token=uuid.uuid4())
@@ -221,6 +242,31 @@ class Q34AggregationTests(Q34FinanceFixture):
         gaps = {gap["code"]: gap for gap in snapshot["gaps"]}
         self.assertEqual(gaps["no_receipt"]["count"], 1)
         self.assertEqual(gaps["no_receipt"]["amount_cents"], 100_000)
+
+    def test_matches_q33_business_dashboard_numbers(self):
+        try:
+            from core.business_dashboard import dashboard_snapshot
+        except ImportError:  # pragma: no cover - only before the Q-33 PR is merged
+            self.skipTest("Q-33 core.business_dashboard is not merged yet")
+        dash = dashboard_snapshot(self.owner, today=self.today)
+        row = {item["project"].code: item for item in dash["rows"]}[self.project.code]
+        snapshot = project_finance(self.project)
+        self.assertEqual(snapshot["revenue_cents"], row["revenue_cents"])
+        self.assertEqual(snapshot["cost_total_cents"], row["cost_cents"])
+        self.assertEqual(snapshot["gross_margin_cents"], row["gross_cents"])
+        self.assertEqual(snapshot["outstanding_cents"], row["outstanding_cents"])
+        self.assertEqual(snapshot["cash_net_cents"], row["cash_net_cents"])
+        self.assertEqual(snapshot["historical_cost_cents"], row["historical_cost_cents"])
+
+    def test_contract_form_requires_submission_token(self):
+        self.login(self.owner)
+        before = ProjectContractChange.objects.filter(project=self.project).count()
+        response = self.client.post(reverse("project-contract-change", args=[self.project.pk]), {
+            "amount": "130000", "effective_on": self.today.isoformat(),
+            "note": "缺少提交编号",
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ProjectContractChange.objects.filter(project=self.project).count(), before)
 
     def test_project_page_renders_basis_gaps_and_drilldown_links_without_writes(self):
         self.login(self.owner)
@@ -236,7 +282,7 @@ class Q34AggregationTests(Q34FinanceFixture):
         text = response.content.decode("utf-8")
         for expected in ("项目收益与现金", "合同额不是收入", "已开票（不含税）", "待开票",
                          "已收款", "未收款", "人工成本", "直接费用", "毛利", "项目现金净额",
-                         "缺费率/待入账工时", "待确认费用", "未开票合同额",
+                         "缺费率/待入账工时", "待确认费用", "未开票合同额", "历史专业成本",
                          f"/time/?project={self.project.pk}", f"/expenses/?project={self.project.pk}"):
             self.assertIn(expected, text)
         self.assertIn("Q34-INV-001", text)  # 开票明细下钻
@@ -282,6 +328,29 @@ class Q34PermissionTests(Q34FinanceFixture):
         # 成员仅能打开本人参与的项目；公司内非项目成员同样 404。
         self.login(self.outsider)
         self.assertEqual(self.client.get(self.project_url()).status_code, 404)
+
+    def test_project_cards_show_current_contract_and_redact_for_member(self):
+        self.login(self.owner)
+        response = self.client.get(reverse("projects"))
+        self.assertContains(response, "当前合同额")
+        self.assertContains(response, "120,000.00")  # 最新追加变更，不是历史 100,000
+        self.login(self.member)
+        response = self.client.get(reverse("projects"))
+        self.assertNotContains(response, "当前合同额")
+        self.assertNotContains(response, "120,000.00")
+
+    def test_billing_drilldown_filters_by_project(self):
+        register_invoice(self.owner, project=self.empty_project, number="Q34-INV-002",
+                         amount_cents=800_000, tax_rate_bp=None,
+                         issued_on=self.today - timedelta(days=2), token=uuid.uuid4())
+        self.login(self.owner)
+        response = self.client.get(reverse("billing") + f"?project={self.project.pk}")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "筛选项目")
+        self.assertContains(response, "Q34-INV-001")
+        # 明细记录按项目过滤；Q34-INV-002 只可能出现在登记发票下拉选项里。
+        self.assertEqual(response.content.decode().count("Q34-INV-002"), 1)
+        self.assertEqual(self.client.get(reverse("billing") + f"?project={self.foreign_project.pk}").status_code, 404)
 
     def test_time_drilldown_filters_to_project_and_denies_foreign_project(self):
         self.login(self.owner)

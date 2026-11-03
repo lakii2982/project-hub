@@ -11,6 +11,7 @@
   <div class="actions"><a class="button" href="{% url 'projects' %}">查看项目</a></div>
 </section>
 
+{% if selected_project %}<div class="overview-strip"><span>筛选项目：<strong>{{ selected_project.code }} · {{ selected_project.name }}</strong></span><span class="muted">上方指标为公司合计；下方明细按项目过滤</span><a href="{% url 'billing' %}">清除筛选</a><a href="{% url 'project-detail' selected_project.pk %}#finance">返回项目收益与现金</a></div>{% endif %}
 <div class="metrics-grid">
   <article class="metric"><span class="metric-label">已开票 <span>价税合计</span></span><strong><small>¥</small> {{ snapshot.invoiced_cents|money }}</strong><p>作废按负值冲减；未开票合同额不计入</p></article>
   <article class="metric"><span class="metric-label">其中税额 <span>可选税率</span></span><strong><small>¥</small> {{ snapshot.tax_cents|money }}</strong><p>{% if snapshot.gaps.tax_unspecified %}{{ snapshot.gaps.tax_unspecified }} 张发票未填税率，未猜测税额{% else %}按填写税率反算，ROUND_HALF_UP{% endif %}</p></article>
