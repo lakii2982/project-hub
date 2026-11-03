@@ -247,6 +247,10 @@ def review(member, kind, pk, decision, note=""):
     if kind == "time" and row.accounting_mode == "monthly_pool":
         from .labor_projection import review_monthly_time
         return review_monthly_time(member, row, decision, note)
+    if kind == "time" and row.accounting_mode == "simplified":
+        # Q-35 weekly rows take effect on save; the legacy approval action must not pretend
+        # to have done something. Corrections live in the weekly page.
+        raise ValidationError("按周填报的工时保存即生效、无需审批；请在按周填报页更正，旧审批入口不再处理该记录")
     require_project(member, row.project)
     if kind == "time":
         if not can_manage(member, row.project) and member.role not in WRITE_FINANCE:
@@ -330,6 +334,8 @@ def reverse(member, kind, pk, note):
     if kind == "time" and row.accounting_mode == "monthly_pool":
         from .labor_projection import reverse_monthly_time
         return reverse_monthly_time(member, row, note)
+    if kind == "time" and row.accounting_mode == "simplified":
+        raise ValidationError("按周填报的工时请在按周填报页更正；旧冲销入口不处理该记录")
     require_project(member, row.project)
     today = timezone.localdate()
     check_period(org, today)

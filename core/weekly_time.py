@@ -36,7 +36,16 @@ class WeekTimeError(ValidationError):
         super().__init__(messages)
 
 
+# Business weeks outside this range are clamped (never a 500 for crafted ?week values).
+EARLIEST_WEEK = date(1970, 1, 5)
+LATEST_WEEK = date(2100, 12, 27)
+
+
 def week_start_for(day):
+    if day < EARLIEST_WEEK:
+        day = EARLIEST_WEEK
+    elif day > LATEST_WEEK:
+        day = LATEST_WEEK
     return day - timedelta(days=day.weekday())
 
 
@@ -139,7 +148,9 @@ def blank_rows(week_start, start_index):
     rows = []
     for offset in range(7):
         rows.append({
-            "key": f"row-{start_index + offset}", "id": "", "token": "", "version": "",
+            # Token is generated at render time so a double-click / back-resubmit of the same
+            # form reuses the same idempotency key instead of creating a second row.
+            "key": f"row-{start_index + offset}", "id": "", "token": str(uuid.uuid4()), "version": "",
             "work_date": (week_start + timedelta(days=offset)).isoformat(), "target": "",
             "minutes": "", "note": "", "nonproject": False, "unpriced": False,
             "corrected": False, "cost_cents": None, "errors": [],
@@ -241,12 +252,22 @@ def save_week(member, employee, week_start, rows):
                     messages.extend(error.messages)
         else:
             raw_token = (row.get("token") or "").strip()
-            token = uuid.uuid4()
+            token = None
             if raw_token:
                 try:
                     token = uuid.UUID(raw_token)
                 except (ValueError, AttributeError):
                     messages.append("提交编号无效，请刷新后重试")
+            if token is None:
+                # No client token: derive a stable key from the submitted fact. Identical
+                # tokenless posts therefore cannot double-post the same投入 (double-click,
+                # cached page, or a retry without the hidden field).
+                target_key = (f"project:{project.pk}" if project else
+                              f"nonproject:{destination.pk}" if destination else "")
+                token = uuid.uuid5(uuid.NAMESPACE_URL, "|".join([
+                    "q35-weekly", str(org.pk), str(employee.pk), work_date.isoformat() if work_date else "",
+                    target_key, str(minutes if minutes is not None else ""),
+                    (note or "")[:NOTE_MAX]]))
             if token in seen_tokens:
                 messages.append("同一提交编号在本次提交中重复出现，请刷新后重试")
             seen_tokens.add(token)
@@ -336,10 +357,15 @@ def save_week(member, employee, week_start, rows):
 
 def price_pending_for_rate(member, rate):
     """Price unpriced project rows covered by a newly created rate; returns priced row count."""
+    organization = rate.employee.organization
     rows = Timesheet.objects.filter(
-        organization=rate.employee.organization, employee=rate.employee, accounting_mode=MODE,
+        organization=organization, employee=rate.employee, accounting_mode=MODE,
         status=STATUS, project__isnull=False, cost_cents__isnull=True,
-        work_date__gte=rate.effective_from).order_by("work_date", "id")
+        work_date__gte=rate.effective_from)
+    if organization.locked_through is not None:
+        # A locked period is never restated by a later rate backfill.
+        rows = rows.filter(work_date__gt=organization.locked_through)
+    rows = rows.order_by("work_date", "id")
     priced = 0
     for row in rows:
         applicable = latest_rate(row.employee, row.work_date)

@@ -1,4 +1,5 @@
 """Q-35 工时随手记与自动人工成本：周填报、费率快照、缺口、权限与幂等。"""
+import re
 import uuid
 from datetime import date, timedelta
 from decimal import Decimal
@@ -15,7 +16,7 @@ from core.models import (
     Organization, Project, ProjectMember, Timesheet,
 )
 from core.reporting import project_cost_burndown, project_summary
-from core.services import time_cost
+from core.services import review as review_record, reverse as reverse_record, time_cost
 from core.weekly_time import MODE, WeekTimeError, missing_rate_gaps, save_week, week_bounds
 
 
@@ -339,6 +340,93 @@ class WeeklyEntryTests(WeeklyTimeFixture):
         self.assertContains(own, "成员甲 的本周工时")
         self.assertNotContains(own, "本周项目汇总")
         self.assertNotContains(own, "¥")
+
+    def test_tokenless_real_rendered_values_post_twice_create_one_row(self):
+        # The old rendered blank rows carried token="" and no id/version. A double-click or
+        # cached-page resubmit must still count the same投入 exactly once.
+        self.login(self.member)
+        row = self.row(0, self.week_start, self.project_target(), 240, "双击重试的同一投入")
+        row["row-0-token"] = ""
+        first = self.post_week(self.member_employee, [row])
+        second = self.post_week(self.member_employee, [row])
+        self.assertEqual(first.status_code, 302)
+        self.assertEqual(second.status_code, 302)
+        self.assertEqual(self.simplified(self.member_employee).count(), 1)
+        self.assertEqual(project_summary(self.project)["labor_cost_cents"], time_cost(12_000, 240))
+
+    def test_rendered_blank_rows_carry_stable_tokens_and_are_idempotent(self):
+        self.login(self.member)
+        page = self.client.get(self.url() + f"?week={self.week_start.isoformat()}")
+        html = page.content.decode("utf-8")
+        tokens = re.findall(r'name="row-(\d+)-token" value="([0-9a-f-]{36})"', html)
+        self.assertGreaterEqual(len(tokens), 2)
+        self.assertNotEqual(tokens[0][1], tokens[1][1])
+        index, token = tokens[0]
+        dates = dict(re.findall(r'name="row-(\d+)-work_date"[^>]*value="([0-9-]{10})"', html))
+        rows = [self.row(int(index), date.fromisoformat(dates[index]), self.project_target(),
+                         180, "渲染表单重试", token=token)]
+        first = self.post_week(self.member_employee, rows)
+        second = self.post_week(self.member_employee, rows)
+        self.assertEqual(first.status_code, 302)
+        self.assertEqual(second.status_code, 302)
+        self.assertEqual(self.simplified(self.member_employee).count(), 1)
+        self.assertEqual(self.simplified(self.member_employee).get().version, 1)
+
+    def test_locked_period_rate_backfill_is_rejected_until_unlocked(self):
+        self.login(self.newbie)
+        self.post_week(self.rate_less_employee, [
+            self.row(0, self.week_start, self.project_target(), 90, "锁账前无费率投入"),
+        ])
+        row = self.simplified(self.rate_less_employee).get()
+        self.assertIsNone(row.cost_cents)
+        Organization.objects.filter(pk=self.org.pk).update(locked_through=self.week_end)
+        with self.assertRaises(ValidationError):
+            create_rate(self.owner, {"employee": self.rate_less_employee,
+                                     "effective_from": self.week_start,
+                                     "hourly_amount": Decimal("150"), "basis": "锁账补录"})
+        row.refresh_from_db()
+        self.assertIsNone(row.cost_cents)
+        self.assertEqual(missing_rate_gaps(self.owner)["count"], 1)
+        Organization.objects.filter(pk=self.org.pk).update(locked_through=None)
+        create_rate(self.owner, {"employee": self.rate_less_employee,
+                                 "effective_from": self.week_start,
+                                 "hourly_amount": Decimal("150"), "basis": "解锁补录"})
+        row.refresh_from_db()
+        self.assertEqual(row.cost_cents, time_cost(15_000, 90))
+        self.assertEqual(missing_rate_gaps(self.owner)["count"], 0)
+
+    def test_extreme_week_inputs_do_not_500(self):
+        self.login(self.member)
+        for value in ("0001-01-01", "9999-12-31"):
+            response = self.client.get(f"{self.url()}?week={value}")
+            self.assertEqual(response.status_code, 200)
+            posted = self.post_week(self.member_employee, [
+                self.row(0, date.fromisoformat(value), self.project_target(), 60, "极端周"),
+            ], week_start=date.fromisoformat(value))
+            self.assertEqual(posted.status_code, 400)
+        self.assertEqual(self.simplified(self.member_employee).count(), 0)
+
+    def test_legacy_review_and_reverse_reject_simplified_rows(self):
+        self.login(self.member)
+        self.post_week(self.member_employee, [
+            self.row(0, self.week_start, self.project_target(), 120, "免审批周填报"),
+        ])
+        row = self.simplified(self.member_employee).get()
+        with self.assertRaises(ValidationError):
+            review_record(self.finance, "time", row.pk, "approve")
+        with self.assertRaises(ValidationError):
+            reverse_record(self.finance, "time", row.pk, "旧冲销入口")
+        row.refresh_from_db()
+        self.assertEqual(row.status, "approved")
+        self.assertEqual(row.version, 1)
+        self.assertFalse(LedgerEntry.objects.filter(timesheet=row).exists())
+        self.login(self.owner)
+        response = self.client.post(reverse("review", args=["time", row.pk]),
+                                    {"decision": "approve", "note": ""})
+        self.assertEqual(response.status_code, 302)
+        row.refresh_from_db()
+        self.assertEqual(row.status, "approved")
+        self.assertFalse(LedgerEntry.objects.filter(timesheet=row).exists())
 
     def test_auditor_is_read_only(self):
         self.login(self.auditor)
