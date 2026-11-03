@@ -95,10 +95,14 @@ def dashboard(request):
             # Q-41 in-app due reminders: read-only, deduped per business fact, no delivery.
             from .due_reminders import due_reminders
             due = due_reminders(request.member)
+    onboarding_resume = None
+    if request.member.role == "owner":
+        from .onboarding import resume_hint
+        onboarding_resume = resume_hint(request.member)
     return render(request, "dashboard.html", {"nav": "dashboard", "metrics": metrics, "cards": cards[:8],
         "alerts": alerts[:8], "forecast_overdue": overdue_plan_totals(financial_projects), "cashflow": cash_forecast(financial_projects),
         "labor_gaps": weekly.missing_rate_gaps(request.member), "expense_facts": dashboard_expense_facts(request.member),
-        "business": business, "basis": basis, "due": due,
+        "business": business, "basis": basis, "due": due, "onboarding_resume": onboarding_resume,
         "today": timezone.localdate()})
 
 
