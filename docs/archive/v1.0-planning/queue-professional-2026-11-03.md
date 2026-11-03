@@ -1,11 +1,11 @@
 # 1.0 交付队列
 
 更新：2026-11-03。这是 1.0 剩余范围的唯一有序清单：给出需求 → 取一条待办 → 一个 PR → 一个可评审成果。
-规则见 [light-delivery.md](../docs/engineering/light-delivery.md)，当前能力见 [STATUS.md](STATUS.md)，候选验收见 [ACCEPTANCE.md](ACCEPTANCE.md)，决定见 [DECISIONS.md](DECISIONS.md)。
+规则见 [light-delivery.md](../../engineering/light-delivery.md)，当前能力见 [STATUS.md](../../../project/STATUS.md)，候选验收见 [ACCEPTANCE.md](../../../project/ACCEPTANCE.md)，决定见 [DECISIONS.md](../../../project/DECISIONS.md)。
 
 - 一个条目 = 一个用户可见成果 = 一个票据 = 一个 PR（≤1 天、生产代码 ≤约 300 行，测试随 PR）；条目不是规划单元，不做规划/契约/收口 PR。
 - 排序：先解锁发布门禁（L3 CI/PG、L4 浏览器、L5 真实环境证据与候选门槛），再业务价值（用户能完成的经营动作），最后依赖解锁（完成后让更多条目可并行）。同波次内即按此顺序。
-- 波次按两周一个候选节奏推进；每条完成后在条目内改 `状态：已交付`，并在 [ACCEPTANCE.md](ACCEPTANCE.md) 的当前候选段记录真实证据。
+- 波次按两周一个候选节奏推进；每条完成后在条目内改 `状态：已交付`，并在 [ACCEPTANCE.md](../../../project/ACCEPTANCE.md) 的当前候选段记录真实证据。
 - `遗留任务` 是历史 PH 编号（`project/tasks.json` 只作历史台账，不再新增）；`需求` 是 `docs/archive/v1.0-planning/requirement-trace.json` 冻结的 V1-* 编号。
 - 只写真实证据：浏览器/命令演示、必需 CI、独立复核。缺环境写清前提，不用文档或配置冒充通过。
 
