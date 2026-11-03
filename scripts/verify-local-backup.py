@@ -133,9 +133,26 @@ def _verify_uploads(
             raise VerificationError(f"attachment mismatch: {relative}")
 
 
+def _verification_python(project: Path) -> Path | None:
+    """Prefer an explicit interpreter, then the local venv, then the caller's Python."""
+    candidates = []
+    configured = os.getenv("PMO_PYTHON")
+    if configured:
+        candidates.append(Path(configured).expanduser())
+    candidates.extend([project / ".venv" / "bin" / "python",
+                       project / ".venv" / "Scripts" / "python.exe",
+                       Path(sys.executable)])
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def _run_integrity(database_copy: Path) -> tuple[bool, int | None]:
     project = Path(__file__).resolve().parent.parent
-    python = project / ".venv" / "bin" / "python"
+    python = _verification_python(project)
+    if python is None:
+        return False, None
     command = [str(python), str(project / "manage.py"), "verify_integrity", "--json"]
     environment = os.environ.copy()
     for key in (
@@ -148,8 +165,6 @@ def _run_integrity(database_copy: Path) -> tuple[bool, int | None]:
         environment.pop(key, None)
     environment["PMO_DB"] = str(database_copy)
     environment["PMO_ENV"] = "development"
-    if not python.is_file():
-        return False, None
     try:
         result = subprocess.run(
             command,

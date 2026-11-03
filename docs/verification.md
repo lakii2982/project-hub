@@ -1,5 +1,34 @@
 # 验证记录（当前结果与历史记录分开）
 
+## Q-43 安装与备份恢复底线（2026-11-04）
+
+干净 SQLite 本地安装（scratch 目录，`PMO_PYTHON=python3.12 sh scripts/local.sh`）exit 0；再次执行同命令 exit 0，`runtime/pmo.sqlite3` SHA-256 不变（`dfdb1721…b40a5`）。Compose 安装脚本 `scripts/install.sh` 的生成 `.env`/0600/不覆盖/占位值拒绝/失败保留/健康超时诊断/重试由 `tests.test_q43_install` 8 项 fake-docker 回归覆盖（含 docker 存在但 compose 不可用→3）；本机无 Docker 与 PostgreSQL，真实 compose/PG 安装与恢复标记为未执行，见下方缺口。
+
+演练数据由 `scripts/demo.py --slice micro --db runtime/q43-source.sqlite3 --runtime-dir runtime/q43 --no-serve` 建立，并新增一个 Evidence 附件（`q43/attachment-21.txt`）。备份命令：
+
+```text
+PMO_DB=…/q43-source.sqlite3 PMO_MEDIA_ROOT=…/q43/uploads .venv/bin/python manage.py backup_local --output runtime/backups/q43-20261104-020735
+→ 本地一致性备份完成，exit 0；database.sqlite3 2.9MB sha256 2a78926f…0154，uploads.tar.gz 151B，manifest.json
+PMO_DB=… PMO_MEDIA_ROOT=… .venv/bin/python scripts/verify-local-backup.py runtime/backups/q43-20261104-020735
+→ {"ok": true, "entries": 52, "attachments": 1}
+```
+
+隔离恢复命令：
+
+```text
+PMO_DB=…/q43-source.sqlite3 .venv/bin/python manage.py restore_local --backup runtime/backups/q43-20261104-020735 --target runtime/q43-restored-020742 --json
+→ {"ok": true, "target": "…/q43-restored-020742", "database": "…/database.sqlite3", "uploads": "…/uploads", "evidence": 1}
+恢复后 database.sqlite3 sha256 2a78926f…0154 = 备份；附件 sha256 1b0baf…9aa8
+PMO_DB=恢复库 PMO_MEDIA_ROOT=恢复附件 .venv/bin/python manage.py verify_integrity --json
+→ {"ok": true, "errors": [], "organizations": 1, "entries": 52}
+```
+
+浏览器核对（Chromium 1440；源库与恢复库分别启动 8771/8772，owner 登录）：工作台、项目列表、项目收益与现金（PH-26001 合同额/开票/收款/成本/毛利/现金净额）、开票与收款、现金五个页面归一化文本完全一致（`q43-browser-evidence.json` equal 全部 true）；member 权限矩阵也一致（billing/cash/settings 403、status 200、项目页无财务数字）；owner 控制台 0 错误。`/status/` 只读显示版本 0.1.0、sqlite 可用、待应用迁移 0、最近备份清单存在（2.9MB/151B/1 附件）、附件缺失 0，不含密钥/主机路径；Before main（8770）组织设置页无 `系统状态` 入口，After 导航出现 `系统状态`。
+
+自动化：`tests.test_q43_install` 8 项、`tests.test_q43_restore` 9 项（含真实 backup_local→restore_local→integrity 集成与 verify-local-backup 解释器回退）、`tests.test_q43_status` 8 项全部通过；全量套件 1806 项在 270.692 秒完成，仅 2 条既有 macOS `/private` 沙箱路径测试失败（main 基线同样复现，与 Q-43 无关），76 项环境跳过，其余通过；最终远端 CI 以 PR 运行结果为准。截图：`docs/screenshots/q43-before-settings-1440.png`、`q43-after-settings-1440.png`、`q43-after-status-1440.png`、`q43-restored-dashboard-1440.png`、`q43-restored-projects-1440.png`、`q43-restored-project-finance-1440.png`、`q43-restored-billing-1440.png`、`q43-restored-cash-1440.png`、`q43-restored-status-1440.png`。
+
+**未执行/缺口**：本机无 Docker、`pg_dump`/`pg_restore` 与真实 PostgreSQL，Compose 安装、真实 PG 备份/恢复、生产 TLS/域名、非 SQLite 大附件跨机恢复均未执行，`not_run`；本次恢复为隔离 SQLite 演练，不以 SQLite 文件拷贝冒充生产恢复。
+
 ## PH-411 通知生命周期规划（2026-11-03）
 
 PH-380 由 PH-340 覆盖并取消；PH-385 仅承接调度、同步诊断、归档与 0013，不含实现。共同治理、独立 S 复核与 required CI 见 `project/reports/PH-411.json`，规划合入后直接实现。

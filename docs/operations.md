@@ -14,12 +14,19 @@
 
 ## 首次启动与检查
 
-1. 填写`.env`，配置域名DNS，执行`docker compose up -d --build`。
-2. `docker compose logs --tail=100 app`检查迁移与启动结果；不要把含环境秘密的完整诊断转发到聊天。
-3. `docker compose exec app python manage.py check --deploy`；通过HTTPS访问`/health/`，应返回status=ok。
-4. 交互运行`bootstrap`，通过浏览器录入最少人员、实际审批人、成本费率、首个项目和现金计划。
-5. 执行`docker compose exec app python manage.py verify_integrity --json`。
-6. 在隔离测试数据上完成工时→审批→成本、费用→审批、实际收付→核销、冲销、锁账和跨身份访问检查。
+需要目标机器已安装 Docker Engine 与 Compose v2。首次安装一条命令（Q-43）：
+
+```sh
+scripts/install.sh --domain pmo.example.com
+```
+
+脚本行为：`.env` 不存在时生成随机 `DJANGO_SECRET_KEY`/`POSTGRES_PASSWORD` 并设 0600，已有 `.env` 只校验、绝不覆盖；校验 compose 配置后执行 `docker compose up -d --build`，等待应用 `/health/` 通过并打印访问地址，任何一步失败返回非零并保留 `.env` 与 named volumes，按提示修复后重试同一命令即可（幂等）。不要把含环境秘密的完整诊断转发到聊天。
+
+安装成功后：
+1. 浏览器打开 `https://<域名>/setup/` 完成首位负责人与初始数据（或 `docker compose exec app python manage.py bootstrap`）。
+2. `docker compose exec app python manage.py check --deploy`；通过HTTPS访问`/health/`，应返回status=ok；登录后打开 `/status/` 查看只读健康/备份状态。
+3. 执行`docker compose exec app python manage.py verify_integrity --json`。
+4. 在隔离测试数据上完成工时→审批→成本、费用→审批、实际收付→核销、冲销、锁账和跨身份访问检查。
 
 不得把演练数据初始化到生产数据库。`check --deploy`是配置检查，不能代替生产流程与权限验证。
 
@@ -40,6 +47,8 @@ sh scripts/backup.sh
 ```
 
 脚本短暂停原本运行的app/worker，保持数据库运行，导出数据库与附件，再恢复这些服务的原状态。已存在的输出目录会被拒绝，不覆盖旧备份。目录/文件权限为0700/0600；失败返回非零并保留 `.incomplete`，有此标记的目录不能当作成功备份。成功包包括数据库custom dump、附件归档、内容清单和相对路径SHA256；在备份目录内用 `sha256sum -c SHA256SUMS`（macOS用 `shasum -a 256 -c SHA256SUMS`）校验。`.env`独立安全保管。检查退出状态后，将成功备份复制到另一台受控设备或加密存储。同机磁盘副本不足以覆盖机器故障。
+
+本地 SQLite 备份与隔离恢复命令见[本地备份](local-backup.md)（`manage.py backup_local` / `manage.py restore_local`），页面 `/status/` 只读显示最近备份清单是否存在。生产 PostgreSQL 的备份目录仍走 `scripts/backup.sh` 与上述隔离恢复步骤。
 
 建议初始恢复目标：RPO不超过24小时、RTO不超过4小时。它们是待演练的目标，不是已证明的服务承诺。依据项目数据量和变更频率调整。
 

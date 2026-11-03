@@ -43,6 +43,8 @@ MICRO_NAV = (
      "roles": frozenset({"owner", "pm"})},
     {"key": "settings", "label": "设置", "url_name": "settings", "icon": "settings",
      "roles": frozenset({"owner"})},
+    {"key": "status", "label": "系统状态", "url_name": "system-status", "icon": "settings",
+     "roles": frozenset({"owner", "finance", "auditor"})},
 )
 
 # 移出 1.0 的页面：导航不出现，直接 URL 返回停用页而不是继续可读（§8.5）。

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}{% load money %}{% block title %}系统状态{% endblock %}{% block breadcrumb %}系统状态{% endblock %}{% block content %}
+<section class="page-heading"><div><div class="eyebrow">HEALTH & BACKUP · READ ONLY</div><h1>系统状态</h1><p>应用、数据库与备份的只读状态；不显示密钥、连接串或主机绝对路径。</p></div><span class="badge neutral">只读</span></section>
+<div class="settings-overview">
+<section class="panel"><div class="panel-heading"><h2>应用</h2></div><div class="panel-body"><dl class="detail-grid">
+<div><dt>版本</dt><dd>{{ version }}</dd></div><div><dt>环境</dt><dd>{{ environment }}</dd></div><div><dt>页面生成时间</dt><dd>{{ generated_at|date:'Y.m.d H:i:s' }}</dd></div><div><dt>权限</dt><dd>{{ membership.get_role_display }}（只读查看）</dd></div>
+</dl></div></section>
+<section class="panel"><div class="panel-heading"><h2>数据库</h2></div><div class="panel-body"><dl class="detail-grid">
+<div><dt>引擎</dt><dd>{{ database.engine }}</dd></div><div><dt>连接</dt><dd>{% if database.reachable %}<span class="badge success">可用</span>{% else %}<span class="badge warning">不可用</span>{% endif %}</dd></div>
+<div><dt>待应用迁移</dt><dd>{% if database.pending_migrations is None %}未知{% else %}{{ database.pending_migrations }}{% endif %}</dd></div>
+</dl><p class="help-text">本页不执行迁移；待应用迁移只提示数量，升级与恢复见运维文档。</p></div></section>
+<section class="panel"><div class="panel-heading"><h2>最近备份</h2></div><div class="panel-body">
+{% if backup.found %}<dl class="detail-grid">
+<div><dt>状态</dt><dd>{% if backup.valid %}<span class="badge success">清单与文件存在</span>{% else %}<span class="badge warning">备份不完整/不可信</span>{% endif %}</dd></div>
+<div><dt>备份时间</dt><dd>{{ backup.when }}</dd></div>
+{% if backup.database_bytes is not None %}<div><dt>数据库大小</dt><dd>{{ backup.database_bytes|filesizeformat }}</dd></div>{% endif %}
+{% if backup.uploads_bytes is not None %}<div><dt>附件包大小</dt><dd>{{ backup.uploads_bytes|filesizeformat }}</dd></div>{% endif %}
+<div><dt>附件记录</dt><dd>{{ backup.evidence|default:'—' }}</dd></div>
+</dl><p class="help-text">页面只读取最近一个备份目录的清单与文件大小，不在请求内做整包哈希校验；恢复前请运行 <code>scripts/verify-local-backup.py</code> 或 <code>manage.py restore_local</code>。</p>
+{% else %}<p class="notice">尚未发现本地备份（{{ backup.env_var }} 未指向有效备份）。这不是备份通过；请按 <code>docs/local-backup.md</code>创建并验证备份。</p>{% endif %}
+</div></section>
+<section class="panel"><div class="panel-heading"><h2>凭证附件</h2></div><div class="panel-body"><dl class="detail-grid">
+<div><dt>已登记附件</dt><dd>{{ evidence.count }}</dd></div><div><dt>缺失文件</dt><dd>{% if evidence.missing %}<span class="badge warning">{{ evidence.missing }}</span>{% else %}<span class="badge success">0</span>{% endif %}</dd></div>
+</dl><p class="help-text">仅显示计数；附件内容与路径不在此页展示。</p></div></section>
+</div>
+{% endblock %}

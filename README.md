@@ -46,7 +46,7 @@ python scripts/demo.py --slice micro
 .venv/bin/python manage.py bootstrap --company "你的公司" --username owner
 ```
 
-密码交互输入。当前基础数据存于 `runtime/pmo.sqlite3`，附件在 `runtime/uploads/`；正式部署使用PostgreSQL与独立持久卷。备份必须同时覆盖数据库与附件，见 [运维手册](docs/operations.md)。
+密码交互输入。当前基础数据存于 `runtime/pmo.sqlite3`，附件在 `runtime/uploads/`；正式部署使用PostgreSQL与独立持久卷。备份必须同时覆盖数据库与附件，见 [运维手册](docs/operations.md)。owner/finance/auditor 登录后可在导航打开 `/status/`，只读查看版本、数据库连通/待迁移、最近备份与附件计数，不显示密钥或主机路径。
 
 本轮代码已合入项目详情六页签、成本预算余额图、关键任务关联与项目级工时；基础资料共用 Project/Employee/CostRate 服务。全站体验与经营趋势仍有 PH-026 等未完成范围，不能将视觉样张当作这些页面已交付。最新验证见 [交付状态](docs/delivery-status.md)，本机使用步骤见 [测试环境](docs/local-testing.md)。
 
@@ -74,7 +74,7 @@ python scripts/demo.py --slice micro
 
 ## 公司服务器部署
 
-已提供PostgreSQL、应用、事件worker、Caddy四服务编排。当前仍需技术人员准备Docker、域名与独立密钥；非技术用户的一键安装和首次启用向导属于0.2目标。真实部署验证以CI和发布证据为准。
+已提供PostgreSQL、应用、事件worker、Caddy四服务编排。服务器安装一条命令：`scripts/install.sh --domain pmo.example.com`（首次生成 0600 `.env` 与随机密钥，绝不覆盖已有 `.env`/卷；失败保留现场并可重试）。安装后浏览器走 `/setup/` 首次启用，登录后 `/status/` 只读查看健康与最近备份；备份与隔离恢复见[本地备份](docs/local-backup.md)和[运维手册](docs/operations.md)。真实 Compose/PostgreSQL 部署与 TLS 仍需在目标环境执行并留证；非技术用户的一键安装与首次启用向导属 0.2 目标。
 
 ```sh
 cp .env.example .env
