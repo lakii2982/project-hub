@@ -12,4 +12,4 @@ else
     .venv/bin/python -m pip install -r requirements.txt
 fi
 .venv/bin/python manage.py migrate --noinput
-printf '%s\n' '真实公司初始化：.venv/bin/python manage.py bootstrap --company 你的公司 --username owner' '演练初始化：.venv/bin/python manage.py seed_demo' '启动：sh scripts/run-local.sh'
+printf '%s\n' '一条命令演练环境：python scripts/demo.py --slice micro（打印地址/账号/5 步脚本，停止：python scripts/demo.py --stop）' '真实公司初始化：.venv/bin/python manage.py bootstrap --company 你的公司 --username owner' '真实公司启动：sh scripts/run-local.sh'

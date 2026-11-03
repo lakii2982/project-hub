@@ -25,19 +25,20 @@ python scripts/projectctl.py brief PH-001
 
 CLI只读，不执行元数据中的命令、不改Git状态、不调用模型。`orient.delivery_flow` 提供有界主线统计与在制工作提示，规则见 [按可用成果推进](docs/engineering/agent-protocol.md#9-按可用成果推进2026-11-01-起生效)；目录变化只是提示，不证明可用成果。实现PR从BASE取任务范围和检查器；扩大范围先做规划PR。详细流程、版本、失败恢复和信任边界见 [工程规范](docs/engineering/README.md)。仓库不要求某个模型供应商、付费API或个人Codex配置。
 
-## 本机运行
+## 本机运行（一条命令演示）
 
-需要Python 3.12+，并让python3指向该版本；也可用PMO_PYTHON指定Python可执行文件。
+需要Python 3.12+，并让python3指向该版本；也可用PMO_PYTHON指定Python可执行文件。先安装一次依赖：
 
 ```sh
 git clone https://github.com/lakii2982/project-hub.git
 cd project-hub
 sh scripts/local.sh
-.venv/bin/python manage.py seed_demo
-sh scripts/run-local.sh
+python scripts/demo.py --slice micro
 ```
 
-先进入项目目录再运行相对路径命令。浏览器打开 <http://127.0.0.1:8765/>；五种演练角色的随机登录信息写入本机 `runtime/demo-credentials.txt`（0600），不进入Git和源码包。演练数据不能初始化到生产环境。
+`scripts/demo.py --slice micro` 会建立独立的 `runtime/demo.sqlite3` 演练库、写入虚构演练数据、在后台启动本地服务并退出 0，同时打印可访问地址、演练账号与 5 步演示脚本。若该文件已存在，必须是本命令此前建立的演练库（公司均为演练数据、迁移齐全）才复用且**不迁移、不写入**；0 字节/空 SQLite/非项目库/真实公司库/旧结构演练库一律拒绝。重复执行幂等：不会重复造数、不会写入已有数据库，并复用已运行的服务。停止服务器用 `python scripts/demo.py --stop --db <启动时的库> --port <启动时的端口>`。
+
+先进入项目目录再运行相对路径命令。浏览器打开打印的 <http://127.0.0.1:8765/>；命令打印六类演练账号（owner/finance/pm/member/auditor/newbie），随机密码不打印到控制台，只写入本机 `runtime/demo-credentials.txt`（0600），不进入Git和源码包。演示数据均为虚构，不含真实客户、工资或凭据；不能初始化到生产环境，也不要用演练库承接真实业务。
 
 真实公司使用独立数据库，跳过seed_demo，运行：
 
