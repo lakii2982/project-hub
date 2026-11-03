@@ -157,3 +157,32 @@
 /* Q-41 简化导出卡片：小屏单列，下载按钮换行不撑破卡片。 */
 .q41-export-grid .metric .button{width:100%;white-space:normal;line-height:1.4}
 @media(max-width:640px){.q41-export-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Q-40 首次启用向导：进度、两栏布局与小屏单列（复用共享表单/面板/通知模式）。 */
+.setup-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--space-5);align-items:start}
+.setup-steps{list-style:none;display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-4);padding:0}
+.setup-steps li{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border:1px solid var(--color-border);border-radius:var(--radius-full);background:var(--color-surface);font-size:var(--font-size-sm)}
+.setup-steps li.done{border-color:var(--color-success-border,var(--color-border))}
+.setup-steps li.current{background:var(--color-accent-soft,var(--color-surface-subtle));border-color:var(--color-accent)}
+.setup-step-index{display:inline-grid;place-items:center;min-width:1.4rem;min-height:1.4rem;border-radius:var(--radius-full);background:var(--color-surface-subtle);font-size:var(--font-size-xs);font-variant-numeric:tabular-nums}
+.setup-steps li.done .setup-step-index{background:var(--color-success-soft,var(--color-surface-subtle))}
+.setup-defaults{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-3);margin:var(--space-4) 0}
+.setup-defaults strong{display:block;margin-top:var(--space-1);font-size:var(--font-size-lg);font-variant-numeric:tabular-nums}
+.setup-defaults p{margin:var(--space-1) 0 0;color:var(--color-text-secondary);font-size:var(--font-size-xs)}
+.setup-facts{margin:0}
+.setup-gaps{margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px solid var(--color-border)}
+.setup-gaps h3{font-size:var(--font-size-md);margin:0 0 var(--space-2)}
+.setup-gaps ul{margin:0;padding-left:1.2rem;display:grid;gap:var(--space-1)}
+.setup-notes{margin:0 0 var(--space-3);padding-left:1.2rem;display:grid;gap:var(--space-2)}
+.setup-actions{flex-wrap:wrap}
+.setup-aside .panel-body{padding-top:0}
+.setup-login-notice{margin-top:var(--space-4);align-items:center}
+.onboarding-resume{margin-bottom:var(--space-4);align-items:center}
+@media(max-width:980px){.setup-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){
+  .setup-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+  .setup-steps li{width:100%;justify-content:flex-start;overflow-wrap:anywhere}
+  .setup-defaults{grid-template-columns:minmax(0,1fr)}
+  .setup-actions .button{width:100%;justify-content:center}
+  .setup-login-notice{flex-direction:column;align-items:flex-start}
+}

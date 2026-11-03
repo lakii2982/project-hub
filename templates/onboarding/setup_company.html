@@ -1,0 +1,19 @@
+{% extends 'registration/auth_base.html' %}
+{% block title %}首次启用{% endblock %}
+{% block content %}
+{% if closed %}<div class="message error" role="alert"><strong>工作区已经完成首次启用。</strong> 不能重复创建公司；请直接登录，已有事实不会被覆盖。</div>{% endif %}
+<div class="eyebrow text-teal">FIRST RUN · 从零开始</div>
+<h2 class="auth-title">建立你的公司工作区</h2>
+<p class="muted">只需一次：建立公司、首位负责人和记账起点，不会写入任何演示数据或历史账。</p>
+<div class="summary-band setup-defaults" aria-label="小微版默认设置">
+  <div><span class="eyebrow">启用日期</span><strong>{{ today|date:'Y-m-d' }}</strong><p>确认后不可静默改写，从当日起记账</p></div>
+  <div><span class="eyebrow">币种</span><strong>{{ currency }}</strong><p>金额以整数分保存</p></div>
+  <div><span class="eyebrow">时区</span><strong>{{ timezone }}</strong><p>业务日期按此时区计算</p></div>
+</div>
+<form method="post" class="stack-form auth-form" data-submit-once novalidate>
+  {% csrf_token %}
+  {% include 'partials/form_fields.html' %}
+  <button type="submit" class="button primary full-width">建立公司并继续</button>
+</form>
+<p class="help-text">已有工作空间？<a href="{% url 'login' %}">直接登录</a>。密码至少 {{ password_min }} 位，不会以明文保存。</p>
+{% endblock %}

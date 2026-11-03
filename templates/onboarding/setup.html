@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load money %}
+{% block title %}首次启用{% endblock %}
+{% block breadcrumb %}首次启用{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">FIRST RUN <span class="heading-dot">/</span> 从零开始</div>
+    <h1>首次启用向导</h1>
+    <p>按顺序完成公司、客户、项目、合同额和首个工时；中断后回到本页会从缺项继续。</p>
+  </div>
+  <div class="actions"><a class="button" href="{% url 'dashboard' %}">稍后继续</a></div>
+</section>
+{% if state.complete %}
+<div class="notice" role="status"><div><strong>基础启用已完成。</strong> 项目、合同额和首个工时都已就绪，可以开始记工时、登记费用与开票收款。</div><a class="button primary" href="{% url 'dashboard' %}">进入工作台</a></div>
+{% else %}
+<div class="notice" role="status"><div><strong>尚未完成全部步骤。</strong> 已保存的事实会保留；刷新或重新登录后可从当前缺项继续。<a href="{% url 'setup' %}?summary=1">查看就绪检查与缺项</a></div><a class="button" href="{% url 'setup' %}">刷新进度</a></div>
+{% endif %}
+<div class="setup-layout">
+  <div>
+    <nav aria-label="启用步骤">
+      <ol class="setup-steps">
+        {% for item in state.steps %}
+        <li class="{% if item.done %}done{% endif %} {% if item.key == step %}current{% endif %}"{% if item.key == step %} aria-current="step"{% endif %}>
+          <span class="setup-step-index">{{ forloop.counter }}</span>
+          <span>{{ item.label }}</span>
+          <span class="badge {% if item.done %}success{% else %}neutral{% endif %}">{% if item.done %}已完成{% else %}待完成{% endif %}</span>
+        </li>
+        {% endfor %}
+        <li class="{% if state.complete %}done current{% endif %}" {% if step == 'ready' %}aria-current="step"{% endif %}>
+          <span class="setup-step-index" aria-hidden="true">✓</span><span>就绪检查</span>
+          <span class="badge {% if state.complete %}success{% else %}neutral{% endif %}">{% if state.complete %}已完成{% else %}待完成{% endif %}</span>
+        </li>
+      </ol>
+    </nav>
+
+    {% if step == 'customer' %}
+    <section class="panel form-panel">
+      <div class="panel-heading"><div><h2>首个客户</h2><p>小微版把客户名称直接记在首个项目上，不另建客户主数据。</p></div></div>
+      <form method="post" action="{% url 'setup-customer' %}" class="stack-form" data-submit-once novalidate>
+        {% csrf_token %}{% include 'partials/form_fields.html' %}
+        <div class="form-actions"><a class="button" href="{% url 'setup' %}">刷新进度</a><button class="button primary" type="submit">保存并继续</button></div>
+      </form>
+    </section>
+    {% elif step == 'project' %}
+    <section class="panel form-panel">
+      <div class="panel-heading"><div><h2>首个项目</h2><p>客户：<strong>{{ state.customer }}</strong> · 负责人就是你，之后可在设置中开通成员。</p></div></div>
+      <form method="post" action="{% url 'setup-project' %}" class="stack-form" data-submit-once novalidate>
+        {% csrf_token %}{% include 'partials/form_fields.html' %}
+        <div class="form-actions"><a class="button" href="{% url 'setup' %}">刷新进度</a><button class="button primary" type="submit">建立项目并继续</button></div>
+      </form>
+    </section>
+    {% elif step == 'contract' %}
+    <section class="panel form-panel">
+      <div class="panel-heading"><div><h2>合同额</h2><p>{{ state.project.code }} · {{ state.project.name }}：合同额只追加，不把合同额当作收入。</p></div></div>
+      <form method="post" action="{% url 'setup-contract' %}" class="stack-form" data-submit-once novalidate>
+        {% csrf_token %}{% include 'partials/form_fields.html' %}
+        <div class="form-actions"><a class="button" href="{% url 'setup' %}">刷新进度</a><button class="button primary" type="submit">保存合同额并继续</button></div>
+      </form>
+    </section>
+    {% elif step == 'time' %}
+    <section class="panel form-panel">
+      <div class="panel-heading"><div><h2>首个工时</h2><p>{{ state.project.code }} · {{ state.project.name }}：保存即生效，免审批；缺费率时显示缺口而不是 0 成本。</p></div></div>
+      <form method="post" action="{% url 'setup-time' %}" class="stack-form" data-submit-once novalidate>
+        {% csrf_token %}{% include 'partials/form_fields.html' %}
+        <div class="form-actions"><a class="button" href="{% url 'setup' %}">刷新进度</a><button class="button primary" type="submit">登记首个工时并查看就绪检查</button></div>
+      </form>
+    </section>
+    {% else %}
+    <section class="panel form-panel setup-summary">
+      <div class="panel-heading"><div><h2>就绪检查</h2><p>已建立的业务事实；缺口不是假零，可按提示继续。</p></div><span class="badge {% if state.complete %}success{% else %}warning{% endif %}">{% if state.complete %}基础启用完成{% else %}仍有缺项{% endif %}</span></div>
+      <div class="panel-body">
+        <dl class="detail-grid setup-facts">
+          <div><dt>公司</dt><dd>{{ state.organization.name }}</dd></div>
+          <div><dt>启用日期</dt><dd>{{ state.started_on|date:'Y-m-d' }}</dd></div>
+          <div><dt>币种 / 时区</dt><dd>{{ state.currency }} / {{ state.timezone }}</dd></div>
+          <div><dt>负责人</dt><dd>{{ state.member.user.get_full_name|default:state.member.user.username }}</dd></div>
+          <div><dt>客户</dt><dd>{{ state.customer|default:'尚未建立' }}</dd></div>
+          <div><dt>项目</dt><dd>{% if state.project %}<a href="{% url 'project-detail' state.project.pk %}">{{ state.project.code }} · {{ state.project.name }}</a>{% else %}尚未建立{% endif %}</dd></div>
+          <div><dt>合同额</dt><dd>{% if state.contract_cents %}¥ {{ state.contract_cents|money }}{% else %}<span class="text-warning">尚未录入</span>{% endif %}</dd></div>
+          <div><dt>首个工时</dt><dd>{% if state.time_entry %}{{ state.time_entry.work_date|date:'Y-m-d' }} · {{ state.time_entry.minutes }} 分钟{% if state.time_entry.cost_cents is None %}<span class="badge warning">缺费率</span>{% else %} · ¥ {{ state.time_entry.cost_cents|money }}{% endif %}{% else %}尚未登记{% endif %}</dd></div>
+          <div><dt>账号 / 资金账户 / 发票</dt><dd>{{ state.people }} 个账号 · {{ state.billing.accounts }} 个账户 · {{ state.billing.invoices }} 张发票</dd></div>
+        </dl>
+        {% if state.gaps %}
+        <div class="setup-gaps" aria-label="缺项">
+          <h3>缺项与建议（{{ state.gaps|length }}）</h3>
+          <ul>
+            {% for gap in state.gaps %}<li><span class="text-warning">{{ gap.text }}</span>{% if gap.key == 'account' %} · <a href="{% url 'cash' %}">去建立资金账户</a>{% elif gap.key == 'invoice' %} · <a href="{% url 'billing' %}">去开票</a>{% elif gap.key == 'rate' or gap.key == 'member' %} · <a href="{% url 'settings' %}">去设置</a>{% endif %}</li>{% endfor %}
+          </ul>
+        </div>
+        {% else %}
+        <p class="help-text">没有发现的缺项。</p>
+        {% endif %}
+        <div class="form-actions setup-actions">
+          <a class="button" href="{% url 'projects' %}">查看项目</a>
+          <a class="button" href="{% url 'timesheets-week' %}">去记工时</a>
+          <a class="button" href="{% url 'billing' %}">去开票与收款</a>
+          <a class="button primary" href="{% url 'dashboard' %}">进入工作台</a>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+  </div>
+  <aside class="panel setup-aside" aria-label="启用说明">
+    <div class="panel-heading"><h2>这次会写入什么</h2></div>
+    <div class="panel-body">
+      <ul class="setup-notes">
+        <li>公司、首位负责人账号与员工档案</li>
+        <li>首个客户（记在首个项目上）、首个项目、合同额追加记录</li>
+        <li>首个工时（可附带负责人内部成本费率）</li>
+      </ul>
+      <p class="help-text">不写入期初余额、历史单据或演示数据；示例数据只存在于独立演练库（`scripts/demo.py`）。</p>
+      <p class="help-text">公司名称可在设置中修改；启用日期、币种和时区在小微版固定，不会被静默改写。</p>
+      {% if step != 'ready' and state.gaps %}<div class="setup-gaps"><h3>当前缺项（{{ state.gaps|length }}）</h3><ul>{% for gap in state.gaps %}<li>{{ gap.text }}</li>{% endfor %}</ul><a class="text-link" href="{% url 'setup' %}?summary=1">查看就绪检查</a></div>{% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

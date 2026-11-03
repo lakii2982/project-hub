@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.urls import path, register_converter
 from django.contrib.auth import views as auth
-from core import views, api, plugin_views, notification_views
+from core import views, api, plugin_views, notification_views, onboarding_views
 from pmo_plugins.billing import views as billing_views
 from pmo_plugins.cashbook import views as cash_views
 from pmo_plugins.expenses import views as expense_views
@@ -24,7 +24,12 @@ urlpatterns = [
     path("api/v1/expenses", api.ExpensesView.as_view()),
     path("api/v1/tasks/<pid:pk>/status", api.TaskStatusView.as_view()),
     path("health/", views.health, name="health"),
-    path("login/", auth.LoginView.as_view(template_name="registration/login.html"), name="login"),
+    path("setup/", onboarding_views.setup, name="setup"),
+    path("setup/customer/", onboarding_views.setup_customer, name="setup-customer"),
+    path("setup/project/", onboarding_views.setup_project, name="setup-project"),
+    path("setup/contract/", onboarding_views.setup_contract, name="setup-contract"),
+    path("setup/time/", onboarding_views.setup_time, name="setup-time"),
+    path("login/", onboarding_views.SetupLoginView.as_view(), name="login"),
     path("logout/", auth.LogoutView.as_view(), name="logout"),
     path("password/change/", auth.PasswordChangeView.as_view(), name="password_change"),
     path("password/change/done/", auth.PasswordChangeDoneView.as_view(), name="password_change_done"),

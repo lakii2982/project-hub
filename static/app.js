@@ -117,3 +117,19 @@
   summary.setAttribute('tabindex', '-1');
   summary.focus();
 })();
+
+
+/* Q-40: first-run wizard forms keep the submit button busy to prevent double submit. */
+(() => {
+  'use strict';
+  document.querySelectorAll('form[data-submit-once]').forEach(form => {
+    form.addEventListener('submit', () => {
+      const button = form.querySelector('button[type="submit"]');
+      if (!button || button.disabled) return;
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+      button.textContent = '处理中…';
+      form.setAttribute('aria-busy', 'true');
+    });
+  });
+})();
