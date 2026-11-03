@@ -145,6 +145,46 @@ class Command(BaseCommand):
             expected_pay_on=today + timedelta(days=9),
             note="云服务续费待确认（演练）", counterparty="演练云服务商",
             token=uuid.uuid4())
+        # Q-33 演示：资金账户、开票与收款（首部分收款、无收款、未开票与显式非项目收款）。
+        from pmo_plugins.billing.services import (register_account, register_invoice,
+                                                  register_receipt)
+        bank = register_account(owner, name="演练基本户", kind="bank",
+            opening_balance_cents=8_000_000, note="演练：期初余额", token=uuid.uuid4())
+        wallet = register_account(owner, name="演练支付宝", kind="alipay",
+            opening_balance_cents=0, note="演练：线上收款", token=uuid.uuid4())
+        first_invoice = register_invoice(owner, project=demo_projects[0],
+            number="DEMO-INV-26001", amount_cents=12_000_000, tax_rate_bp=600,
+            issued_on=today, contract_reference="HT-2026-001", note="演练：首期开票",
+            token=uuid.uuid4())
+        register_invoice(owner, project=demo_projects[1], number="DEMO-INV-26002",
+            amount_cents=6_000_000, tax_rate_bp=600, issued_on=today,
+            contract_reference="HT-2026-002", note="演练：实施首期开票", token=uuid.uuid4())
+        service_invoice = register_invoice(owner, project=demo_projects[2],
+            number="DEMO-INV-26003", amount_cents=3_600_000, tax_rate_bp=None,
+            issued_on=today, contract_reference="HT-2026-003", note="演练：服务费开票",
+            token=uuid.uuid4())
+        register_receipt(owner, project=demo_projects[0], non_project=False, account=bank,
+            invoice=first_invoice, amount_cents=5_000_000, received_on=today,
+            counterparty="云桥科技", reference="DEMO-RCPT-26001",
+            note="演练：首期部分收款", token=uuid.uuid4())
+        register_receipt(owner, project=demo_projects[2], non_project=False, account=bank,
+            invoice=service_invoice, amount_cents=3_600_000, received_on=today,
+            counterparty="蓝湾零售", reference="DEMO-RCPT-26002",
+            note="演练：服务费全额收款", token=uuid.uuid4())
+        register_receipt(owner, project=None, non_project=True, account=wallet,
+            invoice=None, amount_cents=500_000, received_on=today,
+            counterparty="其他零星客户", reference="DEMO-RCPT-26003",
+            note="演练：显式非项目收款", token=uuid.uuid4())
+        record_payment(pm, split.pk, amount_cents=100_000, paid_on=today,
+                       note="演练：本月付款（用于现金支出演示）", token=uuid.uuid4())
+        # Q-33 缺口演示：新成员还没有成本费率，周填报工时保持"待定价"缺口，不计假零成本。
+        from core.weekly_time import save_week, week_start_for
+        newbie_employee = Employee.objects.get(organization=org, name="沈新")
+        ProjectMember.objects.get_or_create(project=demo_projects[0], member=newbie)
+        save_week(newbie, newbie_employee, week_start_for(today), [{
+            "key": "gap-1", "work_date": today,
+            "target": f"project:{demo_projects[0].pk}", "minutes": 120,
+            "note": "演练：缺费率工时（进入工作台缺口清单）"}])
         pending = submit_time(member, {"project": tasks[0].project, "employee": member.employee,
             "work_date": today, "minutes": 120, "note": "方案准备和技术预研", "task": None}, uuid.uuid4())
         credentials = settings.BASE_DIR / "runtime/demo-credentials.txt"

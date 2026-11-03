@@ -111,6 +111,22 @@
 
 .week-table .week-divider-row td{border-top:1px solid var(--color-border);background:var(--color-surface-subtle);color:var(--color-text-secondary);font-size:var(--font-size-xs);padding:var(--space-2) var(--space-3)}
 
+
+/* Q-33 老板工作台：项目毛利排行在小屏堆叠，桌面保留横向滚动表格。 */
+.q33-ranking{min-width:820px}
+@media(max-width:760px){
+  .q33-ranking{min-width:0}
+  .q33-ranking thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .q33-ranking,.q33-ranking tbody,.q33-ranking tr,.q33-ranking th,.q33-ranking td{display:block;width:100%}
+  .q33-ranking tr{padding:var(--space-3) 0;border-top:1px solid var(--color-border)}
+  .q33-ranking tbody th{border:0;padding:0 0 var(--space-2)}
+  .q33-ranking td{display:grid;grid-template-columns:6.5rem minmax(0,1fr);gap:var(--space-3);border:0;padding:var(--space-1) 0;align-items:center;max-width:none;text-align:left}
+  .q33-ranking td:before{content:attr(data-label);color:var(--color-text-secondary);font-size:var(--font-size-xs)}
+  .q33-ranking td:last-child{grid-template-columns:1fr;padding-top:var(--space-2)}
+  .q33-ranking td:last-child:before{display:none}
+  .q33-ranking .cell-sub{margin-top:2px}
+}
+
 /* Q-36 费用与外包：缺口表在小屏堆叠，避免横向撑破页面；桌面端保留横向滚动容器。 */
 .expense-gap-table{min-width:620px}
 @media(max-width:760px){

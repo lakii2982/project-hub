@@ -47,6 +47,17 @@ def hours(value):
 
 
 @register.filter
+def bp_percent(value):
+    """Basis points -> percentage text without float arithmetic."""
+    value = _decimal(value)
+    if value is None:
+        return "—"
+    with localcontext() as ctx:
+        ctx.prec = max(40, len(value.as_tuple().digits) + 8)
+        return format((value / Decimal(100)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP), ",.2f") + "%"
+
+
+@register.filter
 def percent(value):
     value = _decimal(value)
     if value is None:
