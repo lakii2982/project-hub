@@ -140,3 +140,20 @@
   .expense-gap-table td:last-child:before{display:none}
   .expense-gap-table .inline-form{margin-top:var(--space-1)}
 }
+
+/* Q-41 到期提醒表：桌面横向滚动，小屏按 data-label 堆叠，避免逐字换行。 */
+.q41-due-table{min-width:720px}
+@media(max-width:760px){
+  .q41-due-table{min-width:0}
+  .q41-due-table thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .q41-due-table,.q41-due-table tbody,.q41-due-table tr,.q41-due-table td{display:block;width:100%}
+  .q41-due-table tr{padding:var(--space-3) 0;border-top:1px solid var(--color-border)}
+  .q41-due-table td{display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:var(--space-3);border:0;padding:var(--space-1) 0;align-items:start;max-width:none;text-align:left;white-space:normal}
+  .q41-due-table td:before{content:attr(data-label);color:var(--color-text-secondary);font-size:var(--font-size-xs)}
+  .q41-due-table td:last-child{grid-template-columns:1fr}
+  .q41-due-table td:last-child:before{display:none}
+}
+
+/* Q-41 简化导出卡片：小屏单列，下载按钮换行不撑破卡片。 */
+.q41-export-grid .metric .button{width:100%;white-space:normal;line-height:1.4}
+@media(max-width:640px){.q41-export-grid{grid-template-columns:minmax(0,1fr)}}
