@@ -41,6 +41,7 @@ urlpatterns = [
     path("reverse/<str:kind>/<pid:pk>/", views.reverse, name="reverse"),
     path("finance/", views.finance, name="finance"),
     path("time/", views.timesheets, name="timesheets"),
+    path("time/week/", views.timesheets_week, name="timesheets-week"),
     path("assistant/", views.assistant, name="assistant"),
     path("reminders/", views.reminders, name="reminders"),
     path("notifications/", notification_views.notification_list, name="notification-list"),

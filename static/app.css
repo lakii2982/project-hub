@@ -67,3 +67,46 @@
 .project-detail .cost-burndown-plot-scroll:focus-visible{outline:var(--focus-ring-width) solid var(--color-focus);outline-offset:var(--space-1);border-radius:var(--radius-md)}
 .project-detail .cost-burndown-chart{display:block;width:100%;min-width:760px;max-width:none;height:auto}
 @media print{.project-detail .project-panel[hidden]{display:block!important}.cost-burndown-details>.cost-burndown-table-wrap{display:block}}
+
+
+/* Q-35 按周填报工时：周导航、填报表格与项目汇总。语义令牌见 static/ui/ui-tokens.css。 */
+.week-nav{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin:0 0 var(--space-4);padding:var(--space-3) var(--space-4);border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface)}
+.week-nav-label{display:flex;align-items:center;gap:var(--space-2);font-variant-numeric:tabular-nums}
+.week-form .panel-heading{gap:var(--space-4)}
+.week-form .panel-heading p{margin:0;font-size:var(--font-size-xs);color:var(--color-text-secondary)}
+.week-table,.week-totals{width:100%;border-collapse:collapse;font-size:var(--font-size-sm);text-align:left}
+.week-table th,.week-totals th{font-size:var(--font-size-xs);color:var(--color-text-secondary);font-weight:var(--font-weight-medium);padding:var(--space-3);border-bottom:1px solid var(--color-border);white-space:nowrap}
+.week-table td,.week-totals td{padding:var(--space-3);border-bottom:1px solid var(--color-border);vertical-align:top}
+.week-table input,.week-table select{min-height:36px;padding:6px 9px;font-size:var(--font-size-sm)}
+.week-table .minutes-input{max-width:120px}
+.week-table .row-status{white-space:nowrap}
+.week-table .row-status .badge{margin-right:var(--space-1)}
+.week-table tr.row-error{background:var(--color-warning-subtle)}
+.week-table .field-errors{margin-top:var(--space-1);font-size:var(--font-size-xs)}
+.week-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:var(--space-4);margin-top:var(--space-4);align-items:start}
+.week-summary-grid .panel{margin:0}
+.summary-band.compact{padding:0;background:none;border:0;gap:var(--space-6)}
+.summary-band.compact strong{font-size:var(--font-size-2xl)}
+.week-totals .numeric{text-align:right}
+#labor-gaps .panel-body{padding-top:0}
+#labor-gaps .help-text{margin:var(--space-2) 0 0}
+@media(max-width:980px){.week-summary-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){
+  .week-nav{gap:var(--space-2);padding:var(--space-3)}
+  .week-nav .button{min-height:44px}
+  .week-table thead,.week-totals thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .week-table,.week-table tbody,.week-table tr,.week-table td,.week-totals,.week-totals tbody,.week-totals tr,.week-totals td,.week-totals th{display:block;width:100%}
+  .week-table tr{padding:var(--space-3) 0;border-top:1px solid var(--color-border)}
+  .week-table td{display:grid;grid-template-columns:6.5rem minmax(0,1fr);gap:var(--space-3);border:0;padding:var(--space-1) 0;align-items:center}
+  .week-table td:before{content:attr(data-label);color:var(--color-text-secondary);font-size:var(--font-size-xs)}
+  .week-table .minutes-input{max-width:none}
+  .week-table .row-status{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+  .week-table .row-status:before{flex-basis:100%}
+  .week-totals tr{padding:var(--space-3) 0;border-top:1px solid var(--color-border)}
+  .week-totals th,.week-totals td{display:grid;grid-template-columns:6.5rem minmax(0,1fr);gap:var(--space-3);border:0;padding:var(--space-1) 0;text-align:left}
+  .week-totals td:before{content:attr(data-label);color:var(--color-text-secondary);font-size:var(--font-size-xs)}
+  .week-totals .numeric{text-align:left}
+  .week-totals tbody th:before{content:"";}
+}
+
+.week-table .week-divider-row td{border-top:1px solid var(--color-border);background:var(--color-surface-subtle);color:var(--color-text-secondary);font-size:var(--font-size-xs);padding:var(--space-2) var(--space-3)}

@@ -25,5 +25,7 @@ class Command(BaseCommand):
         org = Organization.objects.create(name=options["company"])
         member = Membership.objects.create(organization=org, user=user, role="owner")
         Employee.objects.create(organization=org, name="公司负责人", member=member)
+        from core.masterdata import ensure_labor_destinations
+        ensure_labor_destinations(member)
         audit(member, "organization.initialized", org, {"mode": "real", "currency": "CNY"})
         self.stdout.write(self.style.SUCCESS("公司工作区已建立。请登录后开通独立的项目经理/项目财务账户，并设置费率。"))

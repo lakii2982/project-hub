@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 
 from .access import require_project, require_write
-from .models import CostRate, Employee, Membership, Project, ProjectMember
+from .models import CostRate, Employee, Membership, Project, ProjectMember, Timesheet
 from .services import audit, cents, check_open, lock_company
 
 EMPLOYEE_FIELDS = {"name", "title", "capacity_hours", "active", "member"}
@@ -140,7 +140,7 @@ def update_employee(member, pk, data):
 @transaction.atomic
 def create_rate(member, data):
     """费率只追加：同人同日拒绝覆盖，历史工时快照不改写。"""
-    lock_company(member)
+    organization = lock_company(member)
     _writer(member, "成本费率")
     _reject_unknown(data, RATE_FIELDS)
     employee = data["employee"]
@@ -153,6 +153,14 @@ def create_rate(member, data):
         raise ValidationError("费率必须是本公司员工档案")
     if not employee.active:
         raise ValidationError("员工已停用，不能新增费率；已存在的费率快照保持不变")
+    effective_from = data["effective_from"]
+    if organization.locked_through is not None and Timesheet.objects.filter(
+            organization=organization, employee=employee, accounting_mode="simplified",
+            status="approved", project__isnull=False, cost_cents__isnull=True,
+            work_date__lte=organization.locked_through,
+            work_date__gte=effective_from).exists():
+        # Never restate locked-period labor cost through a later rate backfill.
+        raise ValidationError("锁账期间不能补录会改写已锁期人工成本的费率；请先解锁该账期，或只补录生效日在开放期间的费率")
     rate = CostRate(employee=employee, effective_from=data["effective_from"],
                     hourly_cents=_amount(data["hourly_amount"]), basis=data["basis"])
     if CostRate.objects.filter(employee=employee, effective_from=rate.effective_from).exists():
@@ -165,6 +173,9 @@ def create_rate(member, data):
     audit(member, "rate.created", rate, {"employee": employee.pk, "employee_name": employee.name,
                                          "effective_from": str(rate.effective_from),
                                          "hourly_cents": rate.hourly_cents, "basis": rate.basis})
+    # Q-35: a newly appended rate closes the missing-rate gap for covered weekly rows.
+    from .weekly_time import price_pending_for_rate
+    price_pending_for_rate(member, rate)
     return rate
 
 

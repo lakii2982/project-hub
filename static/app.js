@@ -107,3 +107,13 @@
   if (window.location.hash !== `#${initial}`) window.history.replaceState(null, '', `#${initial}`);
   activate(initial);
 })();
+
+
+/* Q-35: a failed weekly submission keeps entered data and moves focus to the error summary. */
+(() => {
+  'use strict';
+  const summary = document.getElementById('week-error-summary');
+  if (!summary) return;
+  summary.setAttribute('tabindex', '-1');
+  summary.focus();
+})();
