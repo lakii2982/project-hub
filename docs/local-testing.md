@@ -8,13 +8,12 @@
 
 ```sh
 sh scripts/local.sh
-.venv/bin/python manage.py seed_demo
-sh scripts/run-local.sh
+python scripts/demo.py --slice micro
 ```
 
-若系统python3低于3.12，用PMO_PYTHON指定已安装的3.12+解释器后运行local.sh。seed_demo仅用于开发空库：已存在演练公司时保留数据与密码，已有真实公司时拒绝混入演练数据。不要删除数据库来重置账号。
+`scripts/demo.py --slice micro` 一条命令完成演练库迁移、seed_demo、后台服务与地址/账号/5 步脚本打印，重复执行幂等且不覆盖已有数据库；`python scripts/demo.py --stop` 停止服务。若系统python3低于3.12，用PMO_PYTHON指定已安装的3.12+解释器后运行local.sh。seed_demo仅用于开发空库：已存在演练公司时保留数据与密码，已有真实公司时拒绝混入演练数据。不要删除数据库来重置账号。
 
-五个角色用户名为owner、finance、pm、member、auditor。随机演练密码只保存在本机`runtime/demo-credentials.txt`（0600），不进入Git、截图或发布包。登录后可使用经营总览、项目空间、项目详情六页签、工时、审批和财务等入口；不同角色按既有权限显示。图中净现金流不是利润，预算余额不是银行余额。
+六类演练账号用户名为owner、finance、pm、member、auditor、newbie（newbie 用于缺费率缺口演示）。`scripts/demo.py` 只打印账号名，随机密码不打印到控制台，只保存在本机`runtime/demo-credentials.txt`（0600），不进入Git、截图或发布包。登录后可使用经营总览、项目空间、项目详情六页签、工时、审批和财务等入口；不同角色按既有权限显示。图中净现金流不是利润，预算余额不是银行余额。
 
 ## 已有环境更新
 
