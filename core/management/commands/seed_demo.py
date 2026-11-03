@@ -34,6 +34,14 @@ class Command(BaseCommand):
             CostRate.objects.create(employee=employee, effective_from=today - timedelta(days=365),
                                    hourly_cents={"owner": 20000, "finance": 10000, "pm": 16000, "member": 12000, "auditor": 0}[role], basis="演练：包含工资、公司承担福利的标准综合费率")
         owner, pm, finance, member = (members[k] for k in ["owner", "pm", "finance", "member"])
+        from core.masterdata import ensure_labor_destinations
+        ensure_labor_destinations(owner)
+        # Q-35 gap demo: a real member account without any cost rate must surface in the
+        # gap list instead of a fake zero project labor cost.
+        newbie_user = get_user_model().objects.create_user(username="newbie", first_name="沈新", password=password)
+        newbie = Membership.objects.create(organization=org, user=newbie_user, role="member")
+        Employee.objects.create(organization=org, name="沈新", title="新入职工程师", member=newbie)
+        members["newbie"] = newbie
         audit(owner, "organization.initialized", org, {"mode": "demo"})
         specs = [
             ("PH-26001", "云桥 CRM 二期开发", "云桥科技", "software", 36000000, 22000000, 13000000, 3),
@@ -48,6 +56,8 @@ class Command(BaseCommand):
                 "contract_cents": contract, "etc_cents": etc, "scope": "业务梳理、系统交付、用户培训与上线支持；范围以合同附件为准。",
                 "acceptance_criteria": "完成约定交付物，关键流程测试通过，取得客户验收确认。", "contract_reference": f"HT-2026-{index+1:03d}"})
             ProjectMember.objects.get_or_create(project=project, member=member)
+            if index == 0:
+                ProjectMember.objects.get_or_create(project=project, member=newbie)
             baseline = submit_document(pm, {"project": project, "kind": "baseline", "title": "初始预算基线", "amount_cents": budget,
                 "occurred_on": today - timedelta(days=29), "reference": f"{code}-B01"}, uuid.uuid4())
             if index < 3: review(owner, "document", baseline.pk, "approve", "确认预算与范围")
@@ -115,4 +125,4 @@ class Command(BaseCommand):
         credentials.write_text("项目中枢本地演练账户（只用于演练数据库）\n地址：http://127.0.0.1:8765/\n" +
             "\n".join(f"{role}: {m.user.username}" for role, m in members.items()) + f"\n演练密码：{password}\n")
         os.chmod(credentials, 0o600)
-        self.stdout.write(self.style.SUCCESS("演练数据已建立。5个角色的本地登录信息保存到 runtime/demo-credentials.txt（仅当前用户可读）。"))
+        self.stdout.write(self.style.SUCCESS("演练数据已建立。6个角色的本地登录信息保存到 runtime/demo-credentials.txt（仅当前用户可读）。"))

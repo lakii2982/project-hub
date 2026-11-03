@@ -39,7 +39,7 @@
 | 2 | 小微版入口收口（Q-32） | not_run | 待实现 |
 | 3 | 老板工作台：收益 + 现金一屏（Q-33） | not_run | 待实现 |
 | 4 | 项目页：合同额→开票→收款→成本→毛利（Q-34） | not_run | 待实现 |
-| 5 | 工时与自动人工成本（Q-35） | not_run | 待实现 |
+| 5 | 工时与自动人工成本（Q-35） | pass | `python manage.py test tests.test_weekly_time`（13 tests OK，费率快照/更正/幂等/缺费率/权限/锁期/1440 分钟反例）；`python manage.py verify_integrity --json` exit 0（演练库 47 条账目）；`manage.py seed_demo` 后 Chromium 1440/390 浏览器证据 39/39 通过：周填报→更正→重复提交幂等、失败保留已填数据、缺费率进入工作台缺口清单、补录费率后自动定价；截图 `docs/screenshots/q35-weekly-1440.png`、`q35-weekly-390.png`、`q35-gap-1440.png`、`q35-gap-390.png`、`q35-project-cost-1440.png` |
 | 6 | 费用/外包成本确认（Q-36） | not_run | 待实现 |
 | 7 | 极简开票与收款归集（Q-37） | not_run | 待实现 |
 | 8 | 现金账户与 8 周计划（Q-38） | not_run | 待实现 |

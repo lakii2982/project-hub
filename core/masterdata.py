@@ -165,6 +165,9 @@ def create_rate(member, data):
     audit(member, "rate.created", rate, {"employee": employee.pk, "employee_name": employee.name,
                                          "effective_from": str(rate.effective_from),
                                          "hourly_cents": rate.hourly_cents, "basis": rate.basis})
+    # Q-35: a newly appended rate closes the missing-rate gap for covered weekly rows.
+    from .weekly_time import price_pending_for_rate
+    price_pending_for_rate(member, rate)
     return rate
 
 

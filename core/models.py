@@ -294,13 +294,34 @@ class Timesheet(models.Model):
         if self.accounting_mode == 'monthly_pool':
             return {'submitted': '投入待审批', 'approved': '投入已审批／成本见月池',
                     'rejected': '已退回', 'reversed': '投入已撤销'}.get(self.status, self.status)
+        if self.accounting_mode == 'simplified':
+            # Q-35 direct-effect weekly rows: approved on entry, no separate approval step.
+            if self.project_id is None:
+                return '非项目投入'
+            return '已记录' if self.cost_cents is not None else '待定价（缺费率）'
         return self.Status(self.status).label
+
+    @property
+    def simplified_unpriced(self):
+        return self.accounting_mode == 'simplified' and self.project_id is not None and self.cost_cents is None
 
     class Meta:
         ordering = ["-work_date", "-id"]
         constraints = [models.CheckConstraint(condition=Q(minutes__gte=1, minutes__lte=1440), name="valid_time_minutes"),
             models.CheckConstraint(condition=(Q(project__isnull=False, non_project_destination__isnull=True) | Q(project__isnull=True, non_project_destination__isnull=False)), name="labor_time_target_xor"),
-            models.CheckConstraint(condition=(Q(accounting_mode="legacy_snapshot", project__isnull=False, hourly_rate_cents__isnull=False, cost_cents__isnull=False) | Q(accounting_mode="monthly_pool", organization__isnull=False, hourly_rate_cents__isnull=True, cost_cents__isnull=True)), name="labor_time_mode_snapshot"),
+            # Q-35 micro weekly mode: direct-effect rows are priced from the rate snapshot
+            # (rate+cost set) or left unpriced so the gap list can never show a fake zero;
+            # non-project rows never carry a project cost.
+            models.CheckConstraint(condition=(
+                Q(accounting_mode="legacy_snapshot", project__isnull=False, hourly_rate_cents__isnull=False, cost_cents__isnull=False)
+                | Q(accounting_mode="monthly_pool", organization__isnull=False, hourly_rate_cents__isnull=True, cost_cents__isnull=True)
+                | Q(accounting_mode="simplified", organization__isnull=False, project__isnull=False,
+                    non_project_destination__isnull=True, hourly_rate_cents__isnull=False, cost_cents__isnull=False)
+                | Q(accounting_mode="simplified", organization__isnull=False, project__isnull=False,
+                    non_project_destination__isnull=True, hourly_rate_cents__isnull=True, cost_cents__isnull=True)
+                | Q(accounting_mode="simplified", organization__isnull=False, project__isnull=True,
+                    non_project_destination__isnull=False, hourly_rate_cents__isnull=True, cost_cents__isnull=True)
+            ), name="labor_time_mode_snapshot"),
         ]
 
 class Document(models.Model):

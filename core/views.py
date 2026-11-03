@@ -1,7 +1,9 @@
 import csv
 import hashlib
 import io
+import re
 import uuid
+from datetime import date, timedelta
 from decimal import Decimal
 from functools import wraps
 from pathlib import Path
@@ -22,7 +24,9 @@ from . import forms as ui
 from .access import (current_membership, require_member, visible_projects, can_manage, can_read_finance,
                      require_project, require_write, require_finance_write, WRITE_FINANCE)
 from .models import (Project, Membership, Employee, CostRate, ProjectMember, Task, Milestone, Risk,
-                     CashPlan, Timesheet, Document, LedgerEntry, Evidence, AuditEvent, AIJob)
+                     CashPlan, Timesheet, Document, LedgerEntry, Evidence, AuditEvent, AIJob,
+                     NonProjectDestination)
+from . import weekly_time as weekly
 from .services import (create_project, submit_time, submit_document, create_task, review as review_record,
                        reverse as reverse_record, transition as change_stage, update_task, accept_milestone,
                        cents, audit, lock_company, check_open, plan_remaining, verify_audit, edit_task)
@@ -79,7 +83,8 @@ def dashboard(request):
     alerts = alerts_for(financial_projects)
     alerts += alerts_for([p for p in projects if p not in financial_projects], include_finance=False)
     return render(request, "dashboard.html", {"nav": "dashboard", "metrics": metrics, "cards": cards[:8],
-        "alerts": alerts[:8], "forecast_overdue": overdue_plan_totals(financial_projects), "cashflow": cash_forecast(financial_projects), "today": timezone.localdate()})
+        "alerts": alerts[:8], "forecast_overdue": overdue_plan_totals(financial_projects), "cashflow": cash_forecast(financial_projects),
+        "labor_gaps": weekly.missing_rate_gaps(request.member), "today": timezone.localdate()})
 
 
 @workspace_view
@@ -415,6 +420,119 @@ def finance(request):
         "plans": plans, "projects": visible_projects(request.member), "selected_project": selected})
 
 
+def _week_start(value):
+    try:
+        return weekly.week_start_for(date.fromisoformat(str(value or "").strip()))
+    except (TypeError, ValueError):
+        return weekly.week_start_for(timezone.localdate())
+
+
+def _posted_week_rows(post):
+    indices = sorted({int(match.group(1)) for key in post
+                      if (match := re.fullmatch(r"row-(\d+)-(?:id|work_date)", key))})
+    rows = []
+    for index in indices[:200]:
+        prefix = f"row-{index}-"
+        row = {name: post.get(prefix + name, "").strip() for name in
+               ("id", "token", "version", "work_date", "target", "minutes", "note")}
+        if not any([row["id"], row["target"], row["minutes"], row["note"]]):
+            continue
+        row["key"] = f"row-{index}"
+        rows.append(row)
+    return rows
+
+
+def _weekly_payloads(posted_rows, row_errors):
+    payloads = []
+    for row in posted_rows:
+        payloads.append({
+            "key": row["key"], "id": row["id"], "token": row["token"], "version": row["version"],
+            "work_date": row["work_date"], "target": row["target"], "minutes": row["minutes"],
+            "note": row["note"], "nonproject": row["target"].startswith("nonproject:"),
+            "unpriced": False, "corrected": False, "cost_cents": None,
+            "errors": row_errors.get(row["key"], []),
+        })
+    return payloads
+
+
+def _weekly_employee(member):
+    """Resolve the caller's own employee profile; returns (employee, error).
+
+    The employee is always derived server-side: a request can never choose another
+    person's timesheet, so cross-member and cross-tenant writes have no path here.
+    """
+    employee = Employee.objects.filter(
+        organization=member.organization, member=member, active=True).first()
+    if employee is None:
+        return None, "你的账户还没有员工档案；请联系公司负责人添加后再填报工时"
+    return employee, ""
+
+
+def _weekly_context(member, employee, week_start, rows, general_errors=()):
+    today = timezone.localdate()
+    current_week = weekly.week_start_for(today)
+    projects = visible_projects(member).exclude(stage__in=["closed", "cancelled", "on_hold"]).order_by("code")
+    destinations = NonProjectDestination.objects.filter(
+        organization=member.organization, active=True, code="ADMIN").order_by("code")
+    context = {
+        "nav": "time",
+        "employee": employee,
+        "week_start": week_start,
+        "week_label": weekly.week_label(week_start),
+        "prev_week": week_start - timedelta(days=7),
+        "next_week": week_start + timedelta(days=7),
+        "is_current_week": week_start == current_week,
+        "rows": rows,
+        "general_errors": list(general_errors),
+        "project_options": [{"value": f"project:{p.pk}", "label": f"{p.code} · {p.name}"} for p in projects],
+        "destination_options": [{"value": f"nonproject:{d.pk}", "label": d.name} for d in destinations],
+        "own_totals": weekly.own_week_totals(employee, week_start) if employee else None,
+        "project_totals": weekly.week_project_totals(member, week_start) if member.role in {"owner", "pm", "finance"} else [],
+        "labor_gaps": weekly.missing_rate_gaps(member),
+        "today": today,
+    }
+    return context
+
+
+@workspace_view
+def timesheets_week(request):
+    member = request.member
+    week_start = _week_start(request.POST.get("week") if request.method == "POST" else request.GET.get("week"))
+    employee, employee_error = _weekly_employee(member)
+    if request.method != "POST":
+        rows = weekly.weekly_rows(member, employee, week_start) if employee else []
+        start_index = len(rows)
+        if employee:
+            rows += weekly.blank_rows(week_start, start_index)
+        return render(request, "time_week.html", _weekly_context(
+            member, employee, week_start, rows, ([employee_error] if employee_error else [])))
+    require_write(member)
+    if employee is None:
+        return render(request, "time_week.html", _weekly_context(
+            member, None, week_start, [], [employee_error or "没有可填报的员工档案"]), status=403)
+    rows = _posted_week_rows(request.POST)
+    if not rows:
+        return render(request, "time_week.html", _weekly_context(
+            member, employee, week_start, weekly.blank_rows(week_start, 0), ["请至少填写一行工时再保存"]), status=400)
+    try:
+        result = weekly.save_week(member, employee, week_start, rows)
+    except weekly.WeekTimeError as error:
+        summary = sorted({message for messages in error.row_errors.values() for message in messages})
+        context = _weekly_context(member, employee, week_start,
+                                  _weekly_payloads(rows, error.row_errors), summary + error.general)
+        context["error_summary"] = summary
+        return render(request, "time_week.html", context, status=400)
+    except ValidationError as error:
+        return render(request, "time_week.html", _weekly_context(
+            member, employee, week_start, _weekly_payloads(rows, {}), error.messages), status=400)
+    if result["created"] == 0 and result["corrected"] == 0 and result["unpriced"] == 0:
+        messages.success(request, "本页内容没有变化，未重复记账")
+    else:
+        messages.success(request, f"本周工时已保存：新增 {result['created']} 条，更正 {result['corrected']} 条"
+                                  + (f"，{result['unpriced']} 条因缺费率待定价" if result["unpriced"] else ""))
+    return redirect(f"{url_reverse('timesheets-week')}?week={week_start.isoformat()}")
+
+
 @workspace_view
 def timesheets(request):
     rows = Timesheet.objects.filter(Q(project__in=visible_projects(request.member)) | (Q(organization=request.member.organization, project__isnull=True) if request.member.role in {"owner", "finance", "auditor", "member"} else Q(organization=request.member.organization, project__isnull=True, employee__member=request.member))).select_related("project", "employee", "task", "submitted_by")
@@ -422,7 +540,8 @@ def timesheets(request):
     elif request.member.role == "pm": rows = rows.filter(Q(project__manager=request.member) | Q(project__isnull=True, employee__member=request.member))
     totals = rows.filter(status="approved").aggregate(minutes=Sum("minutes"), cost=Sum("cost_cents"))
     return render(request, "time.html", {"nav": "time", "timesheets": rows[:300], "employees": Employee.objects.filter(organization=request.member.organization),
-        "total_minutes": totals["minutes"] or 0, "total_cost_cents": (totals["cost"] or 0) if request.member.role != "member" else None})
+        "total_minutes": totals["minutes"] or 0, "total_cost_cents": (totals["cost"] or 0) if request.member.role != "member" else None,
+        "labor_gaps": weekly.missing_rate_gaps(request.member)})
 
 
 @workspace_view

@@ -6,6 +6,7 @@ from django.utils import timezone
 from .charts import line_chart
 from .models import LedgerEntry, Timesheet
 from .services import plan_remaining
+from .weekly_time import simplified_labor_cost, simplified_labor_cost_days, simplified_gap_count
 
 
 def _key_tasks(project):
@@ -19,6 +20,11 @@ def project_summary(project):
         totals[row["book"]] = row["n"]
     from .labor_projection import project_monthly_cost
     totals["cost"] += project_monthly_cost(project)
+    # Q-35: weekly simplified labor cost is a read-only snapshot sum, separate from the
+    # legacy approval/ledger and monthly-pool paths; unpriced rows stay in the gap list.
+    labor_cost = simplified_labor_cost(project)
+    labor_gaps = simplified_gap_count(project)
+    totals["cost"] += labor_cost
     linked = _key_tasks(project)
     count = linked.count()
     done = linked.filter(status="done").count()
@@ -31,6 +37,7 @@ def project_summary(project):
     over = project.budget_approved and eac > project.budget_cents
     health = "high" if over or overdue else "medium" if not project.budget_approved else "good"
     return {"project": project, "cost_cents": totals["cost"], "budget_cents": project.budget_cents,
+            "labor_cost_cents": labor_cost, "labor_gap_count": labor_gaps,
             "remaining_cents": project.budget_cents - totals["cost"], "cash_in_cents": totals["cash_in"],
             "cash_out_cents": totals["cash_out"], "cash_net_cents": totals["cash_in"] - totals["cash_out"],
             "receivable_cents": receivable, "payable_cents": payable, "eac_cents": eac,
@@ -62,6 +69,8 @@ def project_cost_burndown(project, today=None):
 
     from .labor_projection import project_cost_days
     for occurred_on, amount in project_cost_days(project):
+        daily[occurred_on] += int(amount)
+    for occurred_on, amount in simplified_labor_cost_days(project):
         daily[occurred_on] += int(amount)
 
     start, end = project.start_date, project.end_date
