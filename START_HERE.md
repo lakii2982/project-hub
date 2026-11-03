@@ -2,7 +2,7 @@
 
 1. 读 AGENTS.md，运行 `.venv/bin/python scripts/projectctl.py orient` 与 `python scripts/projectctl.py queue`，
    核对 Git 状态与最近提交，保留其他人的修改。
-2. 只看四个活文档：[project/QUEUE.md](project/QUEUE.md)（下一条成果与验收检查）、
+2. 先读 [docs/product-scope.md](docs/product-scope.md)（1.0 产品范围：小微企业简化版，项目收益 + 现金流），再看四个活文档：[project/QUEUE.md](project/QUEUE.md)（下一条成果与验收检查）、
    [project/STATUS.md](project/STATUS.md)（现在能做什么/还缺什么）、
    [project/ACCEPTANCE.md](project/ACCEPTANCE.md)（候选验收）、[project/DECISIONS.md](project/DECISIONS.md)（已定决定）。
    流程见 [docs/engineering/light-delivery.md](docs/engineering/light-delivery.md)。

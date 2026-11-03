@@ -4,7 +4,8 @@
 
 - 本文件原来的"现状头"内容已并入 STATUS.md；旧逐项现状全文（含历史条目）原样归档到
   [docs/archive/v1.0-planning/delivery-status-archive.md](archive/v1.0-planning/delivery-status-archive.md)，只读保留。
-- 任务级历史台账仍是 `project/tasks.json`（只读，不再新增）；队列与顺序见 [project/QUEUE.md](../project/QUEUE.md)。
+- 1.0 产品范围见 [docs/product-scope.md](product-scope.md)（小微企业简化版：项目收益 + 现金流）；
+  任务级历史台账仍是 `project/tasks.json`（只读，不再新增）；队列与顺序见 [project/QUEUE.md](../project/QUEUE.md)。
 - 交付流程见 [docs/engineering/light-delivery.md](engineering/light-delivery.md)；
   候选验收见 [project/ACCEPTANCE.md](../project/ACCEPTANCE.md)；已定决定见 [project/DECISIONS.md](../project/DECISIONS.md)。
 - 2026-11-03 之前的分阶段能力矩阵、批次 C/D 验收矩阵、对账与证据回填等材料均在

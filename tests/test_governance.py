@@ -109,12 +109,15 @@ class LightDeliveryDocsTests(unittest.TestCase):
         from scripts import projectctl
         parsed = projectctl.parse_queue(ROOT, json.loads(self.read('project/tasks.json'))['tasks'])
         self.assertEqual(parsed['issues'], [])
-        self.assertGreaterEqual(parsed['item_count'], 25)
-        self.assertLessEqual(parsed['item_count'], 30)
+        # 2026-11-03 范围重定义：QUEUE 重排为小微版 14 条（Q-31–Q-44）；专业版 30 条归档只读。
+        self.assertGreaterEqual(parsed['item_count'], 10)
+        self.assertLessEqual(parsed['item_count'], 20)
         first_wave = [item for item in parsed['items'] if item['wave'] == 'W1']
         self.assertGreaterEqual(len(first_wave), 4)
         ids = {item['id'] for item in parsed['items']}
-        self.assertTrue({'Q-01', 'Q-02', 'Q-03', 'Q-04', 'Q-05'} <= ids)
+        self.assertTrue({'Q-31', 'Q-32', 'Q-33', 'Q-34', 'Q-35'} <= ids)
+        self.assertNotIn('Q-01', ids)
+        self.assertTrue((ROOT / 'docs/archive/v1.0-planning/queue-professional-2026-11-03.md').is_file())
         for item in first_wave:
             self.assertEqual(len(item['checks']) >= 3, True, item['id'])
             self.assertTrue(item['demo'], item['id'])
