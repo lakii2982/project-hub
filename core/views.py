@@ -903,6 +903,21 @@ def health(request):
 
 
 @workspace_view
+@require_GET
+def system_status_page(request):
+    """Q-43 read-only health + backup status; never renders secrets or host paths."""
+    from pmo import __version__
+    from .system_status import backup_status, database_status, evidence_summary
+    return render(request, "system_status.html", {
+        "nav": "settings", "version": __version__,
+        "environment": "production" if settings.PRODUCTION else "development",
+        "database": database_status(), "backup": backup_status(),
+        "evidence": evidence_summary(request.member), "generated_at": timezone.localtime(),
+        "membership": request.member,
+    })
+
+
+@workspace_view
 def task_edit(request, pk):
     task = get_object_or_404(Task, pk=pk, project__in=visible_projects(request.member))
     require_project(request.member, task.project, manage=True)

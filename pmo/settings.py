@@ -67,7 +67,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static", ("ui", BASE_DIR / "docs/engineering")]
 STATIC_ROOT = BASE_DIR / "staticfiles"
-MEDIA_ROOT = BASE_DIR / "runtime/uploads"
+MEDIA_ROOT = Path(os.getenv("PMO_MEDIA_ROOT", str(BASE_DIR / "runtime/uploads")))
+# Q-43: local backup snapshots inspected read-only by the status page.
+PMO_BACKUP_DIR = Path(os.getenv("PMO_BACKUP_DIR", str(BASE_DIR / "runtime" / "backups")))
 FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
 LOGIN_URL = "/login/"

@@ -13,7 +13,7 @@ python scripts/demo.py --slice micro
 
 `scripts/demo.py --slice micro` 一条命令完成演练库迁移、seed_demo、后台服务与地址/账号/5 步脚本打印，重复执行幂等且不覆盖已有数据库；`python scripts/demo.py --stop` 停止服务。若系统python3低于3.12，用PMO_PYTHON指定已安装的3.12+解释器后运行local.sh。seed_demo仅用于开发空库：已存在演练公司时保留数据与密码，已有真实公司时拒绝混入演练数据。不要删除数据库来重置账号。
 
-六类演练账号用户名为owner、finance、pm、member、auditor、newbie（newbie 用于缺费率缺口演示）。`scripts/demo.py` 只打印账号名，随机密码不打印到控制台，只保存在本机`runtime/demo-credentials.txt`（0600），不进入Git、截图或发布包。登录后可使用经营总览、项目空间、项目详情六页签、工时、审批和财务等入口；不同角色按既有权限显示。图中净现金流不是利润，预算余额不是银行余额。
+六类演练账号用户名为owner、finance、pm、member、auditor、newbie（newbie 用于缺费率缺口演示）。`scripts/demo.py` 只打印账号名，随机密码不打印到控制台，只保存在本机`runtime/demo-credentials.txt`（0600），不进入Git、截图或发布包。登录后可使用经营总览、项目空间、项目详情六页签、工时、审批和财务等入口；不同角色按既有权限显示。owner/finance/auditor 可在导航打开 `/status/` 查看只读应用/数据库/最近备份/附件计数，不显示密钥或主机路径。图中净现金流不是利润，预算余额不是银行余额。
 
 ## 已有环境更新
 
@@ -48,4 +48,4 @@ TMPDIR=/private/tmp .venv/bin/python manage.py test tests --verbosity 1
 
 TMPDIR写法用于macOS测试夹具的规范路径，避免/var与/private/var别名影响既有路径断言。环境限制跳过、Popen对象回收告警与实际通过数量分别记录在verification.md及任务报告，不视为生产并发证明。
 
-在启动服务的终端按Ctrl+C停止。仅监听127.0.0.1，不开放到局域网；这是开发测试服务，生产部署见operations.md。runtime、备份、凭据、附件、.env和虚拟环境均不得提交。
+备份与隔离恢复命令见[本地备份](local-backup.md)；系统状态页只读显示最近备份是否可见，不替代哈希校验。在启动服务的终端按Ctrl+C停止。仅监听127.0.0.1，不开放到局域网；这是开发测试服务，生产部署见operations.md。runtime、备份、凭据、附件、.env和虚拟环境均不得提交。

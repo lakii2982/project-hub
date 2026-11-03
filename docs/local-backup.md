@@ -37,6 +37,28 @@
 manifest、两个 artifact 和数据库中的 Evidence 记录，再让当前项目的
 `.venv/bin/python manage.py verify_integrity --json` 读取临时数据库副本。
 
-验证时固定 `PMO_ENV=development`、`PMO_DB` 指向临时副本，并清除全部
+验证脚本优先使用 `PMO_PYTHON`，其次项目 `.venv`，最后当前解释器；不依赖固定 `.venv` 路径。验证时固定 `PMO_ENV=development`、`PMO_DB` 指向临时副本，并清除全部
 `POSTGRES_*` 环境变量，不连接真实 PostgreSQL。成功只输出 `ok`、账目数和附件数，
 退出码为 0；任一步失败输出 `ok: false`，退出码为 1。
+## 隔离恢复（Q-43）
+
+```sh
+.venv/bin/python manage.py restore_local --backup runtime/backups/2026-10-22-local --target runtime/restored-2026-10-22
+```
+
+目标目录必须尚不存在；命令校验 manifest、数据库/附件 SHA256 与 SQLite 完整性后，只复制数据库并安全解包附件，失败会删除本次创建的目标目录，绝不覆盖活动库或已有恢复目录。成功后按输出提示以隔离环境启动只读核对：
+
+```sh
+PMO_DB=runtime/restored-2026-10-22/database.sqlite3 \
+PMO_MEDIA_ROOT=runtime/restored-2026-10-22/uploads \
+.venv/bin/python manage.py verify_integrity --json
+PMO_DB=runtime/restored-2026-10-22/database.sqlite3 \
+PMO_MEDIA_ROOT=runtime/restored-2026-10-22/uploads \
+.venv/bin/python manage.py runserver 127.0.0.1:8770 --noreload
+```
+
+恢复后登录/工作台/项目收益与现金/开票与收款/现金页面数字应与备份前一致（Q-43 实测见 [验证记录](verification.md)）。`/status/` 只读显示最近备份的存在性与大小，不替代 `verify-local-backup.py` 或 `restore_local` 的哈希校验。
+
+## 2026-11-04 Q-43 实测
+
+干净 SQLite 本地安装（`sh scripts/local.sh`，uv 缓存）exit 0，重试同命令 exit 0 且 `runtime/pmo.sqlite3` SHA-256 不变；`backup_local` 备份 52 条账目 + 1 个附件，`verify-local-backup.py` 返回 `{"ok": true, "entries": 52, "attachments": 1}`；`restore_local` 恢复到全新目录后数据库 SHA-256 与备份一致、`verify_integrity --json` 为 `ok=true/errors=[]`、52 条账目。浏览器源库与恢复库的工作台/项目/开票/现金页面文本一致，owner 控制台 0 错误；`/status/` 显示版本、sqlite 连接、0 待应用迁移、最近备份清单存在、附件 1 缺失 0，不含密钥或主机路径。该次为 SQLite 本地演练；Docker Compose/PostgreSQL 真实安装因本机无 Docker/PG 未执行，安装脚本的生成 `.env`/重试/失败诊断由 7 项 fake-docker 回归覆盖，真实 PG 恢复目标仍为 `not_run`。
