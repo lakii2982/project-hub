@@ -409,17 +409,19 @@ class CashHttpTests(CashFixture):
         self.expense(amount=1_500_000, expected_pay_on=self.today + timedelta(days=1))
         self.login(self.owner)
         page = self.client.get(reverse("cash"))
-        self.assertContains(page, "预计余额为负，存在现金缺口")
+        self.assertContains(page, "现金缺口")
         self.assertNotContains(page, "本期无已知现金缺口")
         snapshot = cash.cash_snapshot(self.owner)
         self.assertTrue(snapshot["plan"]["negative"])
         self.assertLess(snapshot["plan"]["projected_end_cents"], 0)
 
-    def test_pm_sees_disclosure_for_company_cash_and_own_plan_scope(self):
+    def test_pm_sees_company_cash_but_not_other_project_plans(self):
         self.plan(project=self.other_project, amount=100_000, due_in=5)
         self.login(self.pm)
         page = self.client.get(reverse("cash"))
-        self.assertContains(page, "项目经理仅看到本人负责项目的计划；账户余额与流水为公司现金口径")
+        # Q-45 移除了口径说明长句；公司现金口径与本人计划范围仍由数据和页面结构表达。
+        self.assertContains(page, "资金账户余额")
+        self.assertNotContains(page, "Q38-002")  # 他人项目计划不进入 PM 可见范围
 
     def test_legacy_unlinked_payment_is_visible_gap(self):
         paid = self.expense(amount=200_000)

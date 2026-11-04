@@ -8,6 +8,7 @@ timesheets, their ledger postings and the monthly labor pool are never rewritten
 """
 import uuid
 from datetime import date, timedelta
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -71,6 +72,27 @@ def _parse_date(value):
         return None
 
 
+def _parse_hours(value):
+    """Parse an hours input (``8``, ``7.5``) into integer minutes for storage.
+
+    Hours are a display/input unit only: the source fact remains integer minutes, so
+    conversions round half up and reject non-positive or over-24h values.
+    """
+    if isinstance(value, bool):
+        return None
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    try:
+        hours = Decimal(raw)
+    except (InvalidOperation, ValueError):
+        return None
+    if not hours.is_finite() or hours <= 0 or hours > Decimal(MAX_MINUTES) / Decimal(60):
+        return None
+    minutes = int((hours * 60).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    return minutes if 1 <= minutes <= MAX_MINUTES else None
+
+
 def _parse_minutes(value):
     if isinstance(value, bool):
         return None
@@ -121,12 +143,19 @@ def _destination(organization, destination_id):
     return destination
 
 
+def _hours_text(minutes):
+    """Render integer minutes as an editable hour value (8, 7.5, 0.1)."""
+    value = (Decimal(int(minutes)) / Decimal(60)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    text = format(value.normalize(), "f")
+    return text
+
+
 def _row_payload(row, key):
     return {
         "key": key, "id": row.pk, "token": str(row.token), "version": row.version,
         "work_date": row.work_date.isoformat(),
         "target": f"project:{row.project_id}" if row.project_id else f"nonproject:{row.non_project_destination_id}",
-        "minutes": row.minutes, "note": row.note,
+        "minutes": row.minutes, "hours": _hours_text(row.minutes), "note": row.note,
         "nonproject": row.project_id is None,
         "unpriced": row.simplified_unpriced,
         "corrected": row.version > 1,
@@ -152,7 +181,7 @@ def blank_rows(week_start, start_index):
             # form reuses the same idempotency key instead of creating a second row.
             "key": f"row-{start_index + offset}", "id": "", "token": str(uuid.uuid4()), "version": "",
             "work_date": (week_start + timedelta(days=offset)).isoformat(), "target": "",
-            "minutes": "", "note": "", "nonproject": False, "unpriced": False,
+            "minutes": "", "hours": "", "note": "", "nonproject": False, "unpriced": False,
             "corrected": False, "cost_cents": None, "errors": [],
             "new_group": offset == 0 and start_index > 0,
         })
@@ -217,9 +246,10 @@ def save_week(member, employee, week_start, rows):
                 project, destination = (target, None) if kind == "project" else (None, target)
             except (ValidationError, PermissionDenied) as error:
                 messages.extend([str(message) for message in error.messages])
-        minutes = _parse_minutes(row.get("minutes"))
+        raw_minutes = str(row.get("minutes") or "").strip()
+        minutes = _parse_minutes(raw_minutes) if raw_minutes else _parse_hours(row.get("hours"))
         if minutes is None:
-            messages.append("工时须为1至1440的整数分钟")
+            messages.append("工时须为0.1至24小时（例如 8 或 7.5）")
         note = (row.get("note") or "").strip()
         if not note:
             messages.append("请填写工作说明")
@@ -307,7 +337,7 @@ def save_week(member, employee, week_start, rows):
         for item in parsed:
             if per_day[item["work_date"]] > MAX_MINUTES:
                 errors.setdefault(item["key"], []).append(
-                    f"同一员工当日累计工时不能超过{MAX_MINUTES}分钟（当前{per_day[item['work_date']]}分钟）")
+                    f"同一员工当日累计工时不能超过24小时（当前 {_hours_text(per_day[item['work_date']])} 小时）")
     if errors:
         raise WeekTimeError(errors)
     created = corrected = unpriced = 0

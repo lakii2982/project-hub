@@ -380,7 +380,7 @@ class PageAndConsistencyTests(ExpenseFixture):
         self.assertContains(dashboard, "待确认费用（缺口）")
         self.assertContains(dashboard, "3,000.00")  # the gap amount is shown, not a fake zero
         self.assertContains(project_page, "待确认缺口")
-        self.assertContains(project_page, "费用与外包（成本 / 现金）")
+        self.assertContains(project_page, "费用与外包")
 
     def test_member_is_denied_and_foreign_tenant_sees_only_its_own_empty_page(self):
         self.login(self.member)

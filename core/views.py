@@ -494,8 +494,8 @@ def _posted_week_rows(post):
     for index in indices[:200]:
         prefix = f"row-{index}-"
         row = {name: post.get(prefix + name, "").strip() for name in
-               ("id", "token", "version", "work_date", "target", "minutes", "note")}
-        if not any([row["id"], row["target"], row["minutes"], row["note"]]):
+               ("id", "token", "version", "work_date", "target", "hours", "note")}
+        if not any([row["id"], row["target"], row["hours"], row["note"]]):
             continue
         row["key"] = f"row-{index}"
         rows.append(row)
@@ -507,8 +507,9 @@ def _weekly_payloads(posted_rows, row_errors):
     for row in posted_rows:
         payloads.append({
             "key": row["key"], "id": row["id"], "token": row["token"], "version": row["version"],
-            "work_date": row["work_date"], "target": row["target"], "minutes": row["minutes"],
-            "note": row["note"], "nonproject": row["target"].startswith("nonproject:"),
+            "work_date": row["work_date"], "target": row["target"], "hours": row["hours"],
+            "note": row["note"],
+            "nonproject": row["target"].startswith("nonproject:"),
             "unpriced": False, "corrected": False, "cost_cents": None,
             "errors": row_errors.get(row["key"], []),
         })

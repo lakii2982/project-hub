@@ -6,26 +6,23 @@
   <div>
     <div class="eyebrow">BILLING &amp; RECEIPTS</div>
     <h1>开票与收款</h1>
-    <p>人民币 / 元 · 只追加记录：作废与退款追加负值并保留原始来源；未收款 = 已开票 − 已收款。</p>
   </div>
   <div class="actions"><a class="button" href="{% url 'projects' %}">查看项目</a></div>
 </section>
 
-{% if selected_project %}<div class="overview-strip"><span>筛选项目：<strong>{{ selected_project.code }} · {{ selected_project.name }}</strong></span><span class="muted">上方指标为公司合计；下方明细按项目过滤</span><a href="{% url 'billing' %}">清除筛选</a><a href="{% url 'project-detail' selected_project.pk %}#finance">返回项目收益与现金</a></div>{% endif %}
+{% if selected_project %}<div class="overview-strip"><span>筛选项目：<strong>{{ selected_project.code }} · {{ selected_project.name }}</strong></span><a href="{% url 'billing' %}">清除筛选</a><a href="{% url 'project-detail' selected_project.pk %}#finance">返回项目收益与现金</a></div>{% endif %}
 <div class="metrics-grid">
-  <article class="metric"><span class="metric-label">已开票 <span>价税合计</span></span><strong><small>¥</small> {{ snapshot.invoiced_cents|money }}</strong><p>作废按负值冲减；未开票合同额不计入</p></article>
-  <article class="metric"><span class="metric-label">其中税额 <span>可选税率</span></span><strong><small>¥</small> {{ snapshot.tax_cents|money }}</strong><p>{% if snapshot.gaps.tax_unspecified %}{{ snapshot.gaps.tax_unspecified }} 张发票未填税率，未猜测税额{% else %}按填写税率反算，ROUND_HALF_UP{% endif %}</p></article>
-  <article class="metric"><span class="metric-label">已收款 <span>资金账户</span></span><strong><small>¥</small> {{ snapshot.received_cents|money }}</strong><p>退款按负值冲减；非项目收款 ¥ {{ snapshot.non_project_received_cents|money }}</p></article>
-  <article class="metric featured"><span class="metric-label">未收款</span><strong><small>¥</small> {{ snapshot.outstanding_cents|money }}</strong><p>已开票 − 已收款；负数表示预收/超额收款</p></article>
+  <article class="metric"><span class="metric-label">已开票</span><strong><small>¥</small> {{ snapshot.invoiced_cents|money }}</strong></article>
+  <article class="metric"><span class="metric-label">其中税额</span><strong><small>¥</small> {{ snapshot.tax_cents|money }}</strong></article>
+  <article class="metric"><span class="metric-label">已收款</span><strong><small>¥</small> {{ snapshot.received_cents|money }}</strong></article>
+  <article class="metric featured"><span class="metric-label">未收款</span><strong><small>¥</small> {{ snapshot.outstanding_cents|money }}</strong></article>
 </div>
 <div class="balance-strip">
-  <span>资金账户余额（期初 + 收款 − 付款） <strong>¥ {{ snapshot.account_total_cents|money }}</strong></span>
-  <span>资金账户 <strong>{{ snapshot.accounts|length }}</strong> 个</span>
-  <span class="muted">项目现金净额 = 已收款 − 已付款；付款由 Q-36「费用与付款」登记并关联资金账户（Q-38）。</span>
+  <span>资金账户余额 <strong>¥ {{ snapshot.account_total_cents|money }}</strong> · {{ snapshot.accounts|length }} 个账户</span>
 </div>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>项目开票与收款</h2><p>未收款 = 已开票 − 已收款；同一收款只消费一次</p></div><span class="badge neutral">只读聚合</span></div>
+  <div class="panel-heading"><div><h2>项目开票与收款</h2></div><span class="badge neutral">只读聚合</span></div>
   <div class="table-scroll"><table>
     <caption class="sr-only">按项目汇总的开票、税额、收款、未收款与现金缺口</caption>
     <thead><tr><th>项目</th><th>已开票（价税合计）</th><th>其中税额</th><th>已收款</th><th>未收款</th><th>项目现金净额</th></tr></thead>
@@ -37,7 +34,7 @@
         <td class="numeric">¥ {{ row.tax_cents|money }}</td>
         <td class="numeric">¥ {{ row.received_cents|money }}</td>
         <td class="numeric">¥ {{ row.outstanding_cents|money }}</td>
-        <td class="numeric">¥ {{ row.cash_net_cents|money }}<span class="cell-sub">已收款 − 已付款</span></td>
+        <td class="numeric">¥ {{ row.cash_net_cents|money }}</td>
       </tr>
       {% empty %}<tr><td colspan="6" class="table-empty">还没有开票或收款记录。先用下方表单登记第一张发票。</td></tr>{% endfor %}
     </tbody>
@@ -45,7 +42,7 @@
 </section>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>登记发票</h2><p>号码、价税合计、可选税率、日期与项目/合同</p></div></div>
+  <div class="panel-heading"><div><h2>登记发票</h2></div></div>
   <div class="panel-body">
     <form method="post" action="{% url 'billing-invoice-create' %}" class="stack-form" novalidate>
       {% csrf_token %}
@@ -60,7 +57,7 @@
 </section>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>登记收款</h2><p>选择或新建资金账户；归属项目或显式非项目；可部分收款并关联发票</p></div></div>
+  <div class="panel-heading"><div><h2>登记收款</h2></div></div>
   <div class="panel-body">
     <form method="post" action="{% url 'billing-receipt-create' %}" class="stack-form" novalidate>
       {% csrf_token %}
@@ -78,7 +75,7 @@
 </section>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>资金账户</h2><p>余额 = 期初余额 + 已收款（退款负值） − 已付款；不提供直接改余额</p></div><span class="badge neutral">派生余额</span></div>
+  <div class="panel-heading"><div><h2>资金账户</h2></div><span class="badge neutral">派生余额</span></div>
   <div class="table-scroll"><table>
     <caption class="sr-only">资金账户与派生余额</caption>
     <thead><tr><th>账户</th><th>类型</th><th>期初余额</th><th>已收款</th><th>已付款</th><th>派生余额</th><th>状态</th></tr></thead>
@@ -114,7 +111,7 @@
 </section>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>发票记录</h2><p>最近 {{ snapshot.invoice_rows|length }} 条，含作废冲销记录；原票不修改</p></div><span class="badge neutral">只追加</span></div>
+  <div class="panel-heading"><div><h2>发票记录</h2></div><span class="badge neutral">只追加</span></div>
   <div class="record-list">
     {% for row in snapshot.invoice_rows %}
     <details class="record">
@@ -145,7 +142,7 @@
 </section>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>收款记录</h2><p>最近 {{ snapshot.receipt_rows|length }} 条，含退款负值记录；同一收款只消费一次</p></div><span class="badge neutral">只追加</span></div>
+  <div class="panel-heading"><div><h2>收款记录</h2></div><span class="badge neutral">只追加</span></div>
   <div class="record-list">
     {% for row in snapshot.receipt_rows %}
     <details class="record">
@@ -177,17 +174,7 @@
   </div>
 </section>
 
-<section class="panel section-gap">
-  <div class="panel-heading"><div><h2>数据缺口</h2><p>缺数据显示缺口，不用 0 冒充</p></div></div>
-  <div class="panel-body">
-    <ul class="rule-list">
-      <li><strong>付款已接入资金账户（Q-38）</strong><p>项目现金净额 = 已收款 − 已付款；资金账户余额 = 期初余额 + 已收款 − 已付款，付款未关联账户的历史记录单列缺口，不用 0 冒充净额。</p></li>
-      {% if snapshot.gaps.unlinked_payment_count %}<li><strong>历史付款 {{ snapshot.gaps.unlinked_payment_count }} 笔未关联资金账户</strong><p>¥ {{ snapshot.gaps.unlinked_payment_cents|money }} 未从账户余额扣减；历史记录只读保留，不重算。</p></li>{% endif %}
-      {% if snapshot.gaps.legacy_payments %}<li><strong>历史专业流程付款 {{ snapshot.gaps.legacy_payments }} 笔</strong><p>旧财务流程付款单据未接入极简资金账户，按停用不删历史原则只读保留。</p></li>{% endif %}
-      {% if snapshot.gaps.legacy_receipts %}<li><strong>历史收款 {{ snapshot.gaps.legacy_receipts }} 笔未接入</strong><p>来自旧财务流程的收款单据没有资金账户与发票归属，未计入本页已收款和账户余额；按停用不删历史原则保留只读。</p></li>{% endif %}
-      {% if snapshot.gaps.tax_unspecified %}<li><strong>税率未填 {{ snapshot.gaps.tax_unspecified }} 张</strong><p>未填税率的发票没有拆分税额，系统不猜测税率；请作废后按真实税率重新开票。</p></li>{% endif %}
-      {% if snapshot.gaps.non_project_receipts %}<li><strong>非项目收款 {{ snapshot.gaps.non_project_receipts }} 笔</strong><p>显式非项目收款计入资金账户余额，但不计入任何项目现金净额。</p></li>{% endif %}
-    </ul>
-  </div>
-</section>
+{% if snapshot.gaps.unlinked_payment_count or snapshot.gaps.legacy_payments or snapshot.gaps.legacy_receipts or snapshot.gaps.tax_unspecified or snapshot.gaps.non_project_receipts %}
+<div class="notice" role="status"><strong>数据缺口</strong>{% if snapshot.gaps.unlinked_payment_count %} <span class="badge warning">历史付款 {{ snapshot.gaps.unlinked_payment_count }} 笔 · ¥ {{ snapshot.gaps.unlinked_payment_cents|money }}</span>{% endif %}{% if snapshot.gaps.legacy_payments %} <span class="badge neutral">历史付款 {{ snapshot.gaps.legacy_payments }} 笔</span>{% endif %}{% if snapshot.gaps.legacy_receipts %} <span class="badge neutral">历史收款 {{ snapshot.gaps.legacy_receipts }} 笔</span>{% endif %}{% if snapshot.gaps.tax_unspecified %} <span class="badge warning">税率未填 {{ snapshot.gaps.tax_unspecified }} 张</span>{% endif %}{% if snapshot.gaps.non_project_receipts %} <span class="badge neutral">非项目收款 {{ snapshot.gaps.non_project_receipts }} 笔</span>{% endif %}</div>
+{% endif %}
 {% endblock %}

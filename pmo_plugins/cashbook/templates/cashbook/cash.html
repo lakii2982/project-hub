@@ -3,27 +3,24 @@
 {% block breadcrumb %}现金{% endblock %}
 {% block content %}
 <section class="page-heading">
-  <div><div class="eyebrow">CASH &amp; 8-WEEK PLAN</div><h1>现金</h1>
-    <p>人民币 / 元 · 账户余额 = 期初余额 + 已收款 − 已付款（派生值，不直接编辑）；8 周计划只读派生，不是应收应付或预测事实。</p></div>
+  <div><div class="eyebrow">CASH &amp; 8-WEEK PLAN</div><h1>现金</h1></div>
   <div class="actions"><a class="button" href="{% url 'billing' %}">登记收款</a><a class="button" href="{% url 'expenses' %}">登记费用/付款</a></div>
 </section>
 
 <div class="metrics-grid">
-  <article class="metric"><span class="metric-label">资金账户余额 <span>派生</span></span><strong><small>¥</small> {{ snapshot.account_total_cents|money }}</strong><p>{{ snapshot.accounts|length }} 个账户 · 期初 + 收款 − 付款</p></article>
-  <article class="metric"><span class="metric-label">8 周内计划收款 <span>payment_plan</span></span><strong><small>¥</small> {{ snapshot.plan.within_in_cents|money }}</strong><p>未收收款计划按到期日先后抵减已收款</p></article>
-  <article class="metric"><span class="metric-label">8 周内计划付款 <span>expense</span></span><strong><small>¥</small> {{ snapshot.plan.within_out_cents|money }}</strong><p>已确认未付支出，按预计付款日（未填按发生日）</p></article>
-  <article class="metric featured"><span class="metric-label">预计 8 周后余额</span><strong {% if snapshot.plan.negative %}class="text-warning"{% endif %}><small>¥</small> {{ snapshot.plan.projected_end_cents|money }}</strong><p>{% if snapshot.plan.negative %}<span class="badge warning">预计余额为负，存在现金缺口</span>{% else %}账户余额 + 计划收款 − 计划付款{% endif %}</p></article>
+  <article class="metric"><span class="metric-label">资金账户余额</span><strong><small>¥</small> {{ snapshot.account_total_cents|money }}</strong><small>{{ snapshot.accounts|length }} 个账户</small></article>
+  <article class="metric"><span class="metric-label">8 周内计划收款</span><strong><small>¥</small> {{ snapshot.plan.within_in_cents|money }}</strong></article>
+  <article class="metric"><span class="metric-label">8 周内计划付款</span><strong><small>¥</small> {{ snapshot.plan.within_out_cents|money }}</strong></article>
+  <article class="metric featured"><span class="metric-label">预计 8 周后余额</span><strong {% if snapshot.plan.negative %}class="text-warning"{% endif %}><small>¥</small> {{ snapshot.plan.projected_end_cents|money }}</strong>{% if snapshot.plan.negative %}<span class="badge warning">现金缺口</span>{% endif %}</article>
 </div>
 <div class="balance-strip">
-  <span>逾期计划（单列，不挪入本周） <strong>{{ snapshot.plan.overdue_count }} 项</strong></span>
+  <span>逾期计划（单列） <strong>{{ snapshot.plan.overdue_count }} 项</strong></span>
   <span>8 周以外 <strong>{{ snapshot.plan.beyond_count }} 项 ¥ {{ snapshot.plan.beyond_cents|money }}</strong></span>
   <span>来源去重后 <strong>{{ snapshot.plan.source_count }} 项</strong>（收款计划 {{ snapshot.plan.payment_plan_count }} / 未付支出 {{ snapshot.plan.expense_count }}）</span>
-  <span class="muted">项目收款不绑定收款计划，本页按项目内到期日先后只读抵减；不写核销事实。</span>
-  {% if not can_manage_accounts %}<span class="muted">项目经理仅看到本人负责项目的计划；账户余额与流水为公司现金口径。</span>{% endif %}
 </div>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>未来 8 周现金计划</h2><p>只读派生：按 (source_kind, source_id) 去重，结清后移出；过期单列不自动挪周。</p></div><span class="badge neutral">零写入</span></div>
+  <div class="panel-heading"><div><h2>未来 8 周现金计划</h2></div><span class="badge neutral">零写入</span></div>
   <div class="table-scroll"><table>
     <caption class="sr-only">未来 8 周计划收款、计划付款、净额与预计余额</caption>
     <thead><tr><th>周</th><th>到期范围</th><th class="numeric">计划收款</th><th class="numeric">计划付款</th><th class="numeric">净额</th><th class="numeric">预计余额</th></tr></thead>
@@ -36,8 +33,7 @@
   </table></div>
   <div class="panel-body">
     {% if snapshot.plan.overdue %}
-    <div class="notice" role="status"><strong>逾期计划 {{ snapshot.plan.overdue_count }} 项 · 计划收款 ¥ {{ snapshot.plan.overdue_in_cents|money }} / 计划付款 {{ snapshot.plan.overdue_out_cents|money }}</strong>
-      <p>逾期项单列跟进，不会自动挪到本周；已结清来源已移出计划。</p>
+    <div class="notice" role="status"><strong>逾期计划 {{ snapshot.plan.overdue_count }} 项 · 计划收款 ¥ {{ snapshot.plan.overdue_in_cents|money }} / 计划付款 ¥ {{ snapshot.plan.overdue_out_cents|money }}</strong>
       <ul>{% for item in snapshot.plan.overdue %}<li>{{ item.due_on|date:'Y.m.d' }} · {{ item.project.code }} · {{ item.title }} · {% if item.direction == 'in' %}计划收款{% else %}计划付款{% endif %} ¥ {{ item.amount_cents|money }}（来源 {{ item.source_id }}）</li>{% endfor %}</ul>
     </div>
     {% endif %}
@@ -56,13 +52,13 @@
       </table></div>
     </details>
     {% endif %}
-    {% if not snapshot.plan.items %}<div class="empty-state compact"><h3>当前没有 8 周内计划</h3><p>确认一笔未付费用，或在项目上登记已批准收款计划后，这里按到期日显示。缺数据不用假零。</p></div>{% endif %}
-    {% if snapshot.plan.beyond %}<p class="help-text">另有 {{ snapshot.plan.beyond_count }} 项计划在 8 周以外，合计 ¥ {{ snapshot.plan.beyond_cents|money }}，不计入本页 8 周预计余额。</p>{% endif %}
+    {% if not snapshot.plan.items %}<div class="empty-state compact"><h3>当前没有 8 周内计划</h3><p>确认一笔未付费用，或在项目上登记已批准收款计划后，这里按到期日显示。</p></div>{% endif %}
+    {% if snapshot.plan.beyond %}<p class="help-text">另有 {{ snapshot.plan.beyond_count }} 项计划在 8 周以外，合计 ¥ {{ snapshot.plan.beyond_cents|money }}。</p>{% endif %}
   </div>
 </section>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>资金账户</h2><p>余额 = 期初余额 + 已收款（退款负值） − 已付款；不提供直接改余额</p></div><span class="badge neutral">派生余额</span></div>
+  <div class="panel-heading"><div><h2>资金账户</h2></div><span class="badge neutral">派生余额</span></div>
   <div class="record-list">
     {% for account in snapshot.accounts %}
     <details class="record"><summary>
@@ -71,8 +67,8 @@
     </summary><div class="record-body">
       <dl class="detail-grid">
         <div><dt>期初余额</dt><dd>¥ {{ account.opening_balance_cents|money }}</dd></div>
-        <div><dt>已收款（含退款负值）</dt><dd>¥ {{ account.received_cents|money }}</dd></div>
-        <div><dt>已付款（Q-36 关联）</dt><dd>¥ {{ account.paid_cents|money }}</dd></div>
+        <div><dt>已收款</dt><dd>¥ {{ account.received_cents|money }}</dd></div>
+        <div><dt>已付款</dt><dd>¥ {{ account.paid_cents|money }}</dd></div>
         <div><dt>派生余额</dt><dd><strong>¥ {{ account.balance_cents|money }}</strong></dd></div>
       </dl>
       {% if account.note %}<p class="help-text">{{ account.note }}</p>{% endif %}
@@ -83,7 +79,6 @@
         <div><label for="account-active-{{ account.pk }}">启用</label><input id="account-active-{{ account.pk }}" name="active" type="checkbox" {% if account.active %}checked{% endif %}></div>
         <button class="button primary" type="submit">保存账户维护</button>
       </form>
-      <p class="help-text">只能调整期初余额与启停；余额与流水均由收付款派生，历史流水不改写。</p>
       {% endif %}
     </div></details>
     {% empty %}<div class="empty-state compact"><h3>还没有资金账户</h3><p>{% if can_manage_accounts %}用下方表单建立第一个账户并设置期初余额。{% else %}请公司负责人先建立资金账户。{% endif %}</p></div>{% endfor %}
@@ -101,12 +96,12 @@
     </form>
   </div>
   {% else %}
-  <div class="panel-body"><p class="help-text">资金账户由公司负责人维护；你可以查看派生余额与流水。</p></div>
+  <div class="panel-body"><p class="help-text">资金账户由公司负责人维护。</p></div>
   {% endif %}
 </section>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>收付款流水</h2><p>账户余额 = 期初 + 收款 − 退款 − 付款；最近 {{ snapshot.flows|length }} 条</p></div><span class="badge neutral">只读</span></div>
+  <div class="panel-heading"><div><h2>收付款流水</h2></div><span class="badge neutral">只读</span></div>
   <div class="table-scroll"><table>
     <caption class="sr-only">资金账户收付款流水</caption>
     <thead><tr><th>日期</th><th>类型</th><th>账户</th><th>项目</th><th>说明</th><th>来源编号</th><th class="numeric">金额</th></tr></thead>
@@ -123,16 +118,16 @@
 </section>
 
 <section class="panel section-gap">
-  <div class="panel-heading"><div><h2>数据缺口</h2><p>缺账户/缺计划/历史数据单列，不用 0 冒充</p></div></div>
+  <div class="panel-heading"><div><h2>数据缺口</h2></div></div>
   <div class="panel-body">
     <ul class="rule-list">
-      {% if snapshot.gaps.no_accounts %}<li><strong>没有资金账户</strong><p>没有账户时余额与流水不可派生；请由负责人新建账户并设置期初余额，缺口不显示假零。</p></li>{% endif %}
-      {% if snapshot.gaps.unlinked_payment_count %}<li><strong>历史付款 {{ snapshot.gaps.unlinked_payment_count }} 笔未关联资金账户</strong><p>¥ {{ snapshot.gaps.unlinked_payment_cents|money }} 未从任何账户余额扣减；历史记录只读保留，不重算。</p></li>{% endif %}
-      {% if snapshot.gaps.legacy_receipt_count or snapshot.gaps.legacy_payment_count %}<li><strong>历史专业流程现金 {{ snapshot.gaps.legacy_receipt_count }} 笔收款 / {{ snapshot.gaps.legacy_payment_count }} 笔付款</strong><p>旧财务流程单据没有极简资金账户归属，未计入本页流水与余额；停用不删历史。</p></li>{% endif %}
-      {% if snapshot.gaps.legacy_payable_plan_count %}<li><strong>历史付款计划 {{ snapshot.gaps.legacy_payable_plan_count }} 项 · 剩余 ¥ {{ snapshot.gaps.legacy_payable_plan_cents|money }}</strong><p>8 周计划只取未收收款计划 + 已确认未付支出；旧专业付款计划不纳入，避免与未付支出重复。</p></li>{% endif %}
-      {% if snapshot.gaps.unplanned_receipt_cents %}<li><strong>未匹配收款计划的收款 ¥ {{ snapshot.gaps.unplanned_receipt_cents|money }}</strong><p>已计入账户余额，但该项目没有未结清收款计划可抵减（或计划已停用/未批准）；可能是预收或计划未登记，单列缺口不重复计计划。</p></li>{% endif %}
-      {% if snapshot.gaps.pending_expense_count %}<li><strong>未确认费用 {{ snapshot.gaps.pending_expense_count }} 笔 ¥ {{ snapshot.gaps.pending_expense_cents|money }}</strong><p>确认后才进入成本与 8 周未付计划；未确认金额不计入计划。</p></li>{% endif %}
-      {% if not snapshot.gaps.no_accounts and not snapshot.gaps.unlinked_payment_count and not snapshot.gaps.legacy_receipt_count and not snapshot.gaps.legacy_payment_count and not snapshot.gaps.legacy_payable_plan_count and not snapshot.gaps.unplanned_receipt_cents and not snapshot.gaps.pending_expense_count and not snapshot.plan.negative and snapshot.plan.projected_end_cents >= 0 %}<li><strong>本期无已知现金缺口</strong><p>账户余额与流水均来自收付款事实；计划仍为只读派生，不等于银行余额或利润。</p></li>{% endif %}
+      {% if snapshot.gaps.no_accounts %}<li><strong>没有资金账户</strong></li>{% endif %}
+      {% if snapshot.gaps.unlinked_payment_count %}<li><strong>历史付款 {{ snapshot.gaps.unlinked_payment_count }} 笔未关联资金账户</strong> ¥ {{ snapshot.gaps.unlinked_payment_cents|money }}</li>{% endif %}
+      {% if snapshot.gaps.legacy_receipt_count or snapshot.gaps.legacy_payment_count %}<li><strong>历史专业流程现金 {{ snapshot.gaps.legacy_receipt_count }} 笔收款 / {{ snapshot.gaps.legacy_payment_count }} 笔付款</strong></li>{% endif %}
+      {% if snapshot.gaps.legacy_payable_plan_count %}<li><strong>历史付款计划 {{ snapshot.gaps.legacy_payable_plan_count }} 项 · 剩余 ¥ {{ snapshot.gaps.legacy_payable_plan_cents|money }}</strong></li>{% endif %}
+      {% if snapshot.gaps.unplanned_receipt_cents %}<li><strong>未匹配收款计划的收款 ¥ {{ snapshot.gaps.unplanned_receipt_cents|money }}</strong></li>{% endif %}
+      {% if snapshot.gaps.pending_expense_count %}<li><strong>未确认费用 {{ snapshot.gaps.pending_expense_count }} 笔 ¥ {{ snapshot.gaps.pending_expense_cents|money }}</strong></li>{% endif %}
+      {% if not snapshot.gaps.no_accounts and not snapshot.gaps.unlinked_payment_count and not snapshot.gaps.legacy_receipt_count and not snapshot.gaps.legacy_payment_count and not snapshot.gaps.legacy_payable_plan_count and not snapshot.gaps.unplanned_receipt_cents and not snapshot.gaps.pending_expense_count and not snapshot.plan.negative and snapshot.plan.projected_end_cents >= 0 %}<li><strong>本期无已知现金缺口</strong></li>{% endif %}
     </ul>
   </div>
 </section>

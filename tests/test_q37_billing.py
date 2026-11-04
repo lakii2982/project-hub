@@ -285,8 +285,8 @@ class BillingHttpTests(BillingFixture):
         self.login(self.owner)
         page = self.client.get(reverse("billing"))
         self.assertEqual(page.status_code, 200)
-        for text in ("登记发票", "登记收款", "资金账户", "未收款 = 已开票 − 已收款",
-                     "付款已接入资金账户（Q-38）", "还没有发票", "还没有资金账户", "新建资金账户"):
+        for text in ("登记发票", "登记收款", "资金账户", "未收款",
+                     "还没有发票", "还没有资金账户", "新建资金账户"):
             self.assertContains(page, text)
         self.assertIn("billing/billing.html", [t.name for t in page.templates])
 
@@ -401,9 +401,9 @@ class BillingHttpTests(BillingFixture):
         self.assertContains(page, "开票与收款")
         self.assertContains(page, "未收款")
         self.assertContains(page, "66.00")
-        # Q-36 delivered the payment side, so the old "付款未接入" gap marker is closed.
-        self.assertContains(page, "付款由费用与付款记录接入")
-        self.assertContains(page, "费用与外包（成本 / 现金）")
+        # Q-36 delivered the payment side; Q-45 只保留数值与标题，不保留口径长句。
+        self.assertContains(page, "项目现金净额")
+        self.assertContains(page, "费用与外包")
 
     def test_pm_only_sees_own_project_billing_numbers(self):
         self.account(name="老板账户")
@@ -429,7 +429,7 @@ class BillingHttpTests(BillingFixture):
                                 reference="LEGACY-1", submitted_by=self.owner.user, status="approved")
         self.login(self.owner)
         page = self.client.get(reverse("billing"))
-        self.assertContains(page, "历史收款 1 笔未接入")
+        self.assertContains(page, "历史收款 1 笔")
         self.assertContains(page, "非项目收款 1 笔")
         self.assertContains(page, "非项目收款")
 

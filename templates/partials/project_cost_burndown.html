@@ -6,8 +6,6 @@
   </div>
   {% if cost_burndown.available %}
   <div class="cost-burndown-body">
-    <p class="cost-burndown-note">按当前批准预算重述整条历史曲线，不复原历史预算版本。计划参考线按项目起止日期均匀燃尽，并非已批准的逐日计划。实际线仅截至今天；负值冲销会使余额回升，超支保留负余额。</p>
-    {% if cost_burndown.note %}<p class="muted">{{ cost_burndown.note }}</p>{% endif %}
     <dl class="cost-burndown-summary" aria-label="成本预算余额摘要">
       <div><dt>当前批准预算</dt><dd>¥ {{ cost_burndown.budget_cents|money }}</dd></div>
       <div><dt>累计确认成本</dt><dd>¥ {{ cost_burndown.actual_cost_cents|money }}</dd></div>
