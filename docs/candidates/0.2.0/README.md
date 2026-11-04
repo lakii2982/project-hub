@@ -35,11 +35,11 @@
 python scripts/package.py
 # 输出 releases/project-hub-0.2.0-source.zip 与 .sha256
 python scripts/verify-source-package.py releases/project-hub-0.2.0-source.zip
-# {"ok": true, "files": 1789, "sha256": "a2c367981d9a03a8c4763db2ee7cf602239449e1e036f7b13d407db7628f1944", "runtime_excluded": true}
+# {"ok": true, "files": 1799, "sha256": "b48f2227bac2fffca21b7d71e4bc4a1d4d7a437497e0c80fe3df835f7c2bdc28", "runtime_excluded": true}
 ```
 
-- 归档 SHA-256：`a2c367981d9a03a8c4763db2ee7cf602239449e1e036f7b13d407db7628f1944`（`source.zip.sha256` 同步保存）。
-- 文件数：`1791`；逐文件摘要：包内 `SHA256MANIFEST.json`（不提交到仓库；其 SHA-256 记录在 `candidate.json`）。
+- 归档 SHA-256：`b48f2227bac2fffca21b7d71e4bc4a1d4d7a437497e0c80fe3df835f7c2bdc28`（`source.zip.sha256` 同步保存）。
+- 文件数：`1799`；逐文件摘要：包内 `SHA256MANIFEST.json`（不提交到仓库；其 SHA-256 记录在 `candidate.json`）。
 - 确定性：ZIP 条目固定时间戳/权限，同一源码树重复构建得到相同字节与摘要；发布元数据
   `docs/candidates/` 不进入包内，避免“描述包的文件改变包摘要”的循环。
 - 包内容：`core/`、`pmo/`、`pmo_plugins/`、`templates/`、`static/`、`tests/`、`scripts/`、

@@ -283,7 +283,8 @@ class DashboardHttpTests(DashboardFixture):
         self.assertContains(page, reverse("project-detail", args=[self.project.pk]))
         self.assertContains(page, "11,600.00")  # outstanding ¥11,600.00 (gross cash)
         self.assertContains(page, "15,000.00")  # monthly net invoiced ¥15,000.00
-        self.assertContains(page, "15,600.00")  # gross invoiced shown as subtext
+        # Q-45：注释式口径段落与卡片副标题已移除，只保留标签、数值与缺口徽章。
+        self.assertNotContains(page, "收入默认按开票确认")
 
     def test_basis_query_switch_and_invalid_defaults_to_invoice(self):
         self.login(self.owner)

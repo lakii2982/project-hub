@@ -109,12 +109,13 @@ class LightDeliveryDocsTests(unittest.TestCase):
         from scripts import projectctl
         parsed = projectctl.parse_queue(ROOT, json.loads(self.read('project/tasks.json'))['tasks'])
         self.assertEqual(parsed['issues'], [])
-        # 2026-11-03 范围重定义：QUEUE 精确为小微版 14 条（Q-31–Q-44）；专业版 30 条归档只读。
-        self.assertEqual(parsed['item_count'], 14)
+        # 2026-11-03 范围重定义：QUEUE 为小微版 Q-31–Q-44；Q-45 为 2026-11-04 用户反馈的页面清理成果，
+        # 专业版 30 条归档只读。队列只增不改历史。
+        self.assertEqual(parsed['item_count'], 15)
         first_wave = [item for item in parsed['items'] if item['wave'] == 'W1']
         self.assertEqual(len(first_wave), 7)
         ids = {item['id'] for item in parsed['items']}
-        self.assertEqual(ids, {'Q-' + str(n) for n in range(31, 45)})
+        self.assertEqual(ids, {'Q-' + str(n) for n in range(31, 46)})
         self.assertTrue({'Q-01', 'Q-02', 'Q-03', 'Q-04', 'Q-05'}.isdisjoint(ids))
         self.assertTrue((ROOT / 'docs/archive/v1.0-planning/queue-professional-2026-11-03.md').is_file())
         for item in first_wave:

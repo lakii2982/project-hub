@@ -87,10 +87,12 @@ class WeeklyTimeFixture(TestCase):
         return reverse("timesheets-week")
 
     def row(self, index, work_date, target, minutes, note, row_id=None, token=None, version=None):
+        # Q-45：页面按小时填报（0.1 小时精度），内部仍以整数分钟记账。
+        hours = format((Decimal(minutes) / Decimal(60)).normalize(), "f")
         return {
             f"row-{index}-work_date": work_date.isoformat(),
             f"row-{index}-target": target,
-            f"row-{index}-minutes": str(minutes),
+            f"row-{index}-hours": hours,
             f"row-{index}-note": note,
             f"row-{index}-id": str(row_id) if row_id else "",
             f"row-{index}-token": token if token is not None else str(uuid.uuid4()),
@@ -191,7 +193,7 @@ class WeeklyEntryTests(WeeklyTimeFixture):
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, "缺费率缺口")
         self.assertContains(page, self.rate_less_employee.name)
-        self.assertContains(page, "未计入项目人工成本")
+        self.assertContains(page, "共 1 条")  # Q-45：缺口数量由徽章表达，不再写长说明
         gap = missing_rate_gaps(self.owner)
         self.assertEqual(gap["count"], 1)
         self.assertEqual(gap["minutes"], 90)
@@ -296,10 +298,37 @@ class WeeklyEntryTests(WeeklyTimeFixture):
         self.assertEqual(response.status_code, 400)
         self.assertContains(response, "保留这条已填内容", status_code=400)
         self.assertContains(response, "请填写工作说明", status_code=400)
-        self.assertContains(response, "工时须为1至1440的整数分钟", status_code=400)
+        self.assertContains(response, "工时须为0.1至24小时（例如 8 或 7.5）", status_code=400)
         self.assertContains(response, 'id="week-error-summary"', status_code=400)
         self.assertEqual(self.simplified().count(), 0)
         self.assertEqual(project_summary(self.project)["labor_cost_cents"], 0)
+
+    def test_hour_input_boundaries_round_half_up_and_reject_invalid(self):
+        self.login(self.member)
+
+        def post(hours, day=0):
+            return self.client.post(self.url(), {
+                "week": self.week_start.isoformat(),
+                "employee": str(self.member_employee.pk),
+                "row-0-work_date": (self.week_start + timedelta(days=day)).isoformat(),
+                "row-0-target": self.project_target(),
+                "row-0-hours": hours,
+                "row-0-note": "小时边界",
+                "row-0-token": str(uuid.uuid4()),
+                "row-0-id": "",
+                "row-0-version": "",
+            })
+
+        for invalid in ("abc", "0", "-1", "24.1", "nan", "inf", ""):
+            with self.subTest(hours=invalid):
+                self.assertEqual(post(invalid).status_code, 400)
+                self.assertContains(post(invalid), "工时须为0.1至24小时", status_code=400)
+        self.assertEqual(self.simplified().count(), 0)
+        # 7.51h rounds half up to 451 minutes; 24h is the allowed upper bound.
+        self.assertEqual(post("7.51").status_code, 302)
+        self.assertEqual(self.simplified().get().minutes, 451)
+        self.assertEqual(post("24", day=1).status_code, 302)
+        self.assertEqual(self.simplified().order_by("-id").first().minutes, 1440)
 
     def test_locked_period_future_date_and_daily_total_are_rejected(self):
         self.login(self.member)
@@ -321,7 +350,7 @@ class WeeklyEntryTests(WeeklyTimeFixture):
             self.row(1, self.week_start, self.project_target(), 60, "超额"),
         ])
         self.assertEqual(response.status_code, 400)
-        self.assertContains(response, "不能超过1440分钟", status_code=400)
+        self.assertContains(response, "不能超过24小时", status_code=400)
 
     def test_pm_sees_project_totals_but_not_personal_rates(self):
         self.login(self.member)

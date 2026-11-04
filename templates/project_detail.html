@@ -5,7 +5,7 @@
 {% block content %}
 <div class="project-detail" data-project-tabs>
   <section class="page-heading">
-    <div><div class="eyebrow">{{ project.code }} <span class="heading-dot">/</span> {{ project.get_template_display }}</div><h1>{{ project.name }}</h1><p>立项客户文本（历史）：{{ project.client }} <span class="heading-dot">·</span> 项目经理 {{ project.manager }}</p></div>
+    <div><div class="eyebrow">{{ project.code }} <span class="heading-dot">/</span> {{ project.get_template_display }}</div><h1>{{ project.name }}</h1><p>客户：{{ project.client }} <span class="heading-dot">·</span> 项目经理：{{ project.manager }}</p></div>
     <div class="actions">
       {% if can_manage %}<a class="button" href="{% url 'project-edit' project.pk %}">编辑项目</a>{% endif %}
       <span class="badge health-{{ summary.health|slugify }}">{{ summary.health_label|default:'待评估' }}</span><span class="badge neutral">{{ project.get_stage_display }}</span>
@@ -37,11 +37,11 @@
         {% if can_manage %}<details class="inset-details"><summary>变更项目阶段</summary><form method="post" action="{% url 'transition' project.pk %}" class="stack-form compact-form">{% csrf_token %}<input type="hidden" name="version" value="{{ project.version }}"><label for="target-stage">目标阶段</label><select id="target-stage" name="target" required>{% for value,label in stages %}<option value="{{ value }}" {% if project.stage == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><label for="transition-reason">变更原因</label><textarea id="transition-reason" name="reason" rows="3" minlength="4" required placeholder="说明阶段变更的依据"></textarea><button class="button primary" type="submit">提交阶段变更</button></form></details>{% endif %}
       </div>
     </div>
-    {% if can_finance %}{% include 'partials/project_cost_burndown.html' %}{% endif %}
+    {% if can_finance and not micro_scope %}{% include 'partials/project_cost_burndown.html' %}{% endif %}
   </section>
 
   <section id="tasks" class="anchor-section project-panel panel" role="tabpanel" aria-labelledby="tab-tasks" tabindex="-1">
-    <div class="panel-heading"><div><h2 data-panel-title tabindex="-1">关键任务</h2><p>仅显示关联本项目里程碑或收付款计划的任务。</p></div>{% if can_manage %}<a class="button" href="{% url 'new-object' 'task' %}?project={{ project.pk }}">＋ 新建关键任务</a>{% endif %}</div>
+    <div class="panel-heading"><div><h2 data-panel-title tabindex="-1">关键任务</h2></div>{% if can_manage %}<a class="button" href="{% url 'new-object' 'task' %}?project={{ project.pk }}">＋ 新建关键任务</a>{% endif %}</div>
     <div class="record-list">
       {% for task in tasks %}
       <details class="record">
@@ -52,7 +52,7 @@
           {% if can_manage or not is_viewer and task.owner_id == membership.pk %}<form method="post" action="{% url 'task-update' task.pk %}" class="stack-form compact-form">{% csrf_token %}<input type="hidden" name="version" value="{{ task.version }}"><div class="form-row"><div class="form-field"><label for="task-status-{{ task.pk }}">任务状态</label><select id="task-status-{{ task.pk }}" name="status"><option value="todo" {% if task.status == 'todo' %}selected{% endif %}>待开始</option><option value="doing" {% if task.status == 'doing' %}selected{% endif %}>进行中</option><option value="blocked" {% if task.status == 'blocked' %}selected{% endif %}>有阻碍</option><option value="done" {% if task.status == 'done' %}selected{% endif %}>已完成</option></select></div><div class="form-field grow"><label for="task-note-{{ task.pk }}">完成说明</label><textarea id="task-note-{{ task.pk }}" name="completion_note" rows="2">{{ task.completion_note }}</textarea></div></div><button class="button primary" type="submit">更新任务</button></form>{% endif %}
         </div>
       </details>
-      {% empty %}<div class="empty-state compact"><h3>尚无关联关键任务</h3><p>关键任务需关联本项目的里程碑或收付款计划；无关联的历史任务在下方保留。</p></div>{% endfor %}
+      {% empty %}<div class="empty-state compact"><h3>尚无关联关键任务</h3><p>关键任务需关联里程碑或收付款计划。</p></div>{% endfor %}
     </div>
     <details class="historical-tasks">
       <summary>历史任务（未关联里程碑或收付款计划）</summary>
@@ -82,38 +82,38 @@
 
   {% if can_finance %}
   <section id="finance" class="anchor-section project-panel" role="tabpanel" aria-labelledby="tab-finance" tabindex="-1">
-    <div class="section-heading"><div><h2 data-panel-title tabindex="-1">项目财务</h2><p>人民币 / 元 · 成本与现金分别核算</p></div>{% if can_manage or is_finance %}<div class="actions">{% if micro_scope %}<a class="button" href="{% url 'billing' %}">登记发票与收款</a>{% else %}<a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">登记费用</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">登记收款</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">登记付款</a>{% endif %}</div>{% endif %}</div>
+    <div class="section-heading"><div><h2 data-panel-title tabindex="-1">项目财务</h2></div>{% if can_manage or is_finance %}<div class="actions">{% if micro_scope %}<a class="button" href="{% url 'billing' %}">登记发票与收款</a>{% else %}<a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">登记费用</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">登记收款</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">登记付款</a>{% endif %}</div>{% endif %}</div>
     {% include 'partials/project_finance_summary.html' %}
+    {% if not micro_scope %}
     <div class="metrics-grid">
-      <article class="metric"><span class="metric-label">成本预算</span><strong>¥ {{ summary.budget_cents|money }}</strong><p>{% if project.budget_approved %}预算基线已批准{% else %}预算基线待批准{% endif %}</p></article>
-      <article class="metric"><span class="metric-label">已发生成本</span><strong>¥ {{ summary.cost_cents|money }}</strong><p>预计完工成本 ¥ {{ summary.eac_cents|money }}</p></article>
-      <article class="metric"><span class="metric-label">预算余额</span><strong {% if summary.remaining_cents < 0 %}class="text-warning"{% endif %}>¥ {{ summary.remaining_cents|money }}</strong><p>成本预算 − 已发生成本</p></article>
-      <article class="metric featured"><span class="metric-label">项目净现金流</span><strong>¥ {{ summary.cash_net_cents|money }}</strong><p>收款 {{ summary.cash_in_cents|wan }} / 付款 {{ summary.cash_out_cents|wan }}</p></article>
+      <article class="metric"><span class="metric-label">成本预算</span><strong>¥ {{ summary.budget_cents|money }}</strong></article>
+      <article class="metric"><span class="metric-label">已发生成本</span><strong>¥ {{ summary.cost_cents|money }}</strong></article>
+      <article class="metric"><span class="metric-label">预算余额</span><strong {% if summary.remaining_cents < 0 %}class="text-warning"{% endif %}>¥ {{ summary.remaining_cents|money }}</strong></article>
+      <article class="metric"><span class="metric-label">项目净现金流</span><strong>¥ {{ summary.cash_net_cents|money }}</strong></article>
     </div>
-    <div class="balance-strip"><span>计划待收 <strong>¥ {{ summary.receivable_cents|money }}</strong></span><span>计划待付 <strong>¥ {{ summary.payable_cents|money }}</strong></span><span>当前合同额 <strong>¥ {{ summary.contract_cents|money }}</strong>（立项预估 ¥ {{ project.contract_cents|money }}）</span></div>
+    <div class="balance-strip"><span>计划待收 <strong>¥ {{ summary.receivable_cents|money }}</strong></span><span>计划待付 <strong>¥ {{ summary.payable_cents|money }}</strong></span><span>当前合同额 <strong>¥ {{ summary.contract_cents|money }}</strong></span></div>
+    {% endif %}
     {% if billing %}
     <div class="panel section-gap">
-      <div class="panel-heading"><div><h2>开票与收款</h2><p>价税合计 / 元 · 未收款 = 已开票 − 已收款</p></div><a class="button" href="{% url 'billing' %}">登记发票与收款</a></div>
+      <div class="panel-heading"><div><h2>开票与收款</h2></div><a class="button" href="{% url 'billing' %}">登记发票与收款</a></div>
       <div class="summary-band">
         <div><span>已开票（价税合计）</span><strong>¥ {{ billing.invoiced_cents|money }}</strong></div>
         <div><span>其中税额</span><strong>¥ {{ billing.tax_cents|money }}</strong></div>
         <div><span>已收款</span><strong>¥ {{ billing.received_cents|money }}</strong></div>
         <div><span>未收款</span><strong>¥ {{ billing.outstanding_cents|money }}</strong></div>
-        <p>项目现金净额 = 已收款 − 已付款；付款由费用与付款记录接入。</p>
       </div>
-      <div class="balance-strip"><span>项目现金净额 <strong>¥ {{ billing.cash_net_cents|money }}</strong></span><span class="muted">已收款 − 已付款（费用付款已计入，账户关联见现金页）；已开票含税，税额来自可选税率，不猜测</span></div>
+      <div class="balance-strip"><span>项目现金净额 <strong>¥ {{ billing.cash_net_cents|money }}</strong></span></div>
     </div>
     {% endif %}
     {% if micro_scope and expenses %}
     <section class="panel section-gap" id="project-expenses">
-      <div class="panel-heading"><div><h2>费用与外包（成本 / 现金）</h2><p>人民币 / 元 · 确认只计一次成本，付款只计现金；未付金额进入 8 周计划</p></div><a class="button" href="/expenses/?project={{ project.pk }}">管理费用与付款</a></div>
+      <div class="panel-heading"><div><h2>费用与外包</h2></div><a class="button" href="/expenses/?project={{ project.pk }}">管理费用与付款</a></div>
       <div class="metrics-grid">
-        <article class="metric"><span class="metric-label">已确认费用成本</span><strong>¥ {{ expenses.cost_cents|money }}</strong><p>已计入上方项目成本合计</p></article>
-        <article class="metric"><span class="metric-label">待确认缺口</span><strong {% if expenses.pending_count %}class="text-warning"{% endif %}>{{ expenses.pending_count }} <small>笔</small></strong><p>¥ {{ expenses.pending_amount_cents|money }} 尚未计入成本</p></article>
-        <article class="metric"><span class="metric-label">已付现金</span><strong>¥ {{ expenses.paid_cents|money }}</strong><p>付款记录累计，不重复计成本</p></article>
-        <article class="metric"><span class="metric-label">未付支出</span><strong>¥ {{ expenses.unpaid_cents|money }}</strong><p>{% if expenses.overdue_count %}<span class="text-warning">{{ expenses.overdue_count }} 笔逾期，单列跟进</span>{% else %}按预计付款日进入 8 周计划{% endif %}</p></article>
+        <article class="metric"><span class="metric-label">已确认费用成本</span><strong>¥ {{ expenses.cost_cents|money }}</strong></article>
+        <article class="metric"><span class="metric-label">待确认缺口</span><strong {% if expenses.pending_count %}class="text-warning"{% endif %}>{{ expenses.pending_count }} <small>笔</small></strong></article>
+        <article class="metric"><span class="metric-label">已付现金</span><strong>¥ {{ expenses.paid_cents|money }}</strong></article>
+        <article class="metric"><span class="metric-label">未付支出</span><strong>¥ {{ expenses.unpaid_cents|money }}</strong>{% if expenses.overdue_count %}<small class="text-warning">{{ expenses.overdue_count }} 笔逾期</small>{% endif %}</article>
       </div>
-      <p class="help-text">这里只列 1.0 简明费用流程登记的数据；历史专业流程的费用单据仍按原样保留在项目财务明细中，不改写、不重算。</p>
     </section>
     {% endif %}
     {% if revenue_summary %}<section class="panel section-gap"><div class="panel-heading"><h2>已确认管理收入（固定节点与服务月）</h2><a class="button" href="{% url 'dashboard' %}modules/delivery/acceptance-list/">查看验收与收入</a></div><div class="summary-band"><div><span>收入净额（含冲销）</span><strong>¥ {{ revenue_summary.management_revenue_cents|money }}</strong></div><div><span>原确认 / 冲销</span><strong>{{ revenue_summary.recognition_count }} / {{ revenue_summary.adjustment_count }} 笔</strong></div></div><p>按本项目独立确认的客户验收与批准合同节点价格计算；与已记录成本、收款分别列示，不代表项目利润。工时收入尚未纳入本片；服务月收入按真实客户确认与批准服务期分月计算，与成本、收款分别列示。</p>{% if revenue_summary.pending_acceptance_count or revenue_summary.unrecognized_acceptance_count or revenue_summary.reversed_pending_acceptance_count %}<p role="status">待处理验收 {{ revenue_summary.pending_acceptance_count }} 项 · 待确认收入 {{ revenue_summary.unrecognized_acceptance_count }} 项 · 待明确反验收 {{ revenue_summary.reversed_pending_acceptance_count }} 项</p>{% endif %}{% if revenue_summary.pending_service_confirmation_count or revenue_summary.unrecognized_service_month_count or revenue_summary.reversed_pending_service_month_count %}<p role="status">服务期：待处理确认 {{ revenue_summary.pending_service_confirmation_count }} 项 · 待收入服务月 {{ revenue_summary.unrecognized_service_month_count }} 个 · 已反未反确认 {{ revenue_summary.reversed_pending_service_month_count }} 个</p>{% endif %}<p><a href="{% url 'dashboard' %}modules/delivery/service-confirmation-list/">服务期确认与月度收入</a> · <a href="{% url 'dashboard' %}modules/settlement/settlement-list/">应收结算与账龄</a></p>{% if is_finance or is_viewer %}<p><a href="{% url 'export-data' 'management-revenue' %}?project={{ project.pk }}">导出本项目管理收入与冲销来源</a></p>{% endif %}</section>{% endif %}
@@ -121,10 +121,10 @@
 
     <div class="panel section-gap"><div class="panel-heading"><h2>收付款计划</h2>{% if can_manage or is_finance %}<a class="button" href="{% url 'new-object' 'plan' %}?project={{ project.pk }}">＋ 新建计划</a>{% endif %}</div>{% include 'partials/plans.html' with plans=cash_plans %}</div>
     <div class="panel section-gap">
-      <div class="panel-heading"><div><h2>业务单据与附件</h2><p>最近 40 条，完整记录见项目财务。</p></div>{% if can_manage or is_finance %}<details class="action-menu"><summary class="button">新建单据 ＋</summary><div class="menu-popover"><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">成本费用</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">实际收款</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">实际付款</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=baseline">预算基线</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=change">预算变更</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=acceptance">项目验收</a></div></details>{% endif %}</div>
+      <div class="panel-heading"><div><h2>业务单据与附件</h2></div>{% if can_manage or is_finance %}<details class="action-menu"><summary class="button">新建单据 ＋</summary><div class="menu-popover"><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">成本费用</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">实际收款</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">实际付款</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=baseline">预算基线</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=change">预算变更</a><a href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=acceptance">项目验收</a></div></details>{% endif %}</div>
       {% include 'partials/documents.html' %}
     </div>
-    <div class="panel section-gap"><div class="panel-heading"><div><h2>{% if is_finance %}最近入账{% else %}费用与现金入账{% endif %}</h2><p>最近 60 条。{% if is_finance %}完整记录可在项目财务导出。{% else %}人工成本包含在上方项目汇总。{% endif %}</p></div></div>{% include 'partials/ledger.html' %}</div>
+    <div class="panel section-gap"><div class="panel-heading"><div><h2>{% if is_finance %}最近入账{% else %}费用与现金入账{% endif %}</h2></div></div>{% include 'partials/ledger.html' %}</div>
   </section>
   {% endif %}
 
