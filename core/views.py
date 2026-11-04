@@ -4,7 +4,7 @@ import io
 import re
 import uuid
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from functools import wraps
 from pathlib import Path
 from django import forms
@@ -487,6 +487,22 @@ def _week_start(value):
         return weekly.week_start_for(timezone.localdate())
 
 
+def _hours_to_minutes(value):
+    """Convert the hours input (``8``, ``7.5``) to integer minutes for storage.
+
+    Hours are the input unit only; the source fact stays integer minutes. Invalid or
+    out-of-range input returns ``None`` so the weekly service raises a row-level error.
+    """
+    try:
+        hours = Decimal(str(value or "").strip())
+    except (ArithmeticError, ValueError):
+        return None
+    if not hours.is_finite() or hours <= 0 or hours > Decimal("24"):
+        return None
+    minutes = int((hours * 60).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    return minutes if 1 <= minutes <= 1440 else None
+
+
 def _posted_week_rows(post):
     indices = sorted({int(match.group(1)) for key in post
                       if (match := re.fullmatch(r"row-(\d+)-(?:id|work_date)", key))})
@@ -494,9 +510,11 @@ def _posted_week_rows(post):
     for index in indices[:200]:
         prefix = f"row-{index}-"
         row = {name: post.get(prefix + name, "").strip() for name in
-               ("id", "token", "version", "work_date", "target", "minutes", "note")}
-        if not any([row["id"], row["target"], row["minutes"], row["note"]]):
+               ("id", "token", "version", "work_date", "target", "hours", "note")}
+        if not any([row["id"], row["target"], row["hours"], row["note"]]):
             continue
+        minutes = _hours_to_minutes(row["hours"])
+        row["minutes"] = str(minutes) if minutes is not None else ""
         row["key"] = f"row-{index}"
         rows.append(row)
     return rows
@@ -508,7 +526,8 @@ def _weekly_payloads(posted_rows, row_errors):
         payloads.append({
             "key": row["key"], "id": row["id"], "token": row["token"], "version": row["version"],
             "work_date": row["work_date"], "target": row["target"], "minutes": row["minutes"],
-            "note": row["note"], "nonproject": row["target"].startswith("nonproject:"),
+            "hours": row["hours"], "note": row["note"],
+            "nonproject": row["target"].startswith("nonproject:"),
             "unpriced": False, "corrected": False, "cost_cents": None,
             "errors": row_errors.get(row["key"], []),
         })

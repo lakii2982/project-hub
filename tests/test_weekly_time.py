@@ -87,10 +87,12 @@ class WeeklyTimeFixture(TestCase):
         return reverse("timesheets-week")
 
     def row(self, index, work_date, target, minutes, note, row_id=None, token=None, version=None):
+        # Q-45：页面按小时填报（0.1 小时精度），内部仍以整数分钟记账。
+        hours = format((Decimal(minutes) / Decimal(60)).normalize(), "f")
         return {
             f"row-{index}-work_date": work_date.isoformat(),
             f"row-{index}-target": target,
-            f"row-{index}-minutes": str(minutes),
+            f"row-{index}-hours": hours,
             f"row-{index}-note": note,
             f"row-{index}-id": str(row_id) if row_id else "",
             f"row-{index}-token": token if token is not None else str(uuid.uuid4()),
@@ -191,7 +193,7 @@ class WeeklyEntryTests(WeeklyTimeFixture):
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, "缺费率缺口")
         self.assertContains(page, self.rate_less_employee.name)
-        self.assertContains(page, "未计入项目人工成本")
+        self.assertContains(page, "共 1 条")  # Q-45：缺口数量由徽章表达，不再写长说明
         gap = missing_rate_gaps(self.owner)
         self.assertEqual(gap["count"], 1)
         self.assertEqual(gap["minutes"], 90)
@@ -296,7 +298,7 @@ class WeeklyEntryTests(WeeklyTimeFixture):
         self.assertEqual(response.status_code, 400)
         self.assertContains(response, "保留这条已填内容", status_code=400)
         self.assertContains(response, "请填写工作说明", status_code=400)
-        self.assertContains(response, "工时须为1至1440的整数分钟", status_code=400)
+        self.assertContains(response, "工时须为0.1至24小时（例如 8 或 7.5）", status_code=400)
         self.assertContains(response, 'id="week-error-summary"', status_code=400)
         self.assertEqual(self.simplified().count(), 0)
         self.assertEqual(project_summary(self.project)["labor_cost_cents"], 0)
@@ -321,7 +323,7 @@ class WeeklyEntryTests(WeeklyTimeFixture):
             self.row(1, self.week_start, self.project_target(), 60, "超额"),
         ])
         self.assertEqual(response.status_code, 400)
-        self.assertContains(response, "不能超过1440分钟", status_code=400)
+        self.assertContains(response, "不能超过24小时", status_code=400)
 
     def test_pm_sees_project_totals_but_not_personal_rates(self):
         self.login(self.member)
