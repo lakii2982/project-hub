@@ -26,7 +26,7 @@
     a:hover { color: var(--color-text-link-hover); text-decoration: underline; }
     button, a, summary, input, select, textarea { outline-offset: var(--focus-ring-offset); }
     :focus-visible { outline: var(--focus-ring); }
-    [hidden] { display: none; }
+    [hidden] { display: none !important; }
     svg { display: block; width: 20px; height: 20px; flex: none; }
     h1, h2, h3, p { margin: var(--space-0); }
     h1 {
@@ -165,7 +165,7 @@
     .topbar-left, .topbar-right { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
     .breadcrumb { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); }
     .breadcrumb-current { color: var(--color-text); font-weight: var(--font-weight-medium); }
-    .menu-button { display: none; }
+    .button.menu-button { display: none; }
     .org-badge {
       display: inline-flex;
       align-items: center;
@@ -263,7 +263,7 @@
     .tabbar {
       max-width: 100%;
       margin-bottom: var(--section-gap);
-      padding: var(--focus-ring-width);
+      padding: calc(var(--focus-ring-width) + var(--focus-ring-offset));
       overflow-x: auto;
       overscroll-behavior-inline: contain;
     }
@@ -533,7 +533,7 @@
     @media (max-width: 768px) {
       .desktop-sidebar { display: none; }
       .app-shell { margin-left: var(--space-0); }
-      .menu-button { display: inline-flex; }
+      .button.menu-button { display: inline-flex; }
       .topbar { padding-inline: var(--page-padding-mobile); }
       main { padding: var(--space-6) var(--page-padding-mobile); }
       .state-grid { grid-template-columns: 1fr; }
