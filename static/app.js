@@ -1,44 +1,120 @@
-/* Native forms and section anchors work without JavaScript. */
+/* Progressive enhancement only: core navigation, tabs and forms work without JavaScript. */
 (() => {
   'use strict';
-  const toggle = document.querySelector('[data-nav-toggle]');
-  const sidebar = document.getElementById('sidebar');
-  const backdrop = document.querySelector('[data-close-nav]');
-  if (!toggle || !sidebar || !backdrop) return;
-  const media = window.matchMedia('(max-width: 760px)');
-  function setOpen(open) {
-    document.body.classList.toggle('nav-open', open);
-    toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? '关闭导航' : '打开导航');
-    backdrop.hidden = !open;
-    if (media.matches) sidebar.inert = !open;
-    if (open) sidebar.querySelector('a')?.focus();
-  }
-  function syncSize() {
-    setOpen(false);
-    sidebar.inert = media.matches;
-  }
-  toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
-  backdrop.addEventListener('click', () => { setOpen(false); toggle.focus(); });
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && document.body.classList.contains('nav-open')) {
-      setOpen(false); toggle.focus();
-    }
-    if (event.key === 'Tab' && document.body.classList.contains('nav-open')) {
-      const focusable = [...sidebar.querySelectorAll('a, button')];
-      const first = focusable[0], last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
-    }
-  });
-  sidebar.addEventListener('click', event => {
-    if (media.matches && event.target.closest('a')) setOpen(false);
-  });
-  media.addEventListener('change', syncSize);
-  document.documentElement.classList.add('js-nav');
-  syncSize();
+  document.documentElement.classList.add('js-app');
 })();
 
+/* PH-026 shell: native <dialog> navigation drawer below 1024px.
+   Without JavaScript the drawer renders open in flow, so the nav stays reachable. */
+(() => {
+  'use strict';
+  const drawer = document.getElementById('nav-drawer');
+  const openButton = document.getElementById('drawer-open');
+  const closeButton = document.getElementById('drawer-close');
+  if (!drawer || !openButton) return;
+  const desktop = window.matchMedia('(min-width: 1024px)');
+  let openedByButton = false;
+
+  function syncInitial() {
+    if (drawer.open && !openedByButton) {
+      // The template renders the drawer open for the no-JS case; close it once JS is active.
+      openedByButton = false;
+      drawer.close();
+    }
+    openButton.setAttribute('aria-expanded', String(drawer.open && openedByButton));
+  }
+
+  function open() {
+    if (desktop.matches || drawer.open) return;
+    openedByButton = true;
+    drawer.showModal();
+    openButton.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('drawer-open');
+  }
+
+  function close({ restoreFocus = true } = {}) {
+    if (!drawer.open) return;
+    openedByButton = openedByButton && restoreFocus;
+    drawer.close();
+    if (restoreFocus && openedByButton) openButton.focus();
+  }
+
+  openButton.addEventListener('click', open);
+  if (closeButton) closeButton.addEventListener('click', () => close());
+  drawer.addEventListener('close', () => {
+    openButton.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('drawer-open');
+    if (openedByButton) { openButton.focus(); openedByButton = false; }
+  });
+  // Click on the backdrop area closes the modal drawer.
+  drawer.addEventListener('click', event => { if (event.target === drawer) close(); });
+  drawer.addEventListener('click', event => {
+    if (event.target.closest('a') && drawer.open) close({ restoreFocus: false });
+  });
+  desktop.addEventListener('change', () => { if (desktop.matches) close({ restoreFocus: false }); });
+  syncInitial();
+})();
+
+/* PH-026 link tabs: anchors with role=tab, server-rendered panels.
+   JS adds roving tabindex, auto activation (Arrow/Left/Right/Home/End) and
+   history-driven switching; without JS the links re-render the target panel.
+   Tab ids look like dash-tab-overview, panel ids like dash-panel-overview and
+   the ?tab= deep-link value is the shared suffix (overview). */
+(() => {
+  'use strict';
+  document.querySelectorAll('[data-link-tabs]').forEach(tablist => {
+    const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+    if (!tabs.length) return;
+    const panels = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
+    if (panels.some(panel => !panel)) return;
+    const suffix = tab => tab.id.split('-').pop();
+
+    function currentId() {
+      const requested = new URLSearchParams(window.location.search).get('tab');
+      return tabs.some(tab => suffix(tab) === requested) ? requested : suffix(tabs[0]);
+    }
+
+    function activate(id, { focusTab = false, updateUrl = false } = {}) {
+      tabs.forEach((tab, index) => {
+        const selected = suffix(tab) === id;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        panels[index].hidden = !selected;
+        if (selected) {
+          tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          if (focusTab) tab.focus();
+        }
+      });
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', id);
+        window.history.pushState(null, '', url);
+      }
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', event => {
+        event.preventDefault();
+        activate(suffix(tab), { updateUrl: true });
+      });
+      tab.addEventListener('keydown', event => {
+        let next;
+        if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+        else if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = tabs.length - 1;
+        else return;
+        event.preventDefault();
+        activate(suffix(tabs[next]), { focusTab: true, updateUrl: true });
+      });
+    });
+
+    window.addEventListener('popstate', () => activate(currentId(), { focusTab: true }));
+    activate(currentId());
+  });
+})();
+
+/* Q-34 project detail keeps its hash-driven tabs until the stage 3 migration. */
 (() => {
   'use strict';
   const root = document.querySelector('[data-project-tabs]');

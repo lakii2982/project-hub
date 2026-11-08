@@ -25,6 +25,8 @@
 
 ## 最近交付（main）
 
+- **PH-026 阶段①②（评审中）**：按已交付的 A 蓝白极简规范迭代产品前端第一、二片：全站壳层切换为白色 240px 侧栏 + 蓝白语义令牌（唯一令牌源 `static/ui/ui-tokens.css`，CSS 全量去 v1 变量与裸色值、辅助文字 ≥12px、原生 `dialog` 移动抽屉），工作台改为「收益与现金 / 到期提醒 / 项目动态」三页签（服务端 `?tab=` 深链 + 键盘自动激活，无 JavaScript 可用）；业务数据、路由与财务口径未动；阶段③–⑤（项目与详情、工时费用现金流、设置与图表页签）按 `project/QUEUE.md` 头注分片后续交付。
+
 - **Q-44**：小微版 `0.2.0-rc.1` 预发布候选与源码包：版本 `0.2.0` + CHANGELOG 0.2.0，候选清单 `docs/candidates/0.2.0/`（逐文件 SHA256、归档摘要、构建/校验命令、未验证项），源码包排除 runtime/.env/数据库/附件/备份/缓存并保留 LICENSE/NOTICE/THIRD_PARTY_NOTICES；ACCEPTANCE 逐项真实结果（未执行项保持 not_run/blocked），**未打标签、未发布、未部署**。
 
 - **Q-43**：安装与备份恢复底线：`scripts/install.sh` 一条命令 Compose 安装（0600 `.env`、绝不覆盖、失败保留/诊断/重试），只读 `/status/` 显示健康/迁移/最近备份/附件计数，`backup_local`+`verify-local-backup.py` 备份数据库+Evidence 附件，`restore_local` 隔离恢复并校验哈希/完整性；SQLite 本地实测恢复后页面/金额/权限一致，真实 Docker/PG/TLS 仍 not_run。

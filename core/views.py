@@ -86,6 +86,10 @@ def dashboard(request):
     from .business_dashboard import dashboard_snapshot, resolve_basis
     from .scope import is_micro_scope
     basis = resolve_basis(request.GET.get("basis"))
+    # PH-026 工作台页签：无效/缺失 tab 由服务端回退默认面板，不报错（无 JS 可用）。
+    active_tab = request.GET.get("tab")
+    if active_tab not in {"overview", "due", "activity"}:
+        active_tab = "overview"
     business = None
     due = None
     if request.member.role in {"owner", "pm"}:
@@ -102,8 +106,8 @@ def dashboard(request):
     return render(request, "dashboard.html", {"nav": "dashboard", "metrics": metrics, "cards": cards[:8],
         "alerts": alerts[:8], "forecast_overdue": overdue_plan_totals(financial_projects), "cashflow": cash_forecast(financial_projects),
         "labor_gaps": weekly.missing_rate_gaps(request.member), "expense_facts": dashboard_expense_facts(request.member),
-        "business": business, "basis": basis, "due": due, "onboarding_resume": onboarding_resume,
-        "today": timezone.localdate()})
+        "business": business, "basis": basis, "due": due, "active_tab": active_tab,
+        "onboarding_resume": onboarding_resume, "today": timezone.localdate()})
 
 
 @workspace_view

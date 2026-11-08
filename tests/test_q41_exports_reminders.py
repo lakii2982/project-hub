@@ -301,7 +301,10 @@ class Q41ReminderTests(Q41Fixture):
         self.assertEqual(self.client.get(reverse("due-list")).status_code, 200)
         self.login(self.member)
         self.assertEqual(self.client.get(reverse("due-list")).status_code, 403)
-        self.assertNotContains(self.client.get(reverse("dashboard")), "到期提醒")
+        # PH-026 后 member 的工作台固定渲染「到期提醒」空态面板：不携带任何提醒数据或入口链接。
+        member_dash = self.client.get(reverse("dashboard"))
+        self.assertContains(member_dash, "暂无到期事项")
+        self.assertNotContains(member_dash, reverse("due-list"))
         self.login(self.finance)
         self.assertEqual(self.client.get(reverse("due-list")).status_code, 403)
 
