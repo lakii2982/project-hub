@@ -262,3 +262,18 @@
 - 演示方式：四件规范 diff + 设计参考包 README/映射 + 样张 1440/390/320 浏览器截图与键盘走查记录 + 令牌加载验证（curl/浏览器 Network）。
 - 遗留任务：PH-110、PH-026
 - 需求：V1-INS-08
+
+### Q-47 · A 规范前端迭代第一片：壳层与工作台页签
+
+- 波次：W5
+- 依赖：Q-46
+- 状态：进行中
+- 用户可见成果：按用户 2026-11-08「前端样式确认按规范迭代前端」的确认，交付 PH-026 五片计划的第①②片：全站壳层切换为 A 蓝白极简（白色 240px 侧栏、`#F7F9FD` 画布、60px 白顶栏、<1024px 原生 dialog 导航抽屉、登录单列卡片），`static/app.css` 全量改用唯一语义令牌（v1 变量、裸色值与 <12px 小字清零，4 个失效令牌引用修正）；工作台改为「收益与现金 / 到期提醒 / 项目动态」三页签，服务端 `?tab=` 深链渲染唯一可见面板，无 JavaScript 可用，键盘 ←/→/Home/End 自动激活，前进/后退恢复页签与焦点；阶段③–⑤（项目与详情、工时/费用/现金流、设置与图表页签）按规范 §13.2 顺序留待后续切片。
+- 验收检查：
+  1. 1440/390/320 真实浏览器 10 条产品路由无横向滚动、console error=0；≥1024 白色 240px 侧栏 + 32px 主区留白，<1024 菜单按钮 + 16px 留白；抽屉 Esc/关闭/遮罩可关且焦点回到菜单按钮，无 JS 时导航以静态面板可达。
+  2. 工作台三页签：`?tab=due`/`?tab=activity`/非法值回退 overview 由服务端渲染唯一面板（其余面板带 `hidden`），basis 口径切换共存；member 见固定空态、无提醒数据与入口链接（`tests/test_ph026_dashboard_tabs.py` 8 项）。
+  3. `static/app.css` 无 v1 变量、裸十六进制/rgb 色值与 <12px 字号；`diff docs/engineering/ui-tokens.css static/ui/ui-tokens.css` 为空；候选源码包元数据同步（`check_candidate_metadata.py` ok=true）。
+  4. 全量 `manage.py test tests` 通过（仅存已记录的本机 `tests.test_delivery_execution*` 环境差异）；Before/After 截图同场景同视口入库于 `docs/screenshots/ph026-*`，验收记录 `docs/engineering/ph026-stage12-acceptance.md`。
+- 演示方式：owner 账号本地演示环境 Before/After 截图（1440/390/320 × 工作台/项目/工时/费用/开票与收款/现金/设置）+ 390 抽屉与 `?tab=due` 页签截图 + 键盘走查（页签自动激活、抽屉焦点还原）+ 命令退出码记录（docs/engineering/ph026-stage12-acceptance.md）。
+- 遗留任务：PH-026
+- 需求：V1-INS-08
