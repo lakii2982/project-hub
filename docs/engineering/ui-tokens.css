@@ -1,110 +1,220 @@
+/*
+ * 项目中枢 · 前端设计规范 v2.0
+ * 唯一语义设计令牌：A 方向「蓝白极简 SaaS」。
+ * 页面与组件只能引用语义令牌，不得声明私有十六进制色值或另建同义令牌。
+ */
 :root {
   color-scheme: light;
 
-  /* Semantic color: use these roles rather than raw palette values. */
-  --color-canvas: #f6f7f9;
+  /* ------------------------------------------------------------------------
+   * 颜色：画布与表面
+   * ------------------------------------------------------------------------ */
+  --color-canvas: #f7f9fd;
   --color-surface: #ffffff;
-  --color-surface-subtle: #f1f3f6;
+  --color-surface-subtle: #f4f7fc;
   --color-surface-raised: #ffffff;
-  --color-surface-selected: #edf2ff;
-  --color-text: #20242c;
-  --color-text-secondary: #535d6c;
-  --color-text-muted: #586376;
-  --color-text-inverse: #ffffff;
-  --color-text-link: #3157b7;
-  --color-border: #d9dee7;
-  --color-border-strong: #7d8798;
-  --color-accent: #365fc7;
-  --color-accent-hover: #294da8;
-  --color-accent-active: #203f8c;
-  --color-accent-subtle: #e8eeff;
-  --color-success: #18794e;
-  --color-success-subtle: #e8f5ee;
-  --color-warning: #8a4b0f;
-  --color-warning-subtle: #fff3df;
-  --color-danger: #b42332;
-  --color-danger-hover: #8f1d29;
-  --color-danger-subtle: #fdecef;
-  --color-info: #2463a9;
-  --color-info-subtle: #eaf3fc;
-  --color-overlay: rgb(23 29 38 / 48%);
-  --color-focus: #7c3aed;
+  --color-surface-selected: #eaf1ff;
+  --color-surface-disabled: #eef2f8;
 
-  /* System Chinese typography; no remote font. */
-  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
-  --font-family-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  /* 颜色：文字与链接；正文优先使用 text，说明使用 secondary，辅助使用 muted。 */
+  --color-text: #0f1d33;
+  --color-text-secondary: #526175;
+  --color-text-muted: #67758a;
+  --color-text-inverse: #ffffff;
+  --color-text-link: #1d4ed8;
+  --color-text-link-hover: #1e40af;
+
+  /* 颜色：边框；控件边界使用 border-control，以满足非文本对比度要求。 */
+  --color-border: #e7ecf5;
+  --color-border-strong: #dbe3f0;
+  --color-border-control: #7d8aa0;
+  --color-border-control-hover: #67758a;
+
+  /* 颜色：品牌与交互。 */
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-active: #1e40af;
+  --color-accent-subtle: #eaf1ff;
+  --color-accent-border: #d6e3ff;
+
+  /* 颜色：状态；状态必须同时使用图标、形状或中文标签，不得只依赖颜色。 */
+  --color-success: #0b7a53;
+  --color-success-subtle: #e7f6ef;
+  --color-warning: #9a5b06;
+  --color-warning-subtle: #fdf3e3;
+  --color-danger: #b42318;
+  --color-danger-hover: #912018;
+  --color-danger-subtle: #fdeceb;
+  --color-info: #2563eb;
+  --color-info-subtle: #eaf1ff;
+  --color-neutral-subtle: #eef2f8;
+
+  /* 颜色：遮罩与焦点。 */
+  --color-overlay: rgb(15 29 51 / 48%);
+  --color-focus: #2563eb;
+
+  /*
+   * 颜色：图表系列。
+   * 默认按 1→6 取色，即蓝、橙、绿、朱红、紫红、天蓝；
+   * 顺序参考 Okabe–Ito 色盲友好调色板，避免把红绿作为唯一对立编码。
+   * 系列仍须提供直接标签，并用线型、点形或图案作第二重编码。
+   */
+  --chart-1: #0072b2;
+  --chart-2: #e69f00;
+  --chart-3: #009e73;
+  --chart-4: #d55e00;
+  --chart-5: #cc79a7;
+  --chart-6: #56b4e9;
+  --chart-grid: #e7ecf5;
+  --chart-axis: #67758a;
+
+  /* ------------------------------------------------------------------------
+   * 字体：仅使用本机字体，不加载远程字体。
+   * ------------------------------------------------------------------------ */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro SC", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC",
+    sans-serif;
+  --font-family-mono: ui-monospace, "SFMono-Regular", "SF Mono", Consolas,
+    "Liberation Mono", monospace;
+  --font-family-numeric: var(--font-family-mono);
+
+  /* 字号：以 16px 根字号换算；辅助文字不得低于 12px，正文使用 sm＝14px。 */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.375rem;
-  --font-size-2xl: 1.75rem;
-  --line-height-xs: 1.125rem;
-  --line-height-sm: 1.375rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-body: var(--font-size-sm);
+  --font-size-table: 0.8125rem;
+  --font-size-panel-title: 0.90625rem;
+  --font-size-page-title: var(--font-size-2xl);
+
+  /* 行高：页标题为 24px/32px，正文为 14px/20px。 */
+  --line-height-xs: 1rem;
+  --line-height-sm: 1.25rem;
   --line-height-md: 1.5rem;
   --line-height-lg: 1.625rem;
-  --line-height-xl: 1.875rem;
-  --line-height-2xl: 2.25rem;
+  --line-height-xl: 1.75rem;
+  --line-height-2xl: 2rem;
+  --line-height-body: var(--line-height-sm);
+  --line-height-table: 1.25rem;
+  --line-height-panel-title: 1.375rem;
+  --line-height-page-title: var(--line-height-2xl);
+
   --font-weight-regular: 400;
   --font-weight-medium: 550;
   --font-weight-semibold: 650;
   --font-weight-bold: 700;
 
-  /* 4px spacing grid. */
-  --space-0: 0;
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
+  /* 金额与计数同时使用等宽数字；不得用空格或手工补位模拟对齐。 */
+  --font-variant-numeric-tabular: tabular-nums;
 
-  /* Shape, border and elevation. */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
+  /* ------------------------------------------------------------------------
+   * 间距：统一 px，遵循 4px 网格。
+   * ------------------------------------------------------------------------ */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ------------------------------------------------------------------------
+   * 圆角与边框：卡片 14px、按钮 9px、输入框 8px、小圆角 6px、胶囊 999px。
+   * ------------------------------------------------------------------------ */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-button: 9px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-input: var(--radius-md);
+  --radius-card: var(--radius-lg);
   --radius-pill: 999px;
+
   --border-width: 1px;
   --border-width-strong: 2px;
   --border-default: var(--border-width) solid var(--color-border);
-  --shadow-raised: 0 8px 24px rgb(23 29 38 / 12%);
-  --shadow-overlay: 0 16px 48px rgb(23 29 38 / 20%);
+  --border-emphasis: var(--border-width) solid var(--color-border-strong);
+  --border-control: var(--border-width) solid var(--color-border-control);
+  --border-accent: var(--border-width) solid var(--color-accent-border);
 
-  /* Focus remains visible in forced-colors mode via outline. */
-  --focus-ring-width: 3px;
+  /* ------------------------------------------------------------------------
+   * 阴影：仅用于浮起表面与浮层；普通卡片使用边框，不使用彩色光晕。
+   * ------------------------------------------------------------------------ */
+  --shadow-none: none;
+  --shadow-raised: 0 1px 2px rgb(16 35 66 / 5%), 0 8px 24px rgb(16 35 66 / 4%);
+  --shadow-overlay: 0 16px 48px rgb(15 29 51 / 16%);
+
+  /* ------------------------------------------------------------------------
+   * 焦点：使用 outline，保留 2px 偏移并避免被 overflow 裁切。
+   * ------------------------------------------------------------------------ */
+  --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
   --focus-ring: var(--focus-ring-width) solid var(--color-focus);
 
-  /* Layout breakpoints are documented tokens; native CSS vars cannot drive @media. */
+  /* ------------------------------------------------------------------------
+   * 层级：同级浮层按文档顺序排列，组件不得使用任意大数覆盖层级。
+   * ------------------------------------------------------------------------ */
+  --z-base: 0;
+  --z-sticky: 20;
+  --z-navigation: 30;
+  --z-dropdown: 40;
+  --z-drawer: 50;
+  --z-overlay: 60;
+  --z-dialog: 70;
+  --z-toast: 80;
+
+  /* ------------------------------------------------------------------------
+   * 组件与布局。
+   * 默认控件保持紧凑；触控环境及主要移动操作必须使用 44px 触控目标。
+   * ------------------------------------------------------------------------ */
+  --sidebar-width: 240px;
+  --topbar-height: 60px;
+  --content-max-width: 1440px;
+  --page-padding: var(--space-8);
+  --page-padding-mobile: var(--space-4);
+  --section-gap: var(--space-4);
+  --card-padding: var(--space-4);
+  --card-padding-comfortable: 18px;
+
+  --control-height-sm: 32px;
+  --control-height: 36px;
+  --control-height-lg: 44px;
+  --touch-target: 44px;
+
+  --table-row-height: 44px;
+  --table-cell-padding-x: var(--space-3);
+  --tab-height: 44px;
+  --tab-indicator-width: 2px;
+
+  /* ------------------------------------------------------------------------
+   * 动效：只使用 150–200ms 的颜色、透明度与轻微位移动效。
+   * reduced-motion 下时长归零，不得保留循环、自动或大幅位移动画。
+   * ------------------------------------------------------------------------ */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  /*
+   * 断点：390 小屏手机、640 大屏手机、768 平板、1024 桌面、1440 宽屏。
+   * 320–389px 使用同一套流式小屏规则，不得产生整页横向滚动。
+   * CSS 自定义属性不能用于 @media 条件；媒体查询必须写入与下列令牌同步的
+   * 字面值 390px / 640px / 768px / 1024px / 1440px，修改断点时两边同步更新。
+   */
   --breakpoint-xs: 390px;
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1440px;
-  --sidebar-width: 232px;
-  --content-max-width: 1440px;
-  --control-height: 36px;
-  --touch-target: 44px;
-  --duration-fast: 120ms;
-  --duration-normal: 200ms;
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-
-  /* Chart channels also require line/point/pattern encoding and text labels. */
-  --chart-1: #365fc7;
-  --chart-2: #a15c07;
-  --chart-3: #18794e;
-  --chart-4: #8b46b8;
-  --chart-5: #b42332;
-  --chart-grid: #dfe4eb;
-  --chart-axis: #687385;
-  --z-sticky: 20;
-  --z-drawer: 40;
-  --z-toast: 60;
 }
 
 @media (prefers-reduced-motion: reduce) {

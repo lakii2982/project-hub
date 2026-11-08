@@ -1,0 +1,56 @@
+/* Adapt into existing CSS variables / Tailwind theme without replacing business logic. */
+:root {
+  --brand-500: #2563EB;
+  --brand-600: #1D4ED8;
+  --brand-700: #1E40AF;
+  --brand-50: #EFF6FF;
+  --brand-200: #BFDBFE;
+  --canvas: #F7F9FD;
+  --surface: #FFFFFF;
+  --sidebar: #FFFFFF;
+  --text-primary: #13233B;
+  --text-secondary: #526178;
+  --text-tertiary: #93A1B3;
+  --border: #E5EBF3;
+  --border-strong: #D5DDEA;
+  --success: #16A34A;
+  --success-bg: #EAF8EF;
+  --warning: #D97706;
+  --warning-bg: #FFF7E6;
+  --danger: #DC2626;
+  --danger-bg: #FEF0F0;
+  --chart-revenue: #2563EB;
+  --chart-cost: #F5AC4A;
+  --chart-cash-balance: #0FADA9;
+  --chart-hours-planned: #D9E7FF;
+  --chart-hours-actual: #3980F5;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-size-body: 14px;
+  --font-size-page: 24px;
+  --font-size-section: 18px;
+  --font-size-card: 14px;
+  --font-size-table: 12px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-small: 6px;
+  --radius-control: 8px;
+  --radius-card: 14px;
+  --radius-modal: 18px;
+  --sidebar-width: 232px;
+  --topbar-height: 68px;
+  --page-padding: 32px;
+  --focus-ring: 0 0 0 3px rgba(37,99,235,.18);
+  --shadow-card: 0 3px 16px rgba(25,53,103,.035);
+  --motion-fast: 120ms;
+  --motion-normal: 180ms;
+}
+@media (max-width: 767px) {
+  :root { --page-padding: 14px; --topbar-height: 59px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

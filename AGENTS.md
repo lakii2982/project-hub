@@ -85,6 +85,6 @@
 交付只说明新增能做什么、入口与操作、实际证据、剩余阻塞；分别说明代码存在、自动化通过、浏览器检查、
 真实环境验证。不用 PR/任务数当产品完成率；检查范围之外的事项明确保留，禁止以配置存在代替运行证据。
 
-## 前端必读入口（PH-023）
+## 前端必读入口（规范 v2.0，Q-46）
 
-所有产品前端修改前，必须先读 `docs/engineering/frontend-standards.md` 与 `docs/engineering/visual-system.md`，使用 `docs/engineering/ui-tokens.css` 的语义令牌并复用 `docs/engineering/ui-specimen.html` 的共享模式；新增模式先更新规范与样张。审查必须覆盖 1440px、390px、键盘与焦点、溢出及空态/错误/加载/不可用状态，不接受只换色而不统一布局。
+所有产品前端修改前，必须先读 `docs/engineering/frontend-standards.md` 与 `docs/engineering/visual-system.md`（A 方向「蓝白极简 SaaS」+ 左侧模块/右侧页签结构），使用 `docs/engineering/ui-tokens.css` 的语义令牌（产品页面经 `static/app.css` → `static/ui/ui-tokens.css` 加载，两份令牌必须同源同步）并复用 `docs/engineering/ui-specimen.html` 的共享模式；新增模式先更新规范与样张。用户提供的蓝白极简设计包仅作风格参考，见 `docs/engineering/design-reference/saas-blue-minimal-kit-v2/README.md`（占位品牌与示例数据不是产品事实）。审查必须覆盖 1440px、390px、320px、键盘与焦点、溢出及空态/错误/加载/不可用状态，不接受只换色而不统一布局。规范 v2.0 是改造基线，不表示产品页面已完成迁移；全站布局重构由 PH-026 在规范评审通过后单独重排。
