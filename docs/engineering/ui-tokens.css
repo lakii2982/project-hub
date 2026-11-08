@@ -97,7 +97,7 @@
   --line-height-lg: 1.625rem;
   --line-height-xl: 1.75rem;
   --line-height-2xl: 2rem;
-  --line-height-body: var(--line-height-sm);
+  --line-height-body: 1.5; /* 14px 正文 → 21px，保证中文正文可读性 */
   --line-height-table: 1.25rem;
   --line-height-panel-title: 1.375rem;
   --line-height-page-title: var(--line-height-2xl);
