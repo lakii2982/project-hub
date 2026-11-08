@@ -90,7 +90,7 @@
   --font-size-panel-title: 0.90625rem;
   --font-size-page-title: var(--font-size-2xl);
 
-  /* 行高：页标题为 24px/32px，正文为 14px/20px。 */
+  /* 行高：页标题为 24px/32px，正文为 14px/21px（1.5 倍）。 */
   --line-height-xs: 1rem;
   --line-height-sm: 1.25rem;
   --line-height-md: 1.5rem;
