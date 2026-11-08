@@ -35,7 +35,7 @@
 python scripts/package.py
 # 输出 releases/project-hub-0.2.0-source.zip 与 .sha256
 python scripts/verify-source-package.py releases/project-hub-0.2.0-source.zip
-# {"ok": true, "files": 1799, "sha256": "b48f2227bac2fffca21b7d71e4bc4a1d4d7a437497e0c80fe3df835f7c2bdc28", "runtime_excluded": true}
+# {"ok": true, "files": 1828, "sha256": "26adced103c62a6ae416966ae2f0efa0eaf004d83ba85579ba36e852ee17ab8f", "runtime_excluded": true}
 ```
 
 - 归档 SHA-256：`b48f2227bac2fffca21b7d71e4bc4a1d4d7a437497e0c80fe3df835f7c2bdc28`（`source.zip.sha256` 同步保存）。

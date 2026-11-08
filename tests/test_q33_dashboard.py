@@ -327,7 +327,17 @@ class SeedDemoBillingTests(TestCase):
         self.assertEqual(snapshot["month"]["invoiced_cents"], 20_581_132)  # net of tax
         self.assertEqual(snapshot["month"]["invoiced_gross_cents"], 21_600_000)
         self.assertEqual(snapshot["month"]["received_cents"], 9_100_000)
-        self.assertEqual(snapshot["month"]["spent_cents"], 700_000)
+        # 演示付款按相对日期播种（-5 天 1,000,000、-2 天 600,000、当天 100,000），
+        # 本月支出口径只含 paid_on 不早于本月首日的付款，因此期望值随运行日期
+        # 变化（每月 1–2 号 100,000、3–5 号 700,000、6 号起 1,700,000），不能写死。
+        today = timezone.localdate()
+        month_start = today.replace(day=1)
+        seeded_payments = ((today - timedelta(days=5), 1_000_000),
+                           (today - timedelta(days=2), 600_000),
+                           (today, 100_000))
+        expected_spent = sum(amount for paid_on, amount in seeded_payments
+                             if paid_on >= month_start)
+        self.assertEqual(snapshot["month"]["spent_cents"], expected_spent)
         self.assertEqual(snapshot["outstanding"]["outstanding_cents"], 13_000_000)
         self.assertEqual(snapshot["cash"]["account_total_cents"], 15_400_000)
         self.assertEqual(snapshot["gaps"]["labor_gap_count"], 1)

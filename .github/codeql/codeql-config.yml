@@ -1,0 +1,9 @@
+name: "project-hub CodeQL config"
+
+# docs/engineering/design-reference/ 是用户提供的第三方设计参考包（见该目录
+# README：仅设计参考、不复制其代码、按源 zip SHA-256 保持字节一致），不属于
+# 产品代码；其演示 HTML/JS 不参与 CodeQL 分析，避免对刻意不修改的参考内容
+# 产生不可处置的告警。产品代码与样张（docs/engineering/ui-specimen.html）
+# 仍全部在分析范围内。
+paths-ignore:
+  - docs/engineering/design-reference

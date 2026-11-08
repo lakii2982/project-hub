@@ -6,14 +6,14 @@
   "prerelease": true,
   "date": "2026-11-04",
   "base_commit": "e642ec24a8fa82d454c1e9b50a8873af1336c09a",
-  "branch": "agent/ui-refresh-prototypes-3ad87fee9e2f",
+  "branch": "agent/frontend-design-spec-91cefe33de6d",
   "build": {
     "command": "python scripts/package.py",
     "verify_command": "python scripts/verify-source-package.py releases/project-hub-0.2.0-source.zip",
     "archive": "project-hub-0.2.0-source.zip",
-    "sha256": "7539d79ed3d548c1ebe7fd0f69fb3cc644fe8cb4258852a356d23fe305f90d54",
-    "files": 1799,
-    "manifest_sha256": "23093b453cb98f98236c1f991ccb5a8c09d1e8f7785bf1b41e6208d2dfaf141b"
+    "sha256": "26adced103c62a6ae416966ae2f0efa0eaf004d83ba85579ba36e852ee17ab8f",
+    "files": 1828,
+    "manifest_sha256": "6e8d9c26d8503e6c71c6cd7845a6343dc6920f780fc722a37975cd1b3d6cd692"
   },
   "excluded": [
     "runtime/",
@@ -33,8 +33,8 @@
   "verification": {
     "acceptance": "project/ACCEPTANCE.md",
     "walkthrough": "docs/q42-browser-acceptance.md + docs/verification.md 2026-11-04 (Q-43)",
-    "required_checks": "Q-45 PR checks on the same HEAD (9 required)",
-    "independent_review": "pending: Q-45 independent re-review on final HEAD"
+    "required_checks": "Q-46 PR checks on the same HEAD (9 required)",
+    "independent_review": "pending: Q-46 PR review on final HEAD (internal independent review APPROVE)"
   },
   "not_run": [
     "real Docker/Compose install",

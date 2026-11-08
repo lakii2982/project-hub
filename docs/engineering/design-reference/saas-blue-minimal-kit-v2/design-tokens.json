@@ -1,0 +1,19 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "name": "Blue Minimal SaaS UI · 04 layout × 01 palette",
+  "version": "1.0.0",
+  "color": {
+    "brand": {"primary": "#2563EB", "hover": "#1D4ED8", "active": "#1E40AF", "subtle": "#EFF6FF", "border": "#BFDBFE", "onBrand": "#FFFFFF"},
+    "neutral": {"canvas": "#F7F9FD", "surface": "#FFFFFF", "sidebar": "#FFFFFF", "textPrimary": "#13233B", "textSecondary": "#526178", "textTertiary": "#93A1B3", "border": "#E5EBF3", "borderStrong": "#D5DDEA", "divider": "#EDF1F7"},
+    "semantic": {"success": "#16A34A", "successBg": "#EAF8EF", "warning": "#D97706", "warningBg": "#FFF7E6", "error": "#DC2626", "errorBg": "#FEF0F0", "info": "#2563EB", "infoBg": "#EFF6FF"},
+    "chart": {"revenue": "#2563EB", "cost": "#F5AC4A", "cashBalance": "#0FADA9", "estimate": "#C8D6E9", "actualHours": "#3980F5", "plannedHours": "#D9E7FF", "category4": "#95AFD3"}
+  },
+  "font": {"family": "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif", "size": {"display": "28px", "h1": "24px", "h2": "18px", "h3": "14px", "body": "14px", "table": "12px", "caption": "11px", "micro": "10px"}, "lineHeight": {"h1": "32px", "h2": "26px", "h3": "22px", "body": "22px", "table": "18px", "caption": "16px"}, "weight": {"regular": 400, "medium": 500, "semibold": 650, "bold": 750}},
+  "spacing": {"0": "0px", "1": "4px", "2": "8px", "3": "12px", "4": "16px", "5": "20px", "6": "24px", "8": "32px", "10": "40px", "12": "48px", "16": "64px"},
+  "size": {"sidebarWidth": "232px", "headerHeight": "68px", "pagePaddingDesktop": "32px", "pagePaddingMobile": "14px", "cardGap": "16px", "inputHeight": "40px", "buttonHeight": "36px", "tableRowMinHeight": "44px", "iconSize": "18px", "mobileNavHeight": "59px"},
+  "radius": {"small": "6px", "control": "8px", "medium": "10px", "card": "14px", "modal": "18px", "pill": "9999px"},
+  "shadow": {"card": "0 3px 16px rgba(25, 53, 103, 0.035)", "popover": "0 12px 28px rgba(19, 35, 59, 0.10)", "focus": "0 0 0 3px rgba(37,99,235,.18)"},
+  "motion": {"fast": "120ms", "normal": "180ms", "slow": "240ms", "easing": "cubic-bezier(0.2, 0, 0, 1)"},
+  "breakpoint": {"mobileMax": 767, "tabletMin": 768, "compactDesktopMin": 1024, "desktopMin": 1280, "wideMin": 1440},
+  "density": {"default": "comfortable", "tableAlternate": "compact", "minimumTouchTargetMobile": "44px"}
+}
