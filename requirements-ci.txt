@@ -1,2 +1,2 @@
 # CI-only quality tooling. Product runtime dependencies stay in requirements.txt.
-coverage==7.11.0
+coverage==7.17.2
