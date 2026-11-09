@@ -1,0 +1,62 @@
+{% load money %}
+<div class="panel-stack" id="cashflow-panel-accounts" role="tabpanel" aria-labelledby="cashflow-tab-accounts" tabindex="0"{% if active_tab != 'accounts' %} hidden{% endif %}>
+  <section class="panel">
+    <div class="panel-heading"><div><h2>资金账户</h2></div><span class="badge neutral">派生余额</span></div>
+    <div class="record-list">
+      {% for account in cash.accounts %}
+      <details class="record"><summary>
+        <div><span class="eyebrow">{{ account.get_kind_display }}</span><h3>{{ account.name }}</h3><p>期初 ¥ {{ account.opening_balance_cents|money }} · 已收 ¥ {{ account.received_cents|money }} · 已付 ¥ {{ account.paid_cents|money }}</p></div>
+        <div class="record-summary"><strong class="numeric">¥ {{ account.balance_cents|money }}</strong>{% if account.active %}<span class="badge success">启用</span>{% else %}<span class="badge neutral">停用</span>{% endif %}<span class="disclosure" aria-hidden="true">⌄</span></div>
+      </summary><div class="record-body">
+        <dl class="detail-grid">
+          <div><dt>期初余额</dt><dd>¥ {{ account.opening_balance_cents|money }}</dd></div>
+          <div><dt>已收款</dt><dd>¥ {{ account.received_cents|money }}</dd></div>
+          <div><dt>已付款</dt><dd>¥ {{ account.paid_cents|money }}</dd></div>
+          <div><dt>派生余额</dt><dd><strong>¥ {{ account.balance_cents|money }}</strong></dd></div>
+        </dl>
+        {% if account.note %}<p class="help-text">{{ account.note }}</p>{% endif %}
+        {% if can_manage_accounts %}
+        <form method="post" action="/cash/accounts/{{ account.pk }}/update/" class="inline-form" novalidate>
+          {% csrf_token %}<input type="hidden" name="version" value="{{ account.version }}">
+          <div><label for="account-opening-{{ account.pk }}">期初余额（元）</label><input id="account-opening-{{ account.pk }}" name="opening_balance" type="number" min="-10000000000" max="10000000000" step="0.01" inputmode="decimal" value="{{ account.opening_balance_yuan }}" required></div>
+          <div><label for="account-active-{{ account.pk }}">启用</label><input id="account-active-{{ account.pk }}" name="active" type="checkbox" {% if account.active %}checked{% endif %}></div>
+          <button class="button primary" type="submit">保存账户维护</button>
+        </form>
+        {% endif %}
+      </div></details>
+      {% empty %}<div class="empty-state compact"><h3>还没有资金账户</h3><p>{% if can_manage_accounts %}用下方表单建立第一个账户并设置期初余额。{% else %}请公司负责人先建立资金账户。{% endif %}</p></div>{% endfor %}
+    </div>
+    {% if can_manage_accounts %}
+    <div class="panel-body">
+      <h3>新建资金账户</h3>
+      <form method="post" action="{% url 'cash-account-create' %}" class="stack-form compact-form" novalidate>
+        {% csrf_token %}
+        {% if account_form.non_field_errors %}<div class="message error" role="alert">{{ account_form.non_field_errors }}</div>{% endif %}
+        {{ account_form.request_token }}
+        <div class="form-row">{% include 'billing/field.html' with field=account_form.name %}{% include 'billing/field.html' with field=account_form.kind %}{% include 'billing/field.html' with field=account_form.opening_balance %}</div>
+        <div class="form-row">{% include 'billing/field.html' with field=account_form.note %}</div>
+        <div class="form-actions"><button class="button primary" type="submit">新建账户</button></div>
+      </form>
+    </div>
+    {% else %}
+    <div class="panel-body"><p class="help-text">资金账户由公司负责人维护。</p></div>
+    {% endif %}
+  </section>
+
+  <section class="panel section-gap">
+    <div class="panel-heading"><div><h2>收付款流水</h2></div><span class="badge neutral">只读</span></div>
+    <div class="table-scroll"><table class="cashflow-flow-table cashflow-table-rows">
+      <caption class="sr-only">资金账户收付款流水</caption>
+      <thead><tr><th>日期</th><th>类型</th><th>账户</th><th>项目</th><th>说明</th><th>来源编号</th><th class="numeric">金额</th></tr></thead>
+      <tbody>{% for row in cash.flows %}<tr>
+        <td data-label="日期" class="nowrap">{{ row.date|date:'Y.m.d' }}</td>
+        <td data-label="类型"><span class="badge {% if row.direction == 'out' %}warning{% elif row.kind == 'refund' %}neutral{% else %}success{% endif %}">{{ row.label }}</span></td>
+        <td data-label="账户">{{ row.account.name }}</td>
+        <td data-label="项目">{% if row.project %}{{ row.project.code }} · {{ row.project.name }}{% else %}<span class="muted">非项目</span>{% endif %}</td>
+        <td data-label="说明">{{ row.title }}{% if row.counterparty and row.counterparty != row.title %}<span class="cell-sub">{{ row.counterparty }}</span>{% endif %}</td>
+        <td data-label="来源编号">{{ row.reference|default:'—' }}</td>
+        <td data-label="金额" class="numeric {% if row.signed_cents < 0 %}text-warning{% endif %}">¥ {{ row.signed_cents|money }}</td>
+      </tr>{% empty %}<tr><td colspan="7" class="table-empty">还没有资金账户流水。登记一笔收款或费用付款后显示。</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+</div>

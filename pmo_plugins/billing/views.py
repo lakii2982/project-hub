@@ -3,17 +3,16 @@
 页面与导出只读同一服务层聚合；写操作统一走 ``services`` 的租户/项目/角色/期间/
 来源检查、幂等与审计，不在这里重算金额。
 """
-import uuid
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import IntegrityError
-from django.http import Http404
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from core.access import current_membership
+from pmo_plugins.cashflow_page import render_cashflow
 
 from . import forms as ui
 from . import services
@@ -30,43 +29,16 @@ def _error_text(error):
     return "记录冲突或已更新，请刷新并核对后重试"
 
 
-def _selected_project(request, member):
-    """Optional project drill-down filter; read-only and scoped to billing projects."""
-    value = request.GET.get("project", "")
-    if not value:
-        return None
-    if not value.isdigit() or len(value) > 18:
-        raise Http404()
-    return get_object_or_404(services.billing_projects(member), pk=int(value))
+def _tab_redirect(tab):
+    return redirect(f"{reverse('cashflow')}?tab={tab}")
 
 
 def _page(request, member, *, invoice_form=None, receipt_form=None,
-          account_form=None, status=200):
-    selected_project = _selected_project(request, member)
-    snapshot = services.billing_snapshot(member)
-    if selected_project is not None:
-        # Project drill-down from Q-34: aggregate KPIs stay company-wide, detail lists filter.
-        snapshot["project_rows"] = [row for row in snapshot["project_rows"]
-                                    if row["project"].pk == selected_project.pk]
-        snapshot["invoice_rows"] = [row for row in snapshot["invoice_rows"]
-                                    if row.project_id == selected_project.pk]
-        snapshot["receipt_rows"] = [row for row in snapshot["receipt_rows"]
-                                    if row.project_id == selected_project.pk]
-    for row in snapshot["invoice_rows"]:
-        if row.reverses_id is None and not row.is_voided:
-            row.void_token = uuid.uuid4()
-    for row in snapshot["receipt_rows"]:
-        if row.reverses_id is None and row.refundable_cents > 0:
-            row.refund_token = uuid.uuid4()
-    return render(request, "billing/billing.html", {
-        "nav": "billing",
-        "snapshot": snapshot,
-        "invoice_form": invoice_form or ui.InvoiceForm(member=member),
-        "receipt_form": receipt_form or ui.ReceiptForm(member=member),
-        "account_form": account_form or ui.AccountForm(member=member),
-        "can_manage_accounts": member.role == "owner",
-        "selected_project": selected_project,
-    }, status=status)
+          account_form=None, status=200, default_tab="invoices"):
+    """Legacy /billing/ entry renders the merged cash-flow page on the invoices tab."""
+    return render_cashflow(request, member, default_tab=default_tab,
+                           invoice_form=invoice_form, receipt_form=receipt_form,
+                           account_form=account_form, status=status)
 
 
 @login_required
@@ -81,7 +53,7 @@ def account_create(request):
     member = _member(request)
     form = ui.AccountForm(request.POST, member=member)
     if not form.is_valid():
-        return _page(request, member, account_form=form, status=400)
+        return _page(request, member, account_form=form, status=400, default_tab="accounts")
     try:
         services.register_account(
             member, name=form.cleaned_data["name"], kind=form.cleaned_data["kind"],
@@ -91,8 +63,8 @@ def account_create(request):
         messages.success(request, "资金账户已建立；余额由期初余额与收付款派生")
     except (ValidationError, IntegrityError) as error:
         form.add_error(None, _error_text(error))
-        return _page(request, member, account_form=form, status=400)
-    return redirect("billing")
+        return _page(request, member, account_form=form, status=400, default_tab="accounts")
+    return _tab_redirect("accounts")
 
 
 @login_required
@@ -101,7 +73,7 @@ def invoice_create(request):
     member = _member(request)
     form = ui.InvoiceForm(request.POST, member=member)
     if not form.is_valid():
-        return _page(request, member, invoice_form=form, status=400)
+        return _page(request, member, invoice_form=form, status=400, default_tab="invoices")
     try:
         services.register_invoice(
             member, project=form.cleaned_data["project"],
@@ -113,8 +85,8 @@ def invoice_create(request):
         messages.success(request, "发票已登记；未收款 = 已开票 − 已收款，自动计算")
     except (ValidationError, IntegrityError) as error:
         form.add_error(None, _error_text(error))
-        return _page(request, member, invoice_form=form, status=400)
-    return redirect("billing")
+        return _page(request, member, invoice_form=form, status=400, default_tab="invoices")
+    return _tab_redirect("invoices")
 
 
 @login_required
@@ -125,7 +97,7 @@ def invoice_void(request, pk):
     if not form.is_valid():
         messages.error(request, "；".join(
             message for errors in form.errors.values() for message in errors))
-        return redirect("billing")
+        return _tab_redirect("invoices")
     try:
         services.void_invoice(member, pk, form.cleaned_data["reason"], form.token())
         messages.success(request, "已追加作废记录并保留原发票；未收款随之重算")
@@ -133,7 +105,7 @@ def invoice_void(request, pk):
         messages.error(request, "发票不存在或无权访问")
     except (ValidationError, IntegrityError) as error:
         messages.error(request, _error_text(error))
-    return redirect("billing")
+    return _tab_redirect("invoices")
 
 
 @login_required
@@ -142,7 +114,7 @@ def receipt_create(request):
     member = _member(request)
     form = ui.ReceiptForm(request.POST, member=member)
     if not form.is_valid():
-        return _page(request, member, receipt_form=form, status=400)
+        return _page(request, member, receipt_form=form, status=400, default_tab="receipts")
     try:
         services.register_receipt(
             member, project=form.cleaned_data["project"],
@@ -157,8 +129,8 @@ def receipt_create(request):
         messages.success(request, "收款已登记；同一来源编号只消费一次，不会重复入账")
     except (ValidationError, IntegrityError) as error:
         form.add_error(None, _error_text(error))
-        return _page(request, member, receipt_form=form, status=400)
-    return redirect("billing")
+        return _page(request, member, receipt_form=form, status=400, default_tab="receipts")
+    return _tab_redirect("receipts")
 
 
 @login_required
@@ -169,7 +141,7 @@ def receipt_refund(request, pk):
     if not form.is_valid():
         messages.error(request, "；".join(
             message for errors in form.errors.values() for message in errors))
-        return redirect("billing")
+        return _tab_redirect("receipts")
     try:
         services.refund_receipt(member, pk, services.yuan_to_cents(form.cleaned_data["amount"]),
                                 form.cleaned_data["reason"], form.token())
@@ -178,4 +150,4 @@ def receipt_refund(request, pk):
         messages.error(request, "收款不存在或无权访问")
     except (ValidationError, IntegrityError) as error:
         messages.error(request, _error_text(error))
-    return redirect("billing")
+    return _tab_redirect("receipts")

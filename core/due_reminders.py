@@ -64,7 +64,7 @@ def _invoice_items(member, projects, today):
             "due_on": invoice.issued_on,
             "overdue": invoice.issued_on < today,
             "amount_cents": outstanding,
-            "href": f"/billing/?project={invoice.project_id}",
+            "href": f"/cashflow/?tab=invoices&project={invoice.project_id}",
             "source": f"invoice:{invoice.pk}",
         })
     return items
@@ -90,7 +90,7 @@ def _expense_items(member, today):
             "due_on": row["due_on"],
             "overdue": True,
             "amount_cents": int(row["unpaid_cents"]),
-            "href": f"/expenses/?project={document.project_id}",
+            "href": f"/expenses/?tab=all&project={document.project_id}",
             "source": f"expense:{document.pk}",
         })
     return items
@@ -116,7 +116,7 @@ def _missing_rate_items(member, projects, today):
             "due_on": row.work_date,
             "overdue": row.work_date < today,
             "amount_cents": None,
-            "href": f"/time/?project={row.project_id}",
+            "href": f"/time/?tab=detail&project={row.project_id}",
             "source": f"timesheet:{row.pk}",
         })
     return items

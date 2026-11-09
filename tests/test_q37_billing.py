@@ -272,14 +272,14 @@ class BillingHttpTests(BillingFixture):
     def test_navigation_keeps_billing_for_owner_and_pm_only(self):
         self.login(self.owner)
         page = self.client.get(reverse("dashboard"))
-        self.assertContains(page, "开票与收款")
-        self.assertContains(page, reverse("billing"))
+        self.assertContains(page, "现金流")
+        self.assertContains(page, reverse("cashflow"))
         self.login(self.pm)
-        self.assertContains(self.client.get(reverse("dashboard")), "开票与收款")
+        self.assertContains(self.client.get(reverse("dashboard")), "现金流")
         self.login(self.member)
-        self.assertNotContains(self.client.get(reverse("dashboard")), "开票与收款")
+        self.assertNotContains(self.client.get(reverse("dashboard")), "现金流")
         self.login(self.auditor)
-        self.assertNotContains(self.client.get(reverse("dashboard")), "开票与收款")
+        self.assertNotContains(self.client.get(reverse("dashboard")), "现金流")
 
     def test_billing_page_renders_empty_state_and_forms(self):
         self.login(self.owner)
@@ -288,7 +288,7 @@ class BillingHttpTests(BillingFixture):
         for text in ("登记发票", "登记收款", "资金账户", "未收款",
                      "还没有发票", "还没有资金账户", "新建资金账户"):
             self.assertContains(page, text)
-        self.assertIn("billing/billing.html", [t.name for t in page.templates])
+        self.assertIn("cashflow.html", [t.name for t in page.templates])
 
     def test_role_outside_billing_gets_403(self):
         for member in (self.member, self.auditor, self.finance):

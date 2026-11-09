@@ -10,8 +10,16 @@
   </div>
 </section>
 
+<div class="tabbar"><div class="tablist" role="tablist" aria-label="费用页签" data-link-tabs>
+  {% if can_write %}<a class="tab" id="expense-tab-register" role="tab" href="?tab=register{% if project %}&amp;project={{ project.pk }}{% endif %}" aria-controls="expense-panel-register" aria-selected="{% if active_tab == 'register' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'register' %}0{% else %}-1{% endif %}">登记费用</a>{% endif %}
+  <a class="tab" id="expense-tab-pending" role="tab" href="?tab=pending{% if project %}&amp;project={{ project.pk }}{% endif %}" aria-controls="expense-panel-pending" aria-selected="{% if active_tab == 'pending' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'pending' %}0{% else %}-1{% endif %}">待确认{% if snapshot.totals.pending_count %} <span class="tab-count numeric">{{ snapshot.totals.pending_count }}</span>{% endif %}</a>
+  <a class="tab" id="expense-tab-plan" role="tab" href="?tab=plan{% if project %}&amp;project={{ project.pk }}{% endif %}" aria-controls="expense-panel-plan" aria-selected="{% if active_tab == 'plan' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'plan' %}0{% else %}-1{% endif %}">8 周计划</a>
+  <a class="tab" id="expense-tab-all" role="tab" href="?tab=all{% if project %}&amp;project={{ project.pk }}{% endif %}" aria-controls="expense-panel-all" aria-selected="{% if active_tab == 'all' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'all' %}0{% else %}-1{% endif %}">全部记录</a>
+</div></div>
+
 {% if can_write %}
-<section class="panel section-gap" id="expense-register">
+<div class="panel-stack" id="expense-panel-register" role="tabpanel" aria-labelledby="expense-tab-register" tabindex="0"{% if active_tab != 'register' %} hidden{% endif %}>
+<section class="panel" id="expense-register">
   <div class="panel-heading"><div><h2>登记一笔费用或外包支出</h2></div></div>
   <div class="panel-body">
     <form method="post" action="/expenses/register/" enctype="multipart/form-data" class="stack-form" data-expense-form>
@@ -34,12 +42,14 @@
     </form>
   </div>
 </section>
+</div>
 {% endif %}
 
-{% if snapshot.totals.pending_count %}
-<section class="panel section-gap" id="expense-gaps">
-  <div class="panel-heading"><div><h2>待确认费用缺口</h2></div><span class="badge warning">{{ snapshot.totals.pending_count }} 笔 · ¥ {{ snapshot.totals.pending_amount_cents|money }}</span></div>
+<div class="panel-stack" id="expense-panel-pending" role="tabpanel" aria-labelledby="expense-tab-pending" tabindex="0"{% if active_tab != 'pending' %} hidden{% endif %}>
+<section class="panel" id="expense-gaps">
+  <div class="panel-heading"><div><h2>待确认费用缺口</h2></div>{% if snapshot.totals.pending_count %}<span class="badge warning">{{ snapshot.totals.pending_count }} 笔 · ¥ {{ snapshot.totals.pending_amount_cents|money }}</span>{% endif %}</div>
   <div class="panel-body">
+    {% if snapshot.totals.pending_count %}
     <div class="table-scroll"><table class="expense-gap-table"><caption class="sr-only">待确认费用缺口</caption>
       <thead><tr><th scope="col">项目</th><th scope="col">类别</th><th scope="col">发生日期</th><th scope="col" class="numeric">金额</th><th scope="col">操作</th></tr></thead>
       <tbody>{% for row in snapshot.pending_rows %}<tr>
@@ -50,11 +60,15 @@
         <td data-label="操作">{% if can_write %}<form method="post" action="/expenses/{{ row.document.pk }}/confirm/" class="inline-form">{% csrf_token %}<input type="hidden" name="project" value="{{ row.document.project_id }}"><button class="button primary" type="submit">确认计入成本</button></form>{% else %}<span class="muted">待老板/项目经理确认</span>{% endif %}</td>
       </tr>{% endfor %}</tbody>
     </table></div>
+    {% else %}
+    <div class="empty-state compact"><h3>暂无待确认费用</h3><p>新登记的费用会先出现在这里；确认后才计入项目成本。</p></div>
+    {% endif %}
   </div>
 </section>
-{% endif %}
+</div>
 
-<section class="panel section-gap" id="expense-plan">
+<div class="panel-stack" id="expense-panel-plan" role="tabpanel" aria-labelledby="expense-tab-plan" tabindex="0"{% if active_tab != 'plan' %} hidden{% endif %}>
+<section class="panel" id="expense-plan">
   <div class="panel-heading"><div><h2>未来 8 周未付支出计划</h2></div><span class="badge neutral">8 周内 ¥ {{ snapshot.plan.within_amount_cents|money }}</span></div>
   <div class="panel-body">
     <div class="summary-band compact">
@@ -77,9 +91,11 @@
     {% if snapshot.plan.items %}{% else %}<div class="empty-state compact"><h3>当前没有已确认未付支出</h3><p>登记并确认一笔未付费用后，这里按预计付款日显示 8 周计划。</p></div>{% endif %}
   </div>
 </section>
+</div>
 
+<div class="panel-stack" id="expense-panel-all" role="tabpanel" aria-labelledby="expense-tab-all" tabindex="0"{% if active_tab != 'all' %} hidden{% endif %}>
 {% if snapshot.legacy_count %}<div class="notice" role="status"><strong>另有 {{ snapshot.legacy_count }} 笔历史专业流程费用记录只读保留</strong></div>{% endif %}
-<section class="panel section-gap" id="expense-list">
+<section class="panel" id="expense-list">
   <div class="panel-heading"><div><h2>已登记费用与付款记录</h2></div><span class="badge neutral">待确认 {{ snapshot.totals.pending_count }} · 已确认 {{ snapshot.totals.confirmed_count }}</span></div>
   <div class="record-list">
     {% for row in snapshot.rows %}
@@ -153,4 +169,5 @@
     {% endfor %}
   </div>
 </section>
+</div>
 {% endblock %}

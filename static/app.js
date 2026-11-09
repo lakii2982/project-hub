@@ -69,10 +69,17 @@
     const panels = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
     if (panels.some(panel => !panel)) return;
     const suffix = tab => tab.id.split('-').pop();
+    // Capture the server-selected tab before any activation mutates aria-selected;
+    // otherwise going Back to a legacy URL without ?tab= would keep the last tab.
+    const serverDefault = (() => {
+      const selected = tabs.find(tab => tab.getAttribute('aria-selected') === 'true');
+      return suffix(selected || tabs[0]);
+    })();
 
     function currentId() {
       const requested = new URLSearchParams(window.location.search).get('tab');
-      return tabs.some(tab => suffix(tab) === requested) ? requested : suffix(tabs[0]);
+      if (tabs.some(tab => suffix(tab) === requested)) return requested;
+      return serverDefault;
     }
 
     function activate(id, { focusTab = false, updateUrl = false } = {}) {

@@ -1,0 +1,48 @@
+{% load money %}
+<div class="panel-stack" id="cashflow-panel-overview" role="tabpanel" aria-labelledby="cashflow-tab-overview" tabindex="0"{% if active_tab != 'overview' %} hidden{% endif %}>
+  <div class="metrics-grid">
+    <article class="metric"><span class="metric-label">已开票</span><strong><small>¥</small> {{ snapshot.invoiced_cents|money }}</strong></article>
+    <article class="metric"><span class="metric-label">其中税额</span><strong><small>¥</small> {{ snapshot.tax_cents|money }}</strong></article>
+    <article class="metric"><span class="metric-label">已收款</span><strong><small>¥</small> {{ snapshot.received_cents|money }}</strong></article>
+    <article class="metric featured"><span class="metric-label">未收款</span><strong><small>¥</small> {{ snapshot.outstanding_cents|money }}</strong></article>
+  </div>
+  <div class="balance-strip">
+    <span>资金账户余额 <strong>¥ {{ snapshot.account_total_cents|money }}</strong> · {{ snapshot.accounts|length }} 个账户</span>
+  </div>
+  <section class="panel section-gap">
+    <div class="panel-heading"><div><h2>项目开票与收款</h2></div><span class="badge neutral">只读聚合</span></div>
+    <div class="table-scroll"><table class="cashflow-project-table cashflow-table-rows">
+      <caption class="sr-only">按项目汇总的开票、税额、收款、未收款与现金缺口</caption>
+      <thead><tr><th>项目</th><th>已开票（价税合计）</th><th>其中税额</th><th>已收款</th><th>未收款</th><th>项目现金净额</th></tr></thead>
+      <tbody>
+        {% for row in snapshot.project_rows %}
+        <tr>
+          <td class="nowrap"><a href="{% url 'project-detail' row.project.pk %}?tab=finance">{{ row.project.code }} · {{ row.project.name }}</a><span class="cell-sub">{{ row.project.client }}</span></td>
+          <td data-label="已开票（价税合计）" class="numeric">¥ {{ row.invoiced_cents|money }}</td>
+          <td data-label="其中税额" class="numeric">¥ {{ row.tax_cents|money }}</td>
+          <td data-label="已收款" class="numeric">¥ {{ row.received_cents|money }}</td>
+          <td data-label="未收款" class="numeric">¥ {{ row.outstanding_cents|money }}</td>
+          <td data-label="项目现金净额" class="numeric">¥ {{ row.cash_net_cents|money }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="6" class="table-empty">还没有开票或收款记录。到「发票」或「收款」页签登记第一笔。</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+  {% if snapshot.gaps.unlinked_payment_count or snapshot.gaps.legacy_payments or snapshot.gaps.legacy_receipts or snapshot.gaps.tax_unspecified or snapshot.gaps.non_project_receipts %}
+  <div class="notice" role="status"><strong>开票与收款缺口</strong>{% if snapshot.gaps.unlinked_payment_count %} <span class="badge warning">历史付款 {{ snapshot.gaps.unlinked_payment_count }} 笔 · ¥ {{ snapshot.gaps.unlinked_payment_cents|money }}</span>{% endif %}{% if snapshot.gaps.legacy_payments %} <span class="badge neutral">历史付款 {{ snapshot.gaps.legacy_payments }} 笔</span>{% endif %}{% if snapshot.gaps.legacy_receipts %} <span class="badge neutral">历史收款 {{ snapshot.gaps.legacy_receipts }} 笔</span>{% endif %}{% if snapshot.gaps.tax_unspecified %} <span class="badge warning">税率未填 {{ snapshot.gaps.tax_unspecified }} 张</span>{% endif %}{% if snapshot.gaps.non_project_receipts %} <span class="badge neutral">非项目收款 {{ snapshot.gaps.non_project_receipts }} 笔</span>{% endif %}</div>
+  {% endif %}
+  <section class="panel section-gap">
+    <div class="panel-heading"><div><h2>数据缺口</h2></div></div>
+    <div class="panel-body">
+      <ul class="rule-list">
+        {% if cash.gaps.no_accounts %}<li><strong>没有资金账户</strong></li>{% endif %}
+        {% if cash.gaps.unlinked_payment_count %}<li><strong>历史付款 {{ cash.gaps.unlinked_payment_count }} 笔未关联资金账户</strong> ¥ {{ cash.gaps.unlinked_payment_cents|money }}</li>{% endif %}
+        {% if cash.gaps.legacy_receipt_count or cash.gaps.legacy_payment_count %}<li><strong>历史专业流程现金 {{ cash.gaps.legacy_receipt_count }} 笔收款 / {{ cash.gaps.legacy_payment_count }} 笔付款</strong></li>{% endif %}
+        {% if cash.gaps.legacy_payable_plan_count %}<li><strong>历史付款计划 {{ cash.gaps.legacy_payable_plan_count }} 项 · 剩余 ¥ {{ cash.gaps.legacy_payable_plan_cents|money }}</strong></li>{% endif %}
+        {% if cash.gaps.unplanned_receipt_cents %}<li><strong>未匹配收款计划的收款 ¥ {{ cash.gaps.unplanned_receipt_cents|money }}</strong></li>{% endif %}
+        {% if cash.gaps.pending_expense_count %}<li><strong>未确认费用 {{ cash.gaps.pending_expense_count }} 笔 ¥ {{ cash.gaps.pending_expense_cents|money }}</strong></li>{% endif %}
+        {% if not cash.gaps.no_accounts and not cash.gaps.unlinked_payment_count and not cash.gaps.legacy_receipt_count and not cash.gaps.legacy_payment_count and not cash.gaps.legacy_payable_plan_count and not cash.gaps.unplanned_receipt_cents and not cash.gaps.pending_expense_count and not cash.plan.negative and cash.plan.projected_end_cents >= 0 %}<li><strong>本期无已知现金缺口</strong></li>{% endif %}
+      </ul>
+    </div>
+  </section>
+</div>

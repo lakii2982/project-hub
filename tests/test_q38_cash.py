@@ -316,11 +316,11 @@ class CashHttpTests(CashFixture):
     def test_navigation_and_role_access(self):
         self.login(self.owner)
         page = self.client.get(reverse("dashboard"))
-        self.assertContains(page, "现金")
-        self.assertContains(page, reverse("cash"))
+        self.assertContains(page, "现金流")
+        self.assertContains(page, reverse("cashflow"))
         self.assertEqual(self.client.get(reverse("cash")).status_code, 200)
         self.login(self.pm)
-        self.assertContains(self.client.get(reverse("dashboard")), "现金")
+        self.assertContains(self.client.get(reverse("dashboard")), "现金流")
         self.assertEqual(self.client.get(reverse("cash")).status_code, 200)
         for member in (self.member, self.finance, self.auditor):
             self.login(member)
@@ -343,7 +343,7 @@ class CashHttpTests(CashFixture):
         self.assertContains(page, "13,200.00")  # 10,000.00 + 4,000.00 − 800.00
         self.assertContains(page, f"payment_plan:{plan.pk}")
         self.assertContains(page, f"expense:{unpaid.pk}")
-        self.assertIn("cashbook/cash.html", [t.name for t in page.templates])
+        self.assertIn("cashflow.html", [t.name for t in page.templates])
 
     def test_account_create_and_update_http(self):
         self.login(self.owner)

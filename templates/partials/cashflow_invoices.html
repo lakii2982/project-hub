@@ -1,0 +1,48 @@
+{% load money %}
+<div class="panel-stack" id="cashflow-panel-invoices" role="tabpanel" aria-labelledby="cashflow-tab-invoices" tabindex="0"{% if active_tab != 'invoices' %} hidden{% endif %}>
+  <section class="panel">
+    <div class="panel-heading"><div><h2>登记发票</h2></div></div>
+    <div class="panel-body">
+      <form method="post" action="{% url 'billing-invoice-create' %}" class="stack-form" novalidate>
+        {% csrf_token %}
+        {% if invoice_form.non_field_errors %}<div class="message error" role="alert">{{ invoice_form.non_field_errors }}</div>{% endif %}
+        {{ invoice_form.request_token }}
+        <div class="form-row">{% include 'billing/field.html' with field=invoice_form.project %}{% include 'billing/field.html' with field=invoice_form.number %}</div>
+        <div class="form-row">{% include 'billing/field.html' with field=invoice_form.amount %}{% include 'billing/field.html' with field=invoice_form.tax_rate %}{% include 'billing/field.html' with field=invoice_form.issued_on %}</div>
+        <div class="form-row">{% include 'billing/field.html' with field=invoice_form.contract_reference %}{% include 'billing/field.html' with field=invoice_form.note %}</div>
+        <div class="form-actions"><button class="button primary" type="submit">登记发票</button></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel section-gap">
+    <div class="panel-heading"><div><h2>发票记录</h2></div><span class="badge neutral">只追加</span></div>
+    <div class="record-list">
+      {% for row in snapshot.invoice_rows %}
+      <details class="record">
+        <summary>
+          <div><span class="eyebrow">{{ row.issued_on|date:'Y.m.d' }} / {{ row.project.code }}</span><h3>发票 {{ row.number }}</h3><p>{{ row.project.name }} · 税率 {{ row.tax_rate_display }}</p></div>
+          <div class="record-summary"><strong class="numeric">¥ {{ row.amount_cents|money }}</strong>{% if row.reverses_id %}<span class="badge warning">作废冲销</span>{% elif row.is_voided %}<span class="badge neutral">已作废</span>{% else %}<span class="badge success">正常</span>{% endif %}<span class="disclosure" aria-hidden="true">⌄</span></div>
+        </summary>
+        <div class="record-body">
+          <dl class="detail-grid">
+            <div><dt>价税合计 / 其中税额 / 未税金额</dt><dd>¥ {{ row.amount_cents|money }} / ¥ {{ row.tax_cents|money }} / ¥ {{ row.net_cents|money }}</dd></div>
+            <div><dt>合同或立项依据</dt><dd>{{ row.contract_reference|default:'未填写' }}</dd></div>
+            <div><dt>已收款 / 未收款</dt><dd>¥ {{ row.received_cents|money }} / ¥ {{ row.outstanding_cents|money }}</dd></div>
+            <div><dt>登记人 / 时间</dt><dd>{{ row.created_by.get_full_name|default:row.created_by.username }} · {{ row.created_at|date:'Y.m.d H:i' }}</dd></div>
+            {% if row.reverses_id %}<div><dt>原发票</dt><dd>{{ row.reverses.number }} · ¥ {{ row.reverses.amount_cents|money }} · {{ row.reason }}</dd></div>{% endif %}
+            {% if row.note %}<div><dt>备注</dt><dd>{{ row.note }}</dd></div>{% endif %}
+          </dl>
+          {% if row.void_token %}
+          <form method="post" action="{% url 'billing-invoice-void' row.pk %}" class="inline-form reversal-form">
+            {% csrf_token %}<input type="hidden" name="request_token" value="{{ row.void_token }}">
+            <div class="grow"><label for="void-reason-{{ row.pk }}">作废原因（至少4字；追加负值记录，原票保留）</label><input id="void-reason-{{ row.pk }}" name="reason" required minlength="4" maxlength="240" placeholder="例如：客户名称开错，作废后重新开票"></div>
+            <button class="button danger" type="submit">追加作废</button>
+          </form>
+          {% endif %}
+        </div>
+      </details>
+      {% empty %}<div class="empty-state compact"><h3>还没有发票</h3><p>用上方“登记发票”填写第一张发票；未收款自动计算。</p></div>{% endfor %}
+    </div>
+  </section>
+</div>

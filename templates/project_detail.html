@@ -82,7 +82,7 @@
 
   {% if can_finance %}
   <section id="project-panel-finance" class="project-panel" role="tabpanel" aria-labelledby="project-tab-finance" tabindex="0"{% if active_tab != 'finance' %} hidden{% endif %}>
-    <div class="section-heading"><div><h2>项目财务</h2></div>{% if can_manage or is_finance %}<div class="actions">{% if micro_scope %}<a class="button" href="{% url 'billing' %}">登记发票与收款</a>{% else %}<a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">登记费用</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">登记收款</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">登记付款</a>{% endif %}</div>{% endif %}</div>
+    <div class="section-heading"><div><h2>项目财务</h2></div>{% if can_manage or is_finance %}<div class="actions">{% if micro_scope %}<a class="button" href="{% url 'cashflow' %}?tab=invoices">登记发票与收款</a>{% else %}<a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">登记费用</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">登记收款</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">登记付款</a>{% endif %}</div>{% endif %}</div>
     {% include 'partials/project_finance_summary.html' %}
     {% if not micro_scope %}
     <div class="metrics-grid">
@@ -95,7 +95,7 @@
     {% endif %}
     {% if billing %}
     <div class="panel section-gap">
-      <div class="panel-heading"><div><h2>开票与收款</h2></div><a class="button" href="{% url 'billing' %}">登记发票与收款</a></div>
+      <div class="panel-heading"><div><h2>开票与收款</h2></div><a class="button" href="{% url 'cashflow' %}?tab=invoices">登记发票与收款</a></div>
       <div class="summary-band">
         <div><span>已开票（价税合计）</span><strong>¥ {{ billing.invoiced_cents|money }}</strong></div>
         <div><span>其中税额</span><strong>¥ {{ billing.tax_cents|money }}</strong></div>
