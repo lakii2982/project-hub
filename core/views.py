@@ -353,7 +353,10 @@ def new_object(request, kind):
             if kind in {"employee", "rate", "member"}: return redirect("settings")
             if kind == "time" and not obj.project_id: return redirect("timesheets")
             obj_project = obj if kind == "project" else getattr(obj, "project", project)
-            return redirect(project_tab_url(obj_project.pk, PROJECT_TAB_BY_KIND.get(kind, "overview")))
+            tab = PROJECT_TAB_BY_KIND.get(kind, "overview")
+            if kind == "document" and not can_read_finance(request.member, obj_project):
+                tab = "expenses"  # 无财务权限的成员从“我的费用”面板提交单据后回到该面板。
+            return redirect(project_tab_url(obj_project.pk, tab))
         except (ValidationError, IntegrityError) as error: form.add_error(None, error_text(error))
     back = url_reverse("project-detail", args=[project.pk]) if project else url_reverse("settings" if kind in {"employee", "rate", "member"} else "projects")
     return render(request, "form.html", {"nav": "projects", "heading": HEADINGS[kind], "lead": "填写业务事实，系统会保留来源、责任人和变更记录。", "form": form, "back_url": back})
@@ -926,7 +929,7 @@ def upload_evidence(request, pk):
                 evidence.file.delete(save=False)
                 raise
         messages.success(request, "凭证已保存并记录校验摘要")
-    return redirect(project_tab_url(doc.project_id, "finance"))
+    return redirect(project_tab_url(doc.project_id, "finance" if can_read_finance(request.member, doc.project) else "expenses"))
 
 
 @workspace_view

@@ -355,6 +355,9 @@ class Q34PermissionTests(Q34FinanceFixture):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "筛选项目")
         self.assertContains(response, "Q34-INV-001")
+        # 返回项目页的深链必须使用 ?tab=finance（旧 #finance 在阶段③迁移后失效）。
+        self.assertContains(response, f"{reverse('project-detail', args=[self.project.pk])}?tab=finance")
+        self.assertNotContains(response, f"{reverse('project-detail', args=[self.project.pk])}#finance")
         # 明细记录按项目过滤；Q34-INV-002 只可能出现在登记发票下拉选项里。
         self.assertEqual(response.content.decode().count("Q34-INV-002"), 1)
         self.assertEqual(self.client.get(reverse("billing") + f"?project={self.foreign_project.pk}").status_code, 404)

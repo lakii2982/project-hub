@@ -6,6 +6,7 @@
 Q-33/Q-34 口径、权限或业务数据。
 """
 import re
+import uuid
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -208,6 +209,20 @@ class ProjectDetailTabTests(TabPageAssertions, ProjectTabFixture):
         self.assert_single_visible_panel(html, "expenses")
         self.assert_selected_tab(html, "expenses")
         self.assert_panel_hidden(html, "overview")
+
+    def test_member_document_submit_returns_to_my_expenses_tab(self):
+        """无财务权限成员提交费用单据后回到“我的费用”，而非回退到概览。"""
+        self.login(self.member)
+        response = self.client.post(
+            reverse("new-object", args=["document"]) + f"?project={self.project.pk}&kind=expense",
+            {"project": self.project.pk, "kind": "expense", "title": "成员费用",
+             "category": "vendor", "amount": "100.00", "tax": "0",
+             "occurred_on": timezone.localdate().isoformat(), "reference": "PH026-MEMBER-EXP",
+             "submission_token": str(uuid.uuid4())})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            f"{reverse('project-detail', args=[self.project.pk])}?tab=expenses")
 
     def test_finance_number_is_visible_to_owner_only(self):
         owner_html = self.detail().content.decode()
