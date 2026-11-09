@@ -5,10 +5,9 @@
 {% block content %}
 <div class="project-detail">
   <section class="page-heading">
-    <div><div class="eyebrow">{{ project.code }} <span class="heading-dot">/</span> {{ project.get_template_display }}</div><h1>{{ project.name }}</h1><p>客户：{{ project.client }} <span class="heading-dot">·</span> 项目经理：{{ project.manager }}</p></div>
+    <div><div class="eyebrow">{{ project.code }} <span class="heading-dot">/</span> {{ project.get_template_display }}</div><h1>{{ project.name }}</h1><p>客户：{{ project.client }} <span class="heading-dot">·</span> 项目经理：{{ project.manager }}</p><div class="heading-status"><span class="badge health-{{ summary.health|slugify }}">{{ summary.health_label|default:'待评估' }}</span><span class="badge neutral">{{ project.get_stage_display }}</span></div></div>
     <div class="actions">
       {% if can_manage %}<a class="button" href="{% url 'project-edit' project.pk %}">编辑项目</a>{% endif %}
-      <span class="badge health-{{ summary.health|slugify }}">{{ summary.health_label|default:'待评估' }}</span><span class="badge neutral">{{ project.get_stage_display }}</span>
       {% if micro_scope %}{% if can_finance %}<a class="button" href="/expenses/?project={{ project.pk }}">费用与外包</a>{% endif %}{% elif not is_viewer %}<a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">提交费用</a>{% endif %}{% if not is_viewer %}<a class="button" href="{% url 'new-object' 'time' %}?project={{ project.pk }}">填报工时</a>{% endif %}
     </div>
   </section>
