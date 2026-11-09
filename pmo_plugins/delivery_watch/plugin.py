@@ -36,7 +36,7 @@ class Plugin:
                     "detail": (
                         f"计划验收日{due_date}，剩余{days}天，请核对交付与验收证据。"
                     )[:1000],
-                    "url": f"{base_url}#milestones",
+                    "url": f"{base_url}?tab=milestones",
                 }
             )
         return alerts

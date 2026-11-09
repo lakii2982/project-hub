@@ -10,7 +10,7 @@
   <div class="actions"><a class="button" href="{% url 'projects' %}">查看项目</a></div>
 </section>
 
-{% if selected_project %}<div class="overview-strip"><span>筛选项目：<strong>{{ selected_project.code }} · {{ selected_project.name }}</strong></span><a href="{% url 'billing' %}">清除筛选</a><a href="{% url 'project-detail' selected_project.pk %}#finance">返回项目收益与现金</a></div>{% endif %}
+{% if selected_project %}<div class="overview-strip"><span>筛选项目：<strong>{{ selected_project.code }} · {{ selected_project.name }}</strong></span><a href="{% url 'billing' %}">清除筛选</a><a href="{% url 'project-detail' selected_project.pk %}?tab=finance">返回项目收益与现金</a></div>{% endif %}
 <div class="metrics-grid">
   <article class="metric"><span class="metric-label">已开票</span><strong><small>¥</small> {{ snapshot.invoiced_cents|money }}</strong></article>
   <article class="metric"><span class="metric-label">其中税额</span><strong><small>¥</small> {{ snapshot.tax_cents|money }}</strong></article>

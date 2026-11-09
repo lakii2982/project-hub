@@ -453,8 +453,8 @@ class ProjectDetailHTTPTests(BurndownFixture):
 
         self.assertEqual(response.status_code, 200)
         for anchor in ("overview", "tasks", "milestones", "finance", "risks", "team"):
-            self.assertContains(response, f'href="#{anchor}"')
-            self.assertContains(response, f'id="{anchor}"')
+            self.assertContains(response, f'href="?tab={anchor}"')
+            self.assertContains(response, f'id="project-panel-{anchor}"')
         self.assertContains(response, 'role="tablist"')
         self.assertContains(response, 'role="tab"')
         self.assertContains(response, 'role="tabpanel"')
@@ -513,7 +513,7 @@ class ProjectDetailHTTPTests(BurndownFixture):
         self.assertNotContains(response, "cost_burndown")
         self.assertNotContains(response, "7654321")
         self.assertNotContains(response, "76,543")
-        self.assertNotContains(response, 'href="#finance"')
+        self.assertNotContains(response, 'href="?tab=finance"')
         self.assertContains(response, "我的费用单据")
 
     def test_auditor_with_finance_read_keeps_project_summary_chart(self):
@@ -529,7 +529,7 @@ class ProjectDetailHTTPTests(BurndownFixture):
         # The frozen contract gates project summaries on can_read_finance;
         # auditors already have that permission, without personal labor details.
         self.assertTrue(response.context["can_finance"])
-        self.assertContains(response, 'href="#finance"')
+        self.assertContains(response, 'href="?tab=finance"')
         self.assertIn("cost_burndown", response.context)
         self.assertTrue(response.context["cost_burndown"]["available"])
         self.assertContains(response, "cost-burndown-chart")
