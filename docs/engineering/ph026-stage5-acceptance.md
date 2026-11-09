@@ -50,8 +50,10 @@
 
 ## 5. 全量测试与 CI
 
-- （待最终 HEAD 运行后填写）
-- CI：9 项必需检查 + CodeQL 随 PR 运行，以 CI 双域结果为准。
+- 本机全量 `manage.py test tests`（最终 HEAD）：**1929 tests，2 failures + 76 skips**。两项失败均为既有 macOS 本机环境基线（与 main 一致，非本切片引入）：
+  1. `tests.test_delivery_execution.ExecutorIntegrationTests.test_adapter_sandbox_callbacks_and_persisted_lifecycle`（macOS `/private/var` 与 `/var` 符号链接前缀差异）
+  2. `tests.test_delivery_execution_sandbox.SandboxConstructionTests.test_partial_home_components_and_intra_path_quantifiers_are_rejected`（macOS 沙箱 IsolationError 断言差异）
+- CI：9 项必需检查 + CodeQL 随 PR 运行，以 CI 双域结果为准；独立复核作用于最终 HEAD。
 
 ## 6. 独立复核与修复
 
