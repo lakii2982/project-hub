@@ -110,12 +110,13 @@ class LightDeliveryDocsTests(unittest.TestCase):
         parsed = projectctl.parse_queue(ROOT, json.loads(self.read('project/tasks.json'))['tasks'])
         self.assertEqual(parsed['issues'], [])
         # 2026-11-03 范围重定义：QUEUE 为小微版 Q-31–Q-44；Q-45 为 2026-11-04 用户反馈的页面清理成果，
-        # Q-46 为同日用户要求恢复的前端设计规范 v2.0 交付。专业版 30 条归档只读。队列只增不改历史。
-        self.assertEqual(parsed['item_count'], 16)
+        # Q-46 为同日用户要求恢复的前端设计规范 v2.0 交付；Q-47 为 2026-11-08 用户确认「按规范迭代前端」后
+        # 恢复的 PH-026 第一片（壳层 + 工作台页签）。专业版 30 条归档只读。队列只增不改历史。
+        self.assertEqual(parsed['item_count'], 17)
         first_wave = [item for item in parsed['items'] if item['wave'] == 'W1']
         self.assertEqual(len(first_wave), 7)
         ids = {item['id'] for item in parsed['items']}
-        self.assertEqual(ids, {'Q-' + str(n) for n in range(31, 47)})
+        self.assertEqual(ids, {'Q-' + str(n) for n in range(31, 48)})
         self.assertTrue({'Q-01', 'Q-02', 'Q-03', 'Q-04', 'Q-05'}.isdisjoint(ids))
         self.assertTrue((ROOT / 'docs/archive/v1.0-planning/queue-professional-2026-11-03.md').is_file())
         for item in first_wave:
