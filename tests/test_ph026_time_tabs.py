@@ -228,6 +228,13 @@ class TimeTabTests(TabPageAssertions, WeeklyTimeFixture):
         self.assertEqual(self.simplified().count(), 0)
 
     # ---- 明细的 ?project= 过滤仍生效 ---------------------------------
+    def test_legacy_project_bookmark_defaults_to_detail_tab(self):
+        """旧书签 /time/?project=N（无 tab 参数）应落在工时明细，而不是按周填报。"""
+        page = self.time_page(project=self.project.pk)
+        self.assertEqual(page.context["active_tab"], "detail")
+        html = page.content.decode()
+        self.assertEqual(visible_panel_ids(html), ["detail"])
+
     def test_detail_project_filter_still_applies(self):
         self.save_member_week()
         page = self.time_page(project=self.project.pk, member=self.owner)

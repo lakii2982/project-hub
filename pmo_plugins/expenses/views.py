@@ -119,7 +119,7 @@ def expense_register(request):
     except (ValidationError, IntegrityError) as error:
         form.add_error(None, _error_text(error))
         return _page(request, member, project=project, expense_form=form, status=400)
-    return redirect(f"/expenses/?project={project.pk}")
+    return redirect(f"/expenses/?tab=all&project={project.pk}")
 
 
 @login_required

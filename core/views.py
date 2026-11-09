@@ -612,7 +612,10 @@ TIME_TABS = ("week", "detail", "summary")
 
 def _time_active_tab(request):
     tab = request.GET.get("tab")
-    return tab if tab in TIME_TABS else "week"
+    if tab in TIME_TABS:
+        return tab
+    # 旧书签 /time/?project=N 是项目财务的“工时明细”钻取；默认回退明细而非周填报。
+    return "detail" if request.GET.get("project") else "week"
 
 
 def _time_detail_context(member, request):

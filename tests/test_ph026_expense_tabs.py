@@ -197,6 +197,20 @@ class ExpenseTabTests(TabPageAssertions, ExpenseFixture):
         self.assert_only_panel_visible(html, "all")
         self.assertIn("历史专业流程费用记录只读保留", html)
 
+    def test_failed_register_post_with_conflicting_tab_query_still_pins_register(self):
+        """POST ?tab=all 失败时仍必须回到登记页签并携带表单错误（变异可检出）。"""
+        response = self.client.post(reverse("expense-register") + "?tab=all", {
+            "project": self.project.pk, "category": "vendor", "amount": "not-a-number",
+            "occurred_on": self.today.isoformat(), "counterparty": "演练供应商",
+            "note": "冲突页签下的失败登记",
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.context["active_tab"], "register")
+        html = response.content.decode()
+        self.assert_only_panel_visible(html, "register")
+        self.assertGreater(len(response.context["expense_form"].errors), 0)
+        self.assertIn("冲突页签下的失败登记", html)
+
     def test_failed_register_post_rerenders_register_tab_with_form_errors(self):
         response = self.client.post(reverse("expense-register"), {
             "project": self.project.pk, "category": "vendor", "amount": "not-a-number",

@@ -69,14 +69,17 @@
     const panels = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
     if (panels.some(panel => !panel)) return;
     const suffix = tab => tab.id.split('-').pop();
+    // Capture the server-selected tab before any activation mutates aria-selected;
+    // otherwise going Back to a legacy URL without ?tab= would keep the last tab.
+    const serverDefault = (() => {
+      const selected = tabs.find(tab => tab.getAttribute('aria-selected') === 'true');
+      return suffix(selected || tabs[0]);
+    })();
 
     function currentId() {
       const requested = new URLSearchParams(window.location.search).get('tab');
       if (tabs.some(tab => suffix(tab) === requested)) return requested;
-      // No (valid) URL state: the server-rendered aria-selected tab is authoritative,
-      // so legacy entry points that render a non-first default tab stay in sync.
-      const serverSelected = tabs.find(tab => tab.getAttribute('aria-selected') === 'true');
-      return suffix(serverSelected || tabs[0]);
+      return serverDefault;
     }
 
     function activate(id, { focusTab = false, updateUrl = false } = {}) {

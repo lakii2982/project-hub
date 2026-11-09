@@ -127,6 +127,12 @@ class CashflowTabTests(CashflowTabFixture):
         self.assertContains(page, "筛选项目")
         self.assertContains(page, self.project.code)
 
+    def test_tab_links_keep_project_filter(self):
+        page = self.page(tab="overview", project=self.project.pk)
+        html = page.content.decode()
+        for tab in TABS:
+            self.assertIn(f'href="?tab={tab}&amp;project={self.project.pk}"', html)
+
     def test_invoice_post_redirects_to_invoices_tab(self):
         response = self.client.post(reverse("billing-invoice-create"), {
             "project": self.project.pk, "number": "PH026-CF-INV-2",
