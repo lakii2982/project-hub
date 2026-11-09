@@ -26,7 +26,7 @@
   - **审计**：`/audit/` 对 owner/finance 302 到 `/settings/?tab=audit`（单一维护入口），auditor 保留独立只读审计页；审计面板无任何 POST/变更表单，筛选为只读 GET（对象/操作/操作者），筛选空态保留条件与清除，日志链不可用时显示明确错误而非“暂无日志”。
   - **图表（专业范围）**：`/finance/` 未来 13 周现金预测图为原生 SVG，`role="img"` + `aria-labelledby`/`title`/`desc`，图例以实心柱/斜线纹理柱/虚线菱形点区分三序列，单位/区间/口径写在图旁，真实零基线；相邻精确值表为口径来源；无计划时显示空态且不画全零曲线。项目财务页成本燃尽图保持 title/desc、图例、等价数据表与不可用原因。
   - 3 视口下设置/审计/图表页面：document 横向滚动 = 0、console error = 0、失败请求 = 0（图表容器内部允许局部横滚，不撑宽页面）。
-  - **200% 缩放代理**：1440 宽屏幕在 200% 页面缩放下等价 720 CSS px 视口（页面缩放同时触发响应式断点），以 720×450 视口 + DPR2 复现：设置/审计/工作台/财务页 0 横向滚动；截图 `ph026-stage5-after-zoom200-*`。`prefers-reduced-motion: reduce` 上下文截图见 `-dashboard-reduced-motion`。
+  - **200% 缩放代理**：1440 宽屏幕在 200% 页面缩放下等价 720 CSS px 视口（页面缩放同时触发响应式断点），以 720×450 视口 + DPR2 复现：设置/审计/工作台/财务页 0 横向滚动；截图 `ph026-stage5-after-zoom200-*`（截图上下文均启用 `reduced_motion=reduce`）。
   - 微版工作台按设计不渲染财务预测图（图表属于专业范围页面），脚本显式记录该缺席，避免把范围差异误当缺陷。
 
 ## 3. 证据截图（`docs/screenshots/ph026-stage5-*`，同场景同视口同主题）
@@ -36,7 +36,7 @@
   - 专业范围 1440/390/320：`ph026-stage5-before-full-{1440,390,320}-{finance,project-finance}.png`
 - After（本 PR HEAD）：
   - 设置：`ph026-stage5-after-1440-settings.png`、`-settings-rates.png`、`-settings-audit.png`、`-audit-alias.png`；390/320：`-{390,320}-settings.png`、`-settings-audit.png`
-  - 工作台：1440/390/320 `-dashboard.png`；无 JS `-dashboard-nojs.png`（全部浏览器检查上下文均以 `reduced_motion="reduce"` 运行）
+  - 工作台：1440/390/320 `-dashboard.png`；无 JS `-dashboard-nojs.png`（截图上下文均以 `reduced_motion="reduce"` 运行；深链/键盘与无 JS 交互检查上下文未强制该设置，不涉及动画）
   - 图表（专业范围）：1440/390/320 `-full-{1440,390,320}-finance.png`（现金预测）、`-full-{1440,390,320}-project-finance.png`（成本燃尽）
   - 200% 缩放：`ph026-stage5-after-zoom200-{settings,settings-audit,dashboard,full-finance}.png`
 
@@ -63,7 +63,7 @@
 - 非阻塞观察与处理：
   1. `_audit_context` 在每次设置 GET（含成员/费率页签）都执行 `verify_audit` 全链扫描，量大有性能风险 → 记为已知限制（§7），本切片不改变审计链校验语义。
   2. `/audit/` 对 owner/finance 的 302 丢弃原 query 筛选参数 → 记为已知限制；筛选在设置页审计页签完整可用。
-  3. 减少动态效果证据文件命名曾指向 720 代理上下文 → 已删除冗余重名文件，并在 §2/§3 说明全部检查上下文均为 `reduced_motion=reduce`。
+  3. 减少动态效果证据文件命名曾指向 720 代理上下文 → 已删除冗余重名文件，并在 §2/§3 说明截图上下文均为 `reduced_motion=reduce`（交互检查上下文除外）。
   4. 本节占位已按复核结果补全。
 
 ## 7. 未执行项与边界

@@ -11,9 +11,9 @@
     "command": "python scripts/package.py",
     "verify_command": "python scripts/verify-source-package.py releases/project-hub-0.2.0-source.zip",
     "archive": "project-hub-0.2.0-source.zip",
-    "sha256": "119d527d3cc8cb64c2bc99893b197ac5e349abe23f8fdd6206d193ccf90cd2c3",
+    "sha256": "b9f3b0dbbe610370ef729a97a646ab5a54b8e4899f25ff5d513cc89486556fb9",
     "files": 1991,
-    "manifest_sha256": "d70e8a8bfffd99b8bdf1d1b2024c119c4e540c6e4cc6660e00ee79a0ad0f9f46"
+    "manifest_sha256": "5d641503a2bf765165cd89d118e076d54b6a407917de5cf54bbcd433e6239c86"
   },
   "excluded": [
     "runtime/",
