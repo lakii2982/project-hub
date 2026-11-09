@@ -604,6 +604,54 @@ def _weekly_context(member, employee, week_start, rows, general_errors=()):
     return context
 
 
+# PH-026 阶段④：工时模块三页签（工时明细 / 按周填报 / 项目汇总）。
+# 三块面板始终服务端渲染在 DOM 中，仅非当前面板带 hidden；无 JavaScript 时页签是
+# 指向 /time/?tab=… 的真实链接，服务端按 active_tab（白名单回退 detail）重新渲染。
+TIME_TABS = ("week", "detail", "summary")
+
+
+def _time_active_tab(request):
+    tab = request.GET.get("tab")
+    return tab if tab in TIME_TABS else "week"
+
+
+def _time_detail_context(member, request):
+    """Existing 工时明细 facts; ?project= filtering and foreign-project 404 stay unchanged."""
+    rows = Timesheet.objects.filter(Q(project__in=visible_projects(member)) | (Q(organization=member.organization, project__isnull=True) if member.role in {"owner", "finance", "auditor", "member"} else Q(organization=member.organization, project__isnull=True, employee__member=member))).select_related("project", "employee", "task", "submitted_by")
+    if member.role == "member": rows = rows.filter(employee__member=member)
+    elif member.role == "pm": rows = rows.filter(Q(project__manager=member) | Q(project__isnull=True, employee__member=member))
+    selected_project = None
+    project_filter = request.GET.get("project", "")
+    if project_filter:
+        if not project_filter.isdigit() or len(project_filter) > 18:
+            raise Http404()
+        selected_project = get_object_or_404(visible_projects(member), pk=int(project_filter))
+        rows = rows.filter(project=selected_project)
+    totals = rows.filter(status="approved").aggregate(minutes=Sum("minutes"), cost=Sum("cost_cents"))
+    return {"timesheets": rows[:300], "selected_project": selected_project,
+            "total_minutes": totals["minutes"] or 0,
+            "total_cost_cents": (totals["cost"] or 0) if member.role != "member" else None}
+
+
+def _time_context(member, week_start, tab, *, employee, rows, general_errors=(),
+                  detail=None, error_summary=None):
+    """Build every panel's context so all three panels render on every /time/ request."""
+    context = _weekly_context(member, employee, week_start, rows, general_errors)
+    if detail is not None:
+        context.update(detail)
+    context["active_tab"] = tab
+    context["error_summary"] = list(error_summary) if error_summary is not None else []
+    return context
+
+
+def _render_time(request, member, week_start, active_tab, *, employee, rows,
+                 general_errors=(), error_summary=None, status=200):
+    return render(request, "time.html", _time_context(
+        member, week_start, active_tab, employee=employee, rows=rows,
+        general_errors=general_errors, detail=_time_detail_context(member, request),
+        error_summary=error_summary), status=status)
+
+
 @workspace_view
 def timesheets_week(request):
     member = request.member
@@ -614,52 +662,47 @@ def timesheets_week(request):
         start_index = len(rows)
         if employee:
             rows += weekly.blank_rows(week_start, start_index)
-        return render(request, "time_week.html", _weekly_context(
-            member, employee, week_start, rows, ([employee_error] if employee_error else [])))
+        return _render_time(request, member, week_start, "week", employee=employee, rows=rows,
+                            general_errors=([employee_error] if employee_error else []))
     require_write(member)
     if employee is None:
-        return render(request, "time_week.html", _weekly_context(
-            member, None, week_start, [], [employee_error or "没有可填报的员工档案"]), status=403)
+        return _render_time(request, member, week_start, "week", employee=None, rows=[],
+                            general_errors=[employee_error or "没有可填报的员工档案"], status=403)
     rows = _posted_week_rows(request.POST)
     if not rows:
-        return render(request, "time_week.html", _weekly_context(
-            member, employee, week_start, weekly.blank_rows(week_start, 0), ["请至少填写一行工时再保存"]), status=400)
+        return _render_time(request, member, week_start, "week", employee=employee,
+                            rows=weekly.blank_rows(week_start, 0),
+                            general_errors=["请至少填写一行工时再保存"], status=400)
     try:
         result = weekly.save_week(member, employee, week_start, rows)
     except weekly.WeekTimeError as error:
         summary = sorted({message for messages in error.row_errors.values() for message in messages})
-        context = _weekly_context(member, employee, week_start,
-                                  _weekly_payloads(rows, error.row_errors), summary + error.general)
-        context["error_summary"] = summary
-        return render(request, "time_week.html", context, status=400)
+        return _render_time(request, member, week_start, "week", employee=employee,
+                            rows=_weekly_payloads(rows, error.row_errors),
+                            general_errors=summary + error.general,
+                            error_summary=summary, status=400)
     except ValidationError as error:
-        return render(request, "time_week.html", _weekly_context(
-            member, employee, week_start, _weekly_payloads(rows, {}), error.messages), status=400)
+        return _render_time(request, member, week_start, "week", employee=employee,
+                            rows=_weekly_payloads(rows, {}), general_errors=error.messages, status=400)
     if result["created"] == 0 and result["corrected"] == 0 and result["unpriced"] == 0:
         messages.success(request, "本页内容没有变化，未重复记账")
     else:
         messages.success(request, f"本周工时已保存：新增 {result['created']} 条，更正 {result['corrected']} 条"
                                   + (f"，{result['unpriced']} 条因缺费率待定价" if result["unpriced"] else ""))
-    return redirect(f"{url_reverse('timesheets-week')}?week={week_start.isoformat()}")
+    return redirect(f"{url_reverse('timesheets')}?tab=week&week={week_start.isoformat()}")
 
 
 @workspace_view
 def timesheets(request):
-    rows = Timesheet.objects.filter(Q(project__in=visible_projects(request.member)) | (Q(organization=request.member.organization, project__isnull=True) if request.member.role in {"owner", "finance", "auditor", "member"} else Q(organization=request.member.organization, project__isnull=True, employee__member=request.member))).select_related("project", "employee", "task", "submitted_by")
-    if request.member.role == "member": rows = rows.filter(employee__member=request.member)
-    elif request.member.role == "pm": rows = rows.filter(Q(project__manager=request.member) | Q(project__isnull=True, employee__member=request.member))
-    selected_project = None
-    project_filter = request.GET.get("project", "")
-    if project_filter:
-        if not project_filter.isdigit() or len(project_filter) > 18:
-            raise Http404()
-        selected_project = get_object_or_404(visible_projects(request.member), pk=int(project_filter))
-        rows = rows.filter(project=selected_project)
-    totals = rows.filter(status="approved").aggregate(minutes=Sum("minutes"), cost=Sum("cost_cents"))
-    return render(request, "time.html", {"nav": "time", "timesheets": rows[:300], "selected_project": selected_project,
-        "employees": Employee.objects.filter(organization=request.member.organization),
-        "total_minutes": totals["minutes"] or 0, "total_cost_cents": (totals["cost"] or 0) if request.member.role != "member" else None,
-        "labor_gaps": weekly.missing_rate_gaps(request.member)})
+    member = request.member
+    week_start = _week_start(request.GET.get("week"))
+    employee, employee_error = _weekly_employee(member)
+    rows = weekly.weekly_rows(member, employee, week_start) if employee else []
+    if employee:
+        rows += weekly.blank_rows(week_start, len(rows))
+    return _render_time(request, member, week_start, _time_active_tab(request),
+                        employee=employee, rows=rows,
+                        general_errors=([employee_error] if employee_error else []))
 
 
 @workspace_view

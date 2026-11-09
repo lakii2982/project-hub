@@ -360,7 +360,7 @@ class WeeklyEntryTests(WeeklyTimeFixture):
         self.login(self.pm)
         page = self.client.get(self.url() + f"?week={self.week_start.isoformat()}")
         self.assertEqual(page.status_code, 200)
-        self.assertContains(page, "本周项目汇总")
+        self.assertContains(page, "项目汇总")
         self.assertContains(page, self.project.code)
         for secret in ("小时费率", "费率依据", "成本费率", self.rate_basis):
             self.assertNotContains(page, secret)

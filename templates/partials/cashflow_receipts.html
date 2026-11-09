@@ -1,0 +1,53 @@
+{% load money %}
+<div class="panel-stack" id="cashflow-panel-receipts" role="tabpanel" aria-labelledby="cashflow-tab-receipts" tabindex="0"{% if active_tab != 'receipts' %} hidden{% endif %}>
+  <section class="panel">
+    <div class="panel-heading"><div><h2>登记收款</h2></div></div>
+    <div class="panel-body">
+      <form method="post" action="{% url 'billing-receipt-create' %}" class="stack-form" novalidate>
+        {% csrf_token %}
+        {% if receipt_form.non_field_errors %}<div class="message error" role="alert">{{ receipt_form.non_field_errors }}</div>{% endif %}
+        {{ receipt_form.request_token }}
+        <div class="form-row">{% include 'billing/field.html' with field=receipt_form.project %}{% if receipt_form.non_project %}{% include 'billing/field.html' with field=receipt_form.non_project %}{% endif %}</div>
+        <div class="form-row">{% include 'billing/field.html' with field=receipt_form.account %}{% include 'billing/field.html' with field=receipt_form.invoice %}</div>
+        <div class="form-row">{% include 'billing/field.html' with field=receipt_form.amount %}{% include 'billing/field.html' with field=receipt_form.received_on %}</div>
+        <div class="form-row">{% include 'billing/field.html' with field=receipt_form.reference %}{% include 'billing/field.html' with field=receipt_form.counterparty %}</div>
+        <div class="form-row">{% include 'billing/field.html' with field=receipt_form.note %}</div>
+        <div class="form-actions"><button class="button primary" type="submit">登记收款</button></div>
+      </form>
+      {% if not snapshot.accounts %}<p class="help-text">还没有资金账户。{% if can_manage_accounts %}请先到「资金账户」页签新建账户，再登记收款。{% else %}请公司负责人先新建资金账户。{% endif %}</p>{% endif %}
+    </div>
+  </section>
+
+  <section class="panel section-gap">
+    <div class="panel-heading"><div><h2>收款记录</h2></div><span class="badge neutral">只追加</span></div>
+    <div class="record-list">
+      {% for row in snapshot.receipt_rows %}
+      <details class="record">
+        <summary>
+          <div><span class="eyebrow">{{ row.received_on|date:'Y.m.d' }} / {% if row.project_id %}{{ row.project.code }}{% else %}非项目{% endif %}</span><h3>{% if row.project_id %}{{ row.project.name }}{% else %}非项目收款{% endif %} · {{ row.counterparty|default:'未填客户' }}</h3><p>账户 {{ row.account.name }}{% if row.invoice_id %} · 发票 {{ row.invoice.number }}{% endif %}</p></div>
+          <div class="record-summary"><strong class="numeric">¥ {{ row.amount_cents|money }}</strong>{% if row.reverses_id %}<span class="badge warning">退款</span>{% elif row.refunded_cents %}<span class="badge neutral">部分退款</span>{% else %}<span class="badge success">收款</span>{% endif %}<span class="disclosure" aria-hidden="true">⌄</span></div>
+        </summary>
+        <div class="record-body">
+          <dl class="detail-grid">
+            <div><dt>资金账户</dt><dd>{{ row.account.name }}（{{ row.account.get_kind_display }}）</dd></div>
+            <div><dt>来源编号</dt><dd>{{ row.reference|default:'退款记录无来源编号' }}</dd></div>
+            <div><dt>关联发票</dt><dd>{% if row.invoice_id %}发票 {{ row.invoice.number }}（¥ {{ row.invoice.amount_cents|money }}）{% else %}未关联发票（按项目收款计入未收款）{% endif %}</dd></div>
+            <div><dt>已退款 / 可退</dt><dd>¥ {{ row.refunded_cents|money }} / ¥ {{ row.refundable_cents|money }}</dd></div>
+            <div><dt>登记人 / 时间</dt><dd>{{ row.created_by.get_full_name|default:row.created_by.username }} · {{ row.created_at|date:'Y.m.d H:i' }}</dd></div>
+            {% if row.reverses_id %}<div><dt>原收款</dt><dd>{{ row.reverses.received_on|date:'Y.m.d' }} · ¥ {{ row.reverses.amount_cents|money }} · {{ row.reason }}</dd></div>{% endif %}
+            {% if row.note %}<div><dt>备注</dt><dd>{{ row.note }}</dd></div>{% endif %}
+          </dl>
+          {% if row.refund_token %}
+          <form method="post" action="{% url 'billing-receipt-refund' row.pk %}" class="inline-form reversal-form">
+            {% csrf_token %}<input type="hidden" name="request_token" value="{{ row.refund_token }}">
+            <div><label for="refund-amount-{{ row.pk }}">退款金额（元，最多 ¥ {{ row.refundable_cents|money }}）</label><input id="refund-amount-{{ row.pk }}" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required></div>
+            <div class="grow"><label for="refund-reason-{{ row.pk }}">退款原因（至少4字；追加负值记录）</label><input id="refund-reason-{{ row.pk }}" name="reason" required minlength="4" maxlength="240" placeholder="例如：客户退回部分款项"></div>
+            <button class="button danger" type="submit">追加退款</button>
+          </form>
+          {% endif %}
+        </div>
+      </details>
+      {% empty %}<div class="empty-state compact"><h3>还没有收款</h3><p>先用上方“登记收款”选择资金账户并登记一笔收款。</p></div>{% endfor %}
+    </div>
+  </section>
+</div>

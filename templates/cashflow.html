@@ -1,0 +1,22 @@
+{% extends 'base.html' %}{% load money %}
+{% block title %}现金流{% endblock %}
+{% block breadcrumb %}现金流{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><div class="eyebrow">CASH FLOW / BILLING &amp; ACCOUNTS</div><h1>现金流</h1><p>开票、收款、资金账户与未来 8 周计划在同一处核对。</p></div>
+  <div class="actions"><a class="button" href="{% url 'projects' %}">查看项目</a>{% if selected_project %}<a class="button" href="{% url 'cashflow' %}">清除项目筛选</a>{% endif %}</div>
+</section>
+<div class="tabbar"><div class="tablist" role="tablist" aria-label="现金流页签" data-link-tabs>
+  <a class="tab" id="cashflow-tab-overview" role="tab" href="?tab=overview" aria-controls="cashflow-panel-overview" aria-selected="{% if active_tab == 'overview' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'overview' %}0{% else %}-1{% endif %}">概览</a>
+  <a class="tab" id="cashflow-tab-invoices" role="tab" href="?tab=invoices" aria-controls="cashflow-panel-invoices" aria-selected="{% if active_tab == 'invoices' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'invoices' %}0{% else %}-1{% endif %}">发票{% if snapshot.invoice_rows %} <span class="tab-count numeric">{{ snapshot.invoice_rows|length }}</span>{% endif %}</a>
+  <a class="tab" id="cashflow-tab-receipts" role="tab" href="?tab=receipts" aria-controls="cashflow-panel-receipts" aria-selected="{% if active_tab == 'receipts' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'receipts' %}0{% else %}-1{% endif %}">收款</a>
+  <a class="tab" id="cashflow-tab-accounts" role="tab" href="?tab=accounts" aria-controls="cashflow-panel-accounts" aria-selected="{% if active_tab == 'accounts' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'accounts' %}0{% else %}-1{% endif %}">资金账户</a>
+  <a class="tab" id="cashflow-tab-plan" role="tab" href="?tab=plan" aria-controls="cashflow-panel-plan" aria-selected="{% if active_tab == 'plan' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'plan' %}0{% else %}-1{% endif %}">8 周计划</a>
+</div></div>
+{% if selected_project %}<div class="overview-strip"><span>筛选项目：<strong>{{ selected_project.code }} · {{ selected_project.name }}</strong></span><a href="{% url 'cashflow' %}">清除筛选</a><a href="{% url 'project-detail' selected_project.pk %}?tab=finance">返回项目收益与现金</a></div>{% endif %}
+{% include 'partials/cashflow_overview.html' %}
+{% include 'partials/cashflow_invoices.html' %}
+{% include 'partials/cashflow_receipts.html' %}
+{% include 'partials/cashflow_accounts.html' %}
+{% include 'partials/cashflow_plan.html' %}
+{% endblock %}

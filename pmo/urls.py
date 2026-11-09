@@ -49,6 +49,7 @@ urlpatterns = [
     path("review/<str:kind>/<pid:pk>/", views.review, name="review"),
     path("reverse/<str:kind>/<pid:pk>/", views.reverse, name="reverse"),
     path("finance/", views.finance, name="finance"),
+    path("cashflow/", cash_views.cashflow, name="cashflow"),
     path("billing/", billing_views.billing, name="billing"),
     path("billing/accounts/save/", billing_views.account_create, name="billing-account-create"),
     path("billing/invoices/save/", billing_views.invoice_create, name="billing-invoice-create"),

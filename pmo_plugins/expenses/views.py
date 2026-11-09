@@ -41,11 +41,37 @@ def _yuan(cents):
     return format(Decimal(int(cents)) / Decimal(100), ".2f")
 
 
+# PH-026 阶段④ 页签协议：服务端白名单 + 默认页签；非法 ?tab= 回退默认。
+TABS = ("register", "pending", "plan", "all")
+
+
+def _can_write(member):
+    return member.role in services.WRITER_ROLES
+
+
+def _default_tab(member):
+    return "register" if _can_write(member) else "all"
+
+
+def _active_tab(request, member, *, expense_form=None):
+    """Resolve the server-rendered active tab.
+
+    A failed POST re-renders the page with the register form and its errors, so
+    that path is pinned to ``register`` instead of trusting a query string.
+    """
+    if expense_form is not None:
+        return "register"
+    allowed = TABS if _can_write(member) else tuple(tab for tab in TABS if tab != "register")
+    requested = request.GET.get("tab")
+    return requested if requested in allowed else _default_tab(member)
+
+
 def _page(request, member, *, project=None, expense_form=None, status=200):
     snapshot = services.expense_snapshot(member, project)
     for row in snapshot["rows"]:
         row["amount_yuan"] = _yuan(row["amount_cents"])
         row["payment_token"] = uuid.uuid4()
+    can_write = _can_write(member)
     return render(request, "expenses/expenses.html", {
         "nav": "expenses",
         "snapshot": snapshot,
@@ -53,7 +79,8 @@ def _page(request, member, *, project=None, expense_form=None, status=200):
         "projects": services.writable_projects(member).order_by("code"),
         "expense_form": expense_form or ui.ExpenseForm(member=member, project=project),
         "categories": CATEGORIES,
-        "can_write": member.role in services.WRITER_ROLES,
+        "can_write": can_write,
+        "active_tab": _active_tab(request, member, expense_form=expense_form),
         "payment_accounts": services.payment_accounts(member),
         "today": timezone.localdate(),
     }, status=status)

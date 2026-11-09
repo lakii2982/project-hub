@@ -85,7 +85,7 @@
         <div class="setup-gaps" aria-label="缺项">
           <h3>缺项与建议（{{ state.gaps|length }}）</h3>
           <ul>
-            {% for gap in state.gaps %}<li><span class="text-warning">{{ gap.text }}</span>{% if gap.key == 'account' %} · <a href="{% url 'cash' %}">去建立资金账户</a>{% elif gap.key == 'invoice' %} · <a href="{% url 'billing' %}">去开票</a>{% elif gap.key == 'rate' or gap.key == 'member' %} · <a href="{% url 'settings' %}">去设置</a>{% endif %}</li>{% endfor %}
+            {% for gap in state.gaps %}<li><span class="text-warning">{{ gap.text }}</span>{% if gap.key == 'account' %} · <a href="{% url 'cashflow' %}?tab=accounts">去建立资金账户</a>{% elif gap.key == 'invoice' %} · <a href="{% url 'cashflow' %}?tab=invoices">去开票</a>{% elif gap.key == 'rate' or gap.key == 'member' %} · <a href="{% url 'settings' %}">去设置</a>{% endif %}</li>{% endfor %}
           </ul>
         </div>
         {% else %}
@@ -93,8 +93,8 @@
         {% endif %}
         <div class="form-actions setup-actions">
           <a class="button" href="{% url 'projects' %}">查看项目</a>
-          <a class="button" href="{% url 'timesheets-week' %}">去记工时</a>
-          <a class="button" href="{% url 'billing' %}">去开票与收款</a>
+          <a class="button" href="{% url 'timesheets' %}?tab=week">去记工时</a>
+          <a class="button" href="{% url 'cashflow' %}?tab=invoices">去开票与收款</a>
           <a class="button primary" href="{% url 'dashboard' %}">进入工作台</a>
         </div>
       </div>

@@ -72,7 +72,11 @@
 
     function currentId() {
       const requested = new URLSearchParams(window.location.search).get('tab');
-      return tabs.some(tab => suffix(tab) === requested) ? requested : suffix(tabs[0]);
+      if (tabs.some(tab => suffix(tab) === requested)) return requested;
+      // No (valid) URL state: the server-rendered aria-selected tab is authoritative,
+      // so legacy entry points that render a non-first default tab stay in sync.
+      const serverSelected = tabs.find(tab => tab.getAttribute('aria-selected') === 'true');
+      return suffix(serverSelected || tabs[0]);
     }
 
     function activate(id, { focusTab = false, updateUrl = false } = {}) {

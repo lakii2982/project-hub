@@ -285,9 +285,9 @@ class Q41ReminderTests(Q41Fixture):
         self.assertEqual(response.status_code, 200)
         for text in ("到期提醒", "Q41-INV-001", "Q41 已确认逾期支出", "缺费率工时", "查看来源"):
             self.assertContains(response, text)
-        self.assertContains(response, "/billing/?project=")
-        self.assertContains(response, "/expenses/?project=")
-        self.assertContains(response, "/time/?project=")
+        self.assertContains(response, "/cashflow/?tab=invoices")
+        self.assertContains(response, "/expenses/?tab=all")
+        self.assertContains(response, "/time/?tab=detail")
         dashboard = self.client.get(reverse("dashboard"))
         self.assertContains(dashboard, "到期提醒")
         self.assertContains(dashboard, "查看全部")
