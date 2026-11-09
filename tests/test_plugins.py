@@ -110,6 +110,29 @@ class PluginRuntimeTests(TestCase):
         self.assertTrue(any(a["title"] == self.project.name for a in alerts))
         self.assertTrue(any(a["title"] == "项目检查暂时未完成" for a in alerts))
 
+    def test_insight_url_accepts_known_project_tab_query(self):
+        class TabUrl:
+            manifest = manifest("taburl")
+            @hookimpl
+            def project_insights(self, snapshot, include_finance):
+                return [{"severity": "info", "title": "财务页签", "detail": "",
+                         "url": snapshot["url"] + "?tab=finance"}]
+        with mock.patch("core.plugin_runtime.get_registry", return_value=Registry(instances=[TabUrl()])):
+            alerts = collect_insights(self.org, [self.snapshot()])
+        self.assertTrue(any(a["url"].endswith("?tab=finance") for a in alerts))
+
+    def test_insight_url_rejects_unknown_query_suffix(self):
+        class BadQuery:
+            manifest = manifest("badquery")
+            @hookimpl
+            def project_insights(self, snapshot, include_finance):
+                return [{"severity": "info", "title": "错误参数", "detail": "",
+                         "url": snapshot["url"] + "?redirect=https://other.invalid/"}]
+        with mock.patch("core.plugin_runtime.get_registry", return_value=Registry(instances=[BadQuery()])):
+            with self.assertLogs("core.plugin_runtime", level="ERROR"):
+                alerts = collect_insights(self.org, [self.snapshot()])
+        self.assertFalse(any(a["title"] == "错误参数" for a in alerts))
+
     def test_untrusted_insight_url_is_rejected(self):
         class BadUrl:
             manifest = manifest("badurl")

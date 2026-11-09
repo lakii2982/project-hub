@@ -1650,50 +1650,7 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
 .project-detail dd,
 .project-detail summary { overflow-wrap: anywhere; }
 .project-detail { line-height: var(--line-height-body); }
-.project-detail .project-tabs {
-  gap: var(--space-6);
-  max-width: 100%;
-  margin: var(--space-6) calc(-1 * var(--space-1));
-  padding: var(--space-1);
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  scroll-padding-inline: var(--space-2);
-  overscroll-behavior-inline: contain;
-  border-bottom-color: var(--color-border);
-}
-.project-detail .project-tabs > a {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  min-height: var(--touch-target);
-  padding: var(--space-2);
-  border-bottom: var(--border-width-strong) solid transparent;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-body);
-}
-.project-detail .project-tabs > a:hover {
-  color: var(--color-accent);
-  border-bottom-color: var(--color-accent);
-  text-decoration: none;
-}
-.project-detail .project-tabs > a:focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-focus);
-  outline-offset: 0;
-  border-radius: var(--radius-md);
-}
-.project-detail .project-tabs > a[aria-selected="true"] {
-  color: var(--color-accent);
-  background: var(--color-accent-subtle);
-  border-bottom-color: var(--color-accent);
-}
 .project-detail .project-panel > .section-heading:first-child { margin-top: 0; }
-.project-detail [data-panel-title]:focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-focus);
-  outline-offset: var(--space-1);
-  border-radius: var(--radius-md);
-}
 .project-detail .historical-tasks { border-top: var(--border-width) solid var(--color-border); background: var(--color-surface-subtle); }
 .project-detail .historical-tasks > summary {
   min-height: var(--touch-target);
@@ -1829,6 +1786,31 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
   max-width: none;
   height: auto;
 }
+
+/* ----------------------------------------------------------------------------
+   23b. PH-026 阶段③：项目列表（桌面表格，≤768 按 data-label 转行卡）
+   ---------------------------------------------------------------------------- */
+.project-table .project-name { display: block; font-weight: var(--font-weight-medium); }
+.project-table .project-sub {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+.project-table .progress-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 132px;
+}
+.project-table .progress-cell progress { flex: 1 1 auto; min-width: 72px; }
+.project-table .progress-cell .numeric {
+  flex: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+.project-table .gap-cell { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.project-table .gap-cell .badge { white-space: nowrap; }
 
 /* ----------------------------------------------------------------------------
    24. Q-35 按周填报工时：周导航、填报表格与项目汇总
@@ -2103,7 +2085,6 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
   .setup-login-notice { flex-direction: column; align-items: flex-start; }
   .week-nav { gap: var(--space-2); padding: var(--space-3); }
   .week-nav .button { min-height: var(--touch-target); }
-  .project-detail .project-tabs { gap: var(--space-4); margin: var(--space-4) calc(-1 * var(--space-1)); }
   .cost-burndown-body { padding: var(--space-4); }
   .cost-burndown-summary { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
   .cost-burndown-summary > div {
@@ -2213,6 +2194,50 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
   .q33-ranking td:last-child { grid-template-columns: 1fr; padding-top: var(--space-2); }
   .q33-ranking td:last-child::before { display: none; }
   .q33-ranking .cell-sub { margin-top: var(--space-1); }
+
+  /* PH-026 阶段③ 项目列表行卡 */
+  .project-table { min-width: 0; }
+  .project-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: var(--space-0);
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .project-table,
+  .project-table tbody,
+  .project-table tr { display: block; width: 100%; }
+  .project-table tr { padding: var(--space-3) 0; border-top: var(--border-width) solid var(--color-border); }
+  .project-table tbody th {
+    display: block;
+    border: 0;
+    padding: var(--space-0) 0 var(--space-2);
+    max-width: none;
+  }
+  .project-table td {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: var(--space-3);
+    border: 0;
+    padding: var(--space-1) 0;
+    align-items: center;
+    max-width: none;
+    text-align: left;
+    white-space: normal;
+  }
+  .project-table td::before {
+    content: attr(data-label);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+  }
+  .project-table .numeric { text-align: left; }
+  .project-table .gap-cell { justify-content: flex-start; min-width: 0; }
+  .project-table .gap-cell .badge { white-space: normal; overflow-wrap: anywhere; }
+  .project-table .progress-cell { min-width: 0; width: 100%; }
 
   /* Q-36 费用缺口行卡 */
   .expense-gap-table { min-width: 0; }

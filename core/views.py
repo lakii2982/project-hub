@@ -62,6 +62,16 @@ def error_text(error):
     return "；".join(error.messages) if isinstance(error, ValidationError) else "记录冲突或已更新，请刷新并核对后重试"
 
 
+# PH-026 阶段③：项目详情页签由服务端按 ?tab= 渲染唯一可见面板；写入动作回到所属页签。
+PROJECT_TAB_BY_KIND = {"task": "tasks", "milestone": "milestones", "risk": "risks",
+                       "team": "team", "document": "finance", "plan": "finance"}
+
+
+def project_tab_url(project_id, tab="overview"):
+    """Project detail URL carrying ?tab=; the view whitelists it and falls back to overview."""
+    return f"{url_reverse('project-detail', args=[project_id])}?tab={tab}"
+
+
 def redact_card(card, member):
     if not can_read_finance(member, card["project"]):
         for key in card:
@@ -137,13 +147,34 @@ def reminders(request):
 
 @workspace_view
 def projects(request):
-    qs = visible_projects(request.member)
+    all_visible = visible_projects(request.member)
+    qs = all_visible
     query = request.GET.get("q", "").strip()[:100]
     stage = request.GET.get("stage", "")
+    owner = request.GET.get("owner", "").strip()
     if query: qs = qs.filter(Q(name__icontains=query) | Q(code__icontains=query) | Q(client__icontains=query))
     if stage in Project.Stage.values: qs = qs.filter(stage=stage)
-    cards = [redact_card(project_summary(p), request.member) for p in qs]
-    return render(request, "projects.html", {"nav": "projects", "cards": cards, "query": query, "stage": stage, "stages": Project.Stage.choices})
+    if owner:
+        if not owner.isdigit() or len(owner) > 18:
+            raise Http404()
+        qs = qs.filter(manager_id=int(owner))
+    from .project_finance import project_finance
+    finance_reader = can_read_finance(request.member)
+    rows = []
+    for project in qs:
+        card = redact_card(project_summary(project), request.member)
+        # Q-33/Q-34 shared 1.0 basis; per-project permission matters because a pm can be a
+        # team member of a project they do not manage. Rows without permission keep "—".
+        rows.append({"project": project, "card": card,
+                     "finance": project_finance(project)
+                     if can_read_finance(request.member, project) else None})
+    managers = (Membership.objects.filter(id__in=all_visible.values_list("manager_id", flat=True))
+                .select_related("user").order_by("user__first_name", "user__username"))
+    return render(request, "projects.html", {
+        "nav": "projects", "rows": rows, "query": query, "stage": stage, "owner": owner,
+        "stages": Project.Stage.choices, "managers": managers,
+        "total_count": len(rows), "finance_reader": finance_reader,
+        "filtered": bool(query or stage or owner)})
 
 
 @workspace_view
@@ -182,10 +213,20 @@ def project_detail(request, pk):
         project_finance_summary = project_finance(project)
         if can_manage(request.member, project):
             contract_form = ui.ContractChangeForm(member=request.member, project=project)
+    # PH-026 阶段③：固定六页签（无财务权限的用户以“我的费用”承接原费用面板）；
+    # 无效或越权的 ?tab= 回退概览，不报错，无 JavaScript 时仍是真实链接。
+    allowed_tabs = ["overview", "tasks", "milestones", "risks", "team"]
+    if finance_read:
+        allowed_tabs.insert(3, "finance")
+    else:
+        allowed_tabs.append("expenses")
+    active_tab = request.GET.get("tab")
+    if active_tab not in allowed_tabs:
+        active_tab = "overview"
     return render(request, "project_detail.html", {"nav": "projects", "project": project,
         "revenue_summary": revenue_summary, "contract_totals": contract_totals, "contracts_unavailable": contracts_unavailable,
         "billing": billing_summary, "expenses": expense_summary, "finance": project_finance_summary,
-        "contract_form": contract_form,
+        "contract_form": contract_form, "active_tab": active_tab,
         "summary": redact_card(project_summary(project), request.member),
         "tasks": project.tasks.filter(Q(milestone__isnull=False) | Q(cash_plan__isnull=False)).select_related("owner__user", "dependency", "milestone", "cash_plan"),
         "historical_tasks": project.tasks.filter(milestone__isnull=True, cash_plan__isnull=True).select_related("owner__user", "dependency"),
@@ -204,7 +245,7 @@ def project_contract_change(request, pk):
     from .scope import is_micro_scope
     if not is_micro_scope() or not can_manage(request.member, project):
         raise PermissionDenied("只有公司负责人或项目经理可以变更合同额")
-    target = url_reverse("project-detail", args=[project.pk]) + "#finance"
+    target = project_tab_url(project.pk, "finance")
     form = ui.ContractChangeForm(request.POST, member=request.member, project=project)
     if not form.is_valid():
         messages.error(request, "；".join(message for errors in form.errors.values() for message in errors))
@@ -313,7 +354,10 @@ def new_object(request, kind):
             if kind in {"employee", "rate", "member"}: return redirect("settings")
             if kind == "time" and not obj.project_id: return redirect("timesheets")
             obj_project = obj if kind == "project" else getattr(obj, "project", project)
-            return redirect("project-detail", pk=obj_project.pk)
+            tab = PROJECT_TAB_BY_KIND.get(kind, "overview")
+            if kind == "document" and not can_read_finance(request.member, obj_project):
+                tab = "expenses"  # 无财务权限的成员从“我的费用”面板提交单据后回到该面板。
+            return redirect(project_tab_url(obj_project.pk, tab))
         except (ValidationError, IntegrityError) as error: form.add_error(None, error_text(error))
     back = url_reverse("project-detail", args=[project.pk]) if project else url_reverse("settings" if kind in {"employee", "rate", "member"} else "projects")
     return render(request, "form.html", {"nav": "projects", "heading": HEADINGS[kind], "lead": "填写业务事实，系统会保留来源、责任人和变更记录。", "form": form, "back_url": back})
@@ -334,7 +378,7 @@ def project_edit(request, pk):
             version, reason = data.pop("version"), data.pop("reason")
             update_project(request.member, project.pk, data, version, reason)
             messages.success(request, "项目信息与完工预测已更新")
-            return redirect("project-detail", pk=pk)
+            return redirect(project_tab_url(pk))
         except (ValidationError, IntegrityError) as error: form.add_error(None, error_text(error))
     return render(request, "form.html", {"heading": "更新项目与剩余成本估算", "form": form, "back_url": url_reverse("project-detail", args=[pk])})
 
@@ -380,7 +424,7 @@ def reverse(request, kind, pk):
     try:
         row = reverse_record(request.member, kind, pk, request.POST.get("note", ""))
         messages.success(request, "已追加冲销记录，原记录完整保留")
-        return redirect("project-detail", pk=row.project_id) if row.project_id else redirect("timesheets")
+        return redirect(project_tab_url(row.project_id, "finance")) if row.project_id else redirect("timesheets")
     except ObjectDoesNotExist: raise Http404()
     except (ValidationError, IntegrityError) as error: messages.error(request, error_text(error))
     return redirect("finance")
@@ -394,7 +438,7 @@ def task_update(request, pk):
         update_task(request.member, pk, request.POST.get("status"), int(request.POST.get("version", "0")), request.POST.get("completion_note", ""))
         messages.success(request, "任务状态已更新")
     except (ValueError, ValidationError, IntegrityError) as error: messages.error(request, error_text(error))
-    return redirect("project-detail", pk=task.project_id)
+    return redirect(project_tab_url(task.project_id, "tasks"))
 
 
 @workspace_view
@@ -405,7 +449,7 @@ def transition(request, pk):
         change_stage(request.member, pk, request.POST.get("target"), int(request.POST.get("version", "0")), request.POST.get("reason", ""))
         messages.success(request, "项目阶段已更新")
     except (ValueError, ValidationError, IntegrityError) as error: messages.error(request, error_text(error))
-    return redirect("project-detail", pk=project.pk)
+    return redirect(project_tab_url(project.pk))
 
 
 @workspace_view
@@ -416,7 +460,7 @@ def milestone_accept(request, pk):
         accept_milestone(request.member, pk, request.POST.get("evidence", ""))
         messages.success(request, "里程碑已验收")
     except ValidationError as error: messages.error(request, error_text(error))
-    return redirect("project-detail", pk=milestone.project_id)
+    return redirect(project_tab_url(milestone.project_id, "milestones"))
 
 
 @workspace_view
@@ -434,7 +478,7 @@ def risk_resolve(request, pk):
             risk.save(update_fields=["resolved", "resolution"])
             audit(request.member, "risk.resolved", risk, {"resolution": text[:4000]})
             messages.success(request, "风险已关闭")
-    return redirect("project-detail", pk=risk.project_id)
+    return redirect(project_tab_url(risk.project_id, "risks"))
 
 
 @workspace_view
@@ -452,7 +496,7 @@ def cancel_plan(request, pk):
             plan.save(update_fields=["active", "review_note"])
             audit(request.member, "plan.cancelled", plan, {"reason": note, "remaining_cents": plan_remaining(plan)})
             messages.success(request, "计划未结部分已终止，实际收付款记录保留")
-    return redirect("project-detail", pk=plan.project_id)
+    return redirect(project_tab_url(plan.project_id, "finance"))
 
 
 @workspace_view
@@ -938,7 +982,7 @@ def upload_evidence(request, pk):
                 evidence.file.delete(save=False)
                 raise
         messages.success(request, "凭证已保存并记录校验摘要")
-    return redirect("project-detail", pk=doc.project_id)
+    return redirect(project_tab_url(doc.project_id, "finance" if can_read_finance(request.member, doc.project) else "expenses"))
 
 
 @workspace_view
@@ -990,7 +1034,7 @@ def task_edit(request, pk):
         try:
             edit_task(request.member, task.pk, data, version, reason)
             messages.success(request, "任务计划已更新，原值和调整依据已保留")
-            return redirect("project-detail", pk=task.project_id)
+            return redirect(project_tab_url(task.project_id, "tasks"))
         except (ValidationError, IntegrityError) as error: form.add_error(None, error_text(error))
     return render(request, "form.html", {"heading": "调整任务计划", "form": form, "back_url": url_reverse("project-detail", args=[task.project_id])})
 

@@ -157,7 +157,7 @@ def collect_insights(organization, snapshots, include_finance=True):
                         if item["severity"] not in {"high", "medium", "info"}: raise ValueError("severity")
                         if any(not isinstance(item[k], str) for k in ["title", "detail", "url"]): raise ValueError("types")
                         if not 1 <= len(item["title"]) <= 160 or len(item["detail"]) > 1000: raise ValueError("length")
-                        if not re.fullmatch(re.escape(snapshot["url"]) + r"(#[a-zA-Z0-9_-]{1,40})?", item["url"]): raise ValueError("source URL")
+                        if not re.fullmatch(re.escape(snapshot["url"]) + r"(?:#(?:[a-zA-Z0-9_-]{1,40})|\?tab=(?:overview|tasks|milestones|finance|risks|team|expenses))?", item["url"]): raise ValueError("source URL")
                         validated.append(item)
                 results.extend(validated)
             except Exception as error:

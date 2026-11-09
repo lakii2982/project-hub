@@ -37,9 +37,9 @@ class Plugin:
         name = str(snapshot.get("name") or project_id)
         stage = snapshot.get("stage")
         base_url = snapshot["url"]
-        tasks_url = f"{base_url}#tasks"
-        milestones_url = f"{base_url}#milestones"
-        finance_url = f"{base_url}#finance"
+        tasks_url = f"{base_url}?tab=tasks"
+        milestones_url = f"{base_url}?tab=milestones"
+        finance_url = f"{base_url}?tab=finance"
 
         if include_finance:
             budget = snapshot.get("budget_cents")

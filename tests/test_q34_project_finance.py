@@ -336,12 +336,15 @@ class Q34PermissionTests(Q34FinanceFixture):
     def test_project_cards_show_current_contract_and_redact_for_member(self):
         self.login(self.owner)
         response = self.client.get(reverse("projects"))
-        self.assertContains(response, "当前合同额")
+        self.assertContains(response, 'class="project-table"')
+        self.assertContains(response, "合同额")
         self.assertContains(response, "120,000.00")  # 最新追加变更，不是历史 100,000
+        self.assertContains(response, "34,040.00")   # 1.0 毛利口径
         self.login(self.member)
         response = self.client.get(reverse("projects"))
-        self.assertNotContains(response, "当前合同额")
         self.assertNotContains(response, "120,000.00")
+        self.assertNotContains(response, "34,040.00")
+        self.assertNotContains(response, "¥")
 
     def test_billing_drilldown_filters_by_project(self):
         register_invoice(self.owner, project=self.empty_project, number="Q34-INV-002",
@@ -352,6 +355,9 @@ class Q34PermissionTests(Q34FinanceFixture):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "筛选项目")
         self.assertContains(response, "Q34-INV-001")
+        # 返回项目页的深链必须使用 ?tab=finance（旧 #finance 在阶段③迁移后失效）。
+        self.assertContains(response, f"{reverse('project-detail', args=[self.project.pk])}?tab=finance")
+        self.assertNotContains(response, f"{reverse('project-detail', args=[self.project.pk])}#finance")
         # 明细记录按项目过滤；Q34-INV-002 只可能出现在登记发票下拉选项里。
         self.assertEqual(response.content.decode().count("Q34-INV-002"), 1)
         self.assertEqual(self.client.get(reverse("billing") + f"?project={self.foreign_project.pk}").status_code, 404)
