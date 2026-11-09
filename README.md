@@ -40,6 +40,16 @@ python scripts/demo.py --slice micro
 
 先进入项目目录再运行相对路径命令。浏览器打开打印的 <http://127.0.0.1:8765/>；命令打印六类演练账号（owner/finance/pm/member/auditor/newbie），随机密码不打印到控制台，只写入本机 `runtime/demo-credentials.txt`（0600），不进入Git和源码包。演示数据均为虚构，不含真实客户、工资或凭据；不能初始化到生产环境，也不要用演练库承接真实业务。
 
+演练结束后切到正式库：先停止演练服务，再用只读检查确认可以切换，然后执行切换（默认目标是本机正式库 `runtime/pmo.sqlite3`）：
+
+```sh
+python scripts/demo.py --stop --db <启动时的演练库> --port <启动时的端口>
+python scripts/go-live.py --check
+python scripts/go-live.py
+```
+
+`scripts/go-live.py` 在演练服务仍在运行、目标库已有公司、或目标库就是演练库时拒绝（退出码 2/3）且不写任何数据库；只有空/不存在的目标库才会 `migrate --noinput`，随后校验正式库没有演练组织（`is_demo=1` 为 0）并打印 `http://127.0.0.1:8000/setup/` 首次启用入口；空库重复执行幂等。它不会删除或覆盖演练库，不写入演练数据，不启动长期服务，输出不含密码/密钥。生产部署仍用 `scripts/install.sh --domain <域名>`，安装后打开 `https://<域名>/setup/`。
+
 真实公司使用独立数据库，跳过seed_demo，运行：
 
 ```sh
