@@ -106,8 +106,8 @@ class MicroScopeTests(TestCase):
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, "历史费用只读记录")
         self.assertNotContains(detail, "已确认管理收入")
-        audit_page = self.client.get(reverse("audit"))
-        self.assertEqual(audit_page.status_code, 200)
+        audit_page = self.client.get(reverse("audit"), follow=True)
+        self.assertRedirects(audit_page, f"{reverse('settings')}?tab=audit")
         self.assertContains(audit_page, "document.created")
 
     def test_project_detail_does_not_call_management_revenue(self):
@@ -219,5 +219,5 @@ class MicroScopeTests(TestCase):
         page = self.client.get(reverse("settings"))
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, "审计日志（只读）")
-        self.assertContains(page, reverse("audit"))
+        self.assertContains(page, "?tab=audit")
         self.assertContains(page, "复杂财务页与插件页已从小微版入口停用")

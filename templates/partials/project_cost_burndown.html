@@ -13,12 +13,13 @@
     </dl>
     <div class="cost-burndown-meta">
       <span>单位：人民币元</span>
+      <span class="sr-only">图例：</span>
       {% for series in cost_burndown.chart.series %}<span class="cost-burndown-legend"><i class="cost-burndown-legend-line {% if series.reference %}reference{% else %}actual{% endif %}" aria-hidden="true"></i>{{ series.label }}{% if series.reference %} · 虚线方点{% else %} · 实线圆点{% endif %}</span>{% endfor %}
     </div>
     <div class="cost-burndown-plot-scroll" tabindex="0" role="region" aria-label="成本预算余额燃尽图，可横向滚动查看完整日期轴">
       <svg class="cost-burndown-chart" viewBox="{{ cost_burndown.chart.viewbox }}" role="img" aria-labelledby="cost-burndown-title cost-burndown-desc">
         <title id="cost-burndown-title">项目成本预算余额与计划参考燃尽图</title>
-        <desc id="cost-burndown-desc">按当前批准预算计算，截至 {{ cost_burndown.as_of|date:'Y-m-d' }}，累计确认成本 {{ cost_burndown.actual_cost_cents|money }} 元，预算余额 {{ cost_burndown.remaining_cents|money }} 元。实际预算余额使用实线圆点，计划参考使用虚线方点。精确日期和金额见下方数据表。</desc>
+        <desc id="cost-burndown-desc">单位人民币元。按当前批准预算计算，截至 {{ cost_burndown.as_of|date:'Y-m-d' }}，累计确认成本 {{ cost_burndown.actual_cost_cents|money }} 元，预算余额 {{ cost_burndown.remaining_cents|money }} 元。实际预算余额使用实线圆点，计划参考使用虚线方点。精确日期和金额见下方数据表。</desc>
         <g class="cost-burndown-grid" aria-hidden="true">
           {% for tick in cost_burndown.chart.y_ticks %}<line x1="{{ cost_burndown.chart.left }}" y1="{{ tick.y }}" x2="{{ cost_burndown.chart.right }}" y2="{{ tick.y }}"></line>{% endfor %}
           <line x1="{{ cost_burndown.chart.left }}" y1="{{ cost_burndown.chart.top }}" x2="{{ cost_burndown.chart.left }}" y2="{{ cost_burndown.chart.bottom }}"></line>

@@ -1983,6 +1983,83 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
 .setup-login-notice { margin-top: var(--space-4); align-items: center; }
 .onboarding-resume { margin-bottom: var(--space-4); align-items: center; }
 
+/* ----------------------------------------------------------------------------
+   27. PH-026 阶段⑤：未来 13 周现金预测图（原生 SVG，收支与累计净值分面）
+   ---------------------------------------------------------------------------- */
+.cashflow-chart-block { margin-top: var(--space-4); }
+.cashflow-chart-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: var(--space-0) 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+.cashflow-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  margin-bottom: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+.cashflow-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.cashflow-legend-swatch { display: block; flex: none; overflow: visible; }
+.cashflow-hatch-line { stroke: var(--chart-2); stroke-width: 1.5; }
+.cashflow-chart-plot-scroll {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+.cashflow-chart-plot-scroll:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-md);
+}
+.cashflow-chart {
+  display: block;
+  width: 100%;
+  min-width: 760px;
+  max-width: none;
+  height: auto;
+  font-family: var(--font-family-sans);
+}
+.cashflow-grid line { fill: none; stroke: var(--chart-grid); stroke-width: 1; }
+.cashflow-grid line.vertical { stroke: var(--color-border); }
+.cashflow-grid line.zero { stroke: var(--chart-axis); stroke-width: 1.5; }
+.cashflow-axis text { fill: var(--chart-axis); font-size: var(--font-size-xs); }
+.cashflow-axis .cashflow-panel-label {
+  fill: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+.cashflow-bar.in { fill: var(--chart-1); }
+.cashflow-bar.out { stroke: var(--chart-2); stroke-width: 1; }
+.cashflow-balance-line {
+  fill: none;
+  stroke: var(--chart-5);
+  stroke-width: 2.5;
+  stroke-dasharray: 7 5;
+}
+.cashflow-balance-marker { fill: var(--color-surface); stroke: var(--chart-5); stroke-width: 2; }
+.cashflow-legend-line { stroke: var(--chart-5); stroke-width: 2; stroke-dasharray: 6 4; }
+.cashflow-legend-diamond { fill: var(--color-surface); stroke: var(--chart-5); stroke-width: 2; }
+.cashflow-end-label { fill: var(--color-text-secondary); font-size: var(--font-size-xs); }
+.cashflow-end-label.is-negative { fill: var(--color-warning); }
+.cashflow-caption {
+  padding-bottom: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  text-align: left;
+}
+.cashflow-empty { margin-top: var(--space-3); margin-bottom: var(--space-4); }
+
 /* ============================================================================
    响应式：断点与 ui/ui-tokens.css 保持同源（1024/768/640/480/390/320）
    ============================================================================ */

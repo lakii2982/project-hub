@@ -742,15 +742,67 @@ def _membership_rows(org):
     return rows
 
 
+# PH-026 阶段⑤：组织设置三页签（成员 / 成本费率 / 审计日志）。
+# 三个面板始终服务端渲染在 DOM 中，仅当前面板带 hidden；无 JavaScript 时页签是
+# 指向 /settings/?tab=… 的真实链接，服务端按 active_tab（白名单回退 members）渲染。
+SETTINGS_TABS = ("members", "rates", "audit")
+AUDIT_FILTER_FIELDS = (("entity", "业务对象"), ("action", "操作"), ("actor", "操作者"))
+
+
+def _settings_active_tab(request):
+    tab = request.GET.get("tab")
+    return tab if tab in SETTINGS_TABS else "members"
+
+
+def _audit_filters(request):
+    """只暴露 AuditEvent 真实存储的字段，不虚构来源/时间范围等后端未支持的条件。"""
+    return {name: (request.GET.get(name) or "").strip()[:80]
+            for name, _label in AUDIT_FILTER_FIELDS}
+
+
+def _audit_context(request):
+    """只读审计事实：设置页审计页签与 auditor 的 /audit/ 只读页共用。"""
+    organization = request.member.organization
+    filters = _audit_filters(request)
+    events = AuditEvent.objects.filter(organization=organization).select_related("actor")
+    if filters["entity"]:
+        events = events.filter(entity__icontains=filters["entity"])
+    if filters["action"]:
+        events = events.filter(action__icontains=filters["action"])
+    if filters["actor"]:
+        events = events.filter(Q(actor__username__icontains=filters["actor"])
+                               | Q(actor__first_name__icontains=filters["actor"])
+                               | Q(actor__last_name__icontains=filters["actor"]))
+    conditions = [f"{label}含“{filters[name]}”" for name, label in AUDIT_FILTER_FIELDS
+                  if filters[name]]
+    return {"audit_events": events[:300], "chain_ok": verify_audit(organization),
+            "audit_filters": filters, "audit_filters_active": bool(conditions),
+            "audit_filter_conditions": conditions, "audit_event_limit": 300}
+
+
+def _settings_context(request, *, form=None, membership_form=None, active_tab="members"):
+    organization = request.member.organization
+    context = {"nav": "settings", "active_tab": active_tab, "form": form,
+               "membership_form": membership_form,
+               "memberships": _membership_rows(organization),
+               "employees": Employee.objects.filter(organization=organization).select_related("member__user"),
+               "rates": CostRate.objects.filter(employee__organization=organization).select_related("employee")[:200]}
+    context.update(_audit_context(request))
+    return context
+
+
 @workspace_view
 def settings_page(request):
     if request.member.role not in WRITE_FINANCE: raise PermissionDenied()
     org = request.member.organization
+    active_tab = _settings_active_tab(request)
     form = ui.OrgForm(request.POST or None, instance=org)
     membership_form = None
     if request.member.role == "owner":
         membership_form = ui.MembershipChangeForm(member=request.member)
     if request.method == "POST":
+        # 写入口都在成员页签：成功与失败都固定回 members，不落在其它页签。
+        active_tab = "members"
         if request.member.role != "owner": raise PermissionDenied()
         if "membership_id" in request.POST:
             membership_form = ui.MembershipChangeForm(request.POST, member=request.member)
@@ -770,11 +822,8 @@ def settings_page(request):
                 else:
                     messages.success(request, "成员账号已更新")
                     return redirect("settings")
-            return render(request, "settings.html", {"nav": "settings", "form": form,
-                "membership_form": membership_form,
-                "memberships": _membership_rows(org),
-                "employees": Employee.objects.filter(organization=org).select_related("member__user"),
-                "rates": CostRate.objects.filter(employee__organization=org).select_related("employee")[:200]}, status=400)
+            return render(request, "settings.html", _settings_context(
+                request, form=form, membership_form=membership_form), status=400)
         if form.is_valid():
             with transaction.atomic():
                 locked = lock_company(request.member)
@@ -785,17 +834,23 @@ def settings_page(request):
                     audit(request.member, "organization.updated", changed, {"name": changed.name, "locked_through": changed.locked_through})
                     messages.success(request, "公司设置与锁账日期已更新")
                     return redirect("settings")
-    return render(request, "settings.html", {"nav": "settings", "form": form,
-        "membership_form": membership_form,
-        "memberships": _membership_rows(org),
-        "employees": Employee.objects.filter(organization=org).select_related("member__user"),
-        "rates": CostRate.objects.filter(employee__organization=org).select_related("employee")[:200]})
+    return render(request, "settings.html", _settings_context(
+        request, form=form, membership_form=membership_form, active_tab=active_tab))
 
 
 @workspace_view
 def audit_page(request):
+    """Q-50：/audit/ 仍对 owner/finance/auditor 可用。
+
+    owner/finance 已经有组织设置维护权限，统一转到设置页审计页签，避免两套维护入口；
+    auditor 不能访问设置页，保留独立的只读审计页（筛选仍是只读 GET，不新增权限）。
+    """
     if request.member.role not in {"owner", "finance", "auditor"}: raise PermissionDenied()
-    return render(request, "audit.html", {"nav": "audit", "events": AuditEvent.objects.filter(organization=request.member.organization).select_related("actor")[:300], "chain_ok": verify_audit(request.member.organization)})
+    if request.member.role in WRITE_FINANCE:
+        return redirect(f"{url_reverse('settings')}?tab=audit")
+    context = {"nav": "audit"}
+    context.update(_audit_context(request))
+    return render(request, "audit.html", context)
 
 
 @workspace_view

@@ -268,7 +268,15 @@ class HTTPAccessTestCase(TestCase):
             reverse("new-object", args=["project"]),
         ]
 
-        responses = [self.client.get(route) for route in routes]
+        responses = []
+        for route in routes:
+            response = self.client.get(route)
+            if route == reverse("audit"):
+                # Q-50：owner 的审计入口转到设置页审计页签，跟随重定向后仍须可渲染。
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(response["Location"], f"{reverse('settings')}?tab=audit")
+                response = self.client.get(response["Location"])
+            responses.append(response)
 
         self.assertEqual(len(responses), 13)
         self.assertEqual(

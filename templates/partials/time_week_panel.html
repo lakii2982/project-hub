@@ -16,6 +16,6 @@
 <div class="form-actions"><button class="button primary" type="submit">保存本周工时</button></div></section>
 </form>
 <section class="week-summary-grid">
-<section class="panel"><div class="panel-heading"><h2>本周合计</h2></div><div class="panel-body"><div class="summary-band compact"><div><span>已记录</span><strong>{{ own_totals.minutes|hours }} <small>小时</small></strong></div>{% if is_finance %}<div><span>可计价人天成本</span><strong><small>¥</small> {{ own_totals.cost_cents|money }}</strong></div>{% endif %}<div><span>待定价</span><strong>{{ own_totals.gaps|default:0 }} <small>条</small></strong></div></div>{% if own_totals.gaps %}<p class="help-text">待定价工时需补录费率{% if is_finance %}，<a href="{% url 'settings' %}#rates">补录费率 →</a>{% endif %}</p>{% endif %}</div></section>
+<section class="panel"><div class="panel-heading"><h2>本周合计</h2></div><div class="panel-body"><div class="summary-band compact"><div><span>已记录</span><strong>{{ own_totals.minutes|hours }} <small>小时</small></strong></div>{% if is_finance %}<div><span>可计价人天成本</span><strong><small>¥</small> {{ own_totals.cost_cents|money }}</strong></div>{% endif %}<div><span>待定价</span><strong>{{ own_totals.gaps|default:0 }} <small>条</small></strong></div></div>{% if own_totals.gaps %}<p class="help-text">待定价工时需补录费率{% if is_finance %}，<a href="{% url 'settings' %}?tab=rates">补录费率 →</a>{% endif %}</p>{% endif %}</div></section>
 
 {% endif %}
