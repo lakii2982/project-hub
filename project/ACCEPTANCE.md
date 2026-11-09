@@ -34,6 +34,8 @@ SHA：代码基线 `e642ec2`（Q-43 合并后的 main）；Q-44 发布元数据 
 环境：L3 = GitHub Actions SQLite/PostgreSQL/容器/协议/治理（同一 PR HEAD）；L4 = macOS 本机 Chromium headless 1440×900/390×844 + SQLite 空库（非 seed_demo）。日期：2026-11-04。复核人：待独立复核。
 （候选包、构建/校验命令、逐文件摘要与未验证项见 [docs/candidates/0.2.0/README.md](../docs/candidates/0.2.0/README.md)；本段不代表已发布、已打标签或 L5 通过。）
 
+W6 的 Q-51（客户/项目/合同 CSV 导入）与 Q-52（演练库→正式库一键切换）以 [QUEUE.md](QUEUE.md) 与 [STATUS.md](STATUS.md) 为唯一跟踪；本候选表不逐条重复。Q-52 额外证据：`python manage.py test tests.test_q52_go_live`（12 tests OK，含 target 有员工/账本/审计行但无公司记录时 exit 3 且数据库 SHA-256 不变）、`scripts/go-live.py --check` 只读、空库迁移后无演练组织并打印 `/setup/`。
+
 当前状态（按 [QUEUE.md](QUEUE.md) W1–W3，沿用 STATUS.md 的边界，不重复推断）：
 
 | # | 验收项 | 结果 | 证据 |
