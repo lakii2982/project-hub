@@ -74,6 +74,7 @@ urlpatterns = [
     path("settings/", views.settings_page, name="settings"),
     path("status/", views.system_status_page, name="system-status"),
     path("audit/", views.audit_page, name="audit"),
+    path("import/<str:kind>/template.csv", views.import_template, name="import-template"),
     path("import/<str:kind>/", views.import_data, name="import-data"),
     path("exports/", views.micro_exports, name="micro-exports"),
     path("exports/<str:kind>.csv", views.micro_export_download, name="micro-export-download"),

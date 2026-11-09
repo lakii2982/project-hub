@@ -1599,6 +1599,15 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
   font-size: var(--font-size-sm);
 }
 .import-actions { padding: var(--space-5); }
+.import-errors {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-4) var(--space-5) var(--space-5) calc(var(--space-5) + 1.25em);
+  border-top: var(--border-default);
+  font-size: var(--font-size-sm);
+}
+.import-errors strong { color: var(--color-danger); }
 .import-help { max-width: 820px; }
 .schema-columns {
   display: flex;
