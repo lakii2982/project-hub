@@ -1,7 +1,7 @@
 # PH-026 阶段④ 验收记录（工时、费用与现金流页签）
 
 - 日期：2026-11-09（Asia/Shanghai）
-- 分支：`feat/Q-49-stage4/agent/frontend-iteration-2-ddc35edd8f6d`；真实 base：`origin/main = c26ed4a`（PR #340 阶段③ 合并后）
+- 分支：`feat/Q-49-stage4/agent/frontend-iteration-2-ddc35edd8f6d`；真实 base：`origin/main = d33c59e`（阶段③ #340 + Q-51 客户/项目/合同 CSV 导入 #342 合并后；本切片已 rebase 到该基线，Q-51 不涉及本切片页面行为）
 - 演示数据：`manage.py seed_demo` 演练组织（行远技术 · 演练工作区），账号 owner（陈予安/公司负责人），本地 SQLite
 - 依据：`docs/engineering/visual-system.md` §4.3–§4.5、§5.3、§8 与 `frontend-standards.md` §3–§4、§13.2 阶段④；范围见 `project/QUEUE.md` Q-49
 
@@ -33,7 +33,7 @@
 
 ## 3. 证据截图（`docs/screenshots/ph026-stage4-*`，同场景同视口同主题）
 
-- Before 基线：`origin/main = c26ed4a`（阶段③ 合并后、本切片前）+ seed_demo，owner 登录；实际入库：
+- Before 基线：`origin/main = d33c59e`（阶段③ + Q-51 合并后、本切片前）+ seed_demo，owner 登录；实际入库：
   - 1440：`ph026-stage4-before-1440-{time,time-week,expenses,billing,cash}.png`
   - 390：`ph026-stage4-before-390-{time,time-week,expenses,billing,cash}.png`
   - 320：`ph026-stage4-before-320-{time,expenses}.png`

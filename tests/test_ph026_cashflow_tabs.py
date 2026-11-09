@@ -127,6 +127,11 @@ class CashflowTabTests(CashflowTabFixture):
         self.assertContains(page, "筛选项目")
         self.assertContains(page, self.project.code)
 
+    def test_project_finance_expense_drilldown_uses_all_tab(self):
+        """项目财务「费用明细」钻取必须带 ?tab=all，落到全部记录而不是登记表单。"""
+        page = self.client.get(reverse("project-detail", args=[self.project.pk]))
+        self.assertContains(page, f"?tab=all&amp;project={self.project.pk}")
+
     def test_tab_links_keep_project_filter(self):
         page = self.page(tab="overview", project=self.project.pk)
         html = page.content.decode()
