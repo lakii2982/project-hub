@@ -34,7 +34,8 @@ from .masterdata import (change_membership, create_employee, create_rate,
                          membership_snapshot, update_project)
 from .reporting import (project_summary, portfolio_metrics, cash_forecast, alerts_for,
                         overdue_plan_totals, project_cost_burndown)
-from .imports import HEADERS, parse_csv, preview_rows as validate_import, commit_rows
+from .imports import (HEADERS, parse_csv, preview_rows as validate_import, commit_rows,
+                      project_import_errors)
 from .ai import extract_draft
 
 
@@ -756,8 +757,11 @@ def import_data(request, kind):
     if kind not in HEADERS: raise Http404()
     require_write(request.member)
     if kind == "plan" and request.member.role not in {"owner", "finance", "pm"}: raise PermissionDenied()
+    if kind == "projects" and request.member.role not in {"owner", "pm"}:
+        raise PermissionDenied("只有公司负责人和项目经理可以批量导入客户、项目和合同")
     form = ui.ImportForm(request.POST or None, request.FILES or None, member=request.member)
     preview = None
+    preview_errors = []
     count = 0
     key = f"import_{kind}"
     if request.method == "POST" and request.POST.get("action") == "commit":
@@ -768,20 +772,69 @@ def import_data(request, kind):
             try:
                 objects = commit_rows(request.member, kind, cached["rows"])
                 del request.session[key]
-                messages.success(request, f"已处理{len(objects)}行，全部提交待审批；相同来源编号不会重复入账")
+                if kind == "projects":
+                    messages.success(request, f"已导入{len(objects)}行客户/项目/合同；相同来源编号重复上传保持幂等")
+                else:
+                    messages.success(request, f"已处理{len(objects)}行，全部提交待审批；相同来源编号不会重复入账")
                 return redirect("timesheets" if kind == "time" else "projects")
             except (ValidationError, IntegrityError) as error: messages.error(request, error_text(error))
     elif request.method == "POST" and form.is_valid():
         try:
             rows = parse_csv(kind, form.cleaned_data["file"])
-            count = validate_import(request.member, kind, rows)
-            request.session[key] = {"user_id": request.user.pk, "rows": rows}
-            preview = rows[:20]
+            if kind == "projects":
+                preview_errors = project_import_errors(request.member, rows)
+            if preview_errors:
+                # Report every invalid row and keep the batch out of the session, so no
+                # commit path can write a partial file.
+                request.session.pop(key, None)
+            else:
+                count = validate_import(request.member, kind, rows)
+                request.session[key] = {"user_id": request.user.pk, "rows": rows}
+                preview = rows[:20]
         except (ValidationError, IntegrityError) as error:
             request.session.pop(key, None)
             form.add_error(None, error_text(error))
-    return render(request, "import.html", {"nav": "time" if kind == "time" else "projects", "heading": {"time": "批量导入工时", "expense": "批量导入费用", "plan": "批量导入现金计划", "invoicing": "批量导入发票"}[kind],
-        "kind": kind, "form": form, "headers": HEADERS[kind], "preview_rows": preview, "preview_count": count})
+    return render(request, "import.html", {"nav": "time" if kind == "time" else "projects", "heading": {"time": "批量导入工时", "expense": "批量导入费用", "plan": "批量导入现金计划", "invoicing": "批量导入发票", "projects": "批量导入客户/项目/合同"}[kind],
+        "kind": kind, "form": form, "headers": HEADERS[kind], "preview_rows": preview, "preview_count": count,
+        "preview_errors": preview_errors})
+
+
+IMPORT_TEMPLATE_EXAMPLES = {
+    "time": ["TIME-001", "DEMO-001", "示例员工", "2026-01-05", "8", "示例工时"],
+    "expense": ["EXP-001", "DEMO-001", "示例费用", "100.00", "0", "0", "2026-01-05",
+                "示例供应商", "REF-001", "示例费用"],
+    "plan": ["PLAN-001", "DEMO-001", "in", "示例收款计划", "1000.00", "2026-02-05",
+             "示例客户", "REF-001"],
+    "projects": None,  # dates are filled relative to today so the example row is importable
+    "invoicing": ["INV-001", "示例客户", "INV-2026-001", "2026-01-05", "11300", "10000",
+                  "1300", "{}", "1", "11300", "10000", "1300", "contracts", "contract_line",
+                  "00000000-0000-0000-0000-000000000000", "1", "11300", "10000", "1300",
+                  "示例发票"],
+}
+
+
+@workspace_view
+@require_GET
+def import_template(request, kind):
+    """Download a UTF-8 BOM CSV template (header + one example row) for any import kind."""
+    if kind not in HEADERS: raise Http404()
+    require_write(request.member)
+    if kind == "projects" and request.member.role not in {"owner", "pm"}:
+        raise PermissionDenied("只有公司负责人和项目经理可以批量导入客户、项目和合同")
+    example = IMPORT_TEMPLATE_EXAMPLES[kind]
+    if example is None:
+        today = timezone.localdate()
+        example = ["PROJ-001", "示例客户", "DEMO-001", "示例项目",
+                   (today - timedelta(days=30)).isoformat(),
+                   (today + timedelta(days=335)).isoformat(), "100000.00", "HT-2026-001"]
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerow(HEADERS[kind])
+    writer.writerow(example)
+    response = HttpResponse("\ufeff" + buffer.getvalue(), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{kind}-import-template.csv"'
+    return response
+
 
 
 def csv_safe(value):

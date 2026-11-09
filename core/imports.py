@@ -2,20 +2,25 @@
 import csv
 import io
 import json
+import re
 import uuid
 from collections import OrderedDict
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.utils import timezone
 from .access import visible_projects, require_finance_write
-from .models import Employee, CashPlan
-from .services import cents, submit_time, submit_document, audit, lock_company
+from .contract_changes import record_contract_change
+from .models import Employee, CashPlan, Project, ProjectContractChange
+from .services import cents, create_project, submit_time, submit_document, audit, lock_company
 
 HEADERS = {
     "time": ["source_id", "project_code", "employee_name", "work_date", "hours", "note"],
     "expense": ["source_id", "project_code", "title", "amount", "tax", "recoverable_tax", "occurred_on", "counterparty", "reference", "note"],
     "plan": ["source_id", "project_code", "direction", "title", "amount", "due_date", "counterparty", "reference"],
+    "projects": ["source_id", "client_name", "project_code", "project_name",
+                 "start_date", "end_date", "contract_amount", "contract_reference"],
     "invoicing": ["source_id", "counterparty_name", "invoice_number", "invoice_date",
                   "gross_cents", "net_cents", "tax_cents", "evidence_json", "line_no",
                   "line_gross_cents", "line_net_cents", "line_tax_cents",
@@ -58,6 +63,131 @@ def parse_csv(kind, uploaded):
 
 def import_token(member, kind, source_id):
     return uuid.uuid5(uuid.NAMESPACE_URL, f"project-hub:{member.organization_id}:{kind}:{source_id}")
+
+
+# Q-51 project/contract batch import: one CSV row creates one project and appends its
+# initial contract amount.  The project row token rides on the append-only
+# ProjectContractChange.token, so replaying the same source_id is idempotent.
+PROJECT_CODE_RE = re.compile(r"^[A-Za-z0-9_-]{2,32}$")
+PROJECT_AMOUNT_RE = re.compile(r"^\d{1,11}(?:\.\d{1,2})?$")
+PROJECT_TEXT_MAX = 120
+
+
+def _project_date(value, label):
+    text = str(value or "").strip()
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+        raise ValidationError(f"{label}须为YYYY-MM-DD")
+    try:
+        return date.fromisoformat(text)
+    except ValueError:
+        raise ValidationError(f"{label}不是有效日期")
+
+
+def _project_row_values(member, row):
+    """Validate one project row without writing; return the normalized values."""
+    client = str(row.get("client_name") or "").strip()
+    if not 1 <= len(client) <= PROJECT_TEXT_MAX:
+        raise ValidationError("客户名称须为1至120个字符")
+    code = str(row.get("project_code") or "").strip()
+    if not PROJECT_CODE_RE.fullmatch(code):
+        raise ValidationError("项目编号须为2至32位字母、数字、下划线或短横线")
+    name = str(row.get("project_name") or "").strip()
+    if not 1 <= len(name) <= PROJECT_TEXT_MAX:
+        raise ValidationError("项目名称须为1至120个字符")
+    start = _project_date(row.get("start_date"), "开始日期")
+    end = _project_date(row.get("end_date"), "计划交付日期")
+    if end < start:
+        raise ValidationError("计划交付日期不能早于开始日期")
+    if start > timezone.localdate():
+        raise ValidationError("开始日期不能晚于今天")
+    locked_through = member.organization.locked_through
+    if locked_through and start <= locked_through:
+        raise ValidationError(f"{locked_through}及之前已锁账，不能导入该开始日期的项目")
+    amount_text = str(row.get("contract_amount") or "").strip()
+    if not PROJECT_AMOUNT_RE.fullmatch(amount_text):
+        raise ValidationError("合同额须为大于0的数字、最多两位小数且不超过100亿元")
+    amount_cents = cents(amount_text)
+    # Same source of truth as apply/record_contract_change: 0 < amount <= 10^12 分.
+    if not 0 < amount_cents <= MAX_CENTS:
+        raise ValidationError("合同额须为大于0且不超过100亿元（100亿元=10^12分）")
+    reference = str(row.get("contract_reference") or "").strip()
+    if len(reference) > 240:
+        raise ValidationError("合同依据编号不能超过240字符")
+    return {"client": client, "code": code, "name": name, "start": start,
+            "end": end, "amount_cents": amount_cents, "reference": reference}
+
+
+def _project_contract_change(member, source_id):
+    return ProjectContractChange.objects.filter(
+        token=import_token(member, "projects", source_id)).select_related("project").first()
+
+
+def _assert_project_idempotent(change, values):
+    """Same source_id must replay the identical project/contract content."""
+    project = change.project
+    if (project.code != values["code"] or project.name != values["name"]
+            or project.client != values["client"]
+            or project.start_date != values["start"]
+            or project.end_date != values["end"]
+            or project.contract_reference != values["reference"]
+            or change.amount_cents != values["amount_cents"]):
+        raise ValidationError("同一来源编号的导入内容已改变，请使用新的来源编号")
+
+
+def project_import_errors(member, rows):
+    """Collect every invalid projects row (line + reason) so the batch is never partial."""
+    errors = []
+    seen_codes = {}
+    for index, row in enumerate(rows, 2):
+        try:
+            code = str(row.get("project_code") or "").strip()
+            if PROJECT_CODE_RE.fullmatch(code):
+                if code in seen_codes:
+                    raise ValidationError(f"项目编号与第{seen_codes[code]}行重复")
+                seen_codes[code] = index
+            values = _project_row_values(member, row)
+            change = _project_contract_change(member, row["source_id"])
+            if change is not None:
+                _assert_project_idempotent(change, values)
+            elif Project.objects.filter(
+                    organization=member.organization, code=values["code"]).exists():
+                raise ValidationError("项目编号已存在；如需更新请使用项目编辑流程")
+        except ValidationError as error:
+            errors.append({"line": index, "message": "；".join(error.messages)})
+    return errors
+
+
+def _apply_project_rows(member, rows):
+    objects = []
+    for index, row in enumerate(rows, 2):
+        try:
+            values = _project_row_values(member, row)
+            change = _project_contract_change(member, row["source_id"])
+            if change is not None:
+                _assert_project_idempotent(change, values)
+                objects.append(change.project)
+                continue
+            if Project.objects.filter(
+                    organization=member.organization, code=values["code"]).exists():
+                raise ValidationError("项目编号已存在；如需更新请使用项目编辑流程")
+            project = create_project(member, {
+                "code": values["code"], "name": values["name"],
+                "client": values["client"], "manager": member,
+                "template": Project.Template.SOFTWARE,
+                "stage": Project.Stage.INITIATION,
+                "start_date": values["start"], "end_date": values["end"],
+                "contract_cents": 0, "budget_cents": 0,
+                "contract_reference": values["reference"]})
+            record_contract_change(
+                member, project=project, amount_cents=values["amount_cents"],
+                note=f"CSV 批量导入初始合同额（来源编号 {row['source_id']}）",
+                effective_on=values["start"],
+                token=import_token(member, "projects", row["source_id"]))
+            objects.append(project)
+        except (ValidationError, ValueError, InvalidOperation, OverflowError) as error:
+            detail = "；".join(error.messages) if isinstance(error, ValidationError) else "日期或数字格式无效"
+            raise ValidationError(f"第{index}行：{detail}")
+    return objects
 
 
 def invoicing_invoice_token(organization_id, direction, invoice_number):
@@ -277,6 +407,8 @@ def _apply_invoicing_rows(member, rows):
 def apply_rows(member, kind, rows):
     if kind == "invoicing":
         return _apply_invoicing_rows(member, rows)
+    if kind == "projects":
+        return _apply_project_rows(member, rows)
     projects = {p.code: p for p in visible_projects(member)}
     objects = []
     for index, row in enumerate(rows, 2):
