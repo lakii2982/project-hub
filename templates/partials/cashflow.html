@@ -1,1 +1,67 @@
-{% load money %}<p class="help-text">以已入账项目净现金流为起点，按已批准计划测算。</p>{% if forecast_overdue.count %}<div class="notice">{{ forecast_overdue.count }} 项逾期计划待重新排期：待收 ¥ {{ forecast_overdue.in_cents|money }}，待付 ¥ {{ forecast_overdue.out_cents|money }}。这部分单列跟进，未并入未来预测。</div>{% endif %}<div class="table-scroll"><table><caption class="sr-only">未来 13 周现金预测，单位人民币元</caption><thead><tr><th>期间</th><th class="numeric">预计流入</th><th class="numeric">预计流出</th><th class="numeric">预计累计净流入</th></tr></thead><tbody>{% for row in cashflow %}<tr><th scope="row">{{ row.period }}</th><td class="numeric text-teal">{{ row.in_cents|money }}</td><td class="numeric">{{ row.out_cents|money }}</td><td class="numeric {% if row.balance_cents < 0 %}text-warning{% endif %}">{{ row.balance_cents|money }}</td></tr>{% empty %}<tr><td colspan="4" class="table-empty">暂无现金预测，请先建立收付款计划。</td></tr>{% endfor %}</tbody></table></div>
+{% load money %}<p class="help-text">以已入账项目净现金流为起点，按已批准计划测算。</p>{% if forecast_overdue.count %}<div class="notice">{{ forecast_overdue.count }} 项逾期计划待重新排期：待收 ¥ {{ forecast_overdue.in_cents|money }}，待付 ¥ {{ forecast_overdue.out_cents|money }}。这部分单列跟进，未并入未来预测。</div>{% endif %}
+{% with max_in_row=cashflow|dictsort:"in_cents"|last max_out_row=cashflow|dictsort:"out_cents"|last %}
+{% if max_in_row.in_cents or max_out_row.out_cents %}
+{% with first_row=cashflow|first last_row=cashflow|last max_balance_row=cashflow|dictsort:"balance_cents"|last min_balance_row=cashflow|dictsort:"balance_cents"|first %}
+{% if max_in_row.in_cents >= max_out_row.out_cents %}{% widthratio max_in_row.in_cents 1 1 as chart_flow_scale %}{% else %}{% widthratio max_out_row.out_cents 1 1 as chart_flow_scale %}{% endif %}
+{% widthratio chart_flow_scale 2 1 as chart_flow_half %}
+{% if max_balance_row.balance_cents > 0 %}{% widthratio max_balance_row.balance_cents 1 1 as chart_balance_high %}{% else %}{% widthratio 0 1 1 as chart_balance_high %}{% endif %}
+{% widthratio min_balance_row.balance_cents -1 1 as chart_balance_neg_min %}
+{% if min_balance_row.balance_cents < 0 %}{% widthratio chart_balance_neg_min 1 1 as chart_balance_low %}{% else %}{% widthratio 0 1 1 as chart_balance_low %}{% endif %}
+{% with chart_balance_range=chart_balance_high|add:chart_balance_low %}
+{% widthratio chart_balance_high chart_balance_range 110 as chart_balance_zero_offset %}
+<div class="cashflow-chart-block">
+  <p class="help-text cashflow-chart-meta"><span>单位：人民币元</span><span>时间区间：未来 13 周（{{ first_row.period }} 至 {{ last_row.period }}）</span><span>业务口径：依据已批准收付款计划测算（计划≠实际；净现金流≠利润，≠银行余额）</span></p>
+  <div class="cashflow-chart-legend">
+    <span class="sr-only">图例：</span>
+    <span class="cashflow-chart-legend-item"><svg class="cashflow-legend-swatch" viewBox="0 0 30 14" width="30" height="14" aria-hidden="true" focusable="false"><rect class="cashflow-bar in" x="0" y="1" width="12" height="12"></rect></svg>预计流入 · 零线以上实心柱</span>
+    <span class="cashflow-chart-legend-item"><svg class="cashflow-legend-swatch" viewBox="0 0 30 14" width="30" height="14" aria-hidden="true" focusable="false"><defs><pattern id="cashflow-legend-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="cashflow-hatch-line" x1="0" y1="0" x2="0" y2="7"></line></pattern></defs><rect class="cashflow-bar out" x="0" y="1" width="12" height="12" fill="url(#cashflow-legend-hatch)"></rect></svg>预计流出 · 零线以下斜线纹理柱</span>
+    <span class="cashflow-chart-legend-item"><svg class="cashflow-legend-swatch" viewBox="0 0 30 14" width="30" height="14" aria-hidden="true" focusable="false"><line class="cashflow-legend-line" x1="1" y1="7" x2="29" y2="7"></line><rect class="cashflow-legend-diamond" x="11" y="3" width="8" height="8" transform="rotate(45 15 7)"></rect></svg>预计累计净流入 · 虚线菱形点</span>
+  </div>
+  <div class="cashflow-chart-plot-scroll" tabindex="0" role="region" aria-label="未来 13 周现金预测图，可横向滚动查看完整期间">
+    <svg class="cashflow-chart" viewBox="0 0 760 400" role="img" aria-labelledby="cashflow-chart-title cashflow-chart-desc" preserveAspectRatio="xMidYMid meet">
+      <defs><pattern id="cashflow-out-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="cashflow-hatch-line" x1="0" y1="0" x2="0" y2="7"></line></pattern></defs>
+      <title id="cashflow-chart-title">未来 13 周现金预测图：预计流入、预计流出与预计累计净流入</title>
+      <desc id="cashflow-chart-desc">单位人民币元。时间区间 {{ first_row.period }} 至 {{ last_row.period }}。上半图为每周预计流入（零线以上实心柱）与预计流出（零线以下斜线纹理柱），使用同一金额刻度与真实零基线；下半图为预计累计净流入（虚线菱形点），单独刻度并以零线区分正负。依据已批准收付款计划测算：计划不等于实际，净现金流不等于利润，也不等于银行余额。精确数值见相邻数据表。</desc>
+      <g class="cashflow-grid" aria-hidden="true">
+        {% for row in cashflow %}{% if forloop.counter0|divisibleby:2 %}{% widthratio forloop.counter0 13 640 as grid_band %}<line class="vertical" x1="{{ grid_band|add:'121' }}" y1="24" x2="{{ grid_band|add:'121' }}" y2="366"></line>{% endif %}{% endfor %}
+        <line x1="96" y1="24" x2="736" y2="24"></line>
+        <line x1="96" y1="74" x2="736" y2="74"></line>
+        <line class="zero" x1="96" y1="124" x2="736" y2="124"></line>
+        <line x1="96" y1="174" x2="736" y2="174"></line>
+        <line x1="96" y1="224" x2="736" y2="224"></line>
+        <line x1="96" y1="256" x2="736" y2="256"></line>
+        <line class="zero" x1="96" y1="{{ chart_balance_zero_offset|add:'256' }}" x2="736" y2="{{ chart_balance_zero_offset|add:'256' }}"></line>
+        <line x1="96" y1="366" x2="736" y2="366"></line>
+        <line x1="96" y1="24" x2="96" y2="366"></line>
+      </g>
+      <g class="cashflow-axis" aria-hidden="true">
+        <text class="cashflow-panel-label" x="96" y="16">每周预计收支（元，零线以上流入 / 以下流出）</text>
+        <text x="88" y="24" text-anchor="end" dominant-baseline="middle">{{ chart_flow_scale|money }}</text>
+        <text x="88" y="74" text-anchor="end" dominant-baseline="middle">{{ chart_flow_half|money }}</text>
+        <text x="88" y="124" text-anchor="end" dominant-baseline="middle">0</text>
+        <text x="88" y="174" text-anchor="end" dominant-baseline="middle">-{{ chart_flow_half|money }}</text>
+        <text x="88" y="224" text-anchor="end" dominant-baseline="middle">-{{ chart_flow_scale|money }}</text>
+        <text class="cashflow-panel-label" x="96" y="240">预计累计净流入（元，零线区分正负）</text>
+        {% if max_balance_row.balance_cents > 0 %}<text x="88" y="256" text-anchor="end" dominant-baseline="middle">{{ chart_balance_high|money }}</text>{% endif %}
+        <text x="88" y="{{ chart_balance_zero_offset|add:'256' }}" text-anchor="end" dominant-baseline="middle">0</text>
+        {% if min_balance_row.balance_cents < 0 %}<text x="88" y="366" text-anchor="end" dominant-baseline="middle">-{{ chart_balance_low|money }}</text>{% endif %}
+        {% for row in cashflow %}{% if forloop.counter0|divisibleby:2 %}{% widthratio forloop.counter0 13 640 as label_band %}<text x="{{ label_band|add:'121' }}" y="386" text-anchor="middle">{{ row.period }}</text>{% endif %}{% endfor %}
+      </g>
+      <g class="cashflow-bars" aria-hidden="true">
+        {% for row in cashflow %}{% widthratio forloop.counter0 13 640 as bar_band %}{% widthratio row.in_cents chart_flow_scale 100 as bar_in_height %}{% widthratio bar_in_height -1 1 as bar_in_height_neg %}{% widthratio row.out_cents chart_flow_scale 100 as bar_out_height %}<rect class="cashflow-bar in" x="{{ bar_band|add:'109' }}" y="{{ bar_in_height_neg|add:'124' }}" width="16" height="{{ bar_in_height }}"></rect><rect class="cashflow-bar out" x="{{ bar_band|add:'125' }}" y="124" width="16" height="{{ bar_out_height }}" fill="url(#cashflow-out-hatch)"></rect>{% endfor %}
+      </g>
+      <g class="cashflow-balance" aria-hidden="true">
+        <polyline class="cashflow-balance-line" points="{% for row in cashflow %}{% widthratio forloop.counter0 13 640 as point_band %}{% widthratio row.balance_cents -1 1 as point_neg %}{% widthratio chart_balance_high|add:point_neg chart_balance_range 110 as point_offset %}{{ point_band|add:'121' }},{{ point_offset|add:'256' }} {% endfor %}"></polyline>
+        {% for row in cashflow %}{% widthratio forloop.counter0 13 640 as marker_band %}{% widthratio row.balance_cents -1 1 as marker_neg %}{% widthratio chart_balance_high|add:marker_neg chart_balance_range 110 as marker_offset %}<rect class="cashflow-balance-marker" x="-4" y="-4" width="8" height="8" transform="translate({{ marker_band|add:'121' }} {{ marker_offset|add:'256' }}) rotate(45)"></rect>{% endfor %}
+      </g>
+      <text class="cashflow-end-label{% if last_row.balance_cents < 0 %} is-negative{% endif %}" x="736" y="240" text-anchor="end">13 周末预计累计净流入 ¥ {{ last_row.balance_cents|money }}</text>
+    </svg>
+  </div>
+</div>
+{% endwith %}
+{% endwith %}
+{% else %}
+<div class="empty-state compact cashflow-empty"><h3>未来 13 周暂无已批准的收付款计划</h3><p>未生成现金预测图，不绘制全零曲线。只有已批准且在期内的收付款计划才计入预测；计划不等于实际，净现金流不等于利润或银行余额。</p></div>
+{% endif %}
+<div class="table-scroll"><table><caption class="cashflow-caption">未来 13 周现金预测明细 · 单位：人民币元 · 业务口径：依据已批准收付款计划测算（精确值以此表为准）</caption><thead><tr><th>期间</th><th class="numeric">预计流入</th><th class="numeric">预计流出</th><th class="numeric">预计累计净流入</th></tr></thead><tbody>{% if max_in_row.in_cents or max_out_row.out_cents %}{% for row in cashflow %}<tr><th scope="row">{{ row.period }}</th><td class="numeric text-teal">{{ row.in_cents|money }}</td><td class="numeric">{{ row.out_cents|money }}</td><td class="numeric {% if row.balance_cents < 0 %}text-warning{% endif %}">{{ row.balance_cents|money }}</td></tr>{% endfor %}{% else %}<tr><td colspan="4" class="table-empty">未来 13 周暂无已批准的收付款计划，未生成预测明细。</td></tr>{% endif %}</tbody></table></div>
+{% endwith %}
