@@ -2435,12 +2435,14 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
   .q41-due-table td:last-child::before { display: none; }
 
   /* 行卡多值单元格：除 ::before 字段名外的子元素统一落在值列，
-     避免自动放置把第二段内容塞进字段名列；徽章按内容宽度显示，不拉伸成整行。 */
+     避免自动放置把第二段内容塞进字段名列；徽章按内容宽度显示，不拉伸成整行。
+     到期提醒/费用缺口表的末列是「操作/来源」单列（grid-template-columns:1fr），
+     其子元素必须保持自动放置，否则会创建隐式第二列挤压链接或按钮。 */
   .project-table td > *,
   .q33-ranking td > *,
   .cashflow-table-rows td > *,
-  .q41-due-table td > *,
-  .expense-gap-table td > *,
+  .q41-due-table td:not(:last-child) > *,
+  .expense-gap-table td:not(:last-child) > *,
   .week-table td > *,
   .table-rows td > * { grid-column: 2; }
   .project-table td > .badge,
@@ -2498,6 +2500,10 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
 @media (max-width: 640px) {
   .summary-band { flex-wrap: wrap; }
 
+  /* 单笔金额上限 10^12 分（¥10,000,000,000.00）在 481–640px 两列指标卡中放不下；
+     空间不足时按规范改单列，保持金额整行且不压到相邻卡片。 */
+  .metrics-grid { grid-template-columns: minmax(0, 1fr); }
+
   .q41-export-grid { grid-template-columns: minmax(0, 1fr); }
   .cost-burndown-data thead {
     position: absolute;
@@ -2535,8 +2541,7 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
 /* ---- ≤480：单列卡片与紧凑留白 ---- */
 @media (max-width: 480px) {
   .project-grid { grid-template-columns: 1fr; }
-  /* 指标与向导步骤在手机宽度改为单列，避免金额被拆行、步骤胶囊被挤成椭圆。 */
-  .metrics-grid { grid-template-columns: minmax(0, 1fr); }
+  /* 向导步骤在手机宽度改为单列，避免步骤胶囊被挤成椭圆。 */
   .setup-steps { grid-template-columns: minmax(0, 1fr); }
   .project-card { padding: var(--space-5) var(--space-5) var(--space-0); }
   .breadcrumb {
