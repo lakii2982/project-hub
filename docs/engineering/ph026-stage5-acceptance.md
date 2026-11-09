@@ -36,7 +36,7 @@
   - 专业范围 1440/390/320：`ph026-stage5-before-full-{1440,390,320}-{finance,project-finance}.png`
 - After（本 PR HEAD）：
   - 设置：`ph026-stage5-after-1440-settings.png`、`-settings-rates.png`、`-settings-audit.png`、`-audit-alias.png`；390/320：`-{390,320}-settings.png`、`-settings-audit.png`
-  - 工作台：1440/390/320 `-dashboard.png`；无 JS `-dashboard-nojs.png`；减少动态效果 `-dashboard-reduced-motion.png`
+  - 工作台：1440/390/320 `-dashboard.png`；无 JS `-dashboard-nojs.png`（全部浏览器检查上下文均以 `reduced_motion="reduce"` 运行）
   - 图表（专业范围）：1440/390/320 `-full-{1440,390,320}-finance.png`（现金预测）、`-full-{1440,390,320}-project-finance.png`（成本燃尽）
   - 200% 缩放：`ph026-stage5-after-zoom200-{settings,settings-audit,dashboard,full-finance}.png`
 
@@ -57,10 +57,18 @@
 
 ## 6. 独立复核与修复
 
-- （待复核后填写）
+- 独立复核（reviewer，最终 HEAD `676cddb`，PR 评论）：**approve**，无 blocking finding；4 项非阻塞观察见下。
+  - 复核独立复现：30 项新测试 OK、定向 16 模块 247 tests OK（skipped=1）、全量 1929 tests（2 项既有 macOS 基线失败 + 76 skips）、浏览器 73/73 PASS（微版 + 专业范围各自起服务）、6/6 变异检查可检出、截图 SHA-256 与 ticket 捕获一致、`check_pr`（唯一 Queue: Q-50）/候选元数据/前端门禁通过。
+  - 复核评论：`https://github.com/lakii2982/project-hub/pull/344#issuecomment-6734429257`。
+- 非阻塞观察与处理：
+  1. `_audit_context` 在每次设置 GET（含成员/费率页签）都执行 `verify_audit` 全链扫描，量大有性能风险 → 记为已知限制（§7），本切片不改变审计链校验语义。
+  2. `/audit/` 对 owner/finance 的 302 丢弃原 query 筛选参数 → 记为已知限制；筛选在设置页审计页签完整可用。
+  3. 减少动态效果证据文件命名曾指向 720 代理上下文 → 已删除冗余重名文件，并在 §2/§3 说明全部检查上下文均为 `reduced_motion=reduce`。
+  4. 本节占位已按复核结果补全。
 
 ## 7. 未执行项与边界
 
 - `not_run`：真实浏览器 200% 缩放（以 720 CSS px 视口等价代理，已在 §2 说明方法与近似性）；真实 PostgreSQL 并发（本切片无业务写路径变化）。
 - 微版工作台不显示财务预测图属既有范围设计（阶段①② 已定），本切片未改变；图表证据取自专业范围页面并在 PR 中说明。
 - 审计“来源”筛选未实现：`AuditEvent` 无 source 字段，按契约只暴露后端真实支持的条件。
+- 已知限制：设置页每次 GET 都执行 `verify_audit`（与旧 `/audit/` 同成本，但设置页访问更频繁）；`/audit/` 的 302 跳转会丢弃原查询筛选参数（筛选在设置审计页签可用）。两者均不改变审计数据与权限语义。
