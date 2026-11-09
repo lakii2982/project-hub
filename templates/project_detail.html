@@ -3,7 +3,7 @@
 {% block title %}{{ project.name }}{% endblock %}
 {% block breadcrumb %}<a href="{% url 'projects' %}">项目空间</a> <span aria-hidden="true">/</span> {{ project.code }}{% endblock %}
 {% block content %}
-<div class="project-detail" data-project-tabs>
+<div class="project-detail">
   <section class="page-heading">
     <div><div class="eyebrow">{{ project.code }} <span class="heading-dot">/</span> {{ project.get_template_display }}</div><h1>{{ project.name }}</h1><p>客户：{{ project.client }} <span class="heading-dot">·</span> 项目经理：{{ project.manager }}</p></div>
     <div class="actions">
@@ -12,20 +12,20 @@
       {% if micro_scope %}{% if can_finance %}<a class="button" href="/expenses/?project={{ project.pk }}">费用与外包</a>{% endif %}{% elif not is_viewer %}<a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">提交费用</a>{% endif %}{% if not is_viewer %}<a class="button" href="{% url 'new-object' 'time' %}?project={{ project.pk }}">填报工时</a>{% endif %}
     </div>
   </section>
-  <div class="section-nav project-tabs" role="tablist" aria-label="项目详情视图">
-    <a id="tab-overview" href="#overview" role="tab" aria-selected="true" aria-controls="overview">概览</a>
-    <a id="tab-tasks" href="#tasks" role="tab" aria-selected="false" aria-controls="tasks">关键任务</a>
-    <a id="tab-milestones" href="#milestones" role="tab" aria-selected="false" aria-controls="milestones">里程碑</a>
-    {% if can_finance %}<a id="tab-finance" href="#finance" role="tab" aria-selected="false" aria-controls="finance">项目财务</a>{% endif %}
-    <a id="tab-risks" href="#risks" role="tab" aria-selected="false" aria-controls="risks">风险</a>
-    <a id="tab-team" href="#team" role="tab" aria-selected="false" aria-controls="team">团队</a>
-    {% if not can_finance and not can_manage %}<a id="tab-expenses" href="#expenses" role="tab" aria-selected="false" aria-controls="expenses">我的费用</a>{% endif %}
-  </div>
+  <div class="tabbar"><div class="tablist" role="tablist" aria-label="项目详情页签" data-link-tabs>
+    <a class="tab" id="project-tab-overview" role="tab" href="?tab=overview" aria-controls="project-panel-overview" aria-selected="{% if active_tab == 'overview' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'overview' %}0{% else %}-1{% endif %}">概览</a>
+    <a class="tab" id="project-tab-tasks" role="tab" href="?tab=tasks" aria-controls="project-panel-tasks" aria-selected="{% if active_tab == 'tasks' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'tasks' %}0{% else %}-1{% endif %}">关键任务</a>
+    <a class="tab" id="project-tab-milestones" role="tab" href="?tab=milestones" aria-controls="project-panel-milestones" aria-selected="{% if active_tab == 'milestones' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'milestones' %}0{% else %}-1{% endif %}">里程碑</a>
+    {% if can_finance %}<a class="tab" id="project-tab-finance" role="tab" href="?tab=finance" aria-controls="project-panel-finance" aria-selected="{% if active_tab == 'finance' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'finance' %}0{% else %}-1{% endif %}">项目财务</a>{% endif %}
+    <a class="tab" id="project-tab-risks" role="tab" href="?tab=risks" aria-controls="project-panel-risks" aria-selected="{% if active_tab == 'risks' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'risks' %}0{% else %}-1{% endif %}">风险</a>
+    <a class="tab" id="project-tab-team" role="tab" href="?tab=team" aria-controls="project-panel-team" aria-selected="{% if active_tab == 'team' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'team' %}0{% else %}-1{% endif %}">团队</a>
+    {% if not can_finance and not can_manage %}<a class="tab" id="project-tab-expenses" role="tab" href="?tab=expenses" aria-controls="project-panel-expenses" aria-selected="{% if active_tab == 'expenses' %}true{% else %}false{% endif %}" tabindex="{% if active_tab == 'expenses' %}0{% else %}-1{% endif %}">我的费用</a>{% endif %}
+  </div></div>
 
-  <section id="overview" class="anchor-section project-panel" role="tabpanel" aria-labelledby="tab-overview" tabindex="-1">
+  <section id="project-panel-overview" class="project-panel" role="tabpanel" aria-labelledby="project-tab-overview" tabindex="0"{% if active_tab != 'overview' %} hidden{% endif %}>
     <div class="project-overview">
       <div class="panel overview-main">
-        <div class="panel-heading"><h2 data-panel-title tabindex="-1">交付概览</h2><span class="eyebrow">{{ project.start_date|date:'Y.m.d' }} — {{ project.end_date|date:'Y.m.d' }}</span></div>
+        <div class="panel-heading"><h2>交付概览</h2><span class="eyebrow">{{ project.start_date|date:'Y.m.d' }} — {{ project.end_date|date:'Y.m.d' }}</span></div>
         <div class="large-progress"><strong>{{ summary.progress|percent }}<small>%</small></strong><span>关键任务完成进度</span></div>
         <progress value="{{ summary.progress|percent }}" max="100">{{ summary.progress|percent }}%</progress>
         <div class="overview-facts"><span>已登记工时 <strong>{{ summary.total_minutes|hours }} h</strong></span><span>逾期关键任务 <strong {% if summary.overdue_tasks %}class="text-warning"{% endif %}>{{ summary.overdue_tasks|default:0 }}</strong></span></div>
@@ -40,8 +40,8 @@
     {% if can_finance and not micro_scope %}{% include 'partials/project_cost_burndown.html' %}{% endif %}
   </section>
 
-  <section id="tasks" class="anchor-section project-panel panel" role="tabpanel" aria-labelledby="tab-tasks" tabindex="-1">
-    <div class="panel-heading"><div><h2 data-panel-title tabindex="-1">关键任务</h2></div>{% if can_manage %}<a class="button" href="{% url 'new-object' 'task' %}?project={{ project.pk }}">＋ 新建关键任务</a>{% endif %}</div>
+  <section id="project-panel-tasks" class="project-panel panel" role="tabpanel" aria-labelledby="project-tab-tasks" tabindex="0"{% if active_tab != 'tasks' %} hidden{% endif %}>
+    <div class="panel-heading"><div><h2>关键任务</h2></div>{% if can_manage %}<a class="button" href="{% url 'new-object' 'task' %}?project={{ project.pk }}">＋ 新建关键任务</a>{% endif %}</div>
     <div class="record-list">
       {% for task in tasks %}
       <details class="record">
@@ -71,8 +71,8 @@
     </details>
   </section>
 
-  <section id="milestones" class="anchor-section project-panel panel" role="tabpanel" aria-labelledby="tab-milestones" tabindex="-1">
-    <div class="panel-heading"><h2 data-panel-title tabindex="-1">里程碑</h2>{% if can_manage %}<a class="button" href="{% url 'new-object' 'milestone' %}?project={{ project.pk }}">＋ 新建里程碑</a>{% endif %}</div>
+  <section id="project-panel-milestones" class="project-panel panel" role="tabpanel" aria-labelledby="project-tab-milestones" tabindex="0"{% if active_tab != 'milestones' %} hidden{% endif %}>
+    <div class="panel-heading"><h2>里程碑</h2>{% if can_manage %}<a class="button" href="{% url 'new-object' 'milestone' %}?project={{ project.pk }}">＋ 新建里程碑</a>{% endif %}</div>
     <div class="milestone-list">
       {% for milestone in milestones %}
       <article class="milestone"><div class="milestone-date">{{ milestone.due_date|date:'m.d' }}<small>{{ milestone.due_date|date:'Y' }}</small></div><div class="grow"><div class="row-between"><h3>{{ milestone.name }}</h3>{% if milestone.accepted_at %}<span class="badge success">已验收</span>{% else %}<span class="badge warning">待验收</span>{% endif %}</div><p class="pre-line">{{ milestone.criteria }}</p>{% if milestone.accepted_at %}<p class="muted">{{ milestone.accepted_at|date:'Y.m.d H:i' }} · {{ milestone.accepted_by }} · {{ milestone.evidence }}</p>{% elif can_manage %}<form method="post" action="{% url 'milestone-accept' milestone.pk %}" class="inline-form">{% csrf_token %}<div class="grow"><label for="milestone-evidence-{{ milestone.pk }}">验收依据</label><input id="milestone-evidence-{{ milestone.pk }}" name="evidence" maxlength="240" minlength="4" required placeholder="验收文件编号或交付确认记录"></div><button class="button primary" type="submit">确认验收</button></form>{% endif %}</div></article>
@@ -81,8 +81,8 @@
   </section>
 
   {% if can_finance %}
-  <section id="finance" class="anchor-section project-panel" role="tabpanel" aria-labelledby="tab-finance" tabindex="-1">
-    <div class="section-heading"><div><h2 data-panel-title tabindex="-1">项目财务</h2></div>{% if can_manage or is_finance %}<div class="actions">{% if micro_scope %}<a class="button" href="{% url 'billing' %}">登记发票与收款</a>{% else %}<a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">登记费用</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">登记收款</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">登记付款</a>{% endif %}</div>{% endif %}</div>
+  <section id="project-panel-finance" class="project-panel" role="tabpanel" aria-labelledby="project-tab-finance" tabindex="0"{% if active_tab != 'finance' %} hidden{% endif %}>
+    <div class="section-heading"><div><h2>项目财务</h2></div>{% if can_manage or is_finance %}<div class="actions">{% if micro_scope %}<a class="button" href="{% url 'billing' %}">登记发票与收款</a>{% else %}<a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=expense">登记费用</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=receipt">登记收款</a><a class="button" href="{% url 'new-object' 'document' %}?project={{ project.pk }}&kind=payment">登记付款</a>{% endif %}</div>{% endif %}</div>
     {% include 'partials/project_finance_summary.html' %}
     {% if not micro_scope %}
     <div class="metrics-grid">
@@ -128,12 +128,8 @@
   </section>
   {% endif %}
 
-  {% if not can_finance and not can_manage %}
-  <section id="expenses" class="panel anchor-section project-panel" role="tabpanel" aria-labelledby="tab-expenses" tabindex="-1"><div class="panel-heading"><h2 data-panel-title tabindex="-1">我的费用单据</h2></div>{% include 'partials/documents.html' %}</section>
-  {% endif %}
-
-  <section id="risks" class="anchor-section project-panel panel" role="tabpanel" aria-labelledby="tab-risks" tabindex="-1">
-    <div class="panel-heading"><div><h2 data-panel-title tabindex="-1">风险与问题</h2></div>{% if can_manage %}<a class="button" href="{% url 'new-object' 'risk' %}?project={{ project.pk }}">＋ 登记风险</a>{% endif %}</div>
+  <section id="project-panel-risks" class="project-panel panel" role="tabpanel" aria-labelledby="project-tab-risks" tabindex="0"{% if active_tab != 'risks' %} hidden{% endif %}>
+    <div class="panel-heading"><div><h2>风险与问题</h2></div>{% if can_manage %}<a class="button" href="{% url 'new-object' 'risk' %}?project={{ project.pk }}">＋ 登记风险</a>{% endif %}</div>
     <div class="record-list">
       {% for risk in risks %}
       <details class="record"><summary><div><h3>{{ risk.title }}</h3><p>{{ risk.owner }} · 处理期限 {{ risk.due_date|date:'Y.m.d' }}</p></div><div class="record-summary"><span class="badge {% if risk.resolved %}success{% elif risk.severity == 'high' or risk.severity == 'medium' %}warning{% else %}neutral{% endif %}">{% if risk.resolved %}已解决{% else %}{{ risk.get_severity_display }}风险{% endif %}</span><span class="disclosure" aria-hidden="true">⌄</span></div></summary><div class="record-body"><h4>应对措施</h4><p class="pre-line">{{ risk.mitigation }}</p>{% if risk.resolved %}<h4>解决记录</h4><p class="pre-line">{{ risk.resolution }}</p>{% elif can_manage or not is_viewer and risk.owner_id == membership.pk %}<form method="post" action="{% url 'risk-resolve' risk.pk %}" class="inline-form">{% csrf_token %}<div class="grow"><label for="resolution-{{ risk.pk }}">解决说明</label><textarea id="resolution-{{ risk.pk }}" name="resolution" rows="2" minlength="4" required></textarea></div><button class="button primary" type="submit">标记已解决</button></form>{% endif %}</div></details>
@@ -141,9 +137,13 @@
     </div>
   </section>
 
-  <section id="team" class="anchor-section project-panel panel" role="tabpanel" aria-labelledby="tab-team" tabindex="-1">
-    <div class="panel-heading"><h2 data-panel-title tabindex="-1">项目团队</h2>{% if can_manage %}<a class="button" href="{% url 'new-object' 'team' %}?project={{ project.pk }}">＋ 添加成员</a>{% endif %}</div>
+  <section id="project-panel-team" class="project-panel panel" role="tabpanel" aria-labelledby="project-tab-team" tabindex="0"{% if active_tab != 'team' %} hidden{% endif %}>
+    <div class="panel-heading"><h2>项目团队</h2>{% if can_manage %}<a class="button" href="{% url 'new-object' 'team' %}?project={{ project.pk }}">＋ 添加成员</a>{% endif %}</div>
     <div class="team-grid">{% for item in members %}<div class="team-person"><span class="avatar">{{ item.member|stringformat:'s'|first }}</span><div><strong>{{ item.member }}</strong><small>{{ item.member.get_role_display }}</small></div></div>{% empty %}<div class="empty-state compact"><p>尚未添加项目成员。</p></div>{% endfor %}</div>
   </section>
+
+  {% if not can_finance and not can_manage %}
+  <section id="project-panel-expenses" class="project-panel panel" role="tabpanel" aria-labelledby="project-tab-expenses" tabindex="0"{% if active_tab != 'expenses' %} hidden{% endif %}><div class="panel-heading"><h2>我的费用单据</h2></div>{% include 'partials/documents.html' %}</section>
+  {% endif %}
 </div>
 {% endblock %}

@@ -336,12 +336,15 @@ class Q34PermissionTests(Q34FinanceFixture):
     def test_project_cards_show_current_contract_and_redact_for_member(self):
         self.login(self.owner)
         response = self.client.get(reverse("projects"))
-        self.assertContains(response, "当前合同额")
+        self.assertContains(response, 'class="project-table"')
+        self.assertContains(response, "合同额")
         self.assertContains(response, "120,000.00")  # 最新追加变更，不是历史 100,000
+        self.assertContains(response, "34,040.00")   # 1.0 毛利口径
         self.login(self.member)
         response = self.client.get(reverse("projects"))
-        self.assertNotContains(response, "当前合同额")
         self.assertNotContains(response, "120,000.00")
+        self.assertNotContains(response, "34,040.00")
+        self.assertNotContains(response, "¥")
 
     def test_billing_drilldown_filters_by_project(self):
         register_invoice(self.owner, project=self.empty_project, number="Q34-INV-002",

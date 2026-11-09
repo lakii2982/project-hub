@@ -1,0 +1,17 @@
+{% load money %}{% comment %}项目列表：桌面表格，≤768 按 data-label 转行卡；无财务权限显示“—”而不是假零。{% endcomment %}
+<div class="table-scroll">
+<table class="project-table">
+  <caption class="sr-only">项目清单</caption>
+  <thead><tr><th scope="col">项目</th><th scope="col">客户</th><th scope="col" class="numeric">合同额</th><th scope="col" class="numeric">进度</th><th scope="col" class="numeric">毛利</th><th scope="col">缺口</th></tr></thead>
+  <tbody>{% for row in rows %}
+    <tr>
+      <th scope="row"><a class="project-name" href="{% url 'project-detail' row.project.pk %}">{{ row.project.name }}</a><span class="project-sub">{{ row.project.code }} · {{ row.project.manager }} · {{ row.project.get_stage_display }}</span></th>
+      <td data-label="客户">{{ row.project.client|default:'—' }}</td>
+      <td data-label="合同额" class="numeric">{% if row.finance %}¥ {{ row.finance.contract_cents|money }}{% else %}—{% endif %}</td>
+      <td data-label="进度"><span class="progress-cell"><progress value="{{ row.card.progress }}" max="100">{{ row.card.progress }}%</progress><span class="numeric">{{ row.card.progress }}<small>%</small></span></span></td>
+      <td data-label="毛利" class="numeric">{% if row.finance and row.finance.margin_rate_percent is not None %}<span{% if row.finance.gross_margin_cents < 0 %} class="text-warning"{% endif %}>¥ {{ row.finance.gross_margin_cents|money }}</span>{% elif row.finance %}<span class="muted">—</span> <span class="badge neutral">毛利率无定义</span>{% else %}—{% endif %}</td>
+      <td data-label="缺口"><div class="gap-cell">{% if row.finance %}{% for gap in row.finance.gaps %}<span class="badge {% if gap.severity == 'warning' %}warning{% else %}neutral{% endif %}">{{ gap.label }}</span>{% empty %}<span class="badge success">完整</span>{% endfor %}{% else %}—{% endif %}</div></td>
+    </tr>
+  {% endfor %}</tbody>
+</table>
+</div>
