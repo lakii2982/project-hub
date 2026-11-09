@@ -11,7 +11,7 @@
 | # | 缺陷（修复前可观察） | 根因 | 修复 |
 | --- | --- | --- | --- |
 | 1 | **1024px 整页内容被 240px 固定侧栏覆盖**（页标题、页签、指标卡左半被遮住） | `@media (max-width:1024px)` 把 `.app-shell` 左边距清零；`@media (min-width:1024px)` 只恢复侧栏显示，未恢复主区几何，1024px 恰好同时命中两段 | 在 `min-width:1024px` 段同时恢复 `.app-shell` 左边距、顶栏与主区内边距 |
-| 2 | 手机宽度指标金额被拆行（如「205,811.3 / 2」「130,00 / 0.00」） | ≤640px 对 `.metric > strong` 设 `white-space: normal; overflow-wrap: anywhere` | 删除该拆行规则（金额保持 `nowrap` + `tabular-nums`）；≤480px 指标卡改单列，空间不足时先减列不拆数 |
+| 2 | 手机宽度指标金额被拆行（如「205,811.3 / 2」「130,00 / 0.00」） | ≤640px 对 `.metric > strong` 设 `white-space: normal; overflow-wrap: anywhere` | 删除该拆行规则（金额保持 `nowrap` + `tabular-nums`）；≤640px 指标卡改单列，空间不足时先减列不拆数 |
 | 3 | 设置（员工档案/账户与权限/成本费率/审计日志）、审计、项目财务（明细/收付款计划/账簿）、导入预览、缺费率缺口等窄屏表格被压成逐字竖排 | 这些通用表只有桌面样式，≤768px 仍按表格列宽压缩 | 新增共享 `.table-rows` 行卡模式（字段名 + 值），给上述表加 `data-label`；沿用项目/现金流行卡的同一阅读顺序 |
 | 4 | 行卡内第二段值掉进字段名列、徽章被拉伸成整行（如「收款」占满整行、仪表盘缺口徽章全宽）；到期提醒/费用缺口表末列「来源/操作」被挤出隐式窄列 | 行卡 `td` 为 grid 容器，多子元素被自动放置到字段名列；徽章作为 grid item 默认 stretch；末列为单列布局时子元素被 `grid-column:2` 强制生成隐式第二列 | 行卡 `td` 的直接子元素统一落在值列（`grid-column:2`），徽章 `justify-self:start`；仪表盘缺口单元格改 flex-wrap；到期提醒/费用缺口表末列（`td:last-child`）保留自动放置，链接/操作按钮保持整行 |
 | 5 | 项目详情页头把「推进正常 / 执行」状态徽章与操作按钮并排，看起来像两个按钮 | 状态徽章放在 `.actions` 操作组内 | 徽章移入标题下 `.heading-status` 独立成行，操作组只保留按钮 |
@@ -37,15 +37,15 @@
 | `diff docs/engineering/ui-tokens.css static/ui/ui-tokens.css` | 输出为空（令牌同源，本次未改令牌） |
 | CSS 门禁：v1 变量、裸 hex 色值、`font-size` < 12px 字面量 | 0 命中 |
 | `python scripts/package.py` + `python scripts/check_candidate_metadata.py` | 重建候选源码包元数据后 `ok=true` |
-| `docs/engineering/q53-verify-visual.py`（Chromium/Playwright，仓库内脚本） | 112/112 checks PASS（见 §3） |
+| `docs/engineering/q53-verify-visual.py`（Chromium/Playwright，仓库内脚本；结果写临时目录，不弄脏工作树） | 113/113 checks PASS，exit 0（见 §3） |
 
 ## 3. 浏览器检查（独立于命令结果）
 
 - 浏览器：Chromium（Playwright），视口 **1440×900 / 1024×800 / 768×900 / 390×844 / 320×640**，owner 登录，light 主题；路由 22 条（工作台三页签、项目列表/详情/编辑、工时、费用、现金流三页签、资金账户、设置三页签、系统状态、审计、到期提醒、简化导出、首次启用）。
-- 结果（`docs/engineering/q53-verify-visual.py`，**112/112 checks PASS**）：
+- 结果（`docs/engineering/q53-verify-visual.py`，**113/113 checks PASS，exit 0**）：
   - 每个路由每个视口：`documentElement.scrollWidth <= clientWidth` 且 `body` 无横向滚动；console error = 0、page error = 0、HTTP ≥500 = 0。
   - **1024px 壳层**：侧栏可见且宽 240px，`.app-shell` 起点 x=240，主区不再被覆盖。
-  - **窄屏回归守卫（本次复核后新增）**：`/due/` 390px 行卡末列保持单列、「查看来源」链接与单元格左缘对齐（防隐式第二列）；500px 下把指标值替换为单笔上限 `¥ 10,000,000,000.00`，文字右缘不越出指标卡。
+  - **窄屏回归守卫（复核后新增）**：① `/due/` 390px 行卡末列保持单列、「查看来源」链接与单元格左缘对齐（防隐式第二列）；② 500px 下把指标值替换为单笔上限 `¥ 10,000,000,000.00`，按文本实际宽度判断不越出指标卡；③ 390px 合成模板同构的 `.expense-gap-table` 行，末列「操作」按钮与单元格左缘对齐（演示库无待确认费用时仍可验证）。
 - 微版回归对比：对微版 22 条路由做 1440px Before/After 像素差分，除本记录 §1 明确变更的页面（导出、项目详情、设置、系统状态）与开发态 404 页 URL 文本外，其余页面逐像素一致；390/320 的差异均落在 §1 清单对应页面。
 - 全范围补充（`PMO_SCOPE=full`）：`/connections/` 的 `.stack-form` 提交按钮由整宽改为内容宽度（§1 #10、§4 证据）；`/finance/` 的计划/账簿表首列改为 `<th scope="row">`（规范 §5.3 行表头要求），桌面端行头文字继承 `--font-weight-medium`，属本 PR 声明的语义/字重变化（§4 证据）。两者均非微版 22 条路由，已在此写明范围，不再声称「全站逐像素一致」。
 - 专项复测：
@@ -84,12 +84,14 @@
 ## 6. 独立复核与修复
 
 - 独立复核（`scope-reviewer` 独立评审代理，非作者）：对 HEAD `5b809e3` 结论 **changes requested**，1 项 blocking finding（[B1] 到期提醒/费用缺口行卡末列被通用 `grid-column` 规则挤出隐式窄列）+ 5 项 non-blocking（N1 481–640px 大金额溢出、N2 `.stack-form` 全局按钮宽度、N3 `td`→`th` 字重、N4 浏览器脚本未入库、N5 通用行卡断言不足）。评论：https://github.com/lakii2982/project-hub/pull/345#issuecomment-6739824464
-- 处理：B1 已改为仅对 `td:not(:last-child)` 应用值列规则并加浏览器位置守卫；N1 改为 ≤640px 指标单列并加 500px 上限金额守卫；N2/N3 已写入 §1/§3/§4 并补全范围证据；N4 脚本入库 `docs/engineering/q53-verify-visual.py`；N5 新增 `tests/test_q53_visual_consistency.py`。最终 HEAD 的独立复核结论见 PR 后续评论；作者不自审。
+- 处理（提交 `1221cc3`）：B1 已改为仅对 `td:not(:last-child)` 应用值列规则并加浏览器位置守卫；N1 改为 ≤640px 指标单列并加 500px 上限金额守卫；N2/N3 已写入 §1/§3/§4 并补全范围证据；N4 脚本入库 `docs/engineering/q53-verify-visual.py`；N5 新增 `tests/test_q53_visual_consistency.py`。
+- 最终 HEAD 复核（`scope-reviewer` 独立评审代理，非作者）：对 HEAD `1221cc3` 结论 **approve**，无 blocking finding；评论：https://github.com/lakii2982/project-hub/pull/345#issuecomment-6740329114 。该轮 4 项非阻塞观察（脚本退出码/输出目录、N1 守卫按元素而非文本宽度、doc/正文口径、测试 docstring）已在后续提交处理：脚本结果写临时目录并返回退出码、N1 守卫改用文本 Range、§1#2 与正文统一为 ≤640px、补充费用缺口末列守卫与 docstring 说明；最终 HEAD 复核结论见 PR 后续评论。作者不自审。
 
 ## 7. 未执行项与边界
 
 - `not_run`：真实 PostgreSQL 并发（本切片无业务写路径变化）；200% 文字缩放专项（本切片未改字号/控件高度与壳层结构，沿用 Q-50 已记录的 720 CSS px 等价代理结论）；reduced-motion 专项（未新增动画）；Safari/Firefox 浏览器（本机仅有 Chromium）；L5 真实环境。
 - 已知限制（复核 N3）：`/finance/` 等全范围页的行表头改为 `<th scope="row">` 后桌面字重由 400 变 550（规范 §5.3 行表头要求），已在 §3/§4 说明并留存裁切证据。
+- 浏览器检查脚本 `docs/engineering/q53-verify-visual.py` 依赖本机 Playwright/Chromium 与演示库 owner 密码（经环境变量传入），结果 JSON 写 `PH_OUT` 或系统临时目录，不写入仓库工作树；113 项检查中 110 项为 22 路由 × 5 视口，3 项为窄屏回归守卫。
 - 全站范围说明：`/assistant/`、`/connections/`、`/finance/` 13 周预测表在微版演示中不可达（微版停用/专业范围），本次以 `PMO_SCOPE=full` 同库服务验证：13 周预测表转行卡、`/assistant/` 与 `/connections/` 空态/表单渲染正常、0 横向滚动、0 console error；其中 `/connections/` 的 `.stack-form` 提交按钮宽度变化已单独留存 1440 Before/After（§4）。`/assistant/` 的「提取草稿」按钮仅在配置模型服务时渲染，本机未配置，未纳入截图。
 - 已知限制：390px 审计页在 207 条日志下按行卡展开会显著变长（行卡模式的固有取舍，分页不在本切片范围）；仪表盘毛利排行表在 1024px 仍有既有局部横滚（`min-width: 820px`，属允许的表格容器内滚动，本切片未改其信息结构）。
 - 未改变：业务路由、金额/工时/权限/期间口径、页签结构与默认项、令牌文件；`core/views.py` 仅修正 `nav` 上下文键值。

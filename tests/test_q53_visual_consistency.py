@@ -4,8 +4,8 @@
 ``docs/engineering/q53-verify-visual.py`` 的 Chromium 检查覆盖）：
 
 - 设置/审计的通用表格带 ``table-rows`` 与每格 ``data-label``，删掉任一属性都会失败；
-- 到期提醒表末列保留 ``data-label="来源"``（窄屏单列操作格，不能被通用
-  ``grid-column`` 规则挤出隐式窄列）；
+- 到期提醒模板保留 ``q41-due-table`` 与末列 ``data-label="来源"``（模板契约守卫；
+  窄屏末列的实际 grid 布局由浏览器脚本的 /due/ 位置断言覆盖）；
 - ``/status/`` 的导航上下文为 ``status``，侧栏高亮「系统状态」而不是「设置」。
 """
 from datetime import date
