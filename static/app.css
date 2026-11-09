@@ -613,6 +613,8 @@ main#main {
 }
 .page-heading .eyebrow { margin-bottom: var(--space-2); }
 .page-heading h1 { margin-bottom: var(--space-2); }
+/* 页头状态徽章独立成行，不与操作按钮混排成“假按钮”。 */
+.heading-status { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .page-heading p { font-size: var(--font-size-xs); color: var(--color-text-muted); }
 .heading-count {
   font-size: var(--font-size-md);
@@ -1031,6 +1033,8 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
   flex-direction: column;
   gap: var(--space-5);
 }
+/* 表单内的独立提交按钮按内容宽度显示，与页面其他操作按钮保持同一层级。 */
+.stack-form > .button { align-self: flex-start; }
 .form-field { min-width: 0; }
 .form-field > ul { padding-left: var(--space-5); }
 .form-field input[type="checkbox"] + label { display: inline; }
@@ -1102,6 +1106,7 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
 }
 .section-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-6);
   border-bottom: var(--border-default);
   margin: var(--space-5) 0;
@@ -1898,8 +1903,6 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
 .q41-due-table { min-width: 720px; }
 .q41-export-grid .metric .button {
   width: 100%;
-  white-space: normal;
-  line-height: var(--line-height-body);
 }
 
 /* ----------------------------------------------------------------------------
@@ -2268,7 +2271,13 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
     color: var(--color-text-secondary);
     font-size: var(--font-size-xs);
   }
-  .q33-ranking td:last-child { grid-template-columns: 1fr; padding-top: var(--space-2); }
+  .q33-ranking td:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+    padding-top: var(--space-2);
+  }
   .q33-ranking td:last-child::before { display: none; }
   .q33-ranking .cell-sub { margin-top: var(--space-1); }
 
@@ -2424,18 +2433,70 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
   }
   .q41-due-table td:last-child { grid-template-columns: 1fr; }
   .q41-due-table td:last-child::before { display: none; }
+
+  /* 行卡多值单元格：除 ::before 字段名外的子元素统一落在值列，
+     避免自动放置把第二段内容塞进字段名列；徽章按内容宽度显示，不拉伸成整行。 */
+  .project-table td > *,
+  .q33-ranking td > *,
+  .cashflow-table-rows td > *,
+  .q41-due-table td > *,
+  .expense-gap-table td > *,
+  .week-table td > *,
+  .table-rows td > * { grid-column: 2; }
+  .project-table td > .badge,
+  .q33-ranking td > .badge,
+  .cashflow-table-rows td > .badge,
+  .q41-due-table td > .badge,
+  .expense-gap-table td > .badge,
+  .week-table td > .badge,
+  .table-rows td > .badge { justify-self: start; }
+
+  /* 通用数据表行卡（设置、审计、财务明细、导入预览等按 data-label 转换）。
+     与项目/现金流等专用行卡保持同一字段名 + 值的阅读顺序。 */
+  .table-rows { min-width: 0; }
+  .table-rows thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: var(--space-0);
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .table-rows,
+  .table-rows tbody,
+  .table-rows tr { display: block; width: 100%; }
+  .table-rows tr { padding: var(--space-3) 0; border-top: var(--border-width) solid var(--color-border); }
+  .table-rows tbody th {
+    display: block;
+    border: 0;
+    padding: var(--space-0) 0 var(--space-2);
+    max-width: none;
+  }
+  .table-rows td {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: var(--space-3);
+    border: 0;
+    padding: var(--space-1) 0;
+    align-items: start;
+    max-width: none;
+    text-align: left;
+    white-space: normal;
+  }
+  .table-rows td::before {
+    content: attr(data-label);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+  }
+  .table-rows .numeric { text-align: left; }
 }
 
-/* ---- ≤640：燃尽数据表行卡、导出网格单列、指标数值允许换行 ---- */
+/* ---- ≤640：燃尽数据表行卡、导出网格单列、摘要带换行（数值不拆行） ---- */
 @media (max-width: 640px) {
-  .metric > strong { white-space: normal; overflow-wrap: anywhere; }
-
   .summary-band { flex-wrap: wrap; }
-
-  .summary-band strong {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
 
   .q41-export-grid { grid-template-columns: minmax(0, 1fr); }
   .cost-burndown-data thead {
@@ -2474,6 +2535,9 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
 /* ---- ≤480：单列卡片与紧凑留白 ---- */
 @media (max-width: 480px) {
   .project-grid { grid-template-columns: 1fr; }
+  /* 指标与向导步骤在手机宽度改为单列，避免金额被拆行、步骤胶囊被挤成椭圆。 */
+  .metrics-grid { grid-template-columns: minmax(0, 1fr); }
+  .setup-steps { grid-template-columns: minmax(0, 1fr); }
   .project-card { padding: var(--space-5) var(--space-5) var(--space-0); }
   .breadcrumb {
     max-width: 184px;
@@ -2509,6 +2573,11 @@ td.numeric { font-size: var(--font-size-table); color: var(--color-text); }
    ============================================================================ */
 @media (min-width: 1024px) {
   .desktop-sidebar { display: block; }
+  /* 1024px 同时命中 ≤1024 的抽屉规则；此处必须把桌面壳层几何一并恢复，
+     否则侧栏显示但主区仍为零左边距，整页内容会被固定侧栏覆盖。 */
+  .app-shell { margin-left: var(--sidebar-width); }
+  .topbar { padding: var(--space-2) var(--page-padding); }
+  main#main { padding: var(--page-padding) var(--page-padding) var(--space-0); }
   .menu-button { display: none; }
   html.js-app .menu-button { display: none; }
   .nav-drawer,

@@ -2,7 +2,7 @@
 <section class="page-heading"><div><div class="eyebrow">MICRO EXPORTS</div><h1>简化导出</h1><p>仅公司负责人 · 人民币 / 元 · 与工作台/项目页/工时/费用/开票与收款页同口径</p></div><div class="actions"><a class="button" href="{% url 'dashboard' %}">返回工作台</a><a class="button" href="{% url 'due-list' %}">到期提醒</a></div></section>
 <div class="notice" role="status"><strong>导出边界</strong><p>只导出 1.0 简化口径的项目收益/现金、工时、费用与开票收款；不含个人费率或工资，不导出已移出的专业财务底稿。每次下载写入审计；同一天重复导出生成相同内容和文件名。CSV 文本已做公式注入防护。</p></div>
 <div class="metrics-grid q41-export-grid">
-  {% for item in exports %}<article class="metric"><span class="metric-label">{{ item.label }}</span><strong><small>CSV</small></strong><p>{{ item.description }}</p><div class="actions"><a class="button primary" href="{% url 'micro-export-download' item.kind %}">下载 {{ item.label }} CSV</a></div></article>{% endfor %}
+  {% for item in exports %}<article class="metric"><span class="metric-label">{{ item.label }}</span><strong><small>CSV</small></strong><p>{{ item.description }}</p><div class="actions"><a class="button" href="{% url 'micro-export-download' item.kind %}">下载 {{ item.label }} CSV</a></div></article>{% endfor %}
 </div>
 <section class="panel section-gap"><div class="panel-heading"><div><h2>取数与口径</h2><p>与页面相同只读聚合；导出不改变任何业务事实</p></div><span class="badge neutral">只读</span></div><div class="panel-body"><ul class="rule-list"><li><strong>项目收益与现金</strong><p>合同额取最新追加变更；收入默认开票不含税；毛利 = 收入 − Q-35 简化人工 − Q-36 已确认费用；历史专业成本与缺口单列，不冒充 0。</p></li><li><strong>工时</strong><p>项目/非项目工时与分钟、核算模式、状态；不含个人每小时费率、工资或逐行成本。</p></li><li><strong>费用</strong><p>Q-36 费用登记与确认状态、已付/未付；历史专业费用底稿不在简化导出范围。</p></li><li><strong>开票与收款</strong><p>发票价税合计/税额/不含税/已收/未收与收款、退款记录；与开票与收款页同源。</p></li></ul></div></section>
 {% endblock %}

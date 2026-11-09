@@ -1112,7 +1112,7 @@ def system_status_page(request):
     from pmo import __version__
     from .system_status import backup_status, database_status, evidence_summary
     return render(request, "system_status.html", {
-        "nav": "settings", "version": __version__,
+        "nav": "status", "version": __version__,
         "environment": "production" if settings.PRODUCTION else "development",
         "database": database_status(), "backup": backup_status(),
         "evidence": evidence_summary(request.member), "generated_at": timezone.localtime(),

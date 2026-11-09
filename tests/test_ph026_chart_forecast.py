@@ -179,9 +179,9 @@ class ForecastChartRenderTests(ForecastChartFixture):
             balance_class = "text-warning" if row["balance_cents"] < 0 else ""
             expected = (
                 '<th scope="row">{period}</th>'
-                '<td class="numeric text-teal">{inflow}</td>'
-                '<td class="numeric">{outflow}</td>'
-                '<td class="numeric {balance_class}">{balance}</td>'
+                '<td data-label="预计流入" class="numeric text-teal">{inflow}</td>'
+                '<td data-label="预计流出" class="numeric">{outflow}</td>'
+                '<td data-label="预计累计净流入" class="numeric {balance_class}">{balance}</td>'
             ).format(
                 period=row["period"],
                 inflow=money(row["in_cents"]),

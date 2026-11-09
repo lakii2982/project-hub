@@ -32,15 +32,15 @@
       {% endif %}
       {% if cash.plan.items %}
       <details class="cost-burndown-details"><summary>查看 8 周内计划明细与来源键（{{ cash.plan.source_count }} 项，去重后）</summary>
-        <div class="table-scroll"><table><caption class="sr-only">8 周内计划明细</caption>
+        <div class="table-scroll"><table class="table-rows"><caption class="sr-only">8 周内计划明细</caption>
           <thead><tr><th>方向</th><th>到期日</th><th>项目</th><th>来源</th><th class="numeric">金额</th><th>已核销/已付</th></tr></thead>
           <tbody>{% for item in cash.plan.items %}{% if not item.overdue %}<tr>
-            <td>{% if item.direction == 'in' %}收款{% else %}付款{% endif %}</td>
-            <td>{{ item.due_on|date:'Y.m.d' }}</td>
-            <td>{{ item.project.code }} · {{ item.project.name }}</td>
-            <td>{{ item.source_id }}</td>
-            <td class="numeric">¥ {{ item.amount_cents|money }}</td>
-            <td>¥ {{ item.settled_cents|money }}</td>
+            <td data-label="方向">{% if item.direction == 'in' %}收款{% else %}付款{% endif %}</td>
+            <td data-label="到期日">{{ item.due_on|date:'Y.m.d' }}</td>
+            <td data-label="项目">{{ item.project.code }} · {{ item.project.name }}</td>
+            <td data-label="来源">{{ item.source_id }}</td>
+            <td data-label="金额" class="numeric">¥ {{ item.amount_cents|money }}</td>
+            <td data-label="已核销/已付">¥ {{ item.settled_cents|money }}</td>
           </tr>{% endif %}{% endfor %}</tbody>
         </table></div>
       </details>
